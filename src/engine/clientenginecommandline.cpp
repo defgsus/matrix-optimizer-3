@@ -42,15 +42,15 @@ ClientEngineCommandLine::ClientEngineCommandLine(QObject *parent)
                       tr("Sets the server IP. The client will constantly try to "
                          "connect itself to that address and the ip is stored as the default.\n"
                          "The parameter accepts the common ip notation (xxx.yyy.zzz.www)"),
-                      settings->serverAddress());
+                      settings()->serverAddress());
     cl_->addParameter("clientindex", "cindex, client-index",
                       tr("Sets the client index to the given value.\n"
                          "This is the index used by the server to associate a projector."),
-                      settings->clientIndex());
+                      settings()->clientIndex());
     cl_->addParameter("desktop", "desktop",
                       tr("Selects the desktop for output windows. "
                          "The value will be stored as default."),
-                      settings->desktop());
+                      settings()->desktop());
 
     // -- particular modis --
 
@@ -113,7 +113,7 @@ ClientEngineCommandLine::ReturnValue
             MO_PRINT(tr("Could not parse the server ip") << " '" << ip << "'");
             return Error;
         }
-        settings->setServerAddress(ip);
+        settings()->setServerAddress(ip);
         MO_PRINT("server ip: " << ip);
     }
 
@@ -121,7 +121,7 @@ ClientEngineCommandLine::ReturnValue
     if (cl_->contains("desktop"))
     {
         const int idx = cl_->value("desktop").toInt();
-        settings->setDesktop(idx);
+        settings()->setDesktop(idx);
         MO_PRINT(tr("desktop index") << ": " << idx);
     }
 
@@ -129,7 +129,7 @@ ClientEngineCommandLine::ReturnValue
     if (cl_->contains("clientindex"))
     {
         const int idx = cl_->value("clientindex").toInt();
-        settings->setClientIndex(idx);
+        settings()->setClientIndex(idx);
         MO_PRINT(tr("client index") << ": " << idx);
     }
 
@@ -153,7 +153,7 @@ ClientEngineCommandLine::ReturnValue
     {
         SystemInfo info;
         info.get();
-        MO_PRINT(tr("Info") << ":\n" << info.toString());
+        MO_PRINT(tr("Info") << ":\n" << info.toString() << "\n" << settings()->infoString());
         return Quit;
     }
 

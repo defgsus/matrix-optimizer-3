@@ -1,4 +1,4 @@
-/** @file UdpConnection.h
+/** @file udpconnection.h
 
     @brief
 
@@ -10,13 +10,13 @@
 
 #include <QUdpSocket>
 
-#ifndef MOSRC_NETWORK_UdpConnection_H
-#define MOSRC_NETWORK_UdpConnection_H
+#ifndef MOSRC_NETWORK_UDPCONNECTION_H
+#define MOSRC_NETWORK_UDPCONNECTION_H
 
 #include <QObject>
 
 
-#if 1
+#if 0
 #   define MO_DEBUG_UDP(arg__) MO_DEBUG(arg__)
 #else
 #   define MO_DEBUG_UDP(unused__)
@@ -90,4 +90,4 @@ private:
 } // namespace MO
 
 
-#endif // MOSRC_NETWORK_UdpConnection_H
+#endif // MOSRC_NETWORK_UDPCONNECTION_H

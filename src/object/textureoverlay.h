@@ -8,8 +8,11 @@
     <p>created 8/12/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #ifndef MOSRC_OBJECT_TEXTUREOVERLAY_H
 #define MOSRC_OBJECT_TEXTUREOVERLAY_H
+
 #include "objectgl.h"
 
 namespace MO {
@@ -67,3 +70,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_TEXTUREOVERLAY_H
+
+#endif // #ifndef MO_DISABLE_EXP

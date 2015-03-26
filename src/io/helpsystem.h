@@ -22,6 +22,13 @@ class QTextStream;
 
 namespace MO {
 
+class Object;
+
+/** Globally sets the help url for the next call of the context help */
+void setHelpUrl(const QString& url);
+
+QString currentHelpUrl();
+
 class HelpSystem : public QObject
 {
     Q_OBJECT
@@ -58,13 +65,26 @@ public slots:
      *  _equ#xstart#xend#ystart#yend#equation[#width[#height]] */
     QImage getEquationImage(const QString& url) const;
 
+    /** Returns the image for the particular object.
+        url is "className[#width[#height]]" */
+    QImage getObjectImage(const QString& classNameUrl) const;
+
+    /** Returns a runtime generated resource for the given url,
+        or an invalid QVariant if the url is not known. */
+    QVariant getRuntimeResource(const QString& partial_url);
+
+    /** Returns the html documentation of an object */
+    QString getObjectDoc(const Object * o);
+
 private:
 
     void renderHtml_(const QDomElement&, QTextStream&);
     void renderHtmlImg_(const QDomElement&, QTextStream&);
 
     void loadEquationFunctions_();
+    void addObjectIndex_(QString& doc);
     void addEquationInfo_(QString& doc);
+    void addAngelScriptInfo_(QString& doc);
 
     QStringList searchPaths_;
 

@@ -1,4 +1,4 @@
-/** @file commonresultions.h
+/** @file commonresolutions.h
 
     @brief
 

@@ -1,4 +1,4 @@
-/** @file bandBandFilterBankao.cpp
+/** @file bandfilterbankao.cpp
 
     @brief
 
@@ -106,14 +106,14 @@ void BandFilterBankAO::createParameters()
                                                   true, false);
 
         p_->paramOrder = params()->createIntParameter("_filter_order", tr("order"),
-                                                   tr("The order (sharpness) of the filter for the 'nth order' types"),
+                                                   tr("The order (quality/exactness) of the filter."),
                                                    2,
                                                    1, 10,
                                                    1, true, false);
 
         p_->paramMetaAmp = params()->createFloatParameter("_filter_amp",
-                                                            tr("amplitude"),
-                                                            tr("The global output amplitude of the filter bands"),
+                                                            tr("main amplitude"),
+                                                            tr("The output amplitude of all filter bands - main multiplier"),
                                                             1.0, 0.05);
 
         // parameters per band
@@ -128,14 +128,14 @@ void BandFilterBankAO::createParameters()
                                                                 tr("%1: frequency").arg(i + 1),
                                                                 tr("The frequency of the filter band in Hertz"),
                                                                 i * 100.0, 10.0);
-            p_->paramFreqStart[i]->setMinValue(1.0);
+            p_->paramFreqStart[i]->setMinValue(0.0);
 
             p_->paramFreqWidth[i] = params()->createFloatParameter(QString("_filter_freq_width_%1").arg(i + 1),
                                                                 tr("%1: width").arg(i + 1),
                                                                 tr("The width of the filter band in Hertz - "
                                                                    "the actual band range is center + [-width/2, width/2]"),
-                                                                50.0, 1.0);
-            p_->paramFreqWidth[i]->setMinValue(1.0);
+                                                                50.0, 0.0);
+            p_->paramFreqWidth[i]->setMinValue(0.0);
 
             p_->paramAmp[i] = params()->createFloatParameter(QString("_filter_amp_%1").arg(i+1),
                                                                 tr("%1: amplitude").arg(i+1),
@@ -207,8 +207,8 @@ void BandFilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
     {
         AUDIO::FixedFilter * f = filters[thread].filters[k].get();
 
-        Float   freq = paramFreqStart[k]->value(time, thread),
-                width = paramFreqWidth[k]->value(time, thread);
+        Double  freq = std::max(1., paramFreqStart[k]->value(time, thread)),
+                width = std::max(1., paramFreqWidth[k]->value(time, thread));
 
         // test for changes (to avoid updateCoefficients())
         if (

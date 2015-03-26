@@ -39,8 +39,11 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
+#include "gui/widget/texteditwidget.h"
 #include "gui/util/objectmenu.h"
+#include "gui/item/frontfloatitem.h"
 #include "model/objectmimedata.h"
+#include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -86,44 +89,84 @@ void ParameterWidget::emitStatusTipChanged_(const QString & s)
 
 void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
 {
-    // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-        return;
+    // another object?
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
+        // analyze further
+        if (!desc.isSameApplicationInstance())
+            return;
 
-    // analyze further
-    if (!desc.isFromSameApplicationInstance())
-        return;
+        if (desc.pointer() == param_->object())
+            return;
 
-    if (desc.pointer() == param_->object())
-        return;
+        if (param_->getModulatorTypes() & desc.type())
+        {
+            e->setDropAction(Qt::LinkAction);
+            e->accept();
+            return;
+        }
+    }
 
-    if (param_->getModulatorTypes() & desc.type())
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (   !param_->isModulateable()
+            || !idata->isSameApplicationInstance()
+            || !(idata->modulatorType() & param_->getModulatorTypes())
+                )
+            return;
+
+        e->setDropAction(Qt::LinkAction);
         e->accept();
+        return;
+    }
 }
 
 void ParameterWidget::dropEvent(QDropEvent * e)
 {
     // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
+
+        if (!editor_)
+            return;
+
+        // create modulation
+        editor_->addModulator(param_, desc.id(), "");
+
+        // select the parameter's object
+        if (param_->object())
+            emitObjectSelected_(param_->object());
+
+        e->accept();
         return;
+    }
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
+    // drop of a ui-item
+    if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
+    {
+        if (!param_->isModulateable())
+            return;
 
-    if (!editor_)
-        return;
+        if (!idata->isSameApplicationInstance())
+            return;
 
-    // create modulation
-    editor_->addModulator(param_, desc.id(), "");
+        if (!(idata->modulatorType() & param_->getModulatorTypes()))
+            return;
 
-    // select the parameter's object
-    if (param_->object())
-        emitObjectSelected_(param_->object());
+        auto item = idata->getItem();
+
+        editor_->addUiModulator(param_, item);
+
+        e->accept();
+        //MO_DEBUG("ui-item " << idata->getItemId() << " -> param " << param_->name());
+    }
 }
 
 void ParameterWidget::createWidgets_()
@@ -379,7 +422,13 @@ void ParameterWidget::createWidgets_()
         // load button click
         connect(butedit, &QToolButton::clicked, [=]()
         {
-            ptxt->openEditDialog(this);
+#if 1
+            ptxt->openEditDialog( application()->mainWindow() );
+#else
+            // XXX works but is not fully integrated yet
+            auto w = ptxt->createEditWidget( application()->mainWindow() );
+            application()->createDockWidget("parameter " + ptxt->infoName(), w);
+#endif
         });
 
         // reset to default
@@ -450,7 +499,7 @@ void ParameterWidget::updateButtons()
         bmod_->setIcon(iconModulateOff);
     }
 
-    if (param_->isVisibleInGraph())
+    if (param_->isVisibleInGraph() || param_->isVisibleInterface())
         bvis_->setIcon(iconVisibilityOn);
     else
         bvis_->setIcon(iconVisibility);
@@ -568,6 +617,7 @@ void ParameterWidget::addRemoveModMenu_(QMenu * menu, Parameter * param)
         connect(rem, &QMenu::triggered, [=](QAction* a)
         {
             QString ids = a->data().toString();
+            MO_DEBUG(ObjectMenu::getModulatorId(ids)<<" '"<<ObjectMenu::getOutputId(ids)<<"'");
             editor_->removeModulator(param, ObjectMenu::getModulatorId(ids),
                                             ObjectMenu::getOutputId(ids));
         });
@@ -727,9 +777,29 @@ void ParameterWidget::openVisibilityPopup()
     if (!editor_)
         return;
 
-    editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+    QMenu * menu = new QMenu(this);
+    menu->setAttribute(Qt::WA_DeleteOnClose);
+    QAction * a;
 
-    updateButtons();
+    a = menu->addAction(tr("show connector"));
+    a->setCheckable(true);
+    a->setChecked(param_->isVisibleInGraph());
+    connect(a, &QAction::triggered, [=]()
+    {
+        editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+        updateButtons();
+    });
+
+    a = menu->addAction(tr("show in interface"));
+    a->setCheckable(true);
+    a->setChecked(param_->isVisibleInterface());
+    connect(a, &QAction::triggered, [=]()
+    {
+        editor_->setParameterVisibleInterface(param_, !param_->isVisibleInterface());
+        updateButtons();
+    });
+
+    menu->popup(QCursor::pos());
 }
 
 

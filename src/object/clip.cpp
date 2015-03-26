@@ -73,6 +73,7 @@ void Clip::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("clip", tr("clip"));
+    initParameterGroupExpanded("clip");
 
         paramSpeed_ = params()->createFloatParameter("speed", tr("speed"),
                                         tr("The speed multiplier for all sequences in the clip"),

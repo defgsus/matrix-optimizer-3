@@ -32,6 +32,7 @@ public:
 
 
     MO_OBJECT_CONSTRUCTOR(Model3d);
+    ~Model3d();
 
     /** Returns the current geometry settings. */
     const GEOM::GeometryFactorySettings& geometrySettings() const;
@@ -66,7 +67,8 @@ private slots:
     void geometryFailed_();
 
     void setupDrawable_();
-
+    /** Discards the current thread, if any, and sets creator_=0. */
+    void resetCreator_();
 
 private:
     GL::Drawable * draw_;
@@ -85,11 +87,11 @@ private:
         *diffExp_, *bumpScale_,
         *vertexExtrude_, *paramLineWidth_,
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
-    ParameterSelect * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
+    ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
                     * usePointCoord_, *pointSizeAuto_;
-    ParameterText * glslVertex_, *glslVertexOut_;
+    ParameterText * glslVertex_, *glslVertexOut_, *glslFragmentOut_, *glslNormal_;
 
-    GL::Uniform * u_diff_exp_, * u_bump_scale_,
+    GL::Uniform * u_cam_pos_, * u_diff_exp_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_;
 
     bool doRecompile_;

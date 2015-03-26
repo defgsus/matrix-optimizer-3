@@ -1,4 +1,4 @@
-/** @file Files.cpp
+/** @file files.cpp
 
     @brief default / configured Files and filetypes
 
@@ -25,12 +25,12 @@ QString Files::directory(FileType ft)
 {
     // check for directory settings
     QString key = "Directory/" + fileTypeIds[ft];
-    QString dir = settings->getValue(key).toString();
+    QString dir = settings()->getValue(key).toString();
 
     if (dir.isEmpty())
     {
         // or take directory of filename
-        dir = settings->getValue("File/" + fileTypeIds[ft]).toString();
+        dir = settings()->getValue("File/" + fileTypeIds[ft]).toString();
         if (dir.isEmpty())
             // or return current path if both unknown
             return QDir::currentPath();
@@ -45,21 +45,21 @@ QString Files::directory(FileType ft)
 QString Files::filename(FileType ft)
 {
     const QString key = "File/" + fileTypeIds[ft];
-    if (!settings->contains(key))
+    if (!settings()->contains(key))
         return QString();
 
     return
-        settings->getValue(key).toString();
+        settings()->getValue(key).toString();
 }
 
 void Files::setFilename(FileType ft, const QString& fn)
 {
-    settings->setValue("File/" + fileTypeIds[ft], fn);
+    settings()->setValue("File/" + fileTypeIds[ft], fn);
 }
 
 void Files::setDirectory(FileType ft, const QString &path)
 {
-    settings->setValue("Directory/" + fileTypeIds[ft], path);
+    settings()->setValue("Directory/" + fileTypeIds[ft], path);
 }
 
 QString Files::getOpenFileName(FileType ft, QWidget *parent, bool updateDirectory, bool updateFile)
@@ -166,7 +166,7 @@ QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirector
 
 
 
-QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirectory)
+QString Files::getDirectory(FileType ft, QWidget *parent, bool updateDirectory, const QString& title)
 {
     QString fn = directory(ft);
 
@@ -174,7 +174,10 @@ QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirecto
     QFileDialog diag(parent);
     diag.setConfirmOverwrite(false);
     diag.setAcceptMode(QFileDialog::AcceptOpen);
-    diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
+    if (title.isEmpty())
+        diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
+    else
+        diag.setWindowTitle(title);
     diag.setDirectory(fn);
     diag.setFileMode(QFileDialog::Directory);
     diag.setOption(QFileDialog::ShowDirsOnly, true);
@@ -187,19 +190,19 @@ QString Files::getOpenDirectory(FileType ft, QWidget *parent, bool updateDirecto
     if (!fn.isEmpty())
     {
         if (updateDirectory)
-            setDirectory(ft, QFileInfo(fn).absolutePath());
+            setDirectory(ft, fn);
     }
 
     return fn;
 }
 
-void Files::findFiles(FileType ft, bool recursive, QStringList &entryList)
+void Files::findFiles(FileType ft, bool recursive, QStringList &entryList, bool include_directory)
 {
-    findFiles(ft, directory(ft), recursive, entryList);
+    findFiles(ft, directory(ft), recursive, entryList, include_directory);
 }
 
 void Files::findFiles(FileType ft, const QString &directory,
-                      bool recursive, QStringList &entryList)
+                      bool recursive, QStringList &entryList, bool include_directory)
 {
     MO_DEBUG_IO("Files::findFiles(" << ft << ", " << directory << ", "
              << recursive << ")");
@@ -216,8 +219,12 @@ void Files::findFiles(FileType ft, const QString &directory,
     dir.setNameFilters(filters);
 
     QStringList files = dir.entryList();
-    for (auto & f : files)
-        entryList << (directory + QDir::separator() + f);
+    if (include_directory)
+        for (auto & f : files)
+            entryList << (directory + QDir::separator() + f);
+    else
+        for (auto & f : files)
+            entryList << f;
 
     if (recursive)
     {

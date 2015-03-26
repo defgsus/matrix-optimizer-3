@@ -21,6 +21,7 @@
 #include "io/systeminfo.h"
 #include "clientstate.h"
 #include "types/float.h"
+#include "audio/configuration.h"
 #include "network/netlog.h"
 
 class QIODevice;
@@ -156,7 +157,11 @@ public:
         /** Tells server to send a NetEventFileInfo for filename (QString) */
         GET_SERVER_FILE_TIME,
         /** Tells server to send a NetEventFile for filename (QString) */
-        GET_SERVER_FILE
+        GET_SERVER_FILE,
+        /** Signals the client to clear all it's file cache (e.g. delete all files in ./data/cache. */
+        CLEAR_FILE_CACHE,
+        /** The server sends this before stopping to listen. */
+        CLOSE_CONNECTION
     };
 
     static QString requestName(Request);
@@ -378,7 +383,27 @@ private:
 };
 
 
-/** Clients current state info event - typically an answer to NetEventRequest */
+/** Sends audio config to clients */
+class NetEventAudioConfig: public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventAudioConfig)
+
+    // --------- getter -------------------
+
+    const AUDIO::Configuration & config() { return config_; }
+
+    // --------- setter -------------------
+
+    void setConfig(const AUDIO::Configuration& c) { config_ = c; }
+
+private:
+
+    AUDIO::Configuration config_;
+};
+
+
+/** Sends the current scene time to clients. */
 class NetEventTime : public AbstractNetEvent
 {
 public:
@@ -396,6 +421,30 @@ private:
 
     Double time_;
 };
+
+
+/** Sends an ui value to clients */
+class NetEventUiFloat : public AbstractNetEvent
+{
+public:
+    MO_NETEVENT_CONSTRUCTOR(NetEventUiFloat)
+
+    // --------- getter -------------------
+
+    QString id() { return id_; }
+    Double time() { return time_; }
+    Double value() { return value_; }
+
+    // --------- setter -------------------
+
+    void setValue(const QString& id, Double time, Double value) { id_ = id; time_ = time; value_ = value; }
+
+private:
+
+    Double time_, value_;
+    QString id_;
+};
+
 
 } // namespace MO
 

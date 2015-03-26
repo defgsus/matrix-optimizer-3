@@ -18,6 +18,7 @@
 #include <QTime>
 #include <QMouseEvent>
 #include <QKeyEvent>
+#include <QTimer>
 
 #include "gl/opengl_undef.h"
 
@@ -53,6 +54,16 @@ Window::Window()
 
     setSurfaceType(QSurface::OpenGLSurface);
     setFormat(SceneRenderer::defaultFormat());
+/*
+    updateTimer_ = new QTimer(this);
+    updateTimer_->setSingleShot(true);
+    updateTimer_->setInterval(1);
+    connect(updateTimer_, &QTimer::timeout, [=]()
+    {
+        //MO_DEBUG("helo");
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::HighEventPriority);
+    });
+    */
 }
 
 Window::~Window()
@@ -77,7 +88,7 @@ void Window::setScreen(uint screenIndex)
 {
     // XXX workaround because setScreen() is not very reliable right now
     // ( https://bugreports.qt-project.org/browse/QTBUG-33138 )
-    setGeometry(application->screenGeometry(screenIndex));
+    setGeometry(application()->screenGeometry(screenIndex));
 }
 
 void Window::setRenderer(SceneRenderer *renderer)
@@ -137,12 +148,13 @@ void Window::keyPressEvent(QKeyEvent * e)
 
 void Window::renderLater()
 {
-    //MO_DEBUG_GL("Window::renderLater()");
+    //MO_DEBUG_GL("Window::renderLater() pending==" << updatePending_);
 
     if (!updatePending_)
     {
         updatePending_ = true;
-        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::LowEventPriority);
+        //updateTimer_->start();
+        QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::HighEventPriority);
     }
 }
 
@@ -161,7 +173,7 @@ void Window::createRenderer_()
 
 void Window::renderNow()
 {
-    //MO_DEBUG_GL("Window::renderNow()");
+    //MO_DEBUG("Window::renderNow()");
 
     if (!isExposed() || !renderer_)
         return;

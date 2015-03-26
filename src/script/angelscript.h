@@ -14,12 +14,16 @@
 #define MOSRC_SCRIPT_ANGELSCRIPT_H
 
 #include <string>
-#include <angelscript.h>
 #include <QString>
+#include <angelscript.h>
 
 namespace MO {
 
+// ---- forwards ----
+
 class Object;
+
+// --------- string ----------
 
 /** The utf8 string type currently used in communication with angelscript */
 typedef std::string StringAS;
@@ -27,11 +31,24 @@ typedef std::string StringAS;
 QString toString(const StringAS&);
 StringAS toStringAS(const QString&);
 
+// ------- register ----------
+
 /** Registers all default types and functions. */
 void registerDefaultAngelScript(asIScriptEngine *);
 
+// -------- export namespace -----
+
 /** Exports all functions available to a xml file */
 void exportAngelScriptFunctions(const QString& filename);
+
+/** Creates a html overview of the whole MO namespace.
+    XXX Temporary solution... */
+QString getAngelScriptFunctionsHtml();
+
+/** Some example/test code */
+QString exampleAngelScript();
+
+// ----- helper ------
 
 class AngelScriptAutoPtr
 {
@@ -50,7 +67,7 @@ public:
           p_context (0)
     { }
 
-    /** Binds a module for DiscardModule() */
+    /** Binds a context for Release() */
     AngelScriptAutoPtr(asIScriptContext * c)
         : p_engine  (0),
           p_module  (0),

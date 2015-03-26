@@ -13,16 +13,17 @@
 
 #include "object.h"
 #include "objectfactory.h"
-#include "object/util/objecteditor.h"
 #include "scene.h"
+#include "modulatorobjectfloat.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"
 #include "param/modulatoroutput.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
+#include "util/objecteditor.h"
+#include "util/audioobjectconnections.h"
 #include "math/transformationbuffer.h"
-#include "modulatorobjectfloat.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -44,23 +45,25 @@ namespace Private
 
 }
 
-Object::Object(QObject *parent) :
-    QObject                   (parent),
-    p_parameters_             (0),
-    p_paramActiveScope_       (0),
-    p_canBeDeleted_           (true),
-    p_ref_                    (1),
-    p_parentObject_           (0),
-    p_childrenHaveChanged_    (false),
-    p_numberThreads_          (1),
-    p_numberSoundSources_     (0),
-    p_numberMicrophones_      (0),
-    p_sampleRate_             (44100),
-    p_sampleRateInv_          (1.0/44100.0),
-    p_parentActivityScope_    (AS_ON),
-    p_currentActivityScope_   (AS_ON)
-//    parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY)),
-//    currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+Object::Object(QObject *parent)
+    : QObject                   (parent)
+    , p_parameters_             (0)
+    , p_paramActiveScope_       (0)
+    , p_canBeDeleted_           (true)
+    , p_visible_                (true)
+    , p_ref_                    (1)
+    , p_parentObject_           (0)
+    , p_childrenHaveChanged_    (false)
+    , p_numberThreads_          (1)
+    , p_numberSoundSources_     (0)
+    , p_numberMicrophones_      (0)
+    , p_sampleRate_             (44100)
+    , p_sampleRateInv_          (1.0/44100.0)
+    , p_aoCons_                 (0)
+    , p_parentActivityScope_    (AS_ON)
+    , p_currentActivityScope_   (AS_ON)
+//  , parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+//  , currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
 {
     p_parameters_ = new Parameters(this);
 
@@ -74,15 +77,19 @@ Object::Object(QObject *parent) :
 
 Object::~Object()
 {
+    delete p_aoCons_;
+
     // release references on childs
     for (auto c : p_childObjects_)
         c->releaseRef();
 
+#ifndef MO_HAMBURG
     if (p_ref_ > 1)
     {
         MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
-                   << p_ref_ << ". NOTE: ref-counting is not fully implemented yet.");
+                   << p_ref_ << ". NOTE: ref-counting for Objects is not fully implemented yet.");
     }
+#endif
 
     delete p_parameters_;
 
@@ -169,13 +176,23 @@ Object * Object::deserializeTree(IO::DataStream & io)
     if (Scene * scene = qobject_cast<Scene*>(obj))
     {
         scene->updateTree_();
-
-        //YYY Something like below would be useful at the moment
-        //But modulator storage will be changed anyway
-        //scene->removeUninitializedModulators();
+        //scene->clearNullModulators(true);
     }
 
     return obj;
+}
+
+QString Object::getIoLoadErrors() const
+{
+    QString e = ioLoadErrorStr_;
+    for (auto c : childObjects())
+    {
+        auto ce = c->getIoLoadErrors().trimmed();
+        if (ce.size() > 1)
+            e += "\n" + ce;
+    }
+
+    return e;
 }
 
 Object * Object::p_deserializeTree_(IO::DataStream & io)
@@ -205,7 +222,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            delete o;
+            o->releaseRef();
             e << "\nobject creation failed for class '" << className << "'";
             throw;
         }
@@ -213,7 +230,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         // once in a while check stream for errors
         if (io.status() != QDataStream::Ok)
         {
-            delete o;
+            o->releaseRef();
             MO_IO_ERROR(READ, "error deserializing object '"<<idName<<"'.\n"
                         "QIODevice error: '"<<io.device()->errorString()<<"'");
         }
@@ -228,7 +245,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            delete o;
+            o->releaseRef();
             e << "\nCould not read parameters for object '" << idName << "'";
             throw;
         }
@@ -241,6 +258,9 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
 
         o = ObjectFactory::createDummy();
         name = name + " *missing*";
+
+        o->ioLoadErrorStr_ += tr("unknown object of type '%1'\n")
+                                .arg(className);
     }
 
     // set default object info
@@ -271,22 +291,27 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
 
 void Object::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("obj", 2);
+    io.writeHeader("obj", 3);
 
     io << p_canBeDeleted_;
 
     // v2
     io << p_attachedData_;
+    // v3
+    io << p_visible_;
 }
 
 void Object::deserialize(IO::DataStream & io)
 {
-    const auto ver = io.readHeader("obj", 2);
+    const auto ver = io.readHeader("obj", 3);
 
     io >> p_canBeDeleted_;
 
     if (ver >= 2)
         io >> p_attachedData_;
+
+    if (ver >= 3)
+        io >> p_visible_;
 }
 
 
@@ -303,12 +328,14 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
 int Object::objectPriority(const Object *o)
 {
     if (o->isTransformation())
+        return 4;
+    if (o->isGl() || o->isLightSource())
         return 3;
-    if (o->isModulatorObject())
-        return 2;
-    if (o->isAudioUnit() || o->isAudioObject())
+    if (o->type() & TG_MODULATOR)
         return 1;
-    return 0;
+    if (o->isAudioUnit() || o->isAudioObject())
+        return 0;
+    return 2;
 }
 
 Object * Object::findContainingObject(const int typeFlags)
@@ -778,7 +805,7 @@ void Object::deleteObject_(Object * child, bool destroy)
     {
         child->setParent(0);
         if (destroy)
-            delete child;
+            child->releaseRef();
         p_childrenHaveChanged_ = true;
     }
 }
@@ -839,6 +866,53 @@ QSet<QString> Object::getChildIds(bool recursive) const
         ids.insert(o->idName());
 
     return ids;
+}
+
+Object * Object::findObjectByNamePath(const QString &namePath) const
+{
+    bool isRootPath = namePath.startsWith('/');
+
+    QStringList names = namePath.split('/', QString::SkipEmptyParts);
+    if (names.isEmpty())
+        return 0;
+
+    return findObjectByNamePath(names, 0, isRootPath);
+}
+
+Object * Object::findObjectByNamePath(const QStringList &names, int offset, bool firstIsRoot) const
+{
+    if (offset >= names.length())
+        return 0;
+
+    QString name = names[offset];
+    Object * obj = 0;
+    for (auto c : childObjects())
+    if (c->name() == name)
+    {
+        obj = c;
+        break;
+    }
+
+    // first id should be a child of this?
+    if (obj == 0 && firstIsRoot)
+        return 0;
+
+    // found id?
+    if (obj)
+    {
+        // last in path?
+        if (offset+1 == names.size())
+            return obj;
+        // otherwise traverse obj
+        return obj->findObjectByNamePath(names, offset + 1, true);
+    }
+
+    // otherwise check all children branches
+    for (auto c : childObjects())
+        if (auto obj = c->findObjectByNamePath(names, offset, firstIsRoot))
+            return obj;
+
+    return 0;
 }
 
 /*
@@ -1118,7 +1192,11 @@ void Object::onParameterChanged(Parameter * p)
 }
 
 
-
+void Object::initParameterGroupExpanded(const QString &groupId, bool expanded)
+{
+    if (!hasAttachedData(DT_PARAM_GROUP_EXPANDED, groupId))
+        setAttachedData(expanded, DT_PARAM_GROUP_EXPANDED, groupId);
+}
 
 // ----------------- audio sources ---------------------
 
@@ -1164,7 +1242,72 @@ void Object::calculateMicrophoneTransformation(
         TransformationBuffer::copy(objectTransform, m->transformationBuffer());
 }
 
+void Object::assignAudioConnections(AudioObjectConnections * ao)
+{
+    delete p_aoCons_;
+    p_aoCons_ = ao;
+}
+
+AudioObjectConnections * Object::getAssignedAudioConnections() const
+{
+    return p_aoCons_;
+}
+
 // -------------------- modulators ---------------------
+
+void Object::removeNullModulators(bool recursive)
+{
+    for (auto p : params()->parameters())
+        p->clearNullModulators();
+
+    if (recursive)
+        for (auto c : childObjects())
+            c->removeNullModulators(true);
+}
+
+void Object::removeOutsideModulators(bool recursive)
+{
+    // -- get a list of ids of objects that are modulators
+    //    but are not in this tree --
+
+    QSet<QString> ids;
+
+    if (!recursive)
+    {
+        auto modids = params()->getModulatorIds();
+        for (auto id : modids)
+            // modulation from outside ourselfes?
+            if (!findChildObject(id))
+                ids.insert(id);
+    }
+    else
+    {
+        // whole self tree
+        auto all = findChildObjects(TG_ALL, true);
+        all.prepend(this);
+
+        for (Object * o : all)
+        {
+            auto modids = o->params()->getModulatorIds();
+            for (auto id : modids)
+                // modulation from outside ourselfes?
+                if (!findChildObject(id))
+                    ids.insert(id);
+        }
+    }
+
+    if (!ids.isEmpty())
+        removeModulators(ids.toList(), recursive);
+}
+
+void Object::removeModulators(const QList<QString> &modulatorIds, bool recursive)
+{
+    params()->removeModulators(modulatorIds);
+
+    if (recursive)
+        for (auto c : childObjects())
+            c->removeModulators(modulatorIds, recursive);
+}
 
 QList<Modulator*> Object::getModulators(bool recursive) const
 {

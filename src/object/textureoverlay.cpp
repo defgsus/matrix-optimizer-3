@@ -8,6 +8,8 @@
     <p>created 8/12/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "textureoverlay.h"
 #include "io/datastream.h"
 #include "param/parameters.h"
@@ -95,6 +97,7 @@ void TextureOverlay::createParameters()
     params()->endParameterGroup();
 
     params()->beginParameterGroup("texturecolor", tr("color"));
+    initParameterGroupExpanded("texturecolor");
 
         cr_ = params()->createFloatParameter("red", tr("red"), tr("Red amount of color multiplier"), 1.0, 0.1);
         cr_->setMinValue(0.0);
@@ -267,3 +270,5 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

@@ -151,14 +151,15 @@ QString CommandLineParser::helpString(int max_width) const
         // type and default value
         if (p->type() != CommandLineParameter::T_NONE)
         {
-            s << ": " << p->typeName()
-              << ", default = ";
+            s << " " << p->typeName()
+              << " (default = ";
             for (int j=0; j<p->numValues(); ++j)
             {
                 if (j > 0)
                     s << " ";
                 s << p->defaultValue(j).toString();
             }
+            s << ")";
         }
         s << "\n";
 

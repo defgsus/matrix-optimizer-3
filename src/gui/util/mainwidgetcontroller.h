@@ -41,9 +41,12 @@ class SequenceView;
 class Sequencer;
 class SceneSettings;
 class TransportWidget;
-class ServerDialog;
+class ServerView;
 class ClipView;
 class ObjectGraphView;
+class FrontScene;
+class FrontView;
+class FrontItemEditor;
 
 class MainWidgetController : public QObject
 {
@@ -67,10 +70,12 @@ public:
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
+    FrontView * frontView() const { return frontView_; }
+    FrontItemEditor * frontItemEditor() const { return frontItemEditor_; }
     SequenceView * sequenceView() const { return seqView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
-    QObjectInspector * objectInspector() const { return qobjectInspector_; }
-    ServerDialog * serverDialog() const { return serverDialog_; }
+    //QObjectInspector * objectInspector() const { return qobjectInspector_; }
+    ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
 
     void createMainMenu(QMenuBar * menuBar);
@@ -83,16 +88,21 @@ signals:
 
     void windowTitle(const QString& title);
 
-    /** Widgets might have appeared or disappeared */
+    /** Widgets might have appeared or disappeared.
+        XXX Not used yet. */
     void modeChanged();
 
     // ------------- actions -------------------
 
 public slots:
 
+    void quit();
+
     void start();
     void stop();
     void closeAudio();
+    /** Sets CurrentTime and audio engine's time at once */
+    void setSceneTime(Double time);
 
     /** Loads last or creates new */
     void initScene();
@@ -102,6 +112,13 @@ public slots:
     void loadScene();
     //void loadScene(const QString& fn);
     void newScene();
+
+    void newInterface();
+    void loadInterface();
+    void insertInterface();
+    void saveInterfaceAs();
+    void loadInterfacePresets();
+    void saveInterfacePresetsAs();
 
     void renderToDisk();
 
@@ -127,9 +144,11 @@ private slots:
     void onObjectAdded_(MO::Object*);
     void onObjectDeleted_(const MO::Object*);
     void onObjectsDeleted_(const QList<MO::Object*>&);
+    void onParamVisChanged_();
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
     void onSceneTimeChanged_(Double time);
+    void onUiEditModeChanged_(bool isEdit);
 
     void onProjectionSettingsChanged_();
     void updateSceneProjectionSettings_();
@@ -198,6 +217,9 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+    FrontScene * frontScene_;
+    FrontView * frontView_;
+    FrontItemEditor * frontItemEditor_;
 
     TransportWidget * transportWidget_;
 
@@ -205,9 +227,7 @@ private:
          isVisibleClipView_,
          isVisibleSeqView_;
 
-    QObjectInspector * qobjectInspector_;
-
-    ServerDialog * serverDialog_;
+    ServerView * serverView_;
 
     QStatusBar * statusBar_;
     QLabel * sysInfoLabel_;

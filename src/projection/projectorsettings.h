@@ -53,6 +53,7 @@ public:
     Float roll() const { return roll_; }
     Float offsetX() const { return offsetX_; }
     Float offsetY() const { return offsetY_; }
+    Float fisheyeness() const { return fisheyeness_; }
 
     uint numOverlapAreas() const { return overlapAreas_.count(); }
     const QVector<Vec2> & overlapArea(uint idx) const { return overlapAreas_[idx]; }
@@ -73,6 +74,7 @@ public:
     void setRoll(Float v) { roll_ = v; }
     void setOffsetX(Float v) { offsetX_ = v; }
     void setOffsetY(Float v) { offsetY_ = v; }
+    void setFisheyeness(Float v) { fisheyeness_ = v; }
 
     void clearOverlapAreas() { overlapAreas_.clear(); }
     void appendOverlapArea(const QVector<Vec2>& a) { overlapAreas_.append(a); }
@@ -94,7 +96,8 @@ private:
         yaw_,
         roll_,
         offsetX_,
-        offsetY_;
+        offsetY_,
+        fisheyeness_;
 
     QVector<QVector<Vec2>> overlapAreas_;
 };

@@ -1,4 +1,4 @@
-/** @file CameraSpace.h
+/** @file cameraspace.h
 
     @brief Camera matrix container
 
@@ -34,12 +34,14 @@ public:
     /** Returns the field of view in degree */
     Float fieldOfView() const { return fov_; }
 
-    /** The projection matrix. Typically rustum or orthographic */
+    /** The projection matrix. Typically frustum or orthographic */
     const Mat4& projectionMatrix() const { return proj_; }
     /** The to-eye-space matrix (cubeview * view) */
     const Mat4& cubeViewMatrix() const { return cv_; }
     /** The to-eye-space matrix (view) */
     const Mat4& viewMatrix() const { return v_; }
+    /** The center of camera position in world coords */
+    const Vec3& position() const { return pos_; }
     /** Return, if cubemap rendering is active right now. */
     bool isCubemap() const { return isCubemap_; }
 
@@ -52,12 +54,14 @@ public:
     void setCubeViewMatrix(const Mat4& m) { cv_ = m; }
     void setViewMatrix(const Mat4& m) { v_ = m; }
     void setIsCubemap(bool is) { isCubemap_ = is; }
+    void setPosition(const Vec3& p) { pos_ = p; }
 
 private:
 
     uint width_, height_;
     Float fov_;
     Mat4 proj_, cv_, v_;
+    Vec3 pos_;
     bool isCubemap_;
 };
 

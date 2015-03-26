@@ -62,6 +62,7 @@ void ObjectListWidget::setParentObject(Object *parent)
 
     obj_ = parent;
 
+    // Query the ObjectEditor
     root_ = obj_ ? obj_->rootObject() : 0;
     auto editor = root_ && root_->type() == Object::T_SCENE ?
                 static_cast<Scene*>(root_)->editor()
@@ -105,11 +106,23 @@ void ObjectListWidget::updateList_()
         addItem(item);
     }
 
-    for (auto c : obj_->childObjects())
+    for (Object * c : obj_->childObjects())
     {
-        auto item = new ObjectListWidgetItem(c, this, IT_OBJECT);
+        if (c->isVisible())
+        {
+            auto item = new ObjectListWidgetItem(c, this, IT_OBJECT);
+            addItem(item);
+        }
 
-        addItem(item);
+        // show the invisible objects in debug mode
+#ifndef NDEBUG
+        if (!c->isVisible())
+        {
+            auto item = new ObjectListWidgetItem(c, this, IT_OBJECT);
+            item->setBackgroundColor(QColor(40,20,20));
+            addItem(item);
+        }
+#endif
     }
 }
 

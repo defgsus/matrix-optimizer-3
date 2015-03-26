@@ -13,10 +13,15 @@
 #ifndef MOSRC_MATH_NOISEPERLIN_H
 #define MOSRC_MATH_NOISEPERLIN_H
 
+#include <QHash>
+
 #include "types/float.h"
+#include "types/vector.h"
 
 namespace MO {
 namespace MATH {
+
+//#define MO_NP_VORONOI_BUFFER
 
 /** The age-old perlin noise generator as class.
 
@@ -58,6 +63,25 @@ public:
         @todo make noisef() more general? */
     Double noisef(Double arg_x, Double arg_y, Double scale, int oct) const;
 
+
+    Double random(int x) const;
+    Double random(int x, int y) const;
+    Double random(int x, int y, int z) const;
+
+    Vec2 random2(int x, int y) const;
+    Vec3 random3(int x, int y, int z) const;
+
+    /** Returns the distance to the closest point in a jittered grid */
+    Double voronoi(Double x, Double y);
+    Double voronoi(Double x, Double y, Double z);
+
+    /** Returns the distance to the closest point in a jittered grid,
+        while smoothly fading between closest points. */
+    Double s_voronoi(Double x, Double y, Double sm);
+    Double s_voronoi(Double x, Double y, Double z, Double sm);
+
+    Vec3 voronoiCellPos(int x, int y, int z);
+
 private:
 
     void init_();
@@ -77,10 +101,22 @@ private:
         r1 = r0 - 1.0;
     }
 
+    void prepare_(Double arg, Double& t, Int& b0, Int& b1) const
+    {
+        t = arg + N;
+        b0 = ((Int)t) & BM;
+        b1 = (b0+1) & BM;
+    }
+
+
     Int *p,
         B, BM,
         N, NP, NM;
     Double *g1, *g2, *g3;
+
+#ifdef MO_NP_VORONOI_BUFFER
+    QHash<int, Vec3> voro_;
+#endif
 };
 
 } // namespace MATH

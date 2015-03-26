@@ -1,4 +1,4 @@
-/** @file directories.h
+/** @file files.h
 
     @brief default / configured directories and filetypes
 
@@ -43,14 +43,20 @@ public:
     static QString getSaveFileName(FileType ft, QWidget * parent = 0,
                         bool updateDirectory = true, bool updateFile = true);
 
-    static QString getOpenDirectory(FileType ft, QWidget * parent = 0,
-                        bool updateDirectory = true);
+    /** Returns a directory to read from or write into. */
+    static QString getDirectory(const QString& title, QWidget * parent)
+        { return getDirectory(FT_ANY, parent, false, title); }
+
+    /** Returns a directory to read from or write into.
+        If @p title is not empty, it will be used as the title of the dialog. */
+    static QString getDirectory(FileType ft, QWidget * parent = 0,
+                        bool updateDirectory = true, const QString& title = "");
 
     static void findFiles(FileType ft, bool recursive,
-                          QStringList& entryList);
+                          QStringList& entryList, bool include_directory = true);
 
     static void findFiles(FileType ft, const QString& directory, bool recursive,
-                          QStringList& entryList);
+                          QStringList& entryList, bool include_directory = true);
 
     static void getDirectories(const QString& basePath, QStringList& directoryList,
                                bool recursive);

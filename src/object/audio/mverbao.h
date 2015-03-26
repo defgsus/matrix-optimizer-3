@@ -8,6 +8,8 @@
     <p>created 04.12.2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #ifndef MOSRC_OBJECT_AUDIO_MVERBAO_H
 #define MOSRC_OBJECT_AUDIO_MVERBAO_H
 
@@ -41,3 +43,5 @@ private:
 
 
 #endif // MOSRC_OBJECT_AUDIO_MVERBAO_H
+
+#endif // #ifndef MO_DISABLE_EXP

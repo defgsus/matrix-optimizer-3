@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_PAINTER_VALUECURVE_H
 #define MOSRC_GUI_PAINTER_VALUECURVE_H
 
+#include <functional>
+
 #include <QObject>
 #include <QPen>
 
@@ -56,12 +58,15 @@ public:
     // -------------- setter ----------------
 
     /** Set the curve data. Ownership stays with the caller. */
-    void setCurveData(const ValueCurveData * data) { data_ = data; }
+    void setCurveData(const ValueCurveData * data) { func_ = 0; data_ = data; }
+
+    /** Sets a callback for retrieving the value, e.g. f(x) */
+    void setCurveFunction(std::function<Double(Double)> func) { data_ = 0; func_ = func; }
 
     /** Sets the viewspace for the whole painter area given to paint() */
     void setViewSpace(const UTIL::ViewSpace& viewspace) { viewspace_ = viewspace; }
 
-    void setPen(QPen& pen) { pen_ = pen; }
+    void setPen(const QPen& pen) { pen_ = pen; }
 
     /** Sets the alpha channel of the Pen. */
     void setAlpha(int alpha);
@@ -74,12 +79,16 @@ public:
     /** Paints over the whole area of @p p */
     void paint(QPainter & p);
 
-    /** Paints the area specified by @p rect using the whole area of p as viewspace */
-    void paint(QPainter & p, const QRect& rect);
+    /** Paints the area specified by @p updateArea using the whole area of p as viewspace */
+    void paint(QPainter & p, const QRect& updateArea);
+
+    /** Paints the curve into rectangle @p rect within the range of @p updateArea */
+    void paint(QPainter & p, const QRect& rect, const QRect& updateArea);
 
 protected:
 
     const ValueCurveData * data_;
+    std::function<Double(Double)> func_;
 
     UTIL::ViewSpace viewspace_;
 

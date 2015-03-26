@@ -8,9 +8,13 @@
     <p>created 7/22/2014</p>
 */
 
+#include <chrono>
+#include <thread>
+
 #include <portaudio.h>
 
 #include <QMessageBox>
+#include <QThread>
 
 #include "audiodevice.h"
 #include "audiodevices.h"
@@ -26,15 +30,81 @@
 namespace MO {
 namespace AUDIO {
 
+namespace {
 
-// ------------ private portaudio specific data ---------
+/** A fake thread for nil audio processing */
+class FakeAudioThread : public QThread
+{
+public:
+    FakeAudioThread()
+        : doStop_   (false)
+    {
+    }
+
+    ~FakeAudioThread() { if (isRunning()) stop(); }
+
+    void setCallback(std::function<void(const float *, float *)> cb)
+    {
+        callback_ = cb;
+    }
+
+    void setConfiguration(const Configuration& c)
+    {
+        if (isRunning())
+            return;
+
+        config_ = c;
+        in_.resize(config_.numChannelsIn() * config_.bufferSize());
+        out_.resize(config_.numChannelsOut() * config_.bufferSize());
+        period_ = std::chrono::microseconds(
+                    (int64_t)(config_.sampleRateInv() * config_.bufferSize()) * 1000000
+                    );
+    }
+
+    void stop() { doStop_ = true; wait(); }
+
+    void run() Q_DECL_OVERRIDE
+    {
+        doStop_ = false;
+        while (!doStop_)
+        {
+            if (callback_)
+                callback_(&in_[0], &out_[0]);
+
+            std::this_thread::sleep_for(period_);
+        }
+    }
+
+private:
+
+    std::chrono::high_resolution_clock clock_;
+    std::function<void(const float *, float *)> callback_;
+    Configuration config_;
+    std::chrono::duration<double> period_;
+    std::vector<float> in_, out_;
+    bool doStop_;
+};
+
+} // namespace
+
+
+
+
+
+
+
+// ------------ private 3rd-api-and-such specific data ---------
 
 class AudioDevice::Private
 {
 public:
+    Private() : stream(0), fakeThread(0) { }
+
     PaStreamParameters inputParam, outputParam;
     PaStreamFlags streamFlags;
     PaStream *stream;
+
+    FakeAudioThread * fakeThread;
 };
 
 // ---------------- callback ----------------------------
@@ -117,6 +187,51 @@ void AudioDevice::init(int inDeviceIndex, int outDeviceIndex, const Configuratio
          props.bufferSize());
 }
 
+void AudioDevice::initFake(uint numInputChannels,
+                           uint numOutputChannels,
+                           uint sampleRate,
+                           uint bufferSize)
+{
+    MO_DEBUG("AudioDevice::init("
+             << numInputChannels << ", " << numOutputChannels
+             << ", " << sampleRate << ", " << bufferSize << ")");
+
+    // close previous session
+    if (ok_)
+        close();
+
+    if (!p_->fakeThread)
+    {
+        p_->fakeThread = new FakeAudioThread();
+        p_->fakeThread->setCallback([this](const float * inp, float * outp)
+        {
+            if (func_)
+                func_(inp, outp);
+        });
+    }
+
+    if (p_->fakeThread->isRunning())
+        p_->fakeThread->stop();
+
+    p_->fakeThread->setConfiguration(Configuration(
+                                         numInputChannels, numOutputChannels,
+                                         sampleRate, bufferSize));
+
+    //p_->fakeThread->start(QThread::HighestPriority);
+
+    name_ = "null";
+    outName_ = "null";
+    //inDeviceId_ = inDeviceIndex;
+    //outDeviceId_ = outDeviceIndex;
+    conf_.setNumChannelsIn(numInputChannels);
+    conf_.setNumChannelsOut(numOutputChannels);
+    conf_.setSampleRate(sampleRate);
+    conf_.setBufferSize(bufferSize);
+
+    MO_DEBUG_AUDIO("fake audio ok.");
+    ok_ = true;
+}
+
 void AudioDevice::init(int inDeviceIndex,
                        int outDeviceIndex,
                        uint numInputChannels,
@@ -124,14 +239,21 @@ void AudioDevice::init(int inDeviceIndex,
                        uint sampleRate,
                        uint bufferSize)
 {
-    MO_DEBUG("AudioDevice::init(" << inDeviceIndex << ", " << numInputChannels <<
-             ", " << outDeviceIndex << ", " << numOutputChannels << ", " << sampleRate << ", " << bufferSize << ")");
+    MO_DEBUG("AudioDevice::init(" << inDeviceIndex << ", " << outDeviceIndex
+             << ", " << numInputChannels << ", " << numOutputChannels
+             << ", " << sampleRate << ", " << bufferSize << ")");
 
     // init portaudio if not already done
     if (!AudioDevices::pa_initialized_)
     {
         MO_CHECKPA(Pa_Initialize(), "could not initialize audio library");
         AudioDevices::pa_initialized_ = true;
+    }
+
+    if (inDeviceIndex >= Pa_GetDeviceCount() || outDeviceIndex >= Pa_GetDeviceCount())
+    {
+        initFake(numInputChannels, numOutputChannels, sampleRate, bufferSize);
+        return;
     }
 
     // close previous session
@@ -251,12 +373,16 @@ void AudioDevice::close()
     if (play_)
         stop();
 
-    // XXX this error check is somewhat strange
-    // but if we can't close the device,
-    // we break here and leave the ok() flag on
-    MO_CHECKPA(
-        Pa_CloseStream(p_->stream),
-        "could not close audio device '" << name_ << "'");
+    if (p_->stream)
+    {
+        // XXX this error check is somewhat strange
+        // but if we can't close the device,
+        // we break here and leave the ok() flag on
+        MO_CHECKPA(
+            Pa_CloseStream(p_->stream),
+            "could not close audio device '" << name_ << "'");
+        p_->stream = 0;
+    }
 
     // reset params
     ok_ = play_ = false;
@@ -279,7 +405,11 @@ void AudioDevice::start()
 
     if (!ok_) return;
 
-    MO_CHECKPA(Pa_StartStream(p_->stream), "could not start audio stream");
+    if (p_->stream)
+        MO_CHECKPA(Pa_StartStream(p_->stream), "could not start audio stream")
+    else
+        if (p_->fakeThread)
+            p_->fakeThread->start(QThread::HighestPriority);
 
     play_ = true;
 }
@@ -290,15 +420,19 @@ void AudioDevice::stop()
 
     if (!(ok_ && play_)) return;
 
-    MO_CHECKPA(Pa_StopStream(p_->stream), "could not stop audio stream");
+    if (p_->fakeThread)
+        p_->fakeThread->stop();
+
+    if (p_->stream)
+        MO_CHECKPA(Pa_StopStream(p_->stream), "could not stop audio stream");
 
     play_ = false;
 }
 
 bool AudioDevice::isAudioConfigured()
 {
-    const QString inname = settings->getValue("Audio/indevice").toString();
-    const QString outname = settings->getValue("Audio/outdevice").toString();
+    const QString inname = settings()->getValue("Audio/indevice").toString();
+    const QString outname = settings()->getValue("Audio/outdevice").toString();
     // it's enough to have outputs defined
     return !(outname.isEmpty() || outname == "None");
 }
@@ -306,10 +440,10 @@ bool AudioDevice::isAudioConfigured()
 Configuration AudioDevice::defaultConfiguration()
 {
     return Configuration(
-            settings->value("Audio/samplerate", 44100).toInt(),
-            settings->value("Audio/buffersize", 256).toInt(),
-            settings->value("Audio/channelsIn", 0).toInt(),
-            settings->value("Audio/channelsOut", 0).toInt());
+            settings()->value("Audio/samplerate", 44100).toInt(),
+            settings()->value("Audio/buffersize", 256).toInt(),
+            settings()->value("Audio/channelsIn", 0).toInt(),
+            settings()->value("Audio/channelsOut", 0).toInt());
 }
 
 bool AudioDevice::initFromSettings()
@@ -318,9 +452,9 @@ bool AudioDevice::initFromSettings()
 
     // check config
 
-    QString inDeviceName = settings->getValue("Audio/indevice").toString();
+    QString inDeviceName = settings()->getValue("Audio/indevice").toString();
 
-    QString outDeviceName = settings->getValue("Audio/outdevice").toString();
+    QString outDeviceName = settings()->getValue("Audio/outdevice").toString();
     if (outDeviceName.isEmpty())
         return false;
 
@@ -378,10 +512,10 @@ bool AudioDevice::initFromSettings()
     }
 
     // get the other settings
-    uint sampleRate = settings->getValue("Audio/samplerate").toInt();
-    uint bufferSize = settings->getValue("Audio/buffersize").toInt();
-    uint numInputs = settings->getValue("Audio/channelsIn").toInt();
-    uint numOutputs = settings->getValue("Audio/channelsOut").toInt();
+    uint sampleRate = settings()->getValue("Audio/samplerate").toInt();
+    uint bufferSize = settings()->getValue("Audio/buffersize").toInt();
+    uint numInputs = settings()->getValue("Audio/channelsIn").toInt();
+    uint numOutputs = settings()->getValue("Audio/channelsOut").toInt();
 
     // initialize
 

@@ -8,6 +8,8 @@
     <p>created 04.12.2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "mverbao.h"
 #include "audio/3rd/MVerb.h"
 #include "audio/tool/audiobuffer.h"
@@ -167,3 +169,5 @@ void MVerbAO::processAudio(uint bsize, SamplePos pos, uint thread)
 }
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

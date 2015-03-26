@@ -21,6 +21,8 @@ class QMenu;
 namespace MO {
 namespace GUI {
 
+class IconBar;
+
 class ObjectMenu
 {
 public:
@@ -67,6 +69,16 @@ public:
         The hue int is stored in QAction::data().
         -1 is considered gray. */
     static QMenu * createHueMenu(QWidget * parent = 0);
+
+
+    // ------------------ toolbars ---------------------
+
+    static const QString NewObjectMimeType;
+
+    /** Creates a toolbar with icons in groups for the specified object types.
+        The icons will be dragable and have the mime-type NewObjectMimeType
+        and the mime-data contains an utf8 QByteArray of each Object::className() */
+    static IconBar * createObjectToolBar(int objectTypeFlags = 0xffffffff, QWidget * parent = 0);
 
 private:
 

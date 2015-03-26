@@ -320,20 +320,20 @@ void MidiSettingsDialog::saveSettings_()
 
     if (curId_ < 0 || curDeviceName_.isEmpty())
     {
-        settings->setValue("MidiIn/api", "");
-        settings->setValue("MidiIn/device", "");
+        settings()->setValue("MidiIn/api", "");
+        settings()->setValue("MidiIn/device", "");
     }
     else
     {
-        settings->setValue("MidiIn/api", curApiName_);
-        settings->setValue("MidiIn/device", curDeviceName_);
+        settings()->setValue("MidiIn/api", curApiName_);
+        settings()->setValue("MidiIn/device", curDeviceName_);
     }
 }
 
 void MidiSettingsDialog::loadSettings_()
 {
-    curApiName_ = settings->getValue("MidiIn/api").toString();
-    curDeviceName_ = settings->getValue("MidiIn/device").toString();
+    curApiName_ = settings()->getValue("MidiIn/api").toString();
+    curDeviceName_ = settings()->getValue("MidiIn/device").toString();
 
     if (!devices_)
         devices_ = new AUDIO::MidiDevices;

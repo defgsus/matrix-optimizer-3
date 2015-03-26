@@ -1,4 +1,4 @@
-/** @file audiosettings.cpp
+/** @file audiodialog.cpp
 
     @brief Audio settings dialog
 
@@ -101,7 +101,7 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             bufferSize_ = new QSpinBox(this);
             lh->addWidget(bufferSize_);
             bufferSize_->setRange(8, 4096*8);
-            bufferSize_->setValue(settings->getValue("Audio/buffersize").toInt());
+            bufferSize_->setValue(settings()->getValue("Audio/buffersize").toInt());
 
             auto but = new QToolButton(this);
             lh->addWidget(but);
@@ -119,7 +119,7 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             sampleRate_ = new QSpinBox(this);
             lh->addWidget(sampleRate_);
             sampleRate_->setRange(8, 256000);
-            sampleRate_->setValue(settings->getValue("Audio/samplerate").toInt());
+            sampleRate_->setValue(settings()->getValue("Audio/samplerate").toInt());
 
             but = new QToolButton(this);
             lh->addWidget(but);
@@ -137,7 +137,7 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             numInputs_ = new QSpinBox(this);
             lh->addWidget(numInputs_);
             numInputs_->setRange(0, 256);
-            numInputs_->setValue(settings->getValue("Audio/channelsIn").toInt());
+            numInputs_->setValue(settings()->getValue("Audio/channelsIn").toInt());
 
             but = new QToolButton(this);
             lh->addWidget(but);
@@ -155,7 +155,7 @@ AudioDialog::AudioDialog(QWidget *parent, Qt::WindowFlags f)
             numOutputs_ = new QSpinBox(this);
             lh->addWidget(numOutputs_);
             numOutputs_->setRange(1, 256);
-            numOutputs_->setValue(settings->getValue("Audio/channelsOut").toInt());
+            numOutputs_->setValue(settings()->getValue("Audio/channelsOut").toInt());
 
             but = new QToolButton(this);
             lh->addWidget(but);
@@ -283,7 +283,7 @@ void AudioDialog::checkDevices_()
         return;
     }
 
-    QString api = settings->getValue("Audio/api").toString();
+    QString api = settings()->getValue("Audio/api").toString();
 
     // fill api box
     for (uint i=0; i<devices_->numApis(); ++i)
@@ -303,7 +303,7 @@ void AudioDialog::checkDevices_()
 void AudioDialog::fillInDeviceBox_()
 {
     // MH: Backwardcompatibility???
-    QString dev = settings->getValue("Audio/indevice").toString();
+    QString dev = settings()->getValue("Audio/indevice").toString();
 
     inDeviceBox_->clear();
     inDeviceBox_->addItem(tr("No input device"), QVariant(-1));
@@ -332,7 +332,7 @@ void AudioDialog::fillInDeviceBox_()
 void AudioDialog::fillOutDeviceBox_()
 {
     // MH: Backwardcompatibility???
-    QString dev = settings->getValue("Audio/outdevice").toString();
+    QString dev = settings()->getValue("Audio/outdevice").toString();
 
     outDeviceBox_->clear();
     outDeviceBox_->addItem(tr("No output device"), QVariant(-1));
@@ -387,13 +387,13 @@ void AudioDialog::deviceSelected_()
 
         // MH: Do something about samplerates of input and output...
         // maybe match them or allow only matching samplerates...
-        if (!settings->contains("Audio/samplerate"))
+        if (!settings()->contains("Audio/samplerate"))
             sampleRate_->setValue(devices_->getDeviceInfo(outidx)->defaultSampleRate);
-        if (!settings->contains("Audio/buffersize"))
+        if (!settings()->contains("Audio/buffersize"))
             bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
-        if (!settings->contains("Audio/channelsIn"))
+        if (!settings()->contains("Audio/channelsIn"))
             numInputs_->setValue(devices_->getDeviceInfo(inidx)->numInputChannels);
-        if (!settings->contains("Audio/channelsOut"))
+        if (!settings()->contains("Audio/channelsOut"))
             numOutputs_->setValue(devices_->getDeviceInfo(outidx)->numOutputChannels);
     }
 
@@ -484,16 +484,16 @@ void AudioDialog::storeConfig_()
 {
     int inidx =  apiBox_->currentIndex();
     int outidx = apiBox_->currentIndex();
-//    settings->setValue("Audio/api", inidx < 1? "None" : devices_->getApiInfo(inidx-1)->name );
-    settings->setValue("Audio/api", outidx < 1? "None" : devices_->getApiInfo(outidx-1)->name );
+//    settings()->setValue("Audio/api", inidx < 1? "None" : devices_->getApiInfo(inidx-1)->name );
+    settings()->setValue("Audio/api", outidx < 1? "None" : devices_->getApiInfo(outidx-1)->name );
     inidx  = inDeviceBox_->currentIndex();
     outidx = outDeviceBox_->currentIndex();
-    settings->setValue("Audio/indevice", inidx < 1? "None" : devices_->getDeviceInfo(inidx-1)->name );
-    settings->setValue("Audio/outdevice", outidx < 1? "None" : devices_->getDeviceInfo(outidx-1)->name );
-    settings->setValue("Audio/samplerate", sampleRate_->value());
-    settings->setValue("Audio/buffersize", bufferSize_->value());
-    settings->setValue("Audio/channelsIn", numInputs_->value());
-    settings->setValue("Audio/channelsOut", numOutputs_->value());
+    settings()->setValue("Audio/indevice", inidx < 1? "None" : devices_->getDeviceInfo(inidx-1)->name );
+    settings()->setValue("Audio/outdevice", outidx < 1? "None" : devices_->getDeviceInfo(outidx-1)->name );
+    settings()->setValue("Audio/samplerate", sampleRate_->value());
+    settings()->setValue("Audio/buffersize", bufferSize_->value());
+    settings()->setValue("Audio/channelsIn", numInputs_->value());
+    settings()->setValue("Audio/channelsOut", numOutputs_->value());
 }
 
 
@@ -530,9 +530,9 @@ void AudioDialog::startTone_()
     // input device
     int inidx = selectedInDeviceIndex();
     
-    AUDIO::AudioDevices::DeviceInfo * ininf = 0;
+    const AUDIO::AudioDevices::DeviceInfo * ininf = 0;
     if (inidx >= 0)
-        devices_->getDeviceInfo(inidx);
+        ininf = devices_->getDeviceInfo(inidx);
 
     AUDIO::Configuration conf;
     conf.setNumChannelsIn(numInputs_->value());
@@ -645,7 +645,7 @@ void AudioDialog::startTone_()
     {
         QMessageBox::warning(this, tr("Error"),
                              tr("Failed to start audio device '%1' or '%2'.\n%3")
-                             .arg(ininf->name)
+                             .arg(ininf ? ininf->name : tr("None"))
                              .arg(outinf->name)
                              .arg(e.what())
                              );

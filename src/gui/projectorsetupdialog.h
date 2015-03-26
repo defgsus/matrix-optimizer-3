@@ -91,6 +91,7 @@ private slots:
     void pasteProjector_();
     void copyCamera_();
     void pasteCamera_();
+    void exportBlendMaps_();
 
     void createFromClients_();
     void onComboContent_();
@@ -166,6 +167,7 @@ private:
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
         * spinLensRad_,
 #endif
+        * spinFisheyeness_,
         * spinDist_,
         * spinLat_,
         * spinLong_,

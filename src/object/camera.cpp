@@ -73,6 +73,7 @@ void Camera::createParameters()
     ObjectGl::createParameters();
 
     params()->beginParameterGroup("camera", tr("camera settings"));
+    initParameterGroupExpanded("camera");
 
         p_cameraMode_ = params()->createSelectParameter("cammode", tr("render mode"),
                                             tr("Selects the display/render mode for this camera"),
@@ -286,7 +287,7 @@ void Camera::initGl(uint thread)
     if (cubeMapped)
         uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
 
-    // blendtexture slot
+    // set edgeblend-texture slot
     if (sliced)
     {
         auto btex = screenQuad_[thread]->shader()->getUniform("tex_blend", true);
@@ -314,7 +315,7 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = projcam.getViewMatrix();
         // but we need to turn it because the setup was done
         // assuming a dome with it's top/middle in the y direction
-        // while the camera usually points in the -z direction
+        // while the camera usually points -z
         sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
     }
 
@@ -529,7 +530,10 @@ void Camera::drawFramebuffer(uint thread, Double time)
         MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     }
 
-    screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
+    if (isClient() && renderMode() == RM_PROJECTOR_SLICE)
+        screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height());
+    else
+        screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
     fbo->colorTexture()->unbind();
 }
 

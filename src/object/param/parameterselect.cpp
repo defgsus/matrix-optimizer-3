@@ -8,6 +8,8 @@
     <p>created 7/12/2014</p>
 */
 
+#include <QTextStream>
+
 #include "parameterselect.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -50,6 +52,33 @@ void ParameterSelect::deserialize(IO::DataStream &io)
     io.readEnum(value_, defaultValue_, valueIds_, valueList_);
 }
 
+
+QString ParameterSelect::getDocType() const
+{
+    QString str = isBoolean() ? "bool" : "select";
+    str += ", " + QObject::tr("default") + ": " + defaultValueName();
+    return str;
+}
+
+QString ParameterSelect::getDocValues() const
+{
+    QString str;
+    QTextStream html(&str);
+    html << "<b>" + QObject::tr("values") << ":</b><ul>";
+    for (int i=0; i<valueNames().size(); ++i)
+    {
+        html << "<li>"
+             << "<i>" << valueNames().at(i) << "</i>: " << statusTips().at(i)
+             << "</li>";
+    }
+    html << "</ul>";
+
+    return str;
+}
+
+
+
+
 void ParameterSelect::setDefaultValue(int v)
 {
     MO_ASSERT(valueList_.contains(v),
@@ -84,7 +113,7 @@ const QString& ParameterSelect::valueName() const
 const QString& ParameterSelect::valueId() const
 {
     int idx = valueList_.indexOf(value_);
-    MO_ASSERT(idx>=0, "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
+    MO_ASSERT(idx>=0 && idx<valueIds_.size(), "unknown value " << value_ << " in ParameterSelect('" << idName() << "')");
     return valueIds_.at(idx);
 }
 

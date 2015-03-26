@@ -31,6 +31,7 @@
 #include "object/microphone.h"
 #include "object/lightsource.h"
 #include "object/ascriptobject.h"
+#include "object/modulatorobjectfloat.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
@@ -43,9 +44,13 @@
 #include "gl/texture.h"
 #include "gl/rendersettings.h"
 #include "gl/scenedebugrenderer.h"
-#include "tool/locklessqueue.h"
 #include "io/currenttime.h"
+#include "io/xmlstream.h"
+#include "tool/locklessqueue.h"
 #include "projection/projectionsystemsettings.h"
+#include "gui/util/frontscene.h"
+#include "engine/serverengine.h"
+#include "network/netevent.h"
 
 namespace MO {
 
@@ -56,6 +61,7 @@ MO_REGISTER_OBJECT(Scene)
 Scene::Scene(QObject *parent) :
     Object              (parent),
     editor_             (0),
+    frontScene_         (0),
     glContext_          (0),
     releaseAllGlRequested_(0),
     fbSize_             (1024, 1024),
@@ -115,9 +121,13 @@ void Scene::serialize(IO::DataStream & io) const
 
 bool Scene::serializeAfterChilds(IO::DataStream & io) const
 {
-    io.writeHeader("scene_", 1);
+    io.writeHeader("scene_", 2);
 
     audioCon_->serialize(io);
+
+    // v2
+    io << (frontScene_ ? frontScene_->toXml() : QString());
+
     return true;
 }
 
@@ -128,13 +138,23 @@ void Scene::deserialize(IO::DataStream & io)
 
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
+
+#ifdef MO_DISABLE_EXP
+    doMatchOutputResolution_ = true;
+    //fbSizeRequest_ = QSize(0, 0);
+#endif
 }
 
 void Scene::deserializeAfterChilds(IO::DataStream & io)
 {
-    io.readHeader("scene_", 1);
+    const int ver = io.readHeader("scene_", 2);
 
     audioCon_->deserialize(io, this);
+
+    if (ver>=2)
+    {
+        io >> frontSceneXml_;
+    }
 }
 
 
@@ -174,37 +194,18 @@ void Scene::findObjects_()
     if (clipController_)
         clipController_->collectClips();
 
-#if 0
-    // all transformation objects that are or include audio relevant objects
-    posObjectsAudio_.clear();
-    for (auto o : posObjects_)
+    // ui-proxies
+    uiModsFloat_.clear();
+    for (Object * c : allObjects_)
+    if (c->type() & TG_MODULATOR_OBJECT)
     {
-        if (o->isAudioRelevant())
-            posObjectsAudio_.append(o);
+        auto m = static_cast<ModulatorObject*>(c);
+        if (!m->isUiProxy())
+            continue;
+
+        if (m->type() == T_MODULATOR_OBJECT_FLOAT)
+            uiModsFloat_.insert(m->uiId(), static_cast<ModulatorObjectFloat*>(m));
     }
-
-    // all objects with audio sources
-    audioObjects_.clear();
-    for (auto o : allObjects_)
-        if (!o->audioSources().isEmpty())
-        {
-            audioObjects_.append(o);
-            allAudioSources_.append( o->audioSources() );
-        }
-
-    // all objects with microphones
-    numMicrophones_ = 0;
-    microphoneObjects_.clear();
-    for (auto o : allObjects_)
-        if (!o->microphones().isEmpty())
-        {
-            microphoneObjects_.append(o);
-            numMicrophones_ += o->microphones().size();
-        }
-
-    // toplevel audio units
-    topLevelAudioUnits_ = findChildObjects<AudioUnit>(QString(), false);
-#endif
 
 #ifdef MO_DO_DEBUG_TREE
     for (auto o : allObjects_)
@@ -265,6 +266,77 @@ QSet<Object*> Scene::getAllModulators() const
     return set;
 }
 
+ModulatorObject * Scene::createUiModulator(const QString &uiId)
+{
+    // return existing?
+    for (auto o : childObjects())
+        if (auto m = dynamic_cast<ModulatorObject*>(o))
+            if (m->uiId() == uiId)
+                return m;
+    // create
+    /** @todo create the appropriate type */
+    auto m = ObjectFactory::createModulatorObjectFloat("uiproxy_" + uiId);
+    m->setUiId(uiId);
+    addObject(this, m);
+    return m;
+}
+
+QList<ModulatorObject*> Scene::getUiModulatorObjects(const QList<QString>& uiIds) const
+{
+    // find all modulator objects matching any of the ids
+    QList<ModulatorObject*> list;
+    for (auto & id : uiIds)
+    {
+        auto i = uiModsFloat_.find(id);
+        if (i != uiModsFloat_.end())
+            list << i.value();
+    }
+
+    return list;
+}
+
+#if 0
+QList<Modulator*> Scene::getUiModulators(const QList<QString>& uiIds) const
+{
+    // find all modulator objects matching any of the ids
+    auto modobjs = getUiModulatorObjects(uiIds);
+
+    //getModulators()
+    QList<Modulator*> mods;
+    for (ModulatorObject * o : modobjs)
+    {
+        /*auto i = uiModsFloat_.find(id);
+        if (i != uiModsFloat_.end())
+            list << i.value();
+            */
+    }
+
+    return mods;
+}
+#endif
+
+void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
+{
+    auto i = uiModsFloat_.find(uiId);
+    if (i == uiModsFloat_.end())
+    {
+        MO_WARNING("Scene::setUiValue(" << uiId << ", " << value << ") "
+                   "no such ModulatorObject found");
+        return;
+    }
+
+#ifndef MO_DISABLE_SERVER
+    if (isServer() && serverEngine().isRunning())
+    {
+        auto e = new NetEventUiFloat;
+        e->setValue(uiId, timeStamp, value);
+        serverEngine().sendEvent(e);
+    }
+#endif
+    i.value()->setValue(timeStamp, value);
+    render_();
+}
+
 // ----------------------- tree ------------------------------
 
 void Scene::addObject(Object *parent, Object *newChild, int insert_index)
@@ -276,7 +348,14 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
 
     {
         ScopedSceneLockWrite lock(this);
+
         parent->addObject_(newChild, insert_index);
+        // get internal audio cons
+        if (auto acon = newChild->getAssignedAudioConnections())
+        {
+            audioConnections()->addFrom(*acon);
+            newChild->assignAudioConnections(0);
+        }
         parent->p_childrenChanged_();
         newChild->onParametersLoaded();
         newChild->updateParameterVisibility();
@@ -291,12 +370,20 @@ void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int inse
 
     {
         ScopedSceneLockWrite lock(this);
+
         for (auto n : newChilds)
         {
             // make the name unique
             n->setName( parent->makeUniqueName(n->name()) );
             // add (could be faster with a list version...)
             parent->addObject_(n, insert_index++);
+
+            // get internal audio cons
+            if (auto acon = n->getAssignedAudioConnections())
+            {
+                audioConnections()->addFrom(*acon);
+                n->assignAudioConnections(0);
+            }
         }
 
         parent->p_childrenChanged_();
@@ -454,7 +541,7 @@ void Scene::updateTree_()
 {
     MO_DEBUG_TREE("Scene::updateTree_()");
 
-    const int numlights = lightSources_.size();
+    //const int numlights = lightSources_.size();
 
     findObjects_();
 
@@ -467,7 +554,10 @@ void Scene::updateTree_()
     updateChildrenChanged_();
 
     // tell everyone how much lights we have
-    if (numlights != lightSources_.size())
+    //if (numlights != lightSources_.size())
+    // XXX ^the check is okay, but we need to tell
+    // new objects the light sources and that does
+    // not happen currently...
         updateNumberLights_();
 
     // tell all objects how much thread data they need
@@ -667,7 +757,7 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
     }
 
     for (Object * o : deletedObjects_)
-        delete o;
+        o->releaseRef();
 
     deletedObjects_.clear();
 }
@@ -790,9 +880,9 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 }
 
 
-/// @todo this is all to be moved out of this class anyway
+/// @todo this is all to be moved out of this class REALLY!
 
-void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * outputFbo)
+void Scene::renderScene(Double time, uint thread)//, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -859,14 +949,16 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
-        for (auto camera : cameras_)
+        for (Camera * camera : cameras_)
         if (camera->active(time, thread))
         {
             // get camera viewspace
             camera->initCameraSpace(camSpace, thread, time);
 
             // get camera view-matrix
-            const Mat4 viewm = glm::inverse(camera->transformation());
+            const Mat4& cammat = camera->transformation();
+            camSpace.setPosition(Vec3(cammat[3][0], cammat[3][1], cammat[3][2]));
+            const Mat4 viewm = glm::inverse(cammat);
             camSpace.setViewMatrix(viewm);
 
             // for each cubemap
@@ -878,7 +970,7 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
 
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
-                // render all opengl objects
+                // render each opengl object per camera (per cube-face)
                 for (auto o : glObjects_)
                 if (o->active(time, thread))
                 {
@@ -922,24 +1014,31 @@ void Scene::renderScene(Double time, uint thread, GL::FrameBufferObject * output
     int width = glContext_->size().width(),
         height = glContext_->size().height();
     // .. or output fbo
+    /*
     if (outputFbo)
     {
         width = outputFbo->width();
         height = outputFbo->height();
 
         outputFbo->bind();
-    }
+    }*/
+    width = fbSize_.width();
+    height = fbSize_.height();
 
     fboFinal_[thread]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, width, height) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_BLEND) );
-    screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
+    if (isClient())
+        screenQuad_[thread]->draw(width, height);
+    else
+        screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
+
     fboFinal_[thread]->colorTexture()->unbind();
 
-    if (outputFbo)
-        outputFbo->unbind();
+    //if (outputFbo)
+    //    outputFbo->unbind();
 }
 
 void Scene::updateLightSettings_(uint thread, Double time)
@@ -1112,6 +1211,15 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 //    render_();
 }
 
+void Scene::keyDown(int )
+{
+    //MO_DEBUG("down " << key);
+}
+
+void Scene::keyUp(int )
+{
+    //MO_DEBUG("up " << key);
+}
 
 void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
 {
@@ -1131,6 +1239,11 @@ void Scene::setProjectorIndex(uint index)
         return;
 
     projectorIndex_ = index;
+
+    if (index < projectionSettings_->numProjectors())
+        fbSizeRequest_ = QSize(
+                    projectionSettings_->cameraSettings(index).width(),
+                    projectionSettings_->cameraSettings(index).height());
 
     // update all cameras
     for (Camera * c : cameras_)

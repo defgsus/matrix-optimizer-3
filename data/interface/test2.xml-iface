@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+<mo-xml>
+    <user-interface version="1">
+        <interface-item version="2" class="Group" id="item9">
+            <properties version="1">
+                <property id="background-color" v="QColor#ff202020"/>
+                <property id="background-visible" v="bool#true"/>
+                <property id="border" v="double#3"/>
+                <property id="border-color" v="QColor#ffa0a0a0"/>
+                <property id="label-align" ns="Alignment" nv="top-hcenter"/>
+                <property id="label-margin" v="int#0"/>
+                <property id="label-outside" v="bool#true"/>
+                <property id="label-text" v="QString#Kali-Set"/>
+                <property id="label-visible" v="bool#true"/>
+                <property id="padding" v="int#8"/>
+                <property id="position" v="QPoint#40,-56"/>
+                <property id="rounded-size" v="QSize#6,6"/>
+                <property id="size" v="QSize#253,184"/>
+            </properties>
+            <interface-item version="2" class="Float" id="item10">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff203040"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#true"/>
+                    <property id="label-align" ns="Alignment" nv="top-hcenter"/>
+                    <property id="label-margin" v="int#0"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#X"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#8,40"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#16,128"/>
+                    <property id="value-max" v="double#1.5"/>
+                    <property id="value-min" v="double#-0.1"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+            <interface-item version="2" class="Float" id="item11">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff203040"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#true"/>
+                    <property id="label-align" ns="Alignment" nv="top-hcenter"/>
+                    <property id="label-margin" v="int#0"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#Y"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#32,40"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#16,128"/>
+                    <property id="value-max" v="double#1.5"/>
+                    <property id="value-min" v="double#-0.1"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+            <interface-item version="2" class="Float" id="item12">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff203040"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#true"/>
+                    <property id="label-align" ns="Alignment" nv="top-hcenter"/>
+                    <property id="label-margin" v="int#0"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#Z"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#56,40"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#16,128"/>
+                    <property id="value-max" v="double#1.5"/>
+                    <property id="value-min" v="double#-0.1"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+            <interface-item version="2" class="Float" id="item13">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff103050"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#false"/>
+                    <property id="label-align" ns="Alignment" nv="vcenter-right"/>
+                    <property id="label-margin" v="int#2"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#A"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#96,40"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#124,16"/>
+                    <property id="value-max" v="double#1"/>
+                    <property id="value-min" v="double#0"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+            <interface-item version="2" class="Float" id="item14">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff103050"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#false"/>
+                    <property id="label-align" ns="Alignment" nv="vcenter-right"/>
+                    <property id="label-margin" v="int#2"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#B"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#96,64"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#124,16"/>
+                    <property id="value-max" v="double#1"/>
+                    <property id="value-min" v="double#0"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+            <interface-item version="2" class="Float" id="item15">
+                <properties version="1">
+                    <property id="background-color" v="QColor#ff103050"/>
+                    <property id="background-visible" v="bool#true"/>
+                    <property id="border" v="int#0"/>
+                    <property id="border-color" v="QColor#ffa0a0a0"/>
+                    <property id="fader-vertical" v="bool#false"/>
+                    <property id="label-align" ns="Alignment" nv="vcenter-right"/>
+                    <property id="label-margin" v="int#2"/>
+                    <property id="label-outside" v="bool#true"/>
+                    <property id="label-text" v="QString#C"/>
+                    <property id="label-visible" v="bool#true"/>
+                    <property id="padding" v="int#2"/>
+                    <property id="position" v="QPoint#96,88"/>
+                    <property id="rounded-size" v="QSize#0,0"/>
+                    <property id="size" v="QSize#124,16"/>
+                    <property id="value-max" v="double#1"/>
+                    <property id="value-min" v="double#0"/>
+                    <property id="value-off-color" v="QColor#60000000"/>
+                    <property id="value-on-color" v="QColor#60ffffff"/>
+                </properties>
+            </interface-item>
+        </interface-item>
+    </user-interface>
+</mo-xml>

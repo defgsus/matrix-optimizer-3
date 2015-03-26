@@ -561,6 +561,10 @@ struct advanced
     static F noise_2         (F A, F B) { return AdvancedPrivate::noise.noise(A, B); }
     static F noise_3         (F A, F B, F C) { return AdvancedPrivate::noise.noise(A, B, C); }
 
+    static F noisei          (int A) { return AdvancedPrivate::noise.random(A); }
+    static F noisei_2        (int A, int B) { return AdvancedPrivate::noise.random(A, B); }
+    static F noisei_3        (int A, int B, int C) { return AdvancedPrivate::noise.random(A, B, C); }
+
     static F noiseoct        (F A, uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, std::min((uint)10, oct)); }
     static F noiseoct_2      (F A, F B, uint oct)
@@ -568,146 +572,10 @@ struct advanced
     static F noiseoct_3      (F A, F B, F C,uint oct)
         { return AdvancedPrivate::noise.noiseoct(A, B, C, std::min((uint)10, oct)); }
 
-    // -------------- fractal ----------------------------------
-
-    // takes x,y position, returns z
-    static F mandel          (F A, F B)
-    {
-        F   x0 = A,
-            y0 = B,
-            x = 0.0,
-            y = 0.0,
-            tmp = 0.0,
-            z = 0.0;
-        int iter = 0;
-        while (iter < 1000)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            z = x2 + y2;
-            if (z > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return sqrt(z);
-    }
-
-    // takes x,y position, returns iteration
-    static uint mandeli          (F A, F B)
-    {
-        F   x0 = A,
-            y0 = B,
-            x = 0.0,
-            y = 0.0,
-            tmp = 0.0;
-        uint iter = 0;
-        while (iter < 1000)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            if (x2 + y2 > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return iter;
-    }
-
-    static F mandel_3        (F A, F B, uint maxiter)
-    {
-        F
-            x0 = A,
-            y0 = B,
-            x = 0.0,
-            y = 0.0,
-            tmp = 0.0,
-            z = 0.0;
-        uint iter = 0;
-        while (iter < maxiter)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            z = x2 + y2;
-            if (z > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return sqrt(z);
-    }
-
-    // takes x,y position and maxiter, returns iteration
-    static uint mandeli_3        (F A, F B, uint maxiter)
-    {
-        F
-            x0 = A,
-            y0 = B,
-            x = 0.0,
-            y = 0.0,
-            tmp = 0.0;
-        uint iter = 0;
-        while (iter < maxiter)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            if (x2 + y2 > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return iter;
-    }
-
-    static F julia         (F A, F B, F C, F D)
-    {
-        F
-            x0 = C,
-            y0 = D,
-            x = A,
-            y = B,
-            tmp = 0.0,
-            z = 0.0;
-        int iter = 0;
-        while (iter < 1000)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            z = x2 + y2;
-            if (z > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return sqrt(z);
-    }
-
-    static uint juliai          (F A, F B, F C, F D)
-    {
-        F
-            x0 = C,
-            y0 = D,
-            x = A,
-            y = B,
-            tmp = 0.0;
-        uint iter = 0;
-        while (iter < 1000)
-        {
-            const F x2 = x*x,
-                         y2 = y*y;
-            if (x2 + y2 > 2*2) break;
-            tmp = x2 - y2 + x0;
-              y = 2.0*x*y + y0;
-            x = tmp;
-            ++iter;
-        }
-        return iter;
-    }
+    static F voronoi_2       (F A, F B) { return AdvancedPrivate::noise.voronoi(A, B); }
+    static F voronoi_3       (F A, F B, F C) { return AdvancedPrivate::noise.voronoi(A, B, C); }
+    static F svoronoi_2      (F A, F B, F C) { return AdvancedPrivate::noise.s_voronoi(A, B, C); }
+    static F svoronoi_3      (F A, F B, F C, F D) { return AdvancedPrivate::noise.s_voronoi(A, B, C, D); }
 
     // ------------ smoothed number theory --------------
 
@@ -819,6 +687,178 @@ struct advanced
     }
 
 };
+
+// -------------- fractal ----------------------------------
+
+
+template <typename F, typename I>
+struct fractal
+{
+    // takes x,y position, returns z
+    static F mandel          (F A, F B)
+    {
+        F   x0 = A,
+            y0 = B,
+            x = 0.0,
+            y = 0.0,
+            tmp = 0.0,
+            z = 0.0;
+        I iter = 0;
+        while (iter < 1000)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            z = x2 + y2;
+            if (z > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return sqrt(z);
+    }
+
+    // takes x,y position, returns iteration
+    static I mandeli          (F A, F B)
+    {
+        F   x0 = A,
+            y0 = B,
+            x = 0.0,
+            y = 0.0,
+            tmp = 0.0;
+        I iter = 0;
+        while (iter < 1000)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            if (x2 + y2 > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return iter;
+    }
+
+    static F mandel_3        (F A, F B, I maxiter)
+    {
+        F
+            x0 = A,
+            y0 = B,
+            x = 0.0,
+            y = 0.0,
+            tmp = 0.0,
+            z = 0.0;
+        I iter = 0;
+        while (iter < maxiter)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            z = x2 + y2;
+            if (z > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return sqrt(z);
+    }
+
+    // takes x,y position and maxiter, returns iteration
+    static I mandeli_3        (F A, F B, I maxiter)
+    {
+        F
+            x0 = A,
+            y0 = B,
+            x = 0.0,
+            y = 0.0,
+            tmp = 0.0;
+        I iter = 0;
+        while (iter < maxiter)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            if (x2 + y2 > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return iter;
+    }
+
+    static F julia         (F A, F B, F C, F D)
+    {
+        F
+            x0 = C,
+            y0 = D,
+            x = A,
+            y = B,
+            tmp = 0.0,
+            z = 0.0;
+        I iter = 0;
+        while (iter < 1000)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            z = x2 + y2;
+            if (z > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return sqrt(z);
+    }
+
+    static I juliai          (F A, F B, F C, F D)
+    {
+        F
+            x0 = C,
+            y0 = D,
+            x = A,
+            y = B,
+            tmp = 0.0;
+        I iter = 0;
+        while (iter < 1000)
+        {
+            const F x2 = x*x,
+                         y2 = y*y;
+            if (x2 + y2 > 2*2) break;
+            tmp = x2 - y2 + x0;
+              y = 2.0*x*y + y0;
+            x = tmp;
+            ++iter;
+        }
+        return iter;
+    }
+
+    /* http://www.fractalforums.com/new-theories-and-research/very-simple-formula-for-fractal-patterns */
+    static F duckball   (F x0, F y0, F x, F y, F bailout)
+    {
+        F z;
+        I iter = 0;
+        while (iter < 100)
+        {
+            z = x*x + y*y;
+            if (z < 0.0001 || z >= bailout) break;
+            x = std::abs(x) / z + x0;
+            y = std::abs(y) / z + y0;
+            ++iter;
+        }
+        return std::sqrt(z);
+    }
+
+};
+
+
+
+
+
+
+
+
+
 
 } // namespace MATH
 } // namespace MO

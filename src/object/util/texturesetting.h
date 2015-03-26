@@ -26,12 +26,13 @@ class TextureSetting : public QObject
 public:
     enum TextureType
     {
-        TT_NONE,
-        TT_FILE,
-        TT_MASTER_FRAME,
-        TT_MASTER_FRAME_DEPTH,
-        TT_CAMERA_FRAME,
-        TT_CAMERA_FRAME_DEPTH
+        TEX_NONE,
+        TEX_FILE,
+        TEX_ANGELSCRIPT,
+        TEX_MASTER_FRAME,
+        TEX_MASTER_FRAME_DEPTH,
+        TEX_CAMERA_FRAME,
+        TEX_CAMERA_FRAME_DEPTH
     };
     static const QStringList textureTypeNames;
 
@@ -63,7 +64,7 @@ public:
         @p defaultType is the default value for the type parameter.
         If @p enableNone is true, the TT_NONE type is choosable. */
     void createParameters(const QString& id_suffix,
-                          TextureType defaultType = TT_FILE,
+                          TextureType defaultType = TEX_FILE,
                           bool enableNone = false,
                           bool normalMap = false);
 
@@ -116,6 +117,7 @@ public:
 protected slots:
 
     bool setTextureFromImage_(const QString& fn);
+    bool setTextureFromAS_(const QString& script);
     bool updateCameraFbo_();
     bool updateSceneFbo_();
 
@@ -131,6 +133,7 @@ private:
     ParameterSelect * paramType_, *paramInterpol_,
                     *paramWrapX_, *paramWrapY_;
     ParameterFilename * paramFilename_;
+    ParameterText * paramAngelScript_;
     ParameterInt * paramCamera_;
 };
 

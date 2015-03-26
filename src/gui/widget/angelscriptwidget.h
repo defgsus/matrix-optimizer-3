@@ -47,6 +47,8 @@ protected:
 
     bool compile() Q_DECL_OVERRIDE;
 
+    QString getHelpUrl(const QString& token) const Q_DECL_OVERRIDE;
+
 private:
     class Private;
     Private * p_;

@@ -103,6 +103,12 @@ public:
                 gl::GLenum type,
                 void* ptr_to_data);
 
+    /** create 1d, explicit format, input_format, type */
+    bool create(gl::GLsizei width,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
+                void* ptr_to_data);
+
     /** create 2d, explicit format and input_format, type */
     bool create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum format,
@@ -148,7 +154,7 @@ public:
 
     // ---------------- QImage ----------------
 
-    QImage getImage();
+    QImage getImage() const;
 
 private:
 

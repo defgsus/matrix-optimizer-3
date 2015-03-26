@@ -12,6 +12,7 @@
 #define MOSRC_GUI_MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMap>
 
 #include "object/object_fwd.h"
 #include "types/float.h"
@@ -35,7 +36,14 @@ protected:
     void closeEvent(QCloseEvent *);
     //void resizeEvent(QResizeEvent *);
 
+    void keyPressEvent(QKeyEvent *);
+
 public slots:
+
+
+    /** Creates and returns a default dockwidget for @p widget.
+        @p widget must have an object name! */
+    QDockWidget * createDockWidget(const QString& name, QWidget * widget);
 
 private slots:
 
@@ -48,14 +56,11 @@ private:
     void createDockWidgets_();
     void createMenus_();
 
-    /** Creates and returns a default dockwidget for @p widget.
-        @p widget must have an object name! */
-    QDockWidget * createDockWidget_(const QString& name, QWidget * widget);
-
     MainWidgetController * controller_;
 
     QMenu * viewMenu_;
 
+    QMap<QWidget*, QDockWidget*> dockMap_;
 };
 
 } // namespace GUI

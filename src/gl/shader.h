@@ -118,6 +118,24 @@ class Shader
 {
 public:
 
+    /** for CompileMessage */
+    enum ProgramType
+    {
+        P_VERTEX,
+        P_FRAGMENT,
+        P_LINKER
+    };
+
+    struct CompileMessage
+    {
+        ProgramType program;
+        int line;
+        QString text;
+        CompileMessage() { }
+        CompileMessage(ProgramType p, int line, const QString& t)
+            : program(p), line(line), text(t) { }
+    };
+
     // ---------------- ctor -----------------
 
     /** @p name is a user defined name, mainly for help with debugging */
@@ -128,6 +146,9 @@ public:
 
     /** Return the log from the last compilation */
     const QString& log() const { return log_; }
+
+    /** Returns the errors from the last compilation */
+    const QList<CompileMessage>& compileMessages() const { return msg_; }
 
     /** Has the source changed and shader needs recompilation? */
     bool sourceChanged() const { return sourceChanged_; }
@@ -234,13 +255,21 @@ private:
     void getAttributes_();
 
     /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
-    bool compileShader_(gl::GLenum type, const QString& typeName, const QString& source);
+    bool compileShader_(gl::GLenum type, ProgramType pt, const QString& typeName, const QString& source);
+
+    /** Appends @p msg to log_ and msg_ */
+    void addMessage_(ProgramType pt, const QString& msg);
+
+    /** Appends messages to msg_ */
+    void parseLog_(const QString& log, ProgramType pt);
 
     ErrorReporting rep_;
 
     ShaderSource * source_;
 
     QString name_, log_;
+
+    QList<CompileMessage> msg_;
 
     gl::GLuint prog_;
 

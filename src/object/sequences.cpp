@@ -8,6 +8,8 @@
     <p>created 7/1/2014</p>
 */
 
+#if 0
+
 #include "sequences.h"
 #include "io/datastream.h"
 
@@ -38,3 +40,4 @@ void Sequences::deserialize(IO::DataStream & io)
 
 }
 
+#endif

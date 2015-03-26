@@ -99,7 +99,7 @@ void SceneConvertDialog::createWidgets_()
 
 void SceneConvertDialog::chooseInputPath_()
 {
-    QString path = IO::Files::getOpenDirectory(IO::FT_SCENE, this, false);
+    QString path = IO::Files::getDirectory(IO::FT_SCENE, this, false);
     if (path.isEmpty())
         return;
 
@@ -111,7 +111,7 @@ void SceneConvertDialog::chooseInputPath_()
 
 void SceneConvertDialog::chooseOutputPath_()
 {
-    QString path = IO::Files::getOpenDirectory(IO::FT_SCENE, this, false);
+    QString path = IO::Files::getDirectory(IO::FT_SCENE, this, false);
     if (path.isEmpty())
         return;
 

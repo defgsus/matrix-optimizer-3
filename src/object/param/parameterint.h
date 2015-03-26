@@ -31,6 +31,8 @@ public:
 
     const QString& typeName() const { static QString s("int"); return s; }
 
+    virtual QString getDocType() const Q_DECL_OVERRIDE;
+
     // ---------------- getter -----------------
 
     Int defaultValue() const { return defaultValue_; }

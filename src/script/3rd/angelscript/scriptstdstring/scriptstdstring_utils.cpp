@@ -1,6 +1,6 @@
 #ifndef MO_DISABLE_ANGELSCRIPT
 
-#include <Qt> // Q_UNUSED
+#include <Qt> // for Q_UNUSED
 
 #include <assert.h>
 #include "scriptstdstring.h"

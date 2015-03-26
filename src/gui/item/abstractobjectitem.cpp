@@ -24,6 +24,7 @@
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
 #include "objectgraphconnectitem.h"
+#include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
@@ -35,6 +36,7 @@
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
+#include "gui/util/objectmenu.h"
 #include "model/objectmimedata.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -93,7 +95,8 @@ public:
 
 // -------------------------- AbstractObjectItem ------------------------------
 
-
+/** @todo when moving childs within a parent,
+    expand top-left only after certain threshold distance */
 AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     : QGraphicsItem     (parent),
       p_oi_             (new PrivateOI(this))
@@ -267,7 +270,10 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
 
 void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    e->ignore();
+
+    // drop of real object
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
     {
         // avoid self-drop
         auto data = static_cast<const ObjectMimeData*>(e->mimeData());
@@ -280,6 +286,19 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         p_oi_->dragHover = true;
         update();
         e->accept();
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        if (typ < 0)
+            return;
+        // check if dropable
+        if (object()->canHaveChildren(Object::Type(typ)))
+            e->accept();
     }
 }
 
@@ -295,27 +314,50 @@ void AbstractObjectItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * )
 
 void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
-    // analyze mime data
-    if (!e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-        return;
+    e->ignore();
+    p_oi_->dragHover = false;
 
-    // construct a wrapper
-    auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-    auto desc = data->getDescription();
-
-    // analyze further
-    if (!desc.isFromSameApplicationInstance())
+    // drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
     {
-        QMessageBox::information(0,
-                                 QMessageBox::tr("drop object"),
-                                 QMessageBox::tr("Can't drop an object from another application instance."));
+
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
+
+        // analyze further
+        if (!desc.isSameApplicationInstance())
+        {
+            QMessageBox::information(0,
+                                     QMessageBox::tr("drop object"),
+                                     QMessageBox::tr("Can't drop an object from another application instance."));
+            return;
+        }
+
+        if (desc.pointer() && objectScene())
+            objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+
+        e->accept();
         return;
     }
 
-    if (desc.pointer() && objectScene())
-        objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !object()->canHaveChildren(Object::Type(typ)))
+            return;
 
-    p_oi_->dragHover = false;
+        objectScene()->addObject(object(),
+                                 ObjectFactory::createObject(classn),
+                                 mapToGrid(e->scenePos()) - gridPos());
+
+        e->accept();
+        return;
+    }
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -382,18 +424,19 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
     {
         if ((e->pos() - p_oi_->posMouseDown).manhattanLength() > 4)
         {
-            // drag object id (not position)
-            if (e->modifiers() & Qt::CTRL)
+            // start drag object (not position)
+            if (e->modifiers() & Qt::SHIFT)
             {
                 auto drag = new QDrag(scene());
                 auto data = new ObjectMimeData();
                 data->setObject(object());
                 drag->setMimeData(data);
                 drag->setPixmap(p_oi_->icon.pixmap(48, 48));
-                drag->exec(Qt::CopyAction);
+                drag->exec(Qt::LinkAction);
                 return;
             }
 
+            // start drag position
             p_oi_->dragging = true;
             if (!isSelected())
                 setSelected(true);
@@ -415,7 +458,7 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
                                        : QPoint(0,0)));
             if (it == 0 || it == this || object()->hasParentObject(it->object()))
             {
-                setGridPos(newGrid);
+                setGridPos(newGrid, true);
             }
         }
 
@@ -471,13 +514,15 @@ QSize AbstractObjectItem::gridSize() const
                  std::max(s.height(), p_oi_->minimumSize.height()));
 }
 
-void AbstractObjectItem::setGridPos(const QPoint &pos1)
+void AbstractObjectItem::setGridPos(const QPoint &pos1, bool expand)
 {
     // limit to positive parent area
     QPoint pos(pos1);
-    if (parentObjectItem())
+    if (expand && parentObjectItem())
     {
-        pos = QPoint(std::max(1, pos1.x()), std::max(1, pos1.y()));
+        if (pos.x() < 1 || pos.y() < 1)
+            parentObjectItem()->expandTopLeft(1-pos.x(), 1-pos.y());
+        //pos = QPoint(std::max(1, pos1.x()), std::max(1, pos1.y()));
     }
 
     // no change?
@@ -518,6 +563,16 @@ void AbstractObjectItem::setGridSize(const QSize &size)
 
 // --------------------------- global queries ----------------------------------------------------
 
+QList<AbstractObjectItem*> AbstractObjectItem::childObjectItems() const
+{
+    QList<AbstractObjectItem*> ret;
+    auto l = childItems();
+    for (auto c : l)
+        if (c->type() >= AbstractObjectItem::T_BASE)
+            ret << static_cast<AbstractObjectItem*>(c);
+    return ret;
+}
+
 AbstractObjectItem * AbstractObjectItem::childItemAt(const QPoint& pos) const
 {
     // pos is local in parent
@@ -547,7 +602,7 @@ void AbstractObjectItem::updateColors()
 {
     p_oi_->brushBack = ObjectGraphSettings::brushOutline(object());
     p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object(), true);
-    p_oi_->icon = ObjectFactory::iconForObject(object(),
+    p_oi_->icon = AppIcons::iconForObject(object(),
                                 ObjectFactory::colorForObject(object()));
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
 
@@ -674,6 +729,7 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 void AbstractObjectItem::updateConnectors()
 {
     // clear previous items
+    if (scene())
     for (auto i : p_oi_->inputItems)
     {
         scene()->removeItem(i);
@@ -681,6 +737,7 @@ void AbstractObjectItem::updateConnectors()
     }
     p_oi_->inputItems.clear();
 
+    if (scene())
     for (auto i : p_oi_->outputItems)
     {
         scene()->removeItem(i);
@@ -722,6 +779,23 @@ int AbstractObjectItem::channelForPosition(const QPointF &localPos)
     return -1;
 }
 
+void AbstractObjectItem::expandTopLeft(int x, int y)
+{
+    if (x < 1 && y < 1)
+        return;
+
+    x = std::max(0, x);
+    y = std::max(0, y);
+
+    auto childs = childObjectItems();
+    for (AbstractObjectItem * i : childs)
+        i->setGridPos(i->gridPos() + QPoint(x, y));
+
+    auto p = gridPos();
+    setGridPos(QPoint(p.x() - x, p.y() - y), true);
+}
+
+
 void AbstractObjectItem::adjustSizeToChildren()
 {
     // first do children
@@ -734,15 +808,26 @@ void AbstractObjectItem::adjustSizeToChildren()
             o->adjustSizeToChildren();
     }
 
-    // rect of children
-    const auto crect = childrenBoundingRect(true);
     // grid size
     const auto s = ObjectGraphSettings::gridSize();
-    const QSize gs = QSize(std::max(2.0, crect.right() / s.width() + 1),
-                           std::max(2.0, crect.bottom() / s.height() + 1));
+
+    // rect of children
+    const auto crectf = childrenBoundingRect(true);
+    // in grid coords
+    QRect crect(std::round(crectf.left() / s.width()),
+                std::round(crectf.top() / s.height()),
+                std::round(crectf.width() / s.width()),
+                std::round(crectf.height() / s.height())
+                );
+
+    /// @todo also shrink top-left corner
+
+    const QSize gs = QSize(std::max(2, crect.right() + 1),
+                           std::max(2, crect.bottom() + 1));
     setGridSize(gs);
 }
 
+#if 0
 void AbstractObjectItem::adjustRightItems()
 {
     if (!scene())
@@ -777,7 +862,7 @@ void AbstractObjectItem::adjustRightItems()
                                Qt::DescendingOrder);
     */
 }
-
+#endif
 // --------------------------------------- shape and draw -----------------------------------------
 
 QPointF AbstractObjectItem::inputPos(uint c) const
@@ -856,6 +941,9 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
                         ObjectGraphSettings::gridSize().width();
 
     p->drawRoundedRect(r, cornerRadius, cornerRadius);
+
+    //p->setPen(QPen(Qt::green));
+    //p->drawRect(childrenBoundingRect(true));
 
     //p_oi_->icon.paint(p, 0, 0,
     //                  ObjectGraphSettings::gridSize().width(),

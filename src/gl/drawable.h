@@ -47,6 +47,9 @@ public:
     /** Returns true when the Drawable is ready to render */
     bool isReady() const;
 
+    /** Returns true when opengl resources are allocated. */
+    bool isCreated() const;
+
     // ------------- setter ------------------
 
     /** Sets the geometry to draw.

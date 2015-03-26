@@ -8,6 +8,8 @@
     <p>created 8/19/2014</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "sprite.h"
 #include "io/datastream.h"
 #include "io/log.h"
@@ -71,6 +73,7 @@ void Sprite::createParameters()
     params()->endParameterGroup();
 
     params()->beginParameterGroup("color", tr("color"));
+    initParameterGroupExpanded("color");
 
         cr_ = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
         cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
@@ -232,3 +235,5 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

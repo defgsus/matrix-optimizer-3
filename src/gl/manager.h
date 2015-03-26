@@ -46,6 +46,8 @@ public:
 
     SceneRenderer * renderer() const { return renderer_; }
 
+    bool isAnimating() const;
+
 signals:
 
     /* This will signal the creation of a new Context */

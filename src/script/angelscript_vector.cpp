@@ -1,4 +1,4 @@
-/** @file anglescript_vector.cpp
+/** @file angelscript_vector.cpp
 
     @brief
 
@@ -148,7 +148,7 @@ struct vecfunc
     static Float largest(const Vec& v)
         { Float m = v[0]; for (int i=1; i<vectraits<Vec>::num; ++i) m = std::max(m, v[i]); return m; }
 
-    static Float noisef_2(const Vec3& v) { return MATH::advanced<float>::noise_2(v.x, v.y); }
+    static Float noisef_2(const Vec2& v) { return MATH::advanced<float>::noise_2(v.x, v.y); }
     static Float noisef_3(const Vec3& v) { return MATH::advanced<float>::noise_3(v.x, v.y, v.z); }
     static Vec2 noisev2_1(float f) { return Vec2(MATH::advanced<float>::noise(f),
                                                  MATH::advanced<float>::noise(-f - 57.f)); }
@@ -159,6 +159,12 @@ struct vecfunc
                                                  MATH::advanced<float>::noise(-f - 57.f),
                                                  MATH::advanced<float>::noise(f + 1007.f),
                                                  MATH::advanced<float>::noise(-f - 885.f)); }
+
+    static Float voronoi_2(const Vec2& v) { return MATH::advanced<float>::voronoi_2(v.x, v.y); }
+    static Float voronoi_3(const Vec3& v) { return MATH::advanced<float>::voronoi_3(v.x, v.y, v.z); }
+
+    static Float svoronoi_2(const Vec2& v, Float sm) { return MATH::advanced<float>::svoronoi_2(v.x, v.y, sm); }
+    static Float svoronoi_3(const Vec3& v, Float sm) { return MATH::advanced<float>::svoronoi_3(v.x, v.y, v.z, sm); }
 
     static Vec3 euclidean2polar(const Vec3& euclidean)
     {
@@ -249,14 +255,29 @@ struct vecfunc
     static Vec3 closest_point_on_line(const Vec3& p, const Vec3& a, const Vec3& b)
         { return MATH::closest_point_on_line(p, a, b); }
 
-    static float mandel(const Vec2& ri) { return MATH::advanced<Float>::mandel(ri.x, ri.y); }
-    static uint mandeli(const Vec2& ri) { return MATH::advanced<Float>::mandeli(ri.x, ri.y); }
-    static float mandel3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandel_3(ri.x, ri.y, maxiter); }
-    static uint mandeli3(const Vec2& ri, uint maxiter) { return MATH::advanced<Float>::mandeli_3(ri.x, ri.y, maxiter); }
+    static float mandel(const Vec2& ri) { return MATH::fractal<Float,uint>::mandel(ri.x, ri.y); }
+    static uint mandeli(const Vec2& ri) { return MATH::fractal<Float,uint>::mandeli(ri.x, ri.y); }
+    static float mandel3(const Vec2& ri, uint maxiter) { return MATH::fractal<Float,uint>::mandel_3(ri.x, ri.y, maxiter); }
+    static uint mandeli3(const Vec2& ri, uint maxiter) { return MATH::fractal<Float,uint>::mandeli_3(ri.x, ri.y, maxiter); }
 
-    static float julia(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::julia(start.x, start.y, ri.x, ri.y); }
-    static uint juliai(const Vec2& start, const Vec2& ri) { return MATH::advanced<Float>::juliai(start.x, start.y, ri.x, ri.y); }
+    static float julia(const Vec2& ri, const Vec2& start) { return MATH::fractal<Float,uint>::julia(start.x, start.y, ri.x, ri.y); }
+    static uint juliai(const Vec2& ri, const Vec2& start) { return MATH::fractal<Float,uint>::juliai(start.x, start.y, ri.x, ri.y); }
 
+    static float duckball(const Vec2& ri, const Vec2& start, Float bailout) { return MATH::fractal<Float,uint>::duckball(ri.x, ri.y, start.x, start.y, bailout); }
+
+    static Vec3 duckball3(const Vec3& pos, const Vec3& param = Vec3(-.5f, -.4f, -1.578f), uint iter = 32)
+    {
+        Vec3 p = pos;
+        for (int i = 0; i < iter; ++i)
+        {
+            Float mag = glm::dot(p, p);
+            p = glm::abs(p);
+            if (mag != 0)
+                 p /= mag;
+            p += param;
+        }
+        return p;
+    }
 };
 
 //--------------------------------
@@ -289,7 +310,7 @@ struct vecfunc
 template <class Vec>
 void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ----------- object properties ------------
 
@@ -375,7 +396,7 @@ void register_vector_tmpl(asIScriptEngine *engine, const char * typ)
 /** Specific stuff for 2 */
 void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ---------- constructors ----------
     r = engine->RegisterObjectBehaviour("vec2", asBEHAVE_CONSTRUCT,
@@ -410,6 +431,8 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec2>::noisef_2);
     MO__REG_FUNC("%1 noise2(float)", vecfunc<Vec2>::noisev2_1);
+    MO__REG_FUNC("float voronoi(const %1 &in)", vecfunc<Vec2>::voronoi_2);
+    MO__REG_FUNC("float svoronoi(const %1 &in, float sm = 32.f)", vecfunc<Vec2>::svoronoi_2);
 
     MO__REG_FUNC("%1 ulam_spiral(int n)", vecfunc<Vec2>::ulam_spiral);
 
@@ -417,15 +440,17 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
     MO__REG_FUNC("float mandel(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandel3);
     MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag)", vecfunc<Vec2>::mandeli);
     MO__REG_FUNC("uint mandeli(const %1 &in real_and_imag, uint max_iterations)", vecfunc<Vec2>::mandeli3);
-    MO__REG_FUNC("float julia(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::julia);
-    MO__REG_FUNC("uint juliai(const %1 &in start, const %1 &in real_and_imag)", vecfunc<Vec2>::juliai);
+    MO__REG_FUNC("float julia(const %1 &in real_and_imag, const %1 &in start)", vecfunc<Vec2>::julia);
+    MO__REG_FUNC("uint juliai(const %1 &in real_and_imag, const %1 &in start)", vecfunc<Vec2>::juliai);
+    MO__REG_FUNC("float duckball(const %1 &in pos, const %1 &in start = vec2(0.5), float bailout = 10)", vecfunc<Vec2>::duckball);
+
 }
 
 /** Specific stuff for 3 */
 void register_vector_3(asIScriptEngine *engine)
 {
     const char * typ = "vec3";
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------- constructors ----------
 
@@ -469,6 +494,10 @@ void register_vector_3(asIScriptEngine *engine)
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec3>::noisef_3);
     MO__REG_FUNC("%1 noise3(float)", vecfunc<Vec3>::noisev3_1);
+    MO__REG_FUNC("float voronoi(const %1 &in)", vecfunc<Vec3>::voronoi_3);
+    MO__REG_FUNC("float svoronoi(const %1 &in, float sm = 32.f)", vecfunc<Vec3>::svoronoi_3);
+
+    MO__REG_FUNC("%1 duckball3(const %1 &in pos, const %1 &in param = %1(-.5, -.4, -1.578), uint iterations = 32)", vecfunc<Vec3>::duckball3);
 
     MO__REG_FUNC("%1 euclidean2polar(const %1 &in)", vecfunc<Vec3>::euclidean2polar);
     MO__REG_FUNC("%1 polar2euclidean(const %1 &in)", vecfunc<Vec3>::polar2euclidean);
@@ -501,7 +530,7 @@ void register_vector_3(asIScriptEngine *engine)
 template <class Vec>
 void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------------------- methods ------------------
 
@@ -522,7 +551,7 @@ void register_vector_34_tmpl(asIScriptEngine *engine, const char * typ)
 void register_vector_4(asIScriptEngine *engine)
 {
     const char * typ = "vec4";
-    int r;
+    int r; Q_UNUSED(r);
 
     // --------- constructors ----------
 
@@ -590,7 +619,7 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
         _mathwrap##name__::func);
 
 
-    int r;
+    int r; Q_UNUSED(r);
     MO__MATHWRAP(abs, MATH::advanced<Float>::abs);
     MO__MATHWRAP(acos, MATH::advanced<Float>::acos);
     MO__MATHWRAP(acosh, MATH::advanced<Float>::acosh);
@@ -634,7 +663,7 @@ void register_vector_mathwrapper_tmpl(asIScriptEngine *engine, const char * typ)
 /** Registers the three vector types */
 void registerAngelScript_vector(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // forward-declare types
     r = engine->RegisterObjectType("vec2", sizeof(Vec2), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);
@@ -815,7 +844,7 @@ struct matfunc<Mat3>
 template <class Mat>
 void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // ----------- object properties ------------
 
@@ -847,10 +876,10 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
     MO__REG_TRUE_METHOD("%1 &opMulAssign(float)", asMETHODPR(Mat, operator*=, (float), Mat&));
     MO__REG_TRUE_METHOD("%1 &opDivAssign(float)", asMETHODPR(Mat, operator/=, (float), Mat&));
 
-    MO__REG_METHoD("vec4 opMul(const vec4& in)", matfunc<Mat>::matMulVec4);
-    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
-    MO__REG_METHoD("vec3 opMul(const vec3& in)", matfunc<Mat>::matMulVec3);
+    MO__REG_METHoD("vec3 opMul(const vec3& in) const", matfunc<Mat>::matMulVec3);
+    MO__REG_METHoD("vec4 opMul(const vec4& in) const", matfunc<Mat>::matMulVec4);
     MO__REG_FUNC("vec3 opMul(const vec3& in, const %1 &in)", matfunc<Mat>::vec3MulMat);
+    MO__REG_FUNC("vec4 opMul(const vec4& in, const %1 &in)", matfunc<Mat>::vec4MulMat);
 
     // ------------ members -------------------
 
@@ -879,7 +908,7 @@ void register_matrix_tmpl(asIScriptEngine *engine, const char * typ)
 void register_matrix3(asIScriptEngine * engine)
 {
     const char * typ = "mat3";
-    int r;
+    int r; Q_UNUSED(r);
 
     // -------- constructors ----------
 
@@ -905,7 +934,7 @@ void register_matrix3(asIScriptEngine * engine)
 void register_matrix4(asIScriptEngine * engine)
 {
     const char * typ = "mat4";
-    int r;
+    int r; Q_UNUSED(r);
 
     // -------- constructors ----------
 
@@ -933,7 +962,7 @@ void register_matrix4(asIScriptEngine * engine)
 
 void registerAngelScript_matrix(asIScriptEngine * engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // forward-declare the types
     r = engine->RegisterObjectType("mat3", sizeof(Mat3), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS);

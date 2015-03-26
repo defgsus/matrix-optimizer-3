@@ -27,6 +27,7 @@
 #include "gui/modulatordialog.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectmenu.h"
+#include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/model3d.h"
@@ -38,6 +39,7 @@
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
+#include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
 #include "io/application.h"
@@ -77,7 +79,8 @@ public:
             action  (A_NONE),
             connectStartConnectItem (0),
             connectStartItem    (0),
-            connectEndItem      (0)
+            connectEndItem      (0),
+            nextSelectedObject  (0)
     { }
 
     /// Creates the items for o and all of its children
@@ -128,6 +131,8 @@ public:
     ObjectGraphConnectItem * connectStartConnectItem, * connectEndConnectItem;
     AbstractObjectItem * connectStartItem, * connectEndItem;
     QPointF connectStartPos, connectEndPos;
+
+    Object * nextSelectedObject;
 };
 
 
@@ -263,17 +268,21 @@ QList<AbstractObjectItem*> ObjectGraphScene::selectedObjectItems() const
 }
 
 
+/** @todo this happens quite too often, even for button-less mouse-moves!! */
 void ObjectGraphScene::onChanged_()
 {
-    // XXX this comes quite often, even for button-less mouse-moves!!
     //MO_DEBUG("changed");
     p_->resolveLayout();
 }
 
 void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObjectItem * pitem)
 {
+    if (!o->isVisible())
+        return;
+
     int y = 1;
     for (Object * c : o->childObjects())
+    if (c->isVisible())
     {
         // create item
         auto item = new AbstractObjectItem(c);
@@ -287,11 +296,18 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
             item->setExpanded(c->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool());
 
         // set initial position (from gui settings or top-to-bottom)
+        QPoint pos;
         if (c->hasAttachedData(Object::DT_GRAPH_POS))
-            item->setGridPos(c->getAttachedData(Object::DT_GRAPH_POS).toPoint());
+            pos = c->getAttachedData(Object::DT_GRAPH_POS).toPoint();
         else
-            item->setGridPos(QPoint(1, y));
+            pos = QPoint(1, y);
 
+        // limit to child area and find free pos
+        if (pitem)
+            pos = scene->nextFreePosition(pitem, pos);
+
+        item->setGridPos(pos);
+        // remember y extent
         y = std::max(y, item->gridRect().bottom() + 1);
 
         // install in item tree
@@ -402,6 +418,9 @@ void ObjectGraphScene::Private::addConItemMap(Object * o, AudioConnectionItem * 
 
 void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_pos)
 {
+    MO_DEBUG_GUI("ObjectGraphScene::createObjectItem(" << o << ", QPoint("
+             << local_pos.x() << ", " << local_pos.y() << "))");
+
     // create item
     auto item = new AbstractObjectItem(o);
     // save in map
@@ -443,6 +462,13 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
 
     // create modulator items
     createModulatorItems(o);
+
+    MO_DEBUG(nextSelectedObject << " " << o);
+    if (nextSelectedObject == o)
+    {
+        nextSelectedObject = 0;
+        item->setSelected(true);
+    }
 }
 
 void ObjectGraphScene::Private::resolveLayout(bool updateConnections)
@@ -636,13 +662,24 @@ QPoint ObjectGraphScene::nextFreePosition(Object *parent, const QPoint &pos1) co
 {
     auto item = itemForObject(parent);
     if (!item)
+        /** @todo find next free position in scene! */
         return pos1;
+    return nextFreePosition(item, pos1);
+}
 
+QPoint ObjectGraphScene::nextFreePosition(AbstractObjectItem * item, const QPoint &pos1) const
+{
     QPoint pos(pos1);
-    while (p_->childItemAt(item, pos))
+    // limit to child area
+    pos.setX( std::max(pos.x(), 1));
+    pos.setY( std::max(pos.y(), 1));
+//    MO_DEBUG("find next free pos for " << pos.x() << ", " << pos.y());
+    auto i = p_->childItemAt(item, pos);
+    while (i != 0 && i != item)
     {
-        qDebug() << "failed for" << pos;
+//        qDebug() << "failed for" << pos;
         ++pos.ry();
+        i = p_->childItemAt(item, pos);
     }
 
     return pos;
@@ -798,6 +835,90 @@ void ObjectGraphScene::Private::endConnection()
 }
 
 
+
+
+// ----------------------------- drag/drop --------------------------------------
+
+/** @todo drag-drop for ObjectGraphScene */
+#if 0
+void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    e->ignore();
+
+    /// @todo drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        //e->accept();
+        e->ignore();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+            return;
+        /// @todo whatever we do here, the event will not be accepted by the framework
+        MO_DEBUG("yes");
+        e->setAccepted(true);
+        e->setDropAction(Qt::CopyAction);
+        //e->acceptProposedAction();
+        return;
+    }
+
+    QGraphicsScene::dragEnterEvent(e);
+}
+
+
+void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // !! this event comes before the items, pew...
+    e->ignore();
+    QGraphicsScene::dropEvent(e);
+    MO_DEBUG("after org: accepted == " << e->isAccepted());
+    //if (e->isAccepted())
+        return;
+
+    /// @todo drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        //e->accept();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        MO_DEBUG("drop");
+
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+            return;
+
+        addObject(p_->root,
+                  ObjectFactory::createObject(classn),
+                  mapToGrid(e->scenePos()));
+
+        e->accept();
+        return;
+    }
+}
+#endif
+
+
+
+
+
+
+
+
 // ------------------------------ mouse events ----------------------------------
 
 void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
@@ -937,7 +1058,7 @@ void ObjectGraphScene::drawForeground(QPainter *p, const QRectF &)
 
 void ObjectGraphScene::Private::showPopup()
 {
-    auto popup = new QMenu(application->mainWindow());
+    auto popup = new QMenu(application()->mainWindow());
     popup->setAttribute(Qt::WA_DeleteOnClose, true);
 
     popup->addActions(actions);
@@ -1162,7 +1283,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
         a->setShortcut(Qt::CTRL + Qt::Key_C);
         connect(a, &QAction::triggered, [this, items]()
         {
-            application->clipboard()->setMimeData(scene->mimeData(items));
+            application()->clipboard()->setMimeData(scene->mimeData(items));
         });
 
         // delete
@@ -1181,7 +1302,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
     if (!plural)
     {
-        const auto data = application->clipboard()->mimeData();
+        const auto data = application()->clipboard()->mimeData();
         const bool isClipboard = data->formats().contains(ObjectTreeMimeData::objectMimeType);
 
         if (isClipboard)
@@ -1192,9 +1313,10 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
             // paste
             a = actions.addAction(tr("Paste into %1").arg(pname), scene);
+            a->setShortcut(Qt::CTRL + Qt::Key_P);
             connect(a, &QAction::triggered, [=]()
             {
-                scene->dropMimeData(application->clipboard()->mimeData(), popupGridPos);
+                scene->dropMimeData(application()->clipboard()->mimeData(), popupGridPos);
             });
         }
     }
@@ -1281,7 +1403,7 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
                 curprio = Object::objectPriority(o);
             }
 
-            QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), scene);
+            QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), scene);
             a->setData(o->className());
             if (with_shortcuts)
             {
@@ -1307,6 +1429,8 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
 #ifdef QT_DEBUG
     //o->dumpAttachedData();
 #endif
+    if (!o->isVisible())
+        return;
 
     const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
                           ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
@@ -1319,6 +1443,7 @@ void ObjectGraphScene::onObjectAdded_(Object * o)
 void ObjectGraphScene::onObjectsAdded_(const QList<Object*>& list)
 {
     for (auto o : list)
+    if (o->isVisible())
     {
         const QPoint pos = o->hasAttachedData(Object::DT_GRAPH_POS)
                           ? o->getAttachedData(Object::DT_GRAPH_POS).toPoint()
@@ -1435,7 +1560,8 @@ void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint
 
     newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
-    p_->root->editor()->addObject(parent, newObject, insert_index);
+    p_->nextSelectedObject = newObject;
+    p_->root->editor()->addObject(parent, newObject, insert_index);    
 }
 
 void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
@@ -1550,7 +1676,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
 
     // NOTE: dynamic_cast or qobject_cast won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast works alright after we checked the MimiType.
+    // a different instance. But static_cast works alright after we checked the MimeType.
     // It's important to not rely on class members of ObjectTreeMimeData
     // but to manage everything per QMimeData::data()
     auto objdata = static_cast<const ObjectTreeMimeData*>(data);

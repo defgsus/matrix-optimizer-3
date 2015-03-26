@@ -133,6 +133,14 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
 {
     Vec2 st = Vec2(s, t);// * sScale_ + sOffset_;
 
+    /* // distortion WITHOUT offset
+    if (set_.fisheyeness() != 0.)
+    {
+        Float distort = set_.fisheyeness() * MATH::length_safe(st);
+        st *= (1.f + distort);
+    }
+    */
+
     Vec4 pos = inverseFrustum_ * Vec4(st.x, st.y, -zNear_, 1);
     pos /= pos.w;
 
@@ -146,6 +154,15 @@ void ProjectorMapper::getRay(Float s, Float t, Vec3 *ray_origin, Vec3 *ray_direc
     */
 
     Vec3 dir = MATH::normalize_safe(Vec3(dirf));
+
+    // distortion WITH offset
+    if (set_.fisheyeness() != 0.)
+    {
+        Float distort = 1.f + set_.fisheyeness() * MATH::length_safe(Vec2(dir.x, dir.y));
+        dir.x *= distort;
+        dir.y *= distort;
+        dir = MATH::normalize_safe(Vec3(dir));
+    }
 
     *ray_origin =    Vec3(trans_ * pos);
     *ray_direction = Vec3(trans_ * Vec4(dir, (Float)0));

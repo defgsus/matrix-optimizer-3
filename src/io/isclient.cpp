@@ -40,7 +40,7 @@ bool isServer()
 #ifndef MO_DISABLE_CLIENT
 void setThisApplicationToClient()
 {
-    MO_ASSERT(!application, "Can't set to client mode after creation of Application");
+    MO_ASSERT(!application(), "Can't set to client mode after creation of Application");
 
     isClient_ = true;
 }

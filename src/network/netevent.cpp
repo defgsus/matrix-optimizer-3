@@ -21,6 +21,7 @@
 #include "object/objectfactory.h"
 #include "object/scene.h"
 #include "tool/stringmanip.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -126,6 +127,8 @@ QString NetEventRequest::requestName(Request r)
         case SET_PROJECTION_SETTINGS: return "SET_PROJECTION_SETTINGS";
         case GET_SERVER_FILE_TIME: return "GET_SERVER_FILE_TIME";
         case GET_SERVER_FILE: return "GET_SERVER_FILE";
+        case CLEAR_FILE_CACHE: return "CLEAR_FILE_CACHE";
+        case CLOSE_CONNECTION: return "CLOSE_CONNECTION";
     }
     return "*UNKNOWN*";
 }
@@ -311,6 +314,8 @@ void NetEventFile::loadFile(const QString &fn)
 
 bool NetEventFile::saveFile(const QString &fn) const
 {
+    MO_DEBUG("NetEventFile::saveFile(" << fn << ") data_.size() == " << data_.size());
+
     QFile f(fn);
     if (!f.open(QFile::WriteOnly))
     {
@@ -411,6 +416,33 @@ void NetEventClientState::deserialize(IO::DataStream &io)
 
 
 
+MO_REGISTER_NETEVENT(NetEventAudioConfig)
+
+NetEventAudioConfig::NetEventAudioConfig()
+{
+}
+
+QString NetEventAudioConfig::infoName() const
+{
+    std::stringstream s; s << config_;
+    return AbstractNetEvent::infoName() + QString("[%1]").arg(s.str().c_str());
+}
+
+void NetEventAudioConfig::serialize(IO::DataStream &io) const
+{
+    io << config_.sampleRate() << config_.bufferSize()
+       << config_.numChannelsIn() << config_.numChannelsOut();
+}
+
+void NetEventAudioConfig::deserialize(IO::DataStream &io)
+{
+    uint sr, bs, nin, nout;
+    io >> sr >> bs >> nin >> nout;
+    config_ = AUDIO::Configuration(sr, bs, nin, nout);
+}
+
+
+
 
 MO_REGISTER_NETEVENT(NetEventTime)
 
@@ -434,6 +466,30 @@ void NetEventTime::deserialize(IO::DataStream &io)
 }
 
 
+
+
+
+
+MO_REGISTER_NETEVENT(NetEventUiFloat)
+
+NetEventUiFloat::NetEventUiFloat()
+{
+}
+
+QString NetEventUiFloat::infoName() const
+{
+    return AbstractNetEvent::infoName() + QString("(%1, %2, %3)").arg(id_).arg(time_).arg(value_) + ")";
+}
+
+void NetEventUiFloat::serialize(IO::DataStream &io) const
+{
+    io << time_ << value_ << id_;
+}
+
+void NetEventUiFloat::deserialize(IO::DataStream &io)
+{
+    io >> time_ >> value_ >> id_;
+}
 
 
 

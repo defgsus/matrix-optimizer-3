@@ -152,6 +152,7 @@ void SequenceFloat::createParameters()
     // ------ value ----------
 
     params()->beginParameterGroup("value", tr("value"));
+    initParameterGroupExpanded("value");
 
         p_mode_ = params()->createSelectParameter("seq_mode", tr("sequence type"),
                 tr("Selects the type of the sequence content"),

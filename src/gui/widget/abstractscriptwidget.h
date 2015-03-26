@@ -53,20 +53,32 @@ public slots:
         avoids the internal textChanged() signal. */
     void setSyntaxHighlighter(QSyntaxHighlighter * );
 
+    /** If updates are optional, a checkbox and/or an update button is visible.
+        Updates, e.g. scriptTextChanged() signal is then only emitted on user's request.
+        Default is false. */
+    void setUpdateOptional(bool enable = true);
+
+    /** Emit this from compile() generally.
+        @p line is zero-based */
+    void addCompileMessage(int line, MessageType t, const QString & text);
+
 signals:
 
     /** Only emitted when the changed script is valid */
     void scriptTextChanged();
 
-    // -------------- protected interface ------------------
 protected:
+
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+
+    // -------------- protected interface ------------------
 
     /** Override to compile the script and check for errors */
     virtual bool compile() = 0;
 
-    /** Emit this from compile().
-        @p line is zero-based */
-    void addCompileMessage(int line, MessageType t, const QString & text);
+    /** Override to return an internal html reference for the type of script.
+        Optionally return an anchor using the word under cursor */
+    virtual QString getHelpUrl(const QString& token) const = 0;
 
 private:
     class PrivateSW;

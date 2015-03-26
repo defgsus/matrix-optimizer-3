@@ -21,6 +21,7 @@
 class QTcpSocket;
 
 namespace MO {
+namespace AUDIO { class Configuration; }
 
 class Scene;
 
@@ -68,10 +69,10 @@ public:
 
     /** Returns the one tcp server */
     TcpServer * tcpServer() const { return server_; }
-
-    /** Returns the audio stream to send audio buffers to clients */
-    UdpAudioConnection * getAudioStream();
-
+#if 0
+    /** Returns the audio stream object for sending audio buffers to clients */
+    UdpAudioConnection * getAudioOutStream();
+#endif
     /** Creates a new projection set from the info of the
         connected clients.
         @note If no client is connected, the settings will not
@@ -115,6 +116,11 @@ public slots:
     void setClientIndex(int index, int client_index);
     void setDesktopIndex(int index, int desktopIndex);
 
+    /** Asks the client to clear it's complete file cache. */
+    void sendClearFileCache(int index);
+
+    void getClientState(int index);
+
     // -- commands for all clients --
 
     /** Sends the current default ProjectionSystemSettings to all clients */
@@ -124,7 +130,10 @@ public slots:
     bool sendScene(Scene * scene);
 
     /** Start and stop playback */
-    void setScenePlaying(bool enabled);
+    bool setScenePlaying(bool enabled);
+
+    /** Sends off the audio config (mainly buffersize) to clients */
+    bool sendAudioConfig(const AUDIO::Configuration& c);
 
 private slots:
 
@@ -143,6 +152,7 @@ private:
     void getSysInfo_(ClientInfo&);
     void getClientIndex_(ClientInfo&);
     void sendProjectionSettings_(ClientInfo&);
+    void sendClose_();
 
     QList<ClientInfo> clients_;
 

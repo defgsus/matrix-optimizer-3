@@ -13,6 +13,8 @@
 #include <cassert>
 
 #include <QString>
+#include <QFile>
+#include <QTextStream>
 
 #include "angelscript.h"
 #include "angelscript_vector.h"
@@ -21,6 +23,7 @@
 #include "angelscript_geometry.h"
 #include "angelscript_timeline.h"
 #include "angelscript_network.h"
+#include "angelscript_image.h"
 #include "3rd/angelscript/scriptmath/scriptmathcomplex.h" // XXX deprecated: will be replaced
 #include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
@@ -54,6 +57,7 @@ namespace {
     void angelPrint(const StringAS& s)
     {
         MO_DEBUG("angelscript: " << toString(s));
+        Q_UNUSED(s)
     }
 
 } // namespace
@@ -67,6 +71,7 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
     //engine->SetDefaultNamespace("MO");
     registerAngelScript_vector(engine);
     registerAngelScript_math(engine);
+    registerAngelScript_image(engine);
     registerAngelScript_timeline(engine);
     registerAngelScript_geometry(engine);
     registerAngelScript_object(engine);
@@ -77,8 +82,13 @@ void registerDefaultAngelScript(asIScriptEngine * engine)
     //    registerAngelScript_rootObject(engine, object);
 
     int r = engine->RegisterGlobalFunction("void print(const string & in)", asFUNCTION(angelPrint), asCALL_CDECL); assert( r >= 0 );
+    Q_UNUSED(r)
 }
 
+
+
+
+// -------------------------------- namespace export -----------------------
 
 namespace {
 
@@ -179,8 +189,110 @@ void exportAngelScriptFunctions(const QString & filename)
     xml.save(filename);
 }
 
+namespace {
+
+    void exportFunc(QTextStream& html, asIScriptFunction * func)
+    {
+        const QString
+                //name = QString::fromUtf8(func->GetName()),
+                decl = QString::fromUtf8(func->GetDeclaration(true, false, true));
+
+        html << "<p><b>" << decl.toHtmlEscaped() << "</b></p>";
+    }
+} // namespace
+
+QString getAngelScriptFunctionsHtml()
+{
+    QString retstr;
+    QTextStream html(&retstr);
+
+    asIScriptEngine * engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+    AngelScriptAutoPtr deleter_(engine);
+
+    registerDefaultAngelScript(engine);
+
+    // global functions
+    html << "<h2>global functions</h2>\n";
+
+    for (asUINT i=0; i<engine->GetGlobalFunctionCount(); ++i)
+    {
+        asIScriptFunction * func = engine->GetGlobalFunctionByIndex(i);
+        MO_ASSERT(func, "function " << i << " not found");
+        exportFunc(html, func);
+        html << "\n";
+    }
+
+    // object types
+    html << "<h2>classes</h2><ul>\n";
+    for (asUINT i=0; i<engine->GetObjectTypeCount(); ++i)
+    {
+        html << "<li>";
+
+        asIObjectType* obj = engine->GetObjectTypeByIndex(i);
+        const QString
+                name = QString::fromUtf8(obj->GetName());
+
+        html << "<h3>" << name << "</h3>\n";
+
+        // object properties
+        html << "<p>properties</p><ul>";
+        for (asUINT j=0; j<obj->GetPropertyCount(); ++j)
+        {
+            const char * name, * decl;
+            obj->GetProperty(j, &name);
+            decl = obj->GetPropertyDeclaration(j);
+
+            html << "<li>" << QString::fromUtf8(decl).toHtmlEscaped() << "</li>";
+        }
+        html << "</ul>";
+
+        // object behaviours (c/dtors)
+        html << "<p>behaviours</p><ul>";
+        for (asUINT j=0; j<obj->GetBehaviourCount(); ++j)
+        {
+            asIScriptFunction * func = obj->GetBehaviourByIndex(j, 0);
+            MO_ASSERT(func, "behaviour " << i << " not found");
+            html << "<li>";
+            exportFunc(html, func);
+            html << "</li>";
+        }
+        html << "</ul>";
+
+        // object methods
+        html << "<p>methods</p><ul>";
+        for (asUINT j=0; j<obj->GetMethodCount(); ++j)
+        {
+            asIScriptFunction * func = obj->GetMethodByIndex(j);
+            MO_ASSERT(func, "function " << i << " not found");
+            html << "<li>";
+            exportFunc(html, func);
+            html << "</li>";
+        }
+        html << "</ul>";
+
+        html << "</li>\n";
+    }
+    html << "</ul>";
+
+    return retstr;
+}
+
+
+
+QString exampleAngelScript()
+{
+    QFile f(":/help/example_angelscript.txt");
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+        return QString();
+    QTextStream s(&f);
+    return s.readAll();
+}
+
+
+
 
 } // namespace MO
+
 
 
 

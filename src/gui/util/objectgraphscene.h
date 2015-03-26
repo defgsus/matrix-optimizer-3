@@ -55,6 +55,7 @@ public:
 
     /** Returns the next free position inside parent */
     QPoint nextFreePosition(Object * parent, const QPoint& localPos) const;
+    QPoint nextFreePosition(AbstractObjectItem * item, const QPoint& localPos) const;
 
     // -------------- item getter --------------
 
@@ -156,7 +157,10 @@ private slots:
     void onParameterVisibilityChanged_(MO::Parameter*);
 
 protected:
-
+#if 0
+    virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+#endif
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;

@@ -221,6 +221,10 @@ void AudioObject::processAudioBase(uint bufferSize, SamplePos pos, uint thread)
     p_ao_->lastOutputSamplePos[thread] = pos + bufferSize - 1;
 }
 
+void AudioObject::clientFakeAudio(uint bufferSize, SamplePos pos, uint thread)
+{
+    p_ao_->lastOutputSamplePos[thread] = pos + bufferSize - 1;
+}
 
 
 

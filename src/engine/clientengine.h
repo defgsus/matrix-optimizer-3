@@ -17,14 +17,17 @@
 #include "network/network_fwd.h"
 #include "io/filetypes.h"
 #include "types/float.h"
+#include "audio/configuration.h"
 
 namespace MO {
-class Scene;
-class ClientEngineCommandLine;
 namespace GUI { class InfoWindow; }
 
+class Scene;
 class Client;
 class ClientEngine;
+class ClientEngineCommandLine;
+class AudioEngine;
+
 
 /** Returns singleton instance */
 ClientEngine & clientEngine();
@@ -59,6 +62,8 @@ public slots:
 
     /** Sets the current Scene. Ownership is taken. */
     void setSceneObject(Scene *);
+
+    void setAudioConfig(const AUDIO::Configuration&);
 
 private slots:
 
@@ -98,6 +103,8 @@ private:
     Client * client_;
 
     Scene * scene_, * nextScene_;
+    AudioEngine * audioEngine_;
+    AUDIO::Configuration audioConfig_;
 
     ClientEngineCommandLine * cl_;
 

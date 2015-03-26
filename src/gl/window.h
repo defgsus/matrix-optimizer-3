@@ -32,6 +32,8 @@ public:
     explicit Window();
     ~Window();
 
+    bool isAnimating() const { return animating_; }
+
     /** Returns the opengl renderer associated to this window */
     SceneRenderer * renderer() const { return renderer_; }
 
@@ -102,6 +104,7 @@ private:
         animating_;
 
     QTime * messure_;
+    QTimer * updateTimer_;
 
     double fps_;
 

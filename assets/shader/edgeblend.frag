@@ -5,7 +5,7 @@ out vec4 fragColor;
 
 uniform int u_index;
 uniform float u_dome_radius;
-uniform float u_margin;
+uniform vec2  u_margin;
 uniform vec2  u_nearFar[MO_NUM_PROJECTORS];
 uniform mat4  u_projection[MO_NUM_PROJECTORS];
 uniform mat4  u_inverseProjection[MO_NUM_PROJECTORS];
@@ -91,8 +91,49 @@ vec2 map_from_dome(in int index, in vec3 pdome)
 
 float inside_distance(vec2 slice)
 {
-    return float(abs(slice.x)<=1) * float(abs(slice.y)<=1) * min(1-abs(slice.x),1-abs(slice.y));
+    return    float(abs(slice.x)<=1)
+            * float(abs(slice.y)<=1)
+            * min(1-abs(slice.x), 1-abs(slice.y));
 }
+
+#if 1
+
+float inside_distance_other(vec2 slice)
+{
+    return    float(abs(slice.x)<=1)
+            * float(abs(slice.y)<=1)
+            * min(1-abs(slice.x), 1-abs(slice.y));
+}
+
+#else
+
+// some tests for movable edges...
+float edge_dist(in float x, in float e1, in float e2)
+{
+    return min(abs(e1 - x), abs(e2 - x));
+}
+
+float inside_distance(in vec2 s, in vec4 rect)
+{
+    return   float(s.x >= -1. && s.y >= -1.
+                   && s.x <= 1. && s.y <= 1.)
+           * min(edge_dist(s.x, rect.x, rect.z),
+                 edge_dist(s.y, rect.y, rect.w));
+}
+
+float inside_distance_other(in vec2 slice)
+{
+    return inside_distance(slice, vec4(-1,-1, 2,2));
+}
+
+float inside_with_margin(in vec2 slice)
+{
+    return min(
+                smoothstep(0.0, u_margin.x, edge_dist(slice.x, -1, 1)),
+                smoothstep(0.0, u_margin.y, edge_dist(slice.y, -1, 1))
+                );
+}
+#endif
 
 bool inside(vec2 slice)
 {
@@ -103,6 +144,7 @@ float sqr(float x) { return x*x; }
 
 const float EPS = 0.0001;
 
+// martin's less naive blending method
 float white_mh(in vec2 slice)
 {
     float black = 0.0;
@@ -133,6 +175,9 @@ float white_mh(in vec2 slice)
     }
     float final_outer_section = pure_slice ? 1.0 : 0.0;
 
+    // todo: aspect
+    float margin = u_margin.x;
+
     for (int i = 0; i < MO_NUM_PROJECTORS; ++i)
     if (i != u_index)
     {
@@ -141,51 +186,51 @@ float white_mh(in vec2 slice)
         // others pixel in slice-space [-1,1]
         vec2 oslice = map_from_dome(i, pdome);
 
-        float oedged = inside_distance(oslice);
+        float oedged = inside_distance_other(oslice);
         float edged  = inside_distance(slice);
 
         float black_so_far = 0.0;
         float intersection_color = (1.0 / (float(num_shared) + 3.0*(float(num_shared-2))));
         float max_color = intersection_color * (float(num_covered+1) /*+ 3.0*(float(num_covered-1))*/);
         float min_color = intersection_color * (float(num_covered));
-        float inner_section = ((edged >= u_margin) && (oedged >= u_margin))
+        float inner_section = ((edged >= margin) && (oedged >= margin))
                 ? intersection_color
                 : 0.0;
         float outer_section =  ((edged <= 1.0) && (oedged == 0.0))
                 ? 1.0
                 : 0.0; //intersection_color;
-        float blending_out  = (((edged == 0.0) || (oedged >= u_margin)) &&
-                               ((edged <= u_margin) || (oedged <= u_margin)) &&
-                               !((edged < u_margin) && (oedged < u_margin)))
-                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0 )
+        float blending_out  = (((edged == 0.0) || (oedged >= margin)) &&
+                               ((edged <= margin) || (oedged <= margin)) &&
+                               !((edged < margin) && (oedged < margin)))
+                ? clamp(intersection_color * (edged / margin), 0.0, 1.0 )
                 : 0.0;
-        float blending_in   = ((oedged > 0.0) && (oedged <= u_margin) && (edged > 0.0) &&
-                               !((edged <= u_margin) && (oedged <= u_margin)))
-                ? clamp(intersection_color * (1.0 - oedged / u_margin) + intersection_color, 0.0, 1.0)
+        float blending_in   = ((oedged > 0.0) && (oedged <= margin) && (edged > 0.0) &&
+                               !((edged <= margin) && (oedged <= margin)))
+                ? clamp(intersection_color * (1.0 - oedged / margin) + intersection_color, 0.0, 1.0)
                 : 0.0;
-//        float rest_in       = ((edged <= u_margin) && (oedged <= u_margin) &&
+//        float rest_in       = ((edged <= margin) && (oedged <= margin) &&
 //                               (oedged > 0.0) && (u_index < i))
-//                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0)
+//                ? clamp(intersection_color * (edged / margin), 0.0, 1.0)
 //                : 0.0;
-        float rest_in_1     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged >= edged) &&
+        float rest_in_1     = ((edged <= margin) && (oedged <= margin) && (oedged >= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(intersection_color * (edged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / margin), 0.0, 1.0)
                 : 0.0;
-        float rest_in_2     = ((edged <= u_margin) && (oedged <= u_margin) && (oedged <= edged) &&
+        float rest_in_2     = ((edged <= margin) && (oedged <= margin) && (oedged <= edged) &&
                                (oedged > 0.0) && (u_index < i))
-                ? clamp(intersection_color * (edged/u_margin) + intersection_color * ((edged / u_margin) - ( oedged / u_margin)), 0.0, 1.0)
+                ? clamp(intersection_color * (edged/margin) + intersection_color * ((edged / margin) - ( oedged / margin)), 0.0, 1.0)
                 : 0.0;
-//        float rest_out      = ((edged <= u_margin) && (oedged <= u_margin) &&
+//        float rest_out      = ((edged <= margin) && (oedged <= margin) &&
 //                               (oedged > 0.0) && (u_index > i))
-//                ? clamp(intersection_color * (1.0 - oedged / u_margin) + intersection_color, 0.0, 1.0)
+//                ? clamp(intersection_color * (1.0 - oedged / margin) + intersection_color, 0.0, 1.0)
 //                : 0.0;
-        float rest_out_1    = ((edged <= u_margin) && (oedged <= u_margin) && (oedged <= edged) &&
+        float rest_out_1    = ((edged <= margin) && (oedged <= margin) && (oedged <= edged) &&
                                (oedged > 0.0) && (u_index > i))
-                ? clamp(max_color /*+ max_color*(1.0-edged/u_margin)*/ - intersection_color * (oedged / u_margin), 0.0, 1.0)
+                ? clamp(max_color /*+ max_color*(1.0-edged/margin)*/ - intersection_color * (oedged / margin), 0.0, 1.0)
                 : 0.0;
-        float rest_out_2    = ((edged <= u_margin) && (oedged <= u_margin) && (oedged >= edged) &&
+        float rest_out_2    = ((edged <= margin) && (oedged <= margin) && (oedged >= edged) &&
                                (oedged > 0.0) && (u_index > i))
-                ? clamp(intersection_color * (edged / u_margin) + max_color*(1.0-oedged / u_margin), 0.0, 1.0)
+                ? clamp(intersection_color * (edged / margin) + max_color*(1.0-oedged / margin), 0.0, 1.0)
                 : 0.0;
         black_so_far = ( blending_out + blending_in +
                         /*rest_in  +*/ rest_in_1 + rest_in_2 +
@@ -210,12 +255,13 @@ float white_mh(in vec2 slice)
 }
 
 
-
+// bergi's naive blending method
 float white_sb(in vec2 slice)
 {
     // own pixel on dome surface
     vec3 pdome = map_to_dome(u_index, slice);
 
+    // count number of projectors per pixel
     int num_shared = 0;
     for (int i=0; i< MO_NUM_PROJECTORS; ++i)
     {
@@ -228,15 +274,16 @@ float white_sb(in vec2 slice)
 
     float white = 1.0;
 
+    // blend the edges
     for (int i=0; i < MO_NUM_PROJECTORS; ++i)
     if (i != u_index)
     {
         vec2 oslice = map_from_dome(i, pdome);
 
-        float oedged = inside_distance(oslice);
+        float oedged = inside_distance_other(oslice);
         float edged  = inside_distance(slice);
 
-        float oedged1 = smoothstep(0.0, u_margin, oedged);
+        float oedged1 = smoothstep(0.0, u_margin.x, oedged);
 
         white -= oedged1 * intersection_color;
     }
@@ -246,7 +293,9 @@ float white_sb(in vec2 slice)
 
 void main(void)
 {
-#if MO_BLEND_METHOD == 0
+#if MO_BLEND_METHOD == -1
+    fragColor = vec4(1., 1., 1., 1.);
+#elif MO_BLEND_METHOD == 0
     float w = white_sb(v_texCoord.xy * 2. - 1.);
     fragColor = vec4(w,w,w,1.);
 #elif MO_BLEND_METHOD == 1

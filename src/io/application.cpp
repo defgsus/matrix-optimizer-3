@@ -1,4 +1,4 @@
-/** @file moapplication.cpp
+/** @file application.cpp
 
     @brief QApplication wrapper
 
@@ -8,7 +8,7 @@
     <p>created 6/27/2014</p>
 */
 
-
+//#include <espeak/speak_lib.h>
 #include <iostream>
 
 #include <QPalette>
@@ -16,11 +16,17 @@
 #include <QHostInfo>
 #include <QHostAddress>
 #include <QScreen>
+#include <QDockWidget>
+#include <QMessageBox>
 
+#include "gui/mainwindow.h"
 #include "io/application.h"
-#include "io/error.h"
 #include "io/isclient.h"
 #include "io/settings.h"
+#include "io/version.h"
+#include "io/error.h"
+#include "io/log.h"
+
 
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
@@ -34,14 +40,42 @@
 
 namespace MO {
 
-Application * application;
+namespace { static Application * app_ = 0; }
+
+void createApplication(int &argc, char **argv)
+{
+    app_ = new MO::Application(argc, argv);
+}
+
+Application * application()
+{
+    return app_;
+}
 
 Application::Application(int& argc, char** args)
     : QApplication  (argc, args)
 {
-
+    MO_DEBUG_GUI("Application::Application()");
 }
 
+void Application::setUserName(const QString &n)
+{
+    userName_ = n;
+    sessionId_ = n;
+}
+
+QDockWidget * Application::createDockWidget(const QString& name, QWidget *w)
+{
+    auto main = qobject_cast<GUI::MainWindow*>(mainWindow());
+    MO_ASSERT(main, "wrong main window class " << mainWindow());
+
+    auto dw = main->createDockWidget(name, w);
+
+    main->addDockWidget(Qt::LeftDockWidgetArea, dw, Qt::Vertical);
+    dw->setFloating(true);
+
+    return dw;
+}
 
 
 bool Application::notify(QObject * o, QEvent * e)
@@ -118,5 +152,12 @@ void Application::setPaletteFor(QWidget * w)
     w->setPalette(p);
 }
 
+
+void Application::aboutMO()
+{
+    QString str = MO::applicationName();
+    str += "\ncreated by Stefan Berke\nand Martin Hünniger, Stephan S. Hepper, Jan Zehn";
+    QMessageBox::about(0, tr("Matrix Optimizer"), str);
+}
 
 } // namespace MO

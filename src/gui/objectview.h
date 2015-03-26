@@ -22,7 +22,6 @@ class Object;
 class Parameter;
 namespace GUI {
 
-class SceneSettings;
 class ParameterView;
 class ObjectListWidget;
 
@@ -31,8 +30,6 @@ class ObjectView : public QWidget
     Q_OBJECT
 public:
     explicit ObjectView(QWidget *parent = 0);
-
-    void setSceneSettings(SceneSettings * s);
 
     /** The currently edited object */
     Object * object() const { return object_; }
@@ -79,8 +76,6 @@ private:
     void updateNameLabel_();
 
     Object * object_;
-
-    SceneSettings * sceneSettings_;
 
     ParameterView * paramView_;
     QVBoxLayout * layout_;

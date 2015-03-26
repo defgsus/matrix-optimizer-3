@@ -35,7 +35,12 @@ public:
 
     // --------------- creation ---------------
 
+    /** Completely creates the whole dsp path, with all buffers */
     void createPath(Scene * scene, const AUDIO::Configuration& conf, uint thread);
+
+    /** Final creation of dsp stuff
+        - to be called from the thread that will call calcAudio() */
+    void preparePath();
 
     // ---------------- calc ------------------
 

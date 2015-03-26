@@ -1,5 +1,7 @@
 #ifndef MO_DISABLE_ANGELSCRIPT
 
+#include <Qt> // for Q_UNUSED
+
 #include <assert.h>
 #include <string.h> // strstr
 #include <new> // new()
@@ -165,7 +167,7 @@ static void ComplexListConstructor(float *list, Complex *self)
 
 static void RegisterScriptMathComplex_Native(asIScriptEngine *engine)
 {
-    int r;
+    int r; Q_UNUSED(r);
 
     // Register the type
     r = engine->RegisterObjectType("complex", sizeof(Complex), asOBJ_VALUE | asOBJ_POD | asOBJ_APP_CLASS_CAK | asOBJ_APP_CLASS_ALLFLOATS); assert( r >= 0 );

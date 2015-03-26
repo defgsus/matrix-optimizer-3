@@ -29,7 +29,7 @@ ObjectDescription::ObjectDescription(Object * o)
       p_id_     (o == 0 ? "" : o->idName()),
       p_name_   (o == 0 ? "" : o->name()),
       p_ptr_    (o),
-      p_app_    (application)
+      p_app_    (application())
 { }
 
 QByteArray ObjectDescription::toByteArray() const
@@ -56,11 +56,26 @@ ObjectDescription ObjectDescription::fromByteArray(const QByteArray & a)
     return d;
 }
 
-bool ObjectDescription::isFromSameApplicationInstance() const
+bool ObjectDescription::isSameApplicationInstance() const
 {
-    return p_app_ == application;
+    return p_app_ == application();
 }
 
+
+
+ObjectMimeData * ObjectMimeData::objectMimeData(QMimeData* d)
+{
+    return d->hasFormat(mimeTypeString)
+        ? static_cast<ObjectMimeData*>(d)
+        : 0;
+}
+
+const ObjectMimeData * ObjectMimeData::objectMimeData(const QMimeData* d)
+{
+    return d && d->hasFormat(mimeTypeString)
+        ? static_cast<const ObjectMimeData*>(d)
+        : 0;
+}
 
 
 void ObjectMimeData::setObject(Object * o)

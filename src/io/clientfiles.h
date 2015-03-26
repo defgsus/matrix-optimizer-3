@@ -31,6 +31,9 @@ public:
     explicit ClientFiles(QObject *parent = 0);
     ~ClientFiles();
 
+    /** Returns the size of all files in the cache directory */
+    quint64 cacheSize() const;
+
 signals:
 
     /** Emitted when a particular file was received */
@@ -44,8 +47,11 @@ signals:
 
 public slots:
 
+    /** Deletes the whole cache directory. */
+    void clearCache();
+
     /** Updates the cache when the server is connected */
-    void update();
+    void updateCache();
 
     /** Requests saving the current info-cache to disk, in the next event-cycle */
     void saveCache();

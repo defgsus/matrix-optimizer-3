@@ -22,9 +22,12 @@
 #include "gl/window.h"
 #include "gui/clipview.h"
 #include "gui/objectview.h"
+#include "gui/serverview.h"
 #include "gui/sequencer.h"
 #include "gui/sequenceview.h"
 #include "gui/objectgraphview.h"
+#include "gui/frontview.h"
+#include "gui/frontitemeditor.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -32,12 +35,6 @@
 
 namespace MO {
 namespace GUI {
-
-
-
-
-
-
 
 
 
@@ -154,31 +151,61 @@ void MainWindow::createWidgets_()
 
 void MainWindow::createDockWidgets_()
 {
-    auto dock = createDockWidget_(tr("Transport"), controller_->transportWidget());
+    auto dock = createDockWidget(tr("Transport"), controller_->transportWidget());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Patch"), controller_->objectGraphView());
+    dock = createDockWidget(tr("Patch"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Sequence"), controller_->sequenceView());
+    dock = createDockWidget(tr("Frontend"), controller_->frontView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    removeDockWidget(dock);
+
+    dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget_(tr("Clips"), controller_->clipView());
+    dock = createDockWidget(tr("Clips"), controller_->clipView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    removeDockWidget(dock);
 
-    dock = createDockWidget_(tr("Object"), controller_->objectView());
+    dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
+    removeDockWidget(dock);
+
+#ifndef MO_DISABLE_SERVER
+    if (isServer())
+    {
+        dock = createDockWidget(tr("Server/Client"), controller_->serverView());
+        addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+        removeDockWidget(dock);
+    }
+#endif
+
 }
 
-QDockWidget * MainWindow::createDockWidget_(const QString &name, QWidget *widget)
+QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
 {
     MO_ASSERT(!widget->objectName().isEmpty(), "need name for layout reload");
+
+    if (dockMap_.contains(widget))
+        return dockMap_.value(widget);
 
     auto dock = new QDockWidget(name, this);
     dock->setObjectName(widget->objectName() + "_Dock");
     dock->setAllowedAreas(Qt::AllDockWidgetAreas);
     dock->setWidget(widget);
-    viewMenu_->addAction( dock->toggleViewAction() );
+    dock->setFeatures(  QDockWidget::DockWidgetMovable
+                      | QDockWidget::DockWidgetFloatable
+                      | QDockWidget::DockWidgetClosable
+                      //| QDockWidget::DockWidgetVerticalTitleBar
+                      );
+    auto act = dock->toggleViewAction();
+    viewMenu_->addAction( act );
+
+    dockMap_.insert(widget, dock);
 
     return dock;
 }
@@ -200,16 +227,16 @@ void MainWindow::createMenus_()
 
 void MainWindow::saveAllGeometry_()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
     if (controller_->glWindow())
-        settings->storeGeometry(controller_->glWindow());
+        settings()->storeGeometry(controller_->glWindow());
 }
 
 bool MainWindow::restoreAllGeometry_()
 {
-    bool r = settings->restoreGeometry(this);
+    bool r = settings()->restoreGeometry(this);
     if (controller_->glWindow())
-        settings->restoreGeometry(controller_->glWindow());
+        settings()->restoreGeometry(controller_->glWindow());
     return r;
 }
 
@@ -229,7 +256,10 @@ void MainWindow::closeEvent(QCloseEvent * e)
         e->ignore();
 }
 
-
+void MainWindow::keyPressEvent(QKeyEvent * e)
+{
+    controller_->scene()->keyDown(e->key());
+}
 
 
 } // namespace GUI

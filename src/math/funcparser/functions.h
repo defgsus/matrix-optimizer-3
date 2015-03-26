@@ -1,4 +1,4 @@
-/**	@file functions.h
+/**	@file funcparser/functions.h
 
     @brief static functions for use with math parser
 
@@ -646,7 +646,7 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        RES = sqrt(z);
+        RES = std::sqrt(z);
     }
 
     // takes x,y position and maxiter, returns iteration
@@ -672,6 +672,7 @@ struct math_func<double>
         RES = iter;
     }
 
+    // takes xstart, ystart, x, y and returns value
     static void julia_4        (double ** v)
     {
         double
@@ -693,9 +694,10 @@ struct math_func<double>
             x = tmp;
             ++iter;
         }
-        RES = sqrt(z);
+        RES = std::sqrt(z);
     }
 
+    // takes xstart, ystart, x, y and returns iteration
     static void juliai_4        (double ** v)
     {
         double
@@ -716,6 +718,27 @@ struct math_func<double>
             ++iter;
         }
         RES = iter;
+    }
+
+    // takes xstart, ystart, x, y and returns value
+    static void duckball_4   (double ** v)
+    {
+        double
+            x0 = C,
+            y0 = D,
+            x = A,
+            y = B,
+            z = 0.0;
+        int iter = 0;
+        while (iter < 200)
+        {
+            z = x*x + y*y;
+            if (z < 0.0001) break;
+            x = std::abs(x) / z + x0;
+            y = std::abs(y) / z + y0;
+            ++iter;
+        }
+        RES = std::sqrt(z);
     }
 
     // ---------------- number theory ---------------

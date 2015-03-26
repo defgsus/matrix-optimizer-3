@@ -8,6 +8,8 @@
     <p>created 15.12.2014</p>
 */
 
+#ifndef MO_DISABLE_SPATIAL
+
 #ifndef MOSRC_OBJECT_AUDIO_SOUNDSOURCEAO_H
 #define MOSRC_OBJECT_AUDIO_SOUNDSOURCEAO_H
 
@@ -36,3 +38,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_AUDIO_SOUNDSOURCEAO_H
+
+#endif // #ifndef MO_DISABLE_SPATIAL

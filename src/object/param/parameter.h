@@ -19,7 +19,7 @@
 #include "object/object_fwd.h"
 
 namespace MO {
-
+class Properties;
 
 class Parameter
 {
@@ -32,6 +32,24 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     virtual const QString& typeName() const = 0;
+
+    // -------------- documentation -------------
+
+    /** Returns the html documentation of this parameter. */
+    QString getDoc() const;
+
+    /** Returns the typeName().
+        Reimplement to change behaviour. */
+    virtual QString getDocType() const;
+
+    /** Base implementation returns empty string.
+        Reimplement to add, e.g., range and default value,
+        or to add documentation for select states. */
+    virtual QString getDocValues() const;
+
+    /** Returns the statusTip().
+        Reimplement to add whatever. */
+    virtual QString getDocDesc() const;
 
     // --------------- getter -------------------
 
@@ -64,6 +82,12 @@ public:
     /** Returns true if the parameter should be visible in the ObjectGraphView */
     bool isVisibleInGraph() const { return isVisibleGraph_; }
 
+    /** Returns true if the parameter should be visible in the FrontEndView */
+    bool isVisibleInterface() const { return isVisibleInterface_; }
+
+    /* Read access to the interface settings */
+    //const Properties& interfaceProperties() const { return *iProps_; }
+
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
@@ -77,6 +101,11 @@ public:
     void setVisible(bool visible);
     /** Sets the flag for displaying the parameter in the ObjectGraphView */
     void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
+    /** Sets the flag for displaying the parameter in the Interface */
+    void setVisibleInterface(bool visible) { isVisibleInterface_ = visible; }
+
+    /* Sets the interface properties. Initially empty */
+    //void setInterfaceProperties(const Properties& p);
 
     // ------------ modulators ------------------
 
@@ -104,12 +133,18 @@ public:
     void removeModulator(const QString& idName, const QString& outputId);
     /** Removes all modulators coming from object @p idName */
     void removeAllModulators(const QString& idName);
+    /** Removes all modulators coming from any of the objects in @p idNames */
+    void removeAllModulators(const QList<QString>& idNames);
 
     /** Removes all modulators IDs */
     void removeAllModulators();
 
     /** Finds the actual objects associated to the modulatorIds(). */
     void collectModulators();
+
+    /** Removes all modulator ids for which not modulator has been found.
+        Must be called after collectModulators() or all modulators will be removed. */
+    void clearNullModulators();
 
     /** Returns a modulator for the given id.
         The Modulator is created or reused. */
@@ -123,8 +158,11 @@ public:
     /** Returns all modulators (valid after collectModulators) */
     const QList<Modulator*>& modulators() const { return modulators_; }
 
+    /** Returns a list of all modulator ids. */
+    QList<QString> getModulatorIds() const;
+
     /** Returns a list of all modulator objects (valid after collectModulators()) */
-    QList<Object*> getModulatingObjects() const;
+    QList<Object*> getModulatingObjects(bool recursive = true) const;
 
     /** Returns the list of objects that will be modulating objects when
         this object gets added to @p scene. */
@@ -146,12 +184,13 @@ private:
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,
-         isVisible_, isVisibleGraph_;
+         isVisible_, isVisibleGraph_, isVisibleInterface_;
 
     //QList<QString> modulatorIds_;
 
     QList<Modulator*> modulators_;
 
+//    Properties * iProps_;
 };
 
 } // namespace MO

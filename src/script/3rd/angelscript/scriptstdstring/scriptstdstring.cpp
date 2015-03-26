@@ -969,7 +969,7 @@ static void StringSubString_Generic(asIScriptGeneric *gen)
 
 void RegisterStdString_Generic(asIScriptEngine *engine)
 {
-	int r;
+    int r; Q_UNUSED(r);
 
 	// Register the string type
 	r = engine->RegisterObjectType("string", sizeof(string), asOBJ_VALUE | asOBJ_APP_CLASS_CDAK); assert( r >= 0 );

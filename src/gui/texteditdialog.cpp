@@ -23,6 +23,7 @@
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
 #include "script/angelscript_object.h"
+#include "script/angelscript_image.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -32,8 +33,11 @@ class TextEditDialog::Private
 {
 public:
     Private(TextEditDialog * dialog)
-        : dialog(dialog),
-          rejected(false)
+        : dialog        (dialog),
+          plainText     (0),
+          equEdit       (0),
+          scriptEdit    (0),
+          rejected      (false)
     {
         // wait before text-changed
         timer.setInterval(350);
@@ -73,7 +77,7 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
 
     // --- load user settings ---
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
 
     p_->createWidgets();
@@ -87,7 +91,7 @@ TextEditDialog::TextEditDialog(const QString &text, TextType textType, QWidget *
 
 TextEditDialog::~TextEditDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
     delete p_;
 }
 
@@ -166,12 +170,6 @@ void TextEditDialog::Private::createWidgets()
                     auto s = new SyntaxHighlighter(plainText->document());
                     s->initForStyleSheet();
                 }
-
-                if (textType == TT_GLSL)
-                {
-//                    auto s = new SyntaxHighlighter(plainText->document());
-//                    s->initForGlsl();
-                }
             break;
 
             case TT_EQUATION:
@@ -202,6 +200,7 @@ void TextEditDialog::Private::createWidgets()
                 lv->addWidget(as);
                 registerDefaultAngelScript( as->scriptEngine() );
                 registerAngelScript_object( as->scriptEngine(), 0, true, true);
+                registerAngelScript_image( as->scriptEngine(), 0, true);
                 scriptEdit = as;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
@@ -258,6 +257,12 @@ void TextEditDialog::keyPressEvent(QKeyEvent * e)
         return;
     }
     QDialog::keyPressEvent(e);
+}
+
+void TextEditDialog::addErrorMessage(int line, const QString &text)
+{
+    if (p_->scriptEdit)
+        p_->scriptEdit->addCompileMessage(line, AbstractScriptWidget::M_ERROR, text);
 }
 
 void TextEditDialog::openHelp()

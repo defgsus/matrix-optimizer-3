@@ -67,11 +67,18 @@ public:
     /** Processes dsp data. */
     void processAudioBase(uint bufferSize, SamplePos pos, uint thread);
 
+#ifndef MO_DISABLE_CLIENT
+    /** Should be could when an udp packet has been received for the object */
+    void clientFakeAudio(uint bufferSize, SamplePos pos, uint thread);
+#endif
+
     // ------------------ modulator outputs -------------------
 
     /** Provides normal float values for the non-audio threads
         of each output channel.
+        @p thread is the audio thread index.
         //XXX should: Work by looking up the previous output buffer. but thread issue here
+        Fortunately, it works quite well, on my system at least
         Returns 0.0 for unknown or empty channels. */
     Double getAudioOutputAsFloat(uint channel, Double time, uint thread) const;
 

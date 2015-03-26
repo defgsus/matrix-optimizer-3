@@ -1,6 +1,8 @@
 *.pro.user
 *.autosave
+
 render/
 help_export/
 temp/
 data/cache/
+doc/doxygen/html

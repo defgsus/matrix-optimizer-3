@@ -63,6 +63,7 @@ public:
 
     void clear();
 
+    /** -1 = none, 0 = sb, 1 = mh */
     void setBlendMethod(int method) { blendMethod_ = method; }
     void setBlendMargin(Float margin) { blendMargin_ = margin; }
 

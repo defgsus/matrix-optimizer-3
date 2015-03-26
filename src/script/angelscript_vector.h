@@ -1,4 +1,4 @@
-/** @file anglescript_vector.h
+/** @file angelscript_vector.h
 
     @brief
 

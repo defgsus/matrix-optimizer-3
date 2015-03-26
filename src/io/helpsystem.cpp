@@ -14,18 +14,36 @@
 #include <QTextStream>
 #include <QDomDocument>
 #include <QImage>
+#include <QIcon>
+#include <QPainter>
 
 #include "helpsystem.h"
 #include "io/log.h"
 #include "gui/widget/equationdisplaywidget.h"
 #include "gui/util/viewspace.h"
+#include "gui/util/appicons.h"
+#include "gui/item/abstractobjectitem.h"
 #include "math/funcparser/parser.h"
+#include "object/objectfactory.h"
+#include "object/object.h"
+#include "object/param/parameters.h"
+#include "script/angelscript.h"
+
 
 #ifdef MO_DO_DEBUG_HELP
 #   include <iomanip>
 #endif
 
 namespace MO {
+
+
+namespace {
+    static QString help_url_ = "index.html";
+}
+
+void setHelpUrl(const QString &url) { help_url_ = url; }
+QString currentHelpUrl() { return help_url_; }
+
 
 HelpSystem::HelpSystem(QObject *parent) :
     QObject(parent)
@@ -36,6 +54,7 @@ HelpSystem::HelpSystem(QObject *parent) :
             << ":/help"
             << ":/helpimg"
             << ":/img"
+            << ":/icon"
             << ":/texture";
 
 }
@@ -120,6 +139,9 @@ QVariant HelpSystem::loadResource(const QString &partial_url, ResourceType type)
         if (partial_url.startsWith("_equ"))
             return getEquationImage(partial_url);
 
+        if (partial_url.startsWith("_oi_"))
+            return getObjectImage(partial_url.mid(4));
+
         QString url = findResource(partial_url, type);
         if (url.isEmpty())
             return QVariant();
@@ -141,20 +163,34 @@ bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
 {
     MO_DEBUG_HELP("HelpSystem::loadXhtml('" << partial_url << "')");
 
-    QString url = findResource(partial_url, HtmlResource);
-    if (url.isEmpty())
-        return false;
+    QString pseudo_html, url;
 
-    // open the file
-    QFile file(url);
-    if (!file.open(QFile::ReadOnly))
+    // getruntime created pages ?
+    QVariant rv = getRuntimeResource(partial_url);
+    if (rv.isValid() && rv.canConvert(QVariant::String))
     {
-        MO_DEBUG_HELP("HelpSystem::loadResource() can't open '" << url << "'");
-        return false;
+        url = partial_url;
+        pseudo_html = rv.toString();
     }
+    // load from resource file
+    else
+    {
+        url = findResource(partial_url, HtmlResource);
+        if (url.isEmpty())
+            return false;
 
-    // get text
-    QTextStream stream(&file);
+        // open the file
+        QFile file(url);
+        if (!file.open(QFile::ReadOnly))
+        {
+            MO_DEBUG_HELP("HelpSystem::loadResource() can't open '" << url << "'");
+            return false;
+        }
+
+        // get text
+        QTextStream stream(&file);
+        pseudo_html = stream.readAll();
+    }
 
     // put tags around
     QString xhtml
@@ -163,12 +199,19 @@ bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
               "<link rel=\"stylesheet\" type=\"text/css\" href=\"style.css\"/>\n"
               "</head>\n"
               "<body>\n"
-            + stream.readAll()
+            + pseudo_html
             + "</body></html>";
 
-    // add runtime info to equations page
-    if (url.contains("equation.html"))
-        addEquationInfo_(xhtml);
+    // --- add runtime infos to pages ---
+
+        if (url.contains("equation.html"))
+            addEquationInfo_(xhtml);
+
+        if (url.contains("angelscript.html"))
+            addAngelScriptInfo_(xhtml);
+
+        addObjectIndex_(xhtml);
+
 
     // get dom tree
     QString error;
@@ -262,6 +305,100 @@ void HelpSystem::renderHtmlImg_(const QDomElement & e, QTextStream & stream)
     }
 }
 
+QVariant HelpSystem::getRuntimeResource(const QString &url)
+{
+    // find achor
+    QString anchor;
+    const int aidx = url.indexOf("#");
+    if (aidx > 0)
+        anchor = url.mid(aidx+1);
+    // find actual name
+    QString name;
+    if (aidx > 0)
+        name = url.left(aidx);
+    else
+        name = url;
+    name.remove(".html", Qt::CaseInsensitive);
+
+    MO_DEBUG_HELP("HelpSystem::getRuntimeResource("
+                  << url << "): name='" << name << "', anchor='" << anchor << "'");
+
+    // specific Object page
+    if (name.startsWith("_object_"))
+    {
+        QString objName = name.mid(8);
+        if (objName.isEmpty())
+            return QVariant();
+
+        auto o = ObjectFactory::createObject(objName);
+        return o ? getObjectDoc(o) : QString();
+    }
+
+    return QVariant();
+}
+
+QString HelpSystem::getObjectDoc(const Object * o)
+{
+    QString str;
+    QTextStream html(&str);
+
+    html << "<h1>"
+         << "<img src=\"_oi_" << o->className() << "\"/>"
+         << o->name() << "</h1>";
+
+    QVariant v = loadResource("_od_" + o->className(), HtmlResource);
+    if (v.isValid())
+        html << v.toString() << "\n";
+    else
+        html << tr("No description currently available on this object");
+
+    html << "<a name=\"parameters\"></a><h2>" << o->name() << " " << tr("parameters") << "</h2>";
+
+    html << o->params()->getParameterDoc();
+
+    return str;
+}
+
+QImage HelpSystem::getObjectImage(const QString &url) const
+{
+    const QString
+            className = url.section(QChar('#'), 0, 0),
+            widthstr = url.section(QChar('#'), 1, 1),
+            heightstr = url.section(QChar('#'), 2, 2);
+
+    // create a temp object
+    auto o = ObjectFactory::createObject(className);
+    if (!o)
+        return QImage();
+
+    // create a temp object item (easiest way to paint nicely)
+    GUI::AbstractObjectItem item(o);
+
+    // determine width and height for drawing
+    QSize itemsize = item.boundingRect().size().toSize(),
+          size = itemsize;
+    if (!widthstr.isEmpty())
+    {
+        size.setWidth( widthstr.toInt() );
+        if (heightstr.isEmpty())
+            size.setHeight( size.width() );
+        else
+            size.setHeight( heightstr.toInt() );
+    }
+
+    // paint on image
+    QImage img(itemsize, QImage::Format_ARGB32);
+    QPainter p(&img);
+    p.fillRect(0,0, size.width(), size.height(), QBrush(Qt::black));
+    p.translate(-item.boundingRect().topLeft());
+    item.paint(&p, 0, 0);
+
+    o->releaseRef();
+    return size != itemsize
+            ? img.scaled(size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
+            : img;
+}
+
 QImage HelpSystem::getEquationImage(const QString &url) const
 {
     MO_DEBUG_HELP("HelpSystem::getEquationImage('" << url << "'");
@@ -352,6 +489,8 @@ void HelpSystem::loadEquationFunctions_()
 
 void HelpSystem::addEquationInfo_(QString& doc)
 {
+    MO_DEBUG_HELP("HelpSystem::addEquationInfo_()");
+
     // load the function descriptions
     if (funcMap_.isEmpty())
         loadEquationFunctions_();
@@ -453,5 +592,67 @@ void HelpSystem::addEquationInfo_(QString& doc)
 
     doc.replace("!FUNCTIONS!", str);
 }
+
+
+void HelpSystem::addAngelScriptInfo_(QString& doc)
+{
+    if (doc.contains("!EXAMPLES!"))
+    {
+        QString str = exampleAngelScript().toHtmlEscaped();
+        doc.replace("!EXAMPLES!", str);
+    }
+
+    if (doc.contains("!FUNCTIONS!"))
+    {
+        QString str = getAngelScriptFunctionsHtml();
+        doc.replace("!FUNCTIONS!", str);
+    }
+}
+
+void HelpSystem::addObjectIndex_(QString &doc)
+{
+    if (!doc.contains("!OBJECT_INDEX!"))
+        return;
+
+    // get all objects
+    QList<const Object*> list(ObjectFactory::objects(Object::TG_ALL & ~Object::T_DUMMY));
+    // sort by priority
+    //qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+    // sort into groups
+    QMap<QString, QList<const Object*>> map;
+    for (auto o : list)
+    {
+        QString groupName = ObjectFactory::objectPriorityName(Object::objectPriority(o));
+        auto i = map.find(groupName);
+        if (i == map.end())
+            map.insert(groupName, QList<const Object*>() << o);
+        else
+            i.value() << o;
+    }
+
+
+    QString str = "<ul>\n";
+    for (auto i = map.begin(); i != map.end(); ++i)
+    {
+        // group name
+        str += "<li><b>" + i.key() + "</b><ul>\n";
+        for (auto j : i.value())
+        {
+            str += "<li>";
+            // link
+            str += "<a href=\"_object_" + j->className() + ".html\">";
+            // image
+            if (!j->isAudioObject())
+                str += "<img src=\"_oi_" + j->className() + "#24#24\"/>";
+            // name
+            str += j->name() + "</a></li>\n";
+        }
+        str += "</ul></li>";
+    }
+    str += "</ul>";
+
+    doc.replace("!OBJECT_INDEX!", str);
+}
+
 
 } // namespace MO

@@ -32,7 +32,9 @@ GeometryCreator::GeometryCreator(QObject *parent) :
     curGeometry_(0),
     settings_   (new GeometryFactorySettings(0)),
     timer_      (new QTimer(this)),
-    mutex_      (new QMutex())
+    mutex_      (new QMutex()),
+    doStop_     (false),
+    doDiscard_  (false)
 {
     timer_->setSingleShot(false);
     timer_->setInterval(1000 / 10);
@@ -68,6 +70,8 @@ Geometry * GeometryCreator::takeGeometry()
 
 void GeometryCreator::run()
 {
+    doStop_ = doDiscard_ = false;
+
     // count thread instance and set theadname
     int instanceCounter;
     {
@@ -76,7 +80,7 @@ void GeometryCreator::run()
     }
     setCurrentThreadName(QString("GEOM%1").arg(instanceCounter));
 
-    MO_DEBUG_GL("GeometryCreator::run()");
+    MO_DEBUG_GL("GeometryCreator::run() instance = " << instanceCounter);
 
     GeometryFactorySettings settings(0);
 
@@ -113,14 +117,29 @@ void GeometryCreator::run()
 
     QMutexLocker lock(mutex_);
 
+    // get geometry back
     if (geometry_)
         geometry_->releaseRef();
     geometry_ = curGeometry_;
 
-    MO_DEBUG_GL("GeometryCreator::run() finished");
+    MO_DEBUG_GL("GeometryCreator::run() finished (instance = " << instanceCounter << ")");
 
-    if (success)
+    if (success && !doStop_ && !doDiscard_)
         emit succeeded();
+}
+
+void GeometryCreator::stop()
+{
+    doStop_ = true;
+
+    QMutexLocker lock(mutex_);
+
+    settings_->modifierChain()->stop();
+}
+
+void GeometryCreator::discard()
+{
+    doStop_ = doDiscard_ = true;
 }
 
 void GeometryCreator::onTimer_()

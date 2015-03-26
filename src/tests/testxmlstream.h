@@ -1,4 +1,4 @@
-/** @file testio.h
+/** @file testxmlstream.h
 
     @brief
 
@@ -8,8 +8,8 @@
     <p>created 6/26/2014</p>
 */
 
-#ifndef MOSRC_TESTS_TESTIO_H
-#define MOSRC_TESTS_TESTIO_H
+#ifndef MOSRC_TESTS_TESTXMLSTREAM_H
+#define MOSRC_TESTS_TESTXMLSTREAM_H
 
 class TestXmlStream
 {
@@ -19,4 +19,4 @@ public:
     int run();
 };
 
-#endif // TESTIO_H
+#endif // MOSRC_TESTS_TESTXMLSTREAM_H

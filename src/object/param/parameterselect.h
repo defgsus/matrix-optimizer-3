@@ -29,6 +29,9 @@ public:
 
     const QString& typeName() const { static QString s("select"); return s; }
 
+    virtual QString getDocType() const Q_DECL_OVERRIDE;
+    virtual QString getDocValues() const Q_DECL_OVERRIDE;
+
     // ------------- getter ---------------
 
     /** Only has two values and should be displayed as checkbox? */

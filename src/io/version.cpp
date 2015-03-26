@@ -15,12 +15,20 @@ namespace MO {
 
 const QString& versionString()
 {
+#ifndef NDEBUG
     static const QString ret =
             QString("%1.%2.%3.%4")
             .arg(MO_VERSION_MAJOR)
             .arg(MO_VERSION_MINOR)
             .arg(MO_VERSION_TINY)//, 3, 10, QChar('0'))
             .arg(MO_VERSION_MICRO, 3, 10, QChar('0'));
+#else
+    static const QString ret =
+            QString("%1.%2.%3")
+            .arg(MO_VERSION_MAJOR)
+            .arg(MO_VERSION_MINOR)
+            .arg(MO_VERSION_TINY);
+#endif
 
     return ret;
 }

@@ -57,7 +57,6 @@ HEADERS += \
     src/gui/midisettingsdialog.h \
     src/gui/saveequationdialog.h \
     src/gui/infowindow.h \
-    src/gui/serverdialog.h \
     src/gui/widget/netlogwidget.h \
     src/gui/widget/overlapareaeditwidget.h \
     src/gui/widget/filterresponsewidget.h \
@@ -82,7 +81,31 @@ HEADERS += \
     src/gui/widget/parameterwidget.h \
     src/gui/widget/angelscriptwidget.h \
     src/gui/widget/abstractscriptwidget.h \
-    src/gui/widget/glslwidget.h
+    src/gui/widget/glslwidget.h \
+    src/gui/widget/texteditwidget.h \
+    src/gui/util/appicons.h \
+    src/gui/bulkrenamedialog.h \
+    src/gui/util/frontscene.h \
+    src/gui/item/abstractfrontitem.h \
+    src/gui/frontview.h \
+    src/gui/item/faderitem.h \
+    src/gui/item/abstractguiitem.h \
+    src/gui/serverview.h \
+    src/gui/widget/qvariantwidget.h \
+    src/gui/propertiesview.h \
+    src/gui/frontitemeditor.h \
+    src/gui/widget/coloreditwidget.h \
+    src/gui/item/frontfloatitem.h \
+    src/gui/item/frontgroupitem.h \
+    src/gui/util/frontpreset.h \
+    src/gui/widget/iconbar.h \
+    src/gui/widget/presetswidget.h \
+    src/gui/item/knobitem.h \
+    src/gui/item/abstractfrontdisplayitem.h \
+    src/gui/item/frontdisplayfloatitem.h \
+    src/gui/item/scopeitem.h \
+    src/gui/renderdialog.h \
+    src/gui/widget/filenameinput.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -139,7 +162,6 @@ SOURCES += \
     src/gui/midisettingsdialog.cpp \
     src/gui/saveequationdialog.cpp \
     src/gui/infowindow.cpp \
-    src/gui/serverdialog.cpp \
     src/gui/widget/netlogwidget.cpp \
     src/gui/widget/overlapareaeditwidget.cpp \
     src/gui/widget/filterresponsewidget.cpp \
@@ -164,4 +186,28 @@ SOURCES += \
     src/gui/widget/parameterwidget.cpp \
     src/gui/widget/angelscriptwidget.cpp \
     src/gui/widget/abstractscriptwidget.cpp \
-    src/gui/widget/glslwidget.cpp
+    src/gui/widget/glslwidget.cpp \
+    src/gui/widget/texteditwidget.cpp \
+    src/gui/util/appicons.cpp \
+    src/gui/bulkrenamedialog.cpp \
+    src/gui/util/frontscene.cpp \
+    src/gui/item/abstractfrontitem.cpp \
+    src/gui/frontview.cpp \
+    src/gui/item/faderitem.cpp \
+    src/gui/item/abstractguiitem.cpp \
+    src/gui/serverview.cpp \
+    src/gui/widget/qvariantwidget.cpp \
+    src/gui/propertiesview.cpp \
+    src/gui/frontitemeditor.cpp \
+    src/gui/widget/coloreditwidget.cpp \
+    src/gui/item/frontfloatitem.cpp \
+    src/gui/item/frontgroupitem.cpp \
+    src/gui/util/frontpreset.cpp \
+    src/gui/widget/iconbar.cpp \
+    src/gui/widget/presetswidget.cpp \
+    src/gui/item/knobitem.cpp \
+    src/gui/item/abstractfrontdisplayitem.cpp \
+    src/gui/item/frontdisplayfloatitem.cpp \
+    src/gui/item/scopeitem.cpp \
+    src/gui/renderdialog.cpp \
+    src/gui/widget/filenameinput.cpp

@@ -64,6 +64,37 @@ AudioObjectConnections::~AudioObjectConnections()
     clear();
 }
 
+AudioObjectConnections::AudioObjectConnections(const AudioObjectConnections & other)
+{
+    copyFrom(other);
+}
+
+AudioObjectConnections& AudioObjectConnections::operator =(const AudioObjectConnections& other)
+{
+    copyFrom(other);
+    return *this;
+}
+
+void AudioObjectConnections::copyFrom(const AudioObjectConnections& other)
+{
+    clear();
+    for (auto c : other)
+        connect(*c);
+}
+
+void AudioObjectConnections::addFrom(const AudioObjectConnections& other)
+{
+    for (auto c : other)
+        connect(*c);
+}
+
+void AudioObjectConnections::swap(AudioObjectConnections &other)
+{
+    toMap_.swap(other.toMap_);
+    fromMap_.swap(other.fromMap_);
+    cons_.swap(other.cons_);
+}
+
 void AudioObjectConnections::serialize(IO::DataStream & io) const
 {
     io.writeHeader("aocons", 1);
@@ -335,6 +366,22 @@ void AudioObjectConnections::remove(Object *obj)
     // children
     for (auto c : obj->childObjects())
         remove(c);
+}
+
+AudioObjectConnections AudioObjectConnections::reducedTo(const Object* tree) const
+{
+    QList<AudioObject*> list = tree->findChildObjects<AudioObject>(QString(), true);
+
+    AudioObjectConnections cons;
+
+    // go through all connections
+    for (AudioObjectConnection* c : *this)
+    {
+        if (list.contains(c->from()) && list.contains(c->to()))
+            cons.connect(*c);
+    }
+
+    return cons;
 }
 
 

@@ -27,7 +27,7 @@ FileManager & fileManager()
 {
     static FileManager * instance_ = 0;
     if (!instance_)
-        instance_ = new FileManager(application);
+        instance_ = new FileManager(application());
 
     return *instance_;
 }
@@ -69,6 +69,8 @@ FileManager::FileManager(QObject *parent)
                 this, SLOT(onFileReady_(QString,QString)));
         connect(&clientFiles(), SIGNAL(fileNotReady(QString)),
                 this, SLOT(onFileNotReady_(QString)));
+        //connect(&clientFiles(), SIGNAL(allFilesReady()),
+        //        this, SLOT(checkReadyOrFinished_()));
     }
 }
 
@@ -208,7 +210,7 @@ void FileManager::aquireFilesClient_()
 
     for (Private::File & f : p_->files)
     {
-        if (!f.present) // XXX should be f.querried but not tested for client
+        if (!f.queried) // XXX was f.present, should be f.querried but not tested for client
         {
             // suppose resource-files are always present
             if (f.filename.startsWith(":"))
@@ -278,7 +280,7 @@ void FileManager::checkReadyOrFinished_()
     MO_NETLOG(DEBUG, "FileManager: files ready " << ready << "/" << p_->files.size());
     dumpStatus();
 
-    if (ready == p_->files.size())
+    if (ready >= p_->files.size())
     {
         MO_NETLOG(DEBUG, "FileManager: all files ready");
         emit filesReady();

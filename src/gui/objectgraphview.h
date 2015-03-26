@@ -11,9 +11,11 @@
 #ifndef MOSRC_GUI_OBJECTGRAPHVIEW_H
 #define MOSRC_GUI_OBJECTGRAPHVIEW_H
 
-#include <QGraphicsView>
+#include <QWidget>
 
 #include "object/object_fwd.h"
+
+class QGraphicsView;
 
 namespace MO {
 namespace GUI {
@@ -21,7 +23,7 @@ namespace GUI {
 class ObjectGraphScene;
 class SceneSettings;
 
-class ObjectGraphView : public QGraphicsView
+class ObjectGraphView : public QWidget
 {
     Q_OBJECT
 public:
@@ -49,6 +51,9 @@ private slots:
     void onShitView_(const QPointF&);
 private:
 
+    void createWidgets_();
+
+    QGraphicsView * gview_;
     ObjectGraphScene * gscene_;
     Object * root_;
 };

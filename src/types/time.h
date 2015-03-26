@@ -1,4 +1,4 @@
-/** @file time.h
+/** @file types/time.h
 
     @brief XXX Would like to have a precise sample/float-second unit at the bottom
 
@@ -16,6 +16,7 @@
 namespace MO
 {
 
+    /** @todo Time_t is totatlly not used yet */
     struct Time_t
     {
         int32_t second, sample, sampleRate;

@@ -42,6 +42,7 @@ void Scale::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         all_ = params()->createFloatParameter("all", "scale", tr("Scale/multiplier for the whole"), 1, 0.1);
         x_ = params()->createFloatParameter("x", "x", tr("Additional scale for the x axis"), 1, 0.1);

@@ -32,7 +32,7 @@ AudioFilterDialog::AudioFilterDialog(QWidget *parent) :
     setMinimumSize(320,240);
     resize(800,600);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     restoreFilter_();
 
@@ -45,7 +45,7 @@ AudioFilterDialog::AudioFilterDialog(QWidget *parent) :
 AudioFilterDialog::~AudioFilterDialog()
 {
     saveFilter_();
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 
     delete filter_;
 }
@@ -190,22 +190,22 @@ void AudioFilterDialog::createWidgets_()
 
 void AudioFilterDialog::saveFilter_()
 {
-    settings->setValue("AudioFilterDialog/type", filter_->typeId());
-    settings->setValue("AudioFilterDialog/frequency", (Double)filter_->frequency());
-    settings->setValue("AudioFilterDialog/resonance", (Double)filter_->resonance());
-    settings->setValue("AudioFilterDialog/order", filter_->order());
-    settings->setValue("AudioFilterDialog/resolution", display_->numBands());
-    settings->setValue("AudioFilterDialog/bufferSize", display_->bufferSize());
+    settings()->setValue("AudioFilterDialog/type", filter_->typeId());
+    settings()->setValue("AudioFilterDialog/frequency", (Double)filter_->frequency());
+    settings()->setValue("AudioFilterDialog/resonance", (Double)filter_->resonance());
+    settings()->setValue("AudioFilterDialog/order", filter_->order());
+    settings()->setValue("AudioFilterDialog/resolution", display_->numBands());
+    settings()->setValue("AudioFilterDialog/bufferSize", display_->bufferSize());
 }
 
 void AudioFilterDialog::restoreFilter_()
 {
-    filter_->setType(settings->value("AudioFilterDialog/type", filter_->typeId()).toString());
-    filter_->setFrequency(settings->value("AudioFilterDialog/frequency", (Double)filter_->frequency()).toDouble());
-    filter_->setResonance(settings->value("AudioFilterDialog/resonance", (Double)filter_->resonance()).toDouble());
-    filter_->setOrder(settings->value("AudioFilterDialog/order", filter_->order()).toInt());
-    display_->setNumBands(settings->value("AudioFilterDialog/resolution", display_->numBands()).toInt(), false);
-    display_->setBufferSize(settings->value("AudioFilterDialog/bufferSize", display_->bufferSize()).toInt(), false);
+    filter_->setType(settings()->value("AudioFilterDialog/type", filter_->typeId()).toString());
+    filter_->setFrequency(settings()->value("AudioFilterDialog/frequency", (Double)filter_->frequency()).toDouble());
+    filter_->setResonance(settings()->value("AudioFilterDialog/resonance", (Double)filter_->resonance()).toDouble());
+    filter_->setOrder(settings()->value("AudioFilterDialog/order", filter_->order()).toInt());
+    display_->setNumBands(settings()->value("AudioFilterDialog/resolution", display_->numBands()).toInt(), false);
+    display_->setBufferSize(settings()->value("AudioFilterDialog/bufferSize", display_->bufferSize()).toInt(), false);
 }
 
 void AudioFilterDialog::updateVisibility_()

@@ -25,12 +25,14 @@
 #include "gui/infowindow.h"
 #include "gl/manager.h"
 #include "gl/window.h"
+#include "engine/audioengine.h"
 #include "io/systeminfo.h"
 #include "io/settings.h"
 #include "io/clientfiles.h"
 #include "io/filemanager.h"
 #include "tool/deleter.h"
 #include "io/version.h"
+#include "io/memory.h"
 #include "io/currenttime.h"
 #include "io/application.h"
 #include "io/error.h"
@@ -42,7 +44,7 @@ ClientEngine & clientEngine()
 {
     static ClientEngine * instance_ = 0;
     if (!instance_)
-        instance_ = new ClientEngine(application);
+        instance_ = new ClientEngine(application());
 
     return *instance_;
 }
@@ -62,6 +64,8 @@ ClientEngine::ClientEngine(QObject *parent) :
     client_     (0),
     scene_      (0),
     nextScene_  (0),
+    audioEngine_(0),
+    audioConfig_(44100, 256, 0, 2),
     cl_         (new ClientEngineCommandLine(this)),
     isFilesReady_(false)
 {
@@ -91,8 +95,8 @@ bool ClientEngine::isRunning() const
 int ClientEngine::run(int argc, char ** argv, int skip)
 {
     // stats
-    settings->setValue("Stats/clientRuns",
-                        settings->value("Stats/clientRuns").toInt() + 1);
+    settings()->setValue("Stats/clientRuns",
+                        settings()->value("Stats/clientRuns").toInt() + 1);
 
     // print some info
     MO_PRINT(applicationName());
@@ -135,13 +139,13 @@ int ClientEngine::run(int argc, char ** argv, int skip)
 
     // when not connecting to server and no window is opened
     // we exit
-    if (!cl_->doNetwork() && application->allWindows().isEmpty())
+    if (!cl_->doNetwork() && application()->allWindows().isEmpty())
     {
         MO_PRINT(tr("Nothing to do, exiting..."));
     }
     else
 
-        ret = application->exec();
+        ret = application()->exec();
 
     shutDown_();
 
@@ -185,9 +189,10 @@ void ClientEngine::startNetwork_()
     client_ = new Client(this);
 
     connect(client_, SIGNAL(connected()), this, SLOT(onConnected_()));
-    connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)), this, SLOT(onNetEvent_(AbstractNetEvent*)));
+    connect(client_, SIGNAL(eventReceived(AbstractNetEvent*)),
+            this, SLOT(onNetEvent_(AbstractNetEvent*)));
 
-    client_->connectTo(settings->serverAddress());
+    client_->connectTo(settings()->serverAddress());
 
     // receive files-ready signal from file cacher
     connect(&IO::fileManager(), SIGNAL(filesReady()),
@@ -223,8 +228,8 @@ void ClientEngine::showInfoWindow_(bool enable)
 
         // move to desired desktop
         infoWindow_->setGeometry(
-                    application->screenGeometry(
-                        settings->desktop()));
+                    application()->screenGeometry(
+                        settings()->desktop()));
         // show
         infoWindow_->showFullScreen();
     }
@@ -244,7 +249,7 @@ void ClientEngine::showRenderWindow_(bool enable)
                 createGlObjects_();
 
             // move to desired desktop
-            glWindow_->setScreen(settings->desktop());
+            glWindow_->setScreen(settings()->desktop());
             // show
             glWindow_->showFullScreen();
         }
@@ -267,7 +272,7 @@ void ClientEngine::updateDesktopIndex_()
         if (vis)
             glWindow_->hide();
 
-        glWindow_->setScreen(settings->desktop());
+        glWindow_->setScreen(settings()->desktop());
 
         // XXX moving by above 'workaround' leaves fullscreen
         if (vis)
@@ -281,8 +286,8 @@ void ClientEngine::updateDesktopIndex_()
         if (vis)
             infoWindow_->hide();
 
-        infoWindow_->setGeometry(application->screenGeometry(
-                                     settings->desktop()));
+        infoWindow_->setGeometry(application()->screenGeometry(
+                                     settings()->desktop()));
         if (vis)
             infoWindow_->showFullScreen();
     }
@@ -299,7 +304,7 @@ void ClientEngine::renderWindowSizeChanged_(const QSize & size)
 void ClientEngine::onConnected_()
 {
     MO_NETLOG(DEBUG, "ClientEngine connected :D");
-    IO::clientFiles().update();
+    IO::clientFiles().updateCache();
 }
 
 void ClientEngine::onNetEvent_(AbstractNetEvent * event)
@@ -335,7 +340,7 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         if (e->request() == NetEventRequest::SET_DESKTOP_INDEX)
         {
             MO_NETLOG(EVENT, "setting desktop/screen index to " << e->data().toInt());
-            settings->setDesktop(e->data().toInt());
+            settings()->setDesktop(e->data().toInt());
             updateDesktopIndex_();
             return;
         }
@@ -381,6 +386,20 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
             setPlayback_(false);
             return;
         }
+
+        if (e->request() == NetEventRequest::CLEAR_FILE_CACHE)
+        {
+            IO::clientFiles().clearCache();
+            isFilesReady_ = false;
+            sendState_();
+            return;
+        }
+
+        if (e->request() == NetEventRequest::CLOSE_CONNECTION)
+        {
+            client_->closeConnection();
+            return;
+        }
     }
 
     if (NetEventFileInfo * e = netevent_cast<NetEventFileInfo>(event))
@@ -413,6 +432,19 @@ void ClientEngine::onNetEvent_(AbstractNetEvent * event)
         return;
     }
 
+    if (NetEventAudioConfig * e = netevent_cast<NetEventAudioConfig>(event))
+    {
+        setAudioConfig(e->config());
+        return;
+    }
+
+    if (NetEventUiFloat * e = netevent_cast<NetEventUiFloat>(event))
+    {
+        if (scene_)
+            scene_->setUiValue(e->id(), e->time(), e->value());
+        return;
+    }
+
     MO_NETLOG(WARNING, "unhandled NetEvent " << event->infoName() << " in ClientEngine");
 }
 
@@ -426,19 +458,29 @@ void ClientEngine::setProjectionSettings_(NetEventRequest * e)
     {
         s.deserialize(data);
         // update system settings
-        settings->setDefaultProjectionSettings(s);
+        settings()->setDefaultProjectionSettings(s);
 
         // update scene
         if (scene_)
         {
             scene_->setProjectionSettings(s);
-            scene_->setProjectorIndex(settings->clientIndex());
+            scene_->setProjectorIndex(settings()->clientIndex());
         }
     }
     catch (const Exception& e)
     {
         MO_NETLOG(ERROR, "Failed to deserialize ProjectionSystemSettings\n"
                   << e.what());
+    }
+}
+
+void ClientEngine::setAudioConfig(const AUDIO::Configuration & c)
+{
+    audioConfig_ = c;
+    if (audioEngine_ && scene_)
+    {
+        audioEngine_->setScene(scene_, audioConfig_, MO_AUDIO_THREAD);
+        audioEngine_->prepareUdp();
     }
 }
 
@@ -469,11 +511,20 @@ void ClientEngine::setSceneObject(Scene * scene)
     connect(scene_, SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
 
+    // update projection settings
+    scene_->setProjectionSettings(settings()->getDefaultProjectionSettings());
+    scene_->setProjectorIndex(settings()->clientIndex());
     // update resolution from output window
     scene_->setResolution(glWindow_->frameSize());
-    // update projection settings
-    scene_->setProjectionSettings(settings->getDefaultProjectionSettings());
-    scene_->setProjectorIndex(settings->clientIndex());
+
+    // create audio engine
+    if (!audioEngine_)
+        audioEngine_ = new AudioEngine(this);
+    audioEngine_->setScene(scene_, audioConfig_, MO_AUDIO_THREAD);
+    audioEngine_->prepareUdp();
+    /** @note The audio engine is not actually running on the clients.
+     * It just receives udp packets and puts them into the buffers of
+     * the dsp graph. */
 }
 
 
@@ -522,7 +573,7 @@ void ClientEngine::setPlayback_(bool play)
 void ClientEngine::setClientIndex_(int index)
 {
     // XXX this variable requires parsing the whole xml
-    const int maxi = settings->getDefaultProjectionSettings().numProjectors();
+    const int maxi = settings()->getDefaultProjectionSettings().numProjectors();
 
     MO_ASSERT(maxi > 0, "Somethings wrong with the DefaultProjectionSettings");
 
@@ -532,7 +583,7 @@ void ClientEngine::setClientIndex_(int index)
                    << " because it's out of range (0-" << (maxi-1) << ")");
         index = maxi - 1;
     }
-    settings->setClientIndex(index);
+    settings()->setClientIndex(index);
     if (scene_)
         scene_->setProjectorIndex(index);
     sendState_();
@@ -550,18 +601,27 @@ void ClientEngine::onSceneReceived_(Scene * scene)
 
     sendState_();
 
-    // check for needed files
+    // -- check for needed files --
 
     IO::FileList files;
+    // [The filenames are the original filenames,
+    //  absolute paths from the system where the scene file
+    //  was created.]
     nextScene_->getNeededFiles(files);
 
     IO::fileManager().clear();
     IO::fileManager().addFilenames(files);
 
     if (!files.isEmpty())
+    {
         MO_PRINT("Checking file cache..");
-
-    IO::fileManager().acquireFiles();
+        IO::fileManager().acquireFiles();
+    }
+    else
+    {
+        MO_PRINT("Proceeding...");
+        onFilesReady_();
+    }
 }
 
 void ClientEngine::onFilesReady_()
@@ -583,6 +643,9 @@ void ClientEngine::onFilesNotReady_()
 
 void ClientEngine::setNextScene_()
 {
+    MO_DEBUG("ClientEngine::setNextScene_() nextScene_ == " << nextScene_
+             << ", scene_ == " << scene_);
+
     if (!nextScene_)
         return;
 
@@ -591,7 +654,7 @@ void ClientEngine::setNextScene_()
 
     setSceneObject(s);
 
-    if (glWindow_ && !glWindow_->isVisible())
+    if (glWindow_)// && !glWindow_->isVisible())
         showRenderWindow_(true);
 
     sendState_();
@@ -600,14 +663,16 @@ void ClientEngine::setNextScene_()
 void ClientEngine::sendState_()
 {
     NetEventClientState state;
-    state.state_.index_ = settings->clientIndex();
-    state.state_.desktop_ = settings->desktop();
+    state.state_.index_ = settings()->clientIndex();
+    state.state_.desktop_ = settings()->desktop();
     state.state_.isInfoWindow_ = infoWindow_ && infoWindow_->isVisible();
     state.state_.isRenderWindow_ = glWindow_ && glWindow_->isVisible();
     state.state_.isSceneReady_ = scene_ && !nextScene_;
-    state.state_.isPlayback_ = scene_;//YYY && scene_->isPlayback();
+    state.state_.isPlayback_ = scene_ && glManager_ && glManager_->isAnimating();
     state.state_.isFilesReady_ = isFilesReady_;
-
+    state.state_.cacheSize_ = IO::clientFiles().cacheSize();
+    state.state_.memory_ = Memory::allocated();
+    state.state_.outputSize_ = scene_ ? scene_->outputSize() : QSize();
     client_->sendEvent(state);
 }
 

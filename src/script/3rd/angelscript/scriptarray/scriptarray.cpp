@@ -246,12 +246,13 @@ void RegisterScriptArray(asIScriptEngine *engine, bool defaultArray)
 	if( defaultArray )
 	{
 		int r = engine->RegisterDefaultArrayType("array<T>"); assert( r >= 0 );
+        Q_UNUSED(r);
 	}
 }
 
 static void RegisterScriptArray_Native(asIScriptEngine *engine)
 {
-	int r;
+    int r; Q_UNUSED(r);
 
 	// Register the object type user data clean up
 	engine->SetObjectTypeUserDataCleanupCallback(CleanupObjectTypeArrayCache, ARRAY_CACHE);
@@ -1989,7 +1990,7 @@ static void ScriptArrayReleaseAllHandles_Generic(asIScriptGeneric *gen)
 
 static void RegisterScriptArray_Generic(asIScriptEngine *engine)
 {
-	int r;
+    int r; Q_UNUSED(r);
 
 	engine->SetObjectTypeUserDataCleanupCallback(CleanupObjectTypeArrayCache, ARRAY_CACHE);
 

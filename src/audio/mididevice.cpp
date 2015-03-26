@@ -115,12 +115,12 @@ void MidiDevice::close()
 
 bool MidiDevice::isMidiInputConfigured() const
 {
-    return settings->getValue("MidiIn/device").toString().size();
+    return settings()->getValue("MidiIn/device").toString().size();
 }
 
 bool MidiDevice::openInputFromSettings()
 {
-    QString devname = settings->getValue("MidiIn/device").toString();
+    QString devname = settings()->getValue("MidiIn/device").toString();
     if (devname.isEmpty())
     {
         QMessageBox::critical(0, QMessageBox::tr("midi input"),

@@ -178,6 +178,7 @@ void Oscillograph::createParameters()
     ObjectGl::createParameters();
 
     params()->beginParameterGroup("color", tr("color"));
+    initParameterGroupExpanded("color");
 
         p_->paramBright = params()->createFloatParameter("bright", "bright", tr("Overall brightness of the color"), 1.0, 0.1);
         p_->paramR = params()->createFloatParameter("red", "red", tr("Red amount of ambient color"), 1.0, 0.1);
@@ -321,7 +322,7 @@ void Oscillograph::createParameters()
 
     params()->beginParameterGroup("texture", "texture");
 
-        p_->textureSet->createParameters("_col", TextureSetting::TT_NONE, true);
+        p_->textureSet->createParameters("_col", TextureSetting::TEX_NONE, true);
 
     params()->endParameterGroup();
 }

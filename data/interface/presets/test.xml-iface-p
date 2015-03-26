@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<mo-xml>
+    <ui-presets version="1" name="ui-presets">
+        <ui-preset preset-id="default" version="1" name="default">
+            <properties version="1">
+                <property id="item14" v="float#0.0016"/>
+                <property id="item16" v="float#0.075871"/>
+                <property id="item18" v="float#0.0016"/>
+                <property id="item29" v="float#0.325"/>
+                <property id="item30" v="float#0.4625"/>
+                <property id="item31" v="float#0.314516"/>
+                <property id="item32" v="float#0.16129"/>
+                <property id="item33" v="float#2.82258"/>
+                <property id="item34" v="float#0.217742"/>
+                <property id="item35" v="float#0.45"/>
+                <property id="item37" v="float#0.508065"/>
+                <property id="item39" v="float#13.9032"/>
+            </properties>
+        </ui-preset>
+        <ui-preset preset-id="preset1" version="1" name="preset1">
+            <properties version="1">
+                <property id="item14" v="float#0.0008"/>
+                <property id="item16" v="float#0.067871"/>
+                <property id="item18" v="float#0.0008"/>
+                <property id="item29" v="float#0.325"/>
+                <property id="item30" v="float#0.8817"/>
+                <property id="item31" v="float#0.467742"/>
+                <property id="item32" v="float#0.16129"/>
+                <property id="item33" v="float#0.403225"/>
+                <property id="item34" v="float#0.217742"/>
+                <property id="item35" v="float#0.714"/>
+                <property id="item37" v="float#0.693549"/>
+                <property id="item39" v="float#11.4838"/>
+            </properties>
+        </ui-preset>
+        <ui-preset preset-id="preset2" version="1" name="preset2">
+            <properties version="1">
+                <property id="item14" v="float#0.0008"/>
+                <property id="item16" v="float#0.067871"/>
+                <property id="item18" v="float#0.0008"/>
+                <property id="item29" v="float#0.3474"/>
+                <property id="item30" v="float#0.3195"/>
+                <property id="item31" v="float#0"/>
+                <property id="item32" v="float#0"/>
+                <property id="item33" v="float#0.645161"/>
+                <property id="item34" v="float#1"/>
+                <property id="item35" v="float#0.7204"/>
+                <property id="item37" v="float#0.693549"/>
+                <property id="item39" v="float#11.4838"/>
+            </properties>
+        </ui-preset>
+    </ui-presets>
+</mo-xml>

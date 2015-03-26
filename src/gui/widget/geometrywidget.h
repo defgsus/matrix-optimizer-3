@@ -45,12 +45,12 @@ public slots:
     void setShowGrid(bool enable) { showGrid_ = enable; update(); }
     void setShowTexture(bool enable) { showTexture_ = enable; update(); }
     void setShowNormalMap(bool enable) { showNormalMap_ = enable; update(); }
-    void setShowLights(bool enable) { setLights_(enable? 0.7:0); update(); }
+    void setShowLights(bool enable) { showLights_ = enable; update(); }
     void setPointsize(int size) { pointsize_ = size; update(); }
 
 protected:
 
-    void setLights_(Float amp);
+    void setLights_(Float amp, const Mat4& trans);
 
     void initGL() Q_DECL_OVERRIDE;
 

@@ -22,7 +22,10 @@ class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
 class ProjectionSystemSettings;
+class Settings;
 
+/** singleton instance */
+Settings * settings();
 
 class Settings : public QSettings
 {
@@ -30,10 +33,13 @@ class Settings : public QSettings
 public:
     explicit Settings(QObject *parent = 0);
 
+    /** Returns some settings as printable string */
+    QString infoString() const;
+
     /** Returns the value for key.
         If key is unknown, warning is printed
         and empty QVariant() returned. */
-    QVariant getValue(const QString& key);
+    QVariant getValue(const QString& key) const;
 
 #if (0)
     /** Stores the geometry provided the QWidget::objectName() is set */
@@ -53,20 +59,20 @@ public:
     bool restoreGeometry(QWidget *);
 
     /** Returns address of the server */
-    QString serverAddress();
+    QString serverAddress() const;
     void setServerAddress(const QString&);
 
-    QString udpAudioMulticastAddress();
+    QString udpAudioMulticastAddress() const;
     void setUdpAudioMulticastAddress(const QString&);
-    uint16_t udpAudioMulticastPort();
+    uint16_t udpAudioMulticastPort() const;
     void setUdpAudioMulticastPort(uint16_t);
 
     /** Returns the index of the client */
-    int clientIndex();
+    int clientIndex() const;
     void setClientIndex(int);
 
     /** Selected desktop index */
-    uint desktop();
+    uint desktop() const;
     void setDesktop(uint index);
 
     /** Application style sheet */
@@ -94,9 +100,6 @@ private:
 
     QMap<QString, QVariant> defaultValues_;
 };
-
-/** singleton instance */
-extern Settings * settings;
 
 
 } // namespace MO

@@ -265,7 +265,15 @@ HEADERS += \
     src/network/udpconnection.h \
     src/script/angelscript_network.h \
     src/network/udpaudioconnection.h \
-    src/types/refcounted.h
+    src/types/refcounted.h \
+    src/script/angelscript_image.h \
+    src/io/time.h \
+    src/tool/asciirect.h \
+    src/types/properties.h \
+    src/io/docbookexporter.h \
+    src/maincommandline.h \
+    src/gl/offscreencontext.h \
+    src/io/diskrendersettings.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -492,4 +500,12 @@ SOURCES += \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \
-    src/network/udpaudioconnection.cpp
+    src/network/udpaudioconnection.cpp \
+    src/script/angelscript_image.cpp \
+    src/io/time.cpp \
+    src/tool/asciirect.cpp \
+    src/types/properties.cpp \
+    src/io/docbookexporter.cpp \
+    src/maincommandline.cpp \
+    src/gl/offscreencontext.cpp \
+    src/io/diskrendersettings.cpp

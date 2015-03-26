@@ -48,11 +48,6 @@ void SyntaxHighlighter::setNames(const QStringList &variables,
 
     HighlightingRule rule;
 
-    // setup single line comments
-    rule.pattern = QRegExp("//[^\n]*");
-    rule.format = commentFormat_;
-    rules_.append(rule);
-
     // -- styles for each category --
 
     QTextCharFormat
@@ -104,6 +99,14 @@ void SyntaxHighlighter::setNames(const QStringList &variables,
         rule.format = reservedFormat;
         rules_.append(rule);
     }
+
+    // single line comments
+    // [They are at the end here,
+    //  so keywords in comments will not be highlighted.]
+    rule.pattern = QRegExp("//[^\n]*");
+    rule.format = commentFormat_;
+    rules_.append(rule);
+
 }
 
 
@@ -251,6 +254,8 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
     {
         funcs << QString( engine->GetGlobalFunctionByIndex(i)->GetName() );
     }
+
+    // -- reserved words --
 
     types << "void" << "float" << "double" << "bool"
           << "int" << "int8" << "int16" << "int" << "int64"

@@ -33,15 +33,12 @@ class SpinBox;
 class DoubleSpinBox;
 class GroupWidget;
 class ParameterWidget;
-class SceneSettings;
 
 class ParameterView : public QWidget
 {
     Q_OBJECT
 public:
     explicit ParameterView(QWidget *parent = 0);
-
-    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
 
 signals:
 
@@ -84,7 +81,6 @@ private:
 
     Scene * scene_;
     ObjectEditor * editor_;
-    SceneSettings * sceneSettings_;
     Object * object_;
     QList<Parameter*> parameters_;
     QList<QWidget*> widgets_;

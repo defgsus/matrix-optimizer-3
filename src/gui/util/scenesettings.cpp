@@ -21,6 +21,8 @@
 #include "object/track.h"
 #include "object/sequence.h"
 #include "object/sequencefloat.h"
+#include "object/param/parameters.h"
+
 
 namespace MO {
 namespace GUI {
@@ -230,7 +232,7 @@ int SceneSettings::getTrackHeight(const Track * track) const
 
     return i.value();
 }
-
+/*
 void SceneSettings::setParameterGroupExpanded(
         const Object * obj, const QString &groupId, bool expanded)
 {
@@ -246,7 +248,7 @@ bool SceneSettings::getParameterGroupExpanded(const Object * obj, const QString 
     const QString id = obj->idName() + "/" + groupId;
     return paramGroupExpanded_.contains(id);
 }
-
+*/
 
 void SceneSettings::copySettings(const Object *dst, const Object *src)
 {
@@ -286,6 +288,13 @@ void SceneSettings::updateTreeForCompatibility(Object * o)
     auto j = treeExpanded_.find("0/" + o->idName());
     if (j != treeExpanded_.end())
         o->setAttachedData(true, Object::DT_GRAPH_EXPANDED);
+
+    for (const QString & i : paramGroupExpanded_)
+    if (i.startsWith(o->idName()))
+    {
+        QString group = i.mid(i.indexOf("/")+1);
+        o->setAttachedData(true, Object::DT_PARAM_GROUP_EXPANDED, group);
+    }
 
     // traverse childs
     for (auto c : o->childObjects())

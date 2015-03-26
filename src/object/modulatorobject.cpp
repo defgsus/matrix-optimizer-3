@@ -10,7 +10,7 @@
 
 #include "modulatorobject.h"
 #include "io/datastream.h"
-
+#include "io/log.h"
 
 namespace MO {
 
@@ -22,13 +22,19 @@ ModulatorObject::ModulatorObject(QObject *parent) :
 void ModulatorObject::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("modobj", 1);
+    io.writeHeader("modobj", 2);
+
+    // v2
+    io << p_uiId_;
 }
 
 void ModulatorObject::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    io.readHeader("modobj", 1);
+    const int ver = io.readHeader("modobj", 2);
+
+    if (ver >= 2)
+        io >> p_uiId_;
 }
 
 

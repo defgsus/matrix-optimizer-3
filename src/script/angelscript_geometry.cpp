@@ -16,6 +16,7 @@
 
 #include "angelscript_geometry.h"
 #include "angelscript_object.h"
+#include "angelscript_math.h"
 #include "angelscript.h"
 #include "3rd/angelscript/scriptarray/scriptarray.h"
 #include "object/object.h"
@@ -342,6 +343,7 @@ public:
 
     void applySpringForceTriangles(Float restd, Float delta)
     {
+        const Float enough = 10.0;
         for (uint i=0; i<g->numTriangles(); ++i)
         {
             auto    i0 = g->triangleIndex(i, 0),
@@ -353,9 +355,9 @@ public:
                     p01 = p1 - p0,
                     p02 = p2 - p0,
                     p12 = p2 - p1;
-            Vec3    l01 = (glm::length(p01) - restd) * delta * p01,
-                    l02 = (glm::length(p02) - restd) * delta * p02,
-                    l12 = (glm::length(p12) - restd) * delta * p12;
+            Vec3    l01 = glm::clamp((glm::length(p01) - restd) * delta * p01, -enough, enough),
+                    l02 = glm::clamp((glm::length(p02) - restd) * delta * p02, -enough, enough),
+                    l12 = glm::clamp((glm::length(p12) - restd) * delta * p12, -enough, enough);
             g->setVertex(i0, p0 + l01 + l02);
             g->setVertex(i1, p1 - l01 + l12);
             g->setVertex(i2, p2 - l02 - l12);
@@ -398,6 +400,7 @@ GeometryAS * geometry_to_angelscript(const GEOM::Geometry *g)
 }
 
 
+/** Scalar Field Wrapper with the most common functions :) */
 
 class ScalarFieldAS : public RefCounted
 {
@@ -445,10 +448,17 @@ public:
     };
 
     std::vector<Shape> shapes;
+    uint max_steps;
+    Float surface_threshold,
+          trace_precission;
+    RandomAS rnd;
 
     // -------------- factory for script -----------
 
     ScalarFieldAS()
+        : max_steps         (100),
+          surface_threshold (0.002),
+          trace_precission  (1.0)
     {
         MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::ScalarFieldAS()");
     }
@@ -467,6 +477,7 @@ public:
 
     void addShape(const Shape& s) { shapes.push_back(s); }
 
+    /** Returns distance to a shape */
     float distance(const Vec3& pos, const Shape& s) const
     {
         switch (s.type)
@@ -520,6 +531,37 @@ public:
                     ));
     }
 
+    float trace(const Vec3& pos, const Vec3& dir, float max_t) const { return trace_p(pos, dir, max_t, trace_precission); }
+    float trace_p(const Vec3& pos, const Vec3& dir, float max_t, float prec) const
+    {
+        float t = 0.0;
+        for (uint i=0; i<max_steps && t<max_t; ++i)
+        {
+            const Vec3 p = pos + dir * t;
+            const Float d = value(p);
+
+            if (d <= surface_threshold)
+                break;
+
+            t += d * prec;
+        }
+        return t;
+    }
+
+    float ambient(const Vec3& pos, const Vec3 & dir, float max_dist, float spread, int num)
+    {
+        float amb = 0.f;
+
+        for (int i=0; i<num; ++i)
+        {
+            Vec3 d = glm::normalize(dir + rnd.getVec3MinMax(-1,1) * spread);
+            float t = trace(pos, d, max_dist);
+            amb += t / max_dist;
+        }
+
+        return std::min(1.f, amb / num);
+    }
+
     // ------- setter --------
 
     void clear() { shapes.clear(); }
@@ -540,6 +582,13 @@ public:
         GEOM::MarchingCubes mc;
         mc.renderScalarField(*g->g, minE, maxE, Vec3(w,h,d), isolevel, [=](const Vec3& p) { return value(p); });
     }
+    void marchingTetras(GeometryAS * g, int size, const Vec3& minE, const Vec3& maxE, float isolevel) { marchingTetras3(g,size,size,size,minE,maxE,isolevel); }
+    void marchingTetras3(GeometryAS * g, int w, int h, int d, const Vec3& minE, const Vec3& maxE, float isolevel)
+    {
+        GEOM::MarchingCubes mc;
+        mc.renderScalarFieldTetra(*g->g, minE, maxE, Vec3(w,h,d), isolevel, [=](const Vec3& p) { return value(p); });
+    }
+
 };
 
 
@@ -781,6 +830,9 @@ static void register_scalarField(asIScriptEngine *engine)
     MO__REG_TRUE_METHOD("float distance(const vec3 &in pos) const", value);
     MO__REG_TRUE_METHOD("float value(const vec3 &in pos) const", value);
     MO__REG_TRUE_METHOD("vec3 normal(const vec3 &in pos, float epsilon = 0.01f) const", normal);
+    MO__REG_TRUE_METHOD("float trace(const vec3 &in pos, const vec3 &in dir_norm, float max_dist = 10.f) const", trace);
+    MO__REG_TRUE_METHOD("float trace(const vec3 &in pos, const vec3 &in dir_norm, float max_dist, float precision) const", trace_p);
+    MO__REG_TRUE_METHOD("float ambient(const vec3 &in pos, const vec3 &in dir_norm, float max_dist = 1.f, float spread = 0.3f, uint num_rays = 10.f) const", ambient);
 
     // ---- setter ----
 
@@ -796,6 +848,12 @@ static void register_scalarField(asIScriptEngine *engine)
     MO__REG_TRUE_METHOD("void marchingCubes(Geometry@ g, int w, int h, int d, "
                         "const vec3 &in minExtend = vec3(-1), const vec3 &in maxExtend = vec3(1), float isolevel = 0.f)",
                         marchingCubes3);
+    MO__REG_TRUE_METHOD("void marchingTetras(Geometry@ g, int size, "
+                        "const vec3 &in minExtend = vec3(-1), const vec3 &in maxExtend = vec3(1), float isolevel = 0.f)",
+                        marchingTetras);
+    MO__REG_TRUE_METHOD("void marchingTetras(Geometry@ g, int w, int h, int d, "
+                        "const vec3 &in minExtend = vec3(-1), const vec3 &in maxExtend = vec3(1), float isolevel = 0.f)",
+                        marchingTetras3);
 
 
 

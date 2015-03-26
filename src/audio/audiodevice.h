@@ -50,9 +50,9 @@ namespace AUDIO {
 
     void main()
     {
-        using namespace CSMOD;
         using namespace std::placeholders;
 
+        // show the list of devices present on the system
         AudioDevices devs;
         devs.checkDevices();
         devs.dump_info();
@@ -68,6 +68,7 @@ namespace AUDIO {
 
         sleep(1);
 
+        // Would be done by destructor otherwise
         dev.stop();
         dev.close();
     }
@@ -133,8 +134,9 @@ public:
     bool initFromSettings();
 
     /** Initializes a device/stream.
-        @p inDeviceIndex and outDeviceIndex are the host-os device numbers as returned by CSMOD::AudioDevices.
+        @p inDeviceIndex and @p outDeviceIndex are the host-os device numbers as returned by CSMOD::AudioDevices.
         One of them can be set to -1, if you do not need the particular stream.
+        If one of them is set to the 'null' device, initFake() will be called internally.
         @p numInputChannels and @p numOutputChannels is the number of channels requested
         for the input and output.
         @p sampleRate sets the desired samples per second and can be left zero
@@ -155,7 +157,14 @@ public:
     /** look for other init() function for description. */
     void init(int inDeviceIndex, int outDeviceIndex, const Configuration& props);
 
-    /** close the audio stream.
+    void initFake(const Configuration& c)
+        { initFake(c.numChannelsIn(), c.numChannelsOut(), c.sampleRate(), c.bufferSize()); }
+    void initFake(uint numInputChannels,
+                  uint numOutputChannels,
+                  uint sampleRate,
+                  uint bufferSize);
+
+    /** Closes the audio stream.
         @throws AudioException on any error.
         */
     void close();
@@ -169,8 +178,11 @@ public:
         input holds numInputChannels() * bufferLength() floats and output
         has place for numOutputChannels() * bufferLength() floats.
         @note It's common practice to only do memory-shifting and calculation
-        in this thread and not call any OS functions. Some say you should even
-        avoid mutexes. */
+        in this thread and not call <b>any</b> OS functions. Some say you should even
+        <b>avoid mutexes</b> at all.
+        @see MO::LocklessQueue for managing this. In particular, you should create a
+        normal worker thread that does everything (even memory allocation) and then send the
+        audio buffers to this audio-thread via the LocklessQueue. */
     void setCallback(Callback func);
 
     // ------------- runtime -------------

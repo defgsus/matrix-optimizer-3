@@ -102,9 +102,13 @@ public:
         If an object is given, it is made available to scripts */
     void execute(Geometry * g, Object* o = 0) const;
 
+    /** Will stop execution as soon as possible when called asynchronously to execute() */
+    void stop();
+
 private:
 
     QList<GeometryModifier*> modifiers_;
+    volatile mutable bool doStop_;
 
     static QMap<QString, GeometryModifier*> * registeredModifiers_;
 };

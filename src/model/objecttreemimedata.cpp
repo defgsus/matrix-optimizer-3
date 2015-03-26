@@ -39,7 +39,7 @@ QStringList ObjectTreeMimeData::formats() const
 
 bool ObjectTreeMimeData::isObjectInClipboard()
 {
-    return application->clipboard()->mimeData()->formats()
+    return application()->clipboard()->mimeData()->formats()
             .contains(objectMimeType);
 }
 
@@ -49,17 +49,17 @@ int ObjectTreeMimeData::numObjectsInClipboard()
         return 0;
 
     return static_cast<const ObjectTreeMimeData*>(
-                application->clipboard()->mimeData())->getNumObjects();
+                application()->clipboard()->mimeData())->getNumObjects();
 }
 
 bool ObjectTreeMimeData::isObjectTypeInClipboard(int typeFlags)
 {
-    if (!application->clipboard()->mimeData()->formats()
+    if (!application()->clipboard()->mimeData()->formats()
                 .contains(objectMimeType))
         return false;
 
     Object::Type type = static_cast<const ObjectTreeMimeData*>(
-                application->clipboard()->mimeData())->getObjectType();
+                application()->clipboard()->mimeData())->getObjectType();
 
     return type & typeFlags;
 }

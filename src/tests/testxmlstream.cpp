@@ -1,4 +1,4 @@
-/** @file testio.cpp
+/** @file testxmlstream.cpp
 
     @brief
 

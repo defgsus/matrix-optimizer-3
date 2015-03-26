@@ -1,4 +1,4 @@
-/** @file model.cpp
+/** @file geometry.cpp
 
     @brief Geometry container
 
@@ -439,6 +439,17 @@ Geometry::IndexType Geometry::addVertexAlways(
     }
 
     return numVertices() - 1;
+}
+
+void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
+{
+    if (checkTriangle(p1, p2, p3))
+    {
+        auto i1 = addVertex(p1.x, p1.y, p1.z),
+             i2 = addVertex(p2.x, p2.y, p2.z),
+             i3 = addVertex(p3.x, p3.y, p3.z);
+        addTriangle(i1, i2, i3);
+    }
 }
 
 void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)

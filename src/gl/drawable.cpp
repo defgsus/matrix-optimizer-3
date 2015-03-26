@@ -48,6 +48,10 @@ Drawable::~Drawable()
 {
     MO_DEBUG_GL("Drawable(" << name_ << ")::~Drawable()");
 
+    if (vao_ && vao_->isCreated())
+        MO_GL_WARNING("Release of initialized vao in Drawable - OpenGL resource leak");
+    delete vao_;
+
     delete shader_;
     delete shaderSource_;
     if (geometry_)
@@ -85,6 +89,12 @@ VertexArrayObject * Drawable::vao()
 bool Drawable::isReady() const
 {
     return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->ready();
+}
+
+bool Drawable::isCreated() const
+{
+    return (vao_ && vao_->isCreated())
+            || (shader_ && shader_->ready());
 }
 
 void Drawable::setGeometry(GEOM::Geometry * g)
@@ -161,7 +171,8 @@ void Drawable::compileShader_()
         for (auto & name : list)
         {
             GEOM::Geometry::UserAttribute * attr = geometry_->getAttribute(name);
-            MO_ASSERT(attr, "Declared Attribute '" << name << "' not found in Geometry, Drawable '" << this->name_ << "'");
+            MO_ASSERT(attr, "Declared Attribute '"
+                      << name << "' not found in Geometry, Drawable '" << this->name_ << "'");
             text += attr->declaration();
         }
         shaderSource_->replace("//%user_attributes%", text);
@@ -290,12 +301,12 @@ void Drawable::releaseOpenGl()
 
     uniColor_ = 0;
 
-    if (!vao_)
+    if (vao_)
     {
         vao_->release();
-        //delete vao_;
+        delete vao_;
     }
-    //vao_ = 0;
+    vao_ = 0;
 }
 
 void Drawable::setAmbientColor(Float r, Float g, Float b, Float a)

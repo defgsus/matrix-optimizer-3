@@ -1,0 +1,5 @@
+<p>The camera object is used to render the visible objects. You'll always need at least one camera. Place transformation objects inside the camera to change it's position and rotation. Use the parameters of the camera object to control the projection type, resolution and post-processing options.</p>
+
+<p><b>Currently</b> each camera renders <b>all</b> visible objects in the scene. This is going to change in the future, when you can select which groups of objects to draw for each camera.</p>
+
+<p>The camera has no output (texture connections will be added later). Instead, the image of the scene that is rendered is directly output to the screen. When there is more than one camera in the scene, the images are stacked on top of each other in the order of the camera objects. Use the <a href="#parameters">camera parameters</a> to control the alpha value and the type of blending. This way you can mix between different cameras.</p>

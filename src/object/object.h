@@ -242,6 +242,8 @@ public:
     /** Override to restore custom data after all object childs have been deserialized. */
     virtual void deserializeAfterChilds(IO::DataStream&) { }
 
+    QString getIoLoadErrors() const;
+
     // --------------- getter -------------------
 
     /** Name of the object class, for creating objects at runtime.
@@ -261,6 +263,8 @@ public:
     QString idNamePath() const;
 
     virtual bool isValid() const { return true; }
+    /** Returns whether the Object should be displayed to the user. */
+    virtual bool isVisible() const { return p_visible_; }
 
     virtual Type type() const { return T_NONE; }
     virtual bool isScene() const { return false; }
@@ -348,6 +352,10 @@ public:
         will be reflected in their active() method. */
     void setCurrentActivityScope(ActivityScope scope);
 
+    /** Sets the visibility flag, nothing else.
+        This flag should be set before the object is exposed to any views. */
+    void setVisible(bool v) { p_visible_ = v; }
+
     // ---------- tree getter --------------------
 
     /** Test if object @p newChild can be added to this object.
@@ -404,10 +412,20 @@ public:
     virtual bool canHaveChildren(Type type) const;
 
     /** Read-access to the list of childs */
-    const QList<Object*> childObjects() const { return p_childObjects_; }
+    const QList<Object*>& childObjects() const { return p_childObjects_; }
 
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
+
+    /** Returns the object matching the path in @p namePath.
+        @p namePath can be of the form '/name1/name2' or 'name1/name2'.
+        In the first form, name1 is expected to be a direct child of this object,
+        in the latter form, name1 can be anywhere down the branches.
+        Returns NULL, if the object was not found. */
+    Object * findObjectByNamePath(const QString& namePath) const;
+
+    /** Helper function for the other findObjectByIdPath() method. */
+    Object * findObjectByNamePath(const QStringList& names, int offset = 0, bool firstIsRoot = false) const;
 
     /** Returns the first object, including self, for which @p selector returns true,
         or NULL. */
@@ -544,6 +562,19 @@ public:
         XXX Only used by TrackFloat a.t.m. */
     virtual void collectModulators() { };
 
+    /** Removes all modulator ids from all parameters for which
+        no modulator object has been found. */
+    void removeNullModulators(bool recursive);
+
+    /** Removes all modulators from all parameters, who's ids
+        are not in the current tree.
+        @note low-level function, not really part of interface. */
+    void removeOutsideModulators(bool recursive);
+
+    /** Removes all modulators with the given ids.
+        @note low-level function, not really part of interface. */
+    void removeModulators(const QList<QString>& modulatorIds, bool recursive);
+
     /** Returns all modulators of all parameters of this object.
         If @p recursive is true, all childs will add their Modulators too. */
     QList<Modulator*> getModulators(bool recursive = false) const;
@@ -598,6 +629,13 @@ public:
         XXX Right now it's a bit unclear, what is possible here except from lazy requests. */
     virtual void onParametersLoaded() { }
 
+protected:
+
+    /** Sets the given parameter group's expansion flag default value.
+        The value is unchanged if it had already been changed.
+        This can be used in createParameters() to set particular goups to expanded
+        by default. */
+    void initParameterGroupExpanded(const QString& groupId, bool expanded = true);
 
     // ------------------- audio ------------------
 public:
@@ -612,6 +650,16 @@ public:
         @note Be sure to call the ancestor class implementation in your derived method!
         */
     virtual void setSampleRate(uint samplerate);
+
+    /** When the Object is loaded from a template via ObjectFactory::loadObject(),
+        it will have it's internal tree audio connections here, so the scene
+        can incorporate them. */
+    AudioObjectConnections * getAssignedAudioConnections() const;
+
+    /** Assigns audio connections to the object. This just copies the pointer.
+        Only used for saving templates via ObjectFactory::saveObject()
+        The ownership is taken. Assign NULL to clear existing. */
+    void assignAudioConnections(AudioObjectConnections *);
 
     // ------------------ spatial audio -------------------
 
@@ -728,7 +776,7 @@ private:
 
     QString p_idName_, p_name_;
 
-    bool p_canBeDeleted_;
+    bool p_canBeDeleted_, p_visible_;
 
     int p_ref_;
 
@@ -758,6 +806,8 @@ private:
     uint p_sampleRate_;
     Double p_sampleRateInv_;
 
+    AudioObjectConnections * p_aoCons_;
+
     // ------------ runtime ------------------
 
     ActivityScope
@@ -767,9 +817,11 @@ private:
         p_currentActivityScope_;
 
     // ----------- position ------------------
-    // XXX deprecated
+
+    /** @deprecated */
     Mat4 p_transformation_;
 
+    QString ioLoadErrorStr_;
 };
 
 

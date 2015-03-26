@@ -23,6 +23,7 @@ class QReadWriteLock;
 
 namespace MO {
 namespace AUDIO { class AudioDevice; }
+namespace GUI { class FrontScene; }
 
 class AudioOutThread;
 class AudioInThread;
@@ -30,13 +31,15 @@ template <typename T> class LocklessQueue;
 class ProjectionSystemSettings;
 
 
-/** Handles tree managment, locking, rendering and audio processing */
+/** Handles tree managment, locking and rendering.
+    Audio processing is moved to ObjectDspPath.
+    @todo Rendering will be moved to ObjectGlPath some day...
+*/
 class Scene : public Object
 {
     Q_OBJECT
 
-    // for updateTree_()
-    friend class Object;
+    friend class Object; // for updateTree_()
     friend class ScopedSceneLockRead;
     friend class ScopedSceneLockWrite;
     friend class AudioOutThread;
@@ -89,6 +92,35 @@ public:
     /** Returns a list of all objects that currently serve as modulator */
     QSet<Object*> getAllModulators() const;
 
+    // ------------- ui modulators -------------
+
+    /** Returns (and creates, if necessary) a ModulatorObject as proxy for
+        an GUI::AbstractFrontItem. The ModulatorObject will be invisible to
+        the user. */
+    ModulatorObject * createUiModulator(const QString& uiId);
+
+    /** Returns all ModulatorObjects that belong to the ui item IDs */
+    QList<ModulatorObject*> getUiModulatorObjects(const QList<QString>& uiIds) const;
+#if 0
+    /** Returns all Modulators that belong to the ui item IDs.
+        The Modulator will have as source the proxy ModulatorObject and as
+        goal the actual goal of the ui controller. */
+    QList<Modulator*> getUiModulators(const QList<QString>& uiIds) const;
+#endif
+    /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
+    void setUiValue(const QString& uiId, Double timeStamp, Float value);
+
+    // ------------- ui IO ---------------------
+
+    /** Attaches a FrontScene to the scene.
+        The FrontScene will be serialized with the scene.
+        Otherwise the FrontScene is not touched. */
+    void setFrontScene(GUI::FrontScene * s) { frontScene_ = s; }
+
+    /** Returns the FrontScene xml that has been deserialized.
+        If there was no interface saved with the scene, an empty string is returned. */
+    QString frontSceneXml() const { return frontSceneXml_; }
+
     // ------------- open gl -------------------
 
     // XXX These can be separate per thread!
@@ -106,6 +138,8 @@ public:
     /** Sets the flag if output resolution should be matched by scene fbo resolution.
         This does not do anything else than storing the flag! */
     void setMatchOutputResolution(bool enable) { doMatchOutputResolution_ = enable; }
+
+    QSize outputSize() const { return fbSize_; }
 
     /** Sets the output framebuffer size.
         This is only a request! The framebuffer will change just
@@ -230,6 +264,11 @@ public slots:
     void setSceneTime(Double time, bool send_signal = true);
     void setSceneTime(SamplePos pos, bool send_signal = true);
 
+    /** Send keydown into system.
+        XXX a hack basically - and not used yet */
+    void keyDown(int key);
+    void keyUp(int key);
+
     // ------------- open gl -------------------
 
     bool isShutDown() const { return isShutDown_; }
@@ -264,7 +303,7 @@ public slots:
 
     /** Render the whole scene on the current context.
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
-    void renderScene(Double time, uint thread, GL::FrameBufferObject * fbo = 0);
+    void renderScene(Double time, uint thread);//, GL::FrameBufferObject * fbo = 0);
 
 private slots:
 
@@ -331,6 +370,8 @@ private:
     // -------------- model --------------------
 
     ObjectEditor * editor_;
+    GUI::FrontScene * frontScene_;
+    QString frontSceneXml_;
 
     // ---------- opengl -----------------------
 
@@ -373,6 +414,7 @@ private:
     QList<LightSource*> lightSources_;
     //QList<AudioUnit*> topLevelAudioUnits_;
     QList<Object*> deletedObjects_;
+    QMap<QString, ModulatorObjectFloat*> uiModsFloat_;
 
     // ---------- properties -------------------
 

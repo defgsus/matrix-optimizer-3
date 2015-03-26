@@ -58,6 +58,27 @@ void ParameterInt::deserialize(IO::DataStream &io)
     value_ = v;
 }
 
+
+QString ParameterInt::getDocType() const
+{
+    QString str = typeName();
+
+    // get range string
+    bool limmin = minValue() > -infinity,
+         limmax = maxValue() < infinity;
+    if (limmin || limmax)
+    {
+        if (limmin && limmax)
+            str += " " + QObject::tr("range [%1, %2]").arg(minValue()).arg(maxValue());
+        else if (limmin)
+            str += " >= " + QString::number(minValue());
+        else
+            str += " <= " + QString::number(maxValue());
+    }
+
+    return str;
+}
+
 int ParameterInt::getModulatorTypes() const
 {
     return Object::T_TRACK_FLOAT

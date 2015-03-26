@@ -66,6 +66,13 @@ public:
     AudioObjectConnections();
     ~AudioObjectConnections();
 
+    AudioObjectConnections(const AudioObjectConnections&);
+    AudioObjectConnections& operator = (const AudioObjectConnections&);
+
+    void swap(AudioObjectConnections& other);
+    void copyFrom(const AudioObjectConnections& other);
+    void addFrom(const AudioObjectConnections& other);
+
     // -------------------- io -----------------------
 
     void serialize(IO::DataStream&) const;
@@ -81,6 +88,8 @@ public:
     std::set<AudioObjectConnection*>::const_iterator end() const { return cons_.cend(); }
 
     // --------------- getter ------------------------
+
+    bool isEmpty() const { return cons_.empty(); }
 
     bool contains(AudioObject * o) const { return toMap_.find(o) != toMap_.end()
                                                || fromMap_.find(o) != fromMap_.end(); }
@@ -119,13 +128,17 @@ public:
     void disconnect(AudioObjectConnection *);
 
     /** Removes all objects and their edges recursively */
-    void remove(Object *);
+    void remove(Object * tree);
+
+    /** Returns a new connection container containing only the connections
+        that are in the given tree (from and to). */
+    AudioObjectConnections reducedTo(const Object * tree) const;
 
 private:
 
     // disable copy
-    AudioObjectConnections(const AudioObjectConnections&);
-    AudioObjectConnections& operator = (const AudioObjectConnections&);
+    //AudioObjectConnections(const AudioObjectConnections&);
+    //AudioObjectConnections& operator = (const AudioObjectConnections&);
 
     std::multimap<AudioObject*, AudioObjectConnection*>
         toMap_, fromMap_;

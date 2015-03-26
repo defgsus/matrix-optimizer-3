@@ -8,6 +8,8 @@
     <p>created 02.11.2014</p>
 */
 
+#include <QTextStream>
+
 #include "parameters.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -104,6 +106,122 @@ Parameter * Parameters::findParameter(const QString &id)
 }
 
 
+QMap<QString, QList<Parameter*>> Parameters::getParameterGroups() const
+{
+    QMap<QString, QList<Parameter*>> map;
+    for (auto p : parameters_)
+    {
+        auto i = map.find(p->groupName());
+        if (i == map.end())
+            map.insert(p->groupName(), QList<Parameter*>() << p);
+        else
+            i.value() << p;
+    }
+    return map;
+}
+
+QList<Object*> Parameters::getModulatingObjects(bool recursive) const
+{
+    QSet<Object*> set;
+    getModulatingObjects(set, recursive);
+    return set.toList();
+}
+
+void Parameters::getModulatingObjects(QSet<Object*>& set, bool recursive) const
+{
+    for (auto p : parameters_)
+    {
+        auto l = p->getModulatingObjects(recursive);
+        for (auto o : l)
+            set.insert(o);
+    }
+}
+
+QList<QString> Parameters::getModulatorIds() const
+{
+    QSet<QString> set;
+    getModulatorIds(set);
+    return set.toList();
+}
+
+void Parameters::getModulatorIds(QSet<QString>& set) const
+{
+    for (auto p : parameters_)
+    {
+        auto l = p->getModulatorIds();
+        for (auto o : l)
+            set.insert(o);
+    }
+}
+
+void Parameters::removeModulators(const QList<QString> &ids)
+{
+    for (auto p : parameters_)
+        p->removeAllModulators(ids);
+}
+
+
+namespace {
+    QString toAnchor(QString name)
+    {
+        name.replace(QRegExp("![a-z,A-Z]"), " ");
+        return name;
+    }
+}
+
+QString Parameters::getParameterDoc() const
+{
+    QString retstr;
+    QTextStream html(&retstr);
+
+    auto groups = getParameterGroups();
+
+    // group index
+    html << "<ul>";
+    for (auto gi = groups.begin(); gi != groups.end(); ++gi)
+    {
+        html << "<li><a href=\"#" << toAnchor(gi.key()) << "\">"
+             << gi.key() << "</a></li>";
+    }
+    html << "</ul>";
+
+    // actual parameters
+    html << "<ul>";
+
+    for (auto gi = groups.begin(); gi != groups.end(); ++gi)
+    {
+        const QString groupName = gi.key();
+        // exclude activity, it's the same for all
+        // and not even fully used right now.
+        // XXX hacky exclusion in the face of translations..
+        if (groupName == Object::tr("activity"))
+            continue;
+
+        const QList<Parameter*>& params = gi.value();
+
+        html << "<a name=\"" << toAnchor(groupName) << "\"></a>"
+             << "<h3>" << groupName << "</h3><ul>\n";
+
+        for (const Parameter * p : params)
+        {
+            html << p->getDoc() << "\n";
+        }
+
+        html << "</ul>\n";
+    }
+
+    html << "</ul>\n";
+
+    return retstr;
+}
+
+
+
+
+
+
+
+// ------------------------------ parameter creation ----------------------------------
 
 
 void Parameters::beginParameterGroup(const QString &id, const QString &name)
@@ -278,6 +396,9 @@ ParameterSelect * Parameters::createSelectParameter(
             const QStringList& valueIds, const QStringList& valueNames, const QList<int> &valueList,
             int defaultValue, bool editable, bool modulateable)
 {
+    MO_ASSERT(valueIds.size() == valueNames.size()
+           && valueIds.size() == valueList.size(), "list size mismatch for parameter '" << name << "'");
+
     return createSelectParameter(id, name, statusTip,
                                  valueIds, valueNames, QStringList(), valueList,
                                  defaultValue, editable, modulateable);
@@ -289,6 +410,10 @@ ParameterSelect * Parameters::createSelectParameter(
             const QList<int> &valueList,
             int defaultValue, bool editable, bool modulateable)
 {
+    MO_ASSERT(valueIds.size() == valueNames.size()
+           && valueIds.size() == statusTips.size()
+           && valueIds.size() == valueList.size(), "list size mismatch for parameter '" << name << "'");
+
     ParameterSelect * param = 0;
 
     // see if already there

@@ -8,13 +8,15 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QTextStream>
 
 #include "parameter.h"
+#include "modulator.h"
 #include "object/scene.h"
+#include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "modulator.h"
 
 namespace MO {
 
@@ -25,13 +27,16 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name) :
     isEditable_ (false),
     isModulateable_(false),
     isVisible_  (true),
-    isVisibleGraph_(false)
+    isVisibleGraph_(false),
+    isVisibleInterface_(false)
+    //iProps_     (new Properties)
 {
 }
 
 Parameter::~Parameter()
 {
     clearModulators_();
+    //delete iProps_;
 }
 
 void Parameter::serialize(IO::DataStream &io) const
@@ -52,11 +57,14 @@ void Parameter::serialize(IO::DataStream &io) const
 
     // v3
     io << isVisibleGraph_;
+    // v5
+//    io << isVisibleInterface_;
+//    iProps_->serialize(io);
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    const int ver = io.readHeader("par", 4);
+    const int ver = io.readHeader("par", 5);
 
     io >> idName_;
 
@@ -87,14 +95,29 @@ void Parameter::deserialize(IO::DataStream &io)
         io >> isVisibleGraph_;
     else
         isVisibleGraph_ = false;
+
+    if (ver >= 5) // dummy
+    {
+        io >> isVisibleInterface_;
+        Properties tmp;
+        tmp.deserialize(io);
+        //iProps_->deserialize(io);
+    }
+    else
+        isVisibleInterface_ = false;
+
 }
 
 QString Parameter::infoName() const
 {
-    if (!object_)
-        return name_;
+    QString s = name_;
+    if (!groupName().isEmpty())
+        s.prepend(QString("(%1)").arg(groupName()));
 
-    QString s = object_->name() + "." + name_;
+    if (!object_)
+        return s;
+
+    s.prepend(object_->name() + ".");
     Object * o = object_;
     while (o && !(o->type() & Object::TG_REAL_OBJECT
                   || o->type() & Object::T_CLIP))
@@ -107,6 +130,32 @@ QString Parameter::infoName() const
 
     return s;
 }
+
+
+QString Parameter::getDoc() const
+{
+    QString str;
+    QTextStream html(&str);
+    html << "<b>" << name() << "</b> (<i>" << getDocType();
+    if (isModulateable())
+        html << ", " << Object::tr("modulateable");
+    html << "</i>)\n"
+         << "<ul>"; // inset paragraph
+
+        html << "<p>" << getDocDesc() << "</p>";
+
+        QString vals = getDocValues();
+        if (!vals.isEmpty())
+            html << "<p>" << vals << "</p>";
+
+    html << "</ul><br/>";
+
+    return str;
+}
+
+QString Parameter::getDocType() const { return typeName(); }
+QString Parameter::getDocValues() const { return QString(); }
+QString Parameter::getDocDesc() const { return statusTip(); }
 
 QString Parameter::infoIdName() const
 {
@@ -140,6 +189,10 @@ void Parameter::setVisible(bool visible)
     }
 }
 
+//void Parameter::setInterfaceProperties(const Properties &p)
+//{
+//    *iProps_ = p;
+//}
 
 void Parameter::idNamesChanged(const QMap<QString, QString> & map)
 {
@@ -161,9 +214,18 @@ QList<QPair<QString, QString>> Parameter::modulatorIds() const
     return list;
 }
 
+QList<QString> Parameter::getModulatorIds() const
+{
+    QList<QString> list;
+    for (auto m : modulators_)
+        list << m->modulatorId();
+    return list;
+}
+
 Modulator * Parameter::addModulator(const QString &idName, const QString &outputId)
 {
-    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::addModulator(" << idName << ", " << outputId << ")");
+    MO_DEBUG_MOD("Parameter(" << this->idName()
+                 << ")::addModulator(" << idName << ", " << outputId << ")");
 
     if (Modulator * m = findModulator(idName, outputId))
     {
@@ -214,6 +276,24 @@ void Parameter::removeAllModulators(const QString &idName)
         std::swap(modulators_, mods);
 }
 
+void Parameter::removeAllModulators(const QList<QString>& idNames)
+{
+    MO_DEBUG_MOD("Parameter("<<this->idName()<<")::removeAllModulators(" << idNames.size() << ")");
+
+    QList<Modulator*> mods;
+
+    for (auto m : modulators_)
+    {
+        if (idNames.contains(m->modulatorId()))
+            delete m;
+        else
+            mods << m;
+    }
+
+    if (mods.size() != modulators_.size())
+        std::swap(modulators_, mods);
+}
+
 void Parameter::removeAllModulators()
 {
     clearModulators_();
@@ -252,7 +332,7 @@ Modulator * Parameter::findModulator(const QString& id) const
     return 0;
 }
 
-QList<Object*> Parameter::getModulatingObjects() const
+QList<Object*> Parameter::getModulatingObjects(bool recursive) const
 {
     QList<Object*> list;
 
@@ -260,9 +340,10 @@ QList<Object*> Parameter::getModulatingObjects() const
         if (m->modulator())
             list.append(m->modulator());
 
-    for (auto m : modulators_)
-        if (m->modulator())
-            list.append(m->modulator()->getModulatingObjects());
+    if (recursive)
+        for (auto m : modulators_)
+            if (m->modulator())
+                list.append(m->modulator()->getModulatingObjects());
 
     return list;
 }
@@ -277,6 +358,7 @@ void Parameter::collectModulators()
 
     Object * root = object()->rootObject();
 
+    bool error = false;
     uint k = 0;
     for (auto m : modulators())
     {
@@ -292,6 +374,7 @@ void Parameter::collectModulators()
             else
             {
                 m->setModulator(0);
+                error = true;
                 MO_WARNING("parameter '" << idName()
                            << "' can not work with modulator '" << m->modulatorId() << "'");
             }
@@ -299,6 +382,7 @@ void Parameter::collectModulators()
         else
         {
             m->setModulator(0);
+            error = true;
             MO_WARNING("parameter '" << idName()
                        << "' could not find modulator '" << m->modulatorId() << "'");
         }
@@ -306,8 +390,27 @@ void Parameter::collectModulators()
 
     MO_DEBUG_MOD("Parameter("<<idName()<<") found " << k << " of "
                  << modulators().size() << " modulator(s)");
+
+    if (error)
+        clearNullModulators();
 }
 
+void Parameter::clearNullModulators()
+{
+    QList<Modulator*> tmp;
+    for (Modulator * m : modulators())
+    {
+        if (m->modulator())
+            tmp << m;
+        else
+        {
+            MO_DEBUG("removing modulator '" << m->nameAutomatic());
+            delete m;
+        }
+    }
+
+    modulators_.swap(tmp);
+}
 
 QList<Object*> Parameter::getFutureModulatingObjects(const Scene *scene) const
 {

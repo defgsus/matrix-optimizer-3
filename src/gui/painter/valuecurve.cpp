@@ -38,12 +38,18 @@ void ValueCurve::setAlpha(int alpha)
 
 void ValueCurve::paint(QPainter & p)
 {
-    paint(p, p.window());
+    paint(p, p.window(), p.window());
 }
 
 void ValueCurve::paint(QPainter &p, const QRect &rect)
 {
-    if (!data_)
+    paint(p, p.window(), rect);
+}
+
+void ValueCurve::paint(QPainter &p, const QRect& prect, const QRect &rect)
+{
+    if ((!data_ && !func_)
+        || (prect.width() < 1 || prect.height() < 1))
         return;
 
     p.setPen(pen_);
@@ -54,19 +60,42 @@ void ValueCurve::paint(QPainter &p, const QRect &rect)
     const int i0 = rect.left() - 1,
               i1 = rect.right() + 2,
               im = (i1 - i0) * overPaint_;
-
     int y0=0, x0=0, y;
-    for (int i=0; i<=im; ++i)
+
+    // draw by class
+    if (data_)
     {
-        Double x = i0 + (Double)i / overPaint_;
-        y = p.window().height() - 1 - p.window().height() *
-                viewspace_.mapYFrom( data_->value(viewspace_.mapXTo(x / p.window().width())) );
+        for (int i=0; i<=im; ++i)
+        {
+            Double x = i0 + (Double)i / overPaint_;
+            Double xx = (x - prect.left()) / prect.width();
+            y = prect.top() + prect.height() - 1 - prect.height() *
+                    viewspace_.mapYFrom( data_->value(viewspace_.mapXTo(xx)) );
 
-        if (i!=0)
-            p.drawLine(x0, y0, x, y);
+            if (i!=0)
+                p.drawLine(x0, y0, x, y);
 
-        x0 = x;
-        y0 = y;
+            x0 = x;
+            y0 = y;
+        }
+    }
+
+    // draw by functor
+    else if (func_)
+    {
+        for (int i=0; i<=im; ++i)
+        {
+            Double x = i0 + (Double)i / overPaint_;
+            Double xx = (x - prect.left()) / prect.width();
+            y = prect.top() + prect.height() - 1 - prect.height() *
+                    viewspace_.mapYFrom( func_(viewspace_.mapXTo(xx)) );
+
+            if (i!=0)
+                p.drawLine(x0, y0, x, y);
+
+            x0 = x;
+            y0 = y;
+        }
     }
 
 }

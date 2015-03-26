@@ -17,13 +17,14 @@
 #include "object/object_fwd.h"
 
 namespace MO {
-
+namespace GUI { class TextEditWidget; class TextEditDialog; }
 
 class ParameterText : public Parameter
 {
 public:
 
     ParameterText(Object * object, const QString& idName, const QString& name);
+    ~ParameterText();
 
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
@@ -54,19 +55,39 @@ public:
     void setVariableDescriptions(const QStringList& descs) { varDescs_ = descs; }
     void setVariableDescriptions(const std::vector<std::string>& descs);
 
+    /** Implemented for scripts.
+        Posts messages into the script edit window when open. */
+    void addErrorMessage(int line, const QString & text);
+
     /** Opens a dialog to edit the text.
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the scene object will be called with
         Scene::setParameterValue().
-        @note The scene MUST be present for this call!
-        Returns true, when a change was made. */
-    bool openEditDialog(QWidget * parent = 0);
+        This call immediately returns after opening the dialog.
+        The parameter takes down the dialog on Parameter's destruction!
+        @note The scene MUST be present in the object tree for this call!
+        @note Don't let parent be the ParameterWidget as it would destroy the
+        Dialog when selecting another object. */
+    GUI::TextEditDialog * openEditDialog(QWidget * parent = 0);
+
+    /** Creates a widget for editing the text.
+        Depending on the textType(), the dialog will be structured.
+        If a (valid) text change was done, the scene object will be called with
+        Scene::setParameterValue().
+        The returned widget will issue a closeRequest() signal when the parameter disappears.
+        @note The scene MUST be present in the object tree for this call!
+        @note Don't let parent be the ParameterWidget as it would destroy the
+        Dialog when selecting another object. */
+    GUI::TextEditWidget * createEditWidget(QWidget * parent = 0);
 
 private:
 
     QString value_, defaultValue_;
     TextType textType_;
     QStringList varNames_, varDescs_;
+
+    GUI::TextEditDialog * diag_;
+    GUI::TextEditWidget * editor_;
 };
 
 } // namespace MO

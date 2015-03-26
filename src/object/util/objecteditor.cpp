@@ -18,6 +18,7 @@
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/modulatorobject.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -27,6 +28,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "math/timeline1d.h"
 #include "tool/stringmanip.h"
+#include "gui/item/abstractfrontitem.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -36,11 +38,17 @@ namespace MO {
 #define MO__CHECK_SCENE \
     if (!scene_)        \
     {                   \
-        MO_WARNING("Use of ObjectEditor with no assigned scene object"); \
+        MO_WARNING("Use of ObjectEditor with no assigned scene object\n" \
+                    __FILE__ << ":" << __LINE__); \
         return false; \
     }
 
-#define MO_DEBUG_OBJ_EDITOR(arg__) MO_DEBUG(arg__)
+#if 0
+#   define MO_DEBUG_OBJ_EDITOR(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_OBJ_EDITOR(unused__) { }
+#endif
+
 
 ObjectEditor::ObjectEditor(QObject *parent)
     : QObject       (parent),
@@ -269,7 +277,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
 
     if (!actualObjects.isEmpty())
     {
-        scene_->addObjects(parent, actualObjects);
+        scene_->addObjects(parent, actualObjects, insert_index);
         emit objectsAdded(actualObjects);
     }
 
@@ -347,7 +355,7 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
     MO__CHECK_SCENE
 
     QString error;
-    if (!newParent->isSaveToAdd(object, error))
+    if (newParent != object->parentObject() && !newParent->isSaveToAdd(object, error))
     {
         QMessageBox::critical(0, tr("Can't move object"),
                               tr("The object %1 could not be added to %2.\n%3")
@@ -452,11 +460,21 @@ void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
     }
 }
 
-void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
+void ObjectEditor::setParameterVisibleInterface(Parameter * p, bool enbale)
+{
+    if (enbale != p->isVisibleInterface())
+    {
+        p->setVisibleInterface(enbale);
+        emit parameterVisibilityChanged(p);
+    }
+}
+
+bool ObjectEditor::addModulator(Parameter *p, const QString &idName, const QString& outputId)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addModulator(" << p << ", " << idName << "," << outputId << ")");
+    MO__CHECK_SCENE
 
-    // XXX TODO: test sanity of connection!
+    /** @todo test sanity of connection! */
 
     Modulator * m;
     {
@@ -470,11 +488,14 @@ void ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
     emit parameterChanged(p);
     emit sceneChanged(scene_);
     scene_->render();
+    return true;
 }
 
-void ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QString &outputId)
+
+bool ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QString &outputId)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeModulator(" << p << ", " << idName << "," << outputId << ")");
+    MO__CHECK_SCENE
 
     Modulator * m;
     {
@@ -489,11 +510,13 @@ void ObjectEditor::removeModulator(Parameter *p, const QString &idName, const QS
     emit parameterChanged(p);
     emit sceneChanged(scene_);
     scene_->render();
+    return true;
 }
 
-void ObjectEditor::removeAllModulators(Parameter *p)
+bool ObjectEditor::removeAllModulators(Parameter *p)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeAllModulators(" << p << ")");
+    MO__CHECK_SCENE
 
     auto mods = p->modulators();
     {
@@ -507,8 +530,79 @@ void ObjectEditor::removeAllModulators(Parameter *p)
     emit parameterChanged(p);
     emit sceneChanged(scene_);
     scene_->render();
+    return true;
 }
 
+
+
+// ---------------------------------- ui modulators ----------------------------------------
+
+bool ObjectEditor::addUiModulator(Parameter *p, GUI::AbstractFrontItem * item)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addUiModulator(" << p << ", " << item << ")");
+    MO__CHECK_SCENE
+
+    ModulatorObject * mo;
+    Modulator * m;
+    {
+        ScopedSceneLockWrite lock(scene_);
+        // create or reuse proxy object
+        mo = scene_->createUiModulator(item->idName());
+        // connect to parameter
+        m = p->addModulator(mo->idName(), "");
+        if (!m)
+            return false;
+        p->collectModulators();
+        p->object()->onParameterChanged(p);
+        p->object()->updateParameterVisibility();
+    }
+    emit modulatorAdded(m);
+
+    emit parameterChanged(p);
+    emit sceneChanged(scene_);
+    scene_->render();
+    return true;
+}
+
+bool ObjectEditor::removeUiModulator(const QString &uiId)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeUiModulator(" << uiId << ")");
+    MO__CHECK_SCENE
+
+    auto list = scene_->getUiModulatorObjects(QList<QString>() << uiId);
+    QList<Object*> objects;
+    for (auto o : list)
+        objects << o;
+    deleteObjects(objects);
+
+    /** @todo should also emit parameterChanged() for every affected Parameter */
+    return true;
+}
+
+bool ObjectEditor::removeUiModulators(const QList<QString> &uiIds)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::removeUiModulators(" << uiIds.size() << ")");
+    MO__CHECK_SCENE
+
+    auto list = scene_->getUiModulatorObjects(uiIds);
+    QList<Object*> objects;
+    for (auto o : list)
+        objects << o;
+    deleteObjects(objects);
+
+    /** @todo should also emit parameterChanged() for every affected Parameter */
+    return true;
+}
+
+bool ObjectEditor::setUiValue(const QString& uiId, Double timeStamp, Float value)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::setUiValue(" << uiId << ", " << timeStamp << ", " << value);
+    MO__CHECK_SCENE
+
+    scene_->setUiValue(uiId, timeStamp, value);
+
+    return true;
+}
 
 
 
@@ -520,6 +614,7 @@ bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::connectAudioObjects(" << from << ", " << to << ", "
                         << outChannel << ", " << inChannel << ", " << numChannels << ")");
+    MO__CHECK_SCENE
 
     if (!scene_->audioConnections()->isSaveToAdd(from, to))
     {
@@ -538,23 +633,26 @@ bool ObjectEditor::connectAudioObjects(AudioObject *from, AudioObject *to,
     return true;
 }
 
-void ObjectEditor::disconnectAudioObjects(const AudioObjectConnection & c)
+bool ObjectEditor::disconnectAudioObjects(const AudioObjectConnection & c)
 {
-    disconnectAudioObjects(c.from(), c.to(), c.outputChannel(), c.inputChannel(), c.numChannels());
+    return disconnectAudioObjects(c.from(), c.to(), c.outputChannel(), c.inputChannel(), c.numChannels());
 }
 
-void ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
+bool ObjectEditor::disconnectAudioObjects(AudioObject *from, AudioObject *to,
                                        uint outChannel, uint inChannel,
                                        uint numChannels)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::disconnectAudioObjects(" << from << ", " << to << ", "
                         << outChannel << ", " << inChannel << ", " << numChannels << ")");
+    MO__CHECK_SCENE
 
     if (scene_->audioConnections()->disconnect(from, to, outChannel, inChannel, numChannels))
     {
         emit audioConnectionsChanged();
         emit sceneChanged(scene_);
     }
+
+    return true;
 }
 
 

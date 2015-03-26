@@ -44,7 +44,7 @@ GroupWidget::GroupWidget(const QString& title, bool expanded, QWidget *parent) :
 
 void GroupWidget::createLayout_()
 {
-    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     auto lv = new QVBoxLayout(this);
     lv->setMargin(1);
@@ -194,7 +194,7 @@ void GroupWidget::addLayout(QLayout * l)
 
 void GroupWidget::updateArrow_()
 {
-    button_->setArrowType(expanded_? Qt::RightArrow : Qt::DownArrow);
+    button_->setArrowType(expanded_? Qt::DownArrow : Qt::RightArrow);
 }
 
 

@@ -41,6 +41,7 @@ void Mix::createParameters()
     Transformation::createParameters();
 
     params()->beginParameterGroup("mixmix", tr("mix"));
+    initParameterGroupExpanded("mixmix");
 
         m_ = params()->createFloatParameter("mix", "mix",
                               tr("The contained transformations will be mixed-in by this value, range 0-1")

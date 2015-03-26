@@ -15,6 +15,7 @@
 #include <QPainter>
 
 #include "objectmenu.h"
+#include "appicons.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/param/parameter.h"
@@ -22,6 +23,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/modulatorfloat.h"
 #include "object/trackfloat.h"
+#include "gui/widget/iconbar.h"
 #include "io/error.h"
 
 namespace MO {
@@ -41,6 +43,8 @@ ObjectMenu::ObjectMenu()
 
 QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
 {
+    objectTypeFlags &= ~(Object::T_SCENE | Object::T_DUMMY);
+
     QList<const Object*> list(ObjectFactory::objects(objectTypeFlags));
     if (list.empty())
         return 0;
@@ -58,7 +62,7 @@ QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
             curprio = Object::objectPriority(o);
         }
 
-        QAction * a = new QAction(ObjectFactory::iconForObject(o), o->name(), parent);
+        QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), parent);
         a->setData(o->className());
         menu->addAction(a);
     }
@@ -92,7 +96,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
         if (list.isEmpty() && !match)
             continue;
 
-        QAction * a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
+        QAction * a = new QAction(AppIcons::iconForObject(c), c->name(), menu);
         if (match)
             a->setData(c->idName());
 
@@ -111,7 +115,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
                 if (match)
                 {
                     menu->addAction(a);
-                    a = new QAction(ObjectFactory::iconForObject(c), c->name(), menu);
+                    a = new QAction(AppIcons::iconForObject(c), c->name(), menu);
                     a->setData(c->idName());
                 }
                 a->setMenu(m);
@@ -125,7 +129,7 @@ void ObjectMenu::createObjectMenuRecursive_(QMenu * menu, Object *root, int obje
 }
 
 
-namespace { static QString stupid_separator("*^_mo_sep_^*"); }
+namespace { static QString stupid_separator("_mo_sep_"); }
 
 QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *parent)
 {
@@ -139,7 +143,7 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
         {
             Object * mo = m->modulator();
             MO_ASSERT(mo, "no object assigned to modulator of '" << pf->idName() << "'");
-            QAction * a = new QAction(ObjectFactory::iconForObject(mo), mo->name(), menu);
+            QAction * a = new QAction(AppIcons::iconForObject(mo), mo->name(), menu);
             a->setData(m->modulatorId() + stupid_separator + m->outputId());
             a->setToolTip(mo->namePath());
             a->setStatusTip(a->toolTip());
@@ -162,12 +166,12 @@ QMenu * ObjectMenu::createRemoveModulationMenu(Parameter * param, QWidget *paren
 
 QString ObjectMenu::getModulatorId(const QString &modAndOutputId)
 {
-    return modAndOutputId.section(stupid_separator, 0);
+    return modAndOutputId.section(stupid_separator, 0, 0);
 }
 
 QString ObjectMenu::getOutputId(const QString &modAndOutputId)
 {
-    return modAndOutputId.section(stupid_separator, 1);
+    return modAndOutputId.section(stupid_separator, 1, 1);
 }
 
 void ObjectMenu::setEnabled(QMenu *menu, const QStringList& ids, bool enable)
@@ -353,6 +357,33 @@ QMenu * ObjectMenu::createHueMenu(QWidget *parent)
     return menu;
 }
 
+const QString ObjectMenu::NewObjectMimeType = "matrixoptimizer/new-obj";
+
+IconBar * ObjectMenu::createObjectToolBar(int objectTypeFlags, QWidget *parent)
+{
+    objectTypeFlags &= ~(Object::T_SCENE | Object::T_DUMMY);
+
+    // get all objects
+    QList<const Object*> list(ObjectFactory::objects(objectTypeFlags));
+    // sort by priority
+    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+
+    auto bar = new IconBar(parent);
+
+
+    for (auto o : list)
+    {
+        bar->addIcon(AppIcons::iconForObject(o, ObjectFactory::colorForObject(o)),
+                     o->name(),
+                     NewObjectMimeType,
+                     o->className().toUtf8(),
+                     ObjectFactory::objectPriorityName(Object::objectPriority(o)));
+    }
+
+    bar->finish();
+
+    return bar;
+}
 
 } // namespace GUI
 } // namespace MO

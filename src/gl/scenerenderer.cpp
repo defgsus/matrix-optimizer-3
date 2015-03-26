@@ -115,6 +115,7 @@ void SceneRenderer::render()
         MO_GL_ERROR("could not make context current");
 
     // update size request
+    // XXX This is stupid XXX
     if (context_->size() != size_)
         context_->setSize(size_);
 

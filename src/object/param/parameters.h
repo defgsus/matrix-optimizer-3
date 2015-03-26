@@ -12,6 +12,8 @@
 #define MOSRC_OBJECT_UTIL_PARAMETERS_H
 
 #include <QList>
+#include <QMap>
+#include <QSet>
 
 #include "object/object_fwd.h"
 #include "types/float.h"
@@ -51,7 +53,37 @@ public:
     /** Returns the parameter with the given id, or NULL. */
     Parameter * findParameter(const QString& id);
 
+    /** Returns an automatic html from all parameters. */
+    QString getParameterDoc() const;
+
+    /** Returns the parameters per group name */
+    QMap<QString, QList<Parameter*>> getParameterGroups() const;
+
+    /** Returns a list of all objects that modulate any of the parameters.
+        If @p recursive is true, the whole modulation chain will be resolved.
+        This functions only works after modulator objects are resolved. */
+    QList<Object*> getModulatingObjects(bool recursive) const;
+
+    /** Adds all objects to the set, that modulate any of the parameters.
+        If @p recursive is true, the whole modulation chain will be resolved.
+        This functions only works after modulator objects are resolved. */
+    void getModulatingObjects(QSet<Object*>&, bool recursive) const;
+
+    /** Returns a list of all ids that modulate any of the parameters.
+        This functions works also before modulator objects are resolved. */
+    QList<QString> getModulatorIds() const;
+
+    /** Adds all ids to the set, that modulate any of the parameters.
+        This functions works also before modulator objects are resolved. */
+    void getModulatorIds(QSet<QString>&) const;
+
     // -------------- setter --------------------
+
+    /** Removes all modulators with the given id.
+        @note low-level function, not really part of interface. */
+    void removeModulators(const QList<QString>& ids);
+
+    // ------------ parameter creation ----------
 
     /** Starts a new group which will contain all Parameters created afterwards.
         @p id is the PERSITANT name, to keep the gui-settings between sessions. */

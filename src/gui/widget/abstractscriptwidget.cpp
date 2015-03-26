@@ -14,8 +14,13 @@
 #include <QStyle>
 #include <QListWidget>
 #include <QSyntaxHighlighter>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QLabel>
+
 
 #include "abstractscriptwidget.h"
+#include "gui/helpdialog.h"
 #include "io/settings.h"
 //#include "io/log.h"
 
@@ -31,12 +36,14 @@ public:
     PrivateSW(AbstractScriptWidget * widget)
         : widget    (widget),
           isValid   (false),
-          ignoreTextChange(false)
+          ignoreTextChange(false),
+          isUpdateOptional(false)
     { }
 
     void createWidgets();
     void updateEditorColor();
     void updateErrorWidget();
+    void updateInfoWidget();
 
     void onTextChanged();
 
@@ -58,9 +65,12 @@ public:
 
     QPlainTextEdit * editor;
     QListWidget * messageList;
+    QCheckBox * cbAlwaysUpdate;
+    QPushButton * butUpdate;
+    QLabel * lInfo;
     QTimer * timer;
 
-    bool isValid, ignoreTextChange;
+    bool isValid, ignoreTextChange, isUpdateOptional;
 
     QString curText;
 
@@ -75,6 +85,7 @@ AbstractScriptWidget::AbstractScriptWidget(QWidget *parent)
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
     p_sw_->createWidgets();
+    p_sw_->updateInfoWidget();
 }
 
 AbstractScriptWidget::~AbstractScriptWidget()
@@ -85,6 +96,13 @@ AbstractScriptWidget::~AbstractScriptWidget()
 bool AbstractScriptWidget::isScriptValid() const
 {
     return p_sw_->isValid;
+}
+
+void AbstractScriptWidget::setUpdateOptional(bool enable)
+{
+    p_sw_->isUpdateOptional = enable;
+    p_sw_->butUpdate->setVisible(enable);
+    p_sw_->cbAlwaysUpdate->setVisible(enable);
 }
 
 const QString AbstractScriptWidget::scriptText() const
@@ -125,7 +143,15 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         // XXX
         editor->setMinimumHeight(500);
         lv->addWidget(editor, 10);
-        connect(editor, &QPlainTextEdit::textChanged, [=]() { if (!ignoreTextChange) timer->start(); } );
+        connect(editor, &QPlainTextEdit::textChanged, [this]()
+        {
+            if (!ignoreTextChange)
+                timer->start();
+        });
+        connect(editor, &QPlainTextEdit::cursorPositionChanged, [this]()
+        {
+            updateInfoWidget();
+        });
         //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
 
         // --- setup font ---
@@ -154,12 +180,24 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             editor->setTextCursor(curs);
         });
 
-        /*
-        auto but = new QPushButton(tr("run"), widget);
-        lv->addWidget(but);
-        but->setShortcut(Qt::CTRL + Qt::Key_R);
-        connect(but, &QPushButton::pressed, [=]() { run(); } );
-        */
+        lInfo = new QLabel("balbla", widget);
+        lv->addWidget(lInfo);
+
+        // -- optional update --
+
+        auto lh = new QHBoxLayout();
+        lv->addLayout(lh);
+
+            cbAlwaysUpdate = new QCheckBox(tr("always update"), widget);
+            cbAlwaysUpdate->setVisible(isUpdateOptional);
+            lh->addWidget(cbAlwaysUpdate);
+
+
+            butUpdate = new QPushButton(tr("up&date"), widget);
+            butUpdate->setVisible(isUpdateOptional);
+            lh->addWidget(butUpdate);
+            connect(butUpdate, SIGNAL(pressed()), widget, SIGNAL(scriptTextChanged()));
+
 
         timer = new QTimer(widget);
         timer->setSingleShot(true);
@@ -170,16 +208,41 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 
 void AbstractScriptWidget::PrivateSW::onTextChanged()
 {
+    QString tmp = curText;
     curText = editor->toPlainText();
 
-    messages.clear();
-    isValid = widget->compile();
+    // only compile when new
+    if (tmp != curText)
+    {
+        messages.clear();
+        isValid = widget->compile();
+    }
 
     updateEditorColor();
     updateErrorWidget();
 
     if (isValid)
-        emit widget->scriptTextChanged();
+        if (!isUpdateOptional || cbAlwaysUpdate->isChecked())
+            emit widget->scriptTextChanged();
+}
+
+void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_F1)
+    {
+        // get word under cursor
+        auto c = p_sw_->editor->textCursor();
+        c.select(QTextCursor::WordUnderCursor);
+        // get help url
+        QString url = getHelpUrl( c.selectedText() );
+
+        HelpDialog::run(url);
+
+        e->accept();
+        return;
+    }
+
+    QWidget::keyPressEvent(e);
 }
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()
@@ -192,6 +255,16 @@ void AbstractScriptWidget::PrivateSW::updateEditorColor()
     }
 
     editor->setPalette(p);
+}
+
+void AbstractScriptWidget::PrivateSW::updateInfoWidget()
+{
+    auto c = editor->textCursor();
+    lInfo->setText(tr("%1:%2 (char %3)")
+                   .arg(c.blockNumber() + 1)
+                   .arg(c.columnNumber() + 1)
+                   .arg(c.position())
+                   );
 }
 
 void AbstractScriptWidget::PrivateSW::updateErrorWidget()
@@ -229,6 +302,7 @@ void AbstractScriptWidget::PrivateSW::updateErrorWidget()
 void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const QString &text)
 {
     p_sw_->messages << PrivateSW::Message(line, type, text);
+    p_sw_->updateErrorWidget();
 }
 
 

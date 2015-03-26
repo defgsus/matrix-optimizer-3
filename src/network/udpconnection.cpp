@@ -1,4 +1,4 @@
-/** @file UdpConnection.cpp
+/** @file udpconnection.cpp
 
     @brief
 

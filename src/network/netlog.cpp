@@ -37,8 +37,9 @@ NetworkLogger& NetworkLogger::instance()
 {
     if (!instance_)
     {
-        MO_ASSERT(application, "NetworkLogger needs Application object");
-        instance_ = new NetworkLogger(application);
+        MO_ASSERT(application(), "NetworkLogger needs Application object");
+        /** @todo destructor of Application crashes when destroying NetworkLoger */
+        instance_ = new NetworkLogger(0);//application);
     }
     return *instance_;
 }

@@ -55,7 +55,7 @@ void InfoWindow::createWidgets_()
 
 void InfoWindow::updateInfo()
 {
-    labelId_->setText(QString::number(settings->clientIndex()));
+    labelId_->setText(QString::number(settings()->clientIndex()));
     labelInfo_->setText(infoString());
 }
 

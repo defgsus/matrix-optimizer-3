@@ -11,4 +11,5 @@ commandline parameters:
      Runs the application as client.
      Try client -h for help on clients.
 
-By default, the application is started in desktop/server mode.
+By default, the application is started in desktop/server mode,
+which has the following options:

@@ -59,6 +59,7 @@ namespace GL {
         class ObjLoader;
 
         class FreeCamera;
+        class FreeFloatCamera;
 
     } // namespace GEOM
 } // namespace MO

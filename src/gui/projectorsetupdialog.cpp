@@ -58,7 +58,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
     setObjectName("ProjectorSetupDialog");
     setMinimumSize(760,600);
 
-    settings->restoreGeometry(this);
+    settings()->restoreGeometry(this);
 
     createWidgets_();
     createMenu_();
@@ -77,7 +77,7 @@ ProjectorSetupDialog::ProjectorSetupDialog(QWidget *parent)
 
 ProjectorSetupDialog::~ProjectorSetupDialog()
 {
-    settings->storeGeometry(this);
+    settings()->storeGeometry(this);
 
     delete copyOfCameraSettings_;
     delete cameraSettings_;
@@ -95,9 +95,9 @@ void ProjectorSetupDialog::createMenu_()
     QMenu * menu;
     QAction * a;
 
-    // ############### FILE ###############
+    // ############### Setup ###############
 
-    mainMenu_->addMenu(menu = new QMenu(tr("File"), mainMenu_));
+    mainMenu_->addMenu(menu = new QMenu(tr("Setup"), mainMenu_));
 
         menu->addAction(a = new QAction(tr("New setup"), menu));
         a->setShortcut(Qt::CTRL + Qt::Key_N);
@@ -127,6 +127,7 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Save as default"), menu));
         a->setShortcut(Qt::CTRL + Qt::Key_D);
         connect(a, SIGNAL(triggered()), this, SLOT(saveDefault_()));
+
 
 
     // ############### EDIT ###############
@@ -160,6 +161,11 @@ void ProjectorSetupDialog::createMenu_()
         menu->addAction(a = new QAction(tr("Paste camera settings"), menu));
         connect(a, SIGNAL(triggered()), this, SLOT(pasteCamera_()));
         aPasteCamera_ = a;
+
+        menu->addSeparator();
+
+        menu->addAction(a = new QAction(tr("Export blend maps"), menu));
+        connect(a, SIGNAL(triggered()), this, SLOT(exportBlendMaps_()));
 
     // ############### CLIENT ###############
 
@@ -309,6 +315,13 @@ void ProjectorSetupDialog::createWidgets_()
                                              tr("Shift of projection on y axis"),
                                              0, 0.05, -1000, 1000, SLOT(updateProjectorSettings_()));
 
+                label = new QLabel(tr("distortion"), this);
+                gr->addWidget(label);
+
+                spinFisheyeness_ = createDoubleSpin_(gr, tr("fisheye distortion"),
+                                             tr("Experimental fisheye distorion level"),
+                                             0, 0.1, -1, 10, SLOT(updateProjectorSettings_()));
+
                 // ------- camera settings --------
 
                 cameraGroup_ = gr = new GroupWidget(tr("virtual camera settings"), this);
@@ -409,7 +422,7 @@ void ProjectorSetupDialog::createWidgets_()
 
                     spinBlendMethod_ = new SpinBox(this);
                     lh2->addWidget(spinBlendMethod_);
-                    spinBlendMethod_->setRange(0,1);
+                    spinBlendMethod_->setRange(-1,1);
                     connect(spinBlendMethod_, SIGNAL(valueChanged(int)),
                             this, SLOT(updateProjectorSettings_()));
 
@@ -528,7 +541,7 @@ void ProjectorSetupDialog::createWidgets_()
                 comboContent_->addItem(tr("display blendings"));
                 comboContent_->addItem(tr("display test scene"));
                 //comboContent_->addItem(tr("display current scene"));
-                comboContent_->setCurrentIndex(settings->value(objectName() + "/displayContent", 0).toInt());
+                comboContent_->setCurrentIndex(settings()->value(objectName() + "/displayContent", 0).toInt());
                 connect(comboContent_, SIGNAL(currentIndexChanged(int)),
                         this, SLOT(onComboContent_()));
 
@@ -823,6 +836,7 @@ void ProjectorSetupDialog::updateProjectorSettings_()
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     projectorSettings_->setLensRadius(spinLensRad_->value() / 100);
 #endif
+    projectorSettings_->setFisheyeness(spinFisheyeness_->value());
     projectorSettings_->setDistance(spinDist_->value() / 100);
     projectorSettings_->setLatitude(spinLat_->value());
     projectorSettings_->setLongitude(spinLong_->value());
@@ -888,6 +902,7 @@ void ProjectorSetupDialog::updateProjectorWidgets_()
 #ifndef MO_DISABLE_PROJECTOR_LENS_RADIUS
     spinLensRad_->setValue( projectorSettings_->lensRadius() );
 #endif
+    spinFisheyeness_->setValue( projectorSettings_->fisheyeness() );
     spinDist_->setValue( projectorSettings_->distance() );
     spinLat_->setValue( projectorSettings_->latitude() );
     spinLong_->setValue( projectorSettings_->longitude() );
@@ -1011,7 +1026,7 @@ void ProjectorSetupDialog::loadDefault_()
     if (!saveToClear_())
         return;
 
-    *settings_ = settings->getDefaultProjectionSettings();
+    *settings_ = settings()->getDefaultProjectionSettings();
     *orgSettings_ = *settings_;
     *projectorSettings_ = settings_->projectorSettings(0);
     *cameraSettings_ = settings_->cameraSettings(0);
@@ -1029,7 +1044,7 @@ void ProjectorSetupDialog::loadDefault_()
 
 void ProjectorSetupDialog::saveDefault_()
 {
-    settings->setDefaultProjectionSettings(*settings_);
+    settings()->setDefaultProjectionSettings(*settings_);
 
     // update clients
     if (serverEngine().isRunning())
@@ -1268,7 +1283,7 @@ void ProjectorSetupDialog::onComboContent_()
         idx = 0;
 
     // store in settings
-    settings->setValue(objectName() + "/displayContent", idx);
+    settings()->setValue(objectName() + "/displayContent", idx);
 
     if (idx == 0)
         display_->setShowTexture(false);
@@ -1279,6 +1294,8 @@ void ProjectorSetupDialog::onComboContent_()
     }
 }
 
+/** @todo Refacture this please...
+    We can precalculate the maps now via GL::OffscreenContext. */
 GL::Texture * ProjectorSetupDialog::createTexture_(int index)
 {
     // test render
@@ -1302,6 +1319,26 @@ GL::Texture * ProjectorSetupDialog::createTexture_(int index)
     // blendings only
     ProjectorBlender blender(settings_);
     return blender.renderBlendTexture(index, 320);
+}
+
+void ProjectorSetupDialog::exportBlendMaps_()
+{
+    QString dir = IO::Files::getDirectory(tr("Choose directory to store the blend maps"), this);
+    if (dir.isEmpty())
+        return;
+
+    ProjectorBlender blender(settings_);
+
+    try
+    {
+        blender.exportMaps(dir);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("blend map export"),
+                              tr("Something went wrong while exporting the blend maps.\n%1")
+                              .arg(e.what()));
+    }
 }
 
 } // namespace GUI

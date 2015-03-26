@@ -25,6 +25,7 @@
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/model3d.h"
+#include "object/param/parameters.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
 #include "geom/geometry.h"
@@ -80,7 +81,7 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ----- modulators -----
 
-    auto mods = o->getModulatingObjects();
+    auto mods = o->params()->getModulatingObjects(false);
     if (!mods.isEmpty())
     {
         s << "<p>modulators:";
@@ -90,7 +91,7 @@ void ObjectInfoDialog::setObject(Object * o)
             if (mod->isSequence()
                     && mod->parentObject() && mod->parentObject()->isTrack())
                 continue;
-            s << "<br/>" << mod->idNamePath();
+            s << "<br/>" << mod->idNamePath() << " (" << mod->name() << ")";
         }
         s << "</p>";
     }

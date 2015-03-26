@@ -73,6 +73,7 @@ void LookAt::createParameters()
     params()->endParameterGroup();
 
     params()->beginParameterGroup("trans", tr("transformation"));
+    initParameterGroupExpanded("trans");
 
         x_ = params()->createFloatParameter("x", "look-at x", lookTip, 0);
         y_ = params()->createFloatParameter("y", "look-at y", lookTip, 0);

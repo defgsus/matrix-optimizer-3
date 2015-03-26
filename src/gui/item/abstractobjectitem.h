@@ -21,6 +21,9 @@ namespace GUI {
 
 class ObjectGraphScene;
 
+/** Base class for representing MO::Object in the ObjectGraphScene.
+    @note Right now this class is not abstract, but rather handles every
+    object type by itself, ... */
 class AbstractObjectItem : public QGraphicsItem
 {
 public:
@@ -85,6 +88,8 @@ public:
     /** Returns true if mouse is over item */
     bool isHover() const;
 
+    QList<AbstractObjectItem*> childObjectItems() const;
+
     /** Returns the item for the given grid-pos, or NULL */
     AbstractObjectItem * childItemAt(const QPoint& gridpos) const;
 
@@ -123,8 +128,10 @@ public:
     /** Sets the item to be expanded/collapsed */
     void setExpanded(bool enable = true);
 
-    /** Sets a new position for the item */
-    void setGridPos(const QPoint& pos);
+    /** Sets a new position for the item.
+        If @p expand is true,
+        expandTopLeft() will be called for the parent if necessary. */
+    void setGridPos(const QPoint& pos, bool expand = false);
 
     /** Sets a new size in grid coords */
     void setGridSize(const QSize& size);
@@ -143,10 +150,14 @@ public:
     /** Re-creates all connection items */
     void updateConnectors();
 
+    /** Expands the grid size of the item by moving the top-left
+        corner. All parent items will be expanded if necessary. */
+    void expandTopLeft(int x, int y);
+
     /** Recursively adjust all sizes to fit in the children */
     void adjustSizeToChildren();
 
-    void adjustRightItems();
+    //void adjustRightItems();
 
     // ---------- QGraphicsItem interface --------------
 

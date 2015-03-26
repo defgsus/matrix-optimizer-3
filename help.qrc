@@ -5,9 +5,19 @@
         <file alias="index.html">assets/help/en/index.html</file>
         <file alias="style.css">assets/help/en/style.css</file>
         <file alias="equationfunctions.html">assets/help/en/equationfunctions.html</file>
-        <file alias="sequence.html">assets/help/en/sequence.html</file>
         <file alias="opengldrawing.html">assets/help/en/opengldrawing.html</file>
         <file alias="commandlinehelp.txt">assets/help/en/commandlinehelp.txt</file>
+        <file alias="angelscript.html">assets/help/en/angelscript.html</file>
+        <file alias="_od_Scene.html">assets/help/en/object/scene.html</file>
+        <file alias="_od_Camera.html">assets/help/en/object/camera.html</file>
+        <file alias="_od_LightSource.html">assets/help/en/object/lightsource.html</file>
+        <file alias="_od_Model3d.html">assets/help/en/object/model3d.html</file>
+        <file alias="_od_ModulatorObjectFloat.html">assets/help/en/object/modulator_float.html</file>
+        <file alias="_od_SequenceFloat.html">assets/help/en/object/sequence_float.html</file>
+        <file alias="_od_TrackFloat.html">assets/help/en/object/track_float.html</file>
+        <file alias="example_angelscript.txt">assets/help/example_angelscript.txt</file>
+        <file alias="geometry.html">assets/help/en/geometry.html</file>
+        <file alias="glsl.html">assets/help/en/glsl.html</file>
     </qresource>
     <qresource prefix="/">
         <file alias="stylesheet.css">assets/stylesheet.css</file>
