@@ -62,7 +62,8 @@ public:
           minimumSize   (1, 1),
           itemExp       (0),
           itemName      (0),
-          isMouseDown   (false)
+          isMouseDown   (false),
+          dragThresh    (false)
     { }
 
     void createConnectors();
@@ -86,8 +87,9 @@ public:
         inputItems,
         outputItems;
 
-    bool isMouseDown;
-    QPoint gridPosDown;
+    bool isMouseDown,
+         dragThresh;
+    QPoint gridPosDown, dragThreshPos;
     QPointF posMouseDown;
 };
 
@@ -107,7 +109,7 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     p_oi_->object = object;
     // 'expanded' triangle item
     p_oi_->itemExp = new ObjectGraphExpandItem(this);
-    p_oi_->itemExp->setVisible(false);
+    setExpandVisible(false);
     p_oi_->itemExp->setPos(ObjectGraphSettings::penOutlineWidth() * 3.,
                            ObjectGraphSettings::penOutlineWidth() * 3.);
     updateColors();
@@ -119,6 +121,12 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
     setFlag(ItemIsSelectable, true);
     setFlag(ItemClipsChildrenToShape, true);
     setToolTip(object->name());
+
+    // load item settings from object
+    if (p_oi_->object->hasAttachedData(Object::DT_GRAPH_EXPANDED))
+        p_oi_->expanded = p_oi_->object->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool();
+    else
+        p_oi_->expanded = p_oi_->object->isAudioObject();
 
     p_oi_->createConnectors();
     p_oi_->layoutChildItems();
@@ -212,6 +220,12 @@ void AbstractObjectItem::setLayoutDirty(bool dirty)
             p->setLayoutDirty();
 }
 
+void AbstractObjectItem::setExpandVisible(bool e)
+{
+    if (p_oi_->itemExp)
+        p_oi_->itemExp->setVisible(e || true);
+}
+
 // --------------------------- events ---------------------------------
 
 QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVariant &value)
@@ -230,8 +244,7 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
         auto item = value.value<QGraphicsItem*>();
         if (item && item->type() >= T_BASE)
         {
-            if (p_oi_->itemExp)
-                p_oi_->itemExp->setVisible(true);
+            setExpandVisible(true);
 
             // set visibility of new child
             item->setVisible(isExpanded());
@@ -247,8 +260,7 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
         if (isExpanded() && object()->childObjects().isEmpty())
         {
             setExpanded(false);
-            if (p_oi_->itemExp)
-                p_oi_->itemExp->setVisible(false);
+            setExpandVisible(false);
         }
     }
 
@@ -458,6 +470,34 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
                                        : QPoint(0,0)));
             if (it == 0 || it == this || object()->hasParentObject(it->object()))
             {
+                if ((newGrid.x() == 0 || newGrid.y() == 0))
+                {
+                    if (!p_oi_->dragThresh)
+                    {
+                        p_oi_->dragThresh = true;
+                        return;
+                    }
+                    if (newGrid.x() < 0 || newGrid.y() < 0)
+                    {
+                        p_oi_->dragThresh = false;
+                    }
+                        else return;
+                }
+                /*
+                if ((newGrid.x() < 1 || newGrid.y() < 1))
+                {
+                    if (!p_oi_->dragThresh)
+                    {
+                        p_oi_->dragThresh = true;
+                        p_oi_->dragThreshPos = newGrid;
+                        return;
+                    }
+                    else
+                    {
+                        if (newGrid == p_oi_->dragThreshPos)
+                            return;
+                    }
+                }*/
                 setGridPos(newGrid, true);
             }
         }
@@ -471,6 +511,7 @@ void AbstractObjectItem::mouseReleaseEvent(QGraphicsSceneMouseEvent * e)
 
     p_oi_->isMouseDown = false;
     p_oi_->dragging = false;
+    p_oi_->dragThresh = false;
     update();
 }
 
@@ -508,10 +549,17 @@ QPoint AbstractObjectItem::globalGridPos() const
 
 QSize AbstractObjectItem::gridSize() const
 {
+#if 0
     QSize s = isExpanded() ? p_oi_->size : p_oi_->unexpandedSize;
-
     return QSize(std::max(s.width(),  p_oi_->minimumSize.width()),
                  std::max(s.height(), p_oi_->minimumSize.height()));
+#else
+    if (isExpanded())
+        return QSize(std::max(p_oi_->size.width(),  p_oi_->minimumSize.width()),
+                     std::max(p_oi_->size.height(), p_oi_->minimumSize.height()));
+    else
+        return p_oi_->unexpandedSize;
+#endif
 }
 
 void AbstractObjectItem::setGridPos(const QPoint &pos1, bool expand)
@@ -621,7 +669,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     // audio input/output items
     if (AudioObject * ao = qobject_cast<AudioObject*>(object))
     {
-        item->setUnexpandedSize(QSize(1, 2));
+        //item->setUnexpandedSize(QSize(1, 1));
 
         if (!qobject_cast<AudioInAO*>(ao))
         {
@@ -701,7 +749,7 @@ void AbstractObjectItem::updateLabels()
 
 void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 {
-    QRectF r(item->rect());
+    const QRectF r(item->rect());
 
     qreal top = 0;
 
@@ -711,10 +759,12 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
     top += r.top();
 
     qreal heightfac = (r.height() - top) / std::max(1, inputItems.size());
+    const bool vis = item->isExpanded();
 
     for (int i=0; i<inputItems.size(); ++i)
     {
         inputItems[i]->setPos(r.left(), top + (i + 0.5) * heightfac);
+        inputItems[i]->setVisible(vis);
     }
 
     heightfac = (r.height() - top) / std::max(1, outputItems.size());
@@ -722,6 +772,7 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
     for (int i=0; i<outputItems.size(); ++i)
     {
         outputItems[i]->setPos(r.right(), top + (i + 0.5) * heightfac);
+        outputItems[i]->setVisible(vis);
     }
 
 }

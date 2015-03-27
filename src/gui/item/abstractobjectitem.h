@@ -170,6 +170,8 @@ public:
 protected:
 
     void setUnexpandedSize(const QSize&);
+    /** Show/hide the expand/collapse item. (may be ignored) */
+    void setExpandVisible(bool);
 
     virtual QVariant itemChange(GraphicsItemChange change, const QVariant &value) Q_DECL_OVERRIDE;
     virtual void hoverEnterEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;

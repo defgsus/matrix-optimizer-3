@@ -29,6 +29,10 @@ public slots:
 
     void render();
 
+private slots:
+
+    void p_onWidget_();
+
 private:
 
     struct Private;

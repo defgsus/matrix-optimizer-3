@@ -15,9 +15,14 @@
 
 #include <QDoubleSpinBox>
 
+class QLabel;
+class QHBoxLayout;
+
 namespace MO {
 namespace GUI {
 
+/** Wrapper around QSpinBox.
+    Most of all, to have better control over the valueChanged() signal */
 class SpinBox : public QWidget
 {
     Q_OBJECT
@@ -49,12 +54,16 @@ signals:
 public slots:
 
     void setValue(int val, bool send_signal = false);
+    /** Attaches a label to the spinbox */
+    void setLabel(const QString&);
 
 private slots:
     void internValueChanged_(int);
 
 private:
     QSpinBox * spin_;
+    QLabel * label_;
+    QHBoxLayout * layout_;
     bool ignoreSignal_;
 };
 

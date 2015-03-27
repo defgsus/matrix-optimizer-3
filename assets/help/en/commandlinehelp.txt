@@ -1,15 +1,17 @@
 commandline parameters:
 
- matrixoptimizer [mode] [options]
-
- mode can be one of:
+ matrixoptimizer [render|client] [options]
 
  help, -h, -help, --help
      Shows this help.
 
  client [options]
      Runs the application as client.
-     Try client -h for help on clients.
+
+ render [options]
+     Renders a scene to disk.
+
+Try [render|client] -h for help on a specific mode.
 
 By default, the application is started in desktop/server mode,
 which has the following options:

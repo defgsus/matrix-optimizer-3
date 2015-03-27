@@ -11,8 +11,8 @@
 #ifndef MOSRC_GRAPH_TREE_H
 #define MOSRC_GRAPH_TREE_H
 
-#ifndef MO_GRAPH_DEBUG
-#define MO_GRAPH_DEBUG
+#if !defined(NDEBUG) && !defined(MO_GRAPH_DEBUG)
+#   define MO_GRAPH_DEBUG
 #endif
 
 

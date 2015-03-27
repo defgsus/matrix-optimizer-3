@@ -83,7 +83,7 @@ Object::~Object()
     for (auto c : p_childObjects_)
         c->releaseRef();
 
-#ifndef MO_HAMBURG
+#ifndef NDEBUG
     if (p_ref_ > 1)
     {
         MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
@@ -291,11 +291,11 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
 
 void Object::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("obj", 3);
+    io.writeHeader("obj", 4);
 
     io << p_canBeDeleted_;
 
-    // v2
+    // v2/4
     io << p_attachedData_;
     // v3
     io << p_visible_;
@@ -303,12 +303,15 @@ void Object::serialize(IO::DataStream & io) const
 
 void Object::deserialize(IO::DataStream & io)
 {
-    const auto ver = io.readHeader("obj", 3);
+    const auto ver = io.readHeader("obj", 4);
 
     io >> p_canBeDeleted_;
 
     if (ver >= 2)
         io >> p_attachedData_;
+    // audio objects pre v4 where collapsed by default
+    if (ver < 4 && isAudioObject())
+        setAttachedData(QVariant(), DT_GRAPH_EXPANDED);
 
     if (ver >= 3)
         io >> p_visible_;

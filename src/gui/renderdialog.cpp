@@ -11,13 +11,15 @@
 #include <QLayout>
 #include <QLabel>
 #include <QPushButton>
+#include <QComboBox>
 #include <QFrame>
+#include <QLineEdit>
 
 #include "renderdialog.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
 #include "widget/filenameinput.h"
-#include "io/application.h"
+#include "io/diskrendersettings.h"
 
 namespace MO {
 namespace GUI {
@@ -60,10 +62,26 @@ struct RenderDialog::Private
     Private(RenderDialog * d) : diag(d) { }
 
     void createWidgets();
+    void updateFromWidgets();
 
     RenderDialog * diag;
 
-    FilenameInput * editDir_;
+    DiskRenderSettings rendSet;
+
+    FilenameInput
+            * editDir_;
+    QLineEdit
+            * editImageName_,
+            * editAudioName_;
+    SpinBox
+            * spinImageNum_,
+            * spinImageW_,
+            * spinImageH_,
+            * spinImageFps_;
+    QComboBox
+            * cbImageFormat_;
+    QLabel
+            * labelImageName_;
 };
 
 RenderDialog::RenderDialog(QWidget *parent)
@@ -84,29 +102,81 @@ RenderDialog::~RenderDialog()
 
 void RenderDialog::Private::createWidgets()
 {
-    auto lv = new QVBoxLayout(diag);
+    auto lv0 = new QVBoxLayout(diag);
 
         // output directory
 
         editDir_ = new FilenameInput(IO::FT_ANY, true, diag);
-        editDir_->setFilename(application()->applicationDirPath());
-        lv->addWidget(editDir_);
+        editDir_->setFilename(rendSet.directory());
+        lv0->addWidget(editDir_);
+        connect(editDir_, SIGNAL(filenameChanged(QString)),
+                diag, SLOT(p_onWidget_()));
 
         auto frame = new QFrame(diag);
         frame->setFrameShape(QFrame::HLine);
-        lv->addWidget(frame);
+        lv0->addWidget(frame);
 
-        lv->addStretch(1);
+
+        auto lh = new QHBoxLayout();
+        lv0->addLayout(lh);
+
+            // ---- image ----
+
+            auto lv = new QVBoxLayout();
+            lh->addLayout(lv);
+
+                editImageName_ = new QLineEdit(diag);
+                editImageName_->setText(rendSet.imagePattern());
+                lv->addWidget(editImageName_);
+                connect(editImageName_, SIGNAL(textChanged(QString)),
+                        diag, SLOT(p_onWidget_()));
+
+                spinImageNum_ = new SpinBox(diag);
+                spinImageNum_->setLabel(tr("frame number offset"));
+                spinImageNum_->setRange(0, 999999999);
+                spinImageNum_->setValue(rendSet.imagePatternOffset());
+                lv->addWidget(spinImageNum_);
+                connect(spinImageNum_, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+
+                labelImageName_ = new QLabel(diag);
+                lv->addWidget(labelImageName_);
+
+                spinImageW_ = new SpinBox(diag);
+                spinImageW_->setLabel(tr("width"));
+                spinImageW_->setRange(0, 4096*4);
+                spinImageW_->setValue(rendSet.imageWidth());
+                lv->addWidget(spinImageW_);
+                connect(spinImageW_, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+
+                spinImageH_ = new SpinBox(diag);
+                spinImageH_->setLabel(tr("height"));
+                spinImageH_->setRange(0, 4096*4);
+                spinImageH_->setValue(rendSet.imageHeight());
+                lv->addWidget(spinImageH_);
+                connect(spinImageH_, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+
+                spinImageFps_ = new SpinBox(diag);
+                spinImageFps_->setLabel(tr("frames per second"));
+                spinImageFps_->setRange(0, 60000);
+                spinImageFps_->setValue(rendSet.imageFps());
+                lv->addWidget(spinImageFps_);
+                connect(spinImageFps_, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+
+        lv0->addStretch(1);
 
 
         // [Go!] [Cancel] buttons
 
         frame = new QFrame(diag);
         frame->setFrameShape(QFrame::HLine);
-        lv->addWidget(frame);
+        lv0->addWidget(frame);
 
-        auto lh = new QHBoxLayout(diag);
-        lv->addLayout(lh);
+        lh = new QHBoxLayout();
+        lv0->addLayout(lh);
 
         auto but = new QPushButton(tr("Go!"), diag);
         but->setStatusTip(tr("Starts rendering the scene with selected settings"));
@@ -120,11 +190,23 @@ void RenderDialog::Private::createWidgets()
         lh->addWidget(but);
 }
 
+void RenderDialog::p_onWidget_()
+{
+    p_->updateFromWidgets();
+}
+
+void RenderDialog::Private::updateFromWidgets()
+{
+
+}
+
+
 
 void RenderDialog::render()
 {
     accept();
 }
+
 
 
 } // namespace GUI

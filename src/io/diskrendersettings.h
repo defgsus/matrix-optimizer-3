@@ -68,6 +68,7 @@ public:
     size_t imageWidth() const { return p_image_w_; }
     size_t imageHeight() const { return p_image_h_; }
     size_t imageBitsPerChannel() const { return p_image_bpc_; }
+    size_t imageFps() const { return p_image_fps_; }
     /** Returns the index in imageFormats() */
     size_t imageFormat() const { return p_image_format_; }
     /** Returns id of current image format */

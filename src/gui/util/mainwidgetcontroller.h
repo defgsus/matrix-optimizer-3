@@ -47,6 +47,7 @@ class ObjectGraphView;
 class FrontScene;
 class FrontView;
 class FrontItemEditor;
+class RecentFiles;
 
 class MainWidgetController : public QObject
 {
@@ -110,7 +111,7 @@ public slots:
     bool saveScene();
     void saveSceneAs();
     void loadScene();
-    //void loadScene(const QString& fn);
+    void loadScene(const QString& fn);
     void newScene();
 
     void newInterface();
@@ -150,6 +151,7 @@ private slots:
     void onSceneTimeChanged_(Double time);
     void onUiEditModeChanged_(bool isEdit);
 
+    void onRecentFile_(QAction*);
     void onProjectionSettingsChanged_();
     void updateSceneProjectionSettings_();
 
@@ -234,6 +236,8 @@ private:
     QTimer * sysInfoTimer_;
 
     QString currentSceneFilename_;
+
+    RecentFiles * recentFiles_;
 
     QMenu * menuEdit_, * menuResolutions_,
           * menuProjectorIndex_;

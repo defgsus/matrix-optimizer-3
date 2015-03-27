@@ -276,7 +276,7 @@ void Shader::parseLog_(const QString &log, ProgramType pt)
             x2 = line.indexOf(")", x1);
 //        int x1 = line.indexOf(QRegExp("[0-9]")),
 //            x2 = line.indexOf(QRegExp("(?![0-9])"), x1);
-        MO_PRINT("----------- " << x1 << " " << x2);
+//        MO_PRINT("----------- " << x1 << " " << x2);
         if (x1 >= 0 && x2 > x1 + 1)
             cm.line = line.mid(x1+1, x2-x1-1).toInt();
 

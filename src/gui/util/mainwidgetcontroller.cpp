@@ -63,6 +63,7 @@
 #include "gui/frontitemeditor.h"
 #include "gui/util/frontscene.h"
 #include "gui/util/frontpreset.h"
+#include "gui/util/recentfiles.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -128,6 +129,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       serverView_       (0),
       statusBar_        (0),
       sysInfoLabel_     (0),
+      recentFiles_      (0),
       sceneNotSaved_    (false),
       statusMessageTimeout_(7 * 1000)
 {
@@ -147,6 +149,12 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
 
 MainWidgetController::~MainWidgetController()
 {
+    // store settings
+
+    recentFiles_->saveSettings();
+
+    // shut down
+
     if (renderEngine_)
         renderEngine_->release();
 
@@ -289,6 +297,12 @@ void MainWidgetController::createObjects_()
 
 void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 {
+    recentFiles_ = new RecentFiles(10, this);
+    recentFiles_->setObjectName("_RecentSceneFiles");
+    recentFiles_->loadSettings();
+    recentFiles_->setAutoSave(true);
+
+
     QMenu * m;
     QAction * a;
 
@@ -304,6 +318,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Load scene ..."), menuBar));
         a->setShortcut(Qt::CTRL + Qt::Key_L);
         connect(a, SIGNAL(triggered()), this, SLOT(loadScene()));
+
+        m->addAction(a = new QAction(tr("Load recent scene"), menuBar));
+        a->setMenu( recentFiles_->createMenu() );
+        connect(a->menu(), SIGNAL(triggered(QAction*)),
+                this, SLOT(onRecentFile_(QAction*)));
 
         m->addAction(a = actionSaveScene_ = new QAction(tr("Save scene"), menuBar));
         a->setShortcut(Qt::CTRL + Qt::Key_S);
@@ -596,7 +615,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addAction(a = new QAction(tr("Dump id names"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpIdNames_()));
-
+#ifdef MO_GRAPH_DEBUG
         m->addAction( a = new QAction(tr("Dump object tree"), m) );
         connect(a, &QAction::triggered, [=]()
         {
@@ -604,7 +623,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             tree->dumpTree(std::cout, "");
             delete tree;
         });
-
+#endif
         m->addAction(a = new QAction(tr("Dump needed files"), m));
         connect(a, SIGNAL(triggered()), SLOT(dumpNeededFiles_()));
 #ifndef MO_HAMBURG
@@ -631,9 +650,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction( a = new QAction(tr("Dump modulation graph"), m) );
         connect(a, &QAction::triggered, [=]()
         {
+#ifdef MO_GRAPH_DEBUG
             auto tree = get_object_tree(scene_);
             tree->dumpTree(std::cout);
-
+#endif
             ObjectGraph graph;
             get_object_modulator_graph(graph, scene_);
 #ifdef QT_DEBUG
@@ -796,8 +816,9 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     IO::fileManager().clear();
     IO::fileManager().addFilenames(files);
     IO::fileManager().acquireFiles();
+#ifndef NDEBUG
     IO::fileManager().dumpStatus();
-
+#endif
     // ---------- opengl stuff ----------
 
     MO_ASSERT(glManager_ && glWindow_, "");
@@ -1645,8 +1666,17 @@ void MainWidgetController::initScene()
     }
 }
 
+void MainWidgetController::onRecentFile_(QAction * a)
+{
+    QString fn = a->data().toString();
+    if (!fn.isEmpty())
+        loadScene(fn);
+}
+
 QString MainWidgetController::getSceneSaveFilename_()
 {
+    /** @todo fix that update problem with gl window
+        means: leave idle time for other gui parts. */
     if (isPlayback())
         stop();
 
@@ -1676,6 +1706,16 @@ void MainWidgetController::saveSceneAs()
     saveScene_(fn);
 }
 
+void MainWidgetController::loadScene(const QString& fn)
+{
+    if (isPlayback())
+        stop();
+
+    if (!isOkayToChangeScene())
+        return;
+
+    loadScene_(fn);
+}
 
 void MainWidgetController::loadScene()
 {
@@ -1699,6 +1739,7 @@ void MainWidgetController::loadScene_(const QString &fn)
         try
         {
             scene = ObjectFactory::loadScene(fn);
+            recentFiles_->addFilename(fn);
         }
         catch (Exception& e)
         {
@@ -1727,7 +1768,7 @@ void MainWidgetController::loadScene_(const QString &fn)
             QMessageBox::warning(window_, tr("load scene warning"),
                                  tr("There was something odd when loading the scene\n%1\n%2\n\n"
                                     "Make sure you know what you are doing before you proceed. "
-                                    "Especially saving the scene is probably bad.")
+                                    "Especially saving the scene might be bad.")
                                  .arg(fn)
                                  .arg(err));
         }
@@ -1769,6 +1810,7 @@ bool MainWidgetController::saveScene_(const QString &fn)
             scene_->setFrontScene(frontScene_);
             // actually save the scene
             ObjectFactory::saveScene(fn, scene_);
+            recentFiles_->addFilename(fn);
             // save the gui settings for the scene
             sceneSettings_->saveFile(sceneSettings_->getSettingsFileName(fn));
         }

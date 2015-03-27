@@ -9,6 +9,7 @@
 */
 
 #include <QLayout>
+#include <QLabel>
 
 #include "spinbox.h"
 
@@ -16,19 +17,20 @@ namespace MO {
 namespace GUI {
 
 
-SpinBox::SpinBox(QWidget *parent) :
-    QWidget(parent),
-    ignoreSignal_(false)
+SpinBox::SpinBox(QWidget *parent)
+    : QWidget       (parent)
+    , label_        (0)
+    , ignoreSignal_ (false)
 {
     setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons"));
 
-    auto l = new QVBoxLayout(this);
-    l->setMargin(0);
+    layout_ = new QHBoxLayout(this);
+    layout_->setMargin(0);
     //l->setSizeConstraint(QLayout::SetMinAndMaxSize);
-    l->setSizeConstraint(QLayout::SetMaximumSize);
+    layout_->setSizeConstraint(QLayout::SetMaximumSize);
 
     spin_ = new QSpinBox(this);
-    l->addWidget(spin_);
+    layout_->addWidget(spin_);
     setFocusProxy(spin_);
 
     connect(spin_, SIGNAL(valueChanged(int)), this, SLOT(internValueChanged_(int)));
@@ -51,6 +53,16 @@ void SpinBox::internValueChanged_(int v)
         emit valueChanged(v);
 }
 
+void SpinBox::setLabel(const QString & txt)
+{
+    if (!label_)
+    {
+        label_ = new QLabel(txt, this);
+        layout_->insertWidget(0, label_);
+    }
+    else
+        label_->setText(txt);
+}
 
 } // namespace GUI
 } // namespace MO

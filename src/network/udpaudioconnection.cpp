@@ -204,7 +204,7 @@ void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
     if (!b)
     {
         MO_NETLOG(WARNING, "UdpAudioConnection: received unknown buffer '" << idName << "'");
-#ifdef MO_DO_DEBUG
+#ifndef NDEBUG
         for (auto b : buffers)
             MO_PRINT(b->id);
 #endif

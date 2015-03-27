@@ -13,18 +13,25 @@
 
 #include <QString>
 
+/** @page version
+
+    3.0.2.44 audio objects collapsable (change to deserialize)
+    3.0.2.42 towards hamburg
+*/
+
+// all limited to 8 bit
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  2
-#define MO_VERSION_MICRO 43
+#define MO_VERSION_MICRO 44
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */
 #define MO_VERSION_COMBINE(maj__, min__, tiny__, micro__) \
-                 ( (maj__)  * 1000000 \
-                 + (min__)  * 10000   \
-                 + (tiny__) * 100     \
-                 + (micro__)          )
+                 ( ((maj__)  < 32)     \
+                 + ((min__)  < 16)     \
+                 + ((tiny__) < 8)      \
+                 +  (micro__)          )
 
 /** The program version as one number (major == most-significant) */
 #define MO_VERSION                                                            \
