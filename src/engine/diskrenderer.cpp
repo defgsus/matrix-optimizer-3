@@ -162,6 +162,8 @@ bool DiskRenderer::Private::initScene()
     /** that's very loosely the startup routine for preparing a scene.
         @todo misses FrontItems */
 
+    scene->setLazyFlag(true);
+
     sceneEditor = new ObjectEditor();
     scene->setObjectEditor(sceneEditor);
 
@@ -219,7 +221,15 @@ bool DiskRenderer::Private::releaseScene()
 {
     // release gl resources
     if (scene)
-        scene->kill();
+    {
+        try { scene->kill(); }
+#ifndef NDEBUG
+        catch (const Exception& e)
+            { MO_DEBUG("DiskRenderer::releaseScene() ERROR:\n" << e.what()); }
+#else
+        catch (...) { }
+#endif
+    }
 
     delete audio; audio = 0;
     delete renderer; renderer = 0;
@@ -268,16 +278,14 @@ void DiskRenderer::Private::renderAll()
     pleaseStop = false;
     curFrame = 0;
 
-    // XXX Request creation of everything
+    // Request lazy creation of all gl resources
     renderFrame();
-    sleep(1);
-
 
     QTime time;
     time.start();
 
     size_t f = 0;
-    while (f < 4)//rendSet.lengthFrame() && thread->ok() && !pleaseStop)
+    while (f < rendSet.lengthFrame() && thread->ok() && !pleaseStop)
     {
         curFrame = f + rendSet.startFrame();
         ++f;

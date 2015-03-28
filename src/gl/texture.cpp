@@ -582,8 +582,12 @@ QImage Texture::getImage() const
     for (uint y=0; y<height(); ++y)
     for (uint x=0; x<width(); ++x)
     {
-        int col = *((int*)&buffer[(y*width()+x)*3]);
-        img.setPixel(x, y, col);
+        int col = *((int*)&buffer[((height()-1-y)*width()+x)*3]);
+        // swap color channels
+        int scol =    ((col&0xff) << 16)
+                    | (((col>>8)&0xff) << 8)
+                    | (((col>>16)&0xff));
+        img.setPixel(x, y, scol);
     }
 
     return img;

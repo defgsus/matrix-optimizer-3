@@ -75,6 +75,14 @@ public:
     /** Returns the editor that is assigned to this scene. */
     ObjectEditor * editor() const { return editor_; }
 
+    /** A flag to be queried by object when they create runtime resources.
+        If this returns true, all resources should be created lazily, so
+        that, e.g. a call to ObjectGl::renderGl() always works.
+        When false, objects are free to run worker threads that at some point
+        come back with the created resource, while rendering is already happening. */
+    bool lazyFlag() const { return p_lazyFlag_; }
+    void setLazyFlag(bool lazy) { p_lazyFlag_ = lazy; }
+
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
@@ -435,7 +443,7 @@ private:
 
     QReadWriteLock * readWriteLock_;
 
-    bool isPlayback_;
+    bool isPlayback_, p_lazyFlag_;
 
     Double sceneTime_;
     SamplePos samplePos_;

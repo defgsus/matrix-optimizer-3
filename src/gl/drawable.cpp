@@ -376,6 +376,8 @@ void Drawable::renderShader(const Mat4 &proj,
     else*/
         vao_->drawElements();
 
+    //MO_DEBUG("Drawable('" << name_ << "') drawn");
+
     shader_->deactivate();
 }
 

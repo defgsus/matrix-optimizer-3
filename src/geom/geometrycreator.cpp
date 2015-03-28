@@ -125,7 +125,10 @@ void GeometryCreator::run()
     MO_DEBUG_GL("GeometryCreator::run() finished (instance = " << instanceCounter << ")");
 
     if (success && !doStop_ && !doDiscard_)
+    {
+        MO_DEBUG_GL("GeometryCreator::run() suceeded (instance = " << instanceCounter << ")");
         emit succeeded();
+    }
 }
 
 void GeometryCreator::stop()

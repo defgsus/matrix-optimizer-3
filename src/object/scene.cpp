@@ -81,6 +81,7 @@ Scene::Scene(QObject *parent) :
     sceneSampleRate_    (44100),
     audioCon_           (new AudioObjectConnections()),
     isPlayback_         (false),
+    p_lazyFlag_         (false),
     sceneTime_          (0),
     samplePos_          (0)
 {
@@ -971,7 +972,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
                 // render each opengl object per camera (per cube-face)
-                for (auto o : glObjects_)
+                for (ObjectGl * o : glObjects_)
                 if (o->active(time, thread))
                 {
                     o->p_renderGl_(renderSet, thread, time);
@@ -1001,7 +1002,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
     fboFinal_[thread]->bind();
     fboFinal_[thread]->setViewport();
-    MO_CHECK_GL( glClearColor(0, 1, 0, 1.0) );
+    MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     for (Camera * camera : cameras_)

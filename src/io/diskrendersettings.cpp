@@ -41,6 +41,9 @@ void DiskRenderSettings::p_setDefault_()
     p_image_fps_ = 30;
     p_image_format_ = 0;
     p_image_bpc_ = 8;
+    for (ImageFormat & f : p_image_formats_)
+        if (f.ext == "png")
+            { p_image_format_ = f.index; }
 
     p_audio_pattern_ = "audio_%num%.%ext%";
     p_audio_conf_ = AUDIO::Configuration(44100, 256, 0, 2);

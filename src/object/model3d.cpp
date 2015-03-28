@@ -9,6 +9,7 @@
 */
 
 #include "model3d.h"
+#include "scene.h"
 #include "io/datastream.h"
 #include "gl/drawable.h"
 #include "geom/geometryfactorysettings.h"
@@ -19,6 +20,7 @@
 #include "gl/compatibility.h"
 #include "geom/geometry.h"
 #include "geom/geometrycreator.h"
+#include "geom/geometrymodifierchain.h"
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
@@ -29,6 +31,11 @@
 #include "util/useruniformsetting.h"
 #include "io/log.h"
 
+#if 0
+#   define MO_DEBUG_MODEL(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_MODEL(unused__) { }
+#endif
 
 namespace MO {
 
@@ -439,21 +446,41 @@ const GEOM::GeometryFactorySettings& Model3d::geometrySettings() const
 
 void Model3d::initGl(uint /*thread*/)
 {
+    MO_DEBUG_MODEL("Model3d::initGl()");
+
     texture_->initGl();
     textureBump_->initGl();
 
     draw_ = new GL::Drawable(idName());
 
+    // lazy-creation of resources?
+    const bool lazy = sceneObject() ? sceneObject()->lazyFlag() : false;
+
+    // create resources
+    if (lazy)
+    {
+        nextGeometry_ = new GEOM::Geometry;
+        geomSettings_->setObject(this);
+        geomSettings_->modifierChain()->execute(nextGeometry_, this);
+    }
+    else
     if (!nextGeometry_)
     {
         resetCreator_();
         creator_ = new GEOM::GeometryCreator(this);
+        /** @todo find out if Qt's signal/slot mechanism doesn't work when
+            not connected to main thread. In this case, when started via DiskRenderer,
+            no signals are received from the GEOM::GeometryCreator.
+            It's currently solved via the Scene::lazyFlag() but would be cool
+            to file a bugreport if this generally doesn't work or to, at least,
+            find out if this is the desired behaviour. */
         connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
         connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
 
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
         creator_->start();
+        MO_DEBUG_MODEL("Model3d::initGl() started creator");
     }
 }
 
@@ -494,6 +521,8 @@ void Model3d::numberLightSourcesChanged(uint /*thread*/)
 
 void Model3d::geometryCreated_()
 {
+    MO_DEBUG_MODEL("Model3d::geometryCreated()");
+
     nextGeometry_ = creator_->takeGeometry();
     creator_->deleteLater();
     creator_ = 0;
@@ -503,6 +532,8 @@ void Model3d::geometryCreated_()
 
 void Model3d::geometryFailed_()
 {
+    MO_DEBUG_MODEL("Model3d::geometryFailed()");
+
     creator_->deleteLater();
     creator_ = 0;
 }
@@ -524,6 +555,8 @@ void Model3d::setGeometry(const GEOM::Geometry & g)
 
 void Model3d::setupDrawable_()
 {
+    MO_DEBUG_MODEL("Model3d::setupDrawable()");
+
     GL::ShaderSource * src = new GL::ShaderSource();
 
     src->loadDefaultSource();
@@ -633,6 +666,8 @@ void Model3d::setupDrawable_()
 
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
+    MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
+
     Mat4 trans = transformation();
     Mat4 cubeViewTrans, viewTrans;
     if (fixPosition_->baseValue() == 0)
@@ -654,6 +689,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     if (nextGeometry_)
     {
+        MO_DEBUG_MODEL("Model3d::renderGl: assigning next geometry");
+
         auto g = nextGeometry_;
         nextGeometry_ = 0;
         draw_->setGeometry(g);
@@ -662,12 +699,16 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     if (doRecompile_)
     {
+        MO_DEBUG_MODEL("Model3d::renderGl: recompiling shader");
+
         doRecompile_ = false;
         setupDrawable_();
     }
 
     if (draw_->isReady())
     {
+        MO_DEBUG_MODEL("Model3d::renderGl: drawing");
+
         // bind textures
         texture_->bind();
         textureBump_->bind(1);
@@ -738,6 +779,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                             &rs.lightSettings(),
                             time);
     }
+    else
+        MO_DEBUG_MODEL("Model3d::renderGl: drawable not ready");
 }
 
 
