@@ -9,6 +9,7 @@
 */
 
 #include <QLayout>
+#include <QLabel>
 
 #include "doublespinbox.h"
 #include "doublespinboxclean.h"
@@ -17,19 +18,20 @@ namespace MO {
 namespace GUI {
 
 
-DoubleSpinBox::DoubleSpinBox(QWidget *parent) :
-    QWidget(parent),
-    ignoreSignal_(false)
+DoubleSpinBox::DoubleSpinBox(QWidget *parent)
+    : QWidget       (parent)
+    , label_        (0)
+    , ignoreSignal_ (false)
 {
     setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons"));
 
-    auto l = new QVBoxLayout(this);
-    l->setMargin(0);
+    layout_ = new QHBoxLayout(this);
+    layout_->setMargin(0);
     //l->setSizeConstraint(QLayout::SetMinAndMaxSize);
-    l->setSizeConstraint(QLayout::SetMaximumSize);
+    layout_->setSizeConstraint(QLayout::SetMaximumSize);
 
     spin_ = new DoubleSpinBoxClean(this);
-    l->addWidget(spin_);
+    layout_->addWidget(spin_);
     setFocusProxy(spin_);
 
     connect(spin_, SIGNAL(valueChanged(double)), this, SLOT(internValueChanged_(double)));
@@ -52,6 +54,17 @@ void DoubleSpinBox::internValueChanged_(double v)
         emit valueChanged(v);
 }
 
+void DoubleSpinBox::setLabel(const QString & txt)
+{
+    if (!label_)
+    {
+        label_ = new QLabel(txt, this);
+        label_->setAlignment(Qt::AlignRight);
+        layout_->insertWidget(0, label_);
+    }
+    else
+        label_->setText(txt);
+}
 
 } // namespace GUI
 } // namespace MO

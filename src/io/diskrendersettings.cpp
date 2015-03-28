@@ -9,9 +9,11 @@
 */
 
 #include <QImageWriter>
+#include <QDir>
 
 #include "diskrendersettings.h"
 #include "io/commandlineparser.h"
+#include "io/error.h"
 
 namespace MO {
 
@@ -27,11 +29,14 @@ void DiskRenderSettings::p_setDefault_()
 {
     p_directory_ = "./output";
 
+    p_audio_conf_ = AUDIO::Configuration(44100, 512, 0, 2);
+
     p_time_start_ = 0;
     p_time_length_ = p_audio_conf_.sampleRate() * 60;
 
     p_image_pattern_ = "image_%num%.%ext%";
     p_image_num_offset_ = 1;
+    p_image_num_width_ = 6;
     p_image_w_ = p_image_h_ = 1024;
     p_image_fps_ = 30;
     p_image_format_ = 0;
@@ -44,7 +49,7 @@ void DiskRenderSettings::p_setDefault_()
 }
 
 
-const QList<DiskRenderSettings::ImageFormat>& DiskRenderSettings::imageFormats() const
+const QList<DiskRenderSettings::ImageFormat>& DiskRenderSettings::imageFormats()
 {
     // create static list
     if (p_image_formats_.isEmpty())
@@ -78,7 +83,7 @@ const QList<DiskRenderSettings::ImageFormat>& DiskRenderSettings::imageFormats()
 }
 
 
-const QList<DiskRenderSettings::AudioFormat>& DiskRenderSettings::audioFormats() const
+const QList<DiskRenderSettings::AudioFormat>& DiskRenderSettings::audioFormats()
 {
     // create static list
     if (p_audio_formats_.isEmpty())
@@ -103,6 +108,39 @@ QString DiskRenderSettings::imageFormatId() const
             : "-";
 }
 
+
+QString DiskRenderSettings::imageFormatExt() const
+{
+    return p_image_format_ < size_t(imageFormats().size())
+            ? imageFormats()[p_image_format_].ext
+            : "-";
+}
+
+QString DiskRenderSettings::makeImageFilename(size_t frame) const
+{
+    QString fn = p_image_pattern_;
+    fn.replace("%ext%", imageFormats()[p_image_format_].ext);
+    fn.replace("%num%", QString("%1").arg(frame + p_image_num_offset_,
+                                           p_image_num_width_, 10, QChar('0')));
+
+    //QDir dir(p_directory_);
+    //fn.prepend( dir.absolutePath() + QDir::separator() );
+    if (!(p_directory_.endsWith('/') || p_directory_.endsWith('\\')))
+        fn.prepend(QDir::separator());
+    fn.prepend(p_directory_);
+    return fn;
+}
+
+
+
+void DiskRenderSettings::setImageFormat(size_t index)
+{
+    MO_ASSERT(index < size_t(p_image_formats_.size()), "");
+
+    if (index < size_t(p_image_formats_.size()))
+        p_image_format_ = index;
+}
+
 void DiskRenderSettings::setImageFormat(const QString &id)
 {
     for (int i=0; i<imageFormats().size(); ++i)
@@ -113,20 +151,47 @@ void DiskRenderSettings::setImageFormat(const QString &id)
     }
 }
 
+
+Double DiskRenderSettings::startSecond() const
+{
+    return p_time_start_ * p_audio_conf_.sampleRateInv();
+}
+
+size_t DiskRenderSettings::startFrame() const
+{
+    return p_time_start_ * p_image_fps_ / p_audio_conf_.sampleRate();
+}
+
+void DiskRenderSettings::setStartSecond(Double sec)
+{
+    p_time_start_ = sec * p_audio_conf_.sampleRate();
+}
+
+void DiskRenderSettings::setStartFrame(size_t frame)
+{
+    p_time_start_ = SamplePos(frame) * p_audio_conf_.sampleRate() / p_image_fps_;
+}
+
+Double DiskRenderSettings::lengthSecond() const
+
+{
+    return p_time_length_ * p_audio_conf_.sampleRateInv();
+}
+
 size_t DiskRenderSettings::lengthFrame() const
 {
     return p_time_length_ * p_image_fps_ / p_audio_conf_.sampleRate();
 }
 
-Double DiskRenderSettings::lengthSecond() const
+void DiskRenderSettings::setLengthSecond(Double sec)
 {
-    return p_time_length_ * p_audio_conf_.sampleRateInv();
+    p_time_length_ = sec * p_audio_conf_.sampleRate();
 }
 
-
-
-
-
+void DiskRenderSettings::setLengthFrame(size_t frame)
+{
+    p_time_length_ = SamplePos(frame) * p_audio_conf_.sampleRate() / p_image_fps_;
+}
 
 
 
@@ -151,7 +216,7 @@ IO::CommandLineParser * DiskRenderSettings::createCommandLineParser() const
     cl->addParameter("image_fmt", "if, image-format",
                         QObject::tr("Format of output images, can be one of:")
                         + " " + ifmtstr,
-                        imageFormats()[imageFormat()].id);
+                        imageFormats()[imageFormatIndex()].id);
 
     return cl;
 }

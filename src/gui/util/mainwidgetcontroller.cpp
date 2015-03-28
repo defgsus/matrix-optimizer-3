@@ -102,7 +102,7 @@
 namespace MO {
 namespace GUI {
 
-
+const int MAX_RECENT_FILES = 23;
 
 
 MainWidgetController::MainWidgetController(QMainWindow * win)
@@ -297,7 +297,7 @@ void MainWidgetController::createObjects_()
 
 void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 {
-    recentFiles_ = new RecentFiles(10, this);
+    recentFiles_ = new RecentFiles(MAX_RECENT_FILES, this);
     recentFiles_->setObjectName("_RecentSceneFiles");
     recentFiles_->loadSettings();
     recentFiles_->setAutoSave(true);
@@ -1912,7 +1912,7 @@ void MainWidgetController::loadInterfacePresets()
 
 void MainWidgetController::renderToDisk()
 {
-    auto diag = new RenderDialog(window_);
+    auto diag = new RenderDialog(currentSceneFilename_, window_);
     diag->exec();
     /*
     auto ren = new Renderer(this);

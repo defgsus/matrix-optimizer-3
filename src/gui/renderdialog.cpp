@@ -14,12 +14,18 @@
 #include <QComboBox>
 #include <QFrame>
 #include <QLineEdit>
+#include <QProgressBar>
+#include <QMessageBox>
 
 #include "renderdialog.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
 #include "widget/filenameinput.h"
+#include "engine/diskrenderer.h"
+#include "object/objectfactory.h"
+#include "tool/stringmanip.h"
 #include "io/diskrendersettings.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -59,39 +65,61 @@ namespace GUI {
 
 struct RenderDialog::Private
 {
-    Private(RenderDialog * d) : diag(d) { }
+    Private(RenderDialog * d)
+        : diag          (d)
+        , render        (0)
+        , scene         (0)
+        , timeUnit      (0)
+        , ignoreWidgets (false)
+    { }
 
     void createWidgets();
     void updateFromWidgets();
+    void updateFromSettings();
+    void updateInfoLabels();
 
     RenderDialog * diag;
 
     DiskRenderSettings rendSet;
+    DiskRenderer * render;
+    QString sceneFilename;
+    Scene * scene;
+    int timeUnit;
+    bool ignoreWidgets;
 
     FilenameInput
-            * editDir_;
+            * editDir;
     QLineEdit
-            * editImageName_,
-            * editAudioName_;
+            * editImageName,
+            * editAudioName;
     SpinBox
-            * spinImageNum_,
-            * spinImageW_,
-            * spinImageH_,
-            * spinImageFps_;
+            * spinImageNum,
+            * spinImageNumWidth,
+            * spinImageW,
+            * spinImageH,
+            * spinImageFps;
+    DoubleSpinBox
+            * spinStart,
+            * spinLength;
     QComboBox
-            * cbImageFormat_;
+            * cbImageFormat;
     QLabel
-            * labelImageName_;
+            * labelTime,
+            * labelImageName;
+    QProgressBar
+            * progBar;
 };
 
-RenderDialog::RenderDialog(QWidget *parent)
+RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
     : QDialog       (parent)
     , p_            (new Private(this))
 {
     setObjectName("_RenderDialog");
     setMinimumSize(640, 640);
 
+    p_->sceneFilename = sceneFilename;
     p_->createWidgets();
+    p_->updateFromSettings();
 }
 
 RenderDialog::~RenderDialog()
@@ -106,18 +134,59 @@ void RenderDialog::Private::createWidgets()
 
         // output directory
 
-        editDir_ = new FilenameInput(IO::FT_ANY, true, diag);
-        editDir_->setFilename(rendSet.directory());
-        lv0->addWidget(editDir_);
-        connect(editDir_, SIGNAL(filenameChanged(QString)),
+        editDir = new FilenameInput(IO::FT_ANY, true, diag);
+        editDir->setFilename(rendSet.directory());
+        lv0->addWidget(editDir);
+        connect(editDir, SIGNAL(filenameChanged(QString)),
                 diag, SLOT(p_onWidget_()));
+
+        // name preview
+        labelImageName = new QLabel(diag);
+        lv0->addWidget(labelImageName);
+
+        // time info label
+        labelTime = new QLabel(diag);
+        lv0->addWidget(labelTime);
 
         auto frame = new QFrame(diag);
         frame->setFrameShape(QFrame::HLine);
         lv0->addWidget(frame);
 
-
+        // time range
         auto lh = new QHBoxLayout();
+        lv0->addLayout(lh);
+
+            auto cbTime = new QComboBox(diag);
+            cbTime->addItem(tr("seconds"));
+            cbTime->addItem(tr("frames"));
+            cbTime->addItem(tr("samples"));
+            connect(cbTime, SIGNAL(currentIndexChanged(int)),
+                    diag, SLOT(p_onUnitChange_(int)));
+            lh->addWidget(cbTime);
+
+            spinStart = new DoubleSpinBox(diag);
+            spinStart->setLabel(tr("start"));
+            spinStart->setRange(-10e10, 10e10);
+            spinStart->setDecimals(6);
+            connect(spinStart, SIGNAL(valueChanged(double)),
+                    diag, SLOT(p_onWidget_()));
+            lh->addWidget(spinStart);
+
+            spinLength = new DoubleSpinBox(diag);
+            spinLength->setLabel(tr("length"));
+            spinLength->setRange(0, 10e10);
+            spinLength->setDecimals(6);
+            connect(spinLength, SIGNAL(valueChanged(double)),
+                    diag, SLOT(p_onWidget_()));
+            lh->addWidget(spinLength);
+
+
+        frame = new QFrame(diag);
+        frame->setFrameShape(QFrame::HLine);
+        lv0->addWidget(frame);
+
+
+        lh = new QHBoxLayout();
         lv0->addLayout(lh);
 
             // ---- image ----
@@ -125,49 +194,71 @@ void RenderDialog::Private::createWidgets()
             auto lv = new QVBoxLayout();
             lh->addLayout(lv);
 
-                editImageName_ = new QLineEdit(diag);
-                editImageName_->setText(rendSet.imagePattern());
-                lv->addWidget(editImageName_);
-                connect(editImageName_, SIGNAL(textChanged(QString)),
+                // name pattern
+                editImageName = new QLineEdit(diag);
+                editImageName->setText(rendSet.imagePattern());
+                lv->addWidget(editImageName);
+                connect(editImageName, SIGNAL(textChanged(QString)),
                         diag, SLOT(p_onWidget_()));
 
-                spinImageNum_ = new SpinBox(diag);
-                spinImageNum_->setLabel(tr("frame number offset"));
-                spinImageNum_->setRange(0, 999999999);
-                spinImageNum_->setValue(rendSet.imagePatternOffset());
-                lv->addWidget(spinImageNum_);
-                connect(spinImageNum_, SIGNAL(valueChanged(int)),
+                // frame number offset
+                spinImageNum = new SpinBox(diag);
+                spinImageNum->setLabel(tr("frame number offset"));
+                spinImageNum->setRange(0, 999999999);
+                spinImageNum->setValue(rendSet.imagePatternOffset());
+                lv->addWidget(spinImageNum);
+                connect(spinImageNum, SIGNAL(valueChanged(int)),
                         diag, SLOT(p_onWidget_()));
 
-                labelImageName_ = new QLabel(diag);
-                lv->addWidget(labelImageName_);
-
-                spinImageW_ = new SpinBox(diag);
-                spinImageW_->setLabel(tr("width"));
-                spinImageW_->setRange(0, 4096*4);
-                spinImageW_->setValue(rendSet.imageWidth());
-                lv->addWidget(spinImageW_);
-                connect(spinImageW_, SIGNAL(valueChanged(int)),
+                // frame number width
+                spinImageNumWidth = new SpinBox(diag);
+                spinImageNumWidth->setLabel(tr("frame number digits"));
+                spinImageNumWidth->setRange(0, 1000);
+                spinImageNumWidth->setValue(rendSet.imagePatternOffset());
+                lv->addWidget(spinImageNumWidth);
+                connect(spinImageNumWidth, SIGNAL(valueChanged(int)),
                         diag, SLOT(p_onWidget_()));
 
-                spinImageH_ = new SpinBox(diag);
-                spinImageH_->setLabel(tr("height"));
-                spinImageH_->setRange(0, 4096*4);
-                spinImageH_->setValue(rendSet.imageHeight());
-                lv->addWidget(spinImageH_);
-                connect(spinImageH_, SIGNAL(valueChanged(int)),
+                // format
+                cbImageFormat = new QComboBox(diag);
+                for (const DiskRenderSettings::ImageFormat & f
+                     : DiskRenderSettings::imageFormats())
+                    cbImageFormat->addItem(f.name, QVariant(int(f.index)));
+                cbImageFormat->setCurrentIndex(
+                            rendSet.imageFormatIndex());
+                connect(cbImageFormat, SIGNAL(currentIndexChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+                lv->addWidget(cbImageFormat);
+
+
+                // width
+                spinImageW = new SpinBox(diag);
+                spinImageW->setLabel(tr("width"));
+                spinImageW->setRange(0, 4096*4);
+                spinImageW->setValue(rendSet.imageWidth());
+                lv->addWidget(spinImageW);
+                connect(spinImageW, SIGNAL(valueChanged(int)),
                         diag, SLOT(p_onWidget_()));
 
-                spinImageFps_ = new SpinBox(diag);
-                spinImageFps_->setLabel(tr("frames per second"));
-                spinImageFps_->setRange(0, 60000);
-                spinImageFps_->setValue(rendSet.imageFps());
-                lv->addWidget(spinImageFps_);
-                connect(spinImageFps_, SIGNAL(valueChanged(int)),
+                // height
+                spinImageH = new SpinBox(diag);
+                spinImageH->setLabel(tr("height"));
+                spinImageH->setRange(0, 4096*4);
+                spinImageH->setValue(rendSet.imageHeight());
+                lv->addWidget(spinImageH);
+                connect(spinImageH, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+
+                // fps
+                spinImageFps = new SpinBox(diag);
+                spinImageFps->setLabel(tr("frames per second"));
+                spinImageFps->setRange(0, 60000);
+                spinImageFps->setValue(rendSet.imageFps());
+                lv->addWidget(spinImageFps);
+                connect(spinImageFps, SIGNAL(valueChanged(int)),
                         diag, SLOT(p_onWidget_()));
 
         lv0->addStretch(1);
-
 
         // [Go!] [Cancel] buttons
 
@@ -188,23 +279,153 @@ void RenderDialog::Private::createWidgets()
         but->setStatusTip(tr("Closes the dialog"));
         connect(but, SIGNAL(pressed()), diag, SLOT(reject()));
         lh->addWidget(but);
-}
 
-void RenderDialog::p_onWidget_()
-{
-    p_->updateFromWidgets();
+        // progress bar
+        progBar = new QProgressBar(diag);
+        progBar->setVisible(false);
+        lv0->addWidget(progBar);
 }
 
 void RenderDialog::Private::updateFromWidgets()
 {
+    rendSet.setDirectory(editDir->filename());
 
+    rendSet.setImagePattern(editImageName->text());
+    rendSet.setImagePatternOffset(spinImageNum->value());
+    rendSet.setImagePatternWidth(spinImageNumWidth->value());
+    rendSet.setImageSize(spinImageW->value(), spinImageH->value());
+    rendSet.setImageFps(spinImageFps->value());
+    rendSet.setImageFormat(cbImageFormat->currentIndex());
+
+    switch (timeUnit)
+    {
+        case 0: rendSet.setStartSecond(spinStart->value());
+                rendSet.setLengthSecond(spinLength->value());
+        break;
+        case 1: rendSet.setStartFrame(spinStart->value());
+                rendSet.setLengthFrame(spinLength->value());
+        break;
+        case 2: rendSet.setStartSample(spinStart->value());
+                rendSet.setLengthSample(spinLength->value());
+        break;
+    }
+
+    updateInfoLabels();
+}
+
+void RenderDialog::Private::updateFromSettings()
+{
+    ignoreWidgets = true;
+
+    editDir->setFilename(rendSet.directory());
+
+    // -- image --
+
+    editImageName->setText(rendSet.imagePattern());
+    spinImageNum->setValue(rendSet.imagePatternOffset());
+    spinImageNumWidth->setValue(rendSet.imagePatternWidth());
+    spinImageW->setValue(rendSet.imageWidth());
+    spinImageH->setValue(rendSet.imageHeight());
+    spinImageFps->setValue(rendSet.imageFps());
+    cbImageFormat->setCurrentIndex(rendSet.imageFormatIndex());
+
+    switch (timeUnit)
+    {
+        case 0: spinStart->setValue(rendSet.startSecond());
+                spinLength->setValue(rendSet.lengthSecond());
+        break;
+        case 1: spinStart->setValue(rendSet.startFrame());
+                spinLength->setValue(rendSet.lengthFrame());
+        break;
+        case 2: spinStart->setValue(rendSet.startSample());
+                spinLength->setValue(rendSet.lengthSample());
+        break;
+    }
+
+    ignoreWidgets = false;
+
+    updateInfoLabels();
+}
+
+void RenderDialog::Private::updateInfoLabels()
+{
+    switch (timeUnit)
+    {
+        case 0: labelTime->setText(tr("time %1 - %2")
+                        .arg(time_to_string(rendSet.startSecond()))
+                        .arg(time_to_string(rendSet.lengthSecond() - rendSet.startSecond())));
+        break;
+        case 1: labelTime->setText(tr("time %1 - %2")
+                        .arg(rendSet.startFrame())
+                        .arg(rendSet.lengthFrame() - rendSet.startFrame()));
+        break;
+        case 2: labelTime->setText(tr("time %1 - %2")
+                        .arg(rendSet.startSample())
+                        .arg(rendSet.lengthSample() - rendSet.startSample()));
+        break;
+    }
+
+    labelImageName->setText(tr("example name: ") + rendSet.makeImageFilename(0));
+}
+
+void RenderDialog::p_onWidget_()
+{
+    if (p_->ignoreWidgets)
+        return;
+
+    p_->updateFromWidgets();
+}
+
+void RenderDialog::p_onUnitChange_(int idx)
+{
+    p_->timeUnit = std::max(0, std::min(2, idx ));
+
+    p_->updateFromSettings();
 }
 
 
+void RenderDialog::error(const QString & e)
+{
+    QMessageBox::critical(0, tr("Disk renderer"), e);
+}
 
 void RenderDialog::render()
 {
-    accept();
+    if (p_->render)
+        return;
+    /*
+    try
+    {
+        p_->scene = ObjectFactory::loadScene(p_->sceneFilename);
+    }
+    catch (const Exception& e)
+    {
+        error(tr("Error loading scene.\n").arg(e.what()));
+        return;
+    }*/
+
+    p_->render = new DiskRenderer(this);
+    connect(p_->render, SIGNAL(progress(int)),
+            p_->progBar, SLOT(setValue(int)));
+    connect(p_->render, &DiskRenderer::finished, [this]()
+    {
+        p_->progBar->setVisible(false);
+        if (!p_->render->ok())
+            error(p_->render->errorString());
+    });
+
+    p_->render->setSettings(p_->rendSet);
+    if (!p_->render->loadScene(p_->sceneFilename))
+    {
+        error(tr("Error loading scene.\n").arg(p_->render->errorString()));
+        p_->render->deleteLater();
+    }
+
+    p_->progBar->setVisible(true);
+    p_->render->start();
+
+
+    //accept();
 }
 
 

@@ -13,6 +13,9 @@
 
 #include "doublespinboxclean.h"
 
+class QLabel;
+class QHBoxLayout;
+
 namespace MO {
 namespace GUI {
 
@@ -52,12 +55,15 @@ signals:
 public slots:
 
     void setValue(double val, bool send_signal = false);
+    void setLabel(const QString&);
 
 private slots:
     void internValueChanged_(double);
 
 private:
     DoubleSpinBoxClean * spin_;
+    QLabel * label_;
+    QHBoxLayout * layout_;
     bool ignoreSignal_;
 };
 

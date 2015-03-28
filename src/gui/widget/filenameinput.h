@@ -32,7 +32,7 @@ public:
     explicit FilenameInput(bool directoryOnly = false, QWidget *parent = 0)
         : FilenameInput(IO::FT_ANY, directoryOnly, parent) { }
 
-    QString fileName() const;
+    QString filename() const;
 
 signals:
 

@@ -9,9 +9,11 @@
 */
 
 #include <QSurface>
+#include <QOffscreenSurface>
 
 #include "scenerenderer.h"
 #include "context.h"
+#include "offscreencontext.h"
 #include "object/scene.h"
 #include "io/error.h"
 #include "gl/opengl.h"
@@ -90,6 +92,29 @@ void SceneRenderer::createContext(QSurface * surface)
         updateSceneGlContext_();
 
     emit contextCreated();
+}
+
+OffscreenContext * SceneRenderer::createOffscreenContext()
+{
+    MO_ASSERT(!context_, "context already created");
+
+    auto ocontext = new OffscreenContext(this);
+
+    if (!ocontext->createGl())
+        MO_GL_ERROR("could not create opengl context");
+
+    if (!ocontext->makeCurrent())
+        MO_GL_ERROR("could not make opengl context current");
+
+    context_ = ocontext;
+    surface_ = ocontext->qsurface();
+
+    if (scene_)
+        updateSceneGlContext_();
+
+    emit contextCreated();
+
+    return ocontext;
 }
 
 void SceneRenderer::updateSceneGlContext_()

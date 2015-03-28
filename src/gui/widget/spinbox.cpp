@@ -58,6 +58,7 @@ void SpinBox::setLabel(const QString & txt)
     if (!label_)
     {
         label_ = new QLabel(txt, this);
+        label_->setAlignment(Qt::AlignRight);
         layout_->insertWidget(0, label_);
     }
     else

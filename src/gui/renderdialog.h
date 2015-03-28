@@ -14,13 +14,15 @@
 #include <QDialog>
 
 namespace MO {
+class Scene;
 namespace GUI {
 
+/** Dialog style window with complete disk render control */
 class RenderDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit RenderDialog(QWidget *parent = 0);
+    explicit RenderDialog(const QString& sceneFilename, QWidget *parent = 0);
     ~RenderDialog();
 
 signals:
@@ -32,6 +34,11 @@ public slots:
 private slots:
 
     void p_onWidget_();
+    void p_onUnitChange_(int idx);
+
+protected:
+
+    void error(const QString&);
 
 private:
 

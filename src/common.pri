@@ -273,7 +273,8 @@ HEADERS += \
     src/io/docbookexporter.h \
     src/maincommandline.h \
     src/gl/offscreencontext.h \
-    src/io/diskrendersettings.h
+    src/io/diskrendersettings.h \
+    src/engine/diskrenderer.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -508,4 +509,5 @@ SOURCES += \
     src/io/docbookexporter.cpp \
     src/maincommandline.cpp \
     src/gl/offscreencontext.cpp \
-    src/io/diskrendersettings.cpp
+    src/io/diskrendersettings.cpp \
+    src/engine/diskrenderer.cpp

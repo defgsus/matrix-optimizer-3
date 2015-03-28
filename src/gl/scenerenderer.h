@@ -26,6 +26,7 @@ class Scene;
 namespace GL {
 
 class Context;
+class OffscreenContext;
 
 class SceneRenderer : public QObject
 {
@@ -47,6 +48,7 @@ public:
     void setSize(const QSize& resolution);
 
     void createContext(QSurface *surface);
+    OffscreenContext * createOffscreenContext();
 
     void render();
 

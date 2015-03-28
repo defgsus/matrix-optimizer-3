@@ -42,6 +42,7 @@ FilenameInput::FilenameInput(IO::FileType filetype, bool directoryOnly, QWidget 
 
 void FilenameInput::createWidgets_()
 {
+    /** @todo completer does not show on xubuntu */
     auto fsmodel = new QFileSystemModel(this);
     fsmodel->setRootPath(QDir::currentPath());
     auto comple = new QCompleter(fsmodel, this);
@@ -65,7 +66,7 @@ void FilenameInput::createWidgets_()
 }
 
 
-QString FilenameInput::fileName() const
+QString FilenameInput::filename() const
 {
     return edit_->text();
 }
@@ -79,17 +80,17 @@ void FilenameInput::setFilename(const QString & fn)
 
 void FilenameInput::onTextChanged_()
 {
-    bool valid = !fileName().isEmpty();
+    bool valid = !filename().isEmpty();
     if (valid)
     {
         if (directoryOnly_)
         {
-            QDir dir(fileName());
+            QDir dir(filename());
             valid = dir.exists();
         }
         else
         {
-            QFileInfo fi(fileName());
+            QFileInfo fi(filename());
             valid = fi.exists();
         }
     }
@@ -100,7 +101,7 @@ void FilenameInput::onTextChanged_()
     if (ignoreSig_)
         return;
 
-    emit filenameChanged(fileName());
+    emit filenameChanged(filename());
 }
 
 void FilenameInput::openDialog()
@@ -116,6 +117,8 @@ void FilenameInput::openDialog()
         return;
 
     setFilename(fn);
+
+    emit filenameChanged(filename());
 }
 
 } // namespace GUI

@@ -364,7 +364,7 @@ bool DirectedGraph<T>::makeLinear(std::insert_iterator<U> insertit) const
     }
 
 #ifdef MO_GRAPH_DEBUG
-    graph.dumpEdges(std::cout);
+    //graph.dumpEdges(std::cout);
 #endif
 
     // check if edges left

@@ -60,7 +60,7 @@
 #   define MO_DEBUG_IO(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GL
 #   define MO_DEBUG_GL(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
