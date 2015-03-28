@@ -30,14 +30,17 @@ signals:
 public slots:
 
     void render();
+    void stopRender();
 
 private slots:
 
     void p_onWidget_();
     void p_onUnitChange_(int idx);
+    void p_shutDown_();
 
 protected:
 
+    void closeEvent(QEvent*);
     void error(const QString&);
 
 private:

@@ -26,6 +26,7 @@
 #include "tool/stringmanip.h"
 #include "io/diskrendersettings.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -124,9 +125,15 @@ RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
 
 RenderDialog::~RenderDialog()
 {
+    p_shutDown_();
+
     delete p_;
 }
 
+void RenderDialog::closeEvent(QEvent *)
+{
+    stopRender();
+}
 
 void RenderDialog::Private::createWidgets()
 {
@@ -277,7 +284,7 @@ void RenderDialog::Private::createWidgets()
 
         but = new QPushButton(tr("Cancel"), diag);
         but->setStatusTip(tr("Closes the dialog"));
-        connect(but, SIGNAL(pressed()), diag, SLOT(reject()));
+        connect(but, SIGNAL(pressed()), diag, SLOT(stopRender()));
         lh->addWidget(but);
 
         // progress bar
@@ -386,7 +393,19 @@ void RenderDialog::p_onUnitChange_(int idx)
 
 void RenderDialog::error(const QString & e)
 {
-    QMessageBox::critical(0, tr("Disk renderer"), e);
+    MO_PRINT("Render Error:\n" << e);
+    //QMessageBox::critical(0, tr("Disk renderer"), e);
+}
+
+void RenderDialog::stopRender()
+{
+    if (!p_->render)
+        return;
+
+    p_->render->stop();
+    p_->progBar->setVisible(false);
+
+    p_shutDown_();
 }
 
 void RenderDialog::render()
@@ -415,11 +434,12 @@ void RenderDialog::render()
     });
 
     p_->render->setSettings(p_->rendSet);
-    if (!p_->render->loadScene(p_->sceneFilename))
+    p_->render->setSceneFilename(p_->sceneFilename);
+    /*if (!p_->render->loadScene(p_->sceneFilename))
     {
         error(tr("Error loading scene.\n").arg(p_->render->errorString()));
         p_->render->deleteLater();
-    }
+    }*/
 
     p_->progBar->setVisible(true);
     p_->render->start();
@@ -428,6 +448,12 @@ void RenderDialog::render()
     //accept();
 }
 
+void RenderDialog::p_shutDown_()
+{
+    if (p_->render)
+        p_->render->deleteLater();
+    p_->render = 0;
+}
 
 
 } // namespace GUI

@@ -82,6 +82,7 @@ bool Application::notify(QObject * o, QEvent * e)
 {
     try
     {
+        //qDebug() << "NOTIFY:" << o << e->type() << e->spontaneous();
         return QApplication::notify(o, e);
     }
     catch (const MO::AudioException& e)

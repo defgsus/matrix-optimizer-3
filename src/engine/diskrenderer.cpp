@@ -22,8 +22,13 @@
 #include "gl/offscreencontext.h"
 #include "gl/scenerenderer.h"
 #include "gl/compatibility.h"
+#include "gl/framebufferobject.h"
+#include "gl/texture.h"
+#include "projection/projectionsystemsettings.h"
 #include "io/filemanager.h"
 #include "io/diskrendersettings.h"
+#include "io/currentthread.h"
+#include "io/settings.h"
 #include "io/version.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -46,7 +51,9 @@ struct DiskRenderer::Private
     void addError(const QString& e) { if (!errorStr.isEmpty()) errorStr += '\n'; errorStr += e; }
     bool loadScene(const QString&);
     bool initScene();
+    bool releaseScene();
     bool renderFrame();
+    bool writeImage();
     void renderAll();
     bool prepareDir(const QString& dir_or_filename);
     bool writeImage(const QImage&);
@@ -54,6 +61,7 @@ struct DiskRenderer::Private
     DiskRenderer * thread;
     DiskRenderSettings rendSet;
     Scene * scene;
+    QString sceneFilename;
     ObjectEditor * sceneEditor;
     GL::OffscreenContext * context;
     GL::SceneRenderer * renderer;
@@ -91,10 +99,15 @@ void DiskRenderer::setSettings(const DiskRenderSettings & s)
     p_->rendSet = s;
 }
 
-void DiskRenderer::setScene(Scene * scene)
+void DiskRenderer::setSceneFilename(const QString &fn)
+{
+    p_->sceneFilename = fn;
+}
+
+/*void DiskRenderer::setScene(Scene * scene)
 {
     p_->scene = scene;
-}
+}*/
 
 bool DiskRenderer::loadScene(const QString &fn)
 {
@@ -103,10 +116,17 @@ bool DiskRenderer::loadScene(const QString &fn)
 
 void DiskRenderer::run()
 {
+    setCurrentThreadName("RENDER");
+
     if (!p_->initScene())
+    {
+        p_->releaseScene();
         return;
+    }
 
     p_->renderAll();
+
+    p_->releaseScene();
 }
 
 void DiskRenderer::stop()
@@ -136,13 +156,20 @@ bool DiskRenderer::Private::initScene()
 {
     MO_DEBUG("DiskRenderer::initScene()");
 
-    /** that's very loosely the startup routine for loading a scene.
+    if (!loadScene(sceneFilename))
+        return false;
+
+    /** that's very loosely the startup routine for preparing a scene.
         @todo misses FrontItems */
 
     sceneEditor = new ObjectEditor();
     scene->setObjectEditor(sceneEditor);
 
     scene->runScripts();
+
+    // projection settings
+    scene->setProjectionSettings(MO::settings()->getDefaultProjectionSettings());
+    scene->setProjectorIndex(MO::settings()->clientIndex());
 
     // check for local filenames
 
@@ -173,6 +200,7 @@ bool DiskRenderer::Private::initScene()
         {
             return Double(curFrame) / rendSet.imageFps();
         });
+        scene->setResolution(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
 
     }
     catch (const Exception& e)
@@ -183,6 +211,21 @@ bool DiskRenderer::Private::initScene()
 
     audio = new AudioEngine();
     audio->setScene(scene, rendSet.audioConfig(), MO_AUDIO_THREAD);
+
+    return true;
+}
+
+bool DiskRenderer::Private::releaseScene()
+{
+    // release gl resources
+    if (scene)
+        scene->kill();
+
+    delete audio; audio = 0;
+    delete renderer; renderer = 0;
+    //delete context; context = 0;
+    delete scene; scene = 0;
+    delete sceneEditor; sceneEditor = 0;
 
     return true;
 }
@@ -202,34 +245,76 @@ bool DiskRenderer::Private::renderFrame()
     }
 }
 
+bool DiskRenderer::Private::writeImage()
+{
+    if (!scene)
+        return false;
+
+    auto fbo = scene->fboMaster(MO_GFX_THREAD);
+    if (!fbo || !fbo->colorTexture())
+        return false;
+
+    QImage img = fbo->colorTexture()->getImage();
+    if (img.isNull())
+        return false;
+
+    return writeImage(img);
+}
+
 void DiskRenderer::Private::renderAll()
 {
     MO_DEBUG("DiskRenderer::renderAll()");
 
     pleaseStop = false;
+    curFrame = 0;
+
+    // XXX Request creation of everything
+    renderFrame();
+    sleep(1);
+
+
     QTime time;
     time.start();
 
     size_t f = 0;
-    while (f < rendSet.lengthFrame() && thread->ok() && !pleaseStop)
+    while (f < 4)//rendSet.lengthFrame() && thread->ok() && !pleaseStop)
     {
         curFrame = f + rendSet.startFrame();
+        ++f;
 
         renderFrame();
-
-//        writeImage(img);
+        writeImage();
+        //writeImage(img);
 
         // emit progress every ms..
         if (time.elapsed() > 1000 / 5)
         {
+            MO_DEBUG("rendering frame " << f << "/" << rendSet.lengthFrame());
             emit thread->progress(f * 100 / rendSet.lengthFrame());
             time.start();
         }
     }
 }
 
-bool DiskRenderer::Private::prepareDir(const QString& dir)
+bool DiskRenderer::Private::prepareDir(const QString& dir1)
 {
+    // strip filename away
+    QString dir = dir1;
+    int idx = dir.lastIndexOf('/');
+    if (idx < 0)
+        idx = dir.lastIndexOf('\\');
+    if (idx >= 0)
+    {
+        dir = dir.left(idx);
+    }
+    else
+        return true;
+
+//    MO_DEBUG("preparing dir [" << dir << "]");
+
+    if (dir.isEmpty())
+        return true;
+
     if (!QDir(".").mkpath(dir))
     {
         addError(tr("Could not create directory for '%1'")

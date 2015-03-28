@@ -150,7 +150,8 @@ void ObjectGl::p_setGlContext_(uint thread, GL::Context * c)
 
 void ObjectGl::p_initGl_(uint thread)
 {
-    MO_DEBUG_GL("ObjectGl('" << idName() << "')::initGl_(" << thread << ")");
+    MO_DEBUG_GL("ObjectGl('" << idName() << "')::initGl_(" << thread << ") "
+                "p_glContext_.size() == " << p_glContext_.size());
 
     if (!p_glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");

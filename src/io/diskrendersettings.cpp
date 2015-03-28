@@ -123,8 +123,11 @@ QString DiskRenderSettings::makeImageFilename(size_t frame) const
     fn.replace("%num%", QString("%1").arg(frame + p_image_num_offset_,
                                            p_image_num_width_, 10, QChar('0')));
 
-    //QDir dir(p_directory_);
-    //fn.prepend( dir.absolutePath() + QDir::separator() );
+    // prepend directory
+
+    if (p_directory_.isEmpty())
+        return fn;
+
     if (!(p_directory_.endsWith('/') || p_directory_.endsWith('\\')))
         fn.prepend(QDir::separator());
     fn.prepend(p_directory_);

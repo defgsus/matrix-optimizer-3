@@ -23,6 +23,7 @@ struct PresetsWidget::Private
 {
     Private(PresetsWidget * widget)
         : widget        (widget)
+        , presets       (0)
         , ignoreCombo   (false)
     { }
 

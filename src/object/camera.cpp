@@ -499,7 +499,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
     // -- render camera frame onto current context --
 
-    // cameras framebuffer
+    // camera's framebuffer
     GL::FrameBufferObject * fbo = fbo_[thread];
 
     // final framebuffer
@@ -509,6 +509,8 @@ void Camera::drawFramebuffer(uint thread, Double time)
     // set blendmode
     alphaBlend_.apply(time, thread);
 
+    // bind the color texture from the fbo
+    MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     fbo->colorTexture()->bind();
 
     // set interpolation mode
@@ -530,10 +532,13 @@ void Camera::drawFramebuffer(uint thread, Double time)
         MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     }
 
+    /** @todo hack to stretch into projector slice -
+        for some very unknown reason the size was off on Hamburg clients... */
     if (isClient() && renderMode() == RM_PROJECTOR_SLICE)
         screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height());
     else
         screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
+
     fbo->colorTexture()->unbind();
 }
 

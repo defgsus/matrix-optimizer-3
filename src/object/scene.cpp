@@ -882,7 +882,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
 
 /// @todo this is all to be moved out of this class REALLY!
 
-void Scene::renderScene(Double time, uint thread)//, GL::FrameBufferObject * outputFbo)
+void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -995,19 +995,24 @@ void Scene::renderScene(Double time, uint thread)//, GL::FrameBufferObject * out
 
     using namespace gl;
 
+//    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());
+
     // --- mix camera frames ---
 
     fboFinal_[thread]->bind();
     fboFinal_[thread]->setViewport();
-    MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
+    MO_CHECK_GL( glClearColor(0, 1, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
-    for (auto camera : cameras_)
+    for (Camera * camera : cameras_)
         if (camera->active(time, thread))
             camera->drawFramebuffer(thread, time);
     fboFinal_[thread]->unbind();
 
     // --- draw to screen ---
+
+    if (!paintToScreen)
+        return;
 
     //MO_DEBUG_GL("Scene::renderScene(" << thread << ")");
 

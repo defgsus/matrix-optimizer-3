@@ -42,11 +42,14 @@ public slots:
 
     void setSettings(const DiskRenderSettings&);
 
+    /** Assigns a scene filename for loading */
+    void setSceneFilename(const QString& fn);
+
     /** Loads a scene and constructs everything. */
     bool loadScene(const QString& fn);
 
-    /** Assigns a scene. The gl context will be reinitialized. */
-    void setScene(Scene * );
+    /* Assigns a scene. The gl context will be reinitialized. */
+    //void setScene(Scene * );
 
     /** Request stop and block */
     void stop();
