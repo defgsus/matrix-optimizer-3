@@ -128,7 +128,7 @@ void SceneRenderer::updateSceneGlContext_()
 }
 
 
-void SceneRenderer::render()
+void SceneRenderer::render(bool renderToScreen)
 {
     if (!context_ || !scene_ || scene_->isShutDown())
         return;
@@ -165,7 +165,7 @@ void SceneRenderer::render()
     emit scene_->sceneTimeChanged(time);
 #endif
 
-    scene_->renderScene(time, MO_GFX_THREAD);
+    scene_->renderScene(time, MO_GFX_THREAD, renderToScreen);
 
     context_->qcontext()->swapBuffers(surface_);
 }

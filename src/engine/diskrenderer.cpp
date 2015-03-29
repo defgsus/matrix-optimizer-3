@@ -25,6 +25,7 @@
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
 #include "projection/projectionsystemsettings.h"
+#include "tool/stringmanip.h"
 #include "io/filemanager.h"
 #include "io/diskrendersettings.h"
 #include "io/currentthread.h"
@@ -46,6 +47,8 @@ struct DiskRenderer::Private
         , pleaseStop    (false)
         , curSample     (0)
         , curFrame      (0)
+
+        , progress      (0)
     { }
 
     void addError(const QString& e) { if (!errorStr.isEmpty()) errorStr += '\n'; errorStr += e; }
@@ -70,6 +73,10 @@ struct DiskRenderer::Private
 
     volatile bool pleaseStop;
     size_t curSample, curFrame;
+
+    // render info
+    QTime startTime;
+    Double progress;
 };
 
 
@@ -245,7 +252,7 @@ bool DiskRenderer::Private::renderFrame()
     try
     {
         renderer->setSize(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
-        renderer->render();
+        renderer->render(false);
         return true;
     }
     catch (const Exception& e)
@@ -264,11 +271,20 @@ bool DiskRenderer::Private::writeImage()
     if (!fbo || !fbo->colorTexture())
         return false;
 
-    QImage img = fbo->colorTexture()->getImage();
-    if (img.isNull())
+    try
+    {
+        fbo->colorTexture()->bind();
+        QImage img = fbo->colorTexture()->getImage();
+        if (img.isNull())
+            return false;
+        return writeImage(img);
+    }
+    catch (const Exception& e)
+    {
+        errorStr += "Error on retrieving framebuffer image.\n";
+        errorStr += e.what();
         return false;
-
-    return writeImage(img);
+    }
 }
 
 void DiskRenderer::Private::renderAll()
@@ -282,6 +298,7 @@ void DiskRenderer::Private::renderAll()
     renderFrame();
 
     QTime time;
+    startTime.start();
     time.start();
 
     size_t f = 0;
@@ -297,11 +314,31 @@ void DiskRenderer::Private::renderAll()
         // emit progress every ms..
         if (time.elapsed() > 1000 / 5)
         {
-            MO_DEBUG("rendering frame " << f << "/" << rendSet.lengthFrame());
-            emit thread->progress(f * 100 / rendSet.lengthFrame());
+            //MO_DEBUG("rendering frame " << f << "/" << rendSet.lengthFrame());
+            progress = f * 100.f / rendSet.lengthFrame();
+            emit thread->progress(progress);
             time.start();
         }
     }
+}
+
+QString DiskRenderer::progressString() const
+{
+    Double
+        elapsed = 0.001 * p_->startTime.elapsed(),
+        estimated = elapsed / std::max(0.001, p_->progress) * 100.;
+
+    QString r;
+    QTextStream s(&r);
+    s <<   "progress   : " << p_->progress << "%"
+      << "\nframe      : " << (p_->curFrame - p_->rendSet.startFrame())
+                         << " / " << p_->rendSet.lengthFrame()
+                         << " @ " << p_->rendSet.imageFps() << " fps"
+      << "\nelapsed    : " << time_to_string(elapsed)
+      << "\nestimated  : " << time_to_string(estimated)
+      << "\ntime to go : " << time_to_string(estimated - elapsed)
+         ;
+    return r;
 }
 
 bool DiskRenderer::Private::prepareDir(const QString& dir1)

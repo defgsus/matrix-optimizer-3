@@ -50,7 +50,9 @@ public:
     void createContext(QSurface *surface);
     OffscreenContext * createOffscreenContext();
 
-    void render();
+    /** @p renderToScreen is a current hack.
+        Can be set to false, to just render the Scene::fboFinal() */
+    void render(bool renderToScreen);
 
 signals:
 

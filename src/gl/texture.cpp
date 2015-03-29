@@ -560,7 +560,8 @@ QImage Texture::getImage() const
 
     QImage img(width(), height(), QImage::Format_RGB32);
 
-    std::vector<GLchar> buffer(width() * height() * 3);
+    std::vector<GLfloat> buffer(width() * height() * 4);
+    //float * buffer = (float*) aligned_alloc(32, width() * height() * 4);
 
     GLenum err;
     MO_CHECK_GL_RET_COND( rep_,
@@ -569,9 +570,9 @@ QImage Texture::getImage() const
             // mipmap level
             0,
             // color components
-            GL_RGB,
+            GL_RGBA,
             // format
-            GL_UNSIGNED_BYTE,
+            GL_FLOAT,
             // data
             &buffer[0])
         , err);
@@ -582,13 +583,15 @@ QImage Texture::getImage() const
     for (uint y=0; y<height(); ++y)
     for (uint x=0; x<width(); ++x)
     {
-        int col = *((int*)&buffer[((height()-1-y)*width()+x)*3]);
-        // swap color channels
-        int scol =    ((col&0xff) << 16)
-                    | (((col>>8)&0xff) << 8)
-                    | (((col>>16)&0xff));
-        img.setPixel(x, y, scol);
+        const float * pix = &buffer[((height()-1-y)*width()+x)*4];
+        img.setPixel(x, y, qRgb(
+                         255 * std::max(0.f, std::min(1.f, pix[0] )),
+                         255 * std::max(0.f, std::min(1.f, pix[1] )),
+                         255 * std::max(0.f, std::min(1.f, pix[2] ))
+                         ));
     }
+
+    //free(buffer);
 
     return img;
 }

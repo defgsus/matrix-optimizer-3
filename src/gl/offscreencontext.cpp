@@ -47,19 +47,23 @@ bool OffscreenContext::createGl()
     if (!p_os_surface_)
         p_os_surface_ = new QOffscreenSurface();
 
-    // create QOffscrenSurface
+    // create QOffscreenSurface
     p_os_surface_->setFormat(SceneRenderer::defaultFormat());
     p_os_surface_->create();
     if (!p_os_surface_->isValid())
         return false;
 
+    // set surface of base Context class
     setSurface(p_os_surface_);
     qcontext()->setFormat(p_os_surface_->format());
 
     if (!qcontext()->create())
         return false;
 
-    glbinding::Binding::initialize();
+    if (!qcontext()->makeCurrent(p_os_surface_))
+        return false;
+
+    glbinding::Binding::initialize(glbinding::getCurrentContext());
 
     return true;
 }

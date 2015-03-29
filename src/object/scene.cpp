@@ -1028,8 +1028,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
         outputFbo->bind();
     }*/
-    width = fbSize_.width();
-    height = fbSize_.height();
+    //width = fbSize_.width();
+    //height = fbSize_.height();
 
     fboFinal_[thread]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, width, height) );

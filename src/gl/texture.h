@@ -154,6 +154,8 @@ public:
 
     // ---------------- QImage ----------------
 
+    /** Creates an QImage from the texture data.
+        @note The texture must be bound! */
     QImage getImage() const;
 
 private:

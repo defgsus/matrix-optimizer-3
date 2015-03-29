@@ -106,7 +106,8 @@ struct RenderDialog::Private
             * cbImageFormat;
     QLabel
             * labelTime,
-            * labelImageName;
+            * labelImageName,
+            * labelProgress;
     QProgressBar
             * progBar;
 };
@@ -291,6 +292,9 @@ void RenderDialog::Private::createWidgets()
         progBar = new QProgressBar(diag);
         progBar->setVisible(false);
         lv0->addWidget(progBar);
+
+        labelProgress = new QLabel(diag);
+        lv0->addWidget(labelProgress);
 }
 
 void RenderDialog::Private::updateFromWidgets()
@@ -394,6 +398,8 @@ void RenderDialog::p_onUnitChange_(int idx)
 void RenderDialog::error(const QString & e)
 {
     MO_PRINT("Render Error:\n" << e);
+    /// @todo this might come from the render thread
+    /// in which case the QMessageBox will not work or crash
     //QMessageBox::critical(0, tr("Disk renderer"), e);
 }
 
@@ -424,13 +430,19 @@ void RenderDialog::render()
     }*/
 
     p_->render = new DiskRenderer(this);
-    connect(p_->render, SIGNAL(progress(int)),
-            p_->progBar, SLOT(setValue(int)));
+    // on progress
+    connect(p_->render, &DiskRenderer::progress, [=](int p)
+    {
+        p_->progBar->setValue(p);
+        p_->labelProgress->setText(p_->render->progressString());
+    });
+    // on finished/failure
     connect(p_->render, &DiskRenderer::finished, [this]()
     {
         p_->progBar->setVisible(false);
         if (!p_->render->ok())
             error(p_->render->errorString());
+        p_shutDown_();
     });
 
     p_->render->setSettings(p_->rendSet);
@@ -443,7 +455,6 @@ void RenderDialog::render()
 
     p_->progBar->setVisible(true);
     p_->render->start();
-
 
     //accept();
 }

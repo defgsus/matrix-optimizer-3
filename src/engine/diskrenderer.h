@@ -33,6 +33,11 @@ public:
 
     const DiskRenderSettings& settings() const;
 
+    /** Returns a multi-line string with progress information
+        about the current rendering.
+        Display this on receiving the progress() signal. */
+    QString progressString() const;
+
 signals:
 
     /** Periodically emitted */
