@@ -36,5 +36,7 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/object/track_float.html \
     assets/help/example_angelscript.txt \
     assets/help/en/geometry.html \
-    assets/help/en/glsl.html
+    assets/help/en/glsl.html \
+    assets/shader/shaderobject.vert \
+    assets/shader/shaderobject.frag
     assets/help/en/object/model3d.html

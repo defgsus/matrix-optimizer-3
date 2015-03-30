@@ -13,7 +13,6 @@
 
 #include "scene.h"
 #include "scenelock_p.h"
-#include "camera.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "io/datastream.h"
@@ -25,6 +24,8 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "object/param/parametertimeline1d.h"
+#include "object/camera.h"
+#include "object/shaderobject.h"
 #include "object/track.h"
 #include "object/sequencefloat.h"
 #include "object/clipcontroller.h"
@@ -176,11 +177,20 @@ void Scene::findObjects_()
     // all cameras
     cameras_ = findChildObjects<Camera>(QString(), true);
 
+    // all shader objects
+    shaderObjects_ = findChildObjects<ShaderObject>(QString(), true);
+
     // all light sources
     lightSources_ = findChildObjects<LightSource>(QString(), true);
 
     // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+
+    // all objects that draw their frames into the output
+    frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
+    {
+        return o->isCamera() | o->isShader();
+    }, true);
 
     // not all objects need there transformation calculated
     // these are the ones that do
@@ -937,7 +947,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
             }
 
         // position all objects
-        calculateSceneTransform(thread, time);
+        calculateSceneTransform_(thread, time);
 
         // update lighting settings
         updateLightSettings_(thread, time);
@@ -973,7 +983,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
                 // render each opengl object per camera (per cube-face)
                 for (ObjectGl * o : glObjects_)
-                if (o->active(time, thread))
+                if (!o->isShader() // don't render shader objects per camera
+                    && o->active(time, thread))
                 {
                     o->p_renderGl_(renderSet, thread, time);
                 }
@@ -994,20 +1005,54 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
     }
 
 
+    // --- render ShaderObjects ----
+
+    if (!shaderObjects_.isEmpty())
+    {
+        GL::RenderSettings renderSet;
+        GL::CameraSpace camSpace;
+
+        renderSet.setLightSettings(&lightSettings(thread));
+        renderSet.setCameraSpace(&camSpace);
+        renderSet.setFinalFramebuffer(fboFinal_[thread]);
+
+        try
+        {
+            for (ShaderObject * o : shaderObjects_)
+            if (o->active(time, thread))
+            {
+                o->p_renderGl_(renderSet, thread, time);
+            }
+        }
+        catch (Exception & e)
+        {
+            e << "\nin Scene::renderScene(" << thread << ")";
+            throw;
+        }
+    }
+
+
+//    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());    
+
+    // --- mix camera frames and framedrawers ---
+
     using namespace gl;
-
-//    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());
-
-    // --- mix camera frames ---
 
     fboFinal_[thread]->bind();
     fboFinal_[thread]->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
-    for (Camera * camera : cameras_)
-        if (camera->active(time, thread))
-            camera->drawFramebuffer(thread, time);
+    for (ObjectGl * drawer : frameDrawers_)
+    if (drawer->active(time, thread))
+    {
+        if (drawer->isCamera())
+            static_cast<Camera*>(drawer)->drawFramebuffer(thread, time);
+        else if (drawer->isShader())
+            static_cast<ShaderObject*>(drawer)->drawFramebuffer(thread, time,
+                                                                fboFinal_[thread]->width(),
+                                                                fboFinal_[thread]->height());
+    }
     fboFinal_[thread]->unbind();
 
     // --- draw to screen ---

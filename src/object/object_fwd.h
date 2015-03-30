@@ -43,6 +43,7 @@ namespace MO {
     class Sequences;
     class Sequence;
     class SequenceFloat;
+    class ShaderObject;
     class Clip;
     class ClipController;
     class Track;

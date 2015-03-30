@@ -31,7 +31,7 @@ public:
     bool isCreated() const;
 
     /** 0 or 1 to switch off, 2-n for number of samples in x and y direction.
-        @note Must be called before creation! */
+        @note Must be called before create() and works only with default shader. */
     void setAntialiasing(uint samples);
 
     bool create(const QString& defines = QString())
@@ -46,6 +46,13 @@ public:
     bool create(const QString& vertexFile,
                 const QString& fragmentFile,
                 const QString& defines = QString(),
+                GEOM::Geometry * geom = 0);
+
+    /** Creates the opengl resources.
+        If @p geom != 0, it will be used as the quad geometry and is
+        expected to be in the range of [-1,1], orthogonal to the z-plane.
+        Ownership of @p src and @p geom is taken */
+    bool create(ShaderSource * src,
                 GEOM::Geometry * geom = 0);
 
     void release();

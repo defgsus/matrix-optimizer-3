@@ -119,14 +119,15 @@ public:
         T_SOUND_OBJECT      = 1<<18,
         T_OSCILLATOR        = 1<<19,
         T_AUDIO_OBJECT      = 1<<20,
-        T_ANGELSCRIPT       = 1<<21
+        T_ANGELSCRIPT       = 1<<21,
+        T_SHADER            = 1<<22
     };
     enum TypeGroups
     {
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
                                 | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP
-                                | T_SOUND_OBJECT,
+                                | T_SOUND_OBJECT | T_SHADER,
 
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
@@ -283,6 +284,7 @@ public:
     virtual bool isModulatorObject() const { return false; }
     virtual bool isAudioObject() const { return false; }
     virtual bool isScript() const { return false; }
+    virtual bool isShader() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */
@@ -439,13 +441,21 @@ public:
         where typeFlags is an or-combination of Object::Type enums. */
     QList<Object*> findChildObjects(int typeFlags, bool recursive = false) const;
 
-    /** Returns the children of type @p T with the given id, or NULL.
+    /** Returns the children of type @p T with the given id.
         if @p id is empty, all objects of type T will be returned.
         If @p ignore is not NULL, this object will be ignored by search
         (but it's child objects will be considered as well). */
     template <class T>
     QList<T*> findChildObjects(
             const QString& id = QString(), bool recursive = false, Object * ignore = 0) const;
+
+    /** Returns the children of type @p T for which @p selector returns true.
+        If @p ignore is not NULL, this object will be ignored by search
+        (but it's child objects will be considered as well). */
+    template <class T>
+    QList<T*> findChildObjects(std::function<bool(T*)> selector,
+                               bool recursive = false,
+                               Object * ignore = 0) const;
 
     /** Returns the children of type @p T with the given id, or NULL.
         if @p id is empty, all objects of type T will be returned.
@@ -846,6 +856,27 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
 
         if (recursive)
             list.append(o->findChildObjects<T>(id, recursive, ignore));
+    }
+
+    return list;
+}
+
+template <class T>
+QList<T*> Object::findChildObjects(std::function<bool(T*)> selector,
+                                   bool recursive,
+                                   Object * ignore) const
+{
+    QList<T*> list;
+
+    for (auto o : p_childObjects_)
+    {
+        if (o != ignore
+            && (qobject_cast<T*>(o))
+            && (selector(static_cast<T*>(o))))
+                list.append(static_cast<T*>(o));
+
+        if (recursive)
+            list.append(o->findChildObjects<T>(selector, recursive, ignore));
     }
 
     return list;

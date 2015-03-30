@@ -28,30 +28,37 @@ void privateAttributeDeleter(Attribute * a) { delete a; }
 Uniform::Uniform()
     :   type_    (GLenum(0)),
         size_    (0),
-        location_(0)
+        location_(0),
+        autoSend_(true)
 {
     floats[0] = floats[1] = floats[2] = floats[3] = 0.f;
     ints[0] = ints[1] = ints[2] = ints[3] = 0;
 }
+
+void Uniform::setMatrix(const Mat4 & m)
+{
+    for (int i=0; i<4; ++i)
+        for (int j=0; j<4; ++j)
+            floats[i*4+j] = m[i][j];
+}
+
+void Uniform::copyValuesFrom_(Uniform * u)
+{
+    for (int i=0; i<16; ++i)
+        floats[i] = u->floats[i];
+
+    ints[0] = u->ints[0];
+    ints[1] = u->ints[1];
+    ints[2] = u->ints[2];
+    ints[3] = u->ints[3];
+}
+
 
 Attribute::Attribute()
     :   type_    (GLenum(0)),
         size_    (0),
         location_(0)
 { }
-
-
-void Uniform::copyValuesFrom_(Uniform * u)
-{
-    floats[0] = u->floats[0];
-    floats[1] = u->floats[1];
-    floats[2] = u->floats[2];
-    floats[3] = u->floats[3];
-    ints[0] = u->ints[0];
-    ints[1] = u->ints[1];
-    ints[2] = u->ints[2];
-    ints[3] = u->ints[3];
-}
 
 
 Shader::Shader(const QString &name, ErrorReporting report)
@@ -341,7 +348,12 @@ void Shader::getUniforms_()
             continue;
         }
 
-        // find location of uniform
+        if (u->type() == GL_FLOAT_MAT2
+            || u->type() == GL_FLOAT_MAT3
+            || u->type() == GL_FLOAT_MAT4)
+            u->autoSend_ = false;
+
+        // get location of uniform
         MO_CHECK_GL_COND(rep_, u->location_ = glGetUniformLocation(prog_, &name[0]) );
 
         //MO_CHECK_GL_COND(rep_, glGetUniformBlockIndex())
@@ -443,6 +455,19 @@ void Shader::sendUniform(const Uniform * u)
         MO_CHECK_GL_COND(rep_, glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
     break;
 
+    case GL_FLOAT_MAT2:
+        MO_CHECK_GL_COND(rep_, glUniformMatrix2fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+    break;
+
+    case GL_FLOAT_MAT3:
+        MO_CHECK_GL_COND(rep_, glUniformMatrix3fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+    break;
+
+    case GL_FLOAT_MAT4:
+        //for (int i=0; i<16; ++i) MO_DEBUG(u->floats[i]);
+        MO_CHECK_GL_COND(rep_, glUniformMatrix4fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+    break;
+
     default:
         //MO_GL_WARNING("unhandled uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
         break;
@@ -452,7 +477,11 @@ void Shader::sendUniform(const Uniform * u)
 void Shader::sendUniforms()
 {
     for (size_t i=0; i<numUniforms(); ++i)
-        sendUniform(getUniform(i));
+    {
+        auto u = getUniform(i);
+        if (u->autoSend())
+            sendUniform(u);
+    }
 }
 
 void Shader::releaseGL()
@@ -466,7 +495,8 @@ void Shader::dumpUniforms(std::ostream &out) const
 {
     for (Uniform * u : uniformList_)
     {
-        out << "[" << u->name() << "] @ " << u->location() << "\n"
+        out << "[" << u->name() << "] @ " << u->location() << " autosend "
+            << (u->autoSend() ? "on" : "off") << "\n"
             << "ints(" << u->ints[0] << ", " << u->ints[1] << ", " << u->ints[2] << ", " << u->ints[3] << ") "
             << "floats(" << u->floats[0] << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")"
             << std::endl;

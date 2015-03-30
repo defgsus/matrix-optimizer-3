@@ -63,7 +63,8 @@ struct AppIcons::Private
         I_CLIP,
         I_CLIP_CONTROL,
         I_ANGELSCRIPT,
-        I_OSCILLOGRAPH
+        I_OSCILLOGRAPH,
+        I_GLSL
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -130,6 +131,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_AUDIO, ":/icon/obj_audio.png");
     nameMap_.insert(I_ANGELSCRIPT, ":/icon/obj_angelscript.png");
     nameMap_.insert(I_OSCILLOGRAPH, ":/icon/obj_oscillograph.png");
+    nameMap_.insert(I_GLSL, ":/icon/obj_glsl.png");
 }
 
 
@@ -137,6 +139,9 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 {
     if (o->isClip())
         return I_CLIP;
+
+    if (o->isShader())
+        return I_GLSL;
 
     if (o->isClipController())
         return I_CLIP_CONTROL;
@@ -204,6 +209,7 @@ AppIcons::Private::IconId AppIcons::Private::idForType(int type) const
         case Object::T_CLIP_CONTROLLER: return I_CLIP_CONTROL;
         case Object::T_AUDIO_OBJECT: return I_AUDIO;
         case Object::T_ANGELSCRIPT: return I_ANGELSCRIPT;
+        case Object::T_SHADER: return I_GLSL;
     }
     if (type & Object::TG_TRACK) return I_TRACK;
     if (type & Object::TG_FLOAT) return I_PARAMETER;

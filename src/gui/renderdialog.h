@@ -29,7 +29,7 @@ signals:
 
 public slots:
 
-    void render();
+    void startRender();
     void stopRender();
 
 private slots:

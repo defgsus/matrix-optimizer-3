@@ -330,12 +330,12 @@ QString DiskRenderer::progressString() const
 
     QString r;
     QTextStream s(&r);
-    s <<   "progress   : " << p_->progress << "%"
-      << "\nframe      : " << (p_->curFrame - p_->rendSet.startFrame())
+    s <<   "progress : " << p_->progress << "%"
+      << "\nframe : " << (p_->curFrame - p_->rendSet.startFrame())
                          << " / " << p_->rendSet.lengthFrame()
                          << " @ " << p_->rendSet.imageFps() << " fps"
-      << "\nelapsed    : " << time_to_string(elapsed)
-      << "\nestimated  : " << time_to_string(estimated)
+      << "\ntime elapsed : " << time_to_string(elapsed)
+      << "\ntime estimated : " << time_to_string(estimated)
       << "\ntime to go : " << time_to_string(estimated - elapsed)
          ;
     return r;

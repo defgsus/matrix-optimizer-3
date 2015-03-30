@@ -371,6 +371,8 @@ void Drawable::renderShader(const Mat4 &proj,
 
     }
 
+    //shader_->dumpUniforms();
+
     /* XXX if (drawTypeSet_)
         vao_->drawElements(drawType_);
     else*/

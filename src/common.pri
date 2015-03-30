@@ -274,7 +274,8 @@ HEADERS += \
     src/maincommandline.h \
     src/gl/offscreencontext.h \
     src/io/diskrendersettings.h \
-    src/engine/diskrenderer.h
+    src/engine/diskrenderer.h \
+    src/object/shaderobject.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -510,4 +511,5 @@ SOURCES += \
     src/maincommandline.cpp \
     src/gl/offscreencontext.cpp \
     src/io/diskrendersettings.cpp \
-    src/engine/diskrenderer.cpp
+    src/engine/diskrenderer.cpp \
+    src/object/shaderobject.cpp

@@ -3,6 +3,10 @@
 in vec4 v_texCoord;
 out vec4 fragColor;
 
+#ifdef MO_USE_COLOR
+    uniform vec4 u_color;
+#endif
+
 #ifndef MO_FULLDOME_CUBE
     uniform sampler2D tex_framebuffer;
 #else
@@ -72,5 +76,9 @@ void main(void)
     }
 
     fragColor = col / float(MO_ANTIALIAS * MO_ANTIALIAS);
+#endif
+
+#ifdef MO_USE_COLOR
+    fragColor *= u_color;
 #endif
 }

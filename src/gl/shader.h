@@ -18,6 +18,7 @@
 #include <QString>
 
 #include "opengl.h"
+#include "types/vector.h"
 
 namespace MO {
 namespace GL {
@@ -34,8 +35,9 @@ public:
     union
     {
         /** A vector of floats,
-            for types GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3 and GL_FLOAT_VEC4. */
-        gl::GLfloat floats[4];
+            for types GL_FLOAT, GL_FLOAT_VEC2, GL_FLOAT_VEC3 and GL_FLOAT_VEC4
+            and GL_FLOAT_MATx. */
+        gl::GLfloat floats[16];
 
         /** A vector of ints,
             for types GL_INT, GL_INT_VEC2, GL_INT_VEC3 and GL_INT_VEC4 */
@@ -53,17 +55,22 @@ public:
     /** Uniform location, to send the stuff over */
     gl::GLint location() const { return location_; }
 
+    /** Uniform is automatically send to shader? */
+    bool autoSend() const { return autoSend_; }
+
     // ----- setter -----
 
     void setFloats(gl::GLfloat x, gl::GLfloat y, gl::GLfloat z, gl::GLfloat w)
     { floats[0] = x; floats[1] = y; floats[2] = z; floats[3] = w; }
+    void setMatrix(const Mat4&);
 
-
-    friend class Shader;
-    friend void privateUniformDeleter(Uniform*);
+    void setAutoSend(bool e) { autoSend_ = e; }
 
     // ----------- private area -----------
 private:
+
+    friend class Shader;
+    friend void privateUniformDeleter(Uniform*);
 
     /** Constructor (initializes all to zero) */
     Uniform();
@@ -76,7 +83,7 @@ private:
     gl::GLenum type_;
     gl::GLint size_;
     gl::GLint location_;
-
+    bool autoSend_;
 };
 
 

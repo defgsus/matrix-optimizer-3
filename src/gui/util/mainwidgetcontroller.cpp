@@ -1578,6 +1578,9 @@ void MainWidgetController::setSceneTime(Double time)
     // that's our actual clock
     if (audioEngine_)
         audioEngine_->seek(time);
+
+    if (scene_)
+        scene_->render();
 }
 
 

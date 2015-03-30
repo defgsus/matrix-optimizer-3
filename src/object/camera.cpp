@@ -146,7 +146,7 @@ void Camera::createParameters()
     params()->beginParameterGroup("output", tr("output"));
 
         p_cameraMix_ = params()->createFloatParameter("cammix", tr("camera mix"),
-                          tr("Defines the volume and visibility of the camera [0,1]"),
+                          tr("Defines the opaqueness/transparency of the camera [0,1]"),
                           1.0,
                           0.0, 1.0, 0.05);
 
@@ -158,6 +158,7 @@ void Camera::createParameters()
                                                 tr("Linear interpolation"),
                                                 true,
                                                 true, false);
+    params()->endParameterGroup();
 }
 
 void Camera::onParameterChanged(Parameter * p)

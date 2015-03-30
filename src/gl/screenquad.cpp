@@ -19,11 +19,11 @@ namespace GL {
 
 
 ScreenQuad::ScreenQuad(const QString &name, ErrorReporting reporting)
-    : name_     (name.isEmpty()? "quad" : name),
-      rep_      (reporting),
-      quad_     (0),
-      antialias_(1),
-      u_resolution_(0)
+    : name_         (name.isEmpty()? "quad" : name)
+    , rep_          (reporting)
+    , quad_         (0)
+    , antialias_    (1)
+    , u_resolution_ (0)
 {
 }
 
@@ -85,6 +85,25 @@ bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
 
     return true;
 }
+
+bool ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
+{
+    MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
+
+    // prepare geometry
+
+    quad_ = new GL::Drawable(name_);
+    if (!geom)
+        GEOM::GeometryFactory::createQuad(quad_->geometry(), 2, 2);
+    else
+        quad_->setGeometry(geom);
+
+    quad_->setShaderSource(src);
+    quad_->createOpenGl();
+
+    return true;
+}
+
 
 void ScreenQuad::release()
 {

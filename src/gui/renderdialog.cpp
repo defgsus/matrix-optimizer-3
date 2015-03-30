@@ -280,7 +280,7 @@ void RenderDialog::Private::createWidgets()
         auto but = new QPushButton(tr("Go!"), diag);
         but->setStatusTip(tr("Starts rendering the scene with selected settings"));
         but->setDefault(true);
-        connect(but, SIGNAL(pressed()), diag, SLOT(render()));
+        connect(but, SIGNAL(pressed()), diag, SLOT(startRender()));
         lh->addWidget(but);
 
         but = new QPushButton(tr("Cancel"), diag);
@@ -414,7 +414,7 @@ void RenderDialog::stopRender()
     p_shutDown_();
 }
 
-void RenderDialog::render()
+void RenderDialog::startRender()
 {
     if (p_->render)
         return;
@@ -428,6 +428,8 @@ void RenderDialog::render()
         error(tr("Error loading scene.\n").arg(e.what()));
         return;
     }*/
+
+    p_->labelProgress->setText(tr("start rendering..."));
 
     p_->render = new DiskRenderer(this);
     // on progress
@@ -453,10 +455,10 @@ void RenderDialog::render()
         p_->render->deleteLater();
     }*/
 
+    p_->progBar->setValue(0);
     p_->progBar->setVisible(true);
+    p_->labelProgress->clear();
     p_->render->start();
-
-    //accept();
 }
 
 void RenderDialog::p_shutDown_()
