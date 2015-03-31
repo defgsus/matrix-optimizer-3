@@ -131,7 +131,15 @@ void DiskRenderer::run()
         return;
     }
 
-    p_->renderAll();
+    try
+    {
+        p_->renderAll();
+    }
+    catch (...)
+    {
+        p_->releaseScene();
+        throw;
+    }
 
     p_->releaseScene();
 }
@@ -251,6 +259,8 @@ bool DiskRenderer::Private::renderFrame()
 {
     try
     {
+        MO_ERROR("whatever");
+
         renderer->setSize(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
         renderer->render(false);
         return true;

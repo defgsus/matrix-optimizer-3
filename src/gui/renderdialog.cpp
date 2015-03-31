@@ -16,6 +16,7 @@
 #include <QLineEdit>
 #include <QProgressBar>
 #include <QMessageBox>
+#include <QFileInfo>
 
 #include "renderdialog.h"
 #include "widget/doublespinbox.h"
@@ -75,6 +76,7 @@ struct RenderDialog::Private
     { }
 
     void createWidgets();
+    QWidget * createHeadline(const QString& title);
     void updateFromWidgets();
     void updateFromSettings();
     void updateInfoLabels();
@@ -110,6 +112,8 @@ struct RenderDialog::Private
             * labelProgress;
     QProgressBar
             * progBar;
+    QPushButton
+            * butCancel;
 };
 
 RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
@@ -117,6 +121,7 @@ RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
     , p_            (new Private(this))
 {
     setObjectName("_RenderDialog");
+    setWindowTitle(tr("Render to disk (%1)").arg(QFileInfo(sceneFilename).fileName()));
     setMinimumSize(640, 640);
 
     p_->sceneFilename = sceneFilename;
@@ -136,11 +141,24 @@ void RenderDialog::closeEvent(QEvent *)
     stopRender();
 }
 
+QWidget * RenderDialog::Private::createHeadline(const QString &title)
+{
+    auto l = new QLabel(title, diag);
+    l->setMargin(10);
+    QFont f(l->font());
+    f.setPointSize(f.pointSize() * 1.34);
+    f.setBold(true);
+    l->setFont(f);
+    return l;
+}
+
 void RenderDialog::Private::createWidgets()
 {
     auto lv0 = new QVBoxLayout(diag);
 
         // output directory
+
+        lv0->addWidget( createHeadline(tr("output directory")) );
 
         editDir = new FilenameInput(IO::FT_ANY, true, diag);
         editDir->setFilename(rendSet.directory());
@@ -148,17 +166,15 @@ void RenderDialog::Private::createWidgets()
         connect(editDir, SIGNAL(filenameChanged(QString)),
                 diag, SLOT(p_onWidget_()));
 
-        // name preview
-        labelImageName = new QLabel(diag);
-        lv0->addWidget(labelImageName);
+        auto frame = new QFrame(diag);
+        frame->setFrameShape(QFrame::HLine);
+        lv0->addWidget(frame);
+
+        lv0->addWidget( createHeadline(tr("time range")) );
 
         // time info label
         labelTime = new QLabel(diag);
         lv0->addWidget(labelTime);
-
-        auto frame = new QFrame(diag);
-        frame->setFrameShape(QFrame::HLine);
-        lv0->addWidget(frame);
 
         // time range
         auto lh = new QHBoxLayout();
@@ -193,6 +209,11 @@ void RenderDialog::Private::createWidgets()
         frame->setFrameShape(QFrame::HLine);
         lv0->addWidget(frame);
 
+        lv0->addWidget( createHeadline(tr("image settings")) );
+
+        // name preview
+        labelImageName = new QLabel(diag);
+        lv0->addWidget(labelImageName);
 
         lh = new QHBoxLayout();
         lv0->addLayout(lh);
@@ -283,10 +304,10 @@ void RenderDialog::Private::createWidgets()
         connect(but, SIGNAL(pressed()), diag, SLOT(startRender()));
         lh->addWidget(but);
 
-        but = new QPushButton(tr("Cancel"), diag);
-        but->setStatusTip(tr("Closes the dialog"));
-        connect(but, SIGNAL(pressed()), diag, SLOT(stopRender()));
-        lh->addWidget(but);
+        butCancel = new QPushButton(tr("Close"), diag);
+        butCancel->setStatusTip(tr("Closes the dialog"));
+        connect(butCancel, SIGNAL(pressed()), diag, SLOT(stopRender()));
+        lh->addWidget(butCancel);
 
         // progress bar
         progBar = new QProgressBar(diag);
@@ -397,10 +418,8 @@ void RenderDialog::p_onUnitChange_(int idx)
 
 void RenderDialog::error(const QString & e)
 {
-    MO_PRINT("Render Error:\n" << e);
-    /// @todo this might come from the render thread
-    /// in which case the QMessageBox will not work or crash
-    //QMessageBox::critical(0, tr("Disk renderer"), e);
+    MO_DEBUG("Render Error:\n" << e);
+    QMessageBox::critical(0, tr("Disk renderer"), e);
 }
 
 void RenderDialog::stopRender()
@@ -418,16 +437,6 @@ void RenderDialog::startRender()
 {
     if (p_->render)
         return;
-    /*
-    try
-    {
-        p_->scene = ObjectFactory::loadScene(p_->sceneFilename);
-    }
-    catch (const Exception& e)
-    {
-        error(tr("Error loading scene.\n").arg(e.what()));
-        return;
-    }*/
 
     p_->labelProgress->setText(tr("start rendering..."));
 
@@ -439,13 +448,7 @@ void RenderDialog::startRender()
         p_->labelProgress->setText(p_->render->progressString());
     });
     // on finished/failure
-    connect(p_->render, &DiskRenderer::finished, [this]()
-    {
-        p_->progBar->setVisible(false);
-        if (!p_->render->ok())
-            error(p_->render->errorString());
-        p_shutDown_();
-    });
+    connect(p_->render, SIGNAL(finished()), this, SLOT(p_onFinished_()), Qt::QueuedConnection);
 
     p_->render->setSettings(p_->rendSet);
     p_->render->setSceneFilename(p_->sceneFilename);
@@ -459,6 +462,16 @@ void RenderDialog::startRender()
     p_->progBar->setVisible(true);
     p_->labelProgress->clear();
     p_->render->start();
+}
+
+void RenderDialog::p_onFinished_()
+{
+    p_->progBar->setVisible(false);
+
+    if (!p_->render->ok())
+        error(p_->render->errorString());
+
+    p_shutDown_();
 }
 
 void RenderDialog::p_shutDown_()
