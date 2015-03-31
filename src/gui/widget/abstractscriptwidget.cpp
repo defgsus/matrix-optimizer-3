@@ -263,7 +263,7 @@ void AbstractScriptWidget::PrivateSW::updateInfoWidget()
     lInfo->setText(tr("%1:%2 (char %3)")
                    .arg(c.blockNumber() + 1)
                    .arg(c.columnNumber() + 1)
-                   .arg(c.position())
+                   .arg(c.position() + 1)
                    );
 }
 
@@ -289,7 +289,7 @@ void AbstractScriptWidget::PrivateSW::updateErrorWidget()
             n = tr("warning");
         if (e.type == M_ERROR)
             n = tr("error");
-        n += " " + tr("line") + " " + QString::number(e.line + 1) + ": " + e.text;
+        n += " " + tr("line") + " " + QString::number(e.line) + ": " + e.text;
 
         auto item = new QListWidgetItem(messageList);
         item->setText(n);
@@ -310,7 +310,7 @@ int AbstractScriptWidget::PrivateSW::posForLine(int line) const
 {
     auto str = editor->toPlainText();
 
-    int pos = 0, l = 0;
+    int pos = 0, l = 1;
     while (l < line)
     {
         int idx = str.indexOf('\n', pos);

@@ -15,6 +15,8 @@
 
 namespace MO {
 
+class UserUniformSetting;
+
 class ShaderObject : public ObjectGl
 {
     Q_OBJECT
@@ -69,6 +71,7 @@ private:
 
     Float aspectRatio_;
     AlphaBlendSetting alphaBlend_;
+    UserUniformSetting * userUniforms_;
 };
 
 } // namespace MO

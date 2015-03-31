@@ -91,7 +91,8 @@ public:
                       const Mat4& cubeViewTrans,
                       const Mat4& viewTrans,
                       const Mat4& trans,
-                      const LightSettings * lights = 0, Double time = 0);
+                      const LightSettings * lights = 0,
+                      Double time = -1.);
 
     void renderImmediate();
 

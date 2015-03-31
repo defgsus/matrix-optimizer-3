@@ -77,7 +77,7 @@ protected:
     virtual bool compile() = 0;
 
     /** Override to return an internal html reference for the type of script.
-        Optionally return an anchor using the word under cursor */
+        Optionally return an anchor using the word under cursor or whatever */
     virtual QString getHelpUrl(const QString& token) const = 0;
 
 private:

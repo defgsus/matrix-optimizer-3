@@ -408,16 +408,13 @@ void ParameterWidget::createWidgets_()
         edit->setStatusTip(ptxt->statusTip());
         edit->setText(ptxt->baseValue());
 
-        // XXX
-        breset->setVisible(false);
-
-        setFocusProxy(edit);
-
         // edit button
         QToolButton * butedit = new QToolButton(this);
         l->addWidget(butedit);
         butedit->setText("...");
         butedit->setStatusTip(tr("Click to edit the text"));
+
+        setFocusProxy(butedit);
 
         // load button click
         connect(butedit, &QToolButton::clicked, [=]()
@@ -434,7 +431,7 @@ void ParameterWidget::createWidgets_()
         // reset to default
         connect(breset, &QToolButton::pressed, [=]()
         {
-            edit->setText(ptxt->defaultValue());
+            editor_->setParameterValue(ptxt, ptxt->defaultValue());
         });
     }
 

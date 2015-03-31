@@ -899,7 +899,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
     MO_ASSERT(glContext_, "renderScene() without context");
 
-    if (!glContext_ || cameras_.empty())
+    if (!glContext_ || frameDrawers_.empty())
         return;
 
     //Double time = sceneTime_;
@@ -909,6 +909,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         // read-lock is sufficient because we
         // modify only thread-local storage
         ScopedSceneLockRead lock(this);
+
+        // ---------- lazy resource managment -------------
 
         // free deleted objects resources
         destroyDeletedObjects_(true);
@@ -946,6 +948,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                 o->p_initGl_(thread);
             }
 
+        // --------- render preparation --------------
+
         // position all objects
         calculateSceneTransform_(thread, time);
 
@@ -981,7 +985,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
-                // render each opengl object per camera (per cube-face)
+                // render each opengl object per camera & per cube-face
                 for (ObjectGl * o : glObjects_)
                 if (!o->isShader() // don't render shader objects per camera
                     && o->active(time, thread))

@@ -9,8 +9,13 @@
 */
 
 #include "shaderobject.h"
+#include "param/parameters.h"
+#include "param/parameterfloat.h"
+#include "param/parameterint.h"
+#include "param/parameterselect.h"
+#include "param/parametertext.h"
+#include "util/useruniformsetting.h"
 #include "gl/context.h"
-#include "io/datastream.h"
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
@@ -19,12 +24,8 @@
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
 #include "geom/geometry.h"
-#include "param/parameters.h"
-#include "param/parameterfloat.h"
-#include "param/parameterint.h"
-#include "param/parameterselect.h"
-#include "param/parametertext.h"
 #include "math/vector.h"
+#include "io/datastream.h"
 #include "io/log.h"
 
 using namespace gl;
@@ -36,6 +37,7 @@ MO_REGISTER_OBJECT(ShaderObject)
 ShaderObject::ShaderObject(QObject *parent)
     : ObjectGl      (parent)
     , alphaBlend_   (this)
+    , userUniforms_ (new UserUniformSetting(this))
 {
     setName("Shader");
 
@@ -112,6 +114,12 @@ void ShaderObject::createParameters()
 
     params()->endParameterGroup();
 
+    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        userUniforms_->createParameters("");
+
+    params()->endParameterGroup();
+
     params()->beginParameterGroup("output", tr("output"));
 
         p_out_r_ = params()->createFloatParameter("red", "red", tr("Red amount of output color"), 1.0, 0.1);
@@ -122,7 +130,7 @@ void ShaderObject::createParameters()
                       1.0,
                       0.0, 1.0, 0.05);
 
-        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
+        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_out");
 
         p_magInterpol_ = params()->createBooleanParameter("cammaginterpol", tr("interpolation"),
                                                 tr("The interpolation mode for pixel magnification"),
@@ -132,9 +140,9 @@ void ShaderObject::createParameters()
                                                 true, false);
 
         p_aa_ = params()->createIntParameter("outaa", tr("anti-aliasing"),
-                      tr("Sets the super-sampling of the rendered frame"),
+                      tr("Sets the super-sampling when drawing the rendered frame onto the output"),
                       1,
-                      1, 8, 1, true, false);
+                      1, 16, 1, true, false);
 
     params()->endParameterGroup();
 }
@@ -145,7 +153,8 @@ void ShaderObject::onParameterChanged(Parameter * p)
 
     if (p == p_width_ || p == p_height_
         || p == p_fragment_
-        || p == p_aa_)
+        || p == p_aa_
+        || userUniforms_->needsReinit(p))
         requestReinitGl();
 }
 
@@ -159,6 +168,7 @@ void ShaderObject::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
+    userUniforms_->updateParameterVisibility();
 }
 
 void ShaderObject::setNumberThreads(uint num)
@@ -192,13 +202,31 @@ void ShaderObject::initGl(uint thread)
 
     auto src = new GL::ShaderSource();
     src->loadVertexSource(":/shader/shaderobject.vert");
-    //src->loadFragmentSource(":/shader/shaderobject.frag");
     src->setFragmentSource(p_fragment_->baseValue());
+    // declare user uniforms
+    src->replace("//%user_uniforms%", userUniforms_->getDeclarations(), true);
 
-
+    // create quad and compile shader
     shaderQuad_[thread] = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
-    shaderQuad_[thread]->create(src);
+    try
+    {
+        shaderQuad_[thread]->create(src);
+    }
+    catch (Exception& e)
+    {
+        // send errors to editor widget
+        for (const GL::Shader::CompileMessage & msg : shaderQuad_[thread]->shader()->compileMessages())
+        {
+            if (msg.program == GL::Shader::P_FRAGMENT
+                || msg.program == GL::Shader::P_LINKER)
+            {
+                p_fragment_->addErrorMessage(msg.line, msg.text);
+            }
+        }
+        throw;
+    }
 
+    // shader-quad uniforms
     u_resolution_ = shaderQuad_[thread]->shader()->getUniform("u_resolution", false);
     if (u_resolution_)
         u_resolution_->setFloats(width, height,
@@ -208,6 +236,8 @@ void ShaderObject::initGl(uint thread)
     u_transformation_ = shaderQuad_[thread]->shader()->getUniform("u_transformation", false);
     if (u_transformation_)
         u_transformation_->setAutoSend(true);
+    userUniforms_->tieToShader(shaderQuad_[thread]->shader());
+
 
     // screen-quad
 
@@ -268,6 +298,8 @@ void ShaderObject::initGl(uint thread)
 
 void ShaderObject::releaseGl(uint thread)
 {
+    userUniforms_->releaseGl();
+
     screenQuad_[thread]->release();
     delete screenQuad_[thread];
     screenQuad_[thread] = 0;
@@ -296,6 +328,8 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     if (u_transformation_)
         u_transformation_->setMatrix(transformation());
+
+    userUniforms_->updateUniforms(time, thread);
 
     // --- render ---
 

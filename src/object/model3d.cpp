@@ -598,15 +598,17 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
         src->addDefine("#define MO_ENABLE_NORMAL_OVERRIDE");
         QString text =
-                  "#line 0\n"
-                + glslVertex_->value() + "\n#line 0\n"
+                  "#line 1\n"
+                + glslVertex_->value() + "\n#line 1\n"
                 + glslVertexOut_->value() + "\n";
         src->replace("//%mo_override_vert%", text);
-        src->replace("//%mo_override_frag%", "#line 0\n" + glslFragmentOut_->value() + "\n");
-        src->replace("//%mo_override_normal%", "#line 0\n" + glslNormal_->value() + "\n");
+        src->replace("//%mo_override_frag%", "#line 1\n" + glslFragmentOut_->value() + "\n");
+        src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
     }
     // declare user uniforms
-    src->replace("//%user_uniforms%", "// runtime user uniforms\n" + uniformSetting_->getDeclarations());
+    src->replace("//%user_uniforms%",
+                 "// " + tr("runtime user uniforms") + "\n"
+                 + uniformSetting_->getDeclarations());
     MO_DEBUG_GL("Model3d(" << name() << "): user uniforms:\n" << uniformSetting_->getDeclarations());
 
     draw_->setShaderSource(src);

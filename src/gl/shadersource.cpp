@@ -38,6 +38,19 @@ ShaderSource::ShaderSource()
 {
 }
 
+int ShaderSource::findLineNumber(const QString& src, const QString& text)
+{
+    int idx = src.indexOf(text);
+    if (idx < 0)
+        return -1;
+
+    int ln = 0;
+    for (int i=idx; i>=0; --i)
+        if (src.at(i) == '\n')
+            ++ln;
+    return ln;
+}
+
 void ShaderSource::loadFragmentSource(const QString &filename)
 {
     QFile f(filename);
@@ -76,10 +89,44 @@ void ShaderSource::addDefine(const QString &defineCommand)
     addDefine_(frag_, defineCommand);
 }
 
-void ShaderSource::replace(const QString &before, const QString &after)
+void ShaderSource::replace(const QString &before, const QString &after, bool adjustLineNumber)
 {
-    vert_.replace(before, after);
-    frag_.replace(before, after);
+    if (!adjustLineNumber)
+    {
+        vert_.replace(before, after);
+        frag_.replace(before, after);
+    }
+    else
+    {
+        replaceWithLineNumber(vert_, before, after);
+        replaceWithLineNumber(frag_, before, after);
+    }
+}
+
+void ShaderSource::replaceWithLineNumber(QString &src, const QString &before, const QString &after)
+{
+    int idx, offs = 0;
+    while (true)
+    {
+        // find first/next occurence
+        idx = src.indexOf(before, offs);
+        if (idx < 0)
+            break;
+
+        // get line number
+        int ln = findLineNumber(src, before);
+
+        // construct replacement string
+        QString repl = after + QString("\n#line %1\n").arg(ln + 1);
+
+        // replace string
+        src.remove(idx, before.length());
+        src.insert(idx, repl);
+
+        offs = idx + repl.length();
+    }
+
+//    MO_DEBUG("[" + src + "]");
 }
 
 void ShaderSource::addDefine_(QString &src, const QString &def_line) const

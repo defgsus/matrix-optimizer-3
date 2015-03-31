@@ -16,10 +16,17 @@
 namespace MO {
 namespace GL {
 
+/** A glorified string container for glsl snippets */
 class ShaderSource
 {
 public:
     ShaderSource();
+
+    // -------- helper --------
+
+    /** Returns first line in @p src which contains @p text, or -1 */
+    static int findLineNumber(const QString& src, const QString& text);
+    static void replaceWithLineNumber(QString& src, const QString& before, const QString& after);
 
     // ---------- getter --------------
 
@@ -28,6 +35,8 @@ public:
 
     const QString& vertexSource() const { return vert_; }
     const QString& fragmentSource() const { return frag_; }
+
+    // standard uniform names
 
     const QString& uniformNameSceneTime() const { return unSceneTime_; }
     const QString& uniformNameProjection() const { return unProj_; }
@@ -73,7 +82,7 @@ public:
     void addDefine(const QString& defineCommand);
 
     /** Replaces a piece of text */
-    void replace(const QString& before, const QString& after);
+    void replace(const QString& before, const QString& after, bool adjustLineNumber = false);
 
 private:
 

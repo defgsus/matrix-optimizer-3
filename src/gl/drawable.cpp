@@ -351,7 +351,7 @@ void Drawable::renderShader(const Mat4 &proj,
     MO_CHECK_GL( glUniformMatrix4fv(uniformVT_, 1, GL_FALSE, &viewTrans[0][0]) );
     MO_CHECK_GL( glUniformMatrix4fv(uniformT_, 1, GL_FALSE, &trans[0][0]) );
 
-    if (uniformSceneTime_ != invalidGl)
+    if (uniformSceneTime_ != invalidGl && time >= 0.)
     {
         MO_CHECK_GL( glUniform1f(uniformSceneTime_, time) );
     }
