@@ -114,7 +114,7 @@ public:
             p.second.type = type;
     }
 
-    void set(Timeline1AS * other) { *tl = *other->tl; }
+    void set(Timeline1AS * other) { if (other) *tl = *other->tl; }
 };
 
 

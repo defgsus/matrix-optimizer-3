@@ -34,7 +34,7 @@ public:
 
     // ------------- getter ---------------
 
-    /** Only has two values and should be displayed as checkbox? */
+    /** Only has two values and should be displayed as checkbox */
     bool isBoolean() const { return isBoolean_; }
 
     int defaultValue() const { return defaultValue_; }

@@ -15,6 +15,7 @@
 #include <QString>
 #include <QFile>
 #include <QTextStream>
+#include <QSet>
 
 #include "angelscript.h"
 #include "angelscript_vector.h"
@@ -191,13 +192,24 @@ void exportAngelScriptFunctions(const QString & filename)
 
 namespace {
 
-    void exportFunc(QTextStream& html, asIScriptFunction * func)
+    void writeAnchor(QTextStream& html, const QString& name, QSet<QString>& anchors)
+    {
+        if (!anchors.contains(name))
+        {
+            html << "<a name=\"" << name << "\"/>";
+            anchors.insert(name);
+        }
+    }
+
+    void exportFunc(QTextStream& html, asIScriptFunction * func, QSet<QString>& anchors)
     {
         const QString
-                //name = QString::fromUtf8(func->GetName()),
+                name = QString::fromUtf8(func->GetName()),
                 decl = QString::fromUtf8(func->GetDeclaration(true, false, true));
 
-        html << "<p><b>" << decl.toHtmlEscaped() << "</b></p>";
+        html << "<p>";
+        writeAnchor(html, name, anchors);
+        html << "<b>" << decl.toHtmlEscaped() << "</b></p>";
     }
 } // namespace
 
@@ -211,6 +223,8 @@ QString getAngelScriptFunctionsHtml()
 
     registerDefaultAngelScript(engine);
 
+    QSet<QString> anchors; // avoid multiple anchor names
+
     // global functions
     html << "<h2>global functions</h2>\n";
 
@@ -218,7 +232,7 @@ QString getAngelScriptFunctionsHtml()
     {
         asIScriptFunction * func = engine->GetGlobalFunctionByIndex(i);
         MO_ASSERT(func, "function " << i << " not found");
-        exportFunc(html, func);
+        exportFunc(html, func, anchors);
         html << "\n";
     }
 
@@ -232,6 +246,7 @@ QString getAngelScriptFunctionsHtml()
         const QString
                 name = QString::fromUtf8(obj->GetName());
 
+        writeAnchor(html, name, anchors);
         html << "<h3>" << name << "</h3>\n";
 
         // object properties
@@ -242,7 +257,9 @@ QString getAngelScriptFunctionsHtml()
             obj->GetProperty(j, &name);
             decl = obj->GetPropertyDeclaration(j);
 
-            html << "<li>" << QString::fromUtf8(decl).toHtmlEscaped() << "</li>";
+            html << "<li>";
+            writeAnchor(html, name, anchors);
+            html << QString::fromUtf8(decl).toHtmlEscaped() << "</li>";
         }
         html << "</ul>";
 
@@ -253,7 +270,7 @@ QString getAngelScriptFunctionsHtml()
             asIScriptFunction * func = obj->GetBehaviourByIndex(j, 0);
             MO_ASSERT(func, "behaviour " << i << " not found");
             html << "<li>";
-            exportFunc(html, func);
+            exportFunc(html, func, anchors);
             html << "</li>";
         }
         html << "</ul>";
@@ -265,7 +282,7 @@ QString getAngelScriptFunctionsHtml()
             asIScriptFunction * func = obj->GetMethodByIndex(j);
             MO_ASSERT(func, "function " << i << " not found");
             html << "<li>";
-            exportFunc(html, func);
+            exportFunc(html, func, anchors);
             html << "</li>";
         }
         html << "</ul>";

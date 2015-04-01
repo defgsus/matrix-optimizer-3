@@ -380,7 +380,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
 
     // ######### RENDER MENU #########
-    m = new QMenu(tr("Render"), menuBar);
+    m = new QMenu(tr("Engine"), menuBar);
     menuBar->addMenu(m);
 
         QActionGroup * ag = new QActionGroup(menuBar);
@@ -396,6 +396,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setCheckable(true);
         a->setChecked(true);
         connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+
+        m->addAction(a = new QAction(tr("Run scripts"), menuBar));
+        a->setShortcut(Qt::Key_F9);
+        connect(a, SIGNAL(triggered()), this, SLOT(runScripts()));
 
         m->addSeparator();
 
@@ -914,6 +918,12 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
     {
         e->accept();
         stop();
+    }
+
+    if (e->key() == Qt::Key_F9)
+    {
+        e->accept();
+        runScripts();
     }
 
     if ((e->key() >= Qt::Key_0 && e->key() <= Qt::Key_9)
@@ -1596,6 +1606,11 @@ void MainWidgetController::updateOutputEnvelope_(const F32 * l)
 }
 
 
+void MainWidgetController::runScripts()
+{
+    if (scene_)
+        scene_->runScripts();
+}
 
 void MainWidgetController::newScene()
 {

@@ -17,7 +17,7 @@
 #include "audio/configuration.h"
 
 namespace MO {
-namespace IO { class CommandLineParser; }
+namespace IO { class CommandLineParser; class XmlStream; }
 
 /** Complete settings for render-to-disk. */
 class DiskRenderSettings
@@ -42,6 +42,22 @@ public:
     static const QList<ImageFormat>& imageFormats();
     /** Returns a list of all supported formats */
     static const QList<AudioFormat>& audioFormats();
+
+    // ------------ io -------------
+
+    /** Writes the settings into the xml stream.
+        The stream is expected to be writeable.
+        The section "disk-render-settings" is created.
+        The section on return is the same as on entry.
+        @throws IoException on any errors. */
+    void serialize(IO::XmlStream&) const;
+
+    /** Reads the settings from the xml stream.
+        The stream is expected to be readable
+        and the current section must be "disk-render-settings".
+        The section on return is the same as on entry.
+        @throws IoException on any errors. */
+    void deserialize(IO::XmlStream&);
 
     // ------------ command line --------------
 
@@ -73,10 +89,11 @@ public:
     size_t imageBitsPerChannel() const { return p_image_bpc_; }
     size_t imageFps() const { return p_image_fps_; }
     /** Returns the index in imageFormats() */
-    size_t imageFormatIndex() const { return p_image_format_; }
+    size_t imageFormatIndex() const { return p_image_format_idx_; }
     /** Returns id of current image format */
     QString imageFormatId() const;
     QString imageFormatExt() const;
+    size_t imageQuality() const { return p_image_quality_; }
 
     const QString& audioPattern() const { return p_audio_pattern_; }
     const AUDIO::Configuration & audioConfig() const { return p_audio_conf_; }
@@ -106,7 +123,7 @@ public:
     void setImageSize(size_t w, size_t h) { p_image_w_ = w; p_image_h_ = h; }
     void setImageFps(size_t fps) { p_image_fps_ = fps; }
     void setImageBitsPerChannel(size_t b) { p_image_bpc_ = b; }
-
+    void setImageQuality(size_t q) { p_image_quality_ = q; }
 private:
 
     void p_setDefault_();
@@ -130,10 +147,10 @@ private:
             p_image_w_,
             p_image_h_,
             p_image_bpc_,
-            p_image_format_,
+            p_image_format_idx_,
             p_image_fps_,
-
             p_audio_format_,
+            p_image_quality_,
             p_audio_bpc_;
 };
 

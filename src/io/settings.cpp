@@ -15,10 +15,11 @@
 #include <QTextStream>
 
 #include "settings.h"
+#include "projection/projectionsystemsettings.h"
+#include "io/diskrendersettings.h"
 #include "io/error.h"
 #include "io/files.h"
 #include "io/application.h"
-#include "projection/projectionsystemsettings.h"
 #include "io/xmlstream.h"
 #include "io/log.h"
 #include "io/isclient.h"
@@ -491,6 +492,16 @@ CameraSettings Settings::cameraSettings()
         return cameraSettings();
     }
     return s.cameraSettings(idx);
+}
+
+DiskRenderSettings Settings::getDiskRenderSettings()
+{
+    return DiskRenderSettings();
+}
+
+void Settings::setDiskRenderSettings(const DiskRenderSettings & s)
+{
+
 }
 
 } // namespace MO

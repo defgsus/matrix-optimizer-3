@@ -749,6 +749,8 @@ struct matfunc<Mat4>
     static Mat4& mat_scale(Mat4 * self, const Vec3& s) { return *self = glm::scale(*self, s); }
     static Mat4& mat_scaleF(Mat4 * self, Float s) { return *self = glm::scale(*self, Vec3(s,s,s)); }
 
+    static Vec4 getVector(Mat4 * self, int index) { return index < 4 ? (*self)[index] : Vec4(0.); }
+    static Vec4& getVectorRef(Mat4 * self, int index) { return (*self)[std::min(3, index)]; }
 
     // convenience stuff (non-member)
     static Mat4 rotate(const Mat4& m, const Vec3& axis, Float degree) { return MATH::rotate(m, degree, axis); }
@@ -948,6 +950,8 @@ void register_matrix4(asIScriptEngine * engine)
     // -------- member funcs ---------------------
 
     MO__REG_METHOD("%1& translate(const vec3 &in)", matfunc<Mat4>::mat_translate);
+    //MO__REG_METHOD("vec4& vec(uint index)", matfunc<Mat4>::getVector);
+    MO__REG_METHOD("vec4& vec(uint index)", matfunc<Mat4>::getVectorRef);
 
     // -------- operators -------------
 

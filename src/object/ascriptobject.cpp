@@ -146,10 +146,6 @@ void AScriptObject::Private::compile()
     if (!context)
         MO_ERROR(tr("The script context could not be created"));
 
-    // init context
-    if (context->Prepare(mainFunc) < 0)
-        MO_ERROR(tr("The context could not be initialized"));
-
     ok = true;
     isCompiled = true;
 }
@@ -160,6 +156,10 @@ void AScriptObject::Private::run()
         return;
 
     MO_ASSERT(context, "");
+
+    // init context
+    if (context->Prepare(mainFunc) < 0)
+        MO_ERROR(tr("The context could not be initialized"));
 
     context->Execute();
 }

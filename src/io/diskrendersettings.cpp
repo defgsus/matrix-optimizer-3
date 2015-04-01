@@ -13,6 +13,7 @@
 
 #include "diskrendersettings.h"
 #include "io/commandlineparser.h"
+#include "io/xmlstream.h"
 #include "io/error.h"
 
 namespace MO {
@@ -39,17 +40,56 @@ void DiskRenderSettings::p_setDefault_()
     p_image_num_width_ = 6;
     p_image_w_ = p_image_h_ = 1024;
     p_image_fps_ = 30;
-    p_image_format_ = 0;
     p_image_bpc_ = 8;
+    p_image_format_idx_ = 0;
     for (ImageFormat & f : p_image_formats_)
         if (f.ext == "png")
-            { p_image_format_ = f.index; }
+            { p_image_format_idx_ = f.index; }
+    p_image_quality_ = 100;
 
     p_audio_pattern_ = "audio_%num%.%ext%";
     p_audio_conf_ = AUDIO::Configuration(44100, 256, 0, 2);
     p_audio_format_ = 0;
     p_audio_bpc_ = 16;
 }
+
+void DiskRenderSettings::serialize(IO::XmlStream& io) const
+{
+    io.newSection("disk-render-settings");
+
+        io.write("version", 1);
+
+        io.write("directory", p_directory_);
+        //io.write("time-start", p_time_start_);
+        //io.write("time-length", p_time_length_);
+        io.write("image-name", p_image_pattern_);
+        io.write("image-num-offset", p_image_num_offset_);
+        io.write("image-num-width", p_image_num_width_);
+        io.write("image-width", p_image_w_);
+        io.write("image-height", p_image_h_);
+        io.write("image-fps", p_image_fps_);
+        //io.write("image-bpc", p_image_bpc_);
+        io.write("image-format", imageFormatId());
+        io.write("image-quality", p_image_quality_);
+
+        //io.write("audio-", p_audio_conf_);
+        //io.write("audio-", p_audio_pattern_);
+        //io.write("audio-", p_audio_formats_);
+        //io.write("audio-", p_audio_idx_);
+        //io.write("audio-", p_audio);
+
+    io.endSection();
+}
+
+void DiskRenderSettings::deserialize(IO::XmlStream & io)
+{
+    io.verifySection("disk-render-settings");
+
+    //const int ver = io.expectInt("version");
+
+
+}
+
 
 
 const QList<DiskRenderSettings::ImageFormat>& DiskRenderSettings::imageFormats()
@@ -106,23 +146,23 @@ const QList<DiskRenderSettings::AudioFormat>& DiskRenderSettings::audioFormats()
 
 QString DiskRenderSettings::imageFormatId() const
 {
-    return p_image_format_ < size_t(imageFormats().size())
-            ? imageFormats()[p_image_format_].id
+    return p_image_format_idx_ < size_t(imageFormats().size())
+            ? imageFormats()[p_image_format_idx_].id
             : "-";
 }
 
 
 QString DiskRenderSettings::imageFormatExt() const
 {
-    return p_image_format_ < size_t(imageFormats().size())
-            ? imageFormats()[p_image_format_].ext
+    return p_image_format_idx_ < size_t(imageFormats().size())
+            ? imageFormats()[p_image_format_idx_].ext
             : "-";
 }
 
 QString DiskRenderSettings::makeImageFilename(size_t frame) const
 {
     QString fn = p_image_pattern_;
-    fn.replace("%ext%", imageFormats()[p_image_format_].ext);
+    fn.replace("%ext%", imageFormats()[p_image_format_idx_].ext);
     fn.replace("%num%", QString("%1").arg(frame + p_image_num_offset_,
                                            p_image_num_width_, 10, QChar('0')));
 
@@ -144,7 +184,7 @@ void DiskRenderSettings::setImageFormat(size_t index)
     MO_ASSERT(index < size_t(p_image_formats_.size()), "");
 
     if (index < size_t(p_image_formats_.size()))
-        p_image_format_ = index;
+        p_image_format_idx_ = index;
 }
 
 void DiskRenderSettings::setImageFormat(const QString &id)
@@ -152,7 +192,7 @@ void DiskRenderSettings::setImageFormat(const QString &id)
     for (int i=0; i<imageFormats().size(); ++i)
     if (id == imageFormats()[i].id)
     {
-        p_image_format_ = i;
+        p_image_format_idx_ = i;
         break;
     }
 }

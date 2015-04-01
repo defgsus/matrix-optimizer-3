@@ -386,8 +386,8 @@ bool DiskRenderer::Private::writeImage(const QImage& img)
         return false;
 
     QImageWriter w(fn, rendSet.imageFormatExt().toUtf8());
-    /** @todo expose these in gui */
-    w.setQuality(75);
+    w.setQuality(rendSet.imageQuality());
+    /** @todo expose description in gui */
     w.setDescription(QString("%1 frame %2").arg(versionString()).arg(curFrame));
 
     if (!w.write(img))

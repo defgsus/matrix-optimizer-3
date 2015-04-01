@@ -27,6 +27,7 @@
 #include "tool/stringmanip.h"
 #include "io/diskrendersettings.h"
 #include "io/error.h"
+#include "io/settings.h"
 #include "io/log.h"
 
 namespace MO {
@@ -69,6 +70,7 @@ struct RenderDialog::Private
 {
     Private(RenderDialog * d)
         : diag          (d)
+        , rendSet       (settings()->getDiskRenderSettings())
         , render        (0)
         , scene         (0)
         , timeUnit      (0)
@@ -100,7 +102,8 @@ struct RenderDialog::Private
             * spinImageNumWidth,
             * spinImageW,
             * spinImageH,
-            * spinImageFps;
+            * spinImageFps,
+            * spinImageQuality;
     DoubleSpinBox
             * spinStart,
             * spinLength;
@@ -124,6 +127,8 @@ RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
     setWindowTitle(tr("Render to disk (%1)").arg(QFileInfo(sceneFilename).fileName()));
     setMinimumSize(640, 640);
 
+    settings()->restoreGeometry(this);
+
     p_->sceneFilename = sceneFilename;
     p_->createWidgets();
     p_->updateFromSettings();
@@ -131,6 +136,8 @@ RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
 
 RenderDialog::~RenderDialog()
 {
+    settings()->storeGeometry(this);
+
     p_shutDown_();
 
     delete p_;
@@ -259,6 +266,14 @@ void RenderDialog::Private::createWidgets()
                         diag, SLOT(p_onWidget_()));
                 lv->addWidget(cbImageFormat);
 
+                // quality
+                spinImageQuality = new SpinBox(diag);
+                spinImageQuality->setLabel(tr("quality [1-100]"));
+                spinImageQuality->setRange(1, 100);
+                spinImageQuality->setValue(rendSet.imageQuality());
+                lv->addWidget(spinImageQuality);
+                connect(spinImageQuality, SIGNAL(valueChanged(int)),
+                        diag, SLOT(p_onWidget_()));
 
                 // width
                 spinImageW = new SpinBox(diag);
@@ -328,6 +343,7 @@ void RenderDialog::Private::updateFromWidgets()
     rendSet.setImageSize(spinImageW->value(), spinImageH->value());
     rendSet.setImageFps(spinImageFps->value());
     rendSet.setImageFormat(cbImageFormat->currentIndex());
+    rendSet.setImageQuality(spinImageQuality->value());
 
     switch (timeUnit)
     {
@@ -360,6 +376,7 @@ void RenderDialog::Private::updateFromSettings()
     spinImageH->setValue(rendSet.imageHeight());
     spinImageFps->setValue(rendSet.imageFps());
     cbImageFormat->setCurrentIndex(rendSet.imageFormatIndex());
+    spinImageQuality->setValue(rendSet.imageQuality());
 
     switch (timeUnit)
     {

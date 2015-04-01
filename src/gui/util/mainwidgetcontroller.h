@@ -113,6 +113,7 @@ public slots:
     void loadScene();
     void loadScene(const QString& fn);
     void newScene();
+    void runScripts();
 
     void newInterface();
     void loadInterface();

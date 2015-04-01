@@ -22,6 +22,7 @@ class DomeSettings;
 class ProjectorSettings;
 class CameraSettings;
 class ProjectionSystemSettings;
+class DiskRenderSettings;
 class Settings;
 
 /** singleton instance */
@@ -89,6 +90,9 @@ public:
     DomeSettings domeSettings();
     ProjectorSettings projectorSettings();
     CameraSettings cameraSettings();
+
+    DiskRenderSettings getDiskRenderSettings();
+    void setDiskRenderSettings(const DiskRenderSettings&);
 
 signals:
 

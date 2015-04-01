@@ -34,6 +34,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/param/parameterselect.h"
 #include "object/util/objecteditor.h"
+#include "math/timeline1d.h"
 #include "audio/tool/waveform.h"
 #include "types/refcounted.h"
 #include "io/log.h"
@@ -165,6 +166,9 @@ public:
     ParameterAS * parameter(uint index);
     ParameterAS * findParameter(const StringAS&);
 
+    Mat4 transformation() const { return o->transformation(); }
+    Double time() const { auto s = o->sceneObject(); return s ? s->sceneTime() : 0.; }
+
     // ------ setter ------
 
     void setName(const StringAS& n) { QString name = MO::toString(n); if (auto e = editor()) e->setObjectName(o, name); else o->setName(name); }
@@ -186,7 +190,7 @@ public:
         if (auto seq = qobject_cast<SequenceFloat*>(o))
             if (seq->timeline())
                 return timeline_to_angelscript(*seq->timeline());
-        return 0;
+        return timeline_to_angelscript(MATH::Timeline1D());
     }
 
     void setTimeline(Timeline1AS * tl)
@@ -625,6 +629,9 @@ static void register_object_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("uint parameterCount() const", parameterCount);
     MO__REG_METHOD("Parameter@ parameter(uint index) const", parameter);
     MO__REG_METHOD("Parameter@ parameter(const string &in id) const", findParameter);
+
+    MO__REG_METHOD("double time() const", time);
+    MO__REG_METHOD("mat4 transformation() const", transformation);
 
     MO__REG_METHOD("Timeline1@ getTimeline() const", timeline);
     MO__REG_METHOD("Geometry@ getGeometry() const", geometry);
