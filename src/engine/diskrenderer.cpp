@@ -259,8 +259,6 @@ bool DiskRenderer::Private::renderFrame()
 {
     try
     {
-        MO_ERROR("whatever");
-
         renderer->setSize(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
         renderer->render(false);
         return true;
