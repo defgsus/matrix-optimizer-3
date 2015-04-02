@@ -596,6 +596,12 @@ void HelpSystem::addEquationInfo_(QString& doc)
 
 void HelpSystem::addAngelScriptInfo_(QString& doc)
 {
+    if (doc.contains("!FUNCTIONS_INDEX!"))
+    {
+        QString str = getAngelScriptFunctionsIndexHtml();
+        doc.replace("!FUNCTIONS_INDEX!", str);
+    }
+
     if (doc.contains("!EXAMPLES!"))
     {
         QString str = exampleAngelScript().toHtmlEscaped();

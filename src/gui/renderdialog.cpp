@@ -148,6 +148,11 @@ void RenderDialog::closeEvent(QEvent *)
     stopRender();
 }
 
+bool RenderDialog::isRendering() const
+{
+    return p_->render && p_->render->isRunning();
+}
+
 QWidget * RenderDialog::Private::createHeadline(const QString &title)
 {
     auto l = new QLabel(title, diag);
@@ -320,8 +325,14 @@ void RenderDialog::Private::createWidgets()
         lh->addWidget(but);
 
         butCancel = new QPushButton(tr("Close"), diag);
-        butCancel->setStatusTip(tr("Closes the dialog"));
-        connect(butCancel, SIGNAL(pressed()), diag, SLOT(stopRender()));
+        butCancel->setStatusTip(tr("Stops rendering or closes the dialog"));
+        connect(butCancel, &QPushButton::pressed, [=]()
+        {
+            if (diag->isRendering())
+                diag->stopRender();
+            else
+                diag->reject();
+        });
         lh->addWidget(butCancel);
 
         // progress bar
@@ -456,6 +467,7 @@ void RenderDialog::startRender()
         return;
 
     p_->labelProgress->setText(tr("start rendering..."));
+    p_->butCancel->setText(tr("Stop"));
 
     p_->render = new DiskRenderer(this);
     // on progress
@@ -484,9 +496,11 @@ void RenderDialog::startRender()
 void RenderDialog::p_onFinished_()
 {
     p_->progBar->setVisible(false);
+    p_->butCancel->setText(tr("Close"));
 
-    if (!p_->render->ok())
-        error(p_->render->errorString());
+    if (p_->render)
+        if (!p_->render->ok())
+            error(p_->render->errorString());
 
     p_shutDown_();
 }

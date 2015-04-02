@@ -213,7 +213,8 @@ namespace {
     }
 } // namespace
 
-QString getAngelScriptFunctionsHtml()
+
+QString getAngelScriptFunctionsIndexHtml()
 {
     QString retstr;
     QTextStream html(&retstr);
@@ -223,9 +224,70 @@ QString getAngelScriptFunctionsHtml()
 
     registerDefaultAngelScript(engine);
 
+    html << "<ul><li><a href=\"angelscript.html#global_variables\">variables</a></li>\n"
+         << "<li><a href=\"angelscript.html#global_enums\">enums</a></li>\n"
+         << "<li><a href=\"angelscript.html#global_functions\">functions</a></li>\n"
+         << "</ul>\n";
+
+    // classes
+    html << "<h3>classes</h3>\n<ul>\n";
+    for (asUINT i=0; i<engine->GetObjectTypeCount(); ++i)
+    {
+        asIObjectType* obj = engine->GetObjectTypeByIndex(i);
+        const QString name = QString::fromUtf8(obj->GetName());
+
+        html << "<li><a href=\"angelscript.html#" << name << "\">"
+             << name << "</a></li>\n";
+    }
+    html << "</ul>\n";
+
+    return retstr;
+}
+
+QString getAngelScriptFunctionsHtml()
+{
+    QString retstr;
+    QTextStream html(&retstr);
+
+    asIScriptEngine * engine = asCreateScriptEngine(ANGELSCRIPT_VERSION);
+    AngelScriptAutoPtr deleter_(engine);
+
+    registerDefaultAngelScript(engine);
+    auto mod = engine->GetModule("_api_export_module", asGM_ALWAYS_CREATE);
+    MO_ASSERT(mod, "");
+
     QSet<QString> anchors; // avoid multiple anchor names
 
+    // global enums
+
+    writeAnchor(html, "global_enums", anchors);
+    html << "<h2>global enums</h2>\n";
+
+    for (asUINT i=0; i<engine->GetEnumCount(); ++i)
+    {
+        int typeId;
+        html << "<p>" << QString( engine->GetEnumByIndex(i, &typeId) )
+                << "</p>\n"
+                << "<ul>";
+
+        for (int j=0; j < engine->GetEnumValueCount(typeId); ++j)
+            html << "<li>" << QString( engine->GetEnumValueByIndex(typeId, j, 0) )
+                << "</li>\n";
+        html << "</ul>\n";
+    }
+
+    // global variables
+    html << "<h2>global variables</h2>\n";
+    writeAnchor(html, "global_variables", anchors);
+    for (asUINT i=0; i<mod->GetGlobalVarCount(); ++i)
+    {
+        const char * name;
+        mod->GetGlobalVar(i, &name);
+        html << "<p>" << QString( mod->GetGlobalVarDeclaration(i) ) << "</p>";
+    }
+
     // global functions
+    writeAnchor(html, "global_functions", anchors);
     html << "<h2>global functions</h2>\n";
 
     for (asUINT i=0; i<engine->GetGlobalFunctionCount(); ++i)

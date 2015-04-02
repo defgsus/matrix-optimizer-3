@@ -951,7 +951,7 @@ void register_matrix4(asIScriptEngine * engine)
 
     MO__REG_METHOD("%1& translate(const vec3 &in)", matfunc<Mat4>::mat_translate);
     //MO__REG_METHOD("vec4& vec(uint index)", matfunc<Mat4>::getVector);
-    MO__REG_METHOD("vec4& vec(uint index)", matfunc<Mat4>::getVectorRef);
+    MO__REG_METHoD("vec4& vec(uint index)", matfunc<Mat4>::getVectorRef);
 
     // -------- operators -------------
 

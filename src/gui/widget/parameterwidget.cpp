@@ -197,8 +197,7 @@ void ParameterWidget::createWidgets_()
     bvis_->setStatusTip(tr("Click to open the context menu for the visibility of the parameter in other views"));
     bvis_->setFixedSize(butfs, butfs);
     bvis_->setCheckable(true);
-    connect(bvis_, SIGNAL(pressed()),
-            this, SLOT(openVisibilityPopup()));
+    connect(bvis_, SIGNAL(pressed()), this, SLOT(openVisibilityPopup()));
 
     // label
     QLabel * label = new QLabel(param_->name(), this);
@@ -786,7 +785,7 @@ void ParameterWidget::openVisibilityPopup()
         editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
         updateButtons();
     });
-
+#ifndef MO_DISABLE_EXP
     a = menu->addAction(tr("show in interface"));
     a->setCheckable(true);
     a->setChecked(param_->isVisibleInterface());
@@ -795,7 +794,7 @@ void ParameterWidget::openVisibilityPopup()
         editor_->setParameterVisibleInterface(param_, !param_->isVisibleInterface());
         updateButtons();
     });
-
+#endif
     menu->popup(QCursor::pos());
 }
 

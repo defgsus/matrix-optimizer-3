@@ -25,6 +25,8 @@ public:
     explicit RenderDialog(const QString& sceneFilename, QWidget *parent = 0);
     ~RenderDialog();
 
+    bool isRendering() const;
+
 signals:
 
 public slots:

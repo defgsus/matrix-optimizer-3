@@ -44,6 +44,7 @@ void exportAngelScriptFunctions(const QString& filename);
 /** Creates a html overview of the whole MO namespace.
     XXX Temporary solution... */
 QString getAngelScriptFunctionsHtml();
+QString getAngelScriptFunctionsIndexHtml();
 
 /** Some example/test code */
 QString exampleAngelScript();

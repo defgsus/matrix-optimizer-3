@@ -15,7 +15,7 @@ namespace MO {
 
 const QString& versionString()
 {
-#ifndef NDEBUG
+#if 1 //ndef NDEBUG
     static const QString ret =
             QString("%1.%2.%3.%4")
             .arg(MO_VERSION_MAJOR)

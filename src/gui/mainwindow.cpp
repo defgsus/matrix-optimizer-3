@@ -112,17 +112,11 @@ void MainWindow::createWidgets_()
                 controller_->objectGraphView()->setSizePolicy(
                             QSizePolicy::Expanding, QSizePolicy::Expanding);
 
-//                spacer2_ = new Spacer(Qt::Horizontal, this);
-//                lv->addWidget(spacer2_);
-
                 // Sequence view
                 lv->addWidget(controller_->sequenceView());
 
             lv = new QVBoxLayout();
             l0->addLayout(lv);
-
-//                spacer_ = new Spacer(Qt::Vertical, this);
-//                lv->addWidget(spacer_);
 
             // ------ right container -----
             auto rightContainer = new QWidget(this);
@@ -140,10 +134,6 @@ void MainWindow::createWidgets_()
                 ll->addWidget(controller_->objectView());
                 controller_->objectView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
-//        spacer_->setWidgets(controller_->objectGraphView(), rightContainer, false);
-//        spacer2_->setWidgets(controller_->objectGraphView(), controller_->sequenceView());
-
-
 
     setMinimumSize(800,500);
 
@@ -154,7 +144,7 @@ void MainWindow::createDockWidgets_()
     auto dock = createDockWidget(tr("Transport"), controller_->transportWidget());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
-    dock = createDockWidget(tr("Patch"), controller_->objectGraphView());
+    dock = createDockWidget(tr("Scene"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Frontend"), controller_->frontView());
@@ -183,7 +173,6 @@ void MainWindow::createDockWidgets_()
         removeDockWidget(dock);
     }
 #endif
-
 }
 
 QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
@@ -200,7 +189,6 @@ QDockWidget * MainWindow::createDockWidget(const QString &name, QWidget *widget)
     dock->setFeatures(  QDockWidget::DockWidgetMovable
                       | QDockWidget::DockWidgetFloatable
                       | QDockWidget::DockWidgetClosable
-                      //| QDockWidget::DockWidgetVerticalTitleBar
                       );
     auto act = dock->toggleViewAction();
     viewMenu_->addAction( act );

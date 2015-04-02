@@ -392,9 +392,9 @@ void AudioDialog::deviceSelected_()
         if (!settings()->contains("Audio/buffersize"))
             bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
         if (!settings()->contains("Audio/channelsIn"))
-            numInputs_->setValue(devices_->getDeviceInfo(inidx)->numInputChannels);
+            numInputs_->setValue(std::min(2u, devices_->getDeviceInfo(inidx)->numInputChannels));
         if (!settings()->contains("Audio/channelsOut"))
-            numOutputs_->setValue(devices_->getDeviceInfo(outidx)->numOutputChannels);
+            numOutputs_->setValue(std::min(2u, devices_->getDeviceInfo(outidx)->numOutputChannels));
     }
 
     // update widgets

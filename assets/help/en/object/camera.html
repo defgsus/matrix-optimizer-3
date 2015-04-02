@@ -2,4 +2,10 @@
 
 <p><b>Currently</b> each camera renders <b>all</b> visible objects in the scene. This is going to change in the future, when you can select which groups of objects to draw for each camera.</p>
 
-<p>The camera has no output (texture connections will be added later). Instead, the image of the scene that is rendered is directly output to the screen. When there is more than one camera in the scene, the images are stacked on top of each other in the order of the camera objects. Use the <a href="#parameters">camera parameters</a> to control the alpha value and the type of blending. This way you can mix between different cameras.</p>
+<h3>output</h3>
+<p>The camera has no output (texture connections will be added later). Instead, the image of the scene that is rendered is directly placed on the screen. When there is more than one camera in the scene, the images are stacked on top of each other in the order of the camera objects. Use the <a href="#parameters">camera parameters</a> to control the alpha value and the type of blending. This way you can mix between different cameras.</p>
+
+<h3>free camera</h3>
+<p>The camera's location and orientation is controlled like for any other object, by placing transformation objects inside. Additionally, it is possible to control the transformation with the mouse. In the OpenGL/render window, press <b>keys 1</b> throu <b>9</b> to select the camera which to control, or <b>key 0</b> to turn of mouse-control. <b>Left-drag</b> moves up/down and left/right, <b>right-drag</b> rotates the camera view and <b>mouse-wheel</b> moves forward/backward.</p>
+
+<p>Note that <b>currently</b> the free controlled camera is only a preview feature. The transformation can not easily be keyframed for production.</p>
