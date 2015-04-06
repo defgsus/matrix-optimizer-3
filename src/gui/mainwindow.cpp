@@ -213,6 +213,15 @@ void MainWindow::createMenus_()
     menuBar()->addMenu(viewMenu_);
 }
 
+void MainWindow::showEvent(QShowEvent * e)
+{
+    QMainWindow::showEvent(e);
+
+    /** @todo scene description window comes to early, e.g. before actual window.. */
+    //if (controller_->scene() && controller_->scene()->showSceneDesc())
+    //    controller_->showSceneDesc();
+}
+
 void MainWindow::saveAllGeometry_()
 {
     settings()->storeGeometry(this);

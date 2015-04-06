@@ -95,6 +95,13 @@ public:
     /** Gets the needed files of ALL objects */
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
+    // -------------- info ---------------------
+
+    void setSceneDesc(const QString& desc, bool showOnStart)
+        { sceneDesc_ = desc; showSceneDesc_ = showOnStart; }
+    const QString& sceneDesc() const { return sceneDesc_; }
+    bool showSceneDesc() const { return showSceneDesc_; }
+
     // ------------- modulators ----------------
 
     /** Returns a list of all objects that currently serve as modulator */
@@ -380,6 +387,11 @@ private:
     ObjectEditor * editor_;
     GUI::FrontScene * frontScene_;
     QString frontSceneXml_;
+
+    // ------------------ desc -----------------
+
+    QString sceneDesc_;
+    bool showSceneDesc_;
 
     // ---------- opengl -----------------------
 

@@ -63,6 +63,7 @@ Scene::Scene(QObject *parent) :
     Object              (parent),
     editor_             (0),
     frontScene_         (0),
+    showSceneDesc_      (false),
     glContext_          (0),
     releaseAllGlRequested_(0),
     fbSize_             (1024, 1024),
@@ -115,11 +116,33 @@ Scene::~Scene()
 void Scene::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("scene", 2);
+    io.writeHeader("scene", 3);
 
     // v2
     io << fbSize_ << doMatchOutputResolution_;
+
+    // v3
+    io << sceneDesc_ << showSceneDesc_;
 }
+
+void Scene::deserialize(IO::DataStream & io)
+{
+    Object::deserialize(io);
+    const int ver = io.readHeader("scene", 3);
+
+    if (ver >= 2)
+        io >> fbSizeRequest_ >> doMatchOutputResolution_;
+
+#ifdef MO_DISABLE_EXP
+    doMatchOutputResolution_ = true;
+    //fbSizeRequest_ = QSize(0, 0);
+#endif
+
+    if (ver >= 3)
+        io >> sceneDesc_ >> showSceneDesc_;
+
+}
+
 
 bool Scene::serializeAfterChilds(IO::DataStream & io) const
 {
@@ -131,20 +154,6 @@ bool Scene::serializeAfterChilds(IO::DataStream & io) const
     io << (frontScene_ ? frontScene_->toXml() : QString());
 
     return true;
-}
-
-void Scene::deserialize(IO::DataStream & io)
-{
-    Object::deserialize(io);
-    const int ver = io.readHeader("scene", 2);
-
-    if (ver >= 2)
-        io >> fbSizeRequest_ >> doMatchOutputResolution_;
-
-#ifdef MO_DISABLE_EXP
-    doMatchOutputResolution_ = true;
-    //fbSizeRequest_ = QSize(0, 0);
-#endif
 }
 
 void Scene::deserializeAfterChilds(IO::DataStream & io)

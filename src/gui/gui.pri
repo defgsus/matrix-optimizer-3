@@ -106,7 +106,8 @@ HEADERS += \
     src/gui/item/scopeitem.h \
     src/gui/renderdialog.h \
     src/gui/widget/filenameinput.h \
-    src/gui/util/recentfiles.h
+    src/gui/util/recentfiles.h \
+    src/gui/scenedescdialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -212,4 +213,5 @@ SOURCES += \
     src/gui/item/scopeitem.cpp \
     src/gui/renderdialog.cpp \
     src/gui/widget/filenameinput.cpp \
-    src/gui/util/recentfiles.cpp
+    src/gui/util/recentfiles.cpp \
+    src/gui/scenedescdialog.cpp

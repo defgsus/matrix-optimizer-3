@@ -50,6 +50,10 @@ private slots:
     void saveAllGeometry_();
     bool restoreAllGeometry_();
 
+protected:
+
+    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
+
 private:
 
     void createWidgets_();

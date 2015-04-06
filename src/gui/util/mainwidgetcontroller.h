@@ -114,6 +114,7 @@ public slots:
     void loadScene(const QString& fn);
     void newScene();
     void runScripts();
+    void showSceneDesc();
 
     void newInterface();
     void loadInterface();

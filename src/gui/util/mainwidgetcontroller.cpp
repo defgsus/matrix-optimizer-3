@@ -53,6 +53,7 @@
 #include "gui/infowindow.h"
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
+#include "gui/scenedescdialog.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
 #   include "engine/serverengine.h"
@@ -331,6 +332,12 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addAction(a = new QAction(tr("Save scene as ..."), menuBar));
         a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_S);
         connect(a, SIGNAL(triggered()), this, SLOT(saveSceneAs()));
+
+        m->addSeparator();
+
+        m->addAction(a = new QAction(tr("Show scene description ..."), menuBar));
+        a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_I);
+        connect(a, SIGNAL(triggered()), this, SLOT(showSceneDesc()));
 
         m->addSeparator();
 
@@ -1411,6 +1418,26 @@ void MainWidgetController::testAudioSpeed()
 }
 
 
+void MainWidgetController::showSceneDesc()
+{
+    if (!scene_)
+        return;
+
+    SceneDescDialog diag;
+    diag.setText(scene_->sceneDesc());
+    diag.setShowOnStart(scene_->showSceneDesc());
+
+    if (diag.exec() == QDialog::Accepted)
+    {
+        if (scene_->sceneDesc() != diag.text()
+            || scene_->showSceneDesc() != diag.showOnStart())
+        {
+            scene_->setSceneDesc(diag.text(), diag.showOnStart());
+            onSceneChanged_();
+        }
+    }
+}
+
 void MainWidgetController::dumpIdNames_()
 {
     QSet<QString> ids = scene_->getChildIds(true);
@@ -1733,6 +1760,9 @@ void MainWidgetController::loadScene(const QString& fn)
         return;
 
     loadScene_(fn);
+
+    if (scene_ && scene_->showSceneDesc())
+        showSceneDesc();
 }
 
 void MainWidgetController::loadScene()
@@ -1746,6 +1776,9 @@ void MainWidgetController::loadScene()
     QString fn = IO::Files::getOpenFileName(IO::FT_SCENE, window_);
 
     loadScene_(fn);
+
+    if (scene_ && scene_->showSceneDesc())
+        showSceneDesc();
 }
 
 void MainWidgetController::loadScene_(const QString &fn)
