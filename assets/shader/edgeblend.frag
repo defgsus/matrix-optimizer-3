@@ -191,6 +191,7 @@ float white_mh(in vec2 slice)
 
         float black_so_far = 0.0;
         float intersection_color = (1.0 / (float(num_shared) + 3.0*(float(num_shared-2))));
+
         float max_color = intersection_color * (float(num_covered+1) /*+ 3.0*(float(num_covered-1))*/);
         float min_color = intersection_color * (float(num_covered));
         float inner_section = ((edged >= margin) && (oedged >= margin))
