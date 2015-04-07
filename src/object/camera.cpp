@@ -121,7 +121,7 @@ void Camera::createParameters()
                                       1024, 16, 4096*4, 16, true, false);
         p_height_ = params()->createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
-        p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("size of cube map"), tr("Width and height of the rendered frame per cube map"),
+        p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("resolution of cube map"), tr("Width and height of the rendered frame per cube face"),
                                       1024, 16, 4096*4, 16, true, false);
 
     params()->endParameterGroup();

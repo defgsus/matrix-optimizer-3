@@ -105,7 +105,7 @@ void Properties::getProperties()
     MO_CHECK_GL( glGetIntegerv(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, &maxUniformBlocksGeometry) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockBytes) );
 
-    // ------- emperical tests ---------
+    // ------- empirical tests ---------
 
     glGetError();
 
@@ -170,6 +170,7 @@ void Properties::setLineWidth(GLfloat width)
 #if 0
     MO_CHECK_GL( glLineWidth(width) );
 #else
+    MO_DEBUG("width " << width);
     glLineWidth(width);
     if (glGetError() != GL_NO_ERROR)
         MO_DEBUG("glLineWidth(" << width << ") failed, smooth = " << int(isSmooth) << ", range = "

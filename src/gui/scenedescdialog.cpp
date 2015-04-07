@@ -36,7 +36,7 @@ SceneDescDialog::SceneDescDialog(QWidget *parent)
         p_cb_ = new QCheckBox(tr("Show when opening"), this);
         lv->addWidget(p_cb_);
 
-        auto lh = new QHBoxLayout(this);
+        auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
             auto but = new QPushButton(tr("Save"), this);
