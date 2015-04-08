@@ -88,7 +88,7 @@
 
 <a name="camera"></a>
 <h3>Camera</h3>
-<p>The <a href="_object_Camera">camera</a> object is used to render the visible objects. You'll always need at least one camera. Place transformation objects inside the camera to change it's position and rotation. Use the parameters of the camera object to control the projection type, resolution and post-processing options.</p>
+<p>The <a href="_object_Camera.html">camera</a> object is used to render the visible objects. You'll always need at least one camera. Place transformation objects inside the camera to change it's position and rotation. Use the parameters of the camera object to control the projection type, resolution and post-processing options.</p>
 
 <p><b>Currently</b> each camera renders <b>all</b> visible object in the scene. This is likely to change in the future, when you can select which groups of objects to draw for each camera.</p>
 
@@ -97,12 +97,12 @@
 
 <a name="lightsource"></a>
 <h3>Light source</h3>
-<p>The <a href="_object_LightSource">light source</a> object creates a light for the scene, which any <a href="_object_Model3d">model</a> will recognize and use when drawing. Basic properties are the color, phong settings and directional influence. You can create many light sources at once, but they will considerably slow down rendering at some amount.</p>
+<p>The <a href="_object_LightSource.html">light source</a> object creates a light for the scene, which any <a href="_object_Model3d.html">model</a> will recognize and use when drawing. Basic properties are the color, phong settings and directional influence. You can create many light sources at once, but they will considerably slow down rendering at some amount.</p>
 
 
 <a name="model3d"></a>
 <h3>3D Model</h3>
-<p>This is the basic object to draw something. It has a lot of parameters which makes it very general. In every case, the <a href="_object_Model3d">model</a> will draw it's assigned <a href="geometry.html">geometry.</a> To change the geometry, right-click the object and open the <a href="geometryeditor.html">geometry editor</a>.</p>
+<p>This is the basic object to draw something. It has a lot of parameters which makes it very general. In every case, the <a href="_object_Model3d.html">model</a> will draw it's assigned <a href="geometry.html">geometry.</a> To change the geometry, right-click the object and open the <a href="geometryeditor.html">geometry editor</a>.</p>
 
 
 
@@ -120,7 +120,7 @@
 <a name="controlobjects"></a>
 <h2>Control objects</h2>
 
-<p>Most parameters of any object can be modulated at runtime. Here starts the fun! Control objects are object that generate a value which can control a parameter. A powerful source of modulation is the <a href="_object_SequenceFloat">sequence</a> object.</p>
+<p>Most parameters of any object can be modulated at runtime. Here starts the fun! Control objects are object that generate a value which can control a parameter. A powerful source of modulation is the <a href="_object_SequenceFloat.html">sequence</a> object.</p>
 
 <p><b>Modulation</b> in this sense actually means: Whenever a parameter of an object is asked for it's value (for example, when drawing the object), the parameter will ask any connected <b>modulators</b> for their values and add this to it's own value. These modulators have also parameters which can be modulated again. You can create modulation chains of any depth while feedback loops are not allowed <b>(and in some cases aren't checked properly and will CRASH the program, sorry)</b>.</p>
 
@@ -131,4 +131,4 @@
 <h3>audio / control conversion</h3>
 <p>Special topic, TODO!!</p>
 <p>... one thing though, audio outputs will be buffered for 3 seconds when they are connected via a control signal (green cable). So a parameter can look up 3 seconds of the past audio output.</p>
-<p>... and another thing. Converting control signals to audio signals is also possible by dragging the control object onto the audio input connector. Depending on the complexity of the control signal, this might be computationally expensive, because the signal must be calculated for every audio sample instead of, say, for every screen refresh. The <a href="_object_ParameterAO">audio parameter</a> object converts a modulateable parameter to an audio signal at an adjustable sample rate.</p>
+<p>... and another thing. Converting control signals to audio signals is also possible by dragging the control object onto the audio input connector. Depending on the complexity of the control signal, this might be computationally expensive, because the signal must be calculated for every audio sample instead of, say, for every screen refresh. The <a href="_object_ParameterAO.html">audio parameter</a> object converts a modulateable parameter to an audio signal at an adjustable sample rate.</p>

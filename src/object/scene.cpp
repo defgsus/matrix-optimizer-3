@@ -1200,7 +1200,8 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
 
 void Scene::runScripts()
 {
-    for (auto o : allObjects_)
+    for (Object * o : allObjects_)
+    if (o->activeAtAll())
     if (auto script = qobject_cast<AScriptObject*>(o))
     {
         try
@@ -1209,6 +1210,7 @@ void Scene::runScripts()
         }
         catch (const Exception & e)
         {
+            /** @todo put this in a log console, visible to user! */
             MO_WARNING("The script object '" << script->name() << "' failed:\n"
                        << e.what());
         }

@@ -13,6 +13,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QMouseEvent>
+#include <QWheelEvent>
 
 #include "ruler.h"
 #include "gui/painter/grid.h"
@@ -31,6 +32,8 @@ Ruler::Ruler(QWidget *parent) :
     setAttribute(Qt::WA_OpaquePaintEvent, true);
 
     setMouseTracking(true);
+
+    setStatusTip(tr("Left-click + drag to change position and/or zoom, mousewheel to change zoom"));
 
     // update grid painter
     setOptions(options_);
@@ -169,6 +172,31 @@ void Ruler::mouseDoubleClickEvent(QMouseEvent * e)
         emit doubleClicked(time);
         e->accept();
         return;
+    }
+}
+
+void Ruler::wheelEvent(QWheelEvent * e)
+{
+    const Double zoomChange_ = e->delta() > 0 ? 0.1 : -0.1;
+    bool changed = false;
+
+    if (options_ & O_ZoomY)
+    {
+        space_.zoomY( 1.0 + zoomChange_, (Double)e->y() / height() );
+        changed = true;
+    }
+
+    if (options_ & O_ZoomX)
+    {
+        space_.zoomX( 1.0 + zoomChange_, (Double)e->x() / width() );
+        changed = true;
+    }
+
+    if (changed)
+    {
+        emit viewSpaceChanged(space_);
+        update();
+        e->accept();
     }
 }
 

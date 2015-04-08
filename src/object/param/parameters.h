@@ -53,6 +53,9 @@ public:
     /** Returns the parameter with the given id, or NULL. */
     Parameter * findParameter(const QString& id);
 
+    /** Returns the parameter with the given name, or NULL. */
+    Parameter * findParameterName(const QString& name);
+
     /** Returns an automatic html from all parameters. */
     QString getParameterDoc() const;
 

@@ -84,6 +84,7 @@ void AScriptObject::createParameters()
         p_->scriptText = params()->createTextParameter("_ascript", tr("sourcecode"),
                                                     tr("The source code of the AngelScript program"),
                                                     TT_ANGELSCRIPT,
+                                                    "// " + tr("Press F1 for help") + "\n"
                                                     "void main()\n{\n\t\n}\n",
                                                     true, false);
 
@@ -159,9 +160,15 @@ void AScriptObject::Private::run()
 
     // init context
     if (context->Prepare(mainFunc) < 0)
-        MO_ERROR(tr("The context could not be initialized"));
+        MO_ERROR(tr("The script context could not be initialized"));
 
-    context->Execute();
+    int r = context->Execute();
+
+    if( r == asEXECUTION_EXCEPTION )
+        MO_ERROR("An exception occured in the script: " << context->GetExceptionString());
+
+    if( r != asEXECUTION_FINISHED )
+        MO_ERROR("The script ended prematurely");
 }
 
 void AScriptObject::Private::messageCallback(const asSMessageInfo * msg)

@@ -20,7 +20,7 @@ const QString& versionString()
             QString("%1.%2.%3.%4")
             .arg(MO_VERSION_MAJOR)
             .arg(MO_VERSION_MINOR)
-            .arg(MO_VERSION_TINY)//, 3, 10, QChar('0'))
+            .arg(MO_VERSION_TINY)
             .arg(MO_VERSION_MICRO, 3, 10, QChar('0'));
 #else
     static const QString ret =

@@ -171,10 +171,14 @@ public:
 
     // ------ setter ------
 
-    void setName(const StringAS& n) { QString name = MO::toString(n); if (auto e = editor()) e->setObjectName(o, name); else o->setName(name); }
-    void setHue(int degree) { o->setAttachedData(degree, Object::DT_HUE); if (auto e = editor()) emit e->objectColorChanged(o); }
-    void setExpanded(bool exp) { o->setAttachedData(exp, Object::DT_GRAPH_EXPANDED); if (auto e = editor()) emit e->objectChanged(o); }
-    void setPosition(int x, int y) { o->setAttachedData(QPoint(x, y), Object::DT_GRAPH_POS); if (auto e = editor()) emit e->objectChanged(o); }
+    void setName(const StringAS& n)
+        { QString name = MO::toString(n); if (auto e = editor()) e->setObjectName(o, name); else o->setName(name); }
+    void setHue(int degree)
+        { o->setAttachedData(degree, Object::DT_HUE); if (auto e = editor()) emit e->objectColorChanged(o); }
+    void setExpanded(bool exp)
+        { o->setAttachedData(exp, Object::DT_GRAPH_EXPANDED); if (auto e = editor()) emit e->objectChanged(o); }
+    void setPosition(int x, int y)
+        { o->setAttachedData(QPoint(x, y), Object::DT_GRAPH_POS); if (auto e = editor()) emit e->objectChanged(o); }
 
     // ------ tree setter -----
 
@@ -406,6 +410,14 @@ public:
 
     StringAS name() const { return toStringAS(p->name()); }
     StringAS id() const { return toStringAS(p->idName()); }
+
+    Float getFloat()
+    {
+        if (auto pf = dynamic_cast<ParameterFloat*>(p)) return pf->baseValue();
+        else if (auto pi = dynamic_cast<ParameterInt*>(p)) return pi->baseValue();
+        else MO_WARNING("Parameter '" << p->name() << "' is no float parameter");
+        return 0;
+    }
 
     // ----- setter -------
 
@@ -803,6 +815,7 @@ static void register_parameter_base(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("string id() const", id);
 
     // getter
+    MO__REG_METHOD("float getFloat() const", getFloat);
 
     // setter
     MO__REG_METHOD("void setValue(float value)", setFloat);

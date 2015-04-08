@@ -105,6 +105,14 @@ Parameter * Parameters::findParameter(const QString &id)
     return 0;
 }
 
+Parameter * Parameters::findParameterName(const QString &name)
+{
+    for (auto p : parameters_)
+        if (p->name() == name)
+            return p;
+
+    return 0;
+}
 
 QMap<QString, QList<Parameter*>> Parameters::getParameterGroups() const
 {

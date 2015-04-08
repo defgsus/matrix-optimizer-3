@@ -134,7 +134,7 @@ void BandFilterBankAO::createParameters()
                                                                 tr("%1: width").arg(i + 1),
                                                                 tr("The width of the filter band in Hertz - "
                                                                    "the actual band range is center + [-width/2, width/2]"),
-                                                                50.0, 0.0);
+                                                                50.0, 1.0);
             p_->paramFreqWidth[i]->setMinValue(0.0);
 
             p_->paramAmp[i] = params()->createFloatParameter(QString("_filter_amp_%1").arg(i+1),

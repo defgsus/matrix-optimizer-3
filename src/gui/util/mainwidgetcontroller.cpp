@@ -1759,10 +1759,13 @@ void MainWidgetController::loadScene(const QString& fn)
     if (!isOkayToChangeScene())
         return;
 
-    loadScene_(fn);
+    if (loadScene_(fn))
+    {
+        IO::Files::setFilename(IO::FT_SCENE, fn);
 
-    if (scene_ && scene_->showSceneDesc())
-        showSceneDesc();
+        if (scene_ && scene_->showSceneDesc())
+            showSceneDesc();
+    }
 }
 
 void MainWidgetController::loadScene()
@@ -1775,13 +1778,14 @@ void MainWidgetController::loadScene()
 
     QString fn = IO::Files::getOpenFileName(IO::FT_SCENE, window_);
 
-    loadScene_(fn);
-
-    if (scene_ && scene_->showSceneDesc())
-        showSceneDesc();
+    if (loadScene_(fn))
+    {
+        if (scene_ && scene_->showSceneDesc())
+            showSceneDesc();
+    }
 }
 
-void MainWidgetController::loadScene_(const QString &fn)
+bool MainWidgetController::loadScene_(const QString &fn)
 {
     if (!fn.isEmpty())
     {
@@ -1800,7 +1804,7 @@ void MainWidgetController::loadScene_(const QString &fn)
             statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
 
             newScene();
-            return;
+            return false;
         }
 
         if (!scene)
@@ -1810,7 +1814,7 @@ void MainWidgetController::loadScene_(const QString &fn)
                                   .arg(fn));
             statusBar()->showMessage(tr("Could not open project '%1'").arg(fn));
             newScene();
-            return;
+            return false;
         }
 
         QString err = scene->getIoLoadErrors();
@@ -1847,7 +1851,11 @@ void MainWidgetController::loadScene_(const QString &fn)
         updateWidgetsActivity_();
     }
     else
+    {
         statusBar()->showMessage(tr("loading cancelled"), statusMessageTimeout_);
+        return false;
+    }
+    return true;
 }
 
 bool MainWidgetController::saveScene_(const QString &fn)

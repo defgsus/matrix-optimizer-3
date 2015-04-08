@@ -174,6 +174,8 @@ void ParameterWidget::createWidgets_()
     if (!editor_)
         return;
 
+    setToolTip("id: '" + param_->idName() + "'");
+
     static const QIcon resetIcon(":/icon/reset.png");
 
     QHBoxLayout * l = new QHBoxLayout(this);

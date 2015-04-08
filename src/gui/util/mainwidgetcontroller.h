@@ -193,7 +193,7 @@ private:
     void updateWindowTitle_();
     QString getSceneSaveFilename_();
     bool saveScene_(const QString& fn);
-    void loadScene_(const QString& fn);
+    bool loadScene_(const QString& fn);
 
     void copySceneSettings_(Object * o);
     void setPredefinedResolution_(int index);

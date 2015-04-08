@@ -105,7 +105,7 @@ public:
 
     void clear() { tl->clear(); }
     void update() { tl->setAutoDerivative(); }
-    void add(double time, double value) { tl->add(time, value); }
+    void add(double time, double value) { MO_DEBUG(time << " " << value); tl->add(time, value); }
     void addType(double time, double value, WrappedClass::Point::Type type) { tl->add(time, value, type); }
     void changeType(WrappedClass::Point::Type type)
     {
@@ -120,7 +120,7 @@ public:
 
 /** Ref-counted wrapper of MATH::Timeline1D for AngelScript.
     This class supports Vec as value type.
-    So long as we don't have this timeline natively we cheat by using x timelines */
+    So long as we don't have this timeline natively we cheat by using NUM timelines */
 template <class Vec, unsigned int NUM>
 class TimelineXAS : public RefCounted
 {
