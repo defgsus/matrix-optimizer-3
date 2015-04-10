@@ -18,6 +18,7 @@
 #include "transform/transformation.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"
+#include "param/parameterfloat.h"
 #include "param/modulatoroutput.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
@@ -49,6 +50,7 @@ Object::Object(QObject *parent)
     : QObject                   (parent)
     , p_parameters_             (0)
     , p_paramActiveScope_       (0)
+    , p_paramActive_            (0)
     , p_canBeDeleted_           (true)
     , p_visible_                (true)
     , p_ref_                    (1)
@@ -568,10 +570,10 @@ void Object::p_passDownActivityScope_(ActivityScope parent_scope)
     }
 }
 
-bool Object::active(Double /*time*/, uint /*thread*/) const
+bool Object::active(Double time, uint thread) const
 {
-    // XXX active parameter not there yet
-    return activityScope() & p_currentActivityScope_;
+    return (activityScope() & p_currentActivityScope_)
+            && (!p_paramActive_ || p_paramActive_->value(time, thread) > 0.);
 }
 
 bool Object::activeAtAll() const
@@ -1167,19 +1169,23 @@ void Object::createParameters()
     params()->beginParameterGroup("active", tr("activity"));
 
     p_paramActiveScope_ =
-    params()->createSelectParameter("_activescope", tr("activity scope"),
-                         strTip,
-                         { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
-                           "prev1r", "prev2r", "prev3r" },
-                         { tr("off"), tr("on"), tr("client only"), tr("preview"), tr("render"),
-                           tr("preview 1"), tr("preview 2"), tr("preview 3"),
-                           tr("preview 1 + render"), tr("preview 2 + render"), tr("preview 3 + render") },
-                         { strOff, strOn, strClient, strPrev, strRend, strPrev1, strPrev2, strPrev3,
-                           strPrev1r, strPrev2r, strPrev3r },
-                         { AS_OFF, AS_ON, AS_CLIENT_ONLY, AS_PREVIEW, AS_RENDER,
-                           AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
-                           AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
-                         AS_ON, true, false );
+        params()->createSelectParameter("_activescope", tr("activity scope"),
+                            strTip,
+                            { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
+                              "prev1r", "prev2r", "prev3r" },
+                            { tr("off"), tr("on"), tr("client only"), tr("preview"), tr("render"),
+                              tr("preview 1"), tr("preview 2"), tr("preview 3"),
+                              tr("preview 1 + render"), tr("preview 2 + render"), tr("preview 3 + render") },
+                            { strOff, strOn, strClient, strPrev, strRend, strPrev1, strPrev2, strPrev3,
+                              strPrev1r, strPrev2r, strPrev3r },
+                            { AS_OFF, AS_ON, AS_CLIENT_ONLY, AS_PREVIEW, AS_RENDER,
+                              AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
+                              AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
+                              AS_ON, true, false );
+
+        p_paramActive_ = params()->createFloatParameter("_active", tr("active"),
+                            tr("A value greater than 0.0 makes the object active"),
+                            1., 1.);
 
     params()->endParameterGroup();
 }

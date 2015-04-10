@@ -256,6 +256,8 @@ void SequenceView::onViewSpaceChanged_(const UTIL::ViewSpace & v)
     if (sequence_)
         sceneSettings()->setViewSpace(sequence_, v);
 
+    updateViewSpace_(v);
+
     emit viewSpaceChanged(v);
 }
 

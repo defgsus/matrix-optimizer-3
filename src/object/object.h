@@ -781,6 +781,7 @@ private:
     // --------- default parameters ----------
 
     ParameterSelect * p_paramActiveScope_;
+    ParameterFloat * p_paramActive_;
 
     // ------------ properties ---------------
 

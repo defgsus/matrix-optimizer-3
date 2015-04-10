@@ -189,9 +189,13 @@ void SequenceFloatView::updateViewSpaceTl_(const UTIL::ViewSpace & s)
     // unmap from special timeline's viewspace
     UTIL::ViewSpace v(s);
     v.mapFromSequence(sequence_);
+
     // and feed back in to timeline's overpainters
     // + update everyone else
     setViewSpace(v);
+
+    // emit change
+    emit viewSpaceChanged(v);
 }
 
 
