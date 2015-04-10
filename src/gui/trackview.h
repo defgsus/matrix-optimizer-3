@@ -29,7 +29,6 @@ namespace GUI {
 class TrackViewOverpaint;
 class TrackHeader;
 class SequenceWidget;
-class SceneSettings;
 
 class TrackView : public QWidget
 {
@@ -50,9 +49,6 @@ public:
 
     explicit TrackView(QWidget *parent = 0);
     ~TrackView();
-
-    void setSceneSettings(SceneSettings * s) { sceneSettings_ = s; }
-    SceneSettings * sceneSettings() const { return sceneSettings_; }
 
     /** Returns the header view associated with this view. */
     TrackHeader * trackHeader() const { return header_; }
@@ -204,7 +200,7 @@ private:
     UTIL::ViewSpace space_;
 
     Scene * scene_;
-    SceneSettings * sceneSettings_;
+    ObjectEditor * editor_;
     ObjectFilter * objectFilter_;
     Object * currentObject_;
     QList<Object*> allObjects_;

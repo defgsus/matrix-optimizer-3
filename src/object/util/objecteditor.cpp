@@ -15,6 +15,8 @@
 #include "object/scene.h"
 #include "object/scenelock_p.h"
 #include "object/sequence.h"
+#include "object/sequencefloat.h"
+#include "object/trackfloat.h"
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
@@ -722,6 +724,25 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
     addModulator(param, track->idName(), "");
 
     return (TrackFloat*)track;
+}
+
+TrackFloat * ObjectEditor::wrapIntoTrack(SequenceFloat *seq)
+{
+    Object * parent = seq->parentObject();
+
+    if (!parent || seq->findParentObject(Object::TG_TRACK))
+        return 0;
+
+    TrackFloat * track = ObjectFactory::createTrackFloat(seq->name());
+    addObject(parent, track);
+
+    const QPoint pos = seq->getAttachedData(Object::DT_GRAPH_POS).toPoint();
+    seq->setAttachedData(QPoint(1,1), Object::DT_GRAPH_POS);
+    track->setAttachedData(pos, Object::DT_GRAPH_POS);
+
+    moveObject(seq, track);
+
+    return track;
 }
 
 

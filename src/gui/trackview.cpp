@@ -28,6 +28,8 @@
 #include "object/trackfloat.h"
 #include "object/scene.h"
 #include "object/util/objectfilter.h"
+#include "object/util/objecteditor.h"
+#include "object/objectfactory.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -42,7 +44,6 @@ namespace GUI {
 TrackView::TrackView(QWidget *parent) :
     QWidget         (parent),
     scene_          (0),
-    sceneSettings_  (0),
     objectFilter_   (new ObjectFilter()),
     currentObject_  (0),
     header_         (0),
@@ -242,21 +243,24 @@ void TrackView::setCurrentObject(Object * obj, bool send_signal)
 
     // determine scene
     Scene * scene = obj->sceneObject();
+    MO_ASSERT(scene, "Scene not set in TrackView::setCurrentObject()");
+
     if (scene != scene_)
     {
-        /* YYY
-        connect(scene, SIGNAL(objectChanged(MO::Object*)),
+        editor_ = scene->editor();
+        MO_ASSERT(editor_, "Scene in TrackView without editor");
+
+        connect(editor_, SIGNAL(objectChanged(MO::Object*)),
                 this, SLOT(onObjectChanged_(MO::Object*)));
-        connect(scene, SIGNAL(sequenceChanged(MO::Sequence*)),
+        connect(editor_, SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged_(MO::Sequence*)));
-        connect(scene, SIGNAL(parameterChanged(MO::Parameter*)),
+        connect(editor_, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
-        */
+        //connect(editor_, &ObjectEditor::objectAdded)
     }
     scene_ = scene;
     currentObject_ = obj;
 
-    MO_ASSERT(scene_, "Scene not set in TrackView::setTracks()");
 
     // filter visible tracks
     getFilteredTracks_(tracks_);
@@ -390,12 +394,14 @@ void TrackView::calcTrackY_()
 
 int TrackView::trackHeight(Track * t) const
 {
-    return sceneSettings_->getTrackHeight(t);
+    return t->hasAttachedData(Object::DT_TRACK_HEIGHT)
+            ? t->getAttachedData(Object::DT_TRACK_HEIGHT).toInt()
+            : 32;
 }
 
 void TrackView::setTrackHeight(Track * t, int h)
 {
-    sceneSettings_->setTrackHeight(t, h);
+    t->setAttachedData(h, Object::DT_TRACK_HEIGHT);
 
     calcTrackY_();
     updateWidgetsViewSpace_();
@@ -1122,16 +1128,16 @@ void TrackView::createEditActions_()
         a->setStatusTip(tr("Creates a new sequence at the current time"));
         connect(a, &QAction::triggered, [this]()
         {
-/*YYY            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
+            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
             {
-#ifndef MO_DISABLE_TREE
-                nextFocusSequence_ =
-                    scene_->model()->createFloatSequence(trackf, currentTime_);
-#endif
+                Sequence * seq = ObjectFactory::createSequenceFloat(trackf->name());
+                seq->setStart(currentTime_);
+                editor_->addObject(trackf, seq);
+                nextFocusSequence_ = seq;
+
                 updateTrack(selTrack_);
                 assignModulatingWidgets_();
             }
-            */
         });
 
         editActions_.addSeparator(this);
@@ -1167,9 +1173,9 @@ void TrackView::createEditActions_()
     }
 }
 
-bool TrackView::deleteObject_(Object * )
+bool TrackView::deleteObject_(Object * o)
 {
-    return false;// YYY
+    return editor_->deleteObject(o);
 }
 
 bool TrackView::paste_(bool single_track)
@@ -1196,10 +1202,10 @@ bool TrackView::paste_(bool single_track)
             {
                 s->setStart(currentTime_);
                 nextFocusSequence_ = s;
-/*YYY#ifndef MO_DISABLE_TREE
-                if (omodel_->addObject(selTrack_, s))
+
+                if (editor_->addObject(selTrack_, s))
                     return true;
-#endif*/
+
             }
             else
                 QMessageBox::warning(this, tr("Can not paste"), error);
@@ -1229,13 +1235,13 @@ bool TrackView::paste_(bool single_track)
                 else
                 {
                     s->setStart(time);
-/*YYY#ifndef MO_DISABLE_TREE
-                    if (omodel_->addObject(selTrack_, s))
+
+                    if (editor_->addObject(selTrack_, s))
                     {
                         time = s->end();
                         continue;
                     }
-#endif*/
+
                 }
                 delete s;
                 objs[i] = 0;
@@ -1298,12 +1304,11 @@ bool TrackView::paste_(bool single_track)
                             {
                                 errors += error + "\n";
                             }
-/*YYY#ifndef MO_DISABLE_TREE
+
                             else
                             // add
-                            if (omodel_->addObject(tracks_[tracknum], s))
+                            if (editor_->addObject(tracks_[tracknum], s))
                                 continue;
-#endif*/
                         }
                             else MO_WARNING("skipping sequence '" << s->name() << "' "
                                             "because there is no track left");

@@ -94,6 +94,9 @@ void SequenceWidget::updateValueRange()
     {
         seqf->getMinMaxValue(0.0, seqf->end() - seqf->start(), minValue_, maxValue_,
                              MO_GUI_THREAD);
+        auto delta = (maxValue_ - minValue_) / 50;
+        maxValue_ += delta;
+        minValue_ -= delta;
         updateViewSpace();
     }
 }

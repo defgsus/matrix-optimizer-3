@@ -171,7 +171,9 @@ public:
         DT_CLIP_COLUMN,
         DT_CLIP_ROW,
         DT_PARAM_GROUP_EXPANDED,
-        DT_SELECTED_PARAM
+        DT_SELECTED_PARAM,
+        /** Height of a track in TrackView */
+        DT_TRACK_HEIGHT
     };
 
     // -------------- ctor -------------------

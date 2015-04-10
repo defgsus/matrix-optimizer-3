@@ -24,7 +24,8 @@ namespace MO {
 namespace IO { class DataStream; }
 namespace GUI {
 
-
+/** Almost obsolete gui settings for Objects
+    @deprecated */
 class SceneSettings : public QObject
 {
     Q_OBJECT
@@ -56,8 +57,8 @@ public:
 
     // --------------- Track heights ---------------------
 
-    void setTrackHeight(const Track *, int);
-    int getTrackHeight(const Track *) const;
+    //void setTrackHeight(const Track *, int);
+    //int getTrackHeight(const Track *) const;
 
     // ------ expanded-flag of ParameterGroups -----------
 
@@ -98,7 +99,6 @@ private:
     // ---- config ----
 
     bool useCompression_;
-    int defaultTrackHeight_;
 };
 
 

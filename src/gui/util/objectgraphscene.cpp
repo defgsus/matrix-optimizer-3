@@ -33,6 +33,7 @@
 #include "object/model3d.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
+#include "object/sequencefloat.h"
 #include "object/param/parameters.h"
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"
@@ -1338,7 +1339,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
         editor->setObjectHue(obj, hue);
     });
 
-
+    // edit geometry
     if (Model3d * m = qobject_cast<Model3d*>(obj))
     {
         a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
@@ -1352,6 +1353,18 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
                 ScopedObjectChange lock(root, m);
                 m->setGeometrySettings(diag.getGeometrySettings());
             }
+        });
+    }
+
+    // wrap float sequence in float track
+    if (SequenceFloat * seq = qobject_cast<SequenceFloat*>(obj))
+    if (!obj->findParentObject(Object::T_TRACK_FLOAT))
+    {
+        a = actions.addAction(tr("Wrap into track"), scene);
+        a->setStatusTip(tr("Creates a track and puts the sequence inside"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            editor->wrapIntoTrack(seq);
         });
     }
 

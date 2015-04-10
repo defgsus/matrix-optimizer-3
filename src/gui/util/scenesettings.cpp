@@ -30,9 +30,7 @@ namespace GUI {
 
 SceneSettings::SceneSettings(QObject *parent)
     : QObject               (parent),
-      useCompression_       (true),
-      defaultTrackHeight_   (30)
-
+      useCompression_       (true)
 {
 }
 
@@ -218,7 +216,7 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
     return space;
 }
 
-
+/*
 void SceneSettings::setTrackHeight(const Track * track, int h)
 {
     trackHeights_[track->idName()] = h;
@@ -232,6 +230,7 @@ int SceneSettings::getTrackHeight(const Track * track) const
 
     return i.value();
 }
+*/
 /*
 void SceneSettings::setParameterGroupExpanded(
         const Object * obj, const QString &groupId, bool expanded)

@@ -239,7 +239,6 @@ void MainWidgetController::createObjects_()
 
     // sequencer
     sequencer_ = new Sequencer(window_);
-    sequencer_->setSceneSettings(sceneSettings_);
     sequencer_->setMinimumHeight(320);
     sequencer_->setVisible(false);
     connect(sequencer_, SIGNAL(sequenceSelected(MO::Sequence*)),
@@ -1006,8 +1005,8 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
 
 void MainWidgetController::showClipView_(bool enable, Object * o)
 {
-    if (enable)
-        sequencer_->setVisible(false);
+    //if (enable)
+    //    sequencer_->setVisible(false);
     clipView_->setVisible(enable);
 
     if (!enable)
@@ -1023,10 +1022,8 @@ void MainWidgetController::showClipView_(bool enable, Object * o)
 
 void MainWidgetController::showSequencer_(bool enable, Object * o)
 {
-    return; // XXX removed the sequencer for now, not working right anyway
-
     sequencer_->setVisible(enable);
-    clipView_->setVisible(!enable);
+    //clipView_->setVisible(!enable);
     emit modeChanged();
 
     if (!enable)
@@ -1035,7 +1032,7 @@ void MainWidgetController::showSequencer_(bool enable, Object * o)
         return;
     }
 
-    sequencer_->setCurrentObject(o);
+    sequencer_->setCurrentObject(o->rootObject() ? o->rootObject() : o);
     emit modeChanged();
 }
 
@@ -1198,8 +1195,7 @@ void MainWidgetController::onObjectSelectedClipView_(Object * o)
     // jump to clip in graph view
     objectGraphView()->setFocusObject(o);
     objectView()->selectObject(o);
-
-    // update sequence view
+    // show sequence
     updateSequenceView_(o);
 }
 
@@ -1246,6 +1242,8 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
     // jump to sequence in tree view
     objectGraphView()->setFocusObject(o);
     objectView()->selectObject(o);
+    // show sequence
+    updateSequenceView_(o);
 }
 
 void MainWidgetController::onSequenceClicked_()

@@ -1183,8 +1183,10 @@ void Object::createParameters()
                               AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                               AS_ON, true, false );
 
-        p_paramActive_ = params()->createFloatParameter("_active", tr("active"),
-                            tr("A value greater than 0.0 makes the object active"),
+        /// @todo live activity parameter should apply to children as well!
+        p_paramActive_ = params()->createFloatParameter("_active_f", tr("active"),
+                            tr("A value greater than 0.0 makes the object active"
+                               " - this does CURRENTLY NOT apply to child objects"),
                             1., 1.);
 
     params()->endParameterGroup();

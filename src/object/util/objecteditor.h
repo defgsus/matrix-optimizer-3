@@ -205,9 +205,14 @@ public slots:
     Object * findAModulatorParent(MO::Parameter * parm);
 
     /** Creates a float track for the given parameter.
-        The track is placed at the next suitable position,
-        search the parameter's object and parents. */
+        The track is placed at the next suitable level,
+        searchin the parameter's object and parents. */
     TrackFloat * createFloatTrack(MO::Parameter * p);
+
+    /** Wraps the sequence into a track.
+        If the sequence is already part of a track, nothing happens
+        and NULL is returned. */
+    TrackFloat * wrapIntoTrack(MO::SequenceFloat * seq);
 
     /** Creates the object of @p className in the @p clip and links to parameter.
         If @p clip is NULL, a clip (and even a ClipContainer are automatically created).

@@ -239,6 +239,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
                     data[j] = u.p_float[i]->value(ti, thread);
             }
             /** @todo Need to incorporate texture slots!! */
+            u.texture->bind();
             u.texture->upload(data);
         }
     }

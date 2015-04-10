@@ -154,6 +154,10 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+    dock = createDockWidget(tr("Tracks"), controller_->sequencer());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    removeDockWidget(dock);
+
     dock = createDockWidget(tr("Clips"), controller_->clipView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
     removeDockWidget(dock);
