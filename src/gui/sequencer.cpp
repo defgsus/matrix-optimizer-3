@@ -32,6 +32,8 @@ namespace GUI {
 Sequencer::Sequencer(QWidget *parent) :
     QWidget(parent)
 {
+    setObjectName("_SequencerView");
+
     createWidgets_();
 }
 

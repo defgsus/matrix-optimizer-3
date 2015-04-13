@@ -25,6 +25,8 @@
 #include "object/clipcontroller.h"
 #include "object/audioobject.h"
 #include "object/model3d.h"
+#include "object/sequencefloat.h"
+#include "object/modulatorobjectfloat.h"
 #include "object/param/parameters.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
@@ -78,6 +80,17 @@ void ObjectInfoDialog::setObject(Object * o)
     // ----- children -----
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
+
+    // ---- value -----
+
+    if (auto seq = qobject_cast<SequenceFloat*>(o))
+    {
+        s << "<p>value at " << curTime << " sec: " << seq->value(curTime, MO_GUI_THREAD) << "</p>\n";
+    }
+    if (auto mod = qobject_cast<ModulatorObjectFloat*>(o))
+    {
+        s << "<p>value at " << curTime << " sec: " << mod->value(curTime, MO_GUI_THREAD) << "</p>\n";
+    }
 
     // ----- modulators -----
 

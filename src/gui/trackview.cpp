@@ -66,6 +66,8 @@ TrackView::TrackView(QWidget *parent) :
     modifierDragWithOffset_ (Qt::CTRL),
     selectSequenceOnSingleClick_(true)
 {
+    setObjectName("_TrackView");
+
     setStatusTip(tr("Track View: right-click for context menu / "
                     "left-click for selection frame "
                     "(%1 to flip selection)").arg(enumName(modifierMultiSelect_)));
@@ -227,7 +229,7 @@ void TrackView::clearTracks_(bool keep_alltracks)
 
 void TrackView::setCurrentObject(Object * obj, bool send_signal)
 {
-    MO_ASSERT(sceneSettings_, "TrackView::setObjects() without SceneSettings");
+//    MO_ASSERT(sceneSettings_, "TrackView::setObjects() without SceneSettings");
 
 //    if (obj == currentObject_)
 //        return;
