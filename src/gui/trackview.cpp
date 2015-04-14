@@ -314,6 +314,14 @@ void TrackView::getFilteredTracks_(QList<Track *> &list)
     // transform
     list.clear();
     objectFilter_->transform(allObjects_, list);
+
+    qStableSort(list.begin(), list.end(), [=](Track * r, Track * l)
+    {
+        //if (r->parentObject() && l->parentObject())
+        //  return r->parentObject()->name() < l->parentObject()->name();
+        return r->namePath() < l->namePath();
+        //return r->name() < l->name();
+    });
 }
 
 Object * TrackView::getContainerObject_(Object * o)
@@ -1057,6 +1065,23 @@ void TrackView::createEditActions_()
     {
         // title
         editActions_.addTitle(tr("%1 sequences").arg(selectedWidgets_.size()), this);
+
+        editActions_.addSeparator(this);
+
+        // set color
+        a = editActions_.addAction(tr("Change color"), this);
+        a->setStatusTip(tr("Sets a custom color for the sequence"));
+        QMenu * sub = ObjectMenu::createColorMenu(this);
+        a->setMenu(sub);
+        connect(sub, &QMenu::triggered, [this](QAction*a)
+        {
+            QColor col = a->data().value<QColor>();
+            for (auto w : selectedWidgets_)
+            {
+                w->sequence()->setColor(col);
+                w->updateColors();
+            }
+        });
 
         editActions_.addSeparator(this);
 
