@@ -142,6 +142,12 @@ void Window::keyPressEvent(QKeyEvent * e)
         e->accept();
     }
 
+    if (e->key() == Qt::Key_R)
+    {
+        cameraControl_->setMatrix(Mat4(1));
+        emit cameraMatrixChanged(cameraControl_->getMatrix());
+    }
+
     if (!e->isAccepted())
         emit keyPressed(e);
 }
