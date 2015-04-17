@@ -11,6 +11,8 @@
 #ifndef MOSRC_GL_SHADERSOURCE_H
 #define MOSRC_GL_SHADERSOURCE_H
 
+#include <functional>
+
 #include <QString>
 
 namespace MO {
@@ -72,6 +74,7 @@ public:
     void loadVertexSource(const QString& filename);
     void loadFragmentSource(const QString& filename);
 
+    /** loads the default shader for, e.g., a Model3d */
     void loadDefaultSource();
 
     // ---------- manipulation --------
@@ -84,9 +87,16 @@ public:
     /** Replaces a piece of text */
     void replace(const QString& before, const QString& after, bool adjustLineNumber = false);
 
+    /** Replaces all #include ".." or <..> statements with the result from the function @p func.
+        @p func is given the url from the include statement. If it returns an empty string,
+        an #error message is inserted instead.
+        A true boolean parameter in @p func signals the <> syntax. */
+    void pasteIncludes(std::function<QString(const QString&, bool)> func);
+
 private:
 
     void addDefine_(QString& src, const QString& def_line) const;
+    void pasteIncludes_(QString& src, std::function<QString(const QString&, bool)> func, int lvl);
 
     QString vert_, frag_,
         unSceneTime_,

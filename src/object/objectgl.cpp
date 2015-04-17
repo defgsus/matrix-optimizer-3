@@ -10,6 +10,8 @@
 
 //#include <QDebug>
 
+#include <QFile>
+
 #include "objectgl.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -113,6 +115,31 @@ void ObjectGl::onParameterChanged(Parameter *p)
         rootObject()->propagateRenderMode(0);
     }
 }
+
+
+QString ObjectGl::getGlslInclude(const QString &url, bool do_search) const
+{
+    // --- built-in ---
+
+    if (do_search)
+    {
+        QFile f_(":/shader/inc/" + url);
+        if (f_.open(QFile::Text | QFile::ReadOnly))
+            return QString::fromUtf8(f_.readAll());
+    }
+
+#undef MO__LOAD
+
+    // in objects
+    Object * o = findObjectByNamePath(url);
+    if (!o)
+        return QString();
+
+    /// @todo text objects
+    return QString();
+}
+
+
 
 
 void ObjectGl::setNumberThreads(uint num)

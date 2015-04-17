@@ -102,5 +102,7 @@ include(other_files.pri)
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
 
+OTHER_FILES +=
+
 
 

@@ -103,6 +103,87 @@ void ShaderSource::replace(const QString &before, const QString &after, bool adj
     }
 }
 
+void ShaderSource::pasteIncludes(std::function<QString (const QString &, bool)> func)
+{
+    pasteIncludes_(vert_, func, 0);
+    pasteIncludes_(frag_, func, 0);
+
+    //MO_PRINT("[" + frag_ + "]");
+}
+
+void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QString &, bool)> func, int lvl)
+{
+    QString cpy;
+
+    int idx = src.indexOf("#include");
+    if (idx < 0)
+        return;
+
+    bool was_error = false;
+    int cidx = 0;
+    while (idx >= 0)
+    {
+        // copy source until here
+        cpy += src.mid(cidx, idx - cidx);
+
+        // find end of line
+        cidx = idx;
+        idx = src.indexOf('\n', cidx+8);
+        if (idx < 0)
+        {
+            cpy += "#error end of line expected\n";
+            was_error = true;
+            break;
+        }
+
+        // get url
+        QString url = src.mid(cidx+8, idx - (cidx+8)).simplified();
+
+        bool do_search = (url.startsWith("<") && url.endsWith(">"));
+        if (!do_search && !(url.startsWith("\"") && url.endsWith("\"")))
+        {
+            cpy += "#error expected <> or \"\" around name\n";
+            was_error = true;
+            break;
+        }
+            else url = url.mid(1, url.length()-2);
+
+        QString inc = func(url, do_search);
+        if (inc.isEmpty())
+        {
+            cpy += "#error not found '" + url + "'\n";
+            was_error = true;
+            break;
+        }
+
+        //int line = findLineNumber()
+
+        // paste
+        cpy += inc;
+
+        // next instance
+        cidx = idx;
+        idx = src.indexOf("#include", idx);
+    }
+
+    // early out
+    if (was_error)
+    {
+        src.swap(cpy);
+        return;
+    }
+
+    // copy source until here
+    cpy += src.mid(cidx);
+
+    src.swap(cpy);
+
+    // resolve recursive includes
+    if (lvl < 100 && src.indexOf("#include") >= 0)
+        pasteIncludes_(src, func, lvl+1);
+}
+
+
 void ShaderSource::replaceWithLineNumber(QString &src, const QString &before, const QString &after)
 {
     int idx, offs = 0;

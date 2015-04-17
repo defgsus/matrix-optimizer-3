@@ -350,7 +350,9 @@ void SyntaxHighlighter::initForGlsl()
         "imageBuffer", "iimageBuffer", "uimageBuffer",
         "sizeof", "cast",
         "namespace", "using",
-        "row_major"
+        "row_major",
+        "define", "if", "ifdef", "ifndef", "endif",
+        "include"
     };
 
 

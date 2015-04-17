@@ -15,4 +15,11 @@
         <file alias="shaderobject.frag">assets/shader/shaderobject.frag</file>
         <file alias="shaderobject.vert">assets/shader/shaderobject.vert</file>
     </qresource>
+    <qresource prefix="/shader/inc">
+        <file alias="intersect">assets/shader/inc/intersect.glsl</file>
+        <file alias="rotate">assets/shader/inc/rotate.glsl</file>
+    </qresource>
+    <qresource prefix="/shader/inc/dh">
+        <file alias="hash">assets/shader/inc/dh/hash.glsl</file>
+    </qresource>
 </RCC>

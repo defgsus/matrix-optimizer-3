@@ -79,6 +79,9 @@ public:
     /** Number of lights, the shader should support */
     uint numberLightSources() const { return p_numberLightSources_; }
 
+    /** Returns the source for the include url, or an empty string */
+    QString getGlslInclude(const QString& url, bool do_search) const;
+
     // ------------- opengl virtual interface -----------
 
     /** Override to initialize opengl resources.

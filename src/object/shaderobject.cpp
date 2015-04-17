@@ -205,6 +205,12 @@ void ShaderObject::initGl(uint thread)
     src->setFragmentSource(p_fragment_->baseValue());
     // declare user uniforms
     src->replace("//%user_uniforms%", userUniforms_->getDeclarations(), true);
+    // resolve includes
+    src->pasteIncludes([this](const QString& url, bool do_search)
+    {
+        QString inc = getGlslInclude(url, do_search);
+        return inc.isEmpty() ? inc : ("// ----- include '" + url + "' -----\n" + inc);
+    });
 
     // create quad and compile shader
     shaderQuad_[thread] = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
@@ -279,21 +285,8 @@ void ShaderObject::initGl(uint thread)
 
     fbo_[thread]->create();
     fbo_[thread]->unbind();
-    /*
-    if (renderMode_ == RM_PROJECTOR_SLICE)
-    {
-        // the matrix that transforms the ShaderObject's viewspace
-        // (which is identity normally)
-        sliceMatrix_ = projcam.getViewMatrix();
-        // but we need to turn it because the setup was done
-        // assuming a dome with it's top/middle in the y direction
-        // while the ShaderObject usually points -z
-        sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
-    }
 
-    if (sceneObject())
-        emit sceneObject()->cameraFboChanged(this);
-    */
+    /// @todo maybe input projector slice somehow to ShaderObject?
 }
 
 void ShaderObject::releaseGl(uint thread)

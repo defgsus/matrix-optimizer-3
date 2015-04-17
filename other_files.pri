@@ -41,5 +41,9 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/geometry.html \
     assets/help/en/glsl.html \
     assets/shader/shaderobject.vert \
-    assets/shader/shaderobject.frag
+    assets/shader/shaderobject.frag \
+    CHANGES.txt \
+    assets/shader/inc/dh/hash.glsl \
+    assets/shader/inc/intersect.glsl \
+    assets/shader/inc/rotate.glsl
     assets/help/en/object/model3d.html

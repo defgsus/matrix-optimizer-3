@@ -45,7 +45,7 @@ public:
     void updateErrorWidget();
     void updateInfoWidget();
 
-    void onTextChanged();
+    void onTextChanged(bool alwaysSend = false);
 
     /** Returns the position for the line number */
     int posForLine(int line) const;
@@ -140,7 +140,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         editor = new QPlainTextEdit(widget);
         editor->setProperty("code", true);
         editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-        // XXX
+        /// @todo AbstractScriptWidget editor is squeezed by the message list
         editor->setMinimumHeight(500);
         lv->addWidget(editor, 10);
         connect(editor, &QPlainTextEdit::textChanged, [this]()
@@ -152,7 +152,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         {
             updateInfoWidget();
         });
-        //editor->setSizeAdjustPolicy(QAbstractScrollArea::AdjustToContents);
+
 
         // --- setup font ---
 
@@ -180,7 +180,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             editor->setTextCursor(curs);
         });
 
-        lInfo = new QLabel("balbla", widget);
+        lInfo = new QLabel(widget);
         lv->addWidget(lInfo);
 
         // -- optional update --
@@ -196,7 +196,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             butUpdate = new QPushButton(tr("up&date"), widget);
             butUpdate->setVisible(isUpdateOptional);
             lh->addWidget(butUpdate);
-            connect(butUpdate, SIGNAL(pressed()), widget, SIGNAL(scriptTextChanged()));
+            connect(butUpdate, &QPushButton::pressed, [this]() { onTextChanged(true); } );
 
 
         timer = new QTimer(widget);
@@ -206,7 +206,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
 }
 
 
-void AbstractScriptWidget::PrivateSW::onTextChanged()
+void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
 {
     QString tmp = curText;
     curText = editor->toPlainText();
@@ -222,7 +222,7 @@ void AbstractScriptWidget::PrivateSW::onTextChanged()
     updateErrorWidget();
 
     if (isValid)
-        if (!isUpdateOptional || cbAlwaysUpdate->isChecked())
+        if (alwaysSend || !isUpdateOptional || cbAlwaysUpdate->isChecked())
             emit widget->scriptTextChanged();
 }
 

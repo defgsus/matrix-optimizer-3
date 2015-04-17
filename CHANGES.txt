@@ -1,0 +1,5 @@
+3.0.2.46
+
+ - fix immediate text update on button in code editor
+ - activity float parameter
+ - migrated sequencer view (still experimental)
