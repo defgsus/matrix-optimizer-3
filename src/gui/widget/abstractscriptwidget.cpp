@@ -28,16 +28,16 @@
 namespace MO {
 namespace GUI {
 
-
 class AbstractScriptWidget::PrivateSW
 {
 public:
 
     PrivateSW(AbstractScriptWidget * widget)
-        : widget    (widget),
-          isValid   (false),
-          ignoreTextChange(false),
-          isUpdateOptional(false)
+        : widget            (widget)
+        , isValid           (false)
+        , ignoreTextChange  (false)
+        , isUpdateOptional  (false)
+        , isAlwaysUpdate    (false)
     { }
 
     void createWidgets();
@@ -70,7 +70,8 @@ public:
     QLabel * lInfo;
     QTimer * timer;
 
-    bool isValid, ignoreTextChange, isUpdateOptional;
+    bool isValid, ignoreTextChange,
+        isUpdateOptional, isAlwaysUpdate;
 
     QString curText;
 
@@ -78,6 +79,8 @@ public:
 };
 
 
+/** @todo TextEditDialog duplicates update functionality from AbstractScriptWidget and
+            it's a bit more involving to work on that */
 AbstractScriptWidget::AbstractScriptWidget(QWidget *parent)
     : QWidget       (parent),
       p_sw_         (new PrivateSW(this))
@@ -105,9 +108,17 @@ void AbstractScriptWidget::setUpdateOptional(bool enable)
     p_sw_->cbAlwaysUpdate->setVisible(enable);
 }
 
+void AbstractScriptWidget::setAlwaysUpdate(bool enable)
+{
+    p_sw_->isAlwaysUpdate = enable;
+}
+
 const QString AbstractScriptWidget::scriptText() const
 {
-    return p_sw_->curText;
+    if (!p_sw_->timer->isActive())
+        return p_sw_->curText;
+    // return live content (when timer is still ticking)
+    return p_sw_->editor->toPlainText();
 }
 
 void AbstractScriptWidget::setScriptText(const QString & t)
@@ -196,22 +207,25 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
             butUpdate = new QPushButton(tr("up&date"), widget);
             butUpdate->setVisible(isUpdateOptional);
             lh->addWidget(butUpdate);
-            connect(butUpdate, &QPushButton::pressed, [this]() { onTextChanged(true); } );
+            connect(butUpdate, &QPushButton::clicked, [this]() { onTextChanged(true); } );
 
 
         timer = new QTimer(widget);
         timer->setSingleShot(true);
-        timer->setInterval(600);
-        connect(timer, &QTimer::timeout, [=]() { onTextChanged(); } );
+        timer->setInterval(750);
+        connect(timer, &QTimer::timeout, [=]() { onTextChanged(false); } );
 }
 
 
 void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
 {
+    timer->stop();
+    ignoreTextChange = false;
+
     QString tmp = curText;
     curText = editor->toPlainText();
 
-    // only compile when new
+    // only compile when changed
     if (tmp != curText)
     {
         messages.clear();
@@ -222,7 +236,8 @@ void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
     updateErrorWidget();
 
     if (isValid)
-        if (alwaysSend || !isUpdateOptional || cbAlwaysUpdate->isChecked())
+        if (alwaysSend || isAlwaysUpdate
+            || (isUpdateOptional && cbAlwaysUpdate->isChecked()))
             emit widget->scriptTextChanged();
 }
 
@@ -238,6 +253,14 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 
         HelpDialog::run(url);
 
+        e->accept();
+        return;
+    }
+
+    if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
+        && (e->modifiers() & Qt::ALT || e->modifiers() & Qt::CTRL))
+    {
+        p_sw_->onTextChanged(true);
         e->accept();
         return;
     }
@@ -259,12 +282,15 @@ void AbstractScriptWidget::PrivateSW::updateEditorColor()
 
 void AbstractScriptWidget::PrivateSW::updateInfoWidget()
 {
-    auto c = editor->textCursor();
-    lInfo->setText(tr("%1:%2 (char %3)")
+    QTextCursor c = editor->textCursor();
+    QString text = tr("%1:%2 (char %3)")
                    .arg(c.blockNumber() + 1)
                    .arg(c.columnNumber() + 1)
-                   .arg(c.position() + 1)
-                   );
+                   .arg(c.position() + 1);
+    QString sel = c.selectedText();
+    if (sel.size())
+        text += " " + tr("(%1 chars selected)").arg(sel.size());
+    lInfo->setText(text);
 }
 
 void AbstractScriptWidget::PrivateSW::updateErrorWidget()

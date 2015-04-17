@@ -102,6 +102,7 @@ TextType TextEditDialog::getTextType() const
 
 QString TextEditDialog::getText() const
 {
+    // XXX not used (forgot what it should do, sb)
     if (p_->rejected)
         return p_->defaultText;
 
@@ -178,7 +179,7 @@ void TextEditDialog::Private::createWidgets()
                 lv->addWidget(equEdit);
                 connect(equEdit, &EquationEditor::equationChanged, [=]()
                 {
-                    emitTextChanged();
+                    emit dialog->textChanged();
                 });
                 break;
 
@@ -189,7 +190,7 @@ void TextEditDialog::Private::createWidgets()
                 scriptEdit = glsl;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
-                    emitTextChanged();
+                    emit dialog->textChanged();
                 });
             }
             break;
@@ -204,7 +205,7 @@ void TextEditDialog::Private::createWidgets()
                 scriptEdit = as;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
-                    emitTextChanged();
+                    emit dialog->textChanged();
                 });
             }
             break;
@@ -213,9 +214,14 @@ void TextEditDialog::Private::createWidgets()
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
-            // alway update?
+            // always update?
             cbAlways = new QCheckBox(tr("auto update"), dialog);
             lh->addWidget(cbAlways);
+            connect(cbAlways, &QCheckBox::stateChanged, [this]()
+            {
+                if (scriptEdit)
+                    scriptEdit->setAlwaysUpdate(cbAlways->isChecked());
+            });
 
             // ok
             auto butOk = new QPushButton(tr("Ok"), dialog);
@@ -233,7 +239,10 @@ void TextEditDialog::Private::createWidgets()
             auto butRun = new QPushButton(tr("Up&date"), dialog);
             lh->addWidget(butRun);
 
-            connect(butRun, SIGNAL(clicked()), dialog, SIGNAL(textChanged()));
+            connect(butRun, &QPushButton::clicked, [this]()
+            {
+                emit dialog->textChanged();
+            });
 
             // cancel
             auto butCancel = new QPushButton(tr("Cancel"), dialog);

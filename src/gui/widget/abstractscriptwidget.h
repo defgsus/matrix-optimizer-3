@@ -58,6 +58,11 @@ public slots:
         Default is false. */
     void setUpdateOptional(bool enable = true);
 
+    /** When true, every textchange triggers a scriptTextChanged() signal.
+        Buffered by a few ms. Setting is not reflected in gui (overrides optional updates).
+        Default is false. */
+    void setAlwaysUpdate(bool enable = true);
+
     /** Emit this from compile() generally.
         @p line is zero-based */
     void addCompileMessage(int line, MessageType t, const QString & text);

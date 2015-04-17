@@ -9,6 +9,7 @@
 */
 
 #include <QFile>
+#include <QSet>
 
 #include "shadersource.h"
 #include "io/log.h"
@@ -103,7 +104,7 @@ void ShaderSource::replace(const QString &before, const QString &after, bool adj
     }
 }
 
-void ShaderSource::pasteIncludes(std::function<QString (const QString &, bool)> func)
+void ShaderSource::replaceIncludes(std::function<QString (const QString &, bool)> func)
 {
     pasteIncludes_(vert_, func, 0);
     pasteIncludes_(frag_, func, 0);
@@ -113,6 +114,7 @@ void ShaderSource::pasteIncludes(std::function<QString (const QString &, bool)> 
 
 void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QString &, bool)> func, int lvl)
 {
+    QSet<QString> urls;
     QString cpy;
 
     int idx = src.indexOf("#include");
@@ -139,27 +141,32 @@ void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QSt
         // get url
         QString url = src.mid(cidx+8, idx - (cidx+8)).simplified();
 
-        bool do_search = (url.startsWith("<") && url.endsWith(">"));
-        if (!do_search && !(url.startsWith("\"") && url.endsWith("\"")))
+        if (!urls.contains(url))
         {
-            cpy += "#error expected <> or \"\" around name\n";
-            was_error = true;
-            break;
+            urls.insert(url);
+
+            bool do_search = (url.startsWith("<") && url.endsWith(">"));
+            if (!do_search && !(url.startsWith("\"") && url.endsWith("\"")))
+            {
+                cpy += "#error expected <> or \"\" around name\n";
+                was_error = true;
+                break;
+            }
+                else url = url.mid(1, url.length()-2);
+
+            QString inc = func(url, do_search);
+            if (inc.isEmpty())
+            {
+                cpy += "#error not found '" + url + "'\n";
+                was_error = true;
+                break;
+            }
+
+            //int line = findLineNumber()
+
+            // paste
+            cpy += inc;
         }
-            else url = url.mid(1, url.length()-2);
-
-        QString inc = func(url, do_search);
-        if (inc.isEmpty())
-        {
-            cpy += "#error not found '" + url + "'\n";
-            was_error = true;
-            break;
-        }
-
-        //int line = findLineNumber()
-
-        // paste
-        cpy += inc;
 
         // next instance
         cidx = idx;

@@ -206,7 +206,7 @@ void ShaderObject::initGl(uint thread)
     // declare user uniforms
     src->replace("//%user_uniforms%", userUniforms_->getDeclarations(), true);
     // resolve includes
-    src->pasteIncludes([this](const QString& url, bool do_search)
+    src->replaceIncludes([this](const QString& url, bool do_search)
     {
         QString inc = getGlslInclude(url, do_search);
         return inc.isEmpty() ? inc : ("// ----- include '" + url + "' -----\n" + inc);

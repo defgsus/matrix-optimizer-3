@@ -68,7 +68,6 @@ TextEditWidget::TextEditWidget(TextType textType, QWidget *parent) :
     p_      (new Private(this))
 {
     p_->textType = textType;
-    p_->rejected = false;
 
     setObjectName("_TextEditWidget");
     setWindowTitle(tr("editor"));

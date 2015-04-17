@@ -57,7 +57,7 @@ namespace {
 
     void angelPrint(const StringAS& s)
     {
-        MO_DEBUG("angelscript: " << toString(s));
+        MO_PRINT("angelscript: " << toString(s));
         Q_UNUSED(s)
     }
 

@@ -90,8 +90,10 @@ public:
     /** Replaces all #include ".." or <..> statements with the result from the function @p func.
         @p func is given the url from the include statement. If it returns an empty string,
         an #error message is inserted instead.
-        A true boolean parameter in @p func signals the <> syntax. */
-    void pasteIncludes(std::function<QString(const QString&, bool)> func);
+        A true boolean parameter in @p func signals the <> syntax.
+        Each #include will only be considered once and recursive includes
+        are resolved properly. */
+    void replaceIncludes(std::function<QString(const QString&, bool)> func);
 
 private:
 
