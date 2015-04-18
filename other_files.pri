@@ -48,5 +48,7 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/inc/rotate.glsl \
     assets/shader/inc/matrix.glsl \
     assets/shader/inc/constants.glsl \
-    assets/shader/inc/iq/distfunc.glsl
+    assets/shader/inc/iq/distfunc.glsl \
+    assets/shader/inc/noise.glsl \
+    assets/shader/inc/fnoise.glsl
     assets/help/en/object/model3d.html
