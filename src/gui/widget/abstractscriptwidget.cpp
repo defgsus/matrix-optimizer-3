@@ -123,9 +123,15 @@ const QString AbstractScriptWidget::scriptText() const
 
 void AbstractScriptWidget::setScriptText(const QString & t)
 {
+    p_sw_->timer->stop();
     p_sw_->isValid = false;
     p_sw_->curText = t;
     p_sw_->editor->setPlainText(t);
+}
+
+void AbstractScriptWidget::updateScript()
+{
+    p_sw_->onTextChanged(true);
 }
 
 void AbstractScriptWidget::setSyntaxHighlighter(QSyntaxHighlighter * s)

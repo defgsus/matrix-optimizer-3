@@ -45,5 +45,8 @@ OTHER_FILES += $$BISON_FILES \
     CHANGES.txt \
     assets/shader/inc/dh/hash.glsl \
     assets/shader/inc/intersect.glsl \
-    assets/shader/inc/rotate.glsl
+    assets/shader/inc/rotate.glsl \
+    assets/shader/inc/matrix.glsl \
+    assets/shader/inc/constants.glsl \
+    assets/shader/inc/iq/distfunc.glsl
     assets/help/en/object/model3d.html

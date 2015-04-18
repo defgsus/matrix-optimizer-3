@@ -241,7 +241,10 @@ void TextEditDialog::Private::createWidgets()
 
             connect(butRun, &QPushButton::clicked, [this]()
             {
-                emit dialog->textChanged();
+                if (scriptEdit)
+                    scriptEdit->updateScript();
+                else
+                    emit dialog->textChanged();
             });
 
             // cancel

@@ -42,10 +42,20 @@ public:
     /** Returns true when the current text has been successfully compiled. */
     bool isScriptValid() const;
 
+signals:
+
+    /** Only emitted when the changed script is valid */
+    void scriptTextChanged();
+
     // ------------------ actions --------------------------
 public slots:
 
+    /** Sets the current script text */
     void setScriptText(const QString&);
+
+    /** Checks syntax when script was changed
+        and always sends a scriptTextChanged() signal */
+    void updateScript();
 
     /** Call this to install or update a syntax highlighter.
         Call this even if you have installed it already instead of
@@ -66,11 +76,6 @@ public slots:
     /** Emit this from compile() generally.
         @p line is zero-based */
     void addCompileMessage(int line, MessageType t, const QString & text);
-
-signals:
-
-    /** Only emitted when the changed script is valid */
-    void scriptTextChanged();
 
 protected:
 
