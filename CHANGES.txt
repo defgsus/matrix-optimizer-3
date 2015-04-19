@@ -4,3 +4,6 @@
    - alt/ctrl + enter/return for compile/update
  - activity float parameter
  - migrated sequencer view (still experimental)
+ - disk rendering
+    - multi-threaded image writer
+    - audio out

@@ -8,6 +8,8 @@
     <p>created 8/31/2014</p>
 */
 
+#include <memory>
+
 #include "scenedebugrenderer.h"
 #include "io/log.h"
 #include "object/scene.h"
@@ -22,41 +24,140 @@
 #include "geom/geometry.h"
 #include "geom/objloader.h"
 #include "audio/audiosource.h"
-#include "audio/audiomicrophone.h"
+#include "audio/tool/audiobuffer.h"
+#include "audio/spatial/spatialmicrophone.h"
 
 namespace MO {
 namespace GL {
 
 
-SceneDebugRenderer::SceneDebugRenderer(Scene * s)
-    : scene_            (s),
-      glReady_          (false),
-      drawCamera_       (0),
-      drawAudioSource_  (0),
-      drawMicrophone_   (0),
-      drawLightSource_  (0)
+struct SceneDebugRenderer::Private
 {
+    Private(SceneDebugRenderer * r)
+        : p                 (r)
+        , scene             (0)
+        , glReady           (false)
+        , drawCamera        (0)
+        , drawAudioSource   (0)
+        , drawMicrophone    (0)
+        , drawLightSource   (0)
+    { }
+
+    void updateTree();
+    void initGl();
+    void releaseGl();
+    void addCoordinates(GEOM::Geometry*) const;
+    void render(const RenderSettings & rs, uint thread, int options);
+
+    /** struct to fake the microphones of an object */
+    struct Micro
+    {
+        Micro(Object*);
+        ~Micro();
+
+        Object * object; //! link to parent
+        TransformationBuffer * trans;
+        AUDIO::AudioBuffer * buf;
+        QList<AUDIO::SpatialMicrophone*> mics;
+    };
+
+    SceneDebugRenderer * p;
+    Scene * scene;
+    QList<Camera*> cameras;
+    QList<LightSource*> lightSources;
+    QList<std::shared_ptr<Micro>> microphones;
+
+    bool glReady;
+
+    GL::Drawable
+        * drawCamera,
+        * drawAudioSource,
+        * drawMicrophone,
+        * drawLightSource;
+};
+
+
+SceneDebugRenderer::SceneDebugRenderer(Scene * s)
+    : p_        (new Private(this))
+{
+    p_->scene = s;
 }
 
 SceneDebugRenderer::~SceneDebugRenderer()
 {
     // only for debugging mainly
     // these objects should be deleted by releaseGl()
-    delete drawAudioSource_;
-    delete drawCamera_;
-    delete drawMicrophone_;
-    delete drawLightSource_;
+    delete p_->drawAudioSource;
+    delete p_->drawCamera;
+    delete p_->drawMicrophone;
+    delete p_->drawLightSource;
+
+    delete p_;
 }
+
+bool SceneDebugRenderer::isGlInitialized() const { return p_->glReady; }
 
 void SceneDebugRenderer::updateTree()
 {
-    cameras_ = scene_->findChildObjects<Camera>(QString(), true);
-    lightSources_ = scene_->findChildObjects<LightSource>(QString(), true);
-
-//    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
+    p_->updateTree();
 }
 
 void SceneDebugRenderer::initGl()
+{
+    p_->initGl();
+}
+
+void SceneDebugRenderer::releaseGl()
+{
+    p_->releaseGl();
+}
+
+void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
+{
+    p_->render(rs, thread, options);
+}
+
+void SceneDebugRenderer::Private::updateTree()
+{
+    cameras = scene->findChildObjects<Camera>(QString(), true);
+    lightSources = scene->findChildObjects<LightSource>(QString(), true);
+
+    // get all objects with microphones
+    QList<Object*> micobjs = scene->findChildObjects<Object>([](const Object*o)
+    {
+        return o->numberMicrophones() > 0;
+    }, true);
+//    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
+
+    for (Object * o : micobjs)
+    {
+        auto mic = new Micro(o);
+        microphones.push_back( std::shared_ptr<Micro>(mic) );
+    }
+
+}
+
+SceneDebugRenderer::Private::Micro::Micro(Object * o)
+    : object    (o)
+    , trans     (new TransformationBuffer(1))
+    , buf       (new AUDIO::AudioBuffer(1))
+{
+    for (uint i=0; i<object->numberMicrophones(); ++i)
+    {
+        auto mic = new AUDIO::SpatialMicrophone(buf, 44100, i);
+        mics.append(mic);
+    }
+}
+
+SceneDebugRenderer::Private::Micro::~Micro()
+{
+    for (auto m : mics)
+        delete m;
+    delete buf;
+    delete trans;
+}
+
+void SceneDebugRenderer::Private::initGl()
 {
     GEOM::ObjLoader objload;
 
@@ -66,52 +167,52 @@ void SceneDebugRenderer::initGl()
 
     // --- setup camera drawable ----
 
-    drawCamera_ = new GL::Drawable("scene_debug_camera");
+    drawCamera = new GL::Drawable("scene_debug_camera");
     objload.loadFile(":/model/camera.obj");
-    objload.getGeometry(drawCamera_->geometry());
-    drawCamera_->geometry()->convertToLines();
-    drawCamera_->geometry()->scale(0.1, 0.1, 0.1);
-    addCoordinates_(drawCamera_->geometry());
-    drawCamera_->setShaderSource(src);
-    drawCamera_->createOpenGl();
+    objload.getGeometry(drawCamera->geometry());
+    drawCamera->geometry()->convertToLines();
+    drawCamera->geometry()->scale(0.1, 0.1, 0.1);
+    addCoordinates(drawCamera->geometry());
+    drawCamera->setShaderSource(src);
+    drawCamera->createOpenGl();
 
     // --- setup AudioSource drawable ----
 
-    drawAudioSource_ = new GL::Drawable("scene_debug_audiosource");
+    drawAudioSource = new GL::Drawable("scene_debug_audiosource");
     objload.loadFile(":/model/audiosource.obj");
-    objload.getGeometry(drawAudioSource_->geometry());
-    drawAudioSource_->geometry()->convertToLines();
-    drawAudioSource_->geometry()->scale(0.15, 0.15, 0.15);
-    addCoordinates_(drawAudioSource_->geometry());
-    drawAudioSource_->setShaderSource(src);
-    drawAudioSource_->createOpenGl();
+    objload.getGeometry(drawAudioSource->geometry());
+    drawAudioSource->geometry()->convertToLines();
+    drawAudioSource->geometry()->scale(0.15, 0.15, 0.15);
+    addCoordinates(drawAudioSource->geometry());
+    drawAudioSource->setShaderSource(src);
+    drawAudioSource->createOpenGl();
 
     // --- setup LightSource drawable ----
 
-    drawLightSource_ = new GL::Drawable("scene_debug_lightsource");
+    drawLightSource = new GL::Drawable("scene_debug_lightsource");
     objload.loadFile(":/model/audiosource.obj");
-    objload.getGeometry(drawLightSource_->geometry());
-    drawLightSource_->geometry()->convertToLines();
-    drawLightSource_->geometry()->scale(0.15, 0.15, 0.15);
-    addCoordinates_(drawLightSource_->geometry());
-    drawLightSource_->setShaderSource(src);
-    drawLightSource_->createOpenGl();
+    objload.getGeometry(drawLightSource->geometry());
+    drawLightSource->geometry()->convertToLines();
+    drawLightSource->geometry()->scale(0.15, 0.15, 0.15);
+    addCoordinates(drawLightSource->geometry());
+    drawLightSource->setShaderSource(src);
+    drawLightSource->createOpenGl();
 
     // --- setup Microphone drawable ----
 
-    drawMicrophone_ = new GL::Drawable("scene_debug_microphone");
+    drawMicrophone = new GL::Drawable("scene_debug_microphone");
     objload.loadFile(":/model/audiosource.obj");
-    objload.getGeometry(drawMicrophone_->geometry());
-    drawMicrophone_->geometry()->convertToLines();
-    drawMicrophone_->geometry()->scale(0.15, 0.15, 0.15);
-    addCoordinates_(drawMicrophone_->geometry());
-    drawMicrophone_->setShaderSource(src);
-    drawMicrophone_->createOpenGl();
+    objload.getGeometry(drawMicrophone->geometry());
+    drawMicrophone->geometry()->convertToLines();
+    drawMicrophone->geometry()->scale(0.15, 0.15, 0.15);
+    addCoordinates(drawMicrophone->geometry());
+    drawMicrophone->setShaderSource(src);
+    drawMicrophone->createOpenGl();
 
-    glReady_ = true;
+    glReady = true;
 }
 
-void SceneDebugRenderer::addCoordinates_(GEOM::Geometry * geom)
+void SceneDebugRenderer::Private::addCoordinates(GEOM::Geometry * geom) const
 {
     const Float len = 1.0;
     geom->setColor(1,0,0,1);
@@ -129,46 +230,46 @@ void SceneDebugRenderer::addCoordinates_(GEOM::Geometry * geom)
 
 }
 
-void SceneDebugRenderer::releaseGl()
+void SceneDebugRenderer::Private::releaseGl()
 {
-    glReady_ = false;
+    glReady = false;
 
-    if (drawCamera_)
+    if (drawCamera)
     {
-        if (drawCamera_->isReady())
-            drawCamera_->releaseOpenGl();
-        delete drawCamera_;
-        drawCamera_ = 0;
+        if (drawCamera->isReady())
+            drawCamera->releaseOpenGl();
+        delete drawCamera;
+        drawCamera = 0;
     }
 
-    if (drawMicrophone_)
+    if (drawMicrophone)
     {
-        if (drawMicrophone_->isReady())
-            drawMicrophone_->releaseOpenGl();
-        delete drawMicrophone_;
-        drawMicrophone_ = 0;
+        if (drawMicrophone->isReady())
+            drawMicrophone->releaseOpenGl();
+        delete drawMicrophone;
+        drawMicrophone = 0;
     }
 
-    if (drawAudioSource_)
+    if (drawAudioSource)
     {
-        if (drawAudioSource_->isReady())
-            drawAudioSource_->releaseOpenGl();
-        delete drawAudioSource_;
-        drawAudioSource_ = 0;
+        if (drawAudioSource->isReady())
+            drawAudioSource->releaseOpenGl();
+        delete drawAudioSource;
+        drawAudioSource = 0;
     }
 
-    if (drawLightSource_)
+    if (drawLightSource)
     {
-        if (drawLightSource_->isReady())
-            drawLightSource_->releaseOpenGl();
-        delete drawLightSource_;
-        drawLightSource_ = 0;
+        if (drawLightSource->isReady())
+            drawLightSource->releaseOpenGl();
+        delete drawLightSource;
+        drawLightSource = 0;
     }
 }
 
-void SceneDebugRenderer::render(const RenderSettings & rs, uint , int options)
+void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread, int options)
 {
-    MO_ASSERT(glReady_, "drawables not defined for SceneDebugRenderer::render()");
+    MO_ASSERT(glReady, "drawables not defined for SceneDebugRenderer::render()");
 
     const Mat4&
             proj = rs.cameraSpace().projectionMatrix(),
@@ -176,31 +277,47 @@ void SceneDebugRenderer::render(const RenderSettings & rs, uint , int options)
             view = rs.cameraSpace().viewMatrix();
 
     if (options & Scene::DD_CAMERAS)
-    for (Camera * o : cameras_)
+    for (Camera * o : cameras)
     {
+        if (!o->activeAtAll())
+            continue;
         const Mat4& trans = o->transformation();
-        drawCamera_->renderShader(proj, cubeView * trans, view * trans, trans);
+        drawCamera->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
     if (options & Scene::DD_LIGHT_SOURCES)
-    for (LightSource * o : lightSources_)
+    for (LightSource * o : lightSources)
     {
+        if (!o->activeAtAll())
+            continue;
         const Mat4& trans = o->transformation();
-        drawLightSource_->renderShader(proj, cubeView * trans, view * trans, trans);
-    }
-/*
-    if (options & Scene::DD_MICROPHONES)
-    for (AUDIO::AudioMicrophone * o : microphones_)
-    {
-        const Mat4& trans = o->transformation(thread, 0);
-        drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
+        drawLightSource->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 
+    if (options & Scene::DD_MICROPHONES)
+    for (auto & pm : microphones)
+    {
+        const Micro * m = pm.get();
+        if (!m->object->activeAtAll())
+            continue;
+        m->trans->setTransformation(m->object->transformation(), 0);
+        SamplePos pos = 0;
+        // calc one sample of transformations
+        m->object->calculateMicrophoneTransformation(
+                    m->trans, m->mics, 1, pos, thread);
+        for (const AUDIO::SpatialMicrophone * mic : m->mics)
+        {
+            const Mat4& trans = mic->transformationBuffer()->transformation(0);
+            /** @todo avoid unnecessary state changes in multiple calls to Drawable::renderShader */
+            drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
+        }
+    }
+/*
     if (options & Scene::DD_AUDIO_SOURCES)
     for (AUDIO::AudioSource * a : audioSources_)
     {
         const Mat4& trans = a->transformation(thread, 0);
-        drawMicrophone_->renderShader(proj, cubeView * trans, view * trans, trans);
+        drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
     }
 */
 }

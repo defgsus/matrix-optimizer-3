@@ -175,6 +175,16 @@ void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, u
 }
 */
 
+Mat3 compute_orthogonals(const Vec3& v)
+{
+    Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
+            ? Vec3(-v.z, 0., v.x)
+            : Vec3(0., v.z, -v.y);
+    Vec3 v2 = glm::cross(v, v1);
+
+    return Mat3(v, v1, v2);
+}
+
 void MicrophoneGroup::calculateMicrophoneTransformation(
                     const TransformationBuffer *objectTransformation,
                     const QList<AUDIO::SpatialMicrophone *> & mics,
@@ -182,39 +192,29 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
 {
     for (int i=0; i<mics.size(); ++i)
     {
+        // direction -> matrix
         Vec3 micdir = mic_pos[i];
+        Vec3 up = glm::normalize(glm::mix(
+                                    Vec3(0, micdir.z, -micdir.y),
+                                    Vec3(0,-1,0),
+                                 std::abs(micdir.x)));
+        Mat4 micmat = glm::lookAt(Vec3(0.), micdir, up);
 
+        // for each sample
         for (uint j=0; j<bufferSize; ++j)
         {
             Double time = Double(pos + j) / sampleRate();
 
-            Mat4 micmat = glm::lookAt(micdir, Vec3(0.), glm::normalize(Vec3(0.001, 1., -0.01)))
-                            * glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time, thread)));
+            Mat4 micmat2 = glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time, thread)))
+                            * micmat;
 
             mics[i]->transformationBuffer()->setTransformation(
-                        objectTransformation->transformation(j)
-                            * micmat
-                            //* getMicroTransformation_(i, time, thread)
+                        objectTransformation->transformation(j) * micmat2
                         , j);
         }
     }
 }
 
-Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
-{
-    return glm::translate(
-                MATH::rotate(Mat4(1), 20.f * index, Vec3(0,1,0))
-                            , Vec3(0,0,-dist));
-}
-
-Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Double time, uint thread) const
-{
-    const Float
-            micdist = pDistance_->value(time, thread);
-
-
-    return getMicroTransformation_(index, micdist);
-}
 
 } // namespace MO
 

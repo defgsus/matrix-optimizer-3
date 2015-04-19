@@ -28,6 +28,7 @@
 #include "gl/texture.h"
 #include "projection/projectionsystemsettings.h"
 #include "tool/stringmanip.h"
+#include "tool/threadpool.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
@@ -45,6 +46,7 @@ struct DiskRenderer::Private
 {
     Private(DiskRenderer * t)
         : thread        (t)
+        , threadPool    (0)
         , scene         (0)
         , context       (0)
         , renderer      (0)
@@ -73,6 +75,7 @@ struct DiskRenderer::Private
     bool writeImage(const QImage&);
 
     DiskRenderer * thread;
+    ThreadPool * threadPool;
     DiskRenderSettings rendSet;
     Scene * scene;
     QString sceneFilename;
@@ -219,34 +222,42 @@ bool DiskRenderer::Private::initScene()
 #endif
 
 
-    try
+    // -- setup gl context --
+    if (rendSet.imageEnable())
     {
-        renderer = new GL::SceneRenderer();
-        context = renderer->createOffscreenContext();
-
-#ifndef NDEBUG
-        GL::Properties prop;
-        context->makeCurrent();
-        prop.getProperties();
-        MO_DEBUG("Offscreen Context:\n" + prop.toString());
-#endif
-
-        renderer->setScene(scene);
-        renderer->setTimeCallback([this]()
+        try
         {
-            return Double(curFrame) / rendSet.imageFps();
-        });
-        scene->setResolution(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
+            renderer = new GL::SceneRenderer();
+            context = renderer->createOffscreenContext();
 
-    }
-    catch (const Exception& e)
-    {
-        addError(tr("Could not create OpenGL context\n%1").arg(e.what()));
-        return false;
+    #ifndef NDEBUG
+            GL::Properties prop;
+            context->makeCurrent();
+            prop.getProperties();
+            MO_DEBUG("Offscreen Context:\n" + prop.toString());
+    #endif
+
+            renderer->setScene(scene);
+            renderer->setTimeCallback([this]()
+            {
+                return Double(curFrame) / rendSet.imageFps();
+            });
+            scene->setResolution(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
+
+        }
+        catch (const Exception& e)
+        {
+            addError(tr("Could not create OpenGL context\n%1").arg(e.what()));
+            return false;
+        }
+
+        if (!threadPool)
+            threadPool = new ThreadPool();
+        threadPool->start();
     }
 
     // --- setup audio ---
-    if (1)
+    if (rendSet.audioEnable())
     {
         const auto conf = rendSet.audioConfig();
 
@@ -262,6 +273,9 @@ bool DiskRenderer::Private::initScene()
 
 bool DiskRenderer::Private::releaseScene()
 {
+    if (threadPool)
+        threadPool->stop();
+
     // release gl resources
     if (scene)
     {
@@ -273,6 +287,9 @@ bool DiskRenderer::Private::releaseScene()
         catch (...) { }
 #endif
     }
+
+    delete bufIn; bufIn = 0;
+    delete bufOut; bufOut = 0;
 
     delete audio; audio = 0;
     delete renderer; renderer = 0;
@@ -425,7 +442,8 @@ void DiskRenderer::Private::renderAll()
     curFrame = 0;
 
     // Request lazy creation of all gl resources
-    renderFrame();
+    if (renderer)
+        renderFrame();
 
     // seek audio engine to start pos
     if (audio)
@@ -442,8 +460,11 @@ void DiskRenderer::Private::renderAll()
         ++f;
 
         renderAudioFrame();
-        renderFrame();
-        writeImage();
+        if (renderer)
+        {
+            renderFrame();
+            writeImage();
+        }
 
         // emit progress every ms..
         if (time.elapsed() > 1000 / 5)
@@ -471,6 +492,7 @@ QString DiskRenderer::progressString() const
       << "\nframe : " << (p_->curFrame - p_->rendSet.startFrame())
                          << " / " << p_->rendSet.lengthFrame()
                          << " @ " << p_->rendSet.imageFps() << " fps"
+      << "\nbusy image threads : " << p_->threadPool->numberActiveThreads() << "/" << p_->threadPool->numberThreads()
       << "\ntime elapsed : " << time_to_string(elapsed)
       << "\ntime estimated : " << time_to_string(estimated)
       << "\ntime to go : " << time_to_string(estimated - elapsed)
@@ -512,16 +534,21 @@ bool DiskRenderer::Private::writeImage(const QImage& img)
     if (!prepareDir(fn))
         return false;
 
-    QImageWriter w(fn, rendSet.imageFormatExt().toUtf8());
-    w.setQuality(rendSet.imageQuality());
-    /** @todo expose description in gui */
-    w.setDescription(QString("%1 frame %2").arg(versionString()).arg(curFrame));
-
-    if (!w.write(img))
+    threadPool->addWork([this, fn, img]()
     {
-        addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
-        return false;
-    }
+        QImageWriter w(fn, rendSet.imageFormatExt().toUtf8());
+        w.setQuality(rendSet.imageQuality());
+        w.setCompression(1);
+        /** @todo expose description in gui */
+        w.setDescription(QString("%1: frame %2").arg(versionString()).arg(curFrame));
+
+        MO_PRINT("write " << fn);
+        if (!w.write(img))
+        {
+            addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
+            //return false;
+        }
+    });
     return true;
 }
 

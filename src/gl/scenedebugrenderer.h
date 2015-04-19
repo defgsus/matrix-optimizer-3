@@ -28,7 +28,7 @@ public:
     /** Call when changes to objects has happened */
     void updateTree();
 
-    bool isGlInitialized() const { return glReady_; }
+    bool isGlInitialized() const;
     void initGl();
     void releaseGl();
 
@@ -37,19 +37,8 @@ public:
 
 private:
 
-    void addCoordinates_(GEOM::Geometry*);
-
-    Scene * scene_;
-    QList<Camera*> cameras_;
-    QList<LightSource*> lightSources_;
-
-    bool glReady_;
-
-    GL::Drawable
-        * drawCamera_,
-        * drawAudioSource_,
-        * drawMicrophone_,
-        * drawLightSource_;
+    struct Private;
+    Private * p_;
 };
 
 } // namespace GL

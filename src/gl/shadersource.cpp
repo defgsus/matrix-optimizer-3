@@ -165,7 +165,7 @@ void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QSt
             //int line = findLineNumber()
 
             // paste
-            cpy += inc;
+            cpy += "// ----- include '" + url + "' -----\n" + inc;
         }
 
         // next instance

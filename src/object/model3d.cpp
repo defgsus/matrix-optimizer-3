@@ -591,7 +591,7 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_POINT_SIZE_DISTANCE");
     if (vertexFx_->baseValue())
         src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
-    // glsl
+    // glsl injection
     if (glslDoOverride_->baseValue())
     {
         src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
@@ -605,6 +605,11 @@ void Model3d::setupDrawable_()
         src->replace("//%mo_override_frag%", "#line 1\n" + glslFragmentOut_->value() + "\n");
         src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
     }
+    // resolve includes
+    src->replaceIncludes([this](const QString& url, bool do_search)
+    {
+        return getGlslInclude(url, do_search);
+    });
     // declare user uniforms
     src->replace("//%user_uniforms%",
                  "// " + tr("runtime user uniforms") + "\n"

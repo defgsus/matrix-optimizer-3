@@ -34,20 +34,11 @@ public:
                     const QList<AUDIO::SpatialMicrophone*>&,
                     uint bufferSize, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
 
-    //virtual void onParametersLoaded() Q_DECL_OVERRIDE;
-
-    //virtual void createMicrophones() Q_DECL_OVERRIDE;
-
-    //virtual void updateAudioTransformations(Double time, uint thread) Q_DECL_OVERRIDE;
-    //virtual void updateAudioTransformations(Double time, uint blocksize, uint thread) Q_DECL_OVERRIDE;
 signals:
 
 public slots:
 
 private:
-
-    Mat4 getMicroTransformation_(uint index, Float dist) const;
-    Mat4 getMicroTransformation_(uint index, Double time, uint thread) const;
 
     ParameterInt
         * pNumMics_;

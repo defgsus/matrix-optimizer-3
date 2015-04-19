@@ -36,7 +36,7 @@ void DiskRenderSettings::p_setDefault_()
     p_time_length_ = p_audio_conf_.sampleRate() * 60;
 
     p_image_enable_ = true;
-    p_image_pattern_ = "image_%num%.%ext%";
+    p_image_pattern_ = "image_%num.%ext";
     p_image_num_offset_ = 1;
     p_image_num_width_ = 6;
     p_image_w_ = p_image_h_ = 1024;
@@ -49,7 +49,7 @@ void DiskRenderSettings::p_setDefault_()
     p_image_quality_ = 100;
 
     p_audio_enable_ = true;
-    p_audio_pattern_ = "audio_%num%.%ext%";
+    p_audio_pattern_ = "audio_%num.%ext";
     p_audio_num_offset_ = 1;
     p_audio_num_width_ = 3;
     p_audio_conf_ = AUDIO::Configuration(44100, 256, 0, 2);
@@ -184,8 +184,8 @@ QString DiskRenderSettings::audioFormatExt() const
 QString DiskRenderSettings::makeImageFilename(size_t frame) const
 {
     QString fn = p_image_pattern_;
-    fn.replace("%ext%", imageFormats()[p_image_format_idx_].ext);
-    fn.replace("%num%", QString("%1").arg(frame + p_image_num_offset_,
+    fn.replace("%ext", imageFormats()[p_image_format_idx_].ext);
+    fn.replace("%num", QString("%1").arg(frame + p_image_num_offset_,
                                            p_image_num_width_, 10, QChar('0')));
 
     // prepend directory
@@ -201,7 +201,7 @@ QString DiskRenderSettings::makeImageFilename(size_t frame) const
 
 QString DiskRenderSettings::makeAudioFilename() const
 {
-    QString fn = "_unnormalized_audio.wav";
+    QString fn = QString("_audio_%1ch_unnormalized.wav").arg(p_audio_conf_.numChannelsOut());
 
     // prepend directory
 
@@ -217,8 +217,8 @@ QString DiskRenderSettings::makeAudioFilename() const
 QString DiskRenderSettings::makeAudioFilename(size_t channel) const
 {
     QString fn = p_audio_pattern_;
-    fn.replace("%ext%", audioFormats()[p_audio_format_idx_].ext);
-    fn.replace("%num%", QString("%1").arg(channel + p_audio_num_offset_,
+    fn.replace("%ext", audioFormats()[p_audio_format_idx_].ext);
+    fn.replace("%num", QString("%1").arg(channel + p_audio_num_offset_,
                                           p_audio_num_width_,
                                           10, QChar('0')));
 
