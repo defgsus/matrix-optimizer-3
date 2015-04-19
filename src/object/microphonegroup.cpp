@@ -8,7 +8,7 @@
     <p>created 9/1/2014</p>
 */
 
-#if 0
+#ifndef MO_DISABLE_EXP
 
 #include "microphonegroup.h"
 
@@ -19,7 +19,7 @@
 #include "param/parameters.h"
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
-#include "audio/audiomicrophone.h"
+#include "audio/spatial/spatialmicrophone.h"
 #include "math/vector.h"
 
 
@@ -27,10 +27,45 @@ namespace MO {
 
 MO_REGISTER_OBJECT(MicrophoneGroup)
 
+// pot=14
+static const Vec3 mic_pos[] = {
+    Vec3(-0.707106,	-0.707106,	 0.0), // 1
+    Vec3(-1.0, 		 0.0,  		 0.0), // 2
+    Vec3(-0.707106,	 0.707106,	 0.0),
+    Vec3( 0.0,		 1.0,		 0.0), // 4
+    Vec3( 0.707106,	 0.707106,	 0.0),
+    Vec3( 1.0,		 0.0,		 0.0), // 6
+    Vec3( 0.707106,	-0.707106,	 0.0),
+    Vec3( 0.0,		-1.0,		 0.0), // 8
+
+    Vec3(-0.331413,	-0.800103,   -0.5), // 9
+    Vec3(-0.800103,	-0.331413,	 -0.5),
+    Vec3(-0.800103,	 0.331413,   -0.5),
+    Vec3(-0.331413,	 0.800103,	 -0.5), // 12
+    Vec3( 0.331413,	 0.800103,	 -0.5),
+    Vec3( 0.800103,	 0.331413,	 -0.5),
+    Vec3( 0.800103,	-0.331413,	 -0.5), // 15
+    Vec3( 0.331413,	-0.800103,	 -0.5),
+
+    Vec3(-0.3535533,	-0.3535533,	 -0.866025), // 17
+    Vec3(-0.3535533,	 0.3535533,	 -0.866025),
+    Vec3( 0.3535533,	 0.3535533,	 -0.866025),
+    Vec3( 0.3535533,	-0.3535533,	 -0.866025),
+
+    Vec3( 0.0,		 0.0,		 -1.0)  // 21 zenith
+                    //if (type == Audio::MICRO_22)
+    //Vec3( 0.0,		 0.0,		  1.0) ,0,1.0) ); // 22 dome origin / downwards
+//                    break;
+};
+
+
+
+
 MicrophoneGroup::MicrophoneGroup(QObject *parent) :
     Object(parent)
 {
     setName("MicrophoneGroup");
+    setNumberMicrophones(1);
 }
 
 void MicrophoneGroup::serialize(IO::DataStream & io) const
@@ -52,11 +87,11 @@ void MicrophoneGroup::createParameters()
     params()->beginParameterGroup("mics", "microphones");
 
         pNumMics_ = params()->createIntParameter("nummic", tr("number microphones"),
-                                       tr("The number of microphones to create in the group"),
+                                       tr("The number of microphones in this group"),
                                        1, 1, 256, 1, true, false);
 
-        pDistance_ = params()->createFloatParameter("micdist", tr("distance from center"),
-                            tr("The distance of the microphones from the center of the group"),
+        pDistance_ = params()->createFloatParameter("micdist", tr("distance to center"),
+                            tr("The distance of the microphones to the center of the group"),
                                           0.0, 0.02);
     params()->endParameterGroup();
 }
@@ -66,9 +101,18 @@ void MicrophoneGroup::onParameterChanged(Parameter *p)
     Object::onParameterChanged(p);
 
     if (p == pNumMics_)
-        requestCreateMicrophones();
+        setNumberMicrophones(pNumMics_->baseValue());
+        //requestCreateMicrophones();
 }
 
+void MicrophoneGroup::onParametersLoaded()
+{
+    Object::onParametersLoaded();
+
+    setNumberMicrophones(pNumMics_->baseValue());
+}
+
+/*
 void MicrophoneGroup::createMicrophones()
 {
     Object::createMicrophones();
@@ -129,6 +173,32 @@ void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, u
     }
 #endif
 }
+*/
+
+void MicrophoneGroup::calculateMicrophoneTransformation(
+                    const TransformationBuffer *objectTransformation,
+                    const QList<AUDIO::SpatialMicrophone *> & mics,
+                    uint bufferSize, SamplePos pos, uint thread)
+{
+    for (int i=0; i<mics.size(); ++i)
+    {
+        Vec3 micdir = mic_pos[i];
+
+        for (uint j=0; j<bufferSize; ++j)
+        {
+            Double time = Double(pos + j) / sampleRate();
+
+            Mat4 micmat = glm::lookAt(micdir, Vec3(0.), glm::normalize(Vec3(0.001, 1., -0.01)))
+                            * glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time, thread)));
+
+            mics[i]->transformationBuffer()->setTransformation(
+                        objectTransformation->transformation(j)
+                            * micmat
+                            //* getMicroTransformation_(i, time, thread)
+                        , j);
+        }
+    }
+}
 
 Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Float dist ) const
 {
@@ -142,9 +212,10 @@ Mat4 MicrophoneGroup::getMicroTransformation_(uint index, Double time, uint thre
     const Float
             micdist = pDistance_->value(time, thread);
 
+
     return getMicroTransformation_(index, micdist);
 }
 
 } // namespace MO
 
-#endif
+#endif // MO_DISABLE_EXP

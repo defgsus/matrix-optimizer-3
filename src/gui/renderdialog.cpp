@@ -17,6 +17,7 @@
 #include <QProgressBar>
 #include <QMessageBox>
 #include <QFileInfo>
+#include <QCheckBox>
 
 #include "renderdialog.h"
 #include "widget/doublespinbox.h"
@@ -82,6 +83,7 @@ struct RenderDialog::Private
     void updateFromWidgets();
     void updateFromSettings();
     void updateInfoLabels();
+    void updateActivity(); // set the widget groups enables according to rendSet
 
     RenderDialog * diag;
 
@@ -92,6 +94,9 @@ struct RenderDialog::Private
     int timeUnit;
     bool ignoreWidgets;
 
+    QWidget
+            * groupImage,
+            * groupAudio;
     FilenameInput
             * editDir;
     QLineEdit
@@ -103,19 +108,30 @@ struct RenderDialog::Private
             * spinImageW,
             * spinImageH,
             * spinImageFps,
-            * spinImageQuality;
+            * spinImageQuality,
+            * spinAudioNum,
+            * spinAudioNumWidth,
+            * spinAudioChannels,
+            * spinAudioBufferSize,
+            * spinAudioSampleRate;
     DoubleSpinBox
             * spinStart,
             * spinLength;
     QComboBox
-            * cbImageFormat;
+            * cbImageFormat,
+            * cbAudioFormat;
+    QCheckBox
+            * checkImage,
+            * checkAudio;
     QLabel
             * labelTime,
             * labelImageName,
+            * labelAudioName,
             * labelProgress;
     QProgressBar
             * progBar;
     QPushButton
+            * butGo,
             * butCancel;
 };
 
@@ -221,12 +237,6 @@ void RenderDialog::Private::createWidgets()
         frame->setFrameShape(QFrame::HLine);
         lv0->addWidget(frame);
 
-        lv0->addWidget( createHeadline(tr("image settings")) );
-
-        // name preview
-        labelImageName = new QLabel(diag);
-        lv0->addWidget(labelImageName);
-
         lh = new QHBoxLayout();
         lv0->addLayout(lh);
 
@@ -235,79 +245,193 @@ void RenderDialog::Private::createWidgets()
             auto lv = new QVBoxLayout();
             lh->addLayout(lv);
 
-                // name pattern
-                editImageName = new QLineEdit(diag);
-                editImageName->setText(rendSet.imagePattern());
-                lv->addWidget(editImageName);
-                connect(editImageName, SIGNAL(textChanged(QString)),
-                        diag, SLOT(p_onWidget_()));
+                auto lh1 = new QHBoxLayout();
+                lh1->setMargin(0);
+                lv->addLayout(lh1);
 
-                // frame number offset
-                spinImageNum = new SpinBox(diag);
-                spinImageNum->setLabel(tr("frame number offset"));
-                spinImageNum->setRange(0, 999999999);
-                spinImageNum->setValue(rendSet.imagePatternOffset());
-                lv->addWidget(spinImageNum);
-                connect(spinImageNum, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // enable?
+                    checkImage = new QCheckBox(diag);
+                    checkImage->setChecked(rendSet.imageEnable());
+                    connect(checkImage, SIGNAL(stateChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lh1->addWidget(checkImage);
 
-                // frame number width
-                spinImageNumWidth = new SpinBox(diag);
-                spinImageNumWidth->setLabel(tr("frame number digits"));
-                spinImageNumWidth->setRange(0, 1000);
-                spinImageNumWidth->setValue(rendSet.imagePatternOffset());
-                lv->addWidget(spinImageNumWidth);
-                connect(spinImageNumWidth, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // heading
+                    lh1->addWidget( createHeadline(tr("image settings")), 1);
 
-                // format
-                cbImageFormat = new QComboBox(diag);
-                for (const DiskRenderSettings::ImageFormat & f
-                     : DiskRenderSettings::imageFormats())
-                    cbImageFormat->addItem(f.name, QVariant(int(f.index)));
-                cbImageFormat->setCurrentIndex(
-                            rendSet.imageFormatIndex());
-                connect(cbImageFormat, SIGNAL(currentIndexChanged(int)),
-                        diag, SLOT(p_onWidget_()));
-                lv->addWidget(cbImageFormat);
+                // sub-group for activity
+                groupImage = new QWidget(diag);
+                lv->addWidget(groupImage);
+                lv = new QVBoxLayout(groupImage);
+                lv->setMargin(0);
 
-                // quality
-                spinImageQuality = new SpinBox(diag);
-                spinImageQuality->setLabel(tr("quality [1-100]"));
-                spinImageQuality->setRange(1, 100);
-                spinImageQuality->setValue(rendSet.imageQuality());
-                lv->addWidget(spinImageQuality);
-                connect(spinImageQuality, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // name preview
+                    labelImageName = new QLabel(diag);
+                    lv->addWidget(labelImageName);
 
-                // width
-                spinImageW = new SpinBox(diag);
-                spinImageW->setLabel(tr("width"));
-                spinImageW->setRange(0, 4096*4);
-                spinImageW->setValue(rendSet.imageWidth());
-                lv->addWidget(spinImageW);
-                connect(spinImageW, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // name pattern
+                    editImageName = new QLineEdit(diag);
+                    editImageName->setText(rendSet.imagePattern());
+                    lv->addWidget(editImageName);
+                    connect(editImageName, SIGNAL(textChanged(QString)),
+                            diag, SLOT(p_onWidget_()));
 
-                // height
-                spinImageH = new SpinBox(diag);
-                spinImageH->setLabel(tr("height"));
-                spinImageH->setRange(0, 4096*4);
-                spinImageH->setValue(rendSet.imageHeight());
-                lv->addWidget(spinImageH);
-                connect(spinImageH, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // frame number offset
+                    spinImageNum = new SpinBox(diag);
+                    spinImageNum->setLabel(tr("frame number offset"));
+                    spinImageNum->setRange(0, 999999999);
+                    spinImageNum->setValue(rendSet.imagePatternOffset());
+                    lv->addWidget(spinImageNum);
+                    connect(spinImageNum, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
 
-                // fps
-                spinImageFps = new SpinBox(diag);
-                spinImageFps->setLabel(tr("frames per second"));
-                spinImageFps->setRange(0, 60000);
-                spinImageFps->setValue(rendSet.imageFps());
-                lv->addWidget(spinImageFps);
-                connect(spinImageFps, SIGNAL(valueChanged(int)),
-                        diag, SLOT(p_onWidget_()));
+                    // frame number width
+                    spinImageNumWidth = new SpinBox(diag);
+                    spinImageNumWidth->setLabel(tr("frame number digits"));
+                    spinImageNumWidth->setRange(0, 1000);
+                    spinImageNumWidth->setValue(rendSet.imagePatternOffset());
+                    lv->addWidget(spinImageNumWidth);
+                    connect(spinImageNumWidth, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
 
-        lv0->addStretch(1);
+                    // format
+                    cbImageFormat = new QComboBox(diag);
+                    for (const DiskRenderSettings::ImageFormat & f
+                         : DiskRenderSettings::imageFormats())
+                        cbImageFormat->addItem(f.name, QVariant(int(f.index)));
+                    cbImageFormat->setCurrentIndex(
+                                rendSet.imageFormatIndex());
+                    connect(cbImageFormat, SIGNAL(currentIndexChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lv->addWidget(cbImageFormat);
+
+                    // quality
+                    spinImageQuality = new SpinBox(diag);
+                    spinImageQuality->setLabel(tr("quality [1-100]"));
+                    spinImageQuality->setRange(1, 100);
+                    spinImageQuality->setValue(rendSet.imageQuality());
+                    lv->addWidget(spinImageQuality);
+                    connect(spinImageQuality, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // width
+                    spinImageW = new SpinBox(diag);
+                    spinImageW->setLabel(tr("width"));
+                    spinImageW->setRange(0, 4096*4);
+                    spinImageW->setValue(rendSet.imageWidth());
+                    lv->addWidget(spinImageW);
+                    connect(spinImageW, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // height
+                    spinImageH = new SpinBox(diag);
+                    spinImageH->setLabel(tr("height"));
+                    spinImageH->setRange(0, 4096*4);
+                    spinImageH->setValue(rendSet.imageHeight());
+                    lv->addWidget(spinImageH);
+                    connect(spinImageH, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // fps
+                    spinImageFps = new SpinBox(diag);
+                    spinImageFps->setLabel(tr("frames per second"));
+                    spinImageFps->setRange(0, 60000);
+                    spinImageFps->setValue(rendSet.imageFps());
+                    lv->addWidget(spinImageFps);
+                    connect(spinImageFps, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    lv->addStretch(1);
+
+            lh->addSpacing(8);
+
+            // ---- audio ----
+
+            lv = new QVBoxLayout();
+            lh->addLayout(lv);
+
+                lh1 = new QHBoxLayout();
+                lh1->setMargin(0);
+                lv->addLayout(lh1);
+
+                    // enable?
+                    checkAudio = new QCheckBox(diag);
+                    checkAudio->setChecked(rendSet.audioEnable());
+                    connect(checkAudio, SIGNAL(stateChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lh1->addWidget(checkAudio);
+
+                    // heading
+                    lh1->addWidget( createHeadline(tr("audio settings")) );
+
+                // sub-group for activity
+                groupAudio = new QWidget(diag);
+                lv->addWidget(groupAudio);
+                lv = new QVBoxLayout(groupAudio);
+                lv->setMargin(0);
+
+                    // name preview
+                    labelAudioName = new QLabel(diag);
+                    lv->addWidget(labelAudioName);
+
+                    // name pattern
+                    editAudioName = new QLineEdit(diag);
+                    editAudioName->setText(rendSet.audioPattern());
+                    lv->addWidget(editAudioName);
+                    connect(editAudioName, SIGNAL(textChanged(QString)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // frame number offset
+                    spinAudioNum = new SpinBox(diag);
+                    spinAudioNum->setLabel(tr("frame number offset"));
+                    spinAudioNum->setRange(0, 999999999);
+                    spinAudioNum->setValue(rendSet.audioPatternOffset());
+                    lv->addWidget(spinAudioNum);
+                    connect(spinAudioNum, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // frame number width
+                    spinAudioNumWidth = new SpinBox(diag);
+                    spinAudioNumWidth->setLabel(tr("frame number digits"));
+                    spinAudioNumWidth->setRange(0, 1000);
+                    spinAudioNumWidth->setValue(rendSet.audioPatternOffset());
+                    lv->addWidget(spinAudioNumWidth);
+                    connect(spinAudioNumWidth, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // format
+                    cbAudioFormat = new QComboBox(diag);
+                    for (const DiskRenderSettings::AudioFormat & f
+                         : DiskRenderSettings::audioFormats())
+                        cbAudioFormat->addItem(f.name, QVariant(int(f.index)));
+                    cbAudioFormat->setCurrentIndex(
+                                rendSet.audioFormatIndex());
+                    connect(cbAudioFormat, SIGNAL(currentIndexChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lv->addWidget(cbAudioFormat);
+
+                    spinAudioChannels = new SpinBox(diag);
+                    spinAudioChannels->setLabel(tr("number channels"));
+                    spinAudioChannels->setRange(1, 1<<30);
+                    lv->addWidget(spinAudioChannels);
+                    connect(spinAudioChannels, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    spinAudioSampleRate = new SpinBox(diag);
+                    spinAudioSampleRate->setLabel(tr("sampling rate (Hz)"));
+                    spinAudioSampleRate->setRange(1, 1<<30);
+                    lv->addWidget(spinAudioSampleRate);
+                    connect(spinAudioSampleRate, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    spinAudioBufferSize = new SpinBox(diag);
+                    spinAudioBufferSize->setLabel(tr("buffer size"));
+                    spinAudioBufferSize->setRange(1, 1<<30);
+                    lv->addWidget(spinAudioBufferSize);
+                    connect(spinAudioBufferSize, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    lv->addStretch(1);
 
         // [Go!] [Cancel] buttons
 
@@ -318,11 +442,11 @@ void RenderDialog::Private::createWidgets()
         lh = new QHBoxLayout();
         lv0->addLayout(lh);
 
-        auto but = new QPushButton(tr("Go!"), diag);
-        but->setStatusTip(tr("Starts rendering the scene with selected settings"));
-        but->setDefault(true);
-        connect(but, SIGNAL(pressed()), diag, SLOT(startRender()));
-        lh->addWidget(but);
+        butGo = new QPushButton(tr("Go!"), diag);
+        butGo->setStatusTip(tr("Starts rendering the scene with selected settings"));
+        butGo->setDefault(true);
+        connect(butGo, SIGNAL(pressed()), diag, SLOT(startRender()));
+        lh->addWidget(butGo);
 
         butCancel = new QPushButton(tr("Close"), diag);
         butCancel->setStatusTip(tr("Stops rendering or closes the dialog"));
@@ -348,6 +472,9 @@ void RenderDialog::Private::updateFromWidgets()
 {
     rendSet.setDirectory(editDir->filename());
 
+    // ----------- image -----------
+
+    rendSet.setImageEnable(checkImage->isChecked());
     rendSet.setImagePattern(editImageName->text());
     rendSet.setImagePatternOffset(spinImageNum->value());
     rendSet.setImagePatternWidth(spinImageNumWidth->value());
@@ -355,6 +482,17 @@ void RenderDialog::Private::updateFromWidgets()
     rendSet.setImageFps(spinImageFps->value());
     rendSet.setImageFormat(cbImageFormat->currentIndex());
     rendSet.setImageQuality(spinImageQuality->value());
+
+    // ----------- audio -----------
+
+    rendSet.setAudioEnable(checkAudio->isChecked());
+    rendSet.setAudioPattern(editAudioName->text());
+    rendSet.setAudioPatternOffset(spinAudioNum->value());
+    rendSet.setAudioPatternWidth(spinAudioNumWidth->value());
+    rendSet.setAudioFormat(cbAudioFormat->currentIndex());
+    rendSet.audioConfig().setBufferSize(spinAudioBufferSize->value());
+    rendSet.audioConfig().setNumChannelsOut(spinAudioChannels->value());
+    rendSet.audioConfig().setSampleRate(spinAudioSampleRate->value());
 
     switch (timeUnit)
     {
@@ -370,6 +508,7 @@ void RenderDialog::Private::updateFromWidgets()
     }
 
     updateInfoLabels();
+    updateActivity();
 }
 
 void RenderDialog::Private::updateFromSettings()
@@ -380,6 +519,7 @@ void RenderDialog::Private::updateFromSettings()
 
     // -- image --
 
+    checkImage->setChecked(rendSet.imageEnable());
     editImageName->setText(rendSet.imagePattern());
     spinImageNum->setValue(rendSet.imagePatternOffset());
     spinImageNumWidth->setValue(rendSet.imagePatternWidth());
@@ -388,6 +528,17 @@ void RenderDialog::Private::updateFromSettings()
     spinImageFps->setValue(rendSet.imageFps());
     cbImageFormat->setCurrentIndex(rendSet.imageFormatIndex());
     spinImageQuality->setValue(rendSet.imageQuality());
+
+    // -- audio --
+
+    checkAudio->setChecked(rendSet.audioEnable());
+    editAudioName->setText(rendSet.audioPattern());
+    spinAudioNum->setValue(rendSet.audioPatternOffset());
+    spinAudioNumWidth->setValue(rendSet.audioPatternWidth());
+    cbAudioFormat->setCurrentIndex(rendSet.audioFormatIndex());
+    spinAudioBufferSize->setValue(rendSet.audioConfig().bufferSize());
+    spinAudioChannels->setValue(rendSet.audioConfig().numChannelsOut());
+    spinAudioSampleRate->setValue(rendSet.audioConfig().sampleRate());
 
     switch (timeUnit)
     {
@@ -405,6 +556,7 @@ void RenderDialog::Private::updateFromSettings()
     ignoreWidgets = false;
 
     updateInfoLabels();
+    updateActivity();
 }
 
 void RenderDialog::Private::updateInfoLabels()
@@ -426,6 +578,15 @@ void RenderDialog::Private::updateInfoLabels()
     }
 
     labelImageName->setText(tr("example name: ") + rendSet.makeImageFilename(0));
+    labelAudioName->setText(tr("example name: ") + rendSet.makeAudioFilename(0));
+}
+
+void RenderDialog::Private::updateActivity()
+{
+    groupImage->setEnabled(rendSet.imageEnable());
+    groupAudio->setEnabled(rendSet.audioEnable());
+    butGo->setEnabled( rendSet.imageEnable() || rendSet.audioEnable() );
+
 }
 
 void RenderDialog::p_onWidget_()

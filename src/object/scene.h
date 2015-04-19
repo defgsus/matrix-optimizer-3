@@ -196,6 +196,10 @@ public:
 
     void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
+    /** Call this to update the samplerate for the whole scene.
+        To be done before creating the audio dsp path */
+    void setSceneSampleRate(uint samplerate);
+
     /** Executes all script objects */
     void runScripts();
 

@@ -8,6 +8,8 @@
     <p>created 3/27/2015</p>
 */
 
+#include <sndfile.h>
+
 #include <QDir>
 #include <QImage>
 #include <QImageWriter>
@@ -26,6 +28,9 @@
 #include "gl/texture.h"
 #include "projection/projectionsystemsettings.h"
 #include "tool/stringmanip.h"
+#include "audio/tool/audiobuffer.h"
+#include "audio/tool/soundfile.h"
+#include "audio/tool/soundfilemanager.h"
 #include "io/filemanager.h"
 #include "io/diskrendersettings.h"
 #include "io/currentthread.h"
@@ -44,10 +49,12 @@ struct DiskRenderer::Private
         , context       (0)
         , renderer      (0)
         , audio         (0)
+        , bufIn         (0)
+        , bufOut        (0)
+        , sndFile       (0)
         , pleaseStop    (false)
         , curSample     (0)
         , curFrame      (0)
-
         , progress      (0)
     { }
 
@@ -57,6 +64,10 @@ struct DiskRenderer::Private
     bool releaseScene();
     bool renderFrame();
     bool writeImage();
+    bool openAudioFile(); // creates a 32bit float wav for writing
+    bool closeAudioFile();
+    bool renderAudioFrame();
+    bool writeAudioFrame(); // writes into the open file
     void renderAll();
     bool prepareDir(const QString& dir_or_filename);
     bool writeImage(const QImage&);
@@ -69,6 +80,9 @@ struct DiskRenderer::Private
     GL::OffscreenContext * context;
     GL::SceneRenderer * renderer;
     AudioEngine * audio;
+    AUDIO::AudioBuffer * bufIn, * bufOut;
+    //AUDIO::SoundFile * soundFile;
+    SNDFILE * sndFile;
     QString errorStr;
 
     volatile bool pleaseStop;
@@ -177,8 +191,13 @@ bool DiskRenderer::Private::initScene()
     /** that's very loosely the startup routine for preparing a scene.
         @todo misses FrontItems */
 
+    // request lazy resource creation instead of multi-threaded
     scene->setLazyFlag(true);
 
+    // init samplerate
+    scene->setSceneSampleRate(rendSet.audioConfig().sampleRate());
+
+    // create editor (to make scripts work)
     sceneEditor = new ObjectEditor();
     scene->setObjectEditor(sceneEditor);
 
@@ -226,8 +245,17 @@ bool DiskRenderer::Private::initScene()
         return false;
     }
 
-    audio = new AudioEngine();
-    audio->setScene(scene, rendSet.audioConfig(), MO_AUDIO_THREAD);
+    // --- setup audio ---
+    if (1)
+    {
+        const auto conf = rendSet.audioConfig();
+
+        audio = new AudioEngine();
+        audio->setScene(scene, conf, MO_AUDIO_THREAD);
+
+        bufIn = new AUDIO::AudioBuffer(conf.bufferSize() * conf.numChannelsIn(), 1);
+        bufOut = new AUDIO::AudioBuffer(conf.bufferSize() * conf.numChannelsOut(), 1);
+    }
 
     return true;
 }
@@ -270,6 +298,99 @@ bool DiskRenderer::Private::renderFrame()
     }
 }
 
+bool DiskRenderer::Private::openAudioFile()
+{
+    QString fn = rendSet.makeAudioFilename();
+    if (!prepareDir(fn))
+        return false;
+
+    // create sndfile info struct
+    SF_INFO info;
+    info.channels = rendSet.audioConfig().numChannelsOut();
+    info.samplerate = rendSet.audioConfig().sampleRate();
+    info.frames = rendSet.lengthSample();
+    info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
+
+    // open file
+    sndFile = sf_open(fn.toStdString().c_str(), SFM_WRITE, &info);
+    if (!sndFile)
+    {
+       addError(tr("Could not open file for writing audio '%1'\n%2")
+                .arg(fn).arg(sf_strerror((SNDFILE*)0)));
+       return false;
+    }
+    return true;
+}
+
+bool DiskRenderer::Private::closeAudioFile()
+{
+    if (sf_close(sndFile) != 0)
+    {
+        addError(tr("Could not close the audio file\n%1").arg(sf_strerror(sndFile)));
+        return false;
+    }
+    return true;
+}
+
+bool DiskRenderer::Private::renderAudioFrame()
+{
+    if (!audio)
+        return true;
+
+    try
+    {
+        const SamplePos next_frame = rendSet.frame2sample(curFrame + 1);
+        while (audio->pos() < next_frame)
+        {
+            //MO_PRINT("render " << audio->pos());
+            audio->processForDevice(bufIn->readPointer(), bufOut->writePointer());
+            bufOut->nextBlock();
+            if (!writeAudioFrame())
+                return false;
+        }
+    }
+    catch (const Exception& e)
+    {
+        addError(QString("Audio error: %1").arg(e.what()));
+        return false;
+    }
+
+    return true;
+}
+
+bool DiskRenderer::Private::writeAudioFrame()
+{
+#if 0
+    if (!soundFile)
+    {
+        soundFile = AUDIO::SoundFileManager::createSoundFile(
+                        rendSet.audioConfig().numChannelsOut(),
+                        rendSet.audioConfig().sampleRate());
+    }
+
+    soundFile->appendDeviceData(bufOut->readPointer(), rendSet.audioConfig().bufferSize());
+#else
+    if (!audio)
+        return true;
+
+    if (!sndFile)
+    {
+        if (!openAudioFile())
+            return false;
+    }
+
+    uint len = rendSet.audioConfig().bufferSize();
+    uint e = sf_writef_float(sndFile, bufOut->readPointer(), len);
+
+    if (e != len)
+    {
+        MO_IO_ERROR(READ, "could not write all of soundfile\n"
+                    "expected " << len << " frames, got " << e );
+    }
+#endif
+    return true;
+}
+
 bool DiskRenderer::Private::writeImage()
 {
     if (!scene)
@@ -295,6 +416,7 @@ bool DiskRenderer::Private::writeImage()
     }
 }
 
+
 void DiskRenderer::Private::renderAll()
 {
     MO_DEBUG("DiskRenderer::renderAll()");
@@ -304,6 +426,10 @@ void DiskRenderer::Private::renderAll()
 
     // Request lazy creation of all gl resources
     renderFrame();
+
+    // seek audio engine to start pos
+    if (audio)
+        audio->seek(rendSet.startSample());
 
     QTime time;
     startTime.start();
@@ -315,9 +441,9 @@ void DiskRenderer::Private::renderAll()
         curFrame = f + rendSet.startFrame();
         ++f;
 
+        renderAudioFrame();
         renderFrame();
         writeImage();
-        //writeImage(img);
 
         // emit progress every ms..
         if (time.elapsed() > 1000 / 5)
@@ -328,6 +454,9 @@ void DiskRenderer::Private::renderAll()
             time.start();
         }
     }
+
+    if (sndFile)
+        closeAudioFile();
 }
 
 QString DiskRenderer::progressString() const

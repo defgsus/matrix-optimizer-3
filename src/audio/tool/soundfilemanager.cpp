@@ -36,7 +36,7 @@ public:
     QReadWriteLock lock;
 };
 
-SoundFileManager * SoundFileManager::instance_ = 0;
+SoundFileManager * SoundFileManager::p_instance_ = 0;
 
 
 SoundFileManager::SoundFileManager()
@@ -54,11 +54,11 @@ SoundFileManager::~SoundFileManager()
     delete p_;
 }
 
-SoundFileManager * SoundFileManager::getInstance_()
+SoundFileManager * SoundFileManager::p_getInstance_()
 {
-    if (!instance_)
-        instance_ = new SoundFileManager();
-    return instance_;
+    if (!p_instance_)
+        p_instance_ = new SoundFileManager();
+    return p_instance_;
 }
 
 
@@ -68,7 +68,7 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
 
     MO_DEBUG_SND("SoundFileManager::getSoundFile('" << filename_ << "'");
 
-    auto sfm = getInstance_();
+    auto sfm = p_getInstance_();
 
     {
         QReadLocker lock(&sfm->p_->lock);
@@ -94,7 +94,7 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
     // try to load
     try
     {
-        sf->loadFile_(filename);
+        sf->p_loadFile_(filename);
     }
     catch (Exception & e)
     {
@@ -108,18 +108,35 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
     return sf;
 }
 
+SoundFile * SoundFileManager::createSoundFile(uint channels, uint samplerate)
+{
+    SoundFile * sf = new SoundFile();
+    sf->p_create_(channels, samplerate, 32);
+
+    auto sfm = p_getInstance_();
+
+    // install
+    QWriteLocker lock(&sfm->p_->lock);
+    Private::File file;
+    file.sf = sf;
+    file.count = 1;
+    sfm->p_->soundFiles_.insert("audio_" + QString::number(ulong(sf), 16), file);
+
+    return sf;
+}
+
 void SoundFileManager::releaseSoundFile(SoundFile * sf)
 {
     MO_DEBUG_SND("SoundFileManager::releaseSoundFile(" << sf << ")");
 
-    auto sfm = getInstance_();
+    auto sfm = p_getInstance_();
 
     QWriteLocker lock(&sfm->p_->lock);
 
     auto i = sfm->p_->soundFiles_.find(sf->filename());
 
     // check for existence
-    // (very unlikely this fails)
+    // (unlikely this would fail)
     if (i == sfm->p_->soundFiles_.end())
     {
         MO_WARNING("SoundFileManager::releaseSoundFile() called for unknown SoundFile\n"

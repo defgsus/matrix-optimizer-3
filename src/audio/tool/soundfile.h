@@ -19,6 +19,8 @@
 namespace MO {
 namespace AUDIO {
 
+class AudioBuffer;
+class Configuration;
 
 /** This class is a getter in itself.
     Use SoundFileManager to load files */
@@ -35,6 +37,9 @@ public:
 
     /** Returns true if file was loaded / data can be read */
     bool ok() const;
+
+    /** Returns true for writeable data */
+    bool writeable() const;
 
     /** Returns the filename of the sound file */
     const QString& filename() const;
@@ -54,12 +59,21 @@ public:
     /** Returns value at @p time (in seconds) */
     Double value(Double time, uint channel = 0) const;
 
+    // --------- setter ---------------
+
+    void appendDeviceData(const F32 * buf, size_t numSamples);
+
+    // ------------- io ---------------
+
+    /** Stores a copy of the file */
+    void saveFile(const QString& fn) const;
 
 private:
 
     /** Loads file into memory.
         @throws IoException on errors */
-    void loadFile_(const QString&);
+    void p_loadFile_(const QString&);
+    void p_create_(uint channels, uint sr, int bitSize);
 
     class Private;
     Private * p_;

@@ -21,7 +21,7 @@ EnvelopeFollower::EnvelopeFollower()
     : sr_       (44100),
       fadeIn_   (0.02),
       fadeOut_  (0.5),
-      fadeAv_   (1.0),
+      fadeAv_   (8.0),
       threshold_(0.0),
       ampIn_    (1.0),
       ampOut_   (1.0),

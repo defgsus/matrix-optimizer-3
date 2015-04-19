@@ -19,7 +19,9 @@
 namespace MO {
 namespace IO { class CommandLineParser; class XmlStream; }
 
-/** Complete settings for render-to-disk. */
+/** Complete settings for render-to-disk.
+    This is quite something if you think about it..
+    @todo support xml IO */
 class DiskRenderSettings
 {
 public:
@@ -79,6 +81,8 @@ public:
     size_t lengthFrame() const;
     Double lengthSecond() const;
 
+    /** Enable image rendering */
+    bool imageEnable() const { return p_image_enable_; }
     /** The image filename pattern */
     const QString& imagePattern() const { return p_image_pattern_; }
     /** The offset for image frame numbers */
@@ -95,13 +99,27 @@ public:
     QString imageFormatExt() const;
     size_t imageQuality() const { return p_image_quality_; }
 
-    const QString& audioPattern() const { return p_audio_pattern_; }
+    /** Enable audio rendering */
+    bool audioEnable() const { return p_audio_enable_; }
     const AUDIO::Configuration & audioConfig() const { return p_audio_conf_; }
-    size_t audioFormat() const { return p_audio_format_; }
+    const QString& audioPattern() const { return p_audio_pattern_; }
+    size_t audioPatternOffset() const { return p_audio_num_offset_; }
+    size_t audioPatternWidth() const { return p_audio_num_width_; }
+    /** Returns the index in audioFormats() */
+    size_t audioFormatIndex() const { return p_audio_format_idx_; }
+    /** Returns id of current audio format */
+    QString audioFormatId() const;
+    QString audioFormatExt() const;
     size_t audioBitsPerChannel() const { return p_audio_bpc_; }
 
     /** Returns the filename for the frame number according to settings */
     QString makeImageFilename(size_t frame) const;
+
+    /** Returns the filename for the unnormalized multi-channel audio file */
+    QString makeAudioFilename() const;
+
+    /** Returns the filename for the audio file according to settings */
+    QString makeAudioFilename(size_t channel) const;
 
     // ------------- setter --------------------
 
@@ -114,6 +132,7 @@ public:
     void setLengthFrame(size_t frame);
     void setLengthSecond(Double sec);
 
+    void setImageEnable(bool e) { p_image_enable_ = e; }
     void setImageFormat(size_t index);
     /** Sets format by id */
     void setImageFormat(const QString& id);
@@ -124,6 +143,23 @@ public:
     void setImageFps(size_t fps) { p_image_fps_ = fps; }
     void setImageBitsPerChannel(size_t b) { p_image_bpc_ = b; }
     void setImageQuality(size_t q) { p_image_quality_ = q; }
+
+    void setAudioEnable(bool e) { p_audio_enable_ = e; }
+    /** Write access */
+    AUDIO::Configuration & audioConfig() { return p_audio_conf_; }
+    void setAudioFormat(size_t index);
+    /** Sets format by id */
+    void setAudioFormat(const QString& id);
+    void setAudioPattern(const QString& pattern) { p_audio_pattern_ = pattern; }
+    void setAudioPatternOffset(size_t o) { p_audio_num_offset_ = o; }
+    void setAudioPatternWidth(size_t w) { p_audio_num_width_ = w; }
+    void setAudioBitsPerChannel(size_t b) { p_audio_bpc_ = b; }
+
+    // ------------ conversion ----------------
+
+    SamplePos frame2sample(size_t frame) const
+        { return (double)frame / imageFps() * audioConfig().sampleRate(); }
+
 private:
 
     void p_setDefault_();
@@ -134,6 +170,9 @@ private:
     QString p_directory_,
             p_image_pattern_,
             p_audio_pattern_;
+
+    bool    p_image_enable_,
+            p_audio_enable_;
 
     AUDIO::Configuration
             p_audio_conf_;
@@ -149,8 +188,10 @@ private:
             p_image_bpc_,
             p_image_format_idx_,
             p_image_fps_,
-            p_audio_format_,
             p_image_quality_,
+            p_audio_format_idx_,
+            p_audio_num_offset_,
+            p_audio_num_width_,
             p_audio_bpc_;
 };
 

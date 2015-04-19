@@ -35,6 +35,7 @@ void DiskRenderSettings::p_setDefault_()
     p_time_start_ = 0;
     p_time_length_ = p_audio_conf_.sampleRate() * 60;
 
+    p_image_enable_ = true;
     p_image_pattern_ = "image_%num%.%ext%";
     p_image_num_offset_ = 1;
     p_image_num_width_ = 6;
@@ -47,10 +48,16 @@ void DiskRenderSettings::p_setDefault_()
             { p_image_format_idx_ = f.index; }
     p_image_quality_ = 100;
 
+    p_audio_enable_ = true;
     p_audio_pattern_ = "audio_%num%.%ext%";
+    p_audio_num_offset_ = 1;
+    p_audio_num_width_ = 3;
     p_audio_conf_ = AUDIO::Configuration(44100, 256, 0, 2);
-    p_audio_format_ = 0;
     p_audio_bpc_ = 16;
+    p_audio_format_idx_ = 0;
+    for (AudioFormat & f : p_audio_formats_)
+        if (f.ext == "wav")
+            { p_audio_format_idx_ = f.index; }
 }
 
 void DiskRenderSettings::serialize(IO::XmlStream& io) const
@@ -159,12 +166,61 @@ QString DiskRenderSettings::imageFormatExt() const
             : "-";
 }
 
+QString DiskRenderSettings::audioFormatId() const
+{
+    return p_audio_format_idx_ < size_t(audioFormats().size())
+            ? audioFormats()[p_audio_format_idx_].id
+            : "-";
+}
+
+
+QString DiskRenderSettings::audioFormatExt() const
+{
+    return p_audio_format_idx_ < size_t(audioFormats().size())
+            ? audioFormats()[p_audio_format_idx_].ext
+            : "-";
+}
+
 QString DiskRenderSettings::makeImageFilename(size_t frame) const
 {
     QString fn = p_image_pattern_;
     fn.replace("%ext%", imageFormats()[p_image_format_idx_].ext);
     fn.replace("%num%", QString("%1").arg(frame + p_image_num_offset_,
                                            p_image_num_width_, 10, QChar('0')));
+
+    // prepend directory
+
+    if (p_directory_.isEmpty())
+        return fn;
+
+    if (!(p_directory_.endsWith('/') || p_directory_.endsWith('\\')))
+        fn.prepend(QDir::separator());
+    fn.prepend(p_directory_);
+    return fn;
+}
+
+QString DiskRenderSettings::makeAudioFilename() const
+{
+    QString fn = "_unnormalized_audio.wav";
+
+    // prepend directory
+
+    if (p_directory_.isEmpty())
+        return fn;
+
+    if (!(p_directory_.endsWith('/') || p_directory_.endsWith('\\')))
+        fn.prepend(QDir::separator());
+    fn.prepend(p_directory_);
+    return fn;
+}
+
+QString DiskRenderSettings::makeAudioFilename(size_t channel) const
+{
+    QString fn = p_audio_pattern_;
+    fn.replace("%ext%", audioFormats()[p_audio_format_idx_].ext);
+    fn.replace("%num%", QString("%1").arg(channel + p_audio_num_offset_,
+                                          p_audio_num_width_,
+                                          10, QChar('0')));
 
     // prepend directory
 
@@ -193,6 +249,24 @@ void DiskRenderSettings::setImageFormat(const QString &id)
     if (id == imageFormats()[i].id)
     {
         p_image_format_idx_ = i;
+        break;
+    }
+}
+
+void DiskRenderSettings::setAudioFormat(size_t index)
+{
+    MO_ASSERT(index < size_t(p_audio_formats_.size()), "");
+
+    if (index < size_t(p_audio_formats_.size()))
+        p_audio_format_idx_ = index;
+}
+
+void DiskRenderSettings::setAudioFormat(const QString &id)
+{
+    for (int i=0; i<audioFormats().size(); ++i)
+    if (id == audioFormats()[i].id)
+    {
+        p_audio_format_idx_ = i;
         break;
     }
 }

@@ -17,6 +17,7 @@ namespace MO {
 namespace AUDIO {
 
 class SoundFile;
+class Configuration;
 
 class SoundFileManager
 {
@@ -26,11 +27,14 @@ class SoundFileManager
 public:
 
     /** Returns the soundfile for the given filename.
-        When you are finished with it, call releaseSoundFile()!
+        When finished with it, call releaseSoundFile()!
         This function always returns a SoundFile class.
         If loading has failed, SoundFile::ok() will be false.
         The error string is *currently* just printed to the console. */
     static SoundFile * getSoundFile(const QString& filename);
+
+    /** Creates a new instance for memory-based recording */
+    static SoundFile * createSoundFile(uint channels, uint samplerate);
 
     /** Tell the manager, you don't need the SoundFile anymore.
         Once all clients have released it, it will be deleted. */
@@ -38,8 +42,8 @@ public:
 
 private:
 
-    static SoundFileManager * getInstance_();
-    static SoundFileManager * instance_;
+    static SoundFileManager * p_getInstance_();
+    static SoundFileManager * p_instance_;
 
     class Private;
     Private * p_;

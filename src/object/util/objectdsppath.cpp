@@ -730,8 +730,8 @@ void ObjectDspPath::Private::createPath(Scene * s)
 
         // create the list of soundsources that the above microphones
         // should sample from
-        // [Right now these are all of them, but i want be able in the future
-        //  to just sample sources in the same branch and stuff like that]
+        // [Right now this is everone, but in future we want to be able
+        //  to exclude sample sources from other branches and stuff like that]
         for (Object * sobj : soundsources)
         {
             ObjectBuffer * sbuf = findObjectBuffer(sobj);

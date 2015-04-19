@@ -299,6 +299,11 @@ Double LiveAudioEngine::second() const
     return p_->engine->second();
 }
 
+const F32 * LiveAudioEngine::outputEnvelope() const
+{
+    return p_->engine->outputEnvelope();
+}
+
 
 void LiveAudioEngine::seek(SamplePos pos)
 {

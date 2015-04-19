@@ -15,6 +15,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/envelopefollower.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -42,6 +43,8 @@ public:
     ObjectDspPath path;
     uint threadIdx;
     SamplePos curSample;
+    std::vector<AUDIO::EnvelopeFollower> envs;
+    std::vector<F32> envValues;
 
     bool isPathPrepared;
 };
@@ -90,6 +93,10 @@ Double AudioEngine::second() const
     return p_->conf.sampleRateInv() * p_->curSample;
 }
 
+const F32 * AudioEngine::outputEnvelope() const
+{
+    return &p_->envValues[0];
+}
 
 void AudioEngine::seek(SamplePos pos)
 {
@@ -110,6 +117,14 @@ void AudioEngine::Private::setup()
     MO_DEBUG("AudioEngine::setup()");
 
     path.createPath(scene, conf, threadIdx);
+
+    // setup envelope followers
+    envs.resize(path.audioOutputs().size());
+    for (AUDIO::EnvelopeFollower & env : envs)
+    {
+        env.setSampleRate(conf.sampleRate());
+    }
+    envValues.resize(envs.size());
 
 #ifdef MO_ENABLE_DEBUG
     path.dump(std::cout);
@@ -152,10 +167,16 @@ void AudioEngine::process(const F32 * inputs, F32 * outputs)
     p_->curSample += p_->conf.bufferSize();
 
     // copy output buffers
+    int k=0;
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
     {
         b->readBlock(outputs);
         outputs += config().bufferSize();
+
+        // sample envelope
+        AUDIO::EnvelopeFollower & env = p_->envs[k];
+        p_->envValues[k] = env.process(b->readPointer(), 1, b->blockSize());
+        ++k;
     }
 }
 
@@ -188,12 +209,18 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
     p_->curSample += p_->conf.bufferSize();
 
     // copy output buffers
+    int k=0;
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
     {
         // write channel-interlaced
         b->readBlock(outputs, config().numChannelsOut());
         // advance channel
         ++outputs;
+
+        // sample envelope
+        AUDIO::EnvelopeFollower & env = p_->envs[k];
+        p_->envValues[k] = env.process(b->readPointer(), 1, b->blockSize());
+        ++k;
     }
 }
 

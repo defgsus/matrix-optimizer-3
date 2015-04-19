@@ -13,6 +13,9 @@
 #include <sndfile.h>
 
 #include "soundfile.h"
+#include "audio/configuration.h"
+#include "math/interpol.h"
+#include "math/functions.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -26,13 +29,14 @@ public:
 
     Private()
         : ok        (false),
+          writeable (false),
           sr        (0),
           channels  (0),
           lenSam    (0),
           lenSec    (0)
     { }
 
-    bool ok;
+    bool ok, writeable;
 
     QString filename;
 
@@ -67,6 +71,11 @@ bool SoundFile::ok() const
     return p_->ok;
 }
 
+bool SoundFile::writeable() const
+{
+    return p_->writeable;
+}
+
 const QString& SoundFile::filename() const
 {
     return p_->filename;
@@ -99,15 +108,31 @@ Double SoundFile::value(Double time, uint channel) const
         return 0.0;
 
     // 31bit gives around 13 hours of seekable samples (in mono!)
-    const int frame = time * sampleRate();
-    if (frame < 0 || frame >= (int)p_->lenSam)
+    const long int frame = time * sampleRate();
+    if (frame < 0 || frame >= (long int)p_->lenSam)
         return 0.0;
 
     if (p_->bitSize == 16)
     {
-        const int16_t * ptr = (const int16_t*)
-                &p_->data[(frame * p_->channels + channel) << 1];
+#if 0
+        const int16_t * ptr =
+                (const int16_t*)&p_->data[(frame * p_->channels + channel) << 1];
         return (Double)*ptr / 32768;
+#else
+        const long int fs = p_->channels *2;
+        size_t pos = (frame * p_->channels + channel) * 2;
+        Double v0,v1,v2,v3,v4,v5;
+
+        v0 = frame > 1 ? Double(*((const int16_t*)&p_->data[pos-fs*2])) / 32768. : 0.;
+        v1 = frame > 0 ? Double(*((const int16_t*)&p_->data[pos-fs])) / 32768. : 0.;
+        v2 = Double(*((const int16_t*)&p_->data[pos])) / 32768.;
+        v3 = frame < (long int)p_->lenSam - 1 ? Double(*((const int16_t*)&p_->data[pos+fs])) / 32768. : 0.;
+        v4 = frame < (long int)p_->lenSam - 2 ? Double(*((const int16_t*)&p_->data[pos+fs*2])) / 32768. : 0.;
+        v5 = frame < (long int)p_->lenSam - 3 ? Double(*((const int16_t*)&p_->data[pos+fs*3])) / 32768. : 0.;
+
+        Double t = MATH::fract(time * sampleRate());
+        return MATH::interpol_6(t, v0,v1, v2, v3,v4,v5);
+#endif
     }
     else
         return 0.0;
@@ -115,9 +140,58 @@ Double SoundFile::value(Double time, uint channel) const
 }
 
 
-void SoundFile::loadFile_(const QString & fn)
+
+void SoundFile::appendDeviceData(const F32 *buf, size_t numSamples)
 {
-    MO_DEBUG_SND("SoundFile::loadFile_('" << fn << "'");
+    if (!writeable())
+        return;
+
+    if (p_->bitSize == 16)
+    {
+        size_t pos = p_->data.size();
+
+        p_->data.resize(pos + (numSamples * p_->channels * 2));
+
+        for (size_t i=0; i<numSamples * p_->channels; ++i)
+        {
+            *((int16_t*)&p_->data[pos + i*2]) = buf[i] * 32767;
+        }
+    }
+    else
+    if (p_->bitSize == 32)
+    {
+        size_t pos = p_->data.size();
+
+        p_->data.resize(pos + (numSamples * p_->channels * 4));
+
+        for (size_t i=0; i<numSamples * p_->channels; ++i)
+        {
+            *((F32*)&p_->data[pos + i*4]) = buf[i];
+        }
+    }
+
+    p_->lenSam += numSamples;
+    p_->lenSec = Double(p_->lenSam) / p_->sr;
+}
+
+
+
+
+void SoundFile::p_create_(uint channels, uint sr, int bitSize)
+{
+    p_->bitSize = bitSize;
+    p_->channels = channels;
+    p_->sr = sr;
+    p_->lenSam = 0;
+    p_->lenSec = 0;
+    p_->data.clear();
+    p_->writeable = true;
+}
+
+
+void SoundFile::p_loadFile_(const QString & fn)
+{
+    MO_DEBUG_SND("SoundFile::loadFile_('" << fn << "')");
 
     p_->ok = false;
     p_->filename = fn;
@@ -172,6 +246,35 @@ void SoundFile::loadFile_(const QString & fn)
 
     sf_close(f);
 }
+
+
+void SoundFile::saveFile(const QString &fn) const
+{
+    MO_DEBUG_SND("SoundFile::saveFile('" << fn << "')");
+
+    SF_INFO info;
+    info.channels = p_->channels;
+    info.samplerate = p_->sr;
+    info.frames = p_->lenSam;
+    info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
+
+    SNDFILE *f = sf_open(fn.toStdString().c_str(), SFM_WRITE, &info);
+    if (!f)
+        MO_IO_ERROR(WRITE, "could not open file for writing audio '" << fn << "'\n"
+                    << sf_strerror((SNDFILE*)0));
+
+
+    uint e = sf_writef_float(f, (const F32*)&p_->data[0], p_->lenSam);
+    sf_close(f);
+
+    if (e != p_->lenSam)
+    {
+        MO_IO_ERROR(READ, "could not write all of soundfile '" << p_->filename << "'\n"
+                    "expected " << p_->lenSam << " frames, got " << e );
+    }
+}
+
+
 
 } // namespace AUDIO
 } // namespace MO

@@ -327,8 +327,8 @@ Double NoisePerlin::s_voronoi(Double x, Double y, Double sm)
     int    cx = std::floor(x),
            cy = std::floor(y);
     // fractional part in cell
-    Double fx = MATH::frac(x),
-           fy = MATH::frac(y);
+    Double fx = MATH::fract(x),
+           fy = MATH::fract(y);
 
     Double res = 0.0;
     for (int j=-1; j<=1; ++j)
@@ -355,9 +355,9 @@ Double NoisePerlin::s_voronoi(Double x, Double y, Double z, Double sm)
            cy = std::floor(y),
            cz = std::floor(z);
     // fractional part in cell
-    Double fx = MATH::frac(x),
-           fy = MATH::frac(y),
-           fz = MATH::frac(z);
+    Double fx = MATH::fract(x),
+           fy = MATH::fract(y),
+           fz = MATH::fract(z);
 
     Double res = 0.0;
     for (int k=-1; k<=1; ++k)
@@ -386,8 +386,8 @@ Double NoisePerlin::voronoi(Double x, Double y)
     int    cx = std::floor(x),
            cy = std::floor(y);
     // fractional part in cell
-    Double fx = MATH::frac(x),
-           fy = MATH::frac(y);
+    Double fx = MATH::fract(x),
+           fy = MATH::fract(y);
 
     Double res = 8.0;
     for (int j=-1; j<=1; ++j)
@@ -413,9 +413,9 @@ Double NoisePerlin::voronoi(Double x, Double y, Double z)
            cy = std::floor(y),
            cz = std::floor(z);
     // fractional part in cell
-    Double fx = MATH::frac(x),
-           fy = MATH::frac(y),
-           fz = MATH::frac(z);
+    Double fx = MATH::fract(x),
+           fy = MATH::fract(y),
+           fz = MATH::fract(z);
 
     Double res = 12.0;
     for (int k=-1; k<=1; ++k)

@@ -586,7 +586,7 @@ struct advanced
     static F s_prime			(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::is_prime( MO__INT(A) ),
                     (F)advanced_int<INT>::is_prime( MO__INT(A) + 1 ));
     }
@@ -594,7 +594,7 @@ struct advanced
     static F s_numdiv			(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::num_div( MO__INT(A) ),
                     (F)advanced_int<INT>::num_div( MO__INT(A) + 1 ));
     }
@@ -602,7 +602,7 @@ struct advanced
     static F s_divisor			(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
-            MO::MATH::frac(A),
+            MO::MATH::fract(A),
             (F)advanced_int<INT>::divisor( MO__INT(A), MO__INT(std::abs((F)B)) ),
             (F)advanced_int<INT>::divisor( MO__INT(A) + 1, MO__INT(std::abs((F)B)) ));
                                                             // XXX todo: this cast is for non-integer std::abs() implementations
@@ -611,7 +611,7 @@ struct advanced
     static F s_sumdiv       		(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::sum_div( MO__INT(A) ),
                     (F)advanced_int<INT>::sum_div( MO__INT(A) + 1 ));
     }
@@ -619,7 +619,7 @@ struct advanced
     static F s_proddiv  			(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::prod_div( MO__INT(A) ),
                     (F)advanced_int<INT>::prod_div( MO__INT(A) + 1 ));
     }
@@ -627,7 +627,7 @@ struct advanced
     static F s_nextdiv  			(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::next_div( MO__INT(A), MO__INT(B) ),
                     (F)advanced_int<INT>::next_div( MO__INT(A) + 1, MO__INT(B) ) );
     }
@@ -635,7 +635,7 @@ struct advanced
     static F s_gcd  				(F A, INT B)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::gcd( A, B ),
                     (F)advanced_int<INT>::gcd( A + 1, B ) );
     }
@@ -643,7 +643,7 @@ struct advanced
     static F s_congruent			(F A, INT B, INT C)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::is_congruent( A, B, C ),
                     (F)advanced_int<INT>::is_congruent( A + 1, B, C ) );
     }
@@ -651,7 +651,7 @@ struct advanced
     static F s_factorial			(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::factorial( A ),
                     (F)advanced_int<INT>::factorial( A + 1 ));
     }
@@ -659,7 +659,7 @@ struct advanced
     static F s_digits       		(F A)
     {
         return MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (F)advanced_int<INT>::num_digits( A ),
                     (F)advanced_int<INT>::num_digits( A + 1 ));
     }

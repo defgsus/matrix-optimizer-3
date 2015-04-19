@@ -866,8 +866,6 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     // scene changes
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
-    connect(scene_, SIGNAL(outputEnvelopeChanged(const F32*)),
-                    this, SLOT(updateOutputEnvelope_(const F32*)));
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             this, SLOT(onSceneTimeChanged_(Double)));
 
@@ -952,6 +950,7 @@ void MainWidgetController::onUpdateTimer_()
     //if (audioEngine_)
     //    transportWidget_->
     onSceneTimeChanged_(audioEngine_->second());
+    updateOutputEnvelope_(audioEngine_->outputEnvelope());
 }
 
 
@@ -1544,28 +1543,32 @@ void MainWidgetController::start()
 #endif
 
     // audio input/output channels may have changed
-    // XXX hacky but reliable
+    // XXX not smart - but reliable
     objectGraphView()->setRootObject(scene_);
-
+    // also tell the envelope display
+    updateNumberOutputEnvelopes_(audioEngine_->config().numChannelsOut());
 
 
     // start engine
     if (audioEngine_->start())
+    {
         // start rythmic gui updates
         updateTimer_->start();
 
-    // XXX especially update CurrentTime (for clients)
-    // Scene::sceneTime() is not really used
-    scene_->setSceneTime(audioEngine_->second());
+        glManager_->startAnimate();
+        frontScene_->startAnimate();
 
-    glManager_->startAnimate();
-    frontScene_->startAnimate();
+        // XXX especially update CurrentTime (for clients)
+        // Scene::sceneTime() is not really used
+        scene_->setSceneTime(audioEngine_->second());
 
 #ifndef MO_DISABLE_SERVER
-    if (isServer())
-        if (serverEngine().isRunning())
-            serverEngine().setScenePlaying(true);
+        if (isServer())
+            if (serverEngine().isRunning())
+                serverEngine().setScenePlaying(true);
 #endif
+    }
+
 }
 
 void MainWidgetController::stop()

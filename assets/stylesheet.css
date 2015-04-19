@@ -2,12 +2,21 @@
 
 QWidget {
         background-color: #111;
-        alternate-background-color: #181;
+        alternate-background-color: #121;
         selection-background-color: #555;
         selection-color: #fff;
         color: #aaa;
         dialogbuttonbox-buttons-have-icons: 1;
 }
+
+QWidget:disabled {
+        background-color: #181818;
+        alternate-background-color: #081008;
+        selection-background-color: #444;
+        selection-color: #eee;
+        color: #555;
+}
+
 
 QFrame {
         background-color: #181818;
@@ -52,13 +61,12 @@ QToolButton[GroupHeader="true"] {
 /* ---- buttons --------- */
 
 QPushButton, QToolButton {
-        background-color: #555;
+        background-color: #444;
         color: #fff;
 }
 
 QPushButton:disabled, QToolButton:disabled {
         background-color: #222;
-        color: #000;
 }
 
 
@@ -77,8 +85,6 @@ QSpinBox, QDoubleSpinBox, QLineEdit {
 QSpinBox[readOnly="true"],
 QDoubleSpinBox[readOnly="true"],
 QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
-
-QLineEdit[invalid="true"] { background-color: #433; color: #f88; }
 
 
 /* ---- lists ---- */

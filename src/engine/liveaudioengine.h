@@ -46,6 +46,9 @@ public:
     /** Returns current second */
     Double second() const;
 
+    /** Read access to the envelope values for each output */
+    const F32 * outputEnvelope() const;
+
     bool isAudioConfigured() const;
     bool isAudioInitialized() const;
     bool isPlayback() const;

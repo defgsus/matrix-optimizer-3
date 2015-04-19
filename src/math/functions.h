@@ -43,7 +43,7 @@ Float moduloSigned(Float A, Float B)
 
 /** Returns fractional part of float x */
 template <typename F>
-F frac(F x)
+F fract(F x)
 {
     return x - std::floor(x);
 }

@@ -641,6 +641,12 @@ void Scene::setNumberThreads(uint num)
     }
 }
 
+void Scene::setSceneSampleRate(uint samplerate)
+{
+    sceneSampleRate_ = samplerate;
+    updateSampleRate_();
+}
+
 void Scene::updateNumberLights_()
 {
     for (auto o : glObjects_)

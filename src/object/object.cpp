@@ -1226,6 +1226,8 @@ void Object::setNumberSoundSources(uint num)
 
 void Object::setNumberMicrophones(uint num)
 {
+    /** @todo update audio dsp path on microphone change.
+        This would also need to be done for virtual sound sources. */
     p_numberMicrophones_ = num;
 }
 

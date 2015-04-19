@@ -874,7 +874,7 @@ struct math_func<double>
     static void s_prime_1			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::isPrime( std::abs((Int)A) ),
                     (double)generic_int<Int>::isPrime( std::abs((Int)A + 1) ));
     }
@@ -882,7 +882,7 @@ struct math_func<double>
     static void s_numdiv_1			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::num_div( std::abs((Int)A) ),
                     (double)generic_int<Int>::num_div( std::abs((Int)A+1) ));
     }
@@ -890,7 +890,7 @@ struct math_func<double>
     static void s_divisor_2			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-            MO::MATH::frac(A),
+            MO::MATH::fract(A),
             (double)generic_int<Int>::divisor( std::abs((Int)A), std::abs((Int)B) ),
             (double)generic_int<Int>::divisor( std::abs((Int)A+1), std::abs((Int)B) ));
     }
@@ -898,7 +898,7 @@ struct math_func<double>
     static void s_sumdiv_1			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::sum_div( std::abs((Int)A) ),
                     (double)generic_int<Int>::sum_div( std::abs((Int)A + 1) ));
     }
@@ -906,7 +906,7 @@ struct math_func<double>
     static void s_proddiv_1			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::prod_div( std::abs((Int)A) ),
                     (double)generic_int<Int>::prod_div( std::abs((Int)A + 1) ));
     }
@@ -914,7 +914,7 @@ struct math_func<double>
     static void s_nextdiv_2			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::next_div( A, B ),
                     (double)generic_int<Int>::next_div( A + 1, B ) );
     }
@@ -922,7 +922,7 @@ struct math_func<double>
     static void s_gcd_2				(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::gcd( A, B ),
                     (double)generic_int<Int>::gcd( A + 1, B ) );
     }
@@ -930,7 +930,7 @@ struct math_func<double>
     static void s_congruent_3			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::congruent( A, B, C ),
                     (double)generic_int<Int>::congruent( A + 1, B, C ) );
     }
@@ -938,7 +938,7 @@ struct math_func<double>
     static void s_factorial_1			(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::factorial( A ),
                     (double)generic_int<Int>::factorial( A + 1 ));
     }
@@ -946,7 +946,7 @@ struct math_func<double>
     static void s_digits_1      		(double ** v)
     {
         RES = MO::MATH::interpol_smooth(
-                    MO::MATH::frac(A),
+                    MO::MATH::fract(A),
                     (double)generic_int<Int>::num_digits( A ),
                     (double)generic_int<Int>::num_digits( A + 1 ));
     }
