@@ -74,37 +74,14 @@ void ShaderObject::createParameters()
         GL::ShaderSource tmp;
         tmp.loadFragmentSource(":/shader/shaderobject.frag");
 
+        p_split_ = params()->createIntParameter("split", tr("segments"),
+                                    tr("Split rendering of the output into separate regions for better gui response"),
+                                    1, 1, 1024, 1, true, false);
+
         p_fragment_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment shader"),
                 tr("A piece of glsl code to set the output fragment color"),
                 TT_GLSL,
-                    tmp.fragmentSource()
-                   /*"// " + tr("Please be aware that this interface is likely to change in the future!") +
-                   "\n\n"
-                   "// " + tr("You have access to these values (! means: if available)") + ":\n"
-                   "// -- uniforms --\n"
-                   "// float u_time\n"
-                   "// vec3 u_cam_pos\n"
-                   "// float u_bump_scale\n"
-                   "// sampler2D tex_0 !\n"
-                   "// sampler2D tex_norm_0 !\n"
-                   "// -- input from vertex stage --\n"
-                   "// vec3 v_pos\n"
-                   "// vec3 v_pos_world\n"
-                   "// vec3 v_pos_eye\n"
-                   "// vec3 v_normal\n"
-                   "// vec3 v_normal_eye\n"
-                   "// vec3 v_texCoord\n"
-                   "// vec3 v_cam_dir\n"
-                   "// vec4 v_color\n"
-                   "// vec4 v_ambient_color\n"
-                   "// -- lighting --\n"
-                   "// vec3 mo_normal()\n"
-                   "// ... todo\n"
-                   "// -- output to rasterizer --\n"
-                   "// vec4 out_color\n"
-                   "\n"
-                   "void mo_modify_fragment_output()\n{\n\t\n}\n"
-                   "void main()\n{\n\tv_color = vec4(1., 0. , 0., 1.);\n}\n"*/
+                tmp.fragmentSource()
                 , true, false);
 
         p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
@@ -154,6 +131,7 @@ void ShaderObject::onParameterChanged(Parameter * p)
     if (p == p_width_ || p == p_height_
         || p == p_fragment_
         || p == p_aa_
+        || p == p_split_
         || userUniforms_->needsReinit(p))
         requestReinitGl();
 }
@@ -216,7 +194,7 @@ void ShaderObject::initGl(uint thread)
     shaderQuad_[thread] = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
     try
     {
-        shaderQuad_[thread]->create(src);
+        shaderQuad_[thread]->create(src, 0);
     }
     catch (Exception& e)
     {
@@ -326,7 +304,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     // --- render ---
 
-    shaderQuad_[thread]->draw(w, h);
+    shaderQuad_[thread]->draw(w, h, p_split_->baseValue());
 
     fbo_[thread]->unbind();
 }

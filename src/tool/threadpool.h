@@ -30,8 +30,12 @@ public:
 
     bool isRunning() const { return running_; }
 
+    /** Number of parallel threads */
     int numberThreads() const { return threads_.size(); }
+    /** Number of currently active threads */
     int numberActiveThreads() const;
+    /** Number of work in the que */
+    int numberWork() const { return que_.size(); }
 
 signals:
 
@@ -46,6 +50,9 @@ public slots:
     /** Put the function into the que */
     void addWork(std::function<void()> func);
 
+    /** Blocks execution of the calling thread, until
+        the number of work in the que is less than or equal to @p maxQueSize */
+    void block(size_t maxQueSize);
 
 private:
     class Thread;

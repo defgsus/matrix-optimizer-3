@@ -253,7 +253,7 @@ bool DiskRenderer::Private::initScene()
 
         if (!threadPool)
             threadPool = new ThreadPool();
-        threadPool->start();
+        threadPool->start(rendSet.imageNumThreads());
     }
 
     // --- setup audio ---
@@ -419,6 +419,10 @@ bool DiskRenderer::Private::writeImage()
 
     try
     {
+        renderer->context()->makeCurrent();
+        gl::glFlush();
+        //msleep(100);
+
         fbo->colorTexture()->bind();
         QImage img = fbo->colorTexture()->getImage();
         if (img.isNull())
@@ -492,7 +496,9 @@ QString DiskRenderer::progressString() const
       << "\nframe : " << (p_->curFrame - p_->rendSet.startFrame())
                          << " / " << p_->rendSet.lengthFrame()
                          << " @ " << p_->rendSet.imageFps() << " fps"
-      << "\nbusy image threads : " << p_->threadPool->numberActiveThreads() << "/" << p_->threadPool->numberThreads()
+      << "\nimage threads / que : "
+                        << p_->threadPool->numberActiveThreads() << "/" << p_->threadPool->numberThreads()
+                        << " " << p_->threadPool->numberWork() << "/" << p_->rendSet.imageNumQue()
       << "\ntime elapsed : " << time_to_string(elapsed)
       << "\ntime estimated : " << time_to_string(estimated)
       << "\ntime to go : " << time_to_string(estimated - elapsed)
@@ -534,18 +540,28 @@ bool DiskRenderer::Private::writeImage(const QImage& img)
     if (!prepareDir(fn))
         return false;
 
+    // only allow x images in parallel
+    if (rendSet.imageNumQue() > 0)
+        threadPool->block(rendSet.imageNumQue() - 1);
+
     threadPool->addWork([this, fn, img]()
     {
         QImageWriter w(fn, rendSet.imageFormatExt().toUtf8());
         w.setQuality(rendSet.imageQuality());
-        w.setCompression(1);
+        w.setCompression(rendSet.imageCompression());
         /** @todo expose description in gui */
         w.setDescription(QString("%1: frame %2").arg(versionString()).arg(curFrame));
 
-        MO_PRINT("write " << fn);
+        if (!w.canWrite())
+        {
+            //addError(tr("Can not store the image, settings are wrong?"));
+            //return false;
+        }
+        else
         if (!w.write(img))
         {
-            addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
+            /** @todo get error signals from image write thread */
+            //addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
             //return false;
         }
     });

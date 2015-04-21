@@ -94,7 +94,7 @@ bool ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
 
     quad_ = new GL::Drawable(name_);
     if (!geom)
-        GEOM::GeometryFactory::createQuad(quad_->geometry(), 2, 2);
+        GEOM::GeometryFactory::createQuad(quad_->geometry(), 2, 2.);
     else
         quad_->setGeometry(geom);
 
@@ -116,14 +116,29 @@ void ScreenQuad::release()
 }
 
 
-bool ScreenQuad::draw(uint w, uint h)
+bool ScreenQuad::draw(uint w, uint h, uint splits)
 {
     if (u_resolution_)
         u_resolution_->setFloats(w, h, (Float)1 / w, (Float)1 / h);
 
-    // center the quad into view
+    // simply stretch the quad into view
     Mat4 trans = Mat4(1.0);
-    quad_->renderShader(trans, trans, trans, trans);
+
+    if (splits <= 1)
+    {
+        Mat4 trans = Mat4(1.0);
+        quad_->renderShader(trans, trans, trans, trans);
+    }
+    else
+
+    // render individual slices
+    for (uint i=0; i<splits; ++i)
+    {
+        trans[1].y = 1.f / splits;
+        trans[3].y = Float(i + .5) / splits * 2.f - 1.f;
+        quad_->renderShader(trans, trans, trans, trans);
+        gl::glFlush();
+    }
 
     return true;
 }

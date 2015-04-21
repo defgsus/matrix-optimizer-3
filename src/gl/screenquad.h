@@ -20,7 +20,10 @@
 namespace MO {
 namespace GL {
 
-/** Wrapper of a quad geometry and a shader to render stuff on FBOs */
+/** Wrapper of a quad geometry and a shader to render stuff on FBOs.
+
+    @todo splitting is just hacked-in out of current need and only supported
+    by the draw(uint,uint) function. */
 class ScreenQuad
 {
 public:
@@ -59,7 +62,7 @@ public:
 
     /** Draws a quad across the whole view area [-1,1].
         The width and height of view need to be given for antialiasing */
-    bool draw(uint w, uint h);
+    bool draw(uint w, uint h, uint splits = 1);
 
     /** Draws a quadratic quad into the view area given by @p w and @p h.
         The quad will be centered correctly, if @p w != @p h */

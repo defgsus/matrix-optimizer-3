@@ -8,11 +8,15 @@
     <p>created 19.04.2015</p>
 */
 
+#include <chrono>
+#include <thread>
+
 #include <QThread>
 #include <QMutex>
 #include <QMutexLocker>
 
 #include "threadpool.h"
+#include "io/currentthread.h"
 #include "io/log.h"
 
 namespace MO {
@@ -22,12 +26,14 @@ class ThreadPool::Thread : public QThread
 {
 public:
 
-    Thread(ThreadPool * p) : QThread(), pool(p), func(0) { }
+    Thread(ThreadPool * p, long index) : QThread(), pool(p), func(0), index(index) { }
 
     bool isBusy() const { return func ? true : false; }
 
     void run() Q_DECL_OVERRIDE
     {
+        setCurrentThreadName(QString("IMAGE%1").arg(index));
+
         doStop = false;
 
         func = 0;
@@ -60,6 +66,7 @@ public:
     ThreadPool * pool;
     volatile bool doStop;
     std::function<void()> func;
+    long index;
 };
 
 
@@ -91,7 +98,7 @@ void ThreadPool::start(int numberThreads)
     QMutexLocker lock(mutex_);
 
     for (int i=0; i<numberThreads; ++i)
-        threads_.push_back( new Thread(this) );
+        threads_.push_back( new Thread(this, i) );
 
     for (auto t : threads_)
         t->start();
@@ -129,5 +136,18 @@ void ThreadPool::addWork(std::function<void ()> func)
     que_.push_back(func);
 }
 
+void ThreadPool::block(size_t maxQueSize)
+{
+    while (true)
+    {
+        {
+            QMutexLocker lock(mutex_);
+            if (size_t(que_.size()) <= maxQueSize)
+                return;
+        }
+        
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    }
+}
 
 } // namespace MO

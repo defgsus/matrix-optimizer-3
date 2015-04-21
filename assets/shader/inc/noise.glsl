@@ -130,3 +130,40 @@ vec3 noise3(in vec3 x)
                    f.y),
                f.z);
 }
+
+/** One value and three derivatives for three dimensions
+    http://www.iquilezles.org/www/articles/morenoise/morenoise.htm */
+vec4 noise1d(in vec3 x)
+{
+    vec3 i = floor(x);
+    vec3 u = fract(x);
+
+    vec3 d0 = 30.*u*u*(u*(u-2.)+1.);
+
+    u = NOISE_TRANSITION(u);
+
+    float   a = hash1(i + vec3(0.,0.,0.)),
+            b = hash1(i + vec3(1.,0.,0.)),
+            c = hash1(i + vec3(0.,1.,0.)),
+            d = hash1(i + vec3(1.,1.,0.)),
+            e = hash1(i + vec3(0.,0.,1.)),
+            f = hash1(i + vec3(1.,0.,1.)),
+            g = hash1(i + vec3(0.,1.,1.)),
+            h = hash1(i + vec3(1.,1.,1.)),
+
+            k0 =   a,
+            k1 =   b - a,
+            k2 =   c - a,
+            k3 =   e - a,
+            k4 =   a - b - c + d,
+            k5 =   a - c - e + g,
+            k6 =   a - b - e + f,
+            k7 = - a + b + c - d + e - f - g + h;
+
+    return vec4(
+            k0 + k1*u.x + k2*u.y + k3*u.z
+               + k4*u.x*u.y + k5*u.y*u.z + k6*u.z*u.x + k7*u.x*u.y*u.z,
+            d0.x * (k1 + k4*u.y + k6*u.z + k7*u.y*u.z),
+            d0.y * (k2 + k5*u.z + k4*u.x + k7*u.z*u.x),
+            d0.z * (k3 + k6*u.x + k5*u.y + k7*u.x*u.y) );
+}

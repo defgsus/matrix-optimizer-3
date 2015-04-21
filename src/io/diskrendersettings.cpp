@@ -10,6 +10,7 @@
 
 #include <QImageWriter>
 #include <QDir>
+#include <QThread> // for idealThreadCount
 
 #include "diskrendersettings.h"
 #include "io/commandlineparser.h"
@@ -47,6 +48,9 @@ void DiskRenderSettings::p_setDefault_()
         if (f.ext == "png")
             { p_image_format_idx_ = f.index; }
     p_image_quality_ = 100;
+    p_image_comp_ = 1;
+    p_image_threads_ = QThread::idealThreadCount();
+    p_image_ques_ = 16;
 
     p_audio_enable_ = true;
     p_audio_pattern_ = "audio_%num.%ext";
@@ -78,6 +82,9 @@ void DiskRenderSettings::serialize(IO::XmlStream& io) const
         //io.write("image-bpc", p_image_bpc_);
         io.write("image-format", imageFormatId());
         io.write("image-quality", p_image_quality_);
+        io.write("image-compression", p_image_comp_);
+        io.write("image-threads", p_image_threads_);
+        io.write("image-que", p_image_ques_);
 
         //io.write("audio-", p_audio_conf_);
         //io.write("audio-", p_audio_pattern_);

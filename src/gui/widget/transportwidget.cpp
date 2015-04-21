@@ -46,7 +46,11 @@ TransportWidget::TransportWidget(QWidget *parent) :
 
 void TransportWidget::setSceneTime(Double time)
 {
-    labelTime_->setText(time_to_string(time));
+    /** @todo use correct fps here */
+    labelTime_->setText(tr("%1\n%2s %3f")
+                        .arg(time_to_string(time))
+                        .arg(long(time))
+                        .arg(long(time * 30)));
 }
 
 

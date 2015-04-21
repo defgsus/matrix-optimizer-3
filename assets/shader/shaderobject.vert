@@ -4,16 +4,18 @@ in vec4 a_position;
 //in vec4 a_texCoord;
 
 uniform vec4 u_resolution; // w, h, 1/w, 1/h
-//uniform mat4 u_viewTransform;
+uniform mat4 u_viewTransform;
 
 out vec2 v_pos;
 out vec2 v_screen;
 
 void main(void)
 {
-    //v_texCoord = a_texCoord;
-    v_pos = a_position.xy;
-    v_screen = a_position.xy * u_resolution.xy;
+    vec4 apos = u_viewTransform * a_position;
 
-    gl_Position = a_position;
+    //v_texCoord = a_texCoord;
+    v_pos = apos.xy;
+    v_screen = apos.xy * u_resolution.xy;
+
+    gl_Position = apos;
 }

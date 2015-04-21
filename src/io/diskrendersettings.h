@@ -98,6 +98,9 @@ public:
     QString imageFormatId() const;
     QString imageFormatExt() const;
     size_t imageQuality() const { return p_image_quality_; }
+    size_t imageCompression() const { return p_image_comp_; }
+    size_t imageNumThreads() const { return p_image_threads_; }
+    size_t imageNumQue() const { return p_image_ques_; }
 
     /** Enable audio rendering */
     bool audioEnable() const { return p_audio_enable_; }
@@ -143,6 +146,9 @@ public:
     void setImageFps(size_t fps) { p_image_fps_ = fps; }
     void setImageBitsPerChannel(size_t b) { p_image_bpc_ = b; }
     void setImageQuality(size_t q) { p_image_quality_ = q; }
+    void setImageCompression(size_t c) { p_image_comp_ = c; }
+    void setImageNumThreads(size_t t) { p_image_threads_ = t; }
+    void setImageNumQue(size_t q) { p_image_ques_ = q; }
 
     void setAudioEnable(bool e) { p_audio_enable_ = e; }
     /** Write access */
@@ -189,6 +195,9 @@ private:
             p_image_format_idx_,
             p_image_fps_,
             p_image_quality_,
+            p_image_comp_,
+            p_image_threads_,
+            p_image_ques_,
             p_audio_format_idx_,
             p_audio_num_offset_,
             p_audio_num_width_,

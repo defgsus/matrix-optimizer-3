@@ -18,6 +18,7 @@
 #include <QMessageBox>
 #include <QFileInfo>
 #include <QCheckBox>
+#include <QImageWriter>
 
 #include "renderdialog.h"
 #include "widget/doublespinbox.h"
@@ -109,6 +110,8 @@ struct RenderDialog::Private
             * spinImageH,
             * spinImageFps,
             * spinImageQuality,
+            * spinImageThreads,
+            * spinImageQues,
             * spinAudioNum,
             * spinAudioNumWidth,
             * spinAudioChannels,
@@ -122,7 +125,8 @@ struct RenderDialog::Private
             * cbAudioFormat;
     QCheckBox
             * checkImage,
-            * checkAudio;
+            * checkAudio,
+            * checkImageComp;
     QLabel
             * labelTime,
             * labelImageName,
@@ -307,11 +311,17 @@ void RenderDialog::Private::createWidgets()
 
                     // quality
                     spinImageQuality = new SpinBox(diag);
-                    spinImageQuality->setLabel(tr("quality [1-100]"));
+                    spinImageQuality->setLabel(tr("image size [1-100]"));
                     spinImageQuality->setRange(1, 100);
                     spinImageQuality->setValue(rendSet.imageQuality());
                     lv->addWidget(spinImageQuality);
                     connect(spinImageQuality, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // compression
+                    checkImageComp = new QCheckBox(tr("compression"), diag);
+                    lv->addWidget(checkImageComp);
+                    connect(checkImageComp, SIGNAL(stateChanged(int)),
                             diag, SLOT(p_onWidget_()));
 
                     // width
@@ -339,6 +349,24 @@ void RenderDialog::Private::createWidgets()
                     spinImageFps->setValue(rendSet.imageFps());
                     lv->addWidget(spinImageFps);
                     connect(spinImageFps, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // threads
+                    spinImageThreads = new SpinBox(diag);
+                    spinImageThreads->setLabel(tr("storage threads"));
+                    spinImageThreads->setRange(1, 256);
+                    spinImageThreads->setValue(rendSet.imageNumThreads());
+                    lv->addWidget(spinImageThreads);
+                    connect(spinImageThreads, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
+                    // que
+                    spinImageQues = new SpinBox(diag);
+                    spinImageQues->setLabel(tr("max images in que"));
+                    spinImageQues->setRange(1, 256);
+                    spinImageQues->setValue(rendSet.imageNumQue());
+                    lv->addWidget(spinImageQues);
+                    connect(spinImageQues, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
 
                     lv->addStretch(1);
@@ -482,6 +510,9 @@ void RenderDialog::Private::updateFromWidgets()
     rendSet.setImageFps(spinImageFps->value());
     rendSet.setImageFormat(cbImageFormat->currentIndex());
     rendSet.setImageQuality(spinImageQuality->value());
+    rendSet.setImageCompression(checkImageComp->isChecked());
+    rendSet.setImageNumThreads(spinImageThreads->value());
+    rendSet.setImageNumQue(spinImageQues->value());
 
     // ----------- audio -----------
 
@@ -528,6 +559,9 @@ void RenderDialog::Private::updateFromSettings()
     spinImageFps->setValue(rendSet.imageFps());
     cbImageFormat->setCurrentIndex(rendSet.imageFormatIndex());
     spinImageQuality->setValue(rendSet.imageQuality());
+    checkImageComp->setChecked(rendSet.imageCompression());
+    spinImageThreads->setValue(rendSet.imageNumThreads());
+    spinImageQues->setValue(rendSet.imageNumQue());
 
     // -- audio --
 
@@ -577,8 +611,8 @@ void RenderDialog::Private::updateInfoLabels()
         break;
     }
 
-    labelImageName->setText(tr("example name: ") + rendSet.makeImageFilename(0));
-    labelAudioName->setText(tr("example name: ") + rendSet.makeAudioFilename(0));
+    labelImageName->setText(tr("example name:") + "\n" + rendSet.makeImageFilename(rendSet.startFrame()));
+    labelAudioName->setText(tr("example name:") + "\n" + rendSet.makeAudioFilename(0));
 }
 
 void RenderDialog::Private::updateActivity()
@@ -587,6 +621,9 @@ void RenderDialog::Private::updateActivity()
     groupAudio->setEnabled(rendSet.audioEnable());
     butGo->setEnabled( rendSet.imageEnable() || rendSet.audioEnable() );
 
+    QImageWriter w("./bla", rendSet.imageFormatExt().toUtf8());
+    spinImageQuality->setVisible(w.supportsOption(QImageIOHandler::Quality));
+    checkImageComp->setVisible(w.supportsOption(QImageIOHandler::CompressionRatio));
 }
 
 void RenderDialog::p_onWidget_()

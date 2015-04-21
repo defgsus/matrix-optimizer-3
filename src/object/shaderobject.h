@@ -61,7 +61,7 @@ private:
 
     ParameterFloat * p_out_r_, * p_out_g_, * p_out_b_, * p_out_a_;
     ParameterSelect * p_magInterpol_;
-    ParameterInt * p_width_, * p_height_, * p_aa_;
+    ParameterInt * p_width_, * p_height_, * p_aa_, * p_split_;
     ParameterText * p_fragment_;
     GL::Uniform
         * u_resolution_,

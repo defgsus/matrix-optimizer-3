@@ -28,5 +28,6 @@
     </qresource>
     <qresource prefix="/shader/inc/iq">
         <file alias="distfunc">assets/shader/inc/iq/distfunc.glsl</file>
+        <file alias="vnoise">assets/shader/inc/iq/vnoise.glsl</file>
     </qresource>
 </RCC>
