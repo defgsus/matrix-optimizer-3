@@ -306,12 +306,17 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     shaderQuad_[thread]->draw(w, h, p_split_->baseValue());
 
+    gl::glFlush();
+    gl::glFinish();
+
     fbo_[thread]->unbind();
 }
 
 
 void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int height)
 {
+    gl::glFinish();
+
     // -- shader uniforms --
 
     if (u_out_color_)
@@ -352,6 +357,8 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
     screenQuad_[thread]->drawCentered(width, height, aspectRatio_);
 
     fbo->colorTexture()->unbind();
+
+    gl::glFinish();
 }
 
 

@@ -172,6 +172,7 @@ void SceneRenderer::render(bool renderToScreen)
     scene_->renderScene(time, MO_GFX_THREAD, renderToScreen);
 
     gl::glFlush();
+    gl::glFinish();
 
     context_->qcontext()->swapBuffers(surface_);
 

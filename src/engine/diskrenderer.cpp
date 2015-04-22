@@ -429,13 +429,14 @@ bool DiskRenderer::Private::writeImage()
     try
     {
         renderer->context()->makeCurrent();
-        gl::glFlush();
-        //msleep(100);
+        gl::glFinish();
 
         fbo->colorTexture()->bind();
         tempImage = fbo->colorTexture()->getImage();
         if (tempImage.isNull())
             return false;
+
+        gl::glFinish();
 
         return writeImage(tempImage);
     }
