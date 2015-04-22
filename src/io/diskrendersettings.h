@@ -75,11 +75,14 @@ public:
     const QString& directory() const { return p_directory_; }
 
     SamplePos startSample() const { return p_time_start_; }
-    SamplePos lengthSample() const { return p_time_length_; }
     size_t startFrame() const;
     Double startSecond() const;
+    SamplePos lengthSample() const { return p_time_length_; }
     size_t lengthFrame() const;
     Double lengthSecond() const;
+    SamplePos endSample() const { return startSample() + lengthSample(); }
+    size_t endFrame() const { return startFrame() + lengthFrame(); }
+    Double endSecond() const { return startSecond() + lengthSecond(); }
 
     /** Enable image rendering */
     bool imageEnable() const { return p_image_enable_; }
@@ -101,6 +104,7 @@ public:
     size_t imageCompression() const { return p_image_comp_; }
     size_t imageNumThreads() const { return p_image_threads_; }
     size_t imageNumQue() const { return p_image_ques_; }
+    size_t imageSizeBytes() const;
 
     /** Enable audio rendering */
     bool audioEnable() const { return p_audio_enable_; }
@@ -165,6 +169,8 @@ public:
 
     SamplePos frame2sample(size_t frame) const
         { return (double)frame / imageFps() * audioConfig().sampleRate(); }
+
+    Double frame2second(size_t frame) const { return audioConfig().sampleRateInv() * frame2sample(frame); }
 
 private:
 

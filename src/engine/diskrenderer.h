@@ -40,8 +40,11 @@ public:
 
 signals:
 
-    /** Periodically emitted */
+    /** Periodically emitted, range [0,100] */
     void progress(int percent);
+
+    /** Emitted when a new image has been rendered */
+    void newImage(const QImage&);
 
 public slots:
 

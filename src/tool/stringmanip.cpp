@@ -8,7 +8,10 @@
     <p>created 6/27/2014</p>
 */
 
+#include <QObject> // for tr()
+
 #include "stringmanip.h"
+#include "math/functions.h"
 
 namespace MO {
 
@@ -58,36 +61,85 @@ QString fit_in_length(const QString &str, int len)
 QString byte_to_string(unsigned long int byte)
 {
     if (byte <= 1024)
-        return QString("%1b").arg(byte);
-    byte /= 1024;
+        return QObject::tr("%1b").arg(byte);
+    auto p = byte; byte /= 1024;
     if (byte <= 1024)
-        return QString("%1kb").arg(byte);
-    byte /= 1024;
+        return QObject::tr("%1kb").arg(std::floor(double(p)/10.24)/100.);
+    p = byte; byte /= 1024;
     if (byte <= 1024)
-        return QString("%1mb").arg(byte);
-    byte /= 1024;
+        return QObject::tr("%1mb").arg(std::floor(double(p)/10.24)/100.);
+    p = byte; byte /= 1024;
     if (byte <= 1024)
-        return QString("%1gb").arg(byte);
-    byte /= 1024;
+        return QObject::tr("%1gb").arg(std::floor(double(p)/10.24)/100.);
+    p = byte; byte /= 1024;
     if (byte <= 1024)
-        return QString("%1tb").arg(byte);
-    byte /= 1024;
-    return QString("%1pb").arg(byte);
+        return QObject::tr("%1tb").arg(std::floor(double(p)/1.24)/1000.);
+    p = byte; byte /= 1024;
+    return QObject::tr("%1pb").arg(std::floor(double(p)/1.24)/1000.);
 }
 
-QString time_to_string(double sec)
+QString time_to_string(double sec, bool with_ms)
 {
     const int
             minute = sec / 60,
             hour = minute / 60;
 
-    return QString("%1:%2:%3.%4")
+    auto s = QString("%1:%2:%3")
         .arg(hour)
         .arg(minute % 60, 2, 10, QChar('0'))
-        .arg(int(sec) % 60, 2, 10, QChar('0'))
-        .arg(int(sec * 1000) % 1000, 3, 10, QChar('0'));
+        .arg(int(sec) % 60, 2, 10, QChar('0'));
+    if (with_ms)
+        s += QString(".%1").arg(int(sec * 1000) % 1000, 3, 10, QChar('0'));
+
+    return s;
 }
 
+QString time_to_string_short(double sec, bool with_ms)
+{
+    sec = std::abs(sec);
+
+    const int
+            minute = int(sec / 60) % 60,
+            hour = sec / 60 / 60,
+            isec = int(sec) % 60;
+
+    QString s;
+
+    // ms
+    if (with_ms && MATH::fract(sec))
+    {
+        s = QString(".%1").arg(int(sec * 1000) % 1000, 3, 10, QChar('0'));
+        // nothing follows
+        if (sec < 1.)
+            return s + QObject::tr("ms");
+    }
+
+    // sec
+    auto s2 = QString("%1").arg(isec, sec<60. && isec<10 ? 1 : 2, 10, QChar('0'));
+    if (s.isEmpty())
+        s = s2;
+    else
+        s = s2 + "." + s;
+    // nothing follows?
+    if (sec < 60.)
+        return s + QObject::tr("s");
+
+    // minutes
+    s2 = QString("%1").arg(minute, 2, 10, QChar('0'));
+    if (s.isEmpty())
+        s = s2;
+    else
+        s = s2 + ":" + s;
+
+    // hours
+    s2 = QString("%1").arg(hour, 2, 10, QChar('0'));
+    if (s.isEmpty())
+        s = s2;
+    else
+        s = s2 + ":" + s;
+
+    return s;
+}
 
 
 

@@ -36,6 +36,7 @@
 #include "io/diskrendersettings.h"
 #include "io/currentthread.h"
 #include "io/settings.h"
+#include "io/time.h"
 #include "io/version.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -48,6 +49,7 @@ struct DiskRenderer::Private
         : thread        (t)
         , threadPool    (0)
         , scene         (0)
+        , sceneEditor   (0)
         , context       (0)
         , renderer      (0)
         , audio         (0)
@@ -58,6 +60,7 @@ struct DiskRenderer::Private
         , curSample     (0)
         , curFrame      (0)
         , progress      (0)
+        , stat_image_thread_overhead    (0.)
     { }
 
     void addError(const QString& e) { if (!errorStr.isEmpty()) errorStr += '\n'; errorStr += e; }
@@ -66,10 +69,10 @@ struct DiskRenderer::Private
     bool releaseScene();
     bool renderFrame();
     bool writeImage();
-    bool openAudioFile(); // creates a 32bit float wav for writing
+    bool openAudioFile(); //! creates a 32bit float wav for writing
     bool closeAudioFile();
     bool renderAudioFrame();
-    bool writeAudioFrame(); // writes into the open file
+    bool writeAudioFrame(); //! writes into the open file
     void renderAll();
     bool prepareDir(const QString& dir_or_filename);
     bool writeImage(const QImage&);
@@ -87,13 +90,15 @@ struct DiskRenderer::Private
     //AUDIO::SoundFile * soundFile;
     SNDFILE * sndFile;
     QString errorStr;
+    QImage tempImage;
 
     volatile bool pleaseStop;
     size_t curSample, curFrame;
 
     // render info
     QTime startTime;
-    Double progress;
+    Double progress,
+        stat_image_thread_overhead; // seconds
 };
 
 
@@ -177,7 +182,7 @@ bool DiskRenderer::Private::loadScene(const QString& fn)
     }
     catch (const Exception& e)
     {
-        addError(tr("Error loading scene.\n").arg(e.what()));
+        addError(tr("Error loading scene.\n%1").arg(e.what()));
         return false;
     }
 
@@ -190,6 +195,9 @@ bool DiskRenderer::Private::initScene()
 
     if (!loadScene(sceneFilename))
         return false;
+
+    progress = 0;
+    stat_image_thread_overhead = 0.;
 
     /** that's very loosely the startup routine for preparing a scene.
         @todo misses FrontItems */
@@ -204,6 +212,7 @@ bool DiskRenderer::Private::initScene()
     sceneEditor = new ObjectEditor();
     scene->setObjectEditor(sceneEditor);
 
+    /** @todo When to first run scripts?? */
     scene->runScripts();
 
     // projection settings
@@ -424,10 +433,11 @@ bool DiskRenderer::Private::writeImage()
         //msleep(100);
 
         fbo->colorTexture()->bind();
-        QImage img = fbo->colorTexture()->getImage();
-        if (img.isNull())
+        tempImage = fbo->colorTexture()->getImage();
+        if (tempImage.isNull())
             return false;
-        return writeImage(img);
+
+        return writeImage(tempImage);
     }
     catch (const Exception& e)
     {
@@ -476,6 +486,8 @@ void DiskRenderer::Private::renderAll()
             //MO_DEBUG("rendering frame " << f << "/" << rendSet.lengthFrame());
             progress = f * 100.f / rendSet.lengthFrame();
             emit thread->progress(progress);
+            if (!tempImage.isNull())
+                emit thread->newImage(tempImage);
             time.start();
         }
     }
@@ -489,19 +501,40 @@ QString DiskRenderer::progressString() const
     Double
         elapsed = 0.001 * p_->startTime.elapsed(),
         estimated = elapsed / std::max(0.001, p_->progress) * 100.;
+    SamplePos
+        curf = (p_->curFrame - p_->rendSet.startFrame());
 
     QString r;
     QTextStream s(&r);
     s <<   "progress : " << p_->progress << "%"
-      << "\nframe : " << (p_->curFrame - p_->rendSet.startFrame())
+      << "\nposition : frame " << curf
                          << " / " << p_->rendSet.lengthFrame()
                          << " @ " << p_->rendSet.imageFps() << " fps"
-      << "\nimage threads / que : "
+                         << "; time " << time_to_string(p_->rendSet.frame2second(p_->curFrame), true);
+
+    if (p_->rendSet.imageEnable())
+    {
+        Double spd = p_->renderer->renderSpeed();
+        s << "\nimage time : render " << std::floor(spd/1000.)*1000 << "s";
+        if (spd <= .5)
+            s << " (" << int(1. / spd) << "fps)";
+
+        s               << "; store average " << p_->threadPool->averageWorkTime() << "s";
+        if (p_->stat_image_thread_overhead > 0.001)
+        {
+            s           << "; overhead " << time_to_string_short(p_->stat_image_thread_overhead);
+            Double perc = p_->stat_image_thread_overhead / std::max(0.1, elapsed);
+            if (perc >= 100.)
+                s       << " (" << std::floor(perc) / 100. << "%)";
+        }
+        s   << "\nimage threads / que : "
                         << p_->threadPool->numberActiveThreads() << "/" << p_->threadPool->numberThreads()
-                        << " " << p_->threadPool->numberWork() << "/" << p_->rendSet.imageNumQue()
-      << "\ntime elapsed : " << time_to_string(elapsed)
-      << "\ntime estimated : " << time_to_string(estimated)
-      << "\ntime to go : " << time_to_string(estimated - elapsed)
+                        << " " << p_->threadPool->numberWork() << "/" << p_->rendSet.imageNumQue();
+    }
+
+    s << "\ntime : estimated " << time_to_string_short(estimated)
+            << "; elapsed " << time_to_string_short(elapsed)
+            << "; left " << time_to_string_short(estimated - elapsed)
          ;
     return r;
 }
@@ -536,13 +569,18 @@ bool DiskRenderer::Private::prepareDir(const QString& dir1)
 
 bool DiskRenderer::Private::writeImage(const QImage& img)
 {
+    TimeMessure tm;
+
     QString fn = rendSet.makeImageFilename(curFrame);
+
     if (!prepareDir(fn))
         return false;
 
     // only allow x images in parallel
     if (rendSet.imageNumQue() > 0)
+    {
         threadPool->block(rendSet.imageNumQue() - 1);
+    }
 
     threadPool->addWork([this, fn, img]()
     {
@@ -552,19 +590,22 @@ bool DiskRenderer::Private::writeImage(const QImage& img)
         /** @todo expose description in gui */
         w.setDescription(QString("%1: frame %2").arg(versionString()).arg(curFrame));
 
-        if (!w.canWrite())
+        /*if (!w.canWrite())
         {
-            //addError(tr("Can not store the image, settings are wrong?"));
-            //return false;
+            addError(tr("Can not store the image, settings are wrong?"));
+            pleaseStop = true;
         }
-        else
+        else*/
         if (!w.write(img))
         {
             /** @todo get error signals from image write thread */
-            //addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
-            //return false;
+            addError(tr("Could not write image '%1'\n%2").arg(fn).arg(w.errorString()));
+            pleaseStop = true;
         }
     });
+
+    stat_image_thread_overhead += tm.time();
+
     return true;
 }
 

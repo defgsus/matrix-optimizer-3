@@ -41,6 +41,9 @@ public:
     Context * context() const { return context_; }
     QSurface * surface() const { return surface_; }
 
+    /** Speed of last rendering in seconds */
+    Double renderSpeed() const { return renderSpeed_; }
+
     void setScene(Scene * scene);
 
     void setTimeCallback(std::function<Double()> timeFunc) { timeFunc_ = timeFunc; }
@@ -71,6 +74,8 @@ private:
     QSize size_;
 
     std::function<Double()> timeFunc_;
+
+    Double renderSpeed_;
 };
 
 

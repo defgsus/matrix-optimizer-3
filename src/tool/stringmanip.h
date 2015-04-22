@@ -37,7 +37,10 @@ QString fit_text_block(const QString & s, int max_width, const QString& line_beg
 QString byte_to_string(long unsigned int);
 
 /** Returns human readable time */
-QString time_to_string(double time_in_seconds);
+QString time_to_string(double time_in_seconds, bool with_ms = false);
+
+/** Returns human readable time, as long as necessary */
+QString time_to_string_short(double time_in_seconds, bool with_ms = false);
 
 } // namespace MO
 

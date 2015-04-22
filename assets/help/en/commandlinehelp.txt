@@ -9,7 +9,7 @@ commandline parameters:
      Runs the application as client.
 
  render [options]
-     Renders a scene to disk.
+     Renders a project to disk.
 
 Try [render|client] -h for help on a specific mode.
 

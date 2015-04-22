@@ -268,6 +268,12 @@ void TextEditDialog::keyPressEvent(QKeyEvent * e)
         openHelp();
         return;
     }
+    // avoid accidental exit
+    if (e->key() == Qt::Key_Escape)
+    {
+        e->accept();
+        return;
+    }
     QDialog::keyPressEvent(e);
 }
 

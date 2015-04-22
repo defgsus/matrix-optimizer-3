@@ -16,6 +16,7 @@
 #include <QMutexLocker>
 
 #include "threadpool.h"
+#include "io/time.h"
 #include "io/currentthread.h"
 #include "io/log.h"
 
@@ -26,25 +27,50 @@ class ThreadPool::Thread : public QThread
 {
 public:
 
-    Thread(ThreadPool * p, long index) : QThread(), pool(p), func(0), index(index) { }
+    Thread(ThreadPool * p, long index)
+        : QThread(), pool(p), func(0), index(index),
+          accumTime(-1.), avTime(-1.), runs(0)
+    { }
 
     bool isBusy() const { return func ? true : false; }
 
+    /** Average time over all work */
+    Double averageTimeAll() const { return runs < 1 || accumTime < 0 ? 0. : accumTime / runs; }
+    /** Average time over last couple of work */
+    Double averageTime() const { return avTime < 0 ? 0. : avTime; }
+
     void run() Q_DECL_OVERRIDE
     {
-        setCurrentThreadName(QString("IMAGE%1").arg(index));
+        setCurrentThreadName(QString("IMAGEW%1").arg(index));
 
-        doStop = false;
-
+        doStop = false;        
         func = 0;
+        accumTime = -1.;
+        avTime = -1;
+        runs = 0;
+
+        TimeMessure tm;
 
         while (!doStop)
         {
             if (!func)
                 msleep(10);
             else
+            {
+                tm.start();
+                // execute
                 func();
+                // stats
+                ++runs;
+                Double t = tm.time();
+                accumTime += t;
+                if (avTime < 0.)
+                    avTime = t;
+                else
+                    avTime += .2 * (t - avTime);
+            }
 
+            // query more work
             {
                 QMutexLocker lock(pool->mutex_);
 
@@ -67,6 +93,8 @@ public:
     volatile bool doStop;
     std::function<void()> func;
     long index;
+    Double accumTime, avTime;
+    long runs;
 };
 
 
@@ -85,6 +113,17 @@ int ThreadPool::numberActiveThreads() const
         if (t->isBusy())
             ++n;
     return n;
+}
+
+Double ThreadPool::averageWorkTime() const
+{
+    if (threads_.empty())
+        return 0.0;
+
+    Double n = 0.;
+    for (auto t : threads_)
+        n += t->averageTime();
+    return n / threads_.size();
 }
 
 void ThreadPool::start(int numberThreads)

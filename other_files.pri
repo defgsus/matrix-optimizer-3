@@ -51,5 +51,6 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/inc/iq/distfunc.glsl \
     assets/shader/inc/noise.glsl \
     assets/shader/inc/fnoise.glsl \
-    assets/shader/inc/iq/vnoise.glsl
+    assets/shader/inc/iq/vnoise.glsl \
+    assets/help/en/diskrender.html
     assets/help/en/object/model3d.html

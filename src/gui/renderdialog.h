@@ -39,11 +39,13 @@ private slots:
     void p_onWidget_();
     void p_onUnitChange_(int idx);
     void p_onFinished_();
+    void p_onImage_(const QImage&);
     void p_shutDown_();
 
 protected:
 
     void closeEvent(QEvent*);
+    void keyPressEvent(QKeyEvent*);
     void error(const QString&);
 
 private:

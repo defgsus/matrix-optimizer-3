@@ -15,9 +15,10 @@
 #include "context.h"
 #include "offscreencontext.h"
 #include "object/scene.h"
-#include "io/error.h"
 #include "gl/opengl.h"
 #include "io/currenttime.h"
+#include "io/time.h"
+#include "io/error.h"
 
 #include <QOpenGLContext>
 #include "gl/opengl_undef.h"
@@ -30,7 +31,8 @@ SceneRenderer::SceneRenderer(QObject *parent)
     : QObject       (parent),
       scene_        (0),
       context_      (0),
-      surface_      (0)
+      surface_      (0),
+      renderSpeed_  (0.)
 {
 
 }
@@ -129,12 +131,14 @@ void SceneRenderer::updateSceneGlContext_()
 
 
 void SceneRenderer::render(bool renderToScreen)
-{
+{        
     if (!context_ || !scene_ || scene_->isShutDown())
         return;
 
 //    MO_ASSERT(context_, "no context to render");
 //    MO_ASSERT(scene_, "no scene to render");
+
+    TimeMessure tm;
 
     if (!context_->qcontext()->makeCurrent(surface_))
         MO_GL_ERROR("could not make context current");
@@ -167,7 +171,11 @@ void SceneRenderer::render(bool renderToScreen)
 
     scene_->renderScene(time, MO_GFX_THREAD, renderToScreen);
 
+    gl::glFlush();
+
     context_->qcontext()->swapBuffers(surface_);
+
+    renderSpeed_ = tm.time();
 }
 
 

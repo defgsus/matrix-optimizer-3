@@ -31,10 +31,10 @@ TransportWidget::TransportWidget(QWidget *parent) :
         auto font = labelTime_->font();
         font.setPointSize(20);
         labelTime_->setFont(font);
-        labelTime_->setText(time_to_string(0.0));
+        labelTime_->setText(time_to_string(0.0, true));
         // XXX label size seems not to account for font size automatically
         labelTime_->setMinimumWidth(QFontMetrics(font).width(
-                            time_to_string(60*60*1000)));
+                            time_to_string(60*60*1000, true)));
 
         lh->addStretch(1);
 
@@ -48,7 +48,7 @@ void TransportWidget::setSceneTime(Double time)
 {
     /** @todo use correct fps here */
     labelTime_->setText(tr("%1\n%2s %3f")
-                        .arg(time_to_string(time))
+                        .arg(time_to_string(time, true))
                         .arg(long(time))
                         .arg(long(time * 30)));
 }

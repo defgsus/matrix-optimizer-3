@@ -19,8 +19,10 @@
 #include <QFileInfo>
 #include <QCheckBox>
 #include <QImageWriter>
+#include <QKeyEvent>
 
 #include "renderdialog.h"
+#include "helpdialog.h"
 #include "widget/doublespinbox.h"
 #include "widget/spinbox.h"
 #include "widget/filenameinput.h"
@@ -131,7 +133,9 @@ struct RenderDialog::Private
             * labelTime,
             * labelImageName,
             * labelAudioName,
-            * labelProgress;
+            * labelQueSize,
+            * labelProgress,
+            * labelImage;
     QProgressBar
             * progBar;
     QPushButton
@@ -298,26 +302,6 @@ void RenderDialog::Private::createWidgets()
                     connect(spinImageNumWidth, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
 
-                    // format
-                    cbImageFormat = new QComboBox(diag);
-                    for (const DiskRenderSettings::ImageFormat & f
-                         : DiskRenderSettings::imageFormats())
-                        cbImageFormat->addItem(f.name, QVariant(int(f.index)));
-                    cbImageFormat->setCurrentIndex(
-                                rendSet.imageFormatIndex());
-                    connect(cbImageFormat, SIGNAL(currentIndexChanged(int)),
-                            diag, SLOT(p_onWidget_()));
-                    lv->addWidget(cbImageFormat);
-
-                    // quality
-                    spinImageQuality = new SpinBox(diag);
-                    spinImageQuality->setLabel(tr("image size [1-100]"));
-                    spinImageQuality->setRange(1, 100);
-                    spinImageQuality->setValue(rendSet.imageQuality());
-                    lv->addWidget(spinImageQuality);
-                    connect(spinImageQuality, SIGNAL(valueChanged(int)),
-                            diag, SLOT(p_onWidget_()));
-
                     // compression
                     checkImageComp = new QCheckBox(tr("compression"), diag);
                     lv->addWidget(checkImageComp);
@@ -351,6 +335,26 @@ void RenderDialog::Private::createWidgets()
                     connect(spinImageFps, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
 
+                    // format
+                    cbImageFormat = new QComboBox(diag);
+                    for (const DiskRenderSettings::ImageFormat & f
+                         : DiskRenderSettings::imageFormats())
+                        cbImageFormat->addItem(f.name, QVariant(int(f.index)));
+                    cbImageFormat->setCurrentIndex(
+                                rendSet.imageFormatIndex());
+                    connect(cbImageFormat, SIGNAL(currentIndexChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lv->addWidget(cbImageFormat);
+
+                    // quality
+                    spinImageQuality = new SpinBox(diag);
+                    spinImageQuality->setLabel(tr("image size [1-100]"));
+                    spinImageQuality->setRange(1, 100);
+                    spinImageQuality->setValue(rendSet.imageQuality());
+                    lv->addWidget(spinImageQuality);
+                    connect(spinImageQuality, SIGNAL(valueChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+
                     // threads
                     spinImageThreads = new SpinBox(diag);
                     spinImageThreads->setLabel(tr("storage threads"));
@@ -368,6 +372,11 @@ void RenderDialog::Private::createWidgets()
                     lv->addWidget(spinImageQues);
                     connect(spinImageQues, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
+
+                    // que size label
+                    labelQueSize = new QLabel(diag);
+                    labelQueSize->setAlignment(Qt::AlignRight);
+                    lv->addWidget(labelQueSize);
 
                     lv->addStretch(1);
 
@@ -470,30 +479,36 @@ void RenderDialog::Private::createWidgets()
         lh = new QHBoxLayout();
         lv0->addLayout(lh);
 
-        butGo = new QPushButton(tr("Go!"), diag);
-        butGo->setStatusTip(tr("Starts rendering the scene with selected settings"));
-        butGo->setDefault(true);
-        connect(butGo, SIGNAL(pressed()), diag, SLOT(startRender()));
-        lh->addWidget(butGo);
+            butGo = new QPushButton(tr("Go!"), diag);
+            butGo->setStatusTip(tr("Starts rendering the scene with selected settings"));
+            butGo->setDefault(true);
+            connect(butGo, SIGNAL(pressed()), diag, SLOT(startRender()));
+            lh->addWidget(butGo);
 
-        butCancel = new QPushButton(tr("Close"), diag);
-        butCancel->setStatusTip(tr("Stops rendering or closes the dialog"));
-        connect(butCancel, &QPushButton::pressed, [=]()
-        {
-            if (diag->isRendering())
-                diag->stopRender();
-            else
-                diag->reject();
-        });
-        lh->addWidget(butCancel);
+            butCancel = new QPushButton(tr("Close"), diag);
+            butCancel->setStatusTip(tr("Stops rendering or closes the dialog"));
+            connect(butCancel, &QPushButton::pressed, [=]()
+            {
+                if (diag->isRendering())
+                    diag->stopRender();
+                else
+                    diag->reject();
+            });
+            lh->addWidget(butCancel);
 
         // progress bar
         progBar = new QProgressBar(diag);
         progBar->setVisible(false);
         lv0->addWidget(progBar);
 
-        labelProgress = new QLabel(diag);
-        lv0->addWidget(labelProgress);
+        lh = new QHBoxLayout();
+        lv0->addLayout(lh);
+
+            labelProgress = new QLabel(diag);
+            lh->addWidget(labelProgress);
+
+            labelImage = new QLabel(diag);
+            lh->addWidget(labelImage);
 }
 
 void RenderDialog::Private::updateFromWidgets()
@@ -595,6 +610,7 @@ void RenderDialog::Private::updateFromSettings()
 
 void RenderDialog::Private::updateInfoLabels()
 {
+    /*
     switch (timeUnit)
     {
         case 0: labelTime->setText(tr("time %1 - %2")
@@ -610,9 +626,22 @@ void RenderDialog::Private::updateInfoLabels()
                         .arg(rendSet.lengthSample() - rendSet.startSample()));
         break;
     }
+    */
+
+    labelTime->setText(tr("time %1 - %2 / frames %3 - %4 / samples %5 - %6")
+                        .arg(time_to_string(rendSet.startSecond()))
+                        .arg(time_to_string(rendSet.endSecond()))
+                        .arg(rendSet.startFrame())
+                        .arg(rendSet.endFrame())
+                        .arg(rendSet.startSample())
+                        .arg(rendSet.endSample()));
 
     labelImageName->setText(tr("example name:") + "\n" + rendSet.makeImageFilename(rendSet.startFrame()));
     labelAudioName->setText(tr("example name:") + "\n" + rendSet.makeAudioFilename(0));
+
+    labelQueSize->setText(tr("max image memory: %1")
+                          .arg(byte_to_string(rendSet.imageSizeBytes()
+                                              * (rendSet.imageNumQue() + rendSet.imageNumThreads()))));
 }
 
 void RenderDialog::Private::updateActivity()
@@ -641,6 +670,15 @@ void RenderDialog::p_onUnitChange_(int idx)
     p_->updateFromSettings();
 }
 
+void RenderDialog::keyPressEvent(QKeyEvent * e)
+{
+    if (e->key() == Qt::Key_F1)
+    {
+        auto help = new HelpDialog("diskrender", this);
+        help->show();
+    }
+    QDialog::keyPressEvent(e);
+}
 
 void RenderDialog::error(const QString & e)
 {
@@ -674,6 +712,8 @@ void RenderDialog::startRender()
         p_->progBar->setValue(p);
         p_->labelProgress->setText(p_->render->progressString());
     });
+    //connect(p_->render, SIGNAL(newImage(QImage)),
+    //        this, SLOT(p_onImage_(QImage)), Qt::QueuedConnection);
     // on finished/failure
     connect(p_->render, SIGNAL(finished()), this, SLOT(p_onFinished_()), Qt::QueuedConnection);
 
@@ -710,6 +750,10 @@ void RenderDialog::p_shutDown_()
     p_->render = 0;
 }
 
+void RenderDialog::p_onImage_(const QImage & img)
+{
+    p_->labelImage->setPixmap(QPixmap::fromImage(img));
+}
 
 } // namespace GUI
 } // namespace MO

@@ -188,6 +188,12 @@ QString DiskRenderSettings::audioFormatExt() const
             : "-";
 }
 
+size_t DiskRenderSettings::imageSizeBytes() const
+{
+    return imageWidth() * imageHeight() * 4;
+}
+
+
 QString DiskRenderSettings::makeImageFilename(size_t frame) const
 {
     QString fn = p_image_pattern_;

@@ -1,0 +1,26 @@
+<h1>Disk rendering</h1>
+
+<p>The disk render dialog, located in the <b>engine menu</b>, is currently the one way to render a production to disk. There will be a command-line interface soon.</p>
+
+<p><b>Note that the scene file you have currently loaded is reloaded by the renderer. Any unsaved changes are not rendered!.</b></p>
+
+<p>Also note that the render process can additionally render your computer unusable for anything else. This may be because of full CPU use or exhausted memory from multi-threaded image storage, or from heavy OpenGL shader usage which generally tends to block the GUI of every operating system.</p>
+
+<h2>Settings</h2>
+
+<p>The first mandatory setting is the output path. All rendered data will go there. The path is created if it does not exist. The other mandatory setting is the time range. It can be specified in seconds, frames or audio samples. Image and audio can be individualy turned off. Change all image and audio settings as desired.</p>
+
+<p>Once all settings are made, click <b>Go!</b> to start the rendering. The renderer runs in a separate thread and it's output is *currently* not visible. The bottom of the render dialog will show the statistics and estimated time.</p>
+
+<h3>Image output</h3>
+
+<p>Currently only image sequences are supported. Their format and filename pattern can be freely selected. Some formats support an <b>image size</b> setting. For jpeg this is equal to the usual quality setting. For png this is inverse to the compression level. Lower generally means smaller files. For jpeg, the quality will degrade, for png, which is lossless, the time it takes to compress the image will raise.</p>
+
+<p>The <b>image threads</b> and <b>max image que</b> settings control the amount of parallel work when writing images to disk. Once the renderer is finished with a frame, it copies the data from the GPU and hands it off to another thread for storage. Having, for example, 8 <b>image threads</b> means that 8 frames can be written simultaneously. This is a big time advantage when compressing large-resolution png which may take 10 or more seconds. If the storage threads still don't manage to write the frames in the time they are rendered the pending frames will fill up the RAM. To avoid overflow, the <b>max image que</b> setting controls the number of images that will maximally be held in memory at the same time. Once this number is reached, the renderer will block and wait for a frame to be stored before calculating a new one. The amount of memory that is maximally needed to hold the images in memory is displayed below.</p>
+
+
+<h3>Audio output</h3>
+
+<p>*Currently*, audio is rendered into a multi-channel RIFF WAV format, using 32-bit float values. In the future, this will be used to normalize the audio data and spread it to different files.</p>
+
+<p>The <b>buffer size</b> is the size of one DSP-block. It can be left as it is, in most cases. Note that the duration of a DSP-block and an image frame is usually different. The renderer will calculate as much DSP-blocks as needed to match with the current frame number before rendering the image.</p>

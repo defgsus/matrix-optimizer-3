@@ -15,6 +15,8 @@
 #include <QObject>
 #include <QList>
 
+#include "types/float.h"
+
 class QMutex;
 class QThread;
 
@@ -37,6 +39,9 @@ public:
     /** Number of work in the que */
     int numberWork() const { return que_.size(); }
 
+    /** Average time of executed work in seconds */
+    Double averageWorkTime() const;
+
 signals:
 
 public slots:
@@ -55,6 +60,7 @@ public slots:
     void block(size_t maxQueSize);
 
 private:
+
     class Thread;
     friend class Thread;
     QMutex * mutex_;
