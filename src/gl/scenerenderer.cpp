@@ -150,6 +150,8 @@ void SceneRenderer::render(bool renderToScreen)
 
     moInitGl();
 
+    gl::glFinish();
+
     MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(), context_->size().height()) );
     MO_CHECK_GL( gl::glClearColor(0.1f, 0.1f, 0.1f, 1.0f) );
     MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
