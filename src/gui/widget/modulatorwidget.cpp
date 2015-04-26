@@ -12,19 +12,21 @@
 #include <QLabel>
 
 #include "modulatorwidget.h"
+#include "doublespinbox.h"
 #include "object/param/modulatorfloat.h"
 #include "object/scene.h"
+#include "object/util/objecteditor.h"
 #include "io/error.h"
-#include "doublespinbox.h"
 
 namespace MO {
 namespace GUI {
 
-ModulatorWidget::ModulatorWidget(QWidget *parent) :
-    QWidget     (parent),
-    scene_      (0),
-    object_     (0),
-    modulator_  (0)
+ModulatorWidget::ModulatorWidget(QWidget *parent)
+    : QWidget       (parent)
+    , scene_        (0)
+    , object_       (0)
+    , editor_       (0)
+    , modulator_    (0)
 {
     auto lv = new QVBoxLayout(this);
     lv->setMargin(2);
@@ -79,8 +81,13 @@ void ModulatorWidget::setModulator(Modulator * m)
     modulator_ = m;
     object_ = m->parent();
     scene_ = object_->sceneObject();
+    editor_ = object_->editor();
+
+    // foolproofish
 
     MO_ASSERT(scene_, "no scene assigned to modulator parent in ModulatorWidget");
+    MO_ASSERT(editor_, "no editor assigned to modulator parent in ModulatorWidget");
+    MO_ASSERT(modulator_->parameter(), "no parameter assigned to modulator in ModulatorWidget");
 
     updateWidgets_();
 }
@@ -90,12 +97,14 @@ void ModulatorWidget::updateFromWidgets_()
     if (!modulator_)
         return;
 
-    ScopedObjectChange lock(scene_, object_);
+    // XXX Not *really* needed
+    //ScopedObjectChange lock(scene_, object_);
 
     if (ModulatorFloat * mf = dynamic_cast<ModulatorFloat*>(modulator_))
     {
         mf->setAmplitude(spinAmplitude_->value());
         mf->setTimeOffset(spinTimeOffset_->value());
+        emit editor_->parameterChanged(mf->parameter());
     }
 }
 

@@ -18,7 +18,7 @@
 #include "gui/painter/valuecurve.h"
 #include "object/object.h"
 #include "object/audioobject.h"
-#include "object/sequencefloat.h"
+#include "object/control/sequencefloat.h"
 #include "io/currenttime.h"
 #include "types/properties.h"
 

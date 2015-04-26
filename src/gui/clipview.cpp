@@ -17,8 +17,8 @@
 
 #include "clipview.h"
 #include "widget/clipwidget.h"
-#include "object/clipcontroller.h"
-#include "object/clip.h"
+#include "object/control/clipcontroller.h"
+#include "object/control/clip.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
 #include "object/util/objecteditor.h"

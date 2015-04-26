@@ -22,7 +22,7 @@
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/objectfactory.h"
-#include "object/trackfloat.h"
+#include "object/control/trackfloat.h"
 #include "objectinfodialog.h"
 #include "widget/objectlistwidget.h"
 

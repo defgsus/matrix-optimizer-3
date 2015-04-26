@@ -11,7 +11,7 @@
 #include "viewspace.h"
 #include "io/error.h"
 #include "io/datastream.h"
-#include "object/sequence.h"
+#include "object/control/sequence.h"
 
 namespace MO {
 namespace GUI {

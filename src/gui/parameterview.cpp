@@ -17,7 +17,7 @@
 #include "parameterview.h"
 #include "object/object.h"
 #include "object/scene.h"
-#include "object/sequencefloat.h"
+#include "object/control/sequencefloat.h"
 #include "object/util/objecteditor.h"
 #include "object/param/parameters.h"
 #include "object/param/parameter.h"

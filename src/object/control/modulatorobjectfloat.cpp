@@ -9,10 +9,10 @@
 */
 
 #include "modulatorobjectfloat.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
 #include "io/datastream.h"
 #include "io/log.h"
-#include "param/parameters.h"
-#include "param/parameterfloat.h"
 
 namespace MO {
 

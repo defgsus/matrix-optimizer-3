@@ -16,7 +16,7 @@
 
 #include "trackheaderwidget.h"
 #include "io/error.h"
-#include "object/track.h"
+#include "object/control/track.h"
 
 namespace MO {
 namespace GUI {

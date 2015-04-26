@@ -18,9 +18,9 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/track.h"
-#include "object/sequence.h"
-#include "object/sequencefloat.h"
+#include "object/control/track.h"
+#include "object/control/sequence.h"
+#include "object/control/sequencefloat.h"
 #include "object/param/parameters.h"
 
 

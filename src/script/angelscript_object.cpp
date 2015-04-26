@@ -21,7 +21,7 @@
 #include "object/object.h"
 #include "object/objectfactory.h"
 #include "object/scene.h"
-#include "object/sequencefloat.h"
+#include "object/control/sequencefloat.h"
 #include "object/group.h"
 #include "object/model3d.h"
 #include "object/camera.h"

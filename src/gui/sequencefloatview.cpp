@@ -14,14 +14,14 @@
 #include "sequenceview.h"
 #include "timeline1dview.h"
 #include "ruler.h"
-#include "math/timeline1d.h"
-#include "object/sequencefloat.h"
-#include "object/scene.h"
-#include "io/error.h"
-#include "io/log.h"
 #include "generalsequencefloatview.h"
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
+#include "object/control/sequencefloat.h"
+#include "object/scene.h"
+#include "math/timeline1d.h"
+#include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {

@@ -11,7 +11,7 @@
 #include <QPainter>
 
 #include "sequenceoverpaint.h"
-#include "object/sequence.h"
+#include "object/control/sequence.h"
 #include "object/scene.h"
 
 namespace MO {

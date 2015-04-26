@@ -14,7 +14,7 @@
 #include "object.h"
 #include "objectfactory.h"
 #include "scene.h"
-#include "modulatorobjectfloat.h"
+#include "control/modulatorobjectfloat.h"
 #include "transform/transformation.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"

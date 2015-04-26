@@ -12,7 +12,7 @@
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/trackfloat.h"
+#include "object/control/trackfloat.h"
 #include "object/scene.h"
 #include "object/util/objecteditor.h"
 #include "modulator.h"

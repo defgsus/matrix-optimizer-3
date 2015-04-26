@@ -16,7 +16,7 @@
 #include "clipwidgetbutton.h"
 #include "gui/clipview.h"
 #include "io/error.h"
-#include "object/clip.h"
+#include "object/control/clip.h"
 
 namespace MO {
 namespace GUI {

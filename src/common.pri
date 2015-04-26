@@ -37,18 +37,13 @@ HEADERS += \
     src/io/init.h \
     src/object/model3d.h \
     src/io/applicationtime.h \
-    src/object/sequence.h \
-    src/object/sequences.h \
-    src/object/sequencefloat.h \
     src/math/random.h \
     src/math/noiseperlin.h \
     src/math/funcparser/functions.h \
     src/math/funcparser/parser.h \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
-    src/object/track.h \
     src/tool/syntaxhighlighter.h \
-    src/object/trackfloat.h \
     src/object/object_fwd.h \
     src/object/transform/axisrotation.h \
     src/object/transform/translation.h \
@@ -105,8 +100,6 @@ HEADERS += \
     src/audio/tool/wavetablegenerator.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
-    src/object/modulatorobject.h \
-    src/object/modulatorobjectfloat.h \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
     src/object/textureoverlay.h \
@@ -185,7 +178,6 @@ HEADERS += \
     src/projection/testprojectionrenderer.h \
     src/io/commandlineparser.h \
     src/io/version.h \
-    src/object/clip.h \
     src/tool/selection.h \
     src/graph/directedgraph.h \
     src/object/util/objectmodulatorgraph.h \
@@ -229,7 +221,6 @@ HEADERS += \
     src/audio/tool/delay.h \
     src/object/audio/audioinao.h \
     src/object/param/modulatorevent.h \
-    src/object/clipcontroller.h \
     src/object/audio/filterbankao.h \
     src/object/param/modulatoroutput.h \
     src/object/audio/envelopefollowerao.h \
@@ -276,7 +267,17 @@ HEADERS += \
     src/io/diskrendersettings.h \
     src/engine/diskrenderer.h \
     src/object/shaderobject.h \
-    src/tool/threadpool.h
+    src/tool/threadpool.h \
+    src/object/interface/valuefloatinterface.h \
+    src/object/control/sequencefloat.h \
+    src/object/control/sequence.h \
+    src/object/control/modulatorobject.h \
+    src/object/control/modulatorobjectfloat.h \
+    src/object/control/sequences.h \
+    src/object/control/track.h \
+    src/object/control/trackfloat.h \
+    src/object/control/clip.h \
+    src/object/control/clipcontroller.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -303,14 +304,9 @@ SOURCES += \
     src/object/model3d.cpp \
     src/types/float.cpp \
     src/io/applicationtime.cpp \
-    src/object/sequence.cpp \
-    src/object/sequences.cpp \
-    src/object/sequencefloat.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
-    src/object/track.cpp \
     src/tool/syntaxhighlighter.cpp \
-    src/object/trackfloat.cpp \
     src/object/transform/axisrotation.cpp \
     src/object/transform/transformation.cpp \
     src/object/transform/translation.cpp \
@@ -357,8 +353,6 @@ SOURCES += \
     src/audio/tool/waveform.cpp \
     src/audio/tool/wavetablegenerator.cpp \
     src/io/lockedoutput.cpp \
-    src/object/modulatorobject.cpp \
-    src/object/modulatorobjectfloat.cpp \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
     src/object/textureoverlay.cpp \
@@ -430,7 +424,6 @@ SOURCES += \
     src/projection/testprojectionrenderer.cpp \
     src/io/commandlineparser.cpp \
     src/io/version.cpp \
-    src/object/clip.cpp \
     src/object/util/objectmodulatorgraph.cpp \
     src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
@@ -467,7 +460,6 @@ SOURCES += \
     src/audio/spatial/spatialmicrophone.cpp \
     src/object/audio/audioinao.cpp \
     src/object/param/modulatorevent.cpp \
-    src/object/clipcontroller.cpp \
     src/object/audio/filterbankao.cpp \
     src/object/param/modulatoroutput.cpp \
     src/object/audio/envelopefollowerao.cpp \
@@ -514,5 +506,14 @@ SOURCES += \
     src/io/diskrendersettings.cpp \
     src/engine/diskrenderer.cpp \
     src/object/shaderobject.cpp \
-    src/tool/threadpool.cpp
+    src/tool/threadpool.cpp \
+    src/object/control/sequencefloat.cpp \
+    src/object/control/sequence.cpp \
+    src/object/control/modulatorobject.cpp \
+    src/object/control/modulatorobjectfloat.cpp \
+    src/object/control/sequences.cpp \
+    src/object/control/track.cpp \
+    src/object/control/trackfloat.cpp \
+    src/object/control/clip.cpp \
+    src/object/control/clipcontroller.cpp
 

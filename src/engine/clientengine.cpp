@@ -15,7 +15,7 @@
 #include "clientenginecommandline.h"
 #include "object/scene.h"
 #include "object/objectfactory.h"
-#include "object/clipcontroller.h"
+#include "object/control/clipcontroller.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
 //#include "network/networkmanager.h"

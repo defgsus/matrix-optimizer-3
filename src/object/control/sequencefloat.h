@@ -14,6 +14,7 @@
 #include <QStringList>
 
 #include "sequence.h"
+#include "object/interface/valuefloatinterface.h"
 #include "audio/tool/waveform.h"
 #include "audio/audio_fwd.h"
 
@@ -21,7 +22,7 @@ namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
 namespace MATH { class Timeline1D; }
 
-class SequenceFloat : public Sequence
+class SequenceFloat : public Sequence, public ValueFloatInterface
 {
     Q_OBJECT
 public:
@@ -186,7 +187,7 @@ public:
     PPP_NAMESPACE::Parser * equation(uint thread);
     const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
-    Double value(Double time, uint thread) const;
+    Double value(Double time, uint thread) const Q_DECL_OVERRIDE;
 
 signals:
 

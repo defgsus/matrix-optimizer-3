@@ -15,8 +15,8 @@
 #include "io/error.h"
 #include "sequence.h"
 #include "clipcontroller.h"
-#include "param/parameters.h"
-#include "util/objectmodulatorgraph.h"
+#include "object/param/parameters.h"
+#include "object/util/objectmodulatorgraph.h"
 
 #include "io/log.h"
 

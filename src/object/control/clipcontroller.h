@@ -14,7 +14,7 @@
 #include <QVector>
 #include <QMap>
 
-#include "object.h"
+#include "object/object.h"
 
 namespace MO {
 

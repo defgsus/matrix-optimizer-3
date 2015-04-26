@@ -11,9 +11,9 @@
 #include "modulatorevent.h"
 #include "io/error.h"
 #include "io/datastream.h"
-#include "object/trackfloat.h"
-#include "object/sequencefloat.h"
-#include "object/modulatorobjectfloat.h"
+#include "object/control/trackfloat.h"
+#include "object/control/sequencefloat.h"
+#include "object/control/modulatorobjectfloat.h"
 #include "object/audioobject.h"
 
 namespace MO {

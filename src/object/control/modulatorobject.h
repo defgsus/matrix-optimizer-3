@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_MODULATOROBJECT_H
 
 
-#include "object.h"
+#include "object/object.h"
 
 namespace MO {
 

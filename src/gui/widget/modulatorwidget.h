@@ -46,6 +46,7 @@ private:
 
     Scene * scene_;
     Object * object_;
+    ObjectEditor * editor_;
     Modulator * modulator_;
 
     QLabel * labelName_;

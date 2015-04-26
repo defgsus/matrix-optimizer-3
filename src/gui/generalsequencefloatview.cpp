@@ -16,8 +16,8 @@
 #include "painter/grid.h"
 #include "painter/valuecurve.h"
 #include "painter/sequenceoverpaint.h"
-#include "object/sequencefloat.h"
-#include "object/clip.h"
+#include "object/control/sequencefloat.h"
+#include "object/control/clip.h"
 
 
 namespace MO {

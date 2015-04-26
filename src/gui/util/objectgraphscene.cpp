@@ -33,7 +33,7 @@
 #include "object/model3d.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
-#include "object/sequencefloat.h"
+#include "object/control/sequencefloat.h"
 #include "object/param/parameters.h"
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"

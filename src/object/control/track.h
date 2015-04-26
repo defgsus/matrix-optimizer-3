@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_TRACK_H
 #define MOSRC_OBJECT_TRACK_H
 
-#include "object.h"
+#include "object/object.h"
 
 namespace MO {
 

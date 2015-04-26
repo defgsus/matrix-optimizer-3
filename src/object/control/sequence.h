@@ -14,11 +14,11 @@
 #include <QList>
 #include <QColor>
 
-#include "object.h"
+#include "object/object.h"
+#include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
+#include "object/control/clip.h"
 #include "math/functions.h"
-#include "param/parameterfloat.h"
-#include "param/parameterselect.h"
-#include "clip.h"
 
 namespace MO {
 

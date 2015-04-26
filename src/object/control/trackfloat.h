@@ -13,10 +13,12 @@
 
 
 #include "track.h"
+#include "object/interface/valuefloatinterface.h"
+
 
 namespace MO {
 
-class TrackFloat : public Track
+class TrackFloat : public Track, public ValueFloatInterface
 {
     Q_OBJECT
 public:
@@ -31,7 +33,7 @@ public:
 
     virtual QList<Object*> getModulatingObjects() const;
 
-    Double value(Double time, uint thread) const;
+    Double value(Double time, uint thread) const Q_DECL_OVERRIDE;
 
     /** Writes @p number values starting at @p time into the pointer */
     void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;

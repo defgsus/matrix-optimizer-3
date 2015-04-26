@@ -14,7 +14,7 @@
 #include "gui/item/abstractobjectitem.h"
 #include "gui/item/objectgraphconnectitem.h"
 #include "object/object.h"
-#include "object/clip.h"
+#include "object/control/clip.h"
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/param/modulator.h"

@@ -9,11 +9,11 @@
 */
 
 #include "sequence.h"
-#include "param/parameters.h"
+#include "object/param/parameters.h"
+#include "object/control/clip.h"
+#include "track.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "track.h"
-#include "clip.h"
 
 namespace MO {
 

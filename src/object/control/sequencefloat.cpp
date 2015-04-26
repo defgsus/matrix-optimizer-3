@@ -11,23 +11,24 @@
 #include <random>
 
 #include "sequencefloat.h"
-#include "io/datastream.h"
-#include "io/error.h"
-#include "io/log.h"
-#include "param/parameters.h"
-#include "param/parameterfilename.h"
-#include "param/parametertext.h"
-#include "param/parameterint.h"
-#include "param/parametertimeline1d.h"
-#include "math/timeline1d.h"
-#include "math/funcparser/parser.h"
-#include "math/constants.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfilename.h"
+#include "object/param/parametertext.h"
+#include "object/param/parameterint.h"
+#include "object/param/parametertimeline1d.h"
 #include "audio/tool/waveform.h"
 #include "audio/tool/wavetablegenerator.h"
 #include "audio/tool/bandlimitwavetablegenerator.h"
 #include "audio/tool/fftwavetablegenerator.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
+#include "math/timeline1d.h"
+#include "math/funcparser/parser.h"
+#include "math/constants.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
+
 
 namespace MO {
 

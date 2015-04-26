@@ -22,7 +22,7 @@
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/modulatorfloat.h"
-#include "object/trackfloat.h"
+#include "object/control/trackfloat.h"
 #include "gui/widget/iconbar.h"
 #include "io/error.h"
 

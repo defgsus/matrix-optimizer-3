@@ -13,10 +13,11 @@
 
 
 #include "modulatorobject.h"
+#include "object/interface/valuefloatinterface.h"
 
 namespace MO {
 
-class ModulatorObjectFloat : public ModulatorObject
+class ModulatorObjectFloat : public ModulatorObject, public ValueFloatInterface
 {
     Q_OBJECT
 public:
@@ -26,7 +27,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
-    Double value(Double time, uint thread) const;
+    Double value(Double time, uint thread) const Q_DECL_OVERRIDE;
 
     /** Returns the value set with setValue() */
     Double inputValue() const { return offset_; }

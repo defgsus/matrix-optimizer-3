@@ -17,7 +17,7 @@
 #include "io/log.h"
 #include "io/error.h"
 #include "gui/painter/valuecurve.h"
-#include "object/sequencefloat.h"
+#include "object/control/sequencefloat.h"
 
 
 namespace MO {

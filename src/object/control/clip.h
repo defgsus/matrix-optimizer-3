@@ -13,8 +13,8 @@
 
 #include <QColor>
 
-#include "object.h"
-#include "param/parameterfloat.h"
+#include "object/object.h"
+#include "object/param/parameterfloat.h"
 
 namespace MO {
 

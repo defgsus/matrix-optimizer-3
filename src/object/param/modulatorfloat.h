@@ -17,6 +17,8 @@
 
 namespace MO {
 
+class ValueFloatInterface;
+
 class ModulatorFloat : public Modulator
 {
 public:
@@ -25,9 +27,7 @@ public:
     enum SourceType
     {
         ST_NONE,
-        ST_SEQUENCE_FLOAT,
-        ST_TRACK_FLOAT,
-        ST_MODULATOR_OBJECT_FLOAT,
+        ST_INTERFACE_FLOAT,
         ST_AUDIO_OBJECT
     };
 
@@ -85,6 +85,7 @@ private:
     SourceType sourceType_;
     uint channel_;
     ModulatorOutputStaticFloat * outStaticFloat_;
+    ValueFloatInterface * interface_;
 
     Double amplitude_, timeOffset_;
 };
