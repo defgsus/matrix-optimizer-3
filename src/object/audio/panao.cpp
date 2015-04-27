@@ -74,20 +74,22 @@ void PanAO::deserialize(IO::DataStream & io)
 void PanAO::createParameters()
 {
     AudioObject::createParameters();
-    params()->beginParameterGroup("pan", tr("panner"));
-    p_->paramPan = params()->createFloatParameter("pan_pan", tr("panning"),
-                                                  tr("The panning position in the range [-1,1], 0 is center."),
-                                                  0.0, 0.1);
-    p_->paramMode = params()->createSelectParameter("pan_mode", tr("panning mode"),
-                                                    tr("Selects the panning mode"),
-                                                    { "simple", "equal", "sqrt", "advanced"},
-                                                    { tr("Simple"), tr("Equal power"), tr("Sqrt"), tr("Advanced")},
-                                                    { tr("Simple linear panning"),
-                                                      tr("Left and right channel have the same loudness"),
-                                                      tr("Square root panning mode"),
-                                                      tr("Alternative equal power pan")},
-                                                    {Private::M_SIMPLE, Private::M_EQUAL, Private::M_SQRT, Private::M_ADVANCED},
-                                                    Private::M_SIMPLE);
+    params()->beginParameterGroup("pan", tr("panning"));
+    initParameterGroupExpanded("pan");
+
+        p_->paramPan = params()->createFloatParameter("pan_pan", tr("panning"),
+                                  tr("The panning position in the range [-1,1], 0 is center."),
+                                  0.0, 0.1);
+        p_->paramMode = params()->createSelectParameter("pan_mode", tr("panning mode"),
+                                tr("Selects the panning mode"),
+                                { "simple", "equal", "sqrt", "advanced"},
+                                { tr("Simple"), tr("Equal power"), tr("Sqrt"), tr("Advanced")},
+                                { tr("Simple linear panning"),
+                                  tr("Left and right channel have the same loudness"),
+                                  tr("Square root panning mode"),
+                                  tr("Alternative equal power pan")},
+                                {Private::M_SIMPLE, Private::M_EQUAL, Private::M_SQRT, Private::M_ADVANCED},
+                                Private::M_SIMPLE);
     params()->endParameterGroup();
 }
 

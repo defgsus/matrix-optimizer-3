@@ -49,6 +49,8 @@ namespace MO {
     class Track;
     class TrackFloat;
 
+    class ValueFloatInterface;
+
     class Parameter;
     class Parameters;
     class ParameterInt;

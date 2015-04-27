@@ -49,11 +49,13 @@ void ParameterAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("in", tr("input"));
+    initParameterGroupExpanded("in");
 
         paramValue_ = params()->createFloatParameter("v", tr("value"),
                                                    tr("The input value"),
                                                    0.0, 0.05);
 
+        /** @todo make chopping optional in ParameterAO */
         paramRate_ = params()->createFloatParameter("rate", tr("sampling rate"),
                                                    tr("Number of samples per second"),
                                                    30.0, 0.01, 9999999,

@@ -96,8 +96,8 @@ void ModPlayerAO::createParameters()
 {
     AudioObject::createParameters();
 
-    params()->beginParameterGroup("mod", tr("playback"));
-
+    params()->beginParameterGroup("play", tr("playback"));
+    initParameterGroupExpanded("play");
 
         p_->paramAmp = params()->createFloatParameter("dumb_amp", tr("amplitude"),
                                                    tr("The amplitude of the output"),

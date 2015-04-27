@@ -54,5 +54,6 @@
         <file alias="obj_angelscript.png">assets/icon/obj_angelscript.png</file>
         <file alias="obj_oscillograph.png">assets/icon/obj_oscillograph.png</file>
         <file alias="obj_glsl.png">assets/icon/obj_glsl.png</file>
+        <file alias="obj_derivative.png">assets/icon/obj_derivative.png</file>
     </qresource>
 </RCC>

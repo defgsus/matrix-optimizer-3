@@ -68,15 +68,10 @@ bool ModulatorFloat::canBeModulator(const Object * o) const
 {
     MO_ASSERT(o, "ModulatorFloat::canBeModulator(NULL) called");
 
-    return (dynamic_cast<const ValueFloatInterface*>(o) != 0)
-
-    //return o->type() == Object::T_TRACK_FLOAT
-    //    || o->type() == Object::T_SEQUENCE_FLOAT
-    //    || o->type() == Object::T_MODULATOR_OBJECT_FLOAT
-        || (o->type() == Object::T_AUDIO_OBJECT)
-            //&& !o->modulatorOutputs().isEmpty())
-
-            ;
+    return
+            (dynamic_cast<const ValueFloatInterface*>(o) != 0)
+         || (o->type() == Object::T_AUDIO_OBJECT)
+    ;
 }
 
 bool ModulatorFloat::hasAmplitude() const
@@ -93,10 +88,6 @@ bool ModulatorFloat::hasAmplitude() const
 bool ModulatorFloat::hasTimeOffset() const
 {
     return sourceType_ != ST_AUDIO_OBJECT;
-    /*
-    return     sourceType_ == ST_SEQUENCE_FLOAT
-            || sourceType_ == ST_TRACK_FLOAT
-            || sourceType_ == ST_MODULATOR_OBJECT_FLOAT;*/
 }
 
 
@@ -113,25 +104,10 @@ void ModulatorFloat::modulatorChanged_()
         interface_ = iface;
     }
     else
-
-        /*
-    if (qobject_cast<TrackFloat*>(modulator()))
-        sourceType_ = ST_TRACK_FLOAT;
-    else
-    if (qobject_cast<SequenceFloat*>(modulator()))
-        sourceType_ = ST_SEQUENCE_FLOAT;
-    else
-    if (qobject_cast<ModulatorObjectFloat*>(modulator()))
-        sourceType_ = ST_MODULATOR_OBJECT_FLOAT;
-    else
-    */
     if (qobject_cast<AudioObject*>(modulator()))
     {
         sourceType_ = ST_AUDIO_OBJECT;
         channel_ = getAudioOutputChannel();
-        //std::cout << "--- " << outputId() << " " << outputId().mid(7) << " " << channel_ << std::endl;
-        //outStaticFloat_ = dynamic_cast<ModulatorOutputStaticFloat*>(modulator()->getModulatorOutput("0"));
-        //MO_ASSERT(outStaticFloat_, "not even that?");
     }
 
     else
@@ -167,9 +143,9 @@ Double ModulatorFloat::value(Double time, uint thread) const
         }
 
         case ST_AUDIO_OBJECT:
-            //return amplitude_ * (outStaticFloat_ ? outStaticFloat_->value() : 0.0);
             return amplitude_ *
-                    static_cast<AudioObject*>(modulator())->getAudioOutputAsFloat(channel_, time, MO_AUDIO_THREAD);
+                    static_cast<AudioObject*>(modulator())
+                        ->getAudioOutputAsFloat(channel_, time, MO_AUDIO_THREAD);
     }
 
     return 0.0;

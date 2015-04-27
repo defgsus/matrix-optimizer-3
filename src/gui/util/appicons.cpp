@@ -26,6 +26,7 @@
 #include "object/control/trackfloat.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/modulatorobjectfloat.h"
+#include "object/control/derivativeobjectfloat.h"
 #include "object/synthesizer.h"
 #include "object/audio/filterao.h"
 #include "object/ascriptobject.h"
@@ -64,7 +65,8 @@ struct AppIcons::Private
         I_CLIP_CONTROL,
         I_ANGELSCRIPT,
         I_OSCILLOGRAPH,
-        I_GLSL
+        I_GLSL,
+        I_DERIVATIVE
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -132,6 +134,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_ANGELSCRIPT, ":/icon/obj_angelscript.png");
     nameMap_.insert(I_OSCILLOGRAPH, ":/icon/obj_oscillograph.png");
     nameMap_.insert(I_GLSL, ":/icon/obj_glsl.png");
+    nameMap_.insert(I_DERIVATIVE, ":/icon/obj_derivative.png");
 }
 
 
@@ -172,16 +175,6 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_AUDIO;
     }
 
-    if (qobject_cast<const AScriptObject*>(o))
-        return I_ANGELSCRIPT;
-
-    if (qobject_cast<const Oscillograph*>(o))
-        return I_OSCILLOGRAPH;
-
-#ifndef MO_DISABLE_SPATIAL
-    if (qobject_cast<const Synthesizer*>(o))
-            return I_MUSIC_NOTE;
-#endif
     if (o->type() & Object::T_GROUP) return I_GROUP;
     if (o->isTrack()) return I_TRACK;
     if (o->type() & Object::TG_FLOAT) return I_PARAMETER;
@@ -192,6 +185,20 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (o->isParameter()) return I_PARAMETER;
     if (o->isLightSource()) return I_LIGHT;
     if (o->isModulatorObject()) return I_MODULATOR;
+
+    if (qobject_cast<const AScriptObject*>(o))
+        return I_ANGELSCRIPT;
+
+    if (qobject_cast<const Oscillograph*>(o))
+        return I_OSCILLOGRAPH;
+
+    if (qobject_cast<const DerivativeObjectFloat*>(o))
+        return I_DERIVATIVE;
+
+#ifndef MO_DISABLE_SPATIAL
+    if (qobject_cast<const Synthesizer*>(o))
+            return I_MUSIC_NOTE;
+#endif
 
     return I_NONE;
 }

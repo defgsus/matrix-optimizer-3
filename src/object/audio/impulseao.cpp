@@ -76,16 +76,17 @@ void ImpulseAO::createParameters()
 {
     AudioObject::createParameters();
     params()->beginParameterGroup("impulse", tr("impulse-generator"));
+    initParameterGroupExpanded("impulse");
 
-    p_->paramAmp  = params()->createFloatParameter("impulse_amp", tr("amplitude"),
-                                                   tr("The Amplitude of the impulses"),
-                                                   1.0, 0.05);
-    p_->paramFreq = params()->createFloatParameter("impulse_freq", tr("frequency"),
-                                                   tr("The Frequency of the impulses in Hz"),
-                                                   100.0, 1.0);
-    p_->paramPhase = params()->createFloatParameter("impulse_phase", tr("phase"),
-                                                   tr("The phase modulation in units [-1,1]"),
-                                                   0.0, 0.0625);
+        p_->paramAmp  = params()->createFloatParameter("impulse_amp", tr("amplitude"),
+                                                       tr("The Amplitude of the impulses"),
+                                                       1.0, 0.05);
+        p_->paramFreq = params()->createFloatParameter("impulse_freq", tr("frequency"),
+                                                       tr("The Frequency of the impulses in Hz"),
+                                                       100.0, 1.0);
+        p_->paramPhase = params()->createFloatParameter("impulse_phase", tr("phase"),
+                                                       tr("The phase modulation in units [-1,1]"),
+                                                       0.0, 0.0625);
     params()->endParameterGroup();
 }
 

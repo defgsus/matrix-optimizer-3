@@ -37,6 +37,7 @@ namespace GUI {
 SequenceView::SequenceView(QWidget *parent) :
     QWidget         (parent),
     sequence_       (0),
+    valueFloat_     (0),
     scene_          (0),
     sceneSettings_  (0),
     grid_           (new QGridLayout(this)),
@@ -183,6 +184,7 @@ void SequenceView::setSequence_(Sequence * s)
     bool different = sequence_ != s;
 
     sequence_ = s;
+    valueFloat_ = 0;
 
     if (different)
         updateSequenceWidget_();
@@ -203,9 +205,37 @@ void SequenceView::setSequence_(Sequence * s)
     }
 }
 
+void SequenceView::setValueFloat(ValueFloatInterface *iface)
+{
+    bool different = valueFloat_ != iface;
+
+    sequence_ = 0;
+    valueFloat_ = iface;
+
+    if (different)
+    {
+        updateSequenceWidget_();
+        playBar_->setTimeOffset(0.);
+
+        setViewSpace(viewSpace());
+    }
+}
+
+void SequenceView::setNothing()
+{
+    bool change = sequence_ || valueFloat_;
+    sequence_ = 0;
+    valueFloat_ = 0;
+    if (change)
+    {
+        updateSequenceWidget_();
+        playBar_->setTimeOffset(0.);
+    }
+}
+
 void SequenceView::updateSequenceWidget_()
 {
-    if (!sequence_)
+    if (!sequence_ && !valueFloat_)
     {
         if (seqFloatView_)
         {
@@ -216,27 +246,32 @@ void SequenceView::updateSequenceWidget_()
         return;
     }
 
-    QWidget * w = 0;
-
-    if (sequence_->type() == Object::T_SEQUENCE_FLOAT)
+    if (sequence_ && sequence_->type() == Object::T_SEQUENCE_FLOAT)
     {
-        if (!seqFloatView_)
-        {
-            w = seqFloatView_ = new SequenceFloatView(this);
-            connect(seqFloatView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
-                    this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
-        }
-
-        seqFloatView_->setVisible(true);
+        createSeqFloatView_();
         seqFloatView_->setSequence(static_cast<SequenceFloat*>(sequence_));
+        seqFloatView_->setVisible(true);
     }
-
-    if (w)
+    else
+    if (valueFloat_)
     {
-        grid_->addWidget(w, 1, 1);
+        createSeqFloatView_();
+        seqFloatView_->setValueFloat(valueFloat_);
+        seqFloatView_->setVisible(true);
     }
 
     playBar_->raise();
+}
+
+void SequenceView::createSeqFloatView_()
+{
+    if (!seqFloatView_)
+    {
+        seqFloatView_ = new SequenceFloatView(this);
+        connect(seqFloatView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+                this, SLOT(onViewSpaceChanged_(UTIL::ViewSpace)));
+        grid_->addWidget(seqFloatView_, 1, 1);
+    }
 }
 
 void SequenceView::setViewSpace(const UTIL::ViewSpace & v)

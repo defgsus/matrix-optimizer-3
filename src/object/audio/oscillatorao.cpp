@@ -106,6 +106,7 @@ void OscillatorAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("osc", tr("oscillator"));
+    initParameterGroupExpanded("osc");
 
         p_->paramOffset = params()->createFloatParameter("osc_offset", tr("offset"),
                                                    tr("The offset added to the oscillator output"),

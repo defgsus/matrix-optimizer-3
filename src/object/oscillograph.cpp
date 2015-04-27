@@ -724,6 +724,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
         const Double mbtimefac = 1.0 / Double(std::max(1, mbframes - 1))
                 * p_->paramBlurWidth->value(rtime, thread);
 
+        p_->vaoUpdateTime = rtime + 1.;
         for (int mb = 0; mb < mbframes; ++mb)
         {
             Double time = rtime - Double(mb) * mbtimefac;

@@ -19,6 +19,7 @@
 class QLayout;
 
 namespace MO {
+class ValueFloatInterface;
 namespace GUI {
 namespace PAINTER { class ValueCurveData; }
 
@@ -34,6 +35,7 @@ public:
     ~SequenceFloatView();
 
     SequenceFloat * sequence() const { return sequence_; }
+    ValueFloatInterface * valueFloat() const { return valueFloat_; }
 
 signals:
 
@@ -47,6 +49,7 @@ public slots:
     void setViewSpace(const UTIL::ViewSpace&);
 
     void setSequence(SequenceFloat *);
+    void setValueFloat(ValueFloatInterface *);
 
     /** Creates another sequence widget if needed */
     void updateSequence();
@@ -65,6 +68,7 @@ private:
 
     SequenceView * view_;
     SequenceFloat * sequence_;
+    ValueFloatInterface * valueFloat_;
 
     Timeline1DView * timeline_;
     GeneralSequenceFloatView * seqView_;

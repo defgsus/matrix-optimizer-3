@@ -29,6 +29,7 @@ class QMenu;
 namespace MO {
 class LiveAudioEngine;
 class RenderEngine;
+class ValueFloatInterface;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -148,6 +149,7 @@ private slots:
     void onObjectDeleted_(const MO::Object*);
     void onObjectsDeleted_(const QList<MO::Object*>&);
     void onParamVisChanged_();
+    void onValueFloatChanged_();
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();
     void onSceneTimeChanged_(Double time);
@@ -167,6 +169,7 @@ private slots:
     void showClipView_(bool enable, Object * = 0);
     void showSequence_(bool enable, Sequence * = 0);
     void showSequencer_(bool enable, Object * = 0);
+    void showValueFloat_(ValueFloatInterface * iface);
 
     void updateWidgetsActivity_();
 

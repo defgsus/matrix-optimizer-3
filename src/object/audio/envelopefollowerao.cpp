@@ -76,6 +76,7 @@ void EnvelopeFollowerAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("out", tr("output"));
+    initParameterGroupExpanded("out");
 
         p_->paramInAmp = params()->createFloatParameter("_envf_inamp", tr("input amplitude"),
                                                    tr("The amplitude of the audio input"),

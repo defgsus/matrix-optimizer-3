@@ -71,6 +71,7 @@ void FftAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("fft", tr("fourier transform"));
+    initParameterGroupExpanded("fft");
 
         p_->paramType = params()->createSelectParameter("_fft_type", tr("mode"),
                                                   tr("Selectes the type of fourier transform"),

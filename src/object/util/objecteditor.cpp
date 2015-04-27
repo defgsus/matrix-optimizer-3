@@ -415,6 +415,8 @@ namespace
 
         // signals
         emit edit->parameterChanged(p);
+        if (auto iface = dynamic_cast<ValueFloatInterface*>(p->object()))
+            emit edit->valueFloatChanged(iface);
         if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
             emit edit->sequenceChanged(seq);
 

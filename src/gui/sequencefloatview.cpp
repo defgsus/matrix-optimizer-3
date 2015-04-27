@@ -27,6 +27,8 @@ namespace MO {
 namespace GUI {
 
 namespace {
+
+    /** wrapper for SequenceFloat */
     class SequenceCurveData : public PAINTER::ValueCurveData
     {
     public:
@@ -34,6 +36,7 @@ namespace {
         Double value(Double time) const
             { return sequence->value(sequence->realStart() + time, MO_GUI_THREAD); }
     };
+
 }
 
 
@@ -41,6 +44,7 @@ SequenceFloatView::SequenceFloatView(SequenceView *parent) :
     QWidget         (parent),
     view_           (parent),
     sequence_       (0),
+    valueFloat_     (0),
     timeline_       (0),
     seqView_        (0),
     sequenceCurveData_(0),
@@ -109,6 +113,22 @@ void SequenceFloatView::setSequence(SequenceFloat * s)
     bool different = sequence_ != s;
 
     sequence_ = s;
+    valueFloat_ = 0;
+
+    if (different)
+    {
+        updateSequence();
+    }
+}
+
+void SequenceFloatView::setValueFloat(ValueFloatInterface * iface)
+{
+    MO_DEBUG_GUI("SequenceFloatView::setValueFloat(" << iface << ") valueFloat_ = " << valueFloat_);
+
+    bool different = sequence_ || valueFloat_ != iface;
+
+    sequence_ = 0;
+    valueFloat_ = iface;
 
     if (different)
     {
@@ -146,6 +166,7 @@ void SequenceFloatView::updateSequence()
 
     }
     else
+    if (sequence_)
     {
         if (timeline_ && timeline_->isVisible())
             timeline_->setVisible(false);
@@ -153,9 +174,20 @@ void SequenceFloatView::updateSequence()
         createSequenceView_();
 
         seqView_->setSequence(sequence_);
-
         seqView_->setVisible(true);
     }
+    else
+    if (valueFloat_)
+    {
+        if (timeline_ && timeline_->isVisible())
+            timeline_->setVisible(false);
+
+        createSequenceView_();
+
+        seqView_->setValueFloat(valueFloat_);
+        seqView_->setVisible(true);
+    }
+
 
     // XXX forgot why
     //setViewSpace(view_->viewSpace());

@@ -18,12 +18,14 @@
 #include "painter/sequenceoverpaint.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/clip.h"
-
+#include "object/interface/valuefloatinterface.h"
 
 namespace MO {
 namespace GUI {
 
 namespace {
+
+    /** wrapper for SequenceFloat */
     class SequenceCurveData : public PAINTER::ValueCurveData
     {
     public:
@@ -33,6 +35,16 @@ namespace {
             return sequence->value(sequence->realStart() + time, MO_GUI_THREAD);
         }
     };
+
+    /** wrapper for ValueFloatInterface */
+    class ValueCurveData : public PAINTER::ValueCurveData
+    {
+    public:
+        const ValueFloatInterface * iface;
+        Double value(Double time) const
+            { return iface->value(time, MO_GUI_THREAD); }
+    };
+
 }
 
 
@@ -41,7 +53,8 @@ GeneralSequenceFloatView::GeneralSequenceFloatView(QWidget *parent) :
     sequence_       (0),
     grid_           (new PAINTER::Grid(this)),
     curve_          (new PAINTER::ValueCurve(this)),
-    curveData_      (new SequenceCurveData),
+    curveDataSeq_   (new SequenceCurveData),
+    curveDataValue_ (new ValueCurveData),
     over_           (new PAINTER::SequenceOverpaint(this)),
 
     brushBack_      (QColor(50,50,50))
@@ -50,7 +63,8 @@ GeneralSequenceFloatView::GeneralSequenceFloatView(QWidget *parent) :
 
 GeneralSequenceFloatView::~GeneralSequenceFloatView()
 {
-    delete curveData_;
+    delete curveDataValue_;
+    delete curveDataSeq_;
 }
 
 int GeneralSequenceFloatView::gridOptions() const
@@ -80,13 +94,27 @@ void GeneralSequenceFloatView::setSequence(const SequenceFloat * s)
         return;
 
     sequence_ = s;
-    static_cast<SequenceCurveData*>(curveData_)->sequence = s;
+    valueFloat_ = 0;
+    static_cast<SequenceCurveData*>(curveDataSeq_)->sequence = s;
     over_->setSequence(s);
-    curve_->setCurveData(s ? curveData_ : 0);
+    curve_->setCurveData(s ? curveDataSeq_ : 0);
 
     update();
 }
 
+void GeneralSequenceFloatView::setValueFloat(const ValueFloatInterface * iface)
+{
+    if (iface == valueFloat_)
+        return;
+
+    sequence_ = 0;
+    valueFloat_ = iface;
+    static_cast<ValueCurveData*>(curveDataValue_)->iface = iface;
+    over_->setSequence(0);
+    curve_->setCurveData(iface ? curveDataValue_ : 0);
+
+    update();
+}
 
 void GeneralSequenceFloatView::paintEvent(QPaintEvent * e)
 {

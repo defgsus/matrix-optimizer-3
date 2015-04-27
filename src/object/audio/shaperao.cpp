@@ -156,6 +156,7 @@ void ShaperAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("out", tr("output"));
+    initParameterGroupExpanded("out");
 
         p_->paramType = params()->createSelectParameter("_shaper_type", tr("type"),
                                                         tr("The type of shaping function"),

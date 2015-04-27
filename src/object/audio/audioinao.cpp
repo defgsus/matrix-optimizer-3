@@ -44,6 +44,7 @@ void AudioInAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("in", tr("input"));
+    initParameterGroupExpanded("in");
 
         paramAmp_ = params()->createFloatParameter("amp", tr("amplitude"),
                                                    tr("The amplitude of the audio input"),

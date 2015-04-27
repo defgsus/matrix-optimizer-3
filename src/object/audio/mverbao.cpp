@@ -76,6 +76,7 @@ void MVerbAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("_mverb", tr("Reverb"));
+    initParameterGroupExpanded("_mverb");
 
         MVERB::MVerb<F32> temp;
         temp.reset();

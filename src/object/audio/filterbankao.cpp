@@ -87,7 +87,8 @@ void FilterBankAO::createParameters()
 {
     AudioObject::createParameters();
 
-    params()->beginParameterGroup("osc", tr("Filter"));
+    params()->beginParameterGroup("filter", tr("Filter"));
+    initParameterGroupExpanded("filter");
 
         p_->paramType = params()->createSelectParameter("_filter_type", tr("filter type"),
                                                   tr("Selectes the type of filter"),

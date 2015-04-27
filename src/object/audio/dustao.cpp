@@ -81,20 +81,23 @@ void DustAO::deserialize(IO::DataStream & io)
 void DustAO::createParameters()
 {
     AudioObject::createParameters();
+
     params()->beginParameterGroup("dust", tr("random impulse generator"));
-    p_->paramAmp     = params()->createFloatParameter("dust_amp", tr("amplitude"),
-                                                      tr("The amplitude of the impulses"),
-                                                      1.0, 0.05);
-    p_->paramDensity = params()->createFloatParameter("dust_dens", tr("density"),
-                                                      tr("The density of the impulses"),
-                                                      0.5, 0.05);
-    p_->paramMode    = params()->createSelectParameter("dust_mode", tr("generator mode"),
-                                                       tr("Selects the type of random generator"),
-                                                       {"dust", "dust2"},
-                                                       {tr("dust"), tr("dust2")},
-                                                       {tr("Creates impulses from 0 to 1"), tr("Creates impulses from -1 to 1")},
-                                                       {Private::M_DUST, Private::M_DUST2},
-                                                       Private::M_DUST);
+    initParameterGroupExpanded("dust");
+
+        p_->paramAmp     = params()->createFloatParameter("dust_amp", tr("amplitude"),
+                                                          tr("The amplitude of the impulses"),
+                                                          1.0, 0.05);
+        p_->paramDensity = params()->createFloatParameter("dust_dens", tr("density"),
+                                                          tr("The density of the impulses"),
+                                                          0.5, 0.05);
+        p_->paramMode    = params()->createSelectParameter("dust_mode", tr("generator mode"),
+                           tr("Selects the type of random generator"),
+                           {"dust", "dust2"},
+                           {tr("dust"), tr("dust2")},
+                           {tr("Creates impulses from 0 to 1"), tr("Creates impulses from -1 to 1")},
+                           {Private::M_DUST, Private::M_DUST2},
+                           Private::M_DUST);
     params()->endParameterGroup();
 }
 

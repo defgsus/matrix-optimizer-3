@@ -18,6 +18,8 @@
 
 namespace MO {
 class SequenceFloat;
+class ValueFloatInterface;
+
 namespace GUI {
 namespace PAINTER {
     class Grid; class ValueCurve; class ValueCurveData; class SequenceOverpaint;
@@ -52,18 +54,23 @@ public slots:
     /** Sets a new viewspace for the view */
     void setViewSpace(const UTIL::ViewSpace &, bool send_signal = false);
 
+    /** Sets the sequence to display */
     void setSequence(const MO::SequenceFloat *);
+
+    /** Sets the float interface to display */
+    void setValueFloat(const MO::ValueFloatInterface *);
 
 protected:
 
     void paintEvent(QPaintEvent *);
 
     const SequenceFloat * sequence_;
+    const ValueFloatInterface * valueFloat_;
 
     UTIL::ViewSpace space_;
     PAINTER::Grid * grid_;
     PAINTER::ValueCurve * curve_;
-    PAINTER::ValueCurveData * curveData_;
+    PAINTER::ValueCurveData * curveDataSeq_, * curveDataValue_;
     PAINTER::SequenceOverpaint * over_;
 
     QBrush brushBack_;

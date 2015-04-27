@@ -76,6 +76,7 @@ void DelayAO::createParameters()
     AudioObject::createParameters();
 
     params()->beginParameterGroup("_delay_", tr("delay"));
+    initParameterGroupExpanded("_delay_");
 
         p_->paramMaxTime = params()->createFloatParameter("_delay_max", tr("maximum time"),
                                                    tr("The maximum time delay for the delay line in seconds "

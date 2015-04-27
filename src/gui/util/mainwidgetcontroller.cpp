@@ -98,6 +98,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/objecttree.h"
+#include "object/interface/valuefloatinterface.h"
 #include "tool/commonresolutions.h"
 
 namespace MO {
@@ -180,6 +181,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
     connect(objectEditor_, SIGNAL(objectsDeleted(QList<MO::Object*>)), this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(valueFloatChanged(MO::ValueFloatInterface*)), this, SLOT(onValueFloatChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
@@ -976,8 +978,9 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     // update clipview
     clipView_->removeObject(o);
     objectView_->setObject(0);
-    sequenceView()->setSequence(0);
+    sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
+
 
     // XXX refine this!
     //updateSequenceView_(0);
@@ -992,7 +995,7 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
     // XXX refine this!
     //updateSequenceView_(0);
     objectView_->setObject(0);
-    sequenceView()->setSequence(0);
+    sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
 
 }
@@ -1054,6 +1057,14 @@ void MainWidgetController::showSequence_(bool enable, Sequence * seq)
     emit modeChanged();
 }
 
+void MainWidgetController::showValueFloat_(ValueFloatInterface * iface)
+{
+    seqView_->setValueFloat(iface);
+    seqView_->setVisible(true);
+
+    emit modeChanged();
+}
+
 /** Shows or hides the sequence view and selects a sequence to display */
 void MainWidgetController::updateSequenceView_(Object * o)
 {
@@ -1061,6 +1072,11 @@ void MainWidgetController::updateSequenceView_(Object * o)
     if (o->isSequence())
         showSequence_(true, static_cast<Sequence*>(o));
 
+    else
+    if (auto iface = dynamic_cast<ValueFloatInterface*>(o))
+        showValueFloat_(iface);
+
+    else
     // selected a clip?
     if (o->isClip())
     {
@@ -1247,12 +1263,17 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
 
 void MainWidgetController::onSequenceClicked_()
 {
-    // update objectview if not already
-    if (objectView_->object() != seqView_->sequence())
-        objectView_->setObject(seqView_->sequence());
+    Object * obj = seqView_->sequence();
+    if (!obj)
+        return;
+        //obj = seqView_->valueFloat();
 
-    objectGraphView()->setFocusObject(seqView_->sequence());
-    objectView()->selectObject(seqView_->sequence());
+    // update objectview if not already
+    if (objectView_->object() != obj)
+        objectView_->setObject(obj);
+
+    objectGraphView()->setFocusObject(obj);
+    objectView()->selectObject(obj);
 }
 
 void MainWidgetController::onParamVisChanged_()
@@ -1270,6 +1291,12 @@ void MainWidgetController::onSceneChanged_()
         sceneNotSaved_ = true;
         updateWindowTitle_();
     }
+}
+
+void MainWidgetController::onValueFloatChanged_()
+{
+    if (seqView_->isVisible())
+        seqView_->update();
 }
 
 void MainWidgetController::onUiEditModeChanged_(bool /*isEdit*/)

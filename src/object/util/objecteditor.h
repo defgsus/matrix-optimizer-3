@@ -95,6 +95,9 @@ signals:
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);
 
+    /** A general ValueFloatInterface object has been changed */
+    void valueFloatChanged(MO::ValueFloatInterface*);
+
     /** Emitted when a Modulator has been added */
     void modulatorAdded(MO::Modulator*);
 

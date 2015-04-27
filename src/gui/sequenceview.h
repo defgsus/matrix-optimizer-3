@@ -22,6 +22,7 @@ class QScrollArea;
 class QCheckBox;
 
 namespace MO {
+class ValueFloatInterface;
 namespace GUI {
 namespace UTIL { class ViewSpace; }
 
@@ -47,6 +48,7 @@ public:
     const UTIL::ViewSpace& viewSpace() const;
 
     Sequence * sequence() const { return sequence_; }
+    ValueFloatInterface * valueFloat() const { return valueFloat_; }
 
 signals:
 
@@ -68,6 +70,12 @@ public slots:
 
     /** Sets the sequence to show, or NULL */
     void setSequence(MO::Sequence *);
+
+    /** Sets the contents to be a ValueFloatInterface */
+    void setValueFloat(ValueFloatInterface * iface);
+
+    /** Unassigns sequence or float value displays */
+    void setNothing();
 
     /** Tells me that the scene time has changed */
     void setSceneTime(Double);
@@ -95,7 +103,10 @@ private slots:
 
 private:
 
+    void createSeqFloatView_();
+
     Sequence * sequence_;
+    ValueFloatInterface * valueFloat_;
     Scene * scene_;
 
     SceneSettings * sceneSettings_;
