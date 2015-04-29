@@ -36,7 +36,20 @@ public:
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
+            bool cubemap = false,
+            ErrorReporting reporting = ER_THROW);
+
+    explicit FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
+            int attachmentMask,
+            bool cubemap = false,
+            ErrorReporting reporting = ER_THROW);
+
+    explicit FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask,
             bool cubemap = false,
             ErrorReporting reporting = ER_THROW);

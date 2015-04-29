@@ -76,19 +76,25 @@ public:
     /** Returns a list of errors, or empty string */
     const QString& errorString() const;
 
+    /** Returns information about the current impulse response sampler */
+    QString getIrInfo() const;
+
     /** Returns the current image, threadsafe.
         Image might be a null image if the renderer is not ready yet. */
     QImage getImage();
 
+    /** Returns the current impulse response as image */
+    QImage getIrImage(const QSize& s);
+
     // --------- setter -----------
 
-    /** Applies the new live settings */
+    /** Applies the new live settings, threadsafe */
     void setLiveSettings(const LiveSettings&);
 
-    /** Applies the new settings */
+    /** Applies the new settings, threadsafe */
     void setSettings(const Settings&);
 
-    /** Stops and blocks until finished */
+    /** Stops and blocks until finished, threadsafe */
     void stop();
 
 signals:

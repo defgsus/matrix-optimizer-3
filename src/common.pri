@@ -279,7 +279,8 @@ HEADERS += \
     src/object/control/clip.h \
     src/object/control/clipcontroller.h \
     src/object/control/derivativeobjectfloat.h \
-    src/audio/spatial/wavetracershader.h
+    src/audio/spatial/wavetracershader.h \
+    src/audio/tool/irmap.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -519,5 +520,6 @@ SOURCES += \
     src/object/control/clip.cpp \
     src/object/control/clipcontroller.cpp \
     src/object/control/derivativeobjectfloat.cpp \
-    src/audio/spatial/wavetracershader.cpp
+    src/audio/spatial/wavetracershader.cpp \
+    src/audio/tool/irmap.cpp
 

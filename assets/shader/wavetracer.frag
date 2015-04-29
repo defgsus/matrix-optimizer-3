@@ -199,7 +199,7 @@ vec3 _cast(in vec3 ro, in vec3 rd, in vec3 seed)
         // hit sound?
         if (_DE_sound(hit) <= 0.00001)
         {
-            ret.x = amp;
+            ret.x = amp;// / (1. + 0.3 * ret.y);
             ret.z = float(i);
             break;
         }

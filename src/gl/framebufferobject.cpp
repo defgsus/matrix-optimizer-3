@@ -22,13 +22,30 @@ namespace GL {
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type, bool cubemap,
             ErrorReporting report)
-    : FrameBufferObject(width, height, format, type, 0, cubemap, report)
+    : FrameBufferObject(width, height, format, format, type, 0, cubemap, report)
 {
 }
 
+FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum in_format, gl::GLenum type,
+            bool cubemap,
+            ErrorReporting report)
+    : FrameBufferObject(width, height, format, in_format, type, 0, cubemap, report)
+{
+
+}
 
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
+            int attachmentMask, bool cubemap,
+            ErrorReporting report)
+    : FrameBufferObject(width, height, format, format, type, attachmentMask, cubemap, report)
+{
+
+}
+
+FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask, bool cubemap,
             ErrorReporting report)
     : rep_          (report),
@@ -44,10 +61,10 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
                 ", " << cubemap << ")");
 
     if (!cubemap_)
-        colorTex_ = new Texture(width, height, format, format, type, 0, report);
+        colorTex_ = new Texture(width, height, format, input_format, type, 0, report);
     else
     {
-        colorTex_ = new Texture(width, height, format, format, type, 0, 0, 0, 0, 0, 0, report);
+        colorTex_ = new Texture(width, height, format, input_format, type, 0, 0, 0, 0, 0, 0, report);
     }
 
     if (attachments_ & A_DEPTH)

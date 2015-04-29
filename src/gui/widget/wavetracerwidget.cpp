@@ -20,6 +20,7 @@
 #include "gui/widget/spinbox.h"
 #include "gui/widget/doublespinbox.h"
 #include "gui/widget/glslwidget.h"
+#include "gui/widget/cameracontrolwidget.h"
 #include "audio/spatial/wavetracershader.h"
 #include "io/log.h"
 
@@ -47,6 +48,7 @@ namespace GUI {
 
         AUDIO::WaveTracerShader * tracer;
 
+        CameraControlWidget * camera;
         GlslWidget * source;
         SpinBox * sbMaxSteps,
                 * sbMaxReflect,
@@ -63,7 +65,9 @@ namespace GUI {
                 * sbColorZ;
         QComboBox
                 * comboRender;
-        QLabel * labelImage;
+        QLabel * labelImage,
+               * labelIr,
+               * labelIrInfo;
     };
 
 
@@ -213,6 +217,15 @@ void WaveTracerWidget::Private::createWidgets()
         lv = new QVBoxLayout();
         lh0->addLayout(lv);
 
+            camera = new CameraControlWidget(widget);
+            connect(camera, SIGNAL(cameraMatrixChanged(MO::Mat4)), widget, SLOT(p_onLiveWidget_()));
+            lv->addWidget(camera);
+
+            auto lv1 = new QVBoxLayout(camera);
+
+                labelImage = new QLabel(widget);
+                lv1->addWidget(labelImage);
+
             label = new QLabel(tr("render mode"), widget);
             lv->addWidget(label);
 
@@ -225,8 +238,11 @@ void WaveTracerWidget::Private::createWidgets()
                     widget, SLOT(p_onWidget_()));
             lv->addWidget(comboRender);
 
-            labelImage = new QLabel(widget);
-            lv->addWidget(labelImage);
+            labelIr = new QLabel(widget);
+            lv->addWidget(labelIr);
+
+            labelIrInfo = new QLabel(widget);
+            lv->addWidget(labelIrInfo);
 
             lv->addStretch(1);
 }
@@ -269,6 +285,7 @@ void WaveTracerWidget::Private::updateFromLiveWidgets()
     s.soundColor.x = sbColorX->value();
     s.soundColor.y = sbColorY->value();
     s.soundColor.z = sbColorZ->value();
+    s.camera = glm::inverse(camera->cameraMatrix());
 
     tracer->setLiveSettings(s);
 
@@ -320,10 +337,16 @@ void WaveTracerWidget::Private::updateImage()
 {
     MO_DEBUG("WaveTracerWidget::updateImage()");
 
+    QSize res = QSize(384, 384) * widget->devicePixelRatio();
+
     if (tracer->wasError())
-        labelImage->setPixmap(QPixmap(tracer->settings().resolution));
+        labelImage->setPixmap(QPixmap(res));
     else
-        labelImage->setPixmap(QPixmap::fromImage(tracer->getImage()));
+    {
+        labelImage->setPixmap(QPixmap::fromImage(tracer->getImage().scaled(res)));
+        labelIr->setPixmap(QPixmap::fromImage(tracer->getIrImage(res)));
+        labelIrInfo->setText(tracer->getIrInfo());
+    }
 }
 
 void WaveTracerWidget::p_tracerFinished_()
@@ -346,3 +369,4 @@ void WaveTracerWidget::p_onWidget_()
 
 } // namespace GUI
 } // namespace MO
+

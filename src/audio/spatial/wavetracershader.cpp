@@ -15,6 +15,7 @@
 #include <QReadWriteLock>
 #include <QReadLocker>
 #include <QWriteLocker>
+#include <QPainter>
 
 #include "wavetracershader.h"
 #include "gl/offscreencontext.h"
@@ -23,6 +24,7 @@
 #include "gl/shadersource.h"
 #include "gl/screenquad.h"
 #include "gl/texture.h"
+#include "audio/tool/irmap.h"
 #include "io/currentthread.h"
 #include "io/log.h"
 
@@ -37,7 +39,7 @@ struct WaveTracerShader::Private
         , context   (0)
         , fbo       (0)
         , quad      (0)
-        , maxPasses (1)
+        , maxPasses (10000)
     {
         defaultSettings();
     }
@@ -51,8 +53,10 @@ struct WaveTracerShader::Private
     void initQuad(); //! (re-)creates quad instance and (re-)compiles shader, throws
     void releaseQuad();
     void renderQuad();
-    void getBuffer();
+    void getBuffer(bool doSampleIr, bool doClearIr); //! locked
+    void sampleIr(bool doClearIr); //! not locked
     QImage getImage();
+    QImage getIrImage(const QSize& s);
 
     WaveTracerShader * p;
 
@@ -76,7 +80,8 @@ struct WaveTracerShader::Private
     QString errorString;
     volatile int passCount, maxPasses;
     std::vector<Float> buffer;
-    std::map<Float, Float> ampMap;
+    AUDIO::IrMap irMap;
+    //const static qint64 dist_units = 1e+7; //! quantized units per distance unit
 
     QImage image;
     QReadWriteLock bufferLock;
@@ -110,6 +115,11 @@ void WaveTracerShader::stop()
 QImage WaveTracerShader::getImage()
 {
     return p_->getImage();
+}
+
+QImage WaveTracerShader::getIrImage(const QSize& s)
+{
+    return p_->getIrImage(s);
 }
 
 const WaveTracerShader::LiveSettings& WaveTracerShader::liveSettings() const
@@ -166,10 +176,16 @@ void WaveTracerShader::Private::defaultSettings()
     settings.resolution = QSize(128, 128);
     settings.renderMode = RM_WAVE_TRACER;
     settings.userCode =
-        "#include <iq/distfunc>\n\n"
-        "float DE_room(in vec3 p)\n{\n\t//inverted box as room\n\treturn -sdBox(p, vec3(10.));\n}\n\n"
+        "#include <iq/distfunc>\n"
+        "#include <dh/hash>\n\n"
+        "float DE_room(in vec3 p)\n{\n\t// inverted box as room\n"
+            "\tfloat d = -sdBox(p, vec3(10.));\n\n"
+            "\t// some obstacles\n"
+            "\tp = mod(p, 2.) - 1.;\n"
+            "\td = min(d, sdBox(p, vec3(0.2)));\n\n"
+            "\treturn d;\n}\n\n"
         "float DE_sound(in vec3 p)\n{\n\treturn length(p);\n}\n\n"
-        "float DE_reflection(in vec3 p, in vec3 n)\n{\n\treturn 1.;\n}\n";
+        "float DE_reflection(in vec3 p, in vec3 n)\n{\n\treturn .5 + .5 * hash1(p);\n}\n";
 
     nextSettings = settings;
 }
@@ -213,11 +229,15 @@ void WaveTracerShader::Private::run()
 
             renderQuad();
 
-            getBuffer();
+            // download texture,
+            // sample irMap when correct mode, clear when first pass
+            getBuffer(settings.renderMode == RM_WAVE_TRACER, passCount == 0);
 
             ++passCount;
 
             emit p->frameFinished();
+
+            msleep(10);
         }
         catch (const Exception& e)
         {
@@ -226,8 +246,13 @@ void WaveTracerShader::Private::run()
             doStop = true;
         }
 
+        int maxPass = maxPasses;
+        // HACK, other modes don't use this multisampling
+        if (settings.renderMode != RM_WAVE_TRACER)
+            maxPass = 1;
+
         // wait for work
-        while (!doStop && passCount >= maxPasses)
+        while (!doStop && passCount >= maxPass)
             msleep(50);
     }
 
@@ -254,7 +279,8 @@ void WaveTracerShader::Private::initGl()
         if (!fbo)
         {
             fbo = new GL::FrameBufferObject(settings.resolution.width(),
-                                            settings.resolution.height(), gl::GL_RGBA, gl::GL_FLOAT);
+                                            settings.resolution.height(),
+                                            gl::GL_RGBA32F, gl::GL_RGBA, gl::GL_FLOAT);
             fbo->create();
         }
 
@@ -374,7 +400,7 @@ void WaveTracerShader::Private::renderQuad()
     quad->draw(settings.resolution.width(), settings.resolution.height());
 }
 
-void WaveTracerShader::Private::getBuffer()
+void WaveTracerShader::Private::getBuffer(bool doSampleIr, bool doClearIr)
 {
     context->finish();
 
@@ -386,6 +412,44 @@ void WaveTracerShader::Private::getBuffer()
 
     fbo->colorTexture()->bind();
     fbo->colorTexture()->download(&buffer[0], gl::GL_RGBA, gl::GL_FLOAT);
+
+    if (doSampleIr)
+        sampleIr(doClearIr);
+}
+
+
+void WaveTracerShader::Private::sampleIr(bool doClearIr)
+{
+    // buffer has been calculated?
+    size_t size = settings.resolution.width() * settings.resolution.height() * 4;
+    if (buffer.size() != size)
+        return;
+
+    if (doClearIr)
+        irMap.clear();
+
+    for (auto ptr = buffer.begin(); ptr != buffer.end(); ptr += 4)
+    {
+        Float   amp = ptr[0],
+                dist = ptr[1];
+        const int
+                count = ptr[2] + 0.001;
+
+        if (amp < 0.0000001)
+            continue;
+
+        if ((count & 1) == 1)
+            amp = -amp;
+
+        irMap.addSample(dist, amp);
+    }
+}
+
+QString WaveTracerShader::getIrInfo() const
+{
+    QReadLocker lock(&p_->bufferLock);
+
+    return p_->irMap.getInfo();
 }
 
 QImage WaveTracerShader::Private::getImage()
@@ -411,6 +475,40 @@ QImage WaveTracerShader::Private::getImage()
     }
 
     return img;
+}
+
+QImage WaveTracerShader::Private::getIrImage(const QSize& res)
+{
+    QReadLocker lock(&bufferLock);
+
+    return irMap.getImage(res);
+
+    /*
+    QImage img(res, QImage::Format_ARGB32);
+    img.fill(Qt::black);
+
+    if (irMap.empty())
+        return img;
+
+    QPainter p(&img);
+    //p.begin(&img);
+
+    p.setRenderHint(QPainter::Antialiasing, true);
+    p.setPen(QPen(QColor(255,255,255,50)));
+
+//    MO_PRINT("dist " << maxSampledDist << "; amp " << maxSampledAmp);
+
+    // draw
+    for (auto it = irMap.begin(); it != irMap.end(); ++it)
+    {
+        QPointF p0(qreal(it->first) / maxSampledDist * img.width(), .5 * img.height()),
+                p1(p0.x(), (it->second / maxSampledAmp * -.5 + .5) * img.height());
+        p.drawLine(p0, p1);
+    }
+
+    p.end();
+    return img;
+    */
 }
 
 } // namespace AUDIO

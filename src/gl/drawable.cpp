@@ -193,20 +193,20 @@ void Drawable::compileShader_()
     // --- compile shader ---
 
     shader_->setSource(shaderSource_);
-    try
-    {
+//    try
+//    {
         if (!shader_->compile())
             MO_GL_ERROR("Compilation of Shader failed for Drawable(" << name_ << ")\n"
                           << shader_->log())
         else
             MO_DEBUG_GL("shader compiled");
-    }
-    catch (GlException & e)
-    {
-        e << "in Drawable('" << name_ << "'), shader log = {\n"
-          << shader_->log() << "}";
-        throw;
-    }
+//    }
+//    catch (GlException & e)
+//    {
+//        e << "in Drawable('" << name_ << "'), shader log = {\n"
+//          << shader_->log() << "}";
+//        throw;
+//    }
 
     doRecompile_ = false;
 
