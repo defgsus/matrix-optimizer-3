@@ -95,10 +95,13 @@ public:
         are resolved properly. */
     void replaceIncludes(std::function<QString(const QString&, bool)> func);
 
+    /** Replacess all #include <...> statements for which a files is in the app resources */
+    void pasteDefaultIncludes();
+
 private:
 
-    void addDefine_(QString& src, const QString& def_line) const;
-    void pasteIncludes_(QString& src, std::function<QString(const QString&, bool)> func, int lvl);
+    void p_addDefine_(QString& src, const QString& def_line) const;
+    void p_pasteIncludes_(QString& src, std::function<QString(const QString&, bool)> func, int lvl);
 
     QString vert_, frag_,
         unSceneTime_,

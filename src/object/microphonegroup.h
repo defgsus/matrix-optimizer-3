@@ -43,7 +43,7 @@ private:
     ParameterInt
         * pNumMics_;
     ParameterFloat
-        * pDistance_;
+        * pDistance_, * pDirExp_;
 
     //QList<AUDIO::AudioMicrophone*> micros_;
 };

@@ -35,7 +35,7 @@ Uniform::Uniform()
     ints[0] = ints[1] = ints[2] = ints[3] = 0;
 }
 
-void Uniform::setMatrix(const Mat4 & m)
+void Uniform::set(const Mat4 & m)
 {
     for (int i=0; i<4; ++i)
         for (int j=0; j<4; ++j)

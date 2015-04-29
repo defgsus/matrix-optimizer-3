@@ -86,8 +86,8 @@ void ShaderSource::loadDefaultSource()
 
 void ShaderSource::addDefine(const QString &defineCommand)
 {
-    addDefine_(vert_, defineCommand);
-    addDefine_(frag_, defineCommand);
+    p_addDefine_(vert_, defineCommand);
+    p_addDefine_(frag_, defineCommand);
 }
 
 void ShaderSource::replace(const QString &before, const QString &after, bool adjustLineNumber)
@@ -106,13 +106,29 @@ void ShaderSource::replace(const QString &before, const QString &after, bool adj
 
 void ShaderSource::replaceIncludes(std::function<QString (const QString &, bool)> func)
 {
-    pasteIncludes_(vert_, func, 0);
-    pasteIncludes_(frag_, func, 0);
+    p_pasteIncludes_(vert_, func, 0);
+    p_pasteIncludes_(frag_, func, 0);
 
     //MO_PRINT("[" + frag_ + "]");
 }
 
-void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QString &, bool)> func, int lvl)
+void ShaderSource::pasteDefaultIncludes()
+{
+    replaceIncludes([](const QString& url, bool do_search)
+    {
+        if (!do_search)
+            return QString();
+
+        QFile f(":/shader/inc/" + url);
+        if (!f.open(QFile::Text | QFile::ReadOnly))
+            return QString();
+
+        return "// ----- include '" + url + "' -----\n"
+                + QString::fromUtf8(f.readAll());
+    });
+}
+
+void ShaderSource::p_pasteIncludes_(QString& src, std::function<QString (const QString &, bool)> func, int lvl)
 {
     QSet<QString> urls;
     QString cpy;
@@ -187,7 +203,7 @@ void ShaderSource::pasteIncludes_(QString& src, std::function<QString (const QSt
 
     // resolve recursive includes
     if (lvl < 100 && src.indexOf("#include") >= 0)
-        pasteIncludes_(src, func, lvl+1);
+        p_pasteIncludes_(src, func, lvl+1);
 }
 
 
@@ -217,7 +233,7 @@ void ShaderSource::replaceWithLineNumber(QString &src, const QString &before, co
 //    MO_DEBUG("[" + src + "]");
 }
 
-void ShaderSource::addDefine_(QString &src, const QString &def_line) const
+void ShaderSource::p_addDefine_(QString &src, const QString &def_line) const
 {
     QString line = def_line;
     if (!line.endsWith("\n"))

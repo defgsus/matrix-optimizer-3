@@ -62,7 +62,9 @@ public:
 
     void setFloats(gl::GLfloat x, gl::GLfloat y, gl::GLfloat z, gl::GLfloat w)
     { floats[0] = x; floats[1] = y; floats[2] = z; floats[3] = w; }
-    void setMatrix(const Mat4&);
+    void set(const Mat4&);
+    void set(const Vec3&v) { setFloats(v.x, v.y, v.z, 1.); }
+    void set(const Vec4&v) { setFloats(v.x, v.y, v.z, v.w); }
 
     void setAutoSend(bool e) { autoSend_ = e; }
 

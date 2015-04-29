@@ -93,6 +93,12 @@ void MicrophoneGroup::createParameters()
         pDistance_ = params()->createFloatParameter("micdist", tr("distance to center"),
                             tr("The distance of the microphones to the center of the group"),
                                           0.0, 0.02);
+
+        pDirExp_ = params()->createFloatParameter("micdirexp", tr("directional exponent"),
+                            tr("The exponent setting the opening angle - larger means smaller area"),
+                                          3.0, 0.1);
+        pDirExp_->setMinValue(0.001);
+
     params()->endParameterGroup();
 }
 
@@ -192,6 +198,8 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
 {
     for (int i=0; i<mics.size(); ++i)
     {
+        mics[i]->setDirectionExponent(pDirExp_->value(Double(pos) / sampleRate(), thread));
+
         // direction -> matrix
         Vec3 micdir = mic_pos[i];
         Vec3 up = glm::normalize(glm::mix(

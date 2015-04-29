@@ -41,9 +41,13 @@ public:
     TransformationBuffer * transformationBuffer() { return &p_transform_; }
     const TransformationBuffer * transformationBuffer() const { return &p_transform_; }
 
+    F32 directionExponent() const { return p_dirExp_; }
+
     // ----------------- setter ----------------------
 
     void setChannel(uint channel) { p_channel_ = channel; }
+
+    void setDirectionExponent(F32 exp) { p_dirExp_ = exp; }
 
     // -------------- spatialization -----------------
 
@@ -56,7 +60,7 @@ private:
     AudioBuffer * p_signal_;
     TransformationBuffer p_transform_;
     uint p_sampleRate_, p_channel_;
-    F32 p_sampleRateInv_;
+    F32 p_sampleRateInv_, p_dirExp_;
 };
 
 } // namespace AUDIO

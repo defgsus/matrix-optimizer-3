@@ -16,6 +16,7 @@
 
 #include "gl/opengl_undef.h"
 #include <QOpenGLContext>
+#include "gl/opengl_undef.h"
 
 namespace MO {
 namespace GL {
@@ -76,6 +77,17 @@ bool OffscreenContext::destroyGl()
     p_os_surface_->destroy();
 
     return true;
+}
+
+bool OffscreenContext::finish()
+{
+    gl::GLenum err;
+
+    MO_CHECK_GL_RET_COND(ER_IGNORE, gl::glFlush(), err);
+    MO_CHECK_GL_RET_COND(ER_IGNORE, gl::glFinish(), err);
+    qcontext()->swapBuffers(qsurface());
+
+    return err == gl::GL_NO_ERROR;
 }
 
 } // namespace GL

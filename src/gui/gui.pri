@@ -107,7 +107,9 @@ HEADERS += \
     src/gui/renderdialog.h \
     src/gui/widget/filenameinput.h \
     src/gui/util/recentfiles.h \
-    src/gui/scenedescdialog.h
+    src/gui/scenedescdialog.h \
+    src/gui/widget/wavetracerwidget.h \
+    src/gui/wavetracerdialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -214,4 +216,6 @@ SOURCES += \
     src/gui/renderdialog.cpp \
     src/gui/widget/filenameinput.cpp \
     src/gui/util/recentfiles.cpp \
-    src/gui/scenedescdialog.cpp
+    src/gui/scenedescdialog.cpp \
+    src/gui/widget/wavetracerwidget.cpp \
+    src/gui/wavetracerdialog.cpp

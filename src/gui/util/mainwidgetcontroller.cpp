@@ -76,6 +76,9 @@
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
 #include "gui/renderdialog.h"
+#ifndef MO_HAMBURG
+#   include "gui/wavetracerdialog.h"
+#endif
 #include "io/datastream.h"
 #include "io/files.h"
 #include "io/povrayexporter.h"
@@ -561,6 +564,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             AudioFilterDialog diag;
             diag.exec();
         });
+
 #ifndef MO_HAMBURG
         a = new QAction(tr("Timeline editor"), m);
         m->addAction(a);
@@ -569,6 +573,17 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             TimelineEditDialog diag;
             diag.exec();
         });
+
+        a = new QAction(tr("IR Wave Tracer"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            WaveTracerDialog * diag = new WaveTracerDialog(window_);
+            connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
+            diag->show();
+        });
+
+
 #endif
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);
@@ -880,7 +895,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     objectView_->setObject(0);
 
     seqView_->setScene(scene_);
-    seqView_->setSequence(0);
+    seqView_->setNothing();
 
     sequencer_->setCurrentObject(scene_);
     clipView_->setScene(scene_);

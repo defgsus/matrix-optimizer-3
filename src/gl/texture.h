@@ -145,9 +145,17 @@ public:
     /** Downloads the texture from device to host. <br/>
         If the pointer is zero, the previously assigned pointer is used.
         Eventually, the pointer must be non-zero and capable of storing the required memory.
+        If the texture is a cubemap, then assigning a pointer is illegal,
+        and the data will be downloaded to the previously defined individual pointers.
         <br><b>Texture must be bound()</b>
         */
     bool download(void * ptr_to_data = 0, gl::GLuint mipmap_level = 0) const;
+
+    /** Downloads the texture from device to host, converting the format. <br/>
+        The pointer must be non-zero and capable of storing the required memory.
+        Illegal for cubemaps!
+        <br><b>Texture must be bound()</b> */
+    bool download(void * ptr_to_data, gl::GLenum format, gl::GLenum type, gl::GLuint mipmap_level = 0) const;
 
     /** free the device data and release handle */
     void release();

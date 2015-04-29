@@ -196,7 +196,7 @@ void Drawable::compileShader_()
     try
     {
         if (!shader_->compile())
-            MO_GL_WARNING("Compilation of Shader failed in Drawable(" << name_ << ")\n"
+            MO_GL_ERROR("Compilation of Shader failed for Drawable(" << name_ << ")\n"
                           << shader_->log())
         else
             MO_DEBUG_GL("shader compiled");

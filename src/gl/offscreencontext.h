@@ -39,6 +39,8 @@ public slots:
 
     bool destroyGl();
 
+    bool finish();
+
 signals:
 
 

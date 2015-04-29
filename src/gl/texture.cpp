@@ -538,6 +538,31 @@ bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) c
     return (err != GL_NO_ERROR);
 }
 
+bool Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) const
+{
+    MO_DEBUG_IMG("Texture::download(" << ptr << ", " << format
+                 << ", " << type << ", " << mipmap << ")");
+
+    MO_ASSERT(ptr, "download from texture to NULL");
+    MO_ASSERT(target_ != GL_TEXTURE_CUBE_MAP, "download of cubemap to single goal undefined");
+
+    GLenum err;
+    MO_CHECK_GL_RET_COND( rep_,
+        glGetTexImage(
+            target_,
+            // mipmap level
+            mipmap,
+            // color components
+            format,
+            // format
+            type,
+            // data
+            ptr)
+        , err);
+
+    return (err != GL_NO_ERROR);
+}
+
 
 /*
 QString Texture::info_str() const
@@ -558,8 +583,6 @@ QImage Texture::getImage() const
 {
     MO_DEBUG_IMG("Texture::getImage()");
 
-    QImage img(width(), height(), QImage::Format_RGB32);
-
     std::vector<GLfloat> buffer(width() * height() * 4);
     //float * buffer = (float*) aligned_alloc(32, width() * height() * 4);
 
@@ -579,6 +602,8 @@ QImage Texture::getImage() const
 
     if (err != GL_NO_ERROR)
         return QImage();
+
+    QImage img(width(), height(), QImage::Format_RGB32);
 
     for (uint y=0; y<height(); ++y)
     for (uint x=0; x<width(); ++x)

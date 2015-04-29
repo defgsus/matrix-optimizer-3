@@ -14,6 +14,8 @@
         <file alias="edgeblend.frag">assets/shader/edgeblend.frag</file>
         <file alias="shaderobject.frag">assets/shader/shaderobject.frag</file>
         <file alias="shaderobject.vert">assets/shader/shaderobject.vert</file>
+        <file alias="wavetracer.frag">assets/shader/wavetracer.frag</file>
+        <file alias="wavetracer.vert">assets/shader/wavetracer.vert</file>
     </qresource>
     <qresource prefix="/shader/inc">
         <file alias="intersect">assets/shader/inc/intersect.glsl</file>

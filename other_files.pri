@@ -52,5 +52,7 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/inc/noise.glsl \
     assets/shader/inc/fnoise.glsl \
     assets/shader/inc/iq/vnoise.glsl \
-    assets/help/en/diskrender.html
+    assets/help/en/diskrender.html \
+    assets/shader/wavetracer.frag \
+    assets/shader/wavetracer.vert
     assets/help/en/object/model3d.html

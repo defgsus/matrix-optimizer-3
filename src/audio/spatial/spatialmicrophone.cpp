@@ -23,6 +23,7 @@ SpatialMicrophone::SpatialMicrophone(AudioBuffer * b, uint sampleRate, uint chan
       p_sampleRate_         (sampleRate),
       p_channel_            (channel),
       p_sampleRateInv_      (1.f / std::max(uint(1), sampleRate))
+    , p_dirExp_             (3.f)
 {
 }
 
@@ -109,7 +110,7 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
             const F32 micDot = 0.5f + 0.5f * (dx * mx + dy * my + dz * mz);
 
             // amplitude from direction
-            const F32 ampDir = std::pow(micDot, 3.f);
+            const F32 ampDir = std::pow(micDot, p_dirExp_);
 
             // add to microphone sample buffer
             *buffer++ += sam * ampDist * ampDir;

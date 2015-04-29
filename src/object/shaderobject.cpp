@@ -220,6 +220,7 @@ void ShaderObject::initGl(uint thread)
     u_transformation_ = shaderQuad_[thread]->shader()->getUniform("u_transformation", false);
     if (u_transformation_)
         u_transformation_->setAutoSend(true);
+
     userUniforms_->tieToShader(shaderQuad_[thread]->shader());
 
 
@@ -298,7 +299,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
         u_time_->floats[0] = time;
 
     if (u_transformation_)
-        u_transformation_->setMatrix(transformation());
+        u_transformation_->set(transformation());
 
     userUniforms_->updateUniforms(time, thread);
 
