@@ -36,6 +36,9 @@ uniform float   _BRIGHTNESS;            // amount of visual light/sound, visual 
 uniform float   _EPSILON;
 uniform int     _PASS_NUMBER;           // number of pass (for multi-sampling)
 uniform vec3    _SND_COLOR;             // visual sound representation
+uniform float   _DIFFUSE;               // random reflection [0,1]
+uniform float   _DIFFUSE_RND;           // random random reflection [0,1]
+uniform float   _FRESNEL;               // not fresnel really,
 
 //!mo_user_functions!
 /* expects these functions
@@ -63,7 +66,7 @@ float DE_sound(in vec3 p)
 }
 
 // return reflection coefficient [0,1]
-float DE_reflection(in vec3 p, in vec3 n)
+float DE_reflection(in vec3 p, in vec3 n, in vec3 rd)
 {
         return 1.;
         //return 0.5+0.5*smoothstep(0,0.1,length(p-vec3(1,0,-2))-1.4);
@@ -94,6 +97,15 @@ vec3 _l2w(vec3 l, vec3 normal)
         return l.x*tangent + l.y*binormal + l.z*normal;
 }
 
+// diffusely reflects dir around normal n
+vec3 _diffuse_reflect(in vec3 dir, in vec3 n, in vec3 seed)
+{
+    float diff = _DIFFUSE * (1. + _DIFFUSE_RND * (hash1(seed*0.9+3.223) - 1.));
+    vec3 nd = _l2w(normalize(_hash3(seed*3.321+8.5)-.5), n);
+    return normalize(mix(reflect(dir, n), nd, diff));
+}
+
+
 /*struct Ray
 {
         vec3 ro, rd, hit, n;
@@ -104,7 +116,11 @@ vec3 _l2w(vec3 l, vec3 normal)
 // -------------------- WAVE TRACER ---------------------
 
 float _DE_sound(in vec3 p) { return DE_sound(p - _SNDSRC.xyz) - _SNDSRC.w; }
-float _DE_reflection(in vec3 p, in vec3 n) { return DE_reflection(p, n) * _DAMPING; }
+float _DE_reflection(in vec3 p, in vec3 n, in vec3 rd)
+{
+    float fr = 1. + _FRESNEL * (max(0., dot(n, -rd)) - 1.);
+    return DE_reflection(p, n, rd) * _DAMPING * fr;
+}
 
 float _DE(in vec3 p)
 {
@@ -206,12 +222,15 @@ vec3 _cast(in vec3 ro, in vec3 rd, in vec3 seed)
 
         // reflect
         vec3 n = _DE_normal(hit, _EPSILON);
+
+        float refl = _DE_reflection(hit, n, rd);
+
         ro = hit + 0.001 * n;
         // random new direction
-        rd = _l2w(normalize(_hash3(seed)-.5), n);
+        rd = _diffuse_reflect(rd, n, seed);
 
         seed += 1.618;
-        amp *= _DE_reflection(hit, n);
+        amp *= refl;
     }
 
     return ret;
@@ -320,10 +339,9 @@ vec3 _simple_cast(in vec3 ro, in vec3 rd)
         col += amp * c;
 
         // -- reflect --
+        amp *= _DE_reflection(hit, n, rd);
         ro = hit + 0.001 * n;
         rd = reflect(rd, n);
-
-        amp *= _DE_reflection(hit, n);
     }
 
     col *= _dist_amt(t_all);

@@ -35,6 +35,11 @@ const Mat4& CameraControlWidget::cameraMatrix() const
     return p_cameraControl_->getMatrix();
 }
 
+void CameraControlWidget::setCameraMatrix(const Mat4 & m)
+{
+    p_cameraControl_->setMatrix(m);
+}
+
 void CameraControlWidget::keyPressEvent(QKeyEvent * e)
 {
     e->ignore();

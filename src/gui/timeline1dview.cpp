@@ -36,6 +36,8 @@
 namespace MO {
 namespace GUI {
 
+namespace {
+
 class TimelineCurveData : public PAINTER::ValueCurveData
 {
 public:
@@ -43,7 +45,7 @@ public:
     virtual Double value(Double time) const { return timeline->get(time); }
 };
 
-
+}
 
 
 Timeline1DView::Timeline1DView(MATH::Timeline1D * tl, QWidget *parent)

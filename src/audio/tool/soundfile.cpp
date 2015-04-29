@@ -269,7 +269,7 @@ void SoundFile::saveFile(const QString &fn) const
 
     if (e != p_->lenSam)
     {
-        MO_IO_ERROR(READ, "could not write all of soundfile '" << p_->filename << "'\n"
+        MO_IO_ERROR(WRITE, "could not write all of soundfile '" << fn << "'\n"
                     "expected " << p_->lenSam << " frames, got " << e );
     }
 }

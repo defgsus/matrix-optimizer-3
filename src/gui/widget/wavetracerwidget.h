@@ -32,11 +32,15 @@ public slots:
     /** Restarts the tracer thread if needed */
     void updateTracer();
 
+    /** Save IR with dialog */
+    void saveIr();
+
 private slots:
 
     void p_tracerFinished_();
     void p_onLiveWidget_();
     void p_onWidget_();
+    void p_onIrImage_(QImage img);
 
 private:
 

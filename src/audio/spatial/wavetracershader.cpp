@@ -73,7 +73,11 @@ struct WaveTracerShader::Private
                 * u_BRIGHTNESS,            // amount of visual light/sound, rendermode 1,2
                 * u_EPSILON,
                 * u_PASS_NUMBER,           // number of pass (for multi-sampling)
-                * u_SND_COLOR;             // rendermode 3
+                * u_SND_COLOR,             // rendermode 3
+                * u_DIFFUSE,               // random reflection [0,1]
+                * u_DIFFUSE_RND,           // random random reflection [0,1]
+                * u_FRESNEL;               // not fresnel really,
+
 
     Settings settings, nextSettings;
     LiveSettings liveSettings;
@@ -122,6 +126,13 @@ QImage WaveTracerShader::getIrImage(const QSize& s)
     return p_->getIrImage(s);
 }
 
+AUDIO::IrMap WaveTracerShader::getIrMap() const
+{
+    QReadLocker lock(&p_->bufferLock);
+
+    return p_->irMap;
+}
+
 const WaveTracerShader::LiveSettings& WaveTracerShader::liveSettings() const
 {
     return p_->liveSettings;
@@ -168,6 +179,9 @@ void WaveTracerShader::Private::defaultSettings()
     liveSettings.micAngle = 180.f;
     liveSettings.reflectivness = 0.9f;
     liveSettings.brightness = 1.f;
+    liveSettings.diffuse = 1.f;
+    liveSettings.diffuseRnd = 1.f;
+    liveSettings.fresnel = 1.f;
 
     settings.maxTraceStep = 100;
     settings.maxReflectStep = 5;
@@ -185,7 +199,7 @@ void WaveTracerShader::Private::defaultSettings()
             "\td = min(d, sdBox(p, vec3(0.2)));\n\n"
             "\treturn d;\n}\n\n"
         "float DE_sound(in vec3 p)\n{\n\treturn length(p);\n}\n\n"
-        "float DE_reflection(in vec3 p, in vec3 n)\n{\n\treturn .5 + .5 * hash1(p);\n}\n";
+        "float DE_reflection(in vec3 p, in vec3 n, in vec3 rd)\n{\n\treturn 1.; // .5 + .5 * hash1(p);\n}\n";
 
     nextSettings = settings;
 }
@@ -339,6 +353,9 @@ void WaveTracerShader::Private::initQuad()
     u_EPSILON = sh->getUniform("_EPSILON", true);
     u_PASS_NUMBER = sh->getUniform("_PASS_NUMBER", false);
     u_SND_COLOR = sh->getUniform("_SND_COLOR", false);
+    u_DIFFUSE = sh->getUniform("_DIFFUSE", false);
+    u_DIFFUSE_RND = sh->getUniform("_DIFFUSE_RND", false);
+    u_FRESNEL = sh->getUniform("_FRESNEL", false);
 
     // --- set defaults ---
 
@@ -379,8 +396,6 @@ void WaveTracerShader::Private::releaseGl()
 
 void WaveTracerShader::Private::renderQuad()
 {
-    if (u_transformation)
-        u_transformation->set(liveSettings.camera);
     u_SNDSRC->set(liveSettings.soundPos);
     u_SNDSRC->floats[3] = liveSettings.soundRadius;
     u_FUDGE->floats[0] = liveSettings.fudge;
@@ -388,6 +403,14 @@ void WaveTracerShader::Private::renderQuad()
     u_DAMPING->floats[0] = liveSettings.reflectivness;
     u_MAX_TRACE_DIST->floats[0] = liveSettings.maxTraceDist;
 
+    if (u_transformation)
+        u_transformation->set(liveSettings.camera);
+    if (u_DIFFUSE)
+        u_DIFFUSE->floats[0] = liveSettings.diffuse;
+    if (u_DIFFUSE)
+        u_DIFFUSE_RND->floats[0] = liveSettings.diffuseRnd;
+    if (u_FRESNEL)
+        u_FRESNEL->floats[0] = liveSettings.fresnel;
     if (u_BRIGHTNESS)
         u_BRIGHTNESS->floats[0] = liveSettings.brightness;
     if (u_MIC_ANGLE)
@@ -510,6 +533,46 @@ QImage WaveTracerShader::Private::getIrImage(const QSize& res)
     return img;
     */
 }
+
+namespace {
+
+    /** Little thread for rendering images */
+    class WaveTracerThread_ : public QThread
+    {
+    public:
+        WaveTracerThread_(QObject * o) : QThread(o) { }
+
+        void run()
+        {
+            img = irMap.getImage(res);
+        }
+
+        QSize res;
+        QImage img;
+        AUDIO::IrMap irMap;
+    };
+}
+
+void WaveTracerShader::requestIrImage(const QSize &s)
+{
+    auto thread = new WaveTracerThread_(this);
+
+    thread->res = s;
+
+    {
+        QReadLocker lock(&p_->bufferLock);
+        thread->irMap = p_->irMap;
+    }
+
+    connect(thread, &WaveTracerThread_::finished, [=]()
+    {
+        emit finishedIrImage(thread->img);
+        thread->deleteLater();
+    });
+
+    thread->start();
+}
+
 
 } // namespace AUDIO
 } // namespace MO

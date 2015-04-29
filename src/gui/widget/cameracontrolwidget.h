@@ -38,6 +38,8 @@ signals:
 
 public slots:
 
+    void setCameraMatrix(const Mat4&);
+
 protected:
 
     void keyPressEvent(QKeyEvent *);

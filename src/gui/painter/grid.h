@@ -60,6 +60,8 @@ public:
 
     int options() const { return options_; }
 
+    const UTIL::ViewSpace& viewSpace() const { return viewspace_; }
+
     // -------------- setter ----------------
 
     void setOptions(int options) { options_ = options; }

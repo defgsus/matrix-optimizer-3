@@ -19,6 +19,8 @@
 namespace MO {
 namespace AUDIO {
 
+class IrMap;
+
 /** Impulse response calculation from raymarched distance field */
 class WaveTracerShader : public QThread
 {
@@ -46,7 +48,10 @@ public:
               micAngle,
               soundRadius,
               reflectivness,
-              brightness;
+              brightness,
+              diffuse,
+              diffuseRnd,
+              fresnel;
     };
 
     /** Settings whos change will cause a recompilation */
@@ -79,11 +84,14 @@ public:
     /** Returns information about the current impulse response sampler */
     QString getIrInfo() const;
 
+    /** Returns a copy of the impulse response map, threadsafe */
+    AUDIO::IrMap getIrMap() const;
+
     /** Returns the current image, threadsafe.
         Image might be a null image if the renderer is not ready yet. */
     QImage getImage();
 
-    /** Returns the current impulse response as image */
+    /** Returns the current impulse response as image, threadsafe */
     QImage getIrImage(const QSize& s);
 
     // --------- setter -----------
@@ -94,14 +102,30 @@ public:
     /** Applies the new settings, threadsafe */
     void setSettings(const Settings&);
 
+public slots:
+
     /** Stops and blocks until finished, threadsafe */
     void stop();
+
+    /** Requests an impulse response image to be created on another thread.
+        Emits finishedIrImage(). */
+    void requestIrImage(const QSize& s);
+
+    /* Requests a rendered image to be created on another thread.
+        Emits finishedImage().*/
+    //void requestImage(const QSize& s);
 
 signals:
 
     /** Emitted when a frame has been rendered.
         Calls to getImage() etc. will be valid after this signal. */
     void frameFinished();
+
+    /* Answer to requestImage() */
+    //void finishedImage(QImage img);
+
+    /** Answer to requestIrImage() */
+    void finishedIrImage(QImage img);
 
 protected:
 
