@@ -21,7 +21,8 @@ namespace AUDIO {
 
 class IrMap;
 
-/** Impulse response calculation from raymarched distance field */
+/** Impulse response calculation from raymarched distance field.
+    Does work in it's own thread and wraps everything nicely. */
 class WaveTracerShader : public QThread
 {
     Q_OBJECT
@@ -51,7 +52,10 @@ public:
               brightness,
               diffuse,
               diffuseRnd,
-              fresnel;
+              fresnel,
+              rndRay;
+
+        bool doFlipPhase;
     };
 
     /** Settings whos change will cause a recompilation */
@@ -62,7 +66,8 @@ public:
         QString userCode;
         uint  maxTraceStep,
               maxReflectStep,
-              numMultiSamples;
+              numPasses; //! This may cause the thread to stop but not to restart
+        bool doPassAverage; //! To be set on start!
     };
 
 
@@ -75,6 +80,11 @@ public:
     const LiveSettings& liveSettings() const;
 
     const Settings& settings() const;
+
+    QString infoString() const;
+
+    /** Returns the current pass */
+    uint passCount() const;
 
     bool wasError() const { return !errorString().isEmpty(); }
 

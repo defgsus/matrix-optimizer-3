@@ -61,7 +61,7 @@ size_t IrMap::numSamples() const
 
 QString IrMap::getInfo() const
 {
-    return QObject::tr("samples: %1\namp: %2 - %3\nlength: %4 - %5")
+    return QObject::tr("samples %1; amp %2 - %3; length %4 - %5")
                    .arg(numSamples())
                    .arg(p_min_amp_)
                    .arg(p_max_amp_)
@@ -174,9 +174,11 @@ void IrMap::addSample(Float distance, Float amplitude)
 
 std::vector<F32> IrMap::getSamples(Float sr, Float sos)
 {
-    int len = p_max_dist_ / sos * sr;
+    int len = std::max(0.f, p_max_dist_) / sos * sr;
 
     std::vector<F32> samples;
+    if (!len)
+        return samples;
 
 #ifdef MO_IRMAP_TL
     samples.reserve(len);

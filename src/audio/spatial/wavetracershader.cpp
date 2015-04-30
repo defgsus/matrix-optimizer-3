@@ -39,7 +39,6 @@ struct WaveTracerShader::Private
         , context   (0)
         , fbo       (0)
         , quad      (0)
-        , maxPasses (10000)
     {
         defaultSettings();
     }
@@ -53,8 +52,8 @@ struct WaveTracerShader::Private
     void initQuad(); //! (re-)creates quad instance and (re-)compiles shader, throws
     void releaseQuad();
     void renderQuad();
-    void getBuffer(bool doSampleIr, bool doClearIr); //! locked
-    void sampleIr(bool doClearIr); //! not locked
+    void getBuffer(bool doSampleIr, bool doClear); //! locked
+    void sampleIr(bool doClearIr); //! not locked, called by getBuffer
     QImage getImage();
     QImage getIrImage(const QSize& s);
 
@@ -76,14 +75,16 @@ struct WaveTracerShader::Private
                 * u_SND_COLOR,             // rendermode 3
                 * u_DIFFUSE,               // random reflection [0,1]
                 * u_DIFFUSE_RND,           // random random reflection [0,1]
-                * u_FRESNEL;               // not fresnel really,
+                * u_FRESNEL,               // not fresnel really,
+                * u_RND_RAY;
 
 
     Settings settings, nextSettings;
     LiveSettings liveSettings;
     QString errorString;
-    volatile int passCount, maxPasses;
-    std::vector<Float> buffer;
+    volatile int passCount;
+    int passesAdded;
+    std::vector<Float> buffer, bufferAdd;
     AUDIO::IrMap irMap;
     //const static qint64 dist_units = 1e+7; //! quantized units per distance unit
 
@@ -115,6 +116,17 @@ void WaveTracerShader::stop()
     p_->doStop = true;
     wait();
 }
+
+QString WaveTracerShader::infoString() const
+{
+    return tr("pass %1/%2; %3")
+                   .arg(p_->passCount)
+                   .arg(p_->settings.numPasses)
+                   .arg(getIrInfo())
+    ;
+}
+
+uint WaveTracerShader::passCount() const { return p_->passCount; }
 
 QImage WaveTracerShader::getImage()
 {
@@ -182,17 +194,23 @@ void WaveTracerShader::Private::defaultSettings()
     liveSettings.diffuse = 1.f;
     liveSettings.diffuseRnd = 1.f;
     liveSettings.fresnel = 1.f;
+    liveSettings.rndRay = 0.f;
+    liveSettings.doFlipPhase = true;
 
     settings.maxTraceStep = 100;
     settings.maxReflectStep = 5;
-    settings.numMultiSamples = 10;
+    settings.numPasses = 1;
+    settings.doPassAverage = false;
 
     settings.resolution = QSize(128, 128);
     settings.renderMode = RM_WAVE_TRACER;
     settings.userCode =
         "#include <iq/distfunc>\n"
-        "#include <dh/hash>\n\n"
+        "#include <dh/hash>\n"
+        "#include <noise>\n\n"
         "float DE_room(in vec3 p)\n{\n\t// inverted box as room\n"
+            "\t// noisy surface\n"
+            "\t//p += 0.003 * noise3(p*30.)\n\n"
             "\tfloat d = -sdBox(p, vec3(10.));\n\n"
             "\t// some obstacles\n"
             "\tp = mod(p, 2.) - 1.;\n"
@@ -214,6 +232,7 @@ void WaveTracerShader::Private::run()
     doRecreate = false;
     errorString.clear();
     passCount = 0;
+    passesAdded = 0;
 
     initGl();
 
@@ -231,14 +250,17 @@ void WaveTracerShader::Private::run()
             {
                 releaseGl();
                 settings = nextSettings;
+                passCount = 0;
                 initGl();
+                doRecreate = false;
             }
 
             // recompile if necessary
             if (doRecompile)
             {
                 settings = nextSettings;
-                initQuad();
+                passCount = 0;
+                initQuad(); // sets doRecompile
             }
 
             renderQuad();
@@ -260,13 +282,8 @@ void WaveTracerShader::Private::run()
             doStop = true;
         }
 
-        int maxPass = maxPasses;
-        // HACK, other modes don't use this multisampling
-        if (settings.renderMode != RM_WAVE_TRACER)
-            maxPass = 1;
-
         // wait for work
-        while (!doStop && passCount >= maxPass)
+        while (!doStop && passCount >= (int)settings.numPasses)
             msleep(50);
     }
 
@@ -324,7 +341,7 @@ void WaveTracerShader::Private::initQuad()
     src->addDefine(QString("#define _RENDER_MODE %1").arg(settings.renderMode));
     src->addDefine(QString("#define _MAX_TRACE_STEPS %1").arg(settings.maxTraceStep));
     src->addDefine(QString("#define _MAX_REFLECT %1").arg(settings.maxReflectStep));
-    src->addDefine(QString("#define _NUM_SAMPLES %1").arg(settings.numMultiSamples));
+    src->addDefine(QString("#define _NUM_SAMPLES 1"));//.arg(settings.numMultiSamples));
 
     src->replace("//!mo_user_functions!", settings.userCode, true);
 
@@ -356,6 +373,7 @@ void WaveTracerShader::Private::initQuad()
     u_DIFFUSE = sh->getUniform("_DIFFUSE", false);
     u_DIFFUSE_RND = sh->getUniform("_DIFFUSE_RND", false);
     u_FRESNEL = sh->getUniform("_FRESNEL", false);
+    u_RND_RAY = sh->getUniform("_RND_RAY", false);
 
     // --- set defaults ---
 
@@ -405,6 +423,8 @@ void WaveTracerShader::Private::renderQuad()
 
     if (u_transformation)
         u_transformation->set(liveSettings.camera);
+    if (u_RND_RAY)
+        u_RND_RAY->floats[0] = liveSettings.rndRay;
     if (u_DIFFUSE)
         u_DIFFUSE->floats[0] = liveSettings.diffuse;
     if (u_DIFFUSE)
@@ -423,7 +443,7 @@ void WaveTracerShader::Private::renderQuad()
     quad->draw(settings.resolution.width(), settings.resolution.height());
 }
 
-void WaveTracerShader::Private::getBuffer(bool doSampleIr, bool doClearIr)
+void WaveTracerShader::Private::getBuffer(bool doSampleIr, bool doClear)
 {
     context->finish();
 
@@ -434,10 +454,38 @@ void WaveTracerShader::Private::getBuffer(bool doSampleIr, bool doClearIr)
         buffer.resize(size);
 
     fbo->colorTexture()->bind();
+    // single pass
     fbo->colorTexture()->download(&buffer[0], gl::GL_RGBA, gl::GL_FLOAT);
 
+    // add passes
+    if (settings.doPassAverage)
+    {
+        bool doCl = doClear;
+        if (bufferAdd.size() != size)
+        {
+            bufferAdd.resize(size);
+            doCl = true;
+        }
+        if (doCl)
+        {
+            for (auto & i : bufferAdd) i = 0.f;
+            passesAdded = 0;
+        }
+
+        const Float inv = 1.f / std::max(1, (int)passesAdded + 1);
+        for (size_t i=0; i<size; ++i)
+        {
+            // add
+            bufferAdd[i] += buffer[i];
+            // get average
+            buffer[i] = bufferAdd[i] * inv;
+        }
+        ++passesAdded;
+
+    }
+
     if (doSampleIr)
-        sampleIr(doClearIr);
+        sampleIr(doClear);
 }
 
 
@@ -461,7 +509,7 @@ void WaveTracerShader::Private::sampleIr(bool doClearIr)
         if (amp < 0.0000001)
             continue;
 
-        if ((count & 1) == 1)
+        if (liveSettings.doFlipPhase && (count & 1) == 1)
             amp = -amp;
 
         irMap.addSample(dist, amp);

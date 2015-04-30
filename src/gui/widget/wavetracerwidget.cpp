@@ -72,13 +72,24 @@ namespace GUI {
         Private(WaveTracerWidget * w)
             : widget            (w)
             , tracer            (new AUDIO::WaveTracerShader(widget))
+            , tracerImg         (new AUDIO::WaveTracerShader(widget))
         {
             updateTime.start();
+            updateTimeImg.start();
+
+            auto s = tracerImg->settings();
+            s.renderMode = AUDIO::WaveTracerShader::RM_WAVE_TRACER_VISIBLE;
+            s.numPasses = 10;
+            tracerImg->setSettings(s);
+
+            s = tracer->settings();
+            s.numPasses = 200;
+            tracer->setSettings(s);
         }
 
         void createWidgets();
-        void updateFromWidgets();
-        void updateFromLiveWidgets();
+        void updateFromWidgets(bool doTracer, bool doTracerImg);
+        void updateFromLiveWidgets(bool doTracer, bool doTracerImg);
         void updateFromSettings();
         void updateVisibility();
         void updateImage();
@@ -87,17 +98,22 @@ namespace GUI {
 
         WaveTracerWidget * widget;
 
-        AUDIO::WaveTracerShader * tracer;
-        QTime updateTime;
-        bool doNextUpdate;
+        AUDIO::WaveTracerShader
+            * tracer,
+            * tracerImg;
+        QTime updateTime, updateTimeImg;
+        volatile bool doNextUpdate, doNextUpdateImg;
 
         CameraControlWidget * camera;
         GlslWidget * source;
         SpinBox * sbMaxSteps,
                 * sbMaxReflect,
-                * sbNumSamples,
+                * sbPasses,
+                * sbImgPasses,
                 * sbResX,
-                * sbResY;
+                * sbResY,
+                * sbImgResX,
+                * sbImgResY;;
         DoubleSpinBox
                 * sbSoundRad,
                 * sbMaxDist,
@@ -109,6 +125,7 @@ namespace GUI {
                 * sbDiffuseRnd,
                 * sbFresnel,
                 * sbFudge,
+                * sbRndRay,
                 * sbColorX,
                 * sbColorY,
                 * sbColorZ;
@@ -136,13 +153,18 @@ WaveTracerWidget::WaveTracerWidget(QWidget *parent)
             this, SLOT(p_tracerFinished_()), Qt::QueuedConnection);
     connect(p_->tracer, SIGNAL(finishedIrImage(QImage)),
             this, SLOT(p_onIrImage_(QImage)), Qt::QueuedConnection);
+    connect(p_->tracerImg, SIGNAL(finished()),
+            this, SLOT(p_tracerImgFinished_()), Qt::QueuedConnection);
+    connect(p_->tracerImg, SIGNAL(frameFinished()),
+            this, SLOT(p_tracerImgFinished_()), Qt::QueuedConnection);
 
-    p_->tracer->start();
+    updateTracer();
 }
 
 WaveTracerWidget::~WaveTracerWidget()
 {
     p_->tracer->stop();
+    p_->tracerImg->stop();
 
     delete p_;
 }
@@ -160,6 +182,8 @@ void WaveTracerWidget::Private::createWidgets()
         auto lv = new QVBoxLayout();
         lh0->addLayout(lv, 1);
 
+            // RAY_MARCHING
+
             auto label = new QLabel(tr("ray marching"), widget);
             QFont font = label->font();
             font.setPointSizeF(font.pointSizeF() * 1.2);
@@ -171,15 +195,22 @@ void WaveTracerWidget::Private::createWidgets()
 
                 auto sb = sbResX = new SpinBox(widget);
                 sb->setLabel(tr("resolution"));
-                sb->setRange(16, 1024);
+                sb->setRange(16, 1024*16);
+                sb->setSingleStep(16);
                 connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
                 lh->addWidget(sb);
 
                 sb = sbResY = new SpinBox(widget);
-                sb->setRange(16, 1024);
+                sb->setRange(16, 1024*16);
+                sb->setSingleStep(16);
                 connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
                 lh->addWidget(sb);
 
+            sb = sbPasses = new SpinBox(widget);
+            sb->setLabel(tr("number of passes"));
+            sb->setRange(1, 10000);
+            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
+            lv->addWidget(sb);
 
             sb = sbMaxSteps = new SpinBox(widget);
             sb->setLabel(tr("maximum ray steps"));
@@ -217,50 +248,15 @@ void WaveTracerWidget::Private::createWidgets()
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
 
-            label = new QLabel(tr("visual options"), widget);
-            label->setFont(font);
-            lv->addWidget(label);
-
-            sb = sbNumSamples = new SpinBox(widget);
-            sb->setLabel(tr("number of multi-samples"));
-            sb->setRange(1, 10000);
-            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
-            lv->addWidget(sb);
-
-            dsb = sbBright = new DoubleSpinBox(widget);
-            dsb->setLabel(tr("brightness"));
-            dsb->setRange(0., 10000.);
-            dsb->setDecimals(3);
-            dsb->setSingleStep(0.1);
+            dsb = sbRndRay = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("randomize ray dir"));
+            dsb->setRange(0., 100.);
+            dsb->setDecimals(5);
+            dsb->setSingleStep(0.01);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
 
-            // color
-
-            lh = new QHBoxLayout();
-            lv->addLayout(lh);
-
-                dsb = sbColorX = new DoubleSpinBox(widget);
-                dsb->setLabel(tr("sound/light color"));
-                dsb->setRange(0., 1.);
-                dsb->setDecimals(3);
-                dsb->setSingleStep(0.1);
-                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
-                lh->addWidget(dsb);
-
-                dsb = sbColorY = new DoubleSpinBox(widget);
-                dsb->setRange(0., 1.);
-                dsb->setDecimals(3);
-                dsb->setSingleStep(0.1);
-                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
-                lh->addWidget(dsb);
-
-                dsb = sbColorZ = new DoubleSpinBox(widget);
-                dsb->setRange(0., 1.);
-                dsb->setDecimals(3);
-                dsb->setSingleStep(0.1);
-                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
-                lh->addWidget(dsb);
+            // REFLECTION
 
             label = new QLabel(tr("reflection"), widget);
             label->setFont(font);
@@ -270,7 +266,7 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setLabel(tr("global reflectiveness"));
             dsb->setRange(0., 10000.);
             dsb->setDecimals(3);
-            dsb->setSingleStep(0.1);
+            dsb->setSingleStep(0.05);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
 
@@ -278,7 +274,7 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setLabel(tr("fresnel-like reflectiveness"));
             dsb->setRange(0., 1.);
             dsb->setDecimals(3);
-            dsb->setSingleStep(0.01);
+            dsb->setSingleStep(0.05);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
 
@@ -297,6 +293,8 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setSingleStep(0.05);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
+
+            // SOUND
 
             label = new QLabel(tr("sound"), widget);
             label->setFont(font);
@@ -318,7 +316,6 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setSuffix("°");
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
-
 
             lv->addStretch(1);
 
@@ -346,17 +343,76 @@ void WaveTracerWidget::Private::createWidgets()
                 labelImage = new QLabel(widget);
                 lv1->addWidget(labelImage);
 
-            label = new QLabel(tr("render mode"), widget);
+            label = new QLabel(tr("visual options"), widget);
+            label->setFont(font);
             lv->addWidget(label);
 
             comboRender = new QComboBox(widget);
-            comboRender->addItem(tr("path tracing audio"));
-            comboRender->addItem(tr("path tracing debug"));
-            comboRender->addItem(tr("ray tracing"));
-            comboRender->addItem(tr("field slice"));
+            // XXX QVariants not used. order can't be changed right now.
+            comboRender->addItem(tr("path tracing"), QVariant(AUDIO::WaveTracerShader::RM_WAVE_TRACER_VISIBLE));
+            comboRender->addItem(tr("ray tracing"), QVariant(AUDIO::WaveTracerShader::RM_RAY_TRACER));
+            comboRender->addItem(tr("field slice"), QVariant(AUDIO::WaveTracerShader::RM_FIELD_SLICE));
             connect(comboRender, SIGNAL(currentIndexChanged(int)),
-                    widget, SLOT(p_onWidget_()));
+                    widget, SLOT(p_onImgWidget_()));
             lv->addWidget(comboRender);
+
+            lh = new QHBoxLayout();
+                lv->addLayout(lh);
+
+                sb = sbImgResX = new SpinBox(widget);
+                sb->setLabel(tr("resolution"));
+                sb->setRange(16, 1024);
+                sb->setSingleStep(16);
+                connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onImgWidget_()));
+                lh->addWidget(sb);
+
+                sb = sbImgResY = new SpinBox(widget);
+                sb->setRange(16, 1024);
+                sb->setSingleStep(16);
+                connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onImgWidget_()));
+                lh->addWidget(sb);
+
+            sb = sbImgPasses = new SpinBox(widget);
+            sb->setLabel(tr("number of passes"));
+            sb->setRange(1, 10000);
+            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onImgWidget_()));
+            lv->addWidget(sb);
+
+            dsb = sbBright = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("sound brightness"));
+            dsb->setRange(0., 10000.);
+            dsb->setDecimals(3);
+            dsb->setSingleStep(0.1);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onImgLiveWidget_()));
+            lv->addWidget(dsb);
+
+            // color
+
+            lh = new QHBoxLayout();
+            lv->addLayout(lh);
+
+                dsb = sbColorX = new DoubleSpinBox(widget);
+                dsb->setLabel(tr("sound/light color"));
+                dsb->setRange(0., 1.);
+                dsb->setDecimals(3);
+                dsb->setSingleStep(0.1);
+                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onImgLiveWidget_()));
+                lh->addWidget(dsb);
+
+                dsb = sbColorY = new DoubleSpinBox(widget);
+                dsb->setRange(0., 1.);
+                dsb->setDecimals(3);
+                dsb->setSingleStep(0.1);
+                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onImgLiveWidget_()));
+                lh->addWidget(dsb);
+
+                dsb = sbColorZ = new DoubleSpinBox(widget);
+                dsb->setRange(0., 1.);
+                dsb->setDecimals(3);
+                dsb->setSingleStep(0.1);
+                connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onImgLiveWidget_()));
+                lh->addWidget(dsb);
+
 
             lv->addStretch(1);
 
@@ -377,31 +433,54 @@ void WaveTracerWidget::Private::createWidgets()
 void WaveTracerWidget::updateTracer()
 {
     p_->doNextUpdate = true;
+    p_->doNextUpdateImg = true;
 
     if (!p_->tracer->isRunning())
         p_->tracer->start();
+
+    if (!p_->tracerImg->isRunning())
+        p_->tracerImg->start();
 }
 
-void WaveTracerWidget::Private::updateFromWidgets()
+void WaveTracerWidget::Private::updateFromWidgets(bool doTracer, bool doTracerImg)
 {
-    auto s = tracer->settings();
+    if (doTracerImg)
+    {
+        auto s = tracerImg->settings();
 
-    s.resolution = QSize(sbResX->value(), sbResY->value());
-    s.maxTraceStep = sbMaxSteps->value();
-    s.maxReflectStep = sbMaxReflect->value();
-    s.numMultiSamples = sbNumSamples->value();
-    s.userCode = source->scriptText();
-    s.renderMode = (AUDIO::WaveTracerShader::RenderMode)
-                        std::max(0, comboRender->currentIndex());
+        s.resolution = QSize(sbImgResX->value(), sbImgResY->value());
+        s.maxTraceStep = sbMaxSteps->value();
+        s.maxReflectStep = sbMaxReflect->value();
+        s.doPassAverage = true;
+        s.userCode = source->scriptText();
+        s.renderMode = (AUDIO::WaveTracerShader::RenderMode)(
+                            std::max(0, comboRender->currentIndex()) + 1);
+        s.numPasses = sbImgPasses->value();
 
-    tracer->setSettings(s);
+        tracerImg->setSettings(s);
+    }
+
+    if (doTracer)
+    {
+        auto s = tracer->settings();
+
+        s.resolution = QSize(sbResX->value(), sbResY->value());
+        s.maxTraceStep = sbMaxSteps->value();
+        s.maxReflectStep = sbMaxReflect->value();
+        s.doPassAverage = false;
+        s.userCode = source->scriptText();
+        s.renderMode = AUDIO::WaveTracerShader::RM_WAVE_TRACER;
+        s.numPasses = sbPasses->value();
+
+        tracer->setSettings(s);
+    }
 
     widget->updateTracer();
 
     updateVisibility();
 }
 
-void WaveTracerWidget::Private::updateFromLiveWidgets()
+void WaveTracerWidget::Private::updateFromLiveWidgets(bool doTracer, bool doTracerImg)
 {
     auto s = tracer->liveSettings();
 
@@ -415,19 +494,23 @@ void WaveTracerWidget::Private::updateFromLiveWidgets()
     s.diffuseRnd = sbDiffuseRnd->value();
     s.fresnel = sbFresnel->value();
     s.fudge = sbFudge->value();
+    s.rndRay = sbRndRay->value();
     s.soundColor.x = sbColorX->value();
     s.soundColor.y = sbColorY->value();
     s.soundColor.z = sbColorZ->value();
     s.camera = glm::inverse(camera->cameraMatrix());
 
-    tracer->setLiveSettings(s);
+    if (doTracerImg)
+        tracerImg->setLiveSettings(s);
+    if (doTracer)
+        tracer->setLiveSettings(s);
 
     widget->updateTracer();
 }
 
 void WaveTracerWidget::Private::updateFromSettings()
 {
-    const auto ls = tracer->liveSettings();
+    const auto ls = tracerImg->liveSettings();
 
     sbMaxDist->setValue(ls.maxTraceDist);
     sbReflect->setValue(ls.reflectivness);
@@ -439,20 +522,30 @@ void WaveTracerWidget::Private::updateFromSettings()
     sbDiffuseRnd->setValue(ls.diffuseRnd);
     sbFresnel->setValue(ls.fresnel);
     sbFudge->setValue(ls.fudge);
+    sbRndRay->setValue(ls.rndRay);
     sbColorX->setValue(ls.soundColor.x);
     sbColorY->setValue(ls.soundColor.y);
     sbColorZ->setValue(ls.soundColor.z);
-    camera->setCameraMatrix(ls.camera);
+    camera->setCameraMatrix(glm::inverse(ls.camera));
 
-    const auto s = tracer->settings();
+    auto s = tracer->settings();
 
     sbResX->setValue(s.resolution.width());
     sbResY->setValue(s.resolution.height());
-    comboRender->setCurrentIndex(s.renderMode);
     source->setScriptText(s.userCode);
     sbMaxSteps->setValue(s.maxTraceStep);
     sbMaxReflect->setValue(s.maxReflectStep);
-    sbNumSamples->setValue(s.numMultiSamples);
+    sbPasses->setValue(s.numPasses);
+
+    s = tracerImg->settings();
+
+    sbImgResX->setValue(s.resolution.width());
+    sbImgResY->setValue(s.resolution.height());
+    comboRender->setCurrentIndex(s.renderMode-1);
+    source->setScriptText(s.userCode);
+    sbMaxSteps->setValue(s.maxTraceStep);
+    sbMaxReflect->setValue(s.maxReflectStep);
+    sbImgPasses->setValue(s.numPasses);
 
     updateVisibility();
 }
@@ -460,14 +553,16 @@ void WaveTracerWidget::Private::updateFromSettings()
 void WaveTracerWidget::Private::updateVisibility()
 {
 //    const auto ls = tracer->liveSettings();
-    const auto s = tracer->settings();
+    const auto //s = tracer->settings(),
+               si = tracerImg->settings();
 
     const bool
-            wt = s.renderMode == AUDIO::WaveTracerShader::RM_WAVE_TRACER_VISIBLE,
-            rt = s.renderMode == AUDIO::WaveTracerShader::RM_RAY_TRACER,
-            fs = s.renderMode == AUDIO::WaveTracerShader::RM_FIELD_SLICE;
+            //wt = si.renderMode == AUDIO::WaveTracerShader::RM_WAVE_TRACER_VISIBLE,
+            rt = si.renderMode == AUDIO::WaveTracerShader::RM_RAY_TRACER,
+            fs = si.renderMode == AUDIO::WaveTracerShader::RM_FIELD_SLICE;
 
-    sbNumSamples->setVisible(wt || fs);
+    //sbImgPasses->setVisible(wt || fs);
+    //sbBright->setVisible(true);
     sbColorX->setVisible(rt || fs);
     sbColorY->setVisible(rt || fs);
     sbColorZ->setVisible(rt || fs);
@@ -479,11 +574,11 @@ void WaveTracerWidget::Private::updateImage()
 
     QSize res = QSize(384, 384) * widget->devicePixelRatio();
 
-    if (tracer->wasError())
+    if (tracerImg->wasError())
         labelImage->setPixmap(QPixmap(res));
     else
     {
-        labelImage->setPixmap(QPixmap::fromImage(tracer->getImage().scaled(res)));
+        labelImage->setPixmap(QPixmap::fromImage(tracerImg->getImage().scaled(res)));
     }
 }
 
@@ -508,29 +603,53 @@ void WaveTracerWidget::p_tracerFinished_()
     if (p_->tracer->wasError())
         QMessageBox::critical(this, tr("wave tracer error"), p_->tracer->errorString());
 
-    if (p_->doNextUpdate || p_->updateTime.elapsed() > 500)
+    if (p_->doNextUpdate || p_->updateTime.elapsed() > 2000
+        || p_->tracer->passCount() >= p_->tracer->settings().numPasses)
     {
         p_->requestIrImage();
-        p_->updateImage();
         p_->updateTime.start();
         p_->doNextUpdate = false;
     }
 }
 
+void WaveTracerWidget::p_tracerImgFinished_()
+{
+    if (p_->tracerImg->wasError())
+        QMessageBox::critical(this, tr("image wave tracer error"), p_->tracerImg->errorString());
+
+    if (p_->doNextUpdateImg || p_->updateTimeImg.elapsed() > 300
+        || p_->tracerImg->passCount() >= p_->tracerImg->settings().numPasses)
+    {
+        p_->updateImage();
+        p_->updateTimeImg.start();
+        p_->doNextUpdateImg = false;
+    }
+}
+
 void WaveTracerWidget::p_onLiveWidget_()
 {
-    p_->updateFromLiveWidgets();
+    p_->updateFromLiveWidgets(true, true);
 }
 
 void WaveTracerWidget::p_onWidget_()
 {
-    p_->updateFromWidgets();
+    p_->updateFromWidgets(true, true);
+}
+
+void WaveTracerWidget::p_onImgLiveWidget_()
+{
+    p_->updateFromLiveWidgets(false, true);
+}
+
+void WaveTracerWidget::p_onImgWidget_()
+{
+    p_->updateFromWidgets(false, true);
 }
 
 void WaveTracerWidget::p_onIrImage_(QImage img)
 {
     p_->labelIr->setPixmap(QPixmap::fromImage(img));
-    p_->labelIrInfo->setText(p_->tracer->getIrInfo());
+    p_->labelIrInfo->setText(p_->tracer->infoString());
 }
 
 } // namespace GUI

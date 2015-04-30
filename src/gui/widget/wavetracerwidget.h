@@ -38,8 +38,11 @@ public slots:
 private slots:
 
     void p_tracerFinished_();
+    void p_tracerImgFinished_();
     void p_onLiveWidget_();
     void p_onWidget_();
+    void p_onImgLiveWidget_();
+    void p_onImgWidget_();
     void p_onIrImage_(QImage img);
 
 private:

@@ -22,7 +22,8 @@ uniform mat4 u_transformation;  // object's own transformation matrix
 // 0 = true values
 // 1 = readable colorization of true values with multi-sampling
 // 2 = nice visual for modelling
-// #define _RENDER_MODE 0
+// #define _RENDER_MODE 0-3
+
 // uniform int     _MAX_TRACE_STEPS;
 // uniform int     _MAX_REFLECT;
 // uniform int     _NUM_SAMPLES;
@@ -39,6 +40,7 @@ uniform vec3    _SND_COLOR;             // visual sound representation
 uniform float   _DIFFUSE;               // random reflection [0,1]
 uniform float   _DIFFUSE_RND;           // random random reflection [0,1]
 uniform float   _FRESNEL;               // not fresnel really,
+uniform float   _RND_RAY;
 
 //!mo_user_functions!
 /* expects these functions
@@ -256,7 +258,8 @@ vec3 _multi_cast(in vec3 ro, in vec3 rd, in vec3 seed)
         col += _var2col(_cast(ro, rd1, seed));
         seed += 2.222;
     }
-    return clamp(col / float(_NUM_SAMPLES) * _BRIGHTNESS * 10., 0., 1.);
+    return //clamp(
+                col / float(_NUM_SAMPLES) * _BRIGHTNESS * 10.;//, 0., 1.);
 }
 
 
@@ -456,7 +459,9 @@ void main()
     pos = (u_transformation * vec4(pos,1.)).xyz;
     dir = (mat3(u_transformation)) * dir;
 
-    vec3 seed = vec3(v_pos, float(_PASS_NUMBER) * 1.33);
+    vec3 seed = vec3(v_pos, float(_PASS_NUMBER) * 1.3317549);
+
+    dir = normalize(dir + _RND_RAY * normalize(hash3(seed*4.321-5.678)-.5));
 
     #if _RENDER_MODE == 0
         fragColor = vec4(_cast(pos, dir, seed), 1.);
