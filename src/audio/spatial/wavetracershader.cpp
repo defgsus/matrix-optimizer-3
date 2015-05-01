@@ -175,8 +175,15 @@ void WaveTracerShader::setSettings(const Settings& s)
     p_->passCount = 0;
 }
 
+void WaveTracerShader::setNumPasses(uint num)
+{
+    p_->settings.numPasses = num;
+}
 
-
+void WaveTracerShader::setFlipPhase(bool e)
+{
+    p_->liveSettings.doFlipPhase = e;
+}
 
 void WaveTracerShader::Private::defaultSettings()
 {
@@ -187,7 +194,8 @@ void WaveTracerShader::Private::defaultSettings()
 
     liveSettings.fudge = 0.9f;
     liveSettings.normalEps = 0.0001f;
-    liveSettings.maxTraceDist = 100.f;
+    liveSettings.maxRayDist = 100.f;
+    liveSettings.maxTraceDist = 1000.f;
     liveSettings.micAngle = 180.f;
     liveSettings.reflectivness = 0.9f;
     liveSettings.brightness = 1.f;
@@ -195,7 +203,7 @@ void WaveTracerShader::Private::defaultSettings()
     liveSettings.diffuseRnd = 1.f;
     liveSettings.fresnel = 1.f;
     liveSettings.rndRay = 0.f;
-    liveSettings.doFlipPhase = true;
+    liveSettings.doFlipPhase = false;
 
     settings.maxTraceStep = 100;
     settings.maxReflectStep = 5;
@@ -210,8 +218,12 @@ void WaveTracerShader::Private::defaultSettings()
         "#include <noise>\n\n"
         "float DE_room(in vec3 p)\n{\n\t// inverted box as room\n"
             "\t// noisy surface\n"
-            "\t//p += 0.003 * noise3(p*30.)\n\n"
-            "\tfloat d = -sdBox(p, vec3(10.));\n\n"
+            "\t//p += 0.003 * noise3(p*30.);\n\n"
+            "\t// two rooms\n"
+            "\tfloat d = -sdBox(p, vec3(10.));\n"
+            "\td = max(d, -sdBox(p - vec3(0,0,-21), vec3(10.)));\n"
+            "\t// connected by window\n"
+            "\td = max(d, -sdBox(p - vec3(0,0,-10), vec3(3.)));\n\n"
             "\t// some obstacles\n"
             "\tp = mod(p, 2.) - 1.;\n"
             "\td = min(d, sdBox(p, vec3(0.2)));\n\n"
@@ -419,7 +431,8 @@ void WaveTracerShader::Private::renderQuad()
     u_FUDGE->floats[0] = liveSettings.fudge;
     u_EPSILON->floats[0] = liveSettings.normalEps;
     u_DAMPING->floats[0] = liveSettings.reflectivness;
-    u_MAX_TRACE_DIST->floats[0] = liveSettings.maxTraceDist;
+    u_MAX_TRACE_DIST->floats[0] = liveSettings.maxRayDist;
+    u_MAX_TRACE_DIST->floats[1] = liveSettings.maxTraceDist;
 
     if (u_transformation)
         u_transformation->set(liveSettings.camera);
@@ -499,6 +512,7 @@ void WaveTracerShader::Private::sampleIr(bool doClearIr)
     if (doClearIr)
         irMap.clear();
 
+    //Float phase = 0.;
     for (auto ptr = buffer.begin(); ptr != buffer.end(); ptr += 4)
     {
         Float   amp = ptr[0],
@@ -506,11 +520,14 @@ void WaveTracerShader::Private::sampleIr(bool doClearIr)
         const int
                 count = ptr[2] + 0.001;
 
+        //phase += 4.329;
+
         if (amp < 0.0000001)
             continue;
 
         if (liveSettings.doFlipPhase && (count & 1) == 1)
             amp = -amp;
+        //amp = amp * sin(dist / 330.f * 6.28f * 60.f + phase);
 
         irMap.addSample(dist, amp);
     }

@@ -41,10 +41,10 @@ public:
     /** Returns an informative string */
     QString getInfo() const;
 
-    QImage getImage(const QSize& res);
-
     /** Returns a waveform from the sampled map */
     std::vector<F32> getSamples(Float sample_rate, Float speed_of_sound = 333.);
+
+    QImage getImage(const QSize& res);
 
     // ----------- setter -------------
 
@@ -60,6 +60,7 @@ private:
     MATH::Timeline1D p_tl_;
 #else
     std::map<Float, Float> p_map_;
+    std::vector<Float> p_impulse_;
 #endif
     Float p_min_amp_, p_max_amp_,
           p_min_dist_, p_max_dist_;

@@ -25,7 +25,12 @@
 #include "gui/widget/cameracontrolwidget.h"
 #include "audio/spatial/wavetracershader.h"
 #include "audio/tool/irmap.h"
+#include "audio/tool/soundfile.h"
+#include "audio/tool/soundfilemanager.h"
+#include "audio/audioplayer.h"
+#include "audio/audioplayerdata.h"
 #include "io/files.h"
+#include "io/settings.h"
 #include "io/log.h"
 
 
@@ -73,18 +78,21 @@ namespace GUI {
             : widget            (w)
             , tracer            (new AUDIO::WaveTracerShader(widget))
             , tracerImg         (new AUDIO::WaveTracerShader(widget))
+            , soundFile         (0)
         {
             updateTime.start();
             updateTimeImg.start();
 
             auto s = tracerImg->settings();
+            s.userCode = settings()->value("WaveTracer/source", s.userCode).toString()                                                                                                                                                                                                                                                                                                                                                                                                                                                                      ;
             s.renderMode = AUDIO::WaveTracerShader::RM_WAVE_TRACER_VISIBLE;
             s.numPasses = 10;
             tracerImg->setSettings(s);
 
-            s = tracer->settings();
-            s.numPasses = 200;
-            tracer->setSettings(s);
+            auto s1 = tracer->settings();
+            s1.userCode = s.userCode;
+            s1.numPasses = 200;
+            tracer->setSettings(s1);
         }
 
         void createWidgets();
@@ -104,6 +112,8 @@ namespace GUI {
         QTime updateTime, updateTimeImg;
         volatile bool doNextUpdate, doNextUpdateImg;
 
+        AUDIO::SoundFile * soundFile;
+
         CameraControlWidget * camera;
         GlslWidget * source;
         SpinBox * sbMaxSteps,
@@ -116,7 +126,8 @@ namespace GUI {
                 * sbImgResY;;
         DoubleSpinBox
                 * sbSoundRad,
-                * sbMaxDist,
+                * sbRayDist,
+                * sbTraceDist,
                 * sbReflect,
                 * sbMicAngle,
                 * sbBright,
@@ -131,11 +142,14 @@ namespace GUI {
                 * sbColorZ;
         QComboBox
                 * comboRender;
+        QCheckBox
+                * cbPhaseFlip;
         QLabel * labelImage,
                * labelIr,
                * labelIrInfo;
         QPushButton
-                * butSaveIr;
+                * butSaveIr,
+                * butPlayIr;
     };
 
 
@@ -165,6 +179,8 @@ WaveTracerWidget::~WaveTracerWidget()
 {
     p_->tracer->stop();
     p_->tracerImg->stop();
+
+    AUDIO::AudioPlayer::close();
 
     delete p_;
 }
@@ -208,8 +224,8 @@ void WaveTracerWidget::Private::createWidgets()
 
             sb = sbPasses = new SpinBox(widget);
             sb->setLabel(tr("number of passes"));
-            sb->setRange(1, 10000);
-            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
+            sb->setRange(1, 1<<30);
+            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onPasses_()));
             lv->addWidget(sb);
 
             sb = sbMaxSteps = new SpinBox(widget);
@@ -218,13 +234,15 @@ void WaveTracerWidget::Private::createWidgets()
             connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
             lv->addWidget(sb);
 
-            sb = sbMaxReflect = new SpinBox(widget);
-            sb->setLabel(tr("maximum reflection steps"));
-            sb->setRange(1, 10000);
-            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
-            lv->addWidget(sb);
+            auto dsb = sbRayDist = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("maximum ray length"));
+            dsb->setRange(0., 10000.);
+            dsb->setDecimals(3);
+            dsb->setSingleStep(1.);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
+            lv->addWidget(dsb);
 
-            auto dsb = sbMaxDist = new DoubleSpinBox(widget);
+            dsb = sbTraceDist = new DoubleSpinBox(widget);
             dsb->setLabel(tr("maximum trace distance"));
             dsb->setRange(0., 10000.);
             dsb->setDecimals(3);
@@ -262,6 +280,12 @@ void WaveTracerWidget::Private::createWidgets()
             label->setFont(font);
             lv->addWidget(label);
 
+            sb = sbMaxReflect = new SpinBox(widget);
+            sb->setLabel(tr("maximum reflection steps"));
+            sb->setRange(1, 10000);
+            connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(p_onWidget_()));
+            lv->addWidget(sb);
+
             dsb = sbReflect = new DoubleSpinBox(widget);
             dsb->setLabel(tr("global reflectiveness"));
             dsb->setRange(0., 10000.);
@@ -293,6 +317,10 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setSingleStep(0.05);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
+
+            auto cb = cbPhaseFlip = new QCheckBox(tr("flip phase"), widget);
+            connect(cb, SIGNAL(clicked()), widget, SLOT(p_phase_()));
+            lv->addWidget(cb);
 
             // SOUND
 
@@ -416,6 +444,25 @@ void WaveTracerWidget::Private::createWidgets()
 
             lv->addStretch(1);
 
+            lh = new QHBoxLayout();
+            lv->addLayout(lh);
+
+                auto but = new QPushButton("play IR", widget);
+                connect(but, SIGNAL(clicked()), widget, SLOT(playIr()));
+                lh->addWidget(but);
+
+                but = new QPushButton("load", widget);
+                connect(but, SIGNAL(clicked()), widget, SLOT(loadSound()));
+                lh->addWidget(but);
+
+                but = new QPushButton("play", widget);
+                connect(but, SIGNAL(clicked()), widget, SLOT(playSound()));
+                lh->addWidget(but);
+
+                but = new QPushButton("stop", widget);
+                connect(but, &QPushButton::clicked, [](){ AUDIO::AudioPlayer::close(); });
+                lh->addWidget(but);
+
             butSaveIr = new QPushButton("save impulse response", widget);
             connect(butSaveIr, SIGNAL(clicked()), widget, SLOT(saveIr()));
             lv->addWidget(butSaveIr);
@@ -457,6 +504,8 @@ void WaveTracerWidget::Private::updateFromWidgets(bool doTracer, bool doTracerIm
                             std::max(0, comboRender->currentIndex()) + 1);
         s.numPasses = sbImgPasses->value();
 
+        settings()->setValue("WaveTracer/source", s.userCode);
+
         tracerImg->setSettings(s);
     }
 
@@ -484,7 +533,8 @@ void WaveTracerWidget::Private::updateFromLiveWidgets(bool doTracer, bool doTrac
 {
     auto s = tracer->liveSettings();
 
-    s.maxTraceDist = sbMaxDist->value();
+    s.maxTraceDist = sbTraceDist->value();
+    s.maxRayDist = sbRayDist->value();
     s.reflectivness = sbReflect->value();
     s.brightness = sbBright->value();
     s.micAngle = sbMicAngle->value();
@@ -512,7 +562,8 @@ void WaveTracerWidget::Private::updateFromSettings()
 {
     const auto ls = tracerImg->liveSettings();
 
-    sbMaxDist->setValue(ls.maxTraceDist);
+    sbTraceDist->setValue(ls.maxTraceDist);
+    sbRayDist->setValue(ls.maxRayDist);
     sbReflect->setValue(ls.reflectivness);
     sbMicAngle->setValue(ls.micAngle);
     sbBright->setValue(ls.brightness);
@@ -598,6 +649,78 @@ void WaveTracerWidget::saveIr()
     ir.saveWav(fn, 48000);
 }
 
+void WaveTracerWidget::playIr()
+{
+    auto ir = p_->tracer->getIrMap();
+
+    if (!AUDIO::AudioPlayer::open())
+        return;
+
+    auto sam = ir.getSamples(AUDIO::AudioPlayer::sampleRate());
+    auto data = AUDIO::AudioPlayerSample::fromData(&sam[0], sam.size(),
+                    AUDIO::AudioPlayer::sampleRate());
+    AUDIO::AudioPlayer::play(data);
+    data->releaseRef();
+}
+
+bool WaveTracerWidget::loadSound()
+{
+    QString fn = IO::Files::getOpenFileName(IO::FT_SOUND_FILE, this);
+    if (fn.isEmpty())
+        return false;
+
+    if (p_->soundFile)
+        AUDIO::SoundFileManager::releaseSoundFile(p_->soundFile);
+
+    p_->soundFile = AUDIO::SoundFileManager::getSoundFile(fn);
+    return p_->soundFile != 0;
+}
+
+void WaveTracerWidget::playSound()
+{
+    if (!AUDIO::AudioPlayer::open())
+        return;
+
+    if (!p_->soundFile)
+        if (!loadSound())
+            return;
+/*
+    std::vector<F32> sam(88200, 0.f);
+    for (size_t i=0; i<sam.size(); ++i)
+    {
+        F32 t = F32(i) / 44100.f;
+        sam[i] = sin(t * 6.28f * 440.f) * (1.f - t);
+    }
+    auto data = AUDIO::AudioPlayerSample::fromData(
+                    &sam[0], sam.size(),
+                    AUDIO::AudioPlayer::sampleRate());
+    AUDIO::AudioPlayer::play(data);
+    data->releaseRef();
+*/
+
+    auto sam = p_->soundFile->getSamples();
+    auto irmap = p_->tracer->getIrMap();
+    auto ir = irmap.getSamples(AUDIO::AudioPlayer::sampleRate());
+
+    std::vector<F32> conv(sam.size() + ir.size(), 0.f);
+
+    F32 ma = 0.000001;
+    for (size_t i=0; i<ir.size(); ++i)
+        if (std::abs(ir[i]) > 0.00001)
+        for (size_t j=0; j<sam.size(); ++j)
+        {
+            conv[j + i] += ir[i] * sam[j];
+            ma = std::max(ma, conv[j+i]);
+        }
+    for (auto & s : conv)
+        s /= ma;
+
+    auto data = AUDIO::AudioPlayerSample::fromData(&conv[0], conv.size(),
+                    AUDIO::AudioPlayer::sampleRate());
+    AUDIO::AudioPlayer::play(data);
+    data->releaseRef();
+}
+
 void WaveTracerWidget::p_tracerFinished_()
 {
     if (p_->tracer->wasError())
@@ -634,6 +757,24 @@ void WaveTracerWidget::p_onLiveWidget_()
 void WaveTracerWidget::p_onWidget_()
 {
     p_->updateFromWidgets(true, true);
+}
+
+void WaveTracerWidget::p_onPasses_()
+{
+    uint num = p_->sbPasses->value();
+    if (!p_->tracer->isRunning())
+      //|| p_->tracer->passCount() < num)
+        p_->updateFromWidgets(true, true);
+    else
+        p_->tracer->setNumPasses(num);
+}
+
+void WaveTracerWidget::p_phase_()
+{
+    bool f = p_->cbPhaseFlip->isChecked();
+    p_->tracer->setFlipPhase(f);
+    if (!p_->tracer->isRunning())
+        p_->requestIrImage();
 }
 
 void WaveTracerWidget::p_onImgLiveWidget_()

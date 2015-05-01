@@ -16,6 +16,8 @@
 #include "irmap.h"
 #include "gui/painter/grid.h"
 #include "gui/painter/valuecurve.h"
+#include "math/functions.h"
+#include "math/constants.h"
 #include "io/error.h"
 
 //#define MO_IRMAP_TL
@@ -108,7 +110,7 @@ QImage IrMap::getImage(const QSize &res)
             invDist = Float(img.width()) / std::max(size_t(1), samples.size()),
             invAmp = -.5f * img.height() / std::max(0.000001f, p_max_amp_);
 
-    // draw
+    // draw a line per sample
     for (size_t i=0; i<samples.size(); ++i)
     {
         QPointF p0(invDist * i, .5 * img.height()),
@@ -210,10 +212,10 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
 
         samples[ipos] = amp;
     }
-#else // interpolation by averaging
+#elif 0 // averaging
 
     samples.resize(len, 0.f);
-    std::vector<int> counts;
+    std::vector<Float> counts;
     counts.resize(len, 0);
 
     const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
@@ -227,13 +229,169 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
         if (ipos < 0 || ipos >= len)
             continue;
 
-        samples[ipos] += amp;
-        ++counts[ipos];
+        Float f = MATH::fract(pos), f1 = 1.f - f;
+
+        samples[ipos] += amp * f1;
+        counts[ipos] += f1;
+        if (ipos + 1 >= len)
+            continue;
+        samples[ipos+1] += amp * f;
+        counts[ipos+1] += f;
     }
 
     for (size_t i=0; i<samples.size(); ++i)
         if (counts[i])
             samples[i] /= counts[i];
+
+
+#elif 0 // bell averaging (precalc)
+
+    samples.resize(len, 0.f);
+    std::vector<Float> counts;
+    counts.resize(len, 0);
+
+    if (p_impulse_.empty())
+    {
+        size_t num = 100;
+        for (size_t i=0; i<num; ++i)
+        {
+            Float t = Float(i) / (num-1);
+            //p_impulse_.push_back(std::pow(std::sin(t * PI), 2.));
+            //p_impulse_.push_back( std::sin(t * TWO_PI) );
+        }
+    }
+
+    const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
+
+    for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+    {
+        const Float pos = it->first * invDist,
+                    amp = it->second;
+
+        Float f = MATH::fract(pos), f1 = 1.f - f;
+
+        const int ipos = pos;
+        for (size_t j=0; j<p_impulse_.size(); ++j)
+        {
+            int k = ipos + j;
+            if (k < 0 || k >= len)
+                continue;
+
+            samples[k] += amp * f1 * p_impulse_[j];
+            counts[k] += f1;// * p_impulse_[j];
+            ++k;
+            if (k < len)
+            {
+                samples[k] += amp * f * p_impulse_[j];
+                counts[k] += f;// * p_impulse_[j];
+            }
+        }
+    }
+
+    for (size_t i=0; i<samples.size(); ++i)
+        if (counts[i])
+            samples[i] /= std::max(1.f, counts[i]);
+
+#elif 0 // bell averaging (dynamic)
+
+    samples.resize(len, 0.f);
+    std::vector<Float> counts;
+    counts.resize(len, 0);
+
+    const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
+
+    for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+    {
+        const Float pos = it->first * invDist,
+                    amp = it->second;
+
+        Float f = MATH::fract(pos), f1 = 1.f - f;
+
+        size_t num = 3 + it->first / 6;
+
+        const int ipos = pos;
+        for (size_t j=0; j<num; ++j)
+        {
+            int k = ipos + j;
+            if (k < 0 || k >= len)
+                continue;
+
+            Float t = Float(j) / (num-1);
+            Float imp = std::pow(std::sin(t * PI), 2.);
+
+
+            samples[k] += amp * f1 * imp;
+            counts[k] += f1;// * p_impulse_[j];
+            ++k;
+            if (k < len)
+            {
+                samples[k] += amp * f * imp;
+                counts[k] += f;// * p_impulse_[j];
+            }
+        }
+    }
+
+    for (size_t i=0; i<samples.size(); ++i)
+        if (counts[i])
+            samples[i] /= std::max(1.f, counts[i]);
+
+#elif 1 // bell averaging (dynamic) normalized
+
+    samples.resize(len, 0.f);
+
+    const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
+
+    for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+    {
+        const Float pos = it->first * invDist,
+                    amp = it->second;
+
+        Float f = MATH::fract(pos), f1 = 1.f - f;
+
+        size_t num = 3 + it->first / 6;
+
+        const int ipos = pos;
+        for (size_t j=0; j<num; ++j)
+        {
+            int k = ipos + j;
+            if (k < 0 || k >= len)
+                continue;
+
+            Float t = Float(j) / (num-1);
+            Float imp = std::pow(std::sin(t * PI), 2.);
+
+
+            samples[k] += amp * f1 * imp;
+            ++k;
+            if (k < len)
+            {
+                samples[k] += amp * f * imp;
+            }
+        }
+    }
+
+    Float ma = 0.000001;
+    for (size_t i=0; i<samples.size(); ++i)
+        ma = std::max(samples[i], ma);
+    for (size_t i=0; i<samples.size(); ++i)
+        samples[i] /= ma;
+
+#elif 1 // max
+    samples.resize(len);
+
+    const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
+
+    for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+    {
+        const Float pos = it->first * invDist,
+                    amp = it->second;
+
+        const int ipos = pos;
+        if (ipos < 0 || ipos >= len)
+            continue;
+
+        samples[ipos] = std::max(amp, samples[ipos]);
+    }
 #endif
 
 #endif

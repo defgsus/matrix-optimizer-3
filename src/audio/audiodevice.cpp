@@ -152,8 +152,8 @@ int AudioDevice::callback_(const void * in, void * out)
 AudioDevice::AudioDevice()
     :   inDeviceId_  (0),
         outDeviceId_ (0),
-        ok_          (0),
-        play_        (0),
+        ok_          (false),
+        play_        (false),
         func_        (0),
         p_           (new Private)
 {

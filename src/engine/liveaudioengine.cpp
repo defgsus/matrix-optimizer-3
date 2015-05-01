@@ -180,7 +180,7 @@ public:
             numAhead = 4;
 
         AUDIO::AudioBuffer
-                bufferForDevice(bufferSizeChan, numAhead);
+                    bufferForDevice(bufferSizeChan, numAhead);
 
         auto live = engine_->p_;
 
@@ -476,6 +476,8 @@ bool LiveAudioEngine::start()
     }
     catch (const Exception& e)
     {
+        p_->audioOutThread->stop();
+
         QMessageBox::critical(0, tr("Audio device"),
                               tr("Could initialized but not start audio playback.\n%1")
                               .arg(e.what()));

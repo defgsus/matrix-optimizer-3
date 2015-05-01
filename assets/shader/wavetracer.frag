@@ -31,7 +31,7 @@ uniform mat4 u_transformation;  // object's own transformation matrix
 uniform vec4 	_SNDSRC;                // xyz = pos, w = radius/thickness
 uniform float   _FUDGE;                 // ray step precision
 uniform float   _MIC_ANGLE;             // microphone opening angle
-uniform float   _MAX_TRACE_DIST;
+uniform vec2    _MAX_TRACE_DIST;        // per ray / overall
 uniform float   _DAMPING;               // global reflection amount
 uniform float   _BRIGHTNESS;            // amount of visual light/sound, visual rendermodes
 uniform float   _EPSILON;
@@ -41,6 +41,8 @@ uniform float   _DIFFUSE;               // random reflection [0,1]
 uniform float   _DIFFUSE_RND;           // random random reflection [0,1]
 uniform float   _FRESNEL;               // not fresnel really,
 uniform float   _RND_RAY;
+
+vec3 global_ro;
 
 //!mo_user_functions!
 /* expects these functions
@@ -160,6 +162,8 @@ vec3 _DE_sound_normal(in vec3 p, float eps = 0.0001)
 #if 1
 float _DE_trace(in vec3 ro, in vec3 rd, in float len = 10., int steps = 100)
 {
+    global_ro = ro;
+
     float t = 0.;
     for (int i=0; i<steps && t < len; ++i)
     {
@@ -206,17 +210,19 @@ vec3 _cast(in vec3 ro, in vec3 rd, in vec3 seed)
     for (int i=0; i<_MAX_REFLECT+1; ++i)
     {
         // trace
-        float t = _DE_trace(ro, rd, _MAX_TRACE_DIST, _MAX_TRACE_STEPS);
+        float t = _DE_trace(ro, rd, _MAX_TRACE_DIST.x, _MAX_TRACE_STEPS);
         vec3 hit = ro + t * rd;
         ret.y += t;
 
         // end of ray?
-        if (_DE(hit) > 0.1)
-                break;
+        if (_DE(hit) > 0.1 || ret.y >= _MAX_TRACE_DIST.y)
+            break;
 
         // hit sound?
         if (_DE_sound(hit) <= 0.00001)
         {
+            ret.y -= t;
+            ret.y += distance(ro, _SNDSRC.xyz);
             ret.x = amp;// / (1. + 0.3 * ret.y);
             ret.z = float(i);
             break;
@@ -296,7 +302,7 @@ float _DE_shadow(in vec3 ro, in vec3 rd, float maxt, float k = 8., int steps = 2
 
 float _dist_amt(in float dist)
 {
-    return .3+.7*smoothstep(_MAX_TRACE_DIST/2., 0., dist);
+    return .3+.7*smoothstep(_MAX_TRACE_DIST.x/2., 0., dist);
 }
 
 // simple ray-marching with phong and reflection
@@ -308,12 +314,12 @@ vec3 _simple_cast(in vec3 ro, in vec3 rd)
     for (int i=0; i<_MAX_REFLECT; ++i)
     {
         // trace
-        float t = _DE_trace(ro, rd, _MAX_TRACE_DIST, _MAX_TRACE_STEPS);
+        float t = _DE_trace(ro, rd, _MAX_TRACE_DIST.x, _MAX_TRACE_STEPS);
         vec3 hit = ro + t * rd;
         t_all += t;
 
         // end of ray?
-        if (_DE(hit) > 0.1)
+        if (_DE(hit) > 0.1 || t_all >= _MAX_TRACE_DIST.y)
             break;
 
         // hit sound?
@@ -329,6 +335,7 @@ vec3 _simple_cast(in vec3 ro, in vec3 rd)
         vec3 ln = -_DE_sound_normal(hit, _EPSILON);
         // object color from normal
         vec3 c = 0.13 + 0.1*n;
+        float refl = _DE_reflection(hit, n, rd);
         // edges
         float edg = smoothstep(1, 1-_EPSILON,
                                dot(n, _DE_normal(hit, pow(_EPSILON, 0.36))));
@@ -337,12 +344,12 @@ vec3 _simple_cast(in vec3 ro, in vec3 rd)
         c += amp * _SND_COLOR * pow(max(0., dot(n, ln)), 2.)
                          * _dist_amt(dsnd)
                          * _DE_shadow(hit, ln, dsnd, 8., _MAX_TRACE_STEPS)
-                         * _BRIGHTNESS;
+                         * _BRIGHTNESS * refl;
 
         col += amp * c;
 
         // -- reflect --
-        amp *= _DE_reflection(hit, n, rd);
+        amp *= refl;
         ro = hit + 0.001 * n;
         rd = reflect(rd, n);
     }

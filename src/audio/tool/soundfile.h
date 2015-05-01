@@ -59,6 +59,9 @@ public:
     /** Returns value at @p time (in seconds) */
     Double value(Double time, uint channel = 0) const;
 
+    /** Returns one channel as consecutive data */
+    std::vector<F32> getSamples(uint channel = 0, uint lengthSamples = 0) const;
+
     // --------- setter ---------------
 
     void appendDeviceData(const F32 * buf, size_t numSamples);

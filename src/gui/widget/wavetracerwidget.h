@@ -35,12 +35,19 @@ public slots:
     /** Save IR with dialog */
     void saveIr();
 
+    void playIr();
+
+    bool loadSound();
+    void playSound();
+
 private slots:
 
     void p_tracerFinished_();
     void p_tracerImgFinished_();
     void p_onLiveWidget_();
     void p_onWidget_();
+    void p_onPasses_();
+    void p_phase_();
     void p_onImgLiveWidget_();
     void p_onImgWidget_();
     void p_onIrImage_(QImage img);

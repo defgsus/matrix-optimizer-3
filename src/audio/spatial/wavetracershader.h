@@ -45,6 +45,7 @@ public:
 
         Float fudge,
               normalEps,
+              maxRayDist,
               maxTraceDist,
               micAngle,
               soundRadius,
@@ -104,15 +105,27 @@ public:
     /** Returns the current impulse response as image, threadsafe */
     QImage getIrImage(const QSize& s);
 
+public slots:
     // --------- setter -----------
 
-    /** Applies the new live settings, threadsafe */
+    /** Applies the new live settings, threadsafe.
+        Will restart the rendering if the thread is running. */
     void setLiveSettings(const LiveSettings&);
 
-    /** Applies the new settings, threadsafe */
+    /** Applies the new settings, threadsafe.
+        Will restart the rendering if the thread is running. */
     void setSettings(const Settings&);
 
-public slots:
+    /** Sets the number of passes.
+        Use this to change the Settings::numPasses setting without a restart.
+        This may cause the thread to stop but never to restart. */
+    void setNumPasses(uint num);
+
+    /** Sets the reflection phase flip on or off.
+        Use this to change the LiveSettings::doFlipPhase setting without a restart. */
+    void setFlipPhase(bool e);
+
+    // --------- control ----------
 
     /** Stops and blocks until finished, threadsafe */
     void stop();

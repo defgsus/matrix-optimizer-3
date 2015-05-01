@@ -574,10 +574,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag.exec();
         });
 
-        a = new QAction(tr("IR Wave Tracer"), m);
+        a = new QAction(tr("Wave Tracer"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
+            closeAudio();
             WaveTracerDialog * diag = new WaveTracerDialog(window_);
             connect(diag, SIGNAL(finished(int)), diag, SLOT(deleteLater()));
             diag->show();
