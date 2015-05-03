@@ -283,7 +283,12 @@ HEADERS += \
     src/audio/tool/irmap.h \
     src/audio/audioplayer.h \
     src/audio/audioplayerdata.h \
-    src/math/convolution.h
+    src/math/convolution.h \
+    src/object/audio/sampleholdao.h \
+    src/object/audio/phasorao.h \
+    src/object/audio/noiseao.h \
+    src/object/audio/playbufferao.h
+
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -527,5 +532,9 @@ SOURCES += \
     src/audio/tool/irmap.cpp \
     src/audio/audioplayer.cpp \
     src/audio/audioplayerdata.cpp \
-    src/math/convolution.cpp
+    src/math/convolution.cpp \
+    src/object/audio/sampleholdao.cpp \
+    src/object/audio/phasorao.cpp \
+    src/object/audio/noiseao.cpp \
+    src/object/audio/playbufferao.cpp
 

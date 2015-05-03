@@ -58,6 +58,7 @@ public:
 
     /** Returns value at @p time (in seconds) */
     Double value(Double time, uint channel = 0) const;
+    Double value(size_t frame, uint channel) const;
 
     /** Returns one channel as consecutive data */
     std::vector<F32> getSamples(uint channel = 0, uint lengthSamples = 0) const;
