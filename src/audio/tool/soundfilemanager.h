@@ -20,7 +20,6 @@ class SoundFile;
 
 class SoundFileManager
 {
-public: // MH: Why private? How to use the SFM correctly?
     SoundFileManager();
     ~SoundFileManager();
 

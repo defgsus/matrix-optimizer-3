@@ -50,7 +50,6 @@ class PlayBufferAO::Private
     PlayBufferAO * ao;
     Double size;
     std::vector<F32> buffer;
-    AUDIO::SoundFileManager sndfileManager;
     AUDIO::SoundFile * sndfile;
     uint readPtr, writePtr;
     ParameterFloat
@@ -121,7 +120,7 @@ void PlayBufferAO::createParameters()
                                                     {Private::M_BUFFER, Private::M_FILE},
                                                     Private::M_BUFFER);
     params()->endParameterGroup();
-    p_->sndfile = p_->sndfileManager.getSoundFile(p_->paramFile->value());
+    p_->sndfile = AUDIO::SoundFileManager::getSoundFile(p_->paramFile->value());
 }
 
 void PlayBufferAO::onParameterChanged(Parameter *p)
@@ -132,10 +131,10 @@ void PlayBufferAO::onParameterChanged(Parameter *p)
         p_->buffer.resize(p_->size * p_->ao->sampleRate());
     } else if(p==p_->paramFile) {
         if(p_->sndfile != NULL) {
-            p_->sndfileManager.releaseSoundFile(p_->sndfile);
+            AUDIO::SoundFileManager::releaseSoundFile(p_->sndfile);
             p_->sndfile = NULL;
         }
-        p_->sndfile = p_->sndfileManager.getSoundFile(p_->paramFile->value());
+        p_->sndfile = AUDIO::SoundFileManager::getSoundFile(p_->paramFile->value());
     }
 }
 
@@ -146,10 +145,10 @@ void PlayBufferAO::onParametersLoaded()
     p_->buffer.resize(p_->size * p_->ao->sampleRate());
 
     if(p_->sndfile != NULL) {
-        p_->sndfileManager.releaseSoundFile(p_->sndfile);
+        AUDIO::SoundFileManager::releaseSoundFile(p_->sndfile);
         p_->sndfile = NULL;
     }
-    p_->sndfile = p_->sndfileManager.getSoundFile(p_->paramFile->value());
+    p_->sndfile = AUDIO::SoundFileManager::getSoundFile(p_->paramFile->value());
     //while(!p_->sndfile->ok()) usleep(1);
 }
 
