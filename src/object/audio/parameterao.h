@@ -21,6 +21,7 @@ public:
     MO_OBJECT_CONSTRUCTOR(ParameterAO)
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
 protected:
 
@@ -31,6 +32,8 @@ private:
     ParameterFloat
         * paramValue_,
         * paramRate_;
+    ParameterSelect
+        * paramResample_;
 
     F32 lastSample_, lastSample2_;
     SamplePos samplesWaited_;

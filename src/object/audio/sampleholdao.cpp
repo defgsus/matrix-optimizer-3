@@ -73,6 +73,7 @@ void SampleHoldAO::createParameters()
 {
     AudioObject::createParameters();
     params()->beginParameterGroup("samplehold", tr("sample and hold"));
+    initParameterGroupExpanded("samplehold");
 
     p_->paramTrigger = params()->createFloatParameter("samplehold_trigger", tr("trigger"),
                                                       tr("The trigger input"),

@@ -12,6 +12,7 @@
 #include "audio/tool/audiobuffer.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
 #include "math/constants.h"
 #include "io/datastream.h"
 
@@ -55,14 +56,26 @@ void ParameterAO::createParameters()
                                                    tr("The input value"),
                                                    0.0, 0.05);
 
-        /** @todo make chopping optional in ParameterAO */
+        paramResample_ = params()->createBooleanParameter("resample", tr("enable resampling"),
+                                                   tr("Sample input with a different samplerate"),
+                                                   tr("Input is sampled with the current audio sampling rate"),
+                                                   tr("Input is sampled with an adjustable sampling rate"),
+                                                   false,
+                                                   true, false);
+
         paramRate_ = params()->createFloatParameter("rate", tr("sampling rate"),
                                                    tr("Number of samples per second"),
-                                                   30.0, 0.01, 9999999,
+                                                   60.0, 0.01, 9999999,
                                                    1,
                                                    true, false);
 
     params()->endParameterGroup();
+}
+
+void ParameterAO::updateParameterVisibility()
+{
+    AudioObject::updateParameterVisibility();
+    paramRate_->setVisible( paramResample_->baseValue() != 0 );
 }
 
 void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
@@ -70,13 +83,23 @@ void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
     if (!audioOutputs(thread).isEmpty())
     if (auto out = audioOutputs(thread).first())
     {
-        // simply copy when no modulation present
+        // simply fill-copy when no modulation present
         if (!paramValue_->isModulated())
         {
             F32 val = paramValue_->value(sampleRateInv() * pos, thread);
 
             for (SamplePos i=0; i<out->blockSize(); ++i)
                 out->write(i, val);
+        }
+
+        // or copy per sample
+        else if (paramResample_->baseValue() == 0)
+        {
+            for (SamplePos i=0; i<out->blockSize(); ++i)
+            {
+                out->write(i, paramValue_->value(
+                               sampleRateInv() * (pos + i), thread));
+            }
         }
 
         // or resample

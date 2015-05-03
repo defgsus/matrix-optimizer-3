@@ -26,6 +26,7 @@ namespace IO {
       "interface",
       "interface-p",
       "sound",
+      "ir",
       "s3m",
       "projection-set",
       "povray",
@@ -42,7 +43,8 @@ namespace IO {
       QObject::tr("Geometry settings"),
       QObject::tr("Interface layout"),
       QObject::tr("Interface preset"),
-      QObject::tr("Audio file"),
+      QObject::tr("Audio"),
+      QObject::tr("Impulse response"),
       QObject::tr("Tracker file"),
       QObject::tr("Projection settings"),
       QObject::tr("Povray script"),
@@ -60,6 +62,7 @@ namespace IO {
         { "mo3-geom" },
         { "xml-iface" },
         { "xml-iface-p" },
+        { "wav", "voc", "au", "snd", "aif", "aiff", "aifc", "w64", "flac" },
         { "wav", "voc", "au", "snd", "aif", "aiff", "aifc", "w64", "flac" },
         { "mod", "s3m", "xm", "it" },
         { "xml-proj" },
@@ -91,6 +94,8 @@ namespace IO {
         { QObject::tr("geometry presets") + " ( *.mo3-geom )" },
         { QObject::tr("Interface xml") + " ( *.xml *.xml-iface )" },
         { QObject::tr("Interface presets xml") + " ( *.xml *.xml-iface-p )" },
+        { QObject::tr("all audio files")
+                    + " ( *.wav *.voc *.au *.snd *.aif *.aiff *.aifc *.w64 *.flac )" },
         { QObject::tr("all audio files")
                     + " ( *.wav *.voc *.au *.snd *.aif *.aiff *.aifc *.w64 *.flac )" },
         { QObject::tr("tracker files s3m/mod/xm/it")

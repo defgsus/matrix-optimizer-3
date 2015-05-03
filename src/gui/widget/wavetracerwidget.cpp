@@ -754,7 +754,7 @@ void WaveTracerWidget::saveIr()
 {
     auto ir = p_->tracer->getIrMap();
 
-    QString fn = IO::Files::getSaveFileName(IO::FT_SOUND_FILE, this);
+    QString fn = IO::Files::getSaveFileName(IO::FT_IMPULSE_RESPONSE, this);
     if (fn.isEmpty())
         return;
 

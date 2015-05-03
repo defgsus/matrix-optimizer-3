@@ -287,7 +287,9 @@ HEADERS += \
     src/object/audio/sampleholdao.h \
     src/object/audio/phasorao.h \
     src/object/audio/noiseao.h \
-    src/object/audio/playbufferao.h
+    src/object/audio/playbufferao.h \
+    src/object/audio/convolveao.h \
+    src/audio/tool/convolvebuffer.h
 
 
 SOURCES += \
@@ -536,5 +538,7 @@ SOURCES += \
     src/object/audio/sampleholdao.cpp \
     src/object/audio/phasorao.cpp \
     src/object/audio/noiseao.cpp \
-    src/object/audio/playbufferao.cpp
+    src/object/audio/playbufferao.cpp \
+    src/object/audio/convolveao.cpp \
+    src/audio/tool/convolvebuffer.cpp
 

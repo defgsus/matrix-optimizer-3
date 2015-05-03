@@ -30,6 +30,7 @@ namespace IO {
         FT_INTERFACE_XML,
         FT_INTERFACE_PRESET,
         FT_SOUND_FILE,
+        FT_IMPULSE_RESPONSE,
         /** Like .mod and .s3m */
         FT_TRACKER,
         FT_PROJECTION_SETTINGS,

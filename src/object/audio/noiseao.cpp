@@ -115,6 +115,8 @@ void NoiseAO::createParameters()
 {
     AudioObject::createParameters();
     params()->beginParameterGroup("noise", tr("noise generator"));
+    initParameterGroupExpanded("noise");
+
     p_->paramAmp  = params()->createFloatParameter("noise_amp", tr("amplitude"),
                                                    tr("The amplitude of the signal"),
                                                    1.0, 0.05);

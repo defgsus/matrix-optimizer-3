@@ -69,6 +69,7 @@ void AudioBuffer::readBlockLength(F32 *block, size_t size) const
 {
     MO_ASSERT(size < blockSize() * numBlocks(), size << " is out of range");
 
+    block += size - blockSize();
     size_t j = 0;
     size_t rp = p_readBlock_;
     auto p = readPointer();
@@ -76,11 +77,12 @@ void AudioBuffer::readBlockLength(F32 *block, size_t size) const
     {
         // write current block
         for (size_t i = 0; i < blockSize() && j < size; ++i, ++j)
-            block[j] = p[i];
+            block[i] = p[i];
+        block -= blockSize();
 
         // go backwards in time
         rp = rp > 0 ? (rp - 1) : (p_numBlocks_ - 1);
-        p = &p_samples_[p_readBlock_ * p_blockSize_];
+        p = &p_samples_[rp * p_blockSize_];
     }
 
 }

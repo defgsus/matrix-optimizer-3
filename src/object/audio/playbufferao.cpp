@@ -97,6 +97,8 @@ void PlayBufferAO::createParameters()
 {
     AudioObject::createParameters();
     params()->beginParameterGroup("playbuffer", tr("playable buffer"));
+    initParameterGroupExpanded("playbuffer");
+
     p_->paramAmp  = params()->createFloatParameter("playbuf_amp", tr("amplitude"),
                                                    tr("The amplitude of the signal"),
                                                    1.0, 0.05);
@@ -113,7 +115,7 @@ void PlayBufferAO::createParameters()
                                                       IO::FT_SOUND_FILE,
                                                       "data/audio/speek/84macs.wav");
     p_->paramMode = params()->createSelectParameter("playbuf_mode", tr("buffer mode"),
-                                                    tr("Selects the mode tthe buffer is used"),
+                                                    tr("Selects the mode the buffer is used"),
                                                     {"buffer", "file"},
                                                     {tr("Buffer"), tr("File")},
                                                     {tr("Play and record from and to buffer"), tr("Play from file")},

@@ -27,7 +27,6 @@ class Convolution
 public:
 
     Convolution()
-        : p_kernel_changed_     (true)
     { }
 
     bool isEmpty() const { return p_kernel_.empty(); }
@@ -41,6 +40,10 @@ public:
 
     F kernel(size_t i) const { return p_kernel_[i]; }
 
+    // ---------- setter -----------
+
+    void clear();
+
     void setKernel(const F * data, size_t num, size_t stride = 1);
 
     /** Zeroes all values in the kernal for which their absolute value is below @p minValue */
@@ -51,6 +54,10 @@ public:
         Invalid if isEmpty(). */
     void convolve(F * dst, const F * src, size_t num);
 
+    /** Convolve @p num samples in @p src with the current kernel into @p dst.
+        @p dst must have space for @p num + kernelSize() samples.
+        Invalid if isEmpty().
+        Much faster than convolve() but needs some more memory as well. */
     void convolveComplex(F * dst, const F * src, size_t num);
 
     // ----------------- helper ----------------
@@ -58,17 +65,21 @@ public:
     static void clear(F * data, size_t num, F value = F(0));
     static void normalize(F * data, size_t num, F amp = F(1));
 
-//private:
+private:
 
-    void p_make_complex_kernel_();
-    std::vector<F> p_kernel_, p_comp_kernel_;
-    bool p_kernel_changed_;
+    std::vector<F> p_kernel_;
 };
 
 
 
 
 // ---------------------- IMPL ----------------------
+
+template <typename F>
+void Convolution<F>::clear()
+{
+    p_kernel_.clear();
+}
 
 template <typename F>
 void Convolution<F>::setKernel(const F * data, size_t num, size_t stride)
@@ -83,7 +94,6 @@ void Convolution<F>::setKernel(const F * data, size_t num, size_t stride)
         for (size_t i=0; i<num; ++i, data += stride)
             p_kernel_[i] = *data;
     }
-    p_kernel_changed_ = true;
 }
 
 template <typename F>
@@ -94,7 +104,6 @@ void Convolution<F>::setKernelZeroBelow(F mi)
     for (size_t i=0; i<kernelSize(); ++i, ++k)
         if (std::abs(*k) < mi)
             *k = F(0);
-    p_kernel_changed_ = true;
 }
 
 template <typename F>
@@ -134,9 +143,6 @@ void Convolution<F>::convolve(F * dst, const F * src, size_t num)
 template <typename F>
 void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 {
-    if (p_kernel_changed_)
-        p_make_complex_kernel_();
-
     clear(dst, num + kernelSize());
 
 #if 0 // chunk by chunk - not working yet
@@ -170,39 +176,6 @@ void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
         for (size_t i=0; i<kernelSize(); ++i)
             *dst++ = buf[i];
     }
-#elif 0
-
-    // size of fft
-    const size_t cnum = nextPowerOfTwo( num + kernelSize() );
-
-    // buffer for fft
-    std::vector<F> isrc(cnum, F(0)),
-                   ikernel(cnum, F(0));
-
-    // copy src
-    for (size_t i=0; i<num; ++i)
-        isrc[i] = src[i];
-
-    // copy kernel (stretch into bigger real/imag data)
-    {
-        size_t hs = p_comp_kernel_.size()/2;
-        for (size_t i=0; i<hs; ++i)
-        {
-            ikernel[i] = p_comp_kernel_[i];
-            ikernel[cnum - 1 - i] = p_comp_kernel_[p_comp_kernel_.size() - 1 - i];
-        }
-    }
-
-    real_fft(&isrc[0], cnum);
-
-    // multiply with kernel (complex multiplication)
-    complex_multiply(&isrc[0], &isrc[0], &ikernel[0], cnum);
-
-    ifft(&isrc[0], cnum);
-
-    // copy to dst
-    for (size_t i=0; i<num + kernelSize(); ++i)
-        *dst++ = isrc[i];
 
 #elif 1
 
@@ -238,24 +211,6 @@ void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 #endif
 }
 
-template <typename F>
-void Convolution<F>::p_make_complex_kernel_()
-{
-    size_t n = nextPowerOfTwo( kernelSize() );
-
-    // create zeroed, padded complex kernel space
-    p_comp_kernel_.resize(n);
-    clear(&p_comp_kernel_[0], n);
-
-    // copy time domain kernel
-    for (size_t i=0; i<kernelSize(); ++i)
-        p_comp_kernel_[i] = p_kernel_[i];
-
-    // transform to frequency domain
-    real_fft(&p_comp_kernel_[0], n);
-
-    p_kernel_changed_ = false;
-}
 
 
 } // namespace MATH

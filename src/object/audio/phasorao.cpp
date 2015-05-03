@@ -64,6 +64,8 @@ void PhasorAO::createParameters()
 {
     AudioObject::createParameters();
     params()->beginParameterGroup("phasor", tr("phasor"));
+    initParameterGroupExpanded("phasor");
+
     p_->paramFreq   = params()->createFloatParameter("phsr_freq", tr("frequency"),
                                                      tr("The frequency of the phase change"),
                                                      100.0, 1.0);
