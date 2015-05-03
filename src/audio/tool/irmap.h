@@ -25,16 +25,37 @@ namespace AUDIO {
 class IrMap
 {
 public:
+
+    struct Settings
+    {
+        Float directAmp,        //! Amplitude of direct signal
+              patchSizeRefl,    //! Patch size in seconds per reflection
+              patchSizeDist,    //! Patch size in seconds per distance unit
+              patchExp,         //! Exponent of bell curve
+              patchExpShrink,   //! Lower bell exponent per reflection
+              sos;              //! Speed of sound (seconds per unit)
+        bool doFlipPhase,       //! Flip phase on reflection
+             doNormalizeLocal;
+        size_t sampleRate;
+    };
+
+
+
+
     IrMap();
 
     // ------------- io ---------------
 
     /** Save as waveform, throws. */
-    void saveWav(const QString& filename, Float sample_rate, Float speed_of_sound = 333.);
+    void saveWav(const QString& filename);
 
     // ----------- getter -------------
 
     bool isEmpty() const;
+
+    static Settings getDefaultSettings();
+
+    const Settings& getSettings() const { return p_set_; }
 
     size_t numSamples() const;
 
@@ -42,7 +63,7 @@ public:
     QString getInfo() const;
 
     /** Returns a waveform from the sampled map */
-    std::vector<F32> getSamples(Float sample_rate, Float speed_of_sound = 333.);
+    std::vector<F32> getSamples();
 
     QImage getImage(const QSize& res);
 
@@ -50,7 +71,16 @@ public:
 
     void clear();
 
-    void addSample(Float distance, Float amplitude);
+    /** Applies new settings, call before getSamples() */
+    void setSettings(const Settings& s) { p_set_ = s; }
+
+    void addSample(Float distance, Float amplitude, short numReflect);
+
+    // ---------- helper ---------------
+
+    /** Returns the curve sample for writing an impulse, t [0,1] */
+    F32 getPatchSample(F32 t, int numRefl) const;
+    size_t getPatchSize(int numRefl, F32 dist) const;
 
 private:
 
@@ -59,11 +89,13 @@ private:
 #ifdef MO_IRMAP_TL
     MATH::Timeline1D p_tl_;
 #else
-    std::map<Float, Float> p_map_;
+    std::map<Float, std::pair<Float, short int>> p_map_;
     std::vector<Float> p_impulse_;
 #endif
     Float p_min_amp_, p_max_amp_,
           p_min_dist_, p_max_dist_;
+    short int p_min_refl_, p_max_refl_;
+    Settings p_set_;
 };
 
 } // namespace AUDIO

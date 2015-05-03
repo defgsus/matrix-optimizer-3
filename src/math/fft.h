@@ -41,6 +41,11 @@ void ifft(Double * data, uint num);
 void get_amplitude_phase(Float * data, uint num);
 void get_amplitude_phase(Double * data, uint num);
 
+/** Multiplies complex numbers in @p A and @p B.
+    Input for both @p A and @p B is num/2 real and num/2 imag values (r0,r1,r2,...,i2,i1,i0)
+    Multiplication is stored in @p dst, which can be equal to @p A and/or @p B */
+template <typename F>
+void complex_multiply(F * dst, const F * A, const F * B, uint num);
 
 
 /** Wrapper for standalone functions with associated buffer */
@@ -102,6 +107,28 @@ private:
 };
 
 
+
+// -------------- IMPL ----------------
+
+template <typename F>
+void complex_multiply(F * dst, const F* A, const F* B, uint num)
+{
+    size_t num2 = num / 2;
+    for (size_t i=0; i<num2; ++i)
+    {
+        size_t j = num - 1 - i;
+        F a = A[i],
+          b = A[j],
+          c = B[i],
+          d = B[j],
+
+          re = a*c - b*d,
+          im = a*d + b*c;
+
+        dst[i] = re;
+        dst[j] = im;
+    }
+}
 
 
 } // namespace MATH

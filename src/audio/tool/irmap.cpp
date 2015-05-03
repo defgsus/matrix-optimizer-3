@@ -39,8 +39,25 @@ namespace {
 const Float IrMap::p_convert_ = 1000.f;
 
 IrMap::IrMap()
+    : p_set_        (getDefaultSettings())
 {
     clear();
+}
+
+IrMap::Settings IrMap::getDefaultSettings()
+{
+    Settings s;
+    s.directAmp = 1.;
+    s.doFlipPhase = false;
+    s.doNormalizeLocal = false;
+    s.patchSizeDist = 0.001;
+    s.patchSizeRefl = 0.0;
+    s.patchExp = 3.;
+    s.patchExpShrink = 0.;
+    s.sampleRate = 48000;
+    s.sos = 340.;
+
+    return s;
 }
 
 bool IrMap::isEmpty() const
@@ -63,12 +80,14 @@ size_t IrMap::numSamples() const
 
 QString IrMap::getInfo() const
 {
-    return QObject::tr("samples %1; amp %2 - %3; length %4 - %5")
+    return QObject::tr("samples %1; amp %2 - %3; length %4 - %5; reflect %6 - %7")
                    .arg(numSamples())
                    .arg(p_min_amp_)
                    .arg(p_max_amp_)
                    .arg(p_min_dist_)
-                   .arg(p_max_dist_);
+                   .arg(p_max_dist_)
+                   .arg(p_min_refl_)
+                   .arg(p_max_refl_);
 }
 
 QImage IrMap::getImage(const QSize &res)
@@ -102,7 +121,7 @@ QImage IrMap::getImage(const QSize &res)
 
 #else
 
-    auto samples = getSamples(48000);
+    auto samples = getSamples();
 
     p.setPen(QPen(QColor(55,255,55,50)));
 
@@ -141,18 +160,19 @@ void IrMap::clear()
     p_max_amp_ = p_min_amp_ = p_max_dist_ = p_min_dist_ = 0.f;
 }
 
-void IrMap::addSample(Float distance, Float amplitude)
+void IrMap::addSample(Float distance, Float amplitude, short int numReflect)
 {
     if (isEmpty())
     {
         p_max_amp_ = p_min_amp_ = std::abs(amplitude);
         p_max_dist_ = p_min_dist_ = distance;
+        p_max_refl_ = p_min_refl_ = numReflect;
 
 #ifdef MO_IRMAP_TL
         p_tl_.add(0., 0., MATH::Timeline1D::Point::SPLINE6);
         p_tl_.add(distance * p_convert_, amplitude, MATH::Timeline1D::Point::SPLINE6);
 #else
-        p_map_.insert(std::make_pair(distance, amplitude));
+        p_map_.insert(std::make_pair(distance, std::make_pair(amplitude, numReflect)));
 #endif
         return;
     }
@@ -165,18 +185,33 @@ void IrMap::addSample(Float distance, Float amplitude)
         p_max_amp_ = std::max(p_max_amp_, std::abs(amplitude));
         p_min_dist_ = std::min(p_min_dist_, distance);
         p_max_dist_ = std::max(p_max_dist_, distance);
+        p_min_refl_ = std::min(p_min_refl_, numReflect);
+        p_max_refl_ = std::min(p_max_refl_, numReflect);
 
 #ifdef MO_IRMAP_TL
         p_tl_.add(distance * p_convert_, amplitude, MATH::Timeline1D::Point::SPLINE6);
 #else
-        p_map_.insert(std::make_pair(distance, amplitude));
+        p_map_.insert(std::make_pair(distance, std::make_pair(amplitude, numReflect)));
 #endif
     }
 }
 
-std::vector<F32> IrMap::getSamples(Float sr, Float sos)
+size_t IrMap::getPatchSize(int numRefl, F32 dist) const
 {
-    int len = std::max(0.f, p_max_dist_) / sos * sr;
+    return 3 + (  p_set_.patchSizeRefl * numRefl
+                + p_set_.patchSizeDist * dist) / 1000. * p_set_.sampleRate;
+}
+
+F32 IrMap::getPatchSample(F32 t, int refl) const
+{
+    return std::pow(
+                std::sin(t * PI),
+                std::max(1.f, p_set_.patchExp - p_set_.patchExpShrink * refl));
+}
+
+std::vector<F32> IrMap::getSamples()
+{
+    int len = std::max(0.f, p_max_dist_) / p_set_.sos * p_set_.sampleRate;
 
     std::vector<F32> samples;
     if (!len)
@@ -292,7 +327,7 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
         if (counts[i])
             samples[i] /= std::max(1.f, counts[i]);
 
-#elif 0 // bell averaging (dynamic)
+#elif 0 // local averaging (dynamic bell)
 
     samples.resize(len, 0.f);
     std::vector<Float> counts;
@@ -307,7 +342,7 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
 
         Float f = MATH::fract(pos), f1 = 1.f - f;
 
-        size_t num = 3 + it->first / 6;
+        size_t num = 3 + it->first / 10;
 
         const int ipos = pos;
         for (size_t j=0; j<num; ++j)
@@ -335,46 +370,121 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
         if (counts[i])
             samples[i] /= std::max(1.f, counts[i]);
 
-#elif 1 // bell averaging (dynamic) normalized
+#elif 1 // dynamic bell / add + normalized
 
     samples.resize(len, 0.f);
 
     const Float invDist = Float(len) / std::max(0.000001f, p_max_dist_);
 
-    for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+    if (p_set_.doNormalizeLocal)
     {
-        const Float pos = it->first * invDist,
-                    amp = it->second;
+        std::vector<Float> counts;
+        counts.resize(len, 0);
 
-        Float f = MATH::fract(pos), f1 = 1.f - f;
-
-        size_t num = 3 + it->first / 6;
-
-        const int ipos = pos;
-        for (size_t j=0; j<num; ++j)
+        for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
         {
-            int k = ipos + j;
-            if (k < 0 || k >= len)
-                continue;
+            const Float pos = it->first * invDist,
+                        amp0 = it->second.first;
+            const int   numref = it->second.second;
 
-            Float t = Float(j) / (num-1);
-            Float imp = std::pow(std::sin(t * PI), 2.);
+            // apply settings to amplitude
+            Float amp = amp0;
+            if (numref == 0)
+                amp *= p_set_.directAmp;
+            else
+            if (p_set_.doFlipPhase && (numref & 1) == 1)
+                amp = -amp;
 
+            // interpolation
+            Float f = MATH::fract(pos);
+            f = f*f*(3. - 2.*f);
+            Float f1 = 1.f - f;
+            const int ipos = pos;
 
-            samples[k] += amp * f1 * imp;
-            ++k;
-            if (k < len)
+            // bell size
+            size_t num = getPatchSize(it->first, numref);//+ it->first / 6;
+
+            // write bell
+            for (size_t j=0; j<num; ++j)
             {
-                samples[k] += amp * f * imp;
+                int k = ipos + j - num/2;
+                if (k < 0 || k >= len)
+                    continue;
+
+                Float imp = getPatchSample(Float(j) / (num-1), numref);
+
+                // write with interpolation
+                samples[k] += amp * f1 * imp;
+                counts[k] += f1;
+                ++k;
+                if (k < len)
+                {
+                    samples[k] += amp * f * imp;
+                    counts[k] += f;
+                }
             }
         }
+        // normalize locally
+        for (size_t i=0; i<samples.size(); ++i)
+            if (counts[i])
+                samples[i] /= std::max(1.f, counts[i]);
     }
+    else
+    {
+        Float ma = 0.0;
+        for (auto it = p_map_.begin(); it != p_map_.end(); ++it)
+        {
+            const Float pos = it->first * invDist,
+                        amp0 = it->second.first;
+            const int   numref = it->second.second;
 
-    Float ma = 0.000001;
-    for (size_t i=0; i<samples.size(); ++i)
-        ma = std::max(samples[i], ma);
-    for (size_t i=0; i<samples.size(); ++i)
-        samples[i] /= ma;
+            // apply settings to amplitude
+            Float amp = amp0;
+            if (numref == 0)
+                amp *= p_set_.directAmp;
+            else
+            if (p_set_.doFlipPhase && (numref & 1) == 1)
+                amp = -amp;
+
+            ma = std::max(ma, amp);
+
+            // interpolation
+            Float f = MATH::fract(pos);
+            f = f*f*(3. - 2.*f);
+            Float f1 = 1.f - f;
+            const int ipos = pos;
+
+            // bell size
+            size_t num = getPatchSize(it->first, numref);//+ it->first / 6;
+
+            // write bell
+            for (size_t j=0; j<num; ++j)
+            {
+                int k = ipos + j - num/2;
+                if (k < 0 || k >= len)
+                    continue;
+
+                Float imp = getPatchSample(Float(j) / (num-1), numref);
+
+                // write with interpolation
+                samples[k] += amp * f1 * imp;
+                ++k;
+                if (k < len)
+                    samples[k] += amp * f * imp;
+            }
+        }
+
+        // normalize
+        if (ma)
+        {
+            Float ma1 = 0.000001;
+            for (size_t i=0; i<samples.size(); ++i)
+                ma1 = std::max(samples[i], ma1);
+            ma /= ma1;
+            for (size_t i=0; i<samples.size(); ++i)
+                samples[i] *= ma;
+        }
+    }
 
 #elif 1 // max
     samples.resize(len);
@@ -399,13 +509,13 @@ std::vector<F32> IrMap::getSamples(Float sr, Float sos)
     return samples;
 }
 
-void IrMap::saveWav(const QString &filename, Float sample_rate, Float speed_of_sound)
+void IrMap::saveWav(const QString &filename)
 {
-    auto samples = getSamples(sample_rate, speed_of_sound);
+    auto samples = getSamples();
 
     SF_INFO info;
     info.channels = 1;
-    info.samplerate = sample_rate;
+    info.samplerate = p_set_.sampleRate;
     info.frames = samples.size();
     info.format = SF_FORMAT_WAV | SF_FORMAT_FLOAT;
 

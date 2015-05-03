@@ -15,6 +15,7 @@
 #include <QImage>
 
 #include "types/vector.h"
+#include "audio/tool/irmap.h"
 
 namespace MO {
 namespace AUDIO {
@@ -55,8 +56,6 @@ public:
               diffuseRnd,
               fresnel,
               rndRay;
-
-        bool doFlipPhase;
     };
 
     /** Settings whos change will cause a recompilation */
@@ -82,10 +81,14 @@ public:
 
     const Settings& settings() const;
 
+    const IrMap::Settings& irSettings() const;
+
     QString infoString() const;
 
     /** Returns the current pass */
     uint passCount() const;
+    /** Number of passes still rendering */
+    uint passesLeft() const;
 
     bool wasError() const { return !errorString().isEmpty(); }
 
@@ -116,14 +119,14 @@ public slots:
         Will restart the rendering if the thread is running. */
     void setSettings(const Settings&);
 
+    /** Applies the new settings for the impluse response map, threadsafe.
+        Will take in effect on next getIrMap() */
+    void setIrSettings(const IrMap::Settings&);
+
     /** Sets the number of passes.
         Use this to change the Settings::numPasses setting without a restart.
         This may cause the thread to stop but never to restart. */
     void setNumPasses(uint num);
-
-    /** Sets the reflection phase flip on or off.
-        Use this to change the LiveSettings::doFlipPhase setting without a restart. */
-    void setFlipPhase(bool e);
 
     // --------- control ----------
 

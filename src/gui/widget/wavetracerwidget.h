@@ -47,9 +47,9 @@ private slots:
     void p_onLiveWidget_();
     void p_onWidget_();
     void p_onPasses_();
-    void p_phase_();
     void p_onImgLiveWidget_();
     void p_onImgWidget_();
+    void p_onIrWidget_();
     void p_onIrImage_(QImage img);
 
 private:

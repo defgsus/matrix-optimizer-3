@@ -27,6 +27,12 @@
 #include "io/error.h"
 #include "io/log.h"
 
+#if 1
+#   define MO_DEBUG_AUPLAY(arg__) MO_PRINT("AudioPlayer::" << arg__)
+#else
+#   define MO_DEBUG_AUPLAY(unused__)
+#endif
+
 namespace MO {
 namespace AUDIO {
 
@@ -83,11 +89,19 @@ AudioPlayerPrivate * AudioPlayer::p_()
 
 bool AudioPlayerPrivate::open()
 {
+    MO_DEBUG_AUPLAY("open()");
+
     if (device.isPlaying())
+    {
+        MO_DEBUG_AUPLAY("device is already playing");
         return true;
+    }
 
     if (!device.initFromSettings())
+    {
+        MO_DEBUG_AUPLAY("could not init settings");
         return false;
+    }
 
     device.setCallback([this](const F32 * , F32 * out)
     {
@@ -116,13 +130,14 @@ bool AudioPlayerPrivate::open()
     try
     {
         device.start();
+        MO_DEBUG_AUPLAY("device started");
         return true;
     }
     catch (const Exception& e)
     {
         thread.doStop = true;
 
-        QMessageBox::critical(0, QMessageBox::tr("Audio device"),
+        QMessageBox::critical(0, QMessageBox::tr("audio device"),
                               QMessageBox::tr("Could initialized but not start audio playback.\n%1")
                               .arg(e.what()));
         return false;
@@ -131,6 +146,8 @@ bool AudioPlayerPrivate::open()
 
 bool AudioPlayerPrivate::close()
 {
+    MO_DEBUG_AUPLAY("close()");
+
     if (!device.isPlaying())
         return false;
     device.close();
@@ -144,12 +161,14 @@ void AudioPlayerPrivate::addData(AudioPlayerData * d)
 
     dataList.append(d);
     d->addRef();
-    MO_PRINT("AudioPlayer::addData(" << d << "): " << d->lengthSamples() << "x"
+    MO_DEBUG_AUPLAY("addData(" << d << "): " << d->lengthSamples() << "x"
              << d->numChannels() << " @ " << d->sampleRate() << "hz");
 }
 
 void AudioPlayerPrivate::removeData(AudioPlayerData * d)
 {
+    MO_DEBUG_AUPLAY("removeData(" << d << ")");
+
     QWriteLocker lock(&dataLock);
 
     int num = dataList.removeAll(d);
@@ -159,6 +178,8 @@ void AudioPlayerPrivate::removeData(AudioPlayerData * d)
 
 bool AudioPlayerPrivate::removeAllData()
 {
+    MO_DEBUG_AUPLAY("removeAllData()");
+
     QWriteLocker lock(&dataLock);
 
     bool r = !dataList.isEmpty();
@@ -182,7 +203,14 @@ void AudioPlayerPrivate::mixBlock(F32 * dst1)
     if (buffer.size() != bs)
         buffer.resize(bs);
 
+    // lock dataList
     QReadLocker lock(&dataLock);
+
+    /** @todo Rather lock individual items here.
+        Processing is locked on the same mutex
+        because an AudioPlayerData item could change.
+        This is at max one bufferlength of delay
+        for the thread that's calling play(). */
 
     for (AudioPlayerData *& data : dataList)
     {
@@ -194,7 +222,7 @@ void AudioPlayerPrivate::mixBlock(F32 * dst1)
         // finished?
         if (r < device.bufferSize())
         {
-            MO_PRINT("AudioPlayer::data finished (" << data
+            MO_DEBUG_AUPLAY("AudioPlayer::data finished (" << data
                      << "): " << data->lengthSamples());
             data->releaseRef();
             data = 0;
@@ -212,6 +240,7 @@ void AudioPlayerPrivate::mixBlock(F32 * dst1)
         }
     }
 
+    // remove the finished items
     dataList.removeAll(0);
 }
 
@@ -219,7 +248,7 @@ void AudioPlayerPrivate::mixBlock(F32 * dst1)
 void AudioPlayerThread::run()
 {
     setCurrentThreadName("AUPLAY");
-    MO_DEBUG_AUDIO("AudioPlayerThread::run()");
+    MO_DEBUG_AUPLAY("Thread::run()");
 
     uint    bufferSize = p->device.bufferSize(),
             numChannelsOut = p->device.numOutputChannels(),
@@ -260,7 +289,10 @@ void AudioPlayerThread::run()
 
 
 
-
+bool AudioPlayer::isRunning()
+{
+    return p_()->device.isPlaying();
+}
 
 size_t AudioPlayer::sampleRate()
 {
@@ -283,6 +315,7 @@ bool AudioPlayer::open()
 
 bool AudioPlayer::close()
 {
+    p_()->removeAllData();
     return p_()->close();
 }
 

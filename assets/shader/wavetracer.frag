@@ -399,7 +399,7 @@ vec3 _spherical(vec2 scr)
 // for rendermode 3
 vec3 _field_color(in vec3 p)
 {
-    vec3 seed = vec3(v_pos, 1.59);
+    vec3 seed = vec3(v_pos, 1.59 + float(_PASS_NUMBER));
     vec3 col = vec3(0.);
 
     float dr = DE_room(p);
@@ -423,11 +423,11 @@ vec3 _field_color(in vec3 p)
         for (int i=0; i<_NUM_SAMPLES; ++i)
         {
             vec3 snd = _cast(p, normalize(_hash3(seed*3.35+i)-.5), (seed+i)*1.17+1.55);
-            sh += snd.x;
+            sh += snd.x * sin(snd.y * 6.28);
         }
         sh /= float(_NUM_SAMPLES);
 
-        col += sh * _SND_COLOR * _BRIGHTNESS * 10.;
+        col += clamp(vec3(sh,-sh,0),0,1) * _SND_COLOR * _BRIGHTNESS * 10.;
     }
 
     return col;

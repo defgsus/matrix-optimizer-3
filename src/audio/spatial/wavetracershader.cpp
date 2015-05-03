@@ -81,6 +81,7 @@ struct WaveTracerShader::Private
 
     Settings settings, nextSettings;
     LiveSettings liveSettings;
+    IrMap::Settings irSettings;
     QString errorString;
     volatile int passCount;
     int passesAdded;
@@ -128,6 +129,8 @@ QString WaveTracerShader::infoString() const
 
 uint WaveTracerShader::passCount() const { return p_->passCount; }
 
+uint WaveTracerShader::passesLeft() const { return p_->settings.numPasses - p_->passCount; }
+
 QImage WaveTracerShader::getImage()
 {
     return p_->getImage();
@@ -158,6 +161,11 @@ const WaveTracerShader::Settings& WaveTracerShader::settings() const
             : p_->settings;
 }
 
+const IrMap::Settings& WaveTracerShader::irSettings() const
+{
+    return p_->irSettings;
+}
+
 const QString& WaveTracerShader::errorString() const { return p_->errorString; }
 
 void WaveTracerShader::setLiveSettings(const LiveSettings & s)
@@ -175,14 +183,14 @@ void WaveTracerShader::setSettings(const Settings& s)
     p_->passCount = 0;
 }
 
+void WaveTracerShader::setIrSettings(const IrMap::Settings & s)
+{
+    p_->irSettings = s;
+}
+
 void WaveTracerShader::setNumPasses(uint num)
 {
     p_->settings.numPasses = num;
-}
-
-void WaveTracerShader::setFlipPhase(bool e)
-{
-    p_->liveSettings.doFlipPhase = e;
 }
 
 void WaveTracerShader::Private::defaultSettings()
@@ -202,8 +210,7 @@ void WaveTracerShader::Private::defaultSettings()
     liveSettings.diffuse = 1.f;
     liveSettings.diffuseRnd = 1.f;
     liveSettings.fresnel = 1.f;
-    liveSettings.rndRay = 0.f;
-    liveSettings.doFlipPhase = false;
+    liveSettings.rndRay = 0.01f;
 
     settings.maxTraceStep = 100;
     settings.maxReflectStep = 5;
@@ -232,6 +239,8 @@ void WaveTracerShader::Private::defaultSettings()
         "float DE_reflection(in vec3 p, in vec3 n, in vec3 rd)\n{\n\treturn 1.; // .5 + .5 * hash1(p);\n}\n";
 
     nextSettings = settings;
+
+    irSettings = irMap.getSettings();
 }
 
 void WaveTracerShader::Private::run()
@@ -512,24 +521,27 @@ void WaveTracerShader::Private::sampleIr(bool doClearIr)
     if (doClearIr)
         irMap.clear();
 
+    irMap.setSettings(irSettings);
+
     //Float phase = 0.;
     for (auto ptr = buffer.begin(); ptr != buffer.end(); ptr += 4)
     {
         Float   amp = ptr[0],
                 dist = ptr[1];
-        const int
+        const short int
                 count = ptr[2] + 0.001;
 
-        //phase += 4.329;
+//        if (count == 0)
+//            amp *= liveSettings.directAmp;
 
         if (amp < 0.0000001)
             continue;
 
-        if (liveSettings.doFlipPhase && (count & 1) == 1)
-            amp = -amp;
+//        if (liveSettings.doFlipPhase && (count & 1) == 1)
+//            amp = -amp;
         //amp = amp * sin(dist / 330.f * 6.28f * 60.f + phase);
 
-        irMap.addSample(dist, amp);
+        irMap.addSample(dist, amp, count);
     }
 }
 
@@ -626,15 +638,18 @@ void WaveTracerShader::requestIrImage(const QSize &s)
 
     {
         QReadLocker lock(&p_->bufferLock);
+        p_->irMap.setSettings(p_->irSettings);
         thread->irMap = p_->irMap;
     }
 
     connect(thread, &WaveTracerThread_::finished, [=]()
     {
+        //MO_PRINT("ended ir image thread");
         emit finishedIrImage(thread->img);
         thread->deleteLater();
     });
 
+    //MO_PRINT("START ir image thread");
     thread->start();
 }
 

@@ -17,18 +17,23 @@
 #include <QComboBox>
 #include <QTime>
 #include <QThread>
+#include <QPainter>
 
 #include "wavetracerwidget.h"
 #include "gui/widget/spinbox.h"
 #include "gui/widget/doublespinbox.h"
 #include "gui/widget/glslwidget.h"
 #include "gui/widget/cameracontrolwidget.h"
+#include "gui/util/viewspace.h"
+#include "gui/painter/grid.h"
+#include "gui/painter/valuecurve.h"
 #include "audio/spatial/wavetracershader.h"
 #include "audio/tool/irmap.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
 #include "audio/audioplayer.h"
 #include "audio/audioplayerdata.h"
+#include "math/convolution.h"
 #include "io/files.h"
 #include "io/settings.h"
 #include "io/log.h"
@@ -98,11 +103,13 @@ namespace GUI {
         void createWidgets();
         void updateFromWidgets(bool doTracer, bool doTracerImg);
         void updateFromLiveWidgets(bool doTracer, bool doTracerImg);
+        void updateFromIrWidgets();
         void updateFromSettings();
         void updateVisibility();
         void updateImage();
 
         void requestIrImage();
+        static QImage getSamplesImage(std::vector<F32>& sam, const UTIL::ViewSpace& vs, const QSize& res);
 
         WaveTracerWidget * widget;
 
@@ -137,15 +144,24 @@ namespace GUI {
                 * sbFresnel,
                 * sbFudge,
                 * sbRndRay,
+                * sbDirectAmp,
+                * sbPatchSizeRefl,
+                * sbPatchSizeDist,
+                * sbPatchExp,
+                * sbPatchExpShrink,
+                * sbSos,
                 * sbColorX,
                 * sbColorY,
                 * sbColorZ;
         QComboBox
                 * comboRender;
         QCheckBox
-                * cbPhaseFlip;
-        QLabel * labelImage,
-               * labelIr,
+                * cbPhaseFlip,
+                * cbNormLocal,
+                * cbConvComplex;
+        QLabel * labelImage,    // visual
+               * labelIr,       // impulse response
+               * labelConv,     // convolution
                * labelIrInfo;
         QPushButton
                 * butSaveIr,
@@ -295,7 +311,7 @@ void WaveTracerWidget::Private::createWidgets()
             lv->addWidget(dsb);
 
             dsb = sbFresnel = new DoubleSpinBox(widget);
-            dsb->setLabel(tr("fresnel-like reflectiveness"));
+            dsb->setLabel(tr("fresnel-like absorbtion"));
             dsb->setRange(0., 1.);
             dsb->setDecimals(3);
             dsb->setSingleStep(0.05);
@@ -317,10 +333,6 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setSingleStep(0.05);
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
-
-            auto cb = cbPhaseFlip = new QCheckBox(tr("flip phase"), widget);
-            connect(cb, SIGNAL(clicked()), widget, SLOT(p_phase_()));
-            lv->addWidget(cb);
 
             // SOUND
 
@@ -344,6 +356,68 @@ void WaveTracerWidget::Private::createWidgets()
             dsb->setSuffix("°");
             connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onLiveWidget_()));
             lv->addWidget(dsb);
+
+            // IR
+
+            label = new QLabel(tr("impulse response sampling"), widget);
+            label->setFont(font);
+            lv->addWidget(label);
+
+            dsb = sbSos = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("speed of sound"));
+            dsb->setRange(0.001, 1000000.);
+            dsb->setDecimals(3);
+            dsb->setSingleStep(1);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            dsb = sbDirectAmp = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("direct sound amplitude"));
+            dsb->setRange(0., 10000.);
+            dsb->setDecimals(3);
+            dsb->setSingleStep(0.1);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            dsb = sbPatchSizeDist = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("patch size (distance)"));
+            dsb->setRange(0.0, 1.);
+            dsb->setDecimals(9);
+            dsb->setSingleStep(0.0001);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            dsb = sbPatchSizeRefl = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("patch size (reflect)"));
+            dsb->setRange(0.0, 1.);
+            dsb->setDecimals(9);
+            dsb->setSingleStep(0.0001);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            dsb = sbPatchExp = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("bell exponent"));
+            dsb->setRange(0.0001, 10000.);
+            dsb->setDecimals(5);
+            dsb->setSingleStep(0.1);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            dsb = sbPatchExpShrink = new DoubleSpinBox(widget);
+            dsb->setLabel(tr("bell exponent shrink"));
+            dsb->setRange(0.0, 10000.);
+            dsb->setDecimals(5);
+            dsb->setSingleStep(0.1);
+            connect(dsb, SIGNAL(valueChanged(double)), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(dsb);
+
+            auto cb = cbPhaseFlip = new QCheckBox(tr("flip amplitude on reflection"), widget);
+            connect(cb, SIGNAL(clicked()), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(cb, 0, Qt::AlignRight);
+
+            cb = cbNormLocal = new QCheckBox(tr("normalize locally"), widget);
+            connect(cb, SIGNAL(clicked()), widget, SLOT(p_onIrWidget_()));
+            lv->addWidget(cb, 0, Qt::AlignRight);
 
             lv->addStretch(1);
 
@@ -459,6 +533,11 @@ void WaveTracerWidget::Private::createWidgets()
                 connect(but, SIGNAL(clicked()), widget, SLOT(playSound()));
                 lh->addWidget(but);
 
+                cb = cbConvComplex = new QCheckBox(widget);
+                cb->setToolTip("complex convolution");
+                cb->setChecked(true);
+                lh->addWidget(cb);
+
                 but = new QPushButton("stop", widget);
                 connect(but, &QPushButton::clicked, [](){ AUDIO::AudioPlayer::close(); });
                 lh->addWidget(but);
@@ -474,6 +553,9 @@ void WaveTracerWidget::Private::createWidgets()
     labelIrInfo = new QLabel(widget);
     lv0->addWidget(labelIrInfo);
 
+    labelConv = new QLabel(widget);
+    labelConv->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    lv0->addWidget(labelConv);
 
 }
 
@@ -558,6 +640,25 @@ void WaveTracerWidget::Private::updateFromLiveWidgets(bool doTracer, bool doTrac
     widget->updateTracer();
 }
 
+void WaveTracerWidget::Private::updateFromIrWidgets()
+{
+    auto s = tracer->irSettings();
+
+    s.directAmp = sbDirectAmp->value();
+    s.doFlipPhase = cbPhaseFlip->isChecked();
+    s.doNormalizeLocal = cbNormLocal->isChecked();
+    s.patchExp = sbPatchExp->value();
+    s.patchExpShrink = sbPatchExpShrink->value();
+    s.patchSizeRefl = sbPatchSizeRefl->value();
+    s.patchSizeDist = sbPatchSizeDist->value();
+    s.sos = sbSos->value();
+
+    tracer->setIrSettings(s);
+
+    if (!tracer->passesLeft())
+        requestIrImage();
+}
+
 void WaveTracerWidget::Private::updateFromSettings()
 {
     const auto ls = tracerImg->liveSettings();
@@ -597,6 +698,17 @@ void WaveTracerWidget::Private::updateFromSettings()
     sbMaxSteps->setValue(s.maxTraceStep);
     sbMaxReflect->setValue(s.maxReflectStep);
     sbImgPasses->setValue(s.numPasses);
+
+    auto ir = tracer->irSettings();
+
+    sbDirectAmp->setValue(ir.directAmp);
+    cbPhaseFlip->setChecked(ir.doFlipPhase);
+    cbNormLocal->setChecked(ir.doNormalizeLocal);
+    sbPatchSizeDist->setValue(ir.patchSizeDist);
+    sbPatchSizeRefl->setValue(ir.patchSizeRefl);
+    sbPatchExp->setValue(ir.patchExp);
+    sbPatchExpShrink->setValue(ir.patchExpShrink);
+    sbSos->setValue(ir.sos);
 
     updateVisibility();
 }
@@ -646,17 +758,22 @@ void WaveTracerWidget::saveIr()
     if (fn.isEmpty())
         return;
 
-    ir.saveWav(fn, 48000);
+    ir.saveWav(fn);
 }
 
 void WaveTracerWidget::playIr()
 {
     auto ir = p_->tracer->getIrMap();
 
-    if (!AUDIO::AudioPlayer::open())
-        return;
+    if (!AUDIO::AudioPlayer::isRunning())
+        if (!AUDIO::AudioPlayer::open())
+            return;
 
-    auto sam = ir.getSamples(AUDIO::AudioPlayer::sampleRate());
+    auto set = ir.getSettings();
+    set.sampleRate = AUDIO::AudioPlayer::sampleRate();
+    ir.setSettings(set);
+
+    auto sam = ir.getSamples();
     auto data = AUDIO::AudioPlayerSample::fromData(&sam[0], sam.size(),
                     AUDIO::AudioPlayer::sampleRate());
     AUDIO::AudioPlayer::play(data);
@@ -678,8 +795,9 @@ bool WaveTracerWidget::loadSound()
 
 void WaveTracerWidget::playSound()
 {
-    if (!AUDIO::AudioPlayer::open())
-        return;
+    if (!AUDIO::AudioPlayer::isRunning())
+        if (!AUDIO::AudioPlayer::open())
+            return;
 
     if (!p_->soundFile)
         if (!loadSound())
@@ -700,26 +818,80 @@ void WaveTracerWidget::playSound()
 
     auto sam = p_->soundFile->getSamples();
     auto irmap = p_->tracer->getIrMap();
-    auto ir = irmap.getSamples(AUDIO::AudioPlayer::sampleRate());
+    auto set = irmap.getSettings();
+    set.sampleRate = AUDIO::AudioPlayer::sampleRate();
+    irmap.setSettings(set);
+    auto ir = irmap.getSamples();
 
     std::vector<F32> conv(sam.size() + ir.size(), 0.f);
 
-    F32 ma = 0.000001;
-    for (size_t i=0; i<ir.size(); ++i)
-        if (std::abs(ir[i]) > 0.00001)
-        for (size_t j=0; j<sam.size(); ++j)
-        {
-            conv[j + i] += ir[i] * sam[j];
-            ma = std::max(ma, conv[j+i]);
-        }
-    for (auto & s : conv)
-        s /= ma;
+    MATH::Convolution<F32> falter;
+    falter.setKernel(&ir[0], ir.size());
+    falter.setKernelZeroBelow(0.000001);
+    if (p_->cbConvComplex->isChecked())
+        falter.convolveComplex(&conv[0], &sam[0], sam.size());
+    else
+        falter.convolve(&conv[0], &sam[0], sam.size());
+    falter.normalize(&conv[0], conv.size(), 0.9);
+
+    UTIL::ViewSpace vs(0,-1, Double(conv.size())/44100, 2);
+    p_->labelConv->setPixmap(QPixmap::fromImage(
+            p_->getSamplesImage(conv, vs, p_->labelConv->size())));
+//    UTIL::ViewSpace vs(0,-1, Double(falter.p_comp_kernel_.size())/44100, 2);
+//    p_->labelConv->setPixmap(QPixmap::fromImage(
+//            p_->getSamplesImage(falter.p_comp_kernel_, vs, p_->labelConv->size())));
 
     auto data = AUDIO::AudioPlayerSample::fromData(&conv[0], conv.size(),
                     AUDIO::AudioPlayer::sampleRate());
     AUDIO::AudioPlayer::play(data);
     data->releaseRef();
 }
+
+
+QImage WaveTracerWidget::Private::getSamplesImage(std::vector<F32>& samples, const UTIL::ViewSpace& vs, const QSize& res)
+{
+    QImage img(res, QImage::Format_ARGB32);
+    img.fill(Qt::black);
+
+    // prepare painter
+    QPainter p(&img);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+    // draw a grid
+    //GUI::UTIL::ViewSpace vs(0., -p_max_amp_, p_max_dist_, p_max_amp_ * 2.);
+    GUI::PAINTER::Grid grid;
+    grid.setViewSpace(vs);
+    grid.paint(p);
+
+    // draw the curve
+    GUI::PAINTER::ValueCurve curve;
+    curve.setViewSpace(vs);
+    curve.setCurveFunction([&samples](Double ti)
+    {
+        int i = ti * 44100; // XXX
+        return i >=0 && i < int(samples.size()) ? Double(samples[i]) : 0.0;
+    });
+    curve.paint(p);
+
+    /*
+    p.setPen(QPen(QColor(55,255,55,50)));
+
+    const Float
+            invDist = Float(img.width()) / std::max(size_t(1), samples.size()),
+            invAmp = -.5f * img.height() / std::max(0.000001f, p_max_amp_);
+
+    // draw a line per sample
+    for (size_t i=0; i<samples.size(); ++i)
+    {
+        QPointF p0(invDist * i, .5 * img.height()),
+                p1(p0.x(), p0.y() + samples[i] * invAmp);
+        p.drawLine(p0, p1);
+    }*/
+
+    return img;
+}
+
+
 
 void WaveTracerWidget::p_tracerFinished_()
 {
@@ -769,12 +941,9 @@ void WaveTracerWidget::p_onPasses_()
         p_->tracer->setNumPasses(num);
 }
 
-void WaveTracerWidget::p_phase_()
+void WaveTracerWidget::p_onIrWidget_()
 {
-    bool f = p_->cbPhaseFlip->isChecked();
-    p_->tracer->setFlipPhase(f);
-    if (!p_->tracer->isRunning())
-        p_->requestIrImage();
+    p_->updateFromIrWidgets();
 }
 
 void WaveTracerWidget::p_onImgLiveWidget_()

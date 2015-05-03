@@ -35,6 +35,8 @@ class AudioPlayer
 {
 public:
 
+    static bool isRunning();
+
     /** Valid after open(), 44100 otherwise */
     static size_t sampleRate();
     /** Valid after open(), 2 otherwise */

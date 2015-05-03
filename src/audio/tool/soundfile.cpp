@@ -117,11 +117,11 @@ std::vector<F32> SoundFile::getSamples(uint channel, uint len) const
 
     if (p_->bitSize == 16)
         for (size_t i=0; i<len; ++i)
-            *dst++ = F32(*((int16_t*)&p_->data[i*2 + channel])) / 32768.f;
+            *dst++ = F32(*((int16_t*)&p_->data[i*2*p_->channels + channel])) / 32768.f;
     else
     if (p_->bitSize == 32)
         for (size_t i=0; i<len; ++i)
-            *dst++ = *((F32*)&p_->data[i*4 + channel]);
+            *dst++ = *((F32*)&p_->data[i*4*p_->channels + channel]);
 
     return ret;
 }

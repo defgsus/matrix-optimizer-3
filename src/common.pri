@@ -282,7 +282,8 @@ HEADERS += \
     src/audio/spatial/wavetracershader.h \
     src/audio/tool/irmap.h \
     src/audio/audioplayer.h \
-    src/audio/audioplayerdata.h
+    src/audio/audioplayerdata.h \
+    src/math/convolution.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -525,5 +526,6 @@ SOURCES += \
     src/audio/spatial/wavetracershader.cpp \
     src/audio/tool/irmap.cpp \
     src/audio/audioplayer.cpp \
-    src/audio/audioplayerdata.cpp
+    src/audio/audioplayerdata.cpp \
+    src/math/convolution.cpp
 
