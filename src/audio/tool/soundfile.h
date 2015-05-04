@@ -63,6 +63,9 @@ public:
     /** Returns one channel as consecutive data */
     std::vector<F32> getSamples(uint channel = 0, uint lengthSamples = 0) const;
 
+    /** Returns one channel as consecutive data, resampled. */
+    std::vector<F32> getResampled(uint sampleRate, uint channel = 0, uint lengthSamples = 0) const;
+
     // --------- setter ---------------
 
     void appendDeviceData(const F32 * buf, size_t numSamples);

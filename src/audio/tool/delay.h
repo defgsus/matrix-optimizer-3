@@ -63,6 +63,9 @@ public:
 
     // ------------- setter -----------------------
 
+    /** Clear all history */
+    void setNull() { for (auto & f : p_buffer_) f = F(0); }
+
     /** Inserts @p bufferSize samples from @p data into the delay history */
     void writeBlock(const F * data, I bufferSize);
 
@@ -114,11 +117,11 @@ inline F Delay<F, I>::read(F foffset) const
         offset = convert<F, I>(foffset),
         dpos = p_pos_ - offset;
 
-#ifndef MO_DISABLE_DELAY_INTERPOLATION
+#ifdef MO_DISABLE_DELAY_INTERPOLATION
     // no interpolation
     return p_buffer_[dpos & p_mask_];
 #else
-    const F fade = F(1) - MATH::frac(foffset);
+    const F fade = F(1) - MATH::fract(foffset);
 
     return MO__DELAY_INTERPOL(fade, dpos);
 #endif

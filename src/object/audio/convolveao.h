@@ -23,10 +23,10 @@ public:
     ~ConvolveAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
-    virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
-    //virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
-
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void setSampleRate(uint samplerate) Q_DECL_OVERRIDE;
 protected:
 
     virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)

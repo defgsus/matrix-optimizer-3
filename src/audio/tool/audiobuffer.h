@@ -25,6 +25,7 @@ class AudioBuffer
 
     // -------------- creation ------------------------
 
+    AudioBuffer() : AudioBuffer(1, 1) { }
     AudioBuffer(size_t blockSize, size_t numBlocks = 1);
 
     void setSize(size_t blockSize, size_t numBlocks = 1);
@@ -86,13 +87,20 @@ class AudioBuffer
         @p size MUST be smaller than blockSize() * numBlocks(). */
     void readBlockLength(F32 * block, size_t size) const;
 
-    /** Forwards the write pointer */
+    /** Forwards the read and write pointer */
     void nextBlock()
     {
         // forward write pointer
         p_writeBlock_ = (p_writeBlock_ + 1) % p_numBlocks_;
         // forward read pointer
         p_readBlock_ = (p_readBlock_ + 1) % p_numBlocks_;
+    }
+
+    /** Sets the read and write pointer back to the previous block. */
+    void previousBlock()
+    {
+        p_writeBlock_ = p_writeBlock_ > 0 ? p_writeBlock_ - 1 : p_numBlocks_ - 1;
+        p_readBlock_ = p_readBlock_ > 0 ? p_readBlock_ - 1 : p_numBlocks_ - 1;
     }
 
     // ------ static convenience functions ----------

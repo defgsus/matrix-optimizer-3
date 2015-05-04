@@ -31,8 +31,10 @@
 #include "audio/tool/irmap.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
+#include "audio/tool/audiobuffer.h"
 #include "audio/audioplayer.h"
 #include "audio/audioplayerdata.h"
+#include "audio/tool/convolvebuffer.h"
 #include "math/convolution.h"
 #include "io/files.h"
 #include "io/settings.h"
@@ -825,6 +827,7 @@ void WaveTracerWidget::playSound()
 
     std::vector<F32> conv(sam.size() + ir.size(), 0.f);
 
+#if 1
     MATH::Convolution<F32> falter;
     falter.setKernel(&ir[0], ir.size());
     falter.setKernelZeroBelow(0.000001);
@@ -833,6 +836,33 @@ void WaveTracerWidget::playSound()
     else
         falter.convolve(&conv[0], &sam[0], sam.size());
     falter.normalize(&conv[0], conv.size(), 0.9);
+#else
+    if (!p_->cbConvComplex->isChecked())
+    {
+        MATH::Convolution<F32> falter;
+        falter.setKernel(&ir[0], ir.size());
+        falter.setKernelZeroBelow(0.000001);
+        falter.convolveComplex(&conv[0], &sam[0], sam.size());
+        falter.normalize(&conv[0], conv.size(), 0.9);
+    }
+    else
+    {
+        // test convolvebuffer
+        AUDIO::ConvolveBuffer falter;
+        falter.setKernel(&ir[0], ir.size());
+        AUDIO::AudioBuffer in(1024), out(in.blockSize());
+        for (size_t i=0; i<conv.size(); i += in.blockSize())
+        {
+            for (size_t j=0; j<in.blockSize(); ++j)
+                in.write(j, (i+j < sam.size()) ? sam[i+j] : 0.f );
+            falter.process(&in, &out);
+            for (size_t j=0; j<in.blockSize(); ++j)
+                if (i+j < conv.size())
+                    conv[i+j] = out.read(j);
+        }
+        MATH::Convolution<F32>::normalize(&conv[0], conv.size(), 0.9);
+    }
+#endif
 
     UTIL::ViewSpace vs(0,-1, Double(conv.size())/44100, 2);
     p_->labelConv->setPixmap(QPixmap::fromImage(

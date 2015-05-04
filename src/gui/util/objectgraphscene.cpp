@@ -293,8 +293,8 @@ void ObjectGraphScene::Private::createObjectChildItems(Object *o, AbstractObject
         //o->dumpAttachedData();
 
         // set expanded according to gui settings
-        if (c->hasAttachedData(Object::DT_GRAPH_EXPANDED))
-            item->setExpanded(c->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool());
+        //if (c->hasAttachedData(Object::DT_GRAPH_EXPANDED))
+        //    item->setExpanded(c->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool());
 
         // set initial position (from gui settings or top-to-bottom)
         QPoint pos;
@@ -445,8 +445,8 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
     item->setGridPos(pos);
     item->setZValue(++zStack);
 
-    const bool isExpand = o->hasAttachedData(Object::DT_GRAPH_EXPANDED)
-                        && o->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool();
+    const bool isExpand = (o->isAudioObject() && !o->hasAttachedData(Object::DT_GRAPH_EXPANDED))
+                        || o->getAttachedData(Object::DT_GRAPH_EXPANDED).toBool();
     item->setExpanded(isExpand);
 
     // install in item tree

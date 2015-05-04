@@ -256,8 +256,9 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
     else
     if (change == ItemChildRemovedChange)
     {
+        bool isao = p_oi_->object && p_oi_->object->isAudioObject();
         // collapse if no child left
-        if (isExpanded() && object()->childObjects().isEmpty())
+        if (!isao && isExpanded() && object()->childObjects().isEmpty())
         {
             setExpanded(false);
             setExpandVisible(false);

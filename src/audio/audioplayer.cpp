@@ -123,14 +123,15 @@ bool AudioPlayerPrivate::open()
     // init communication stuff
     audioOutQueue.reset();
 
-    // start threads
-    thread.start();
-
     // start device
     try
     {
         device.start();
         MO_DEBUG_AUPLAY("device started");
+
+        // start threads
+        thread.start();
+
         return true;
     }
     catch (const Exception& e)

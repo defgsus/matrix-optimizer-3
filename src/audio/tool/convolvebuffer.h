@@ -40,6 +40,7 @@ public:
 
 private:
 
+#if 0 // naive version (too slow)
     std::vector<F32>
             p_kernel_,
             p_kernel_fft_,
@@ -48,6 +49,21 @@ private:
     size_t p_pos_, p_cur_blockSize_;
     bool p_kernel_changed_;
     F32 p_amp_;
+
+#else
+
+    std::vector<F32>
+            p_kernel_,
+            p_scratch_,
+            p_input_;
+    std::vector<std::vector<F32>>
+            p_kernel_fft_;
+    AUDIO::AudioBuffer * p_out_buf_;
+    size_t p_windowSize_, p_windows_, p_pos_, p_cur_blockSize_;
+    bool p_kernel_changed_;
+    F32 p_amp_;
+
+#endif
 };
 
 

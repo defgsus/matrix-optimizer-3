@@ -126,6 +126,25 @@ std::vector<F32> SoundFile::getSamples(uint channel, uint len) const
     return ret;
 }
 
+std::vector<F32> SoundFile::getResampled(uint sr, uint channel, uint len) const
+{
+    if (!ok() || numberChannels() == 0)
+        return std::vector<F32>();
+
+    if (len == 0)
+        len = Double(lengthSamples()) / sampleRate() * sr;
+
+    if (channel >= numberChannels())
+        channel = numberChannels() - 1;
+
+    std::vector<F32> ret(len);
+    for (size_t i=0; i<len; ++i)
+        ret[i] = value(Double(i) / sampleRate(), channel);
+
+    return ret;
+}
+
+
 Double SoundFile::value(Double time, uint channel) const
 {
     if (!p_->ok)
