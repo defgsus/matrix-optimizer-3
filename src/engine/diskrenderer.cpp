@@ -76,6 +76,7 @@ struct DiskRenderer::Private
     void renderAll();
     bool prepareDir(const QString& dir_or_filename);
     bool writeImage(const QImage&);
+    void normalizeAndSplitAudio();
 
     DiskRenderer * thread;
     ThreadPool * threadPool;
@@ -147,23 +148,43 @@ void DiskRenderer::run()
 {
     setCurrentThreadName("RENDER");
 
-    if (!p_->initScene())
+    // render audio/video
+    if (p_->rendSet.imageEnable() && p_->rendSet.audioEnable())
     {
+
+        if (!p_->initScene())
+        {
+            p_->releaseScene();
+            return;
+        }
+
+        try
+        {
+            p_->renderAll();
+        }
+        catch (const Exception& e)
+        {
+            p_->releaseScene();
+            p_->addError(e.what());
+            return;
+        }
+
         p_->releaseScene();
-        return;
     }
 
-    try
+    // convert audio files
+    if (p_->rendSet.audioSplitEnable())
     {
-        p_->renderAll();
+        try
+        {
+            p_->normalizeAndSplitAudio();
+        }
+        catch (const Exception& e)
+        {
+            p_->releaseScene();
+            p_->addError(e.what());
+        }
     }
-    catch (...)
-    {
-        p_->releaseScene();
-        throw;
-    }
-
-    p_->releaseScene();
 }
 
 void DiskRenderer::stop()
@@ -609,5 +630,96 @@ bool DiskRenderer::Private::writeImage(const QImage& img)
 
     return true;
 }
+
+void DiskRenderer::Private::normalizeAndSplitAudio()
+{
+    QString fn = rendSet.makeAudioFilename();
+    SF_INFO ininfo;
+    ininfo.format = 0;
+    SNDFILE * infile = sf_open(fn.toStdString().c_str(), SFM_READ, &ininfo);
+    if (!infile)
+        MO_IO_ERROR(READ, tr("Could not open audio file\n'%1'\n%2")
+                 .arg(fn).arg(sf_strerror((SNDFILE*)0)));
+
+    // get maximum value
+    F32 normMul = 1.;
+    if (rendSet.audioNormalizeEnable())
+    {
+        Double maxVal;
+        int r = sf_command(infile, SFC_CALC_SIGNAL_MAX, &maxVal, sizeof(maxVal));
+        if (r)
+            MO_IO_ERROR(READ, tr("Could not calculate maximum in audio file\n'%1'\n%2")
+                     .arg(fn).arg(sf_strerror(infile)));
+        MO_DEBUG("max amplitude: " << maxVal);
+        if (maxVal > 0.)
+            normMul = 0.999 / maxVal;
+    }
+
+    std::vector<SNDFILE*> files;
+
+    try
+    {
+        // create sndfiles for each channel
+        for (size_t i=0; i<(size_t)ininfo.channels; ++i)
+        {
+            SF_INFO info;
+            info.channels = 1;
+            info.samplerate = ininfo.samplerate;
+            info.frames = ininfo.frames;
+            info.format = SF_FORMAT_WAV | SF_FORMAT_PCM_24;
+
+            QString fn = rendSet.makeAudioFilename(i);
+
+            // open file
+            SNDFILE * file = sf_open(fn.toStdString().c_str(), SFM_WRITE, &info);
+            if (!file)
+               MO_IO_ERROR(WRITE, tr("Could not open file for writing audio\n'%1'\n%2")
+                                    .arg(fn).arg(sf_strerror((SNDFILE*)0)));
+            files.push_back(file);
+        }
+
+        size_t bsize = 1024 * 16;
+        std::vector<F32> data(bsize * ininfo.channels),
+                         dataout(bsize);
+
+        // split data
+        for (size_t i=0; i<(size_t)ininfo.frames; i += bsize)
+        {
+            // read a chunk - interlaced
+            size_t left = std::min(bsize, ininfo.frames - i);
+            size_t r = sf_readf_float(infile, &data[0], left);
+            if (r != left)
+                MO_IO_ERROR(READ, tr("Could not read from audio file\n'%1'\n%2")
+                                    .arg(fn).arg(sf_strerror(infile)));
+
+            // deinterlace (and normalize)
+            for (size_t k=0; k<(size_t)ininfo.channels; ++k)
+            {
+                for (size_t j=0; j<left; ++j)
+                    dataout[j] = data[j * ininfo.channels + k] * normMul;
+
+                r = sf_writef_float(files[k], &dataout[0], left);
+                if (r != left)
+                    MO_IO_ERROR(WRITE, tr("Could not write to audio file\n'%1'\n%2")
+                                        .arg(rendSet.makeAudioFilename(k))
+                                        .arg(sf_strerror(files[k])));
+            }
+
+            emit thread->progress(i * 100 / ininfo.frames);
+        }
+
+        for (auto f : files)
+            sf_close(f);
+        sf_close(infile);
+    }
+    catch (Exception& e)
+    {
+        for (auto f : files)
+            sf_close(f);
+        sf_close(infile);
+        throw;
+    }
+}
+
 
 } // namespace MO

@@ -2,9 +2,10 @@
 
  - disk rendering
     - multi-threaded image writer
-    - audio out
+    - multi-channel audio out
  - activity float parameter
  - fix immediate text update on button in code editor
    - alt/ctrl + enter/return for compile/update
+ - Wave Tracer for generating impulse responses from scalar fields
  - migrated sequencer view (still experimental)
  - reactivated microphone group (still experimental)

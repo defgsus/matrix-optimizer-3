@@ -108,6 +108,10 @@ public:
 
     /** Enable audio rendering */
     bool audioEnable() const { return p_audio_enable_; }
+    /** Enable splitting of audio files */
+    bool audioSplitEnable() const { return p_audio_split_enable_; }
+    /** Enable normalizing when splitting. */
+    bool audioNormalizeEnable() const { return p_audio_norm_enable_; }
     const AUDIO::Configuration & audioConfig() const { return p_audio_conf_; }
     const QString& audioPattern() const { return p_audio_pattern_; }
     size_t audioPatternOffset() const { return p_audio_num_offset_; }
@@ -155,6 +159,8 @@ public:
     void setImageNumQue(size_t q) { p_image_ques_ = q; }
 
     void setAudioEnable(bool e) { p_audio_enable_ = e; }
+    void setAudioSplitEnable(bool e) { p_audio_split_enable_ = e; }
+    void setAudioNormalizeEnable(bool e) { p_audio_norm_enable_ = e; }
     /** Write access */
     AUDIO::Configuration & audioConfig() { return p_audio_conf_; }
     void setAudioFormat(size_t index);
@@ -184,7 +190,9 @@ private:
             p_audio_pattern_;
 
     bool    p_image_enable_,
-            p_audio_enable_;
+            p_audio_enable_,
+            p_audio_split_enable_,
+            p_audio_norm_enable_;
 
     AUDIO::Configuration
             p_audio_conf_;

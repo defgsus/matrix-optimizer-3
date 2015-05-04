@@ -53,6 +53,8 @@ void DiskRenderSettings::p_setDefault_()
     p_image_ques_ = 16;
 
     p_audio_enable_ = true;
+    p_audio_split_enable_ = true;
+    p_audio_norm_enable_ = true;
     p_audio_pattern_ = "audio_%num.%ext";
     p_audio_num_offset_ = 1;
     p_audio_num_width_ = 3;

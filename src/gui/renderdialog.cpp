@@ -99,7 +99,8 @@ struct RenderDialog::Private
 
     QWidget
             * groupImage,
-            * groupAudio;
+            * groupAudio,
+            * groupAudioSplit;
     FilenameInput
             * editDir;
     QLineEdit
@@ -127,8 +128,10 @@ struct RenderDialog::Private
             * cbAudioFormat;
     QCheckBox
             * checkImage,
+            * checkImageComp,
             * checkAudio,
-            * checkImageComp;
+            * checkAudioSplit,
+            * checkAudioNorm;
     QLabel
             * labelTime,
             * labelImageName,
@@ -385,6 +388,7 @@ void RenderDialog::Private::createWidgets()
             // ---- audio ----
 
             lv = new QVBoxLayout();
+            auto lv23 = lv; // need it later
             lh->addLayout(lv);
 
                 lh1 = new QHBoxLayout();
@@ -436,17 +440,6 @@ void RenderDialog::Private::createWidgets()
                     connect(spinAudioNumWidth, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
 
-                    // format
-                    cbAudioFormat = new QComboBox(diag);
-                    for (const DiskRenderSettings::AudioFormat & f
-                         : DiskRenderSettings::audioFormats())
-                        cbAudioFormat->addItem(f.name, QVariant(int(f.index)));
-                    cbAudioFormat->setCurrentIndex(
-                                rendSet.audioFormatIndex());
-                    connect(cbAudioFormat, SIGNAL(currentIndexChanged(int)),
-                            diag, SLOT(p_onWidget_()));
-                    lv->addWidget(cbAudioFormat);
-
                     spinAudioChannels = new SpinBox(diag);
                     spinAudioChannels->setLabel(tr("number channels"));
                     spinAudioChannels->setRange(1, 1<<30);
@@ -467,6 +460,37 @@ void RenderDialog::Private::createWidgets()
                     lv->addWidget(spinAudioBufferSize);
                     connect(spinAudioBufferSize, SIGNAL(valueChanged(int)),
                             diag, SLOT(p_onWidget_()));
+
+                // -- split --
+
+                checkAudioSplit = new QCheckBox(tr("split into single files"), diag);
+                checkAudioSplit->setChecked(rendSet.audioSplitEnable());
+                connect(checkAudioSplit, SIGNAL(stateChanged(int)),
+                        diag, SLOT(p_onWidget_()));
+                lv23->addWidget(checkAudioSplit);
+
+                // sub-group for activity
+                groupAudioSplit = new QWidget(diag);
+                lv23->addWidget(groupAudioSplit);
+                lv = new QVBoxLayout(groupAudioSplit);
+                lv->setMargin(0);
+
+                    checkAudioNorm = new QCheckBox(tr("normalize"), diag);
+                    checkAudioNorm->setChecked(rendSet.audioNormalizeEnable());
+                    connect(checkAudioNorm, SIGNAL(stateChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lv->addWidget(checkAudioNorm);
+
+                    // format
+                    cbAudioFormat = new QComboBox(diag);
+                    for (const DiskRenderSettings::AudioFormat & f
+                         : DiskRenderSettings::audioFormats())
+                        cbAudioFormat->addItem(f.name, QVariant(int(f.index)));
+                    cbAudioFormat->setCurrentIndex(
+                                rendSet.audioFormatIndex());
+                    connect(cbAudioFormat, SIGNAL(currentIndexChanged(int)),
+                            diag, SLOT(p_onWidget_()));
+                    lv->addWidget(cbAudioFormat);
 
                     lv->addStretch(1);
 
@@ -532,6 +556,8 @@ void RenderDialog::Private::updateFromWidgets()
     // ----------- audio -----------
 
     rendSet.setAudioEnable(checkAudio->isChecked());
+    rendSet.setAudioSplitEnable(checkAudioSplit->isChecked());
+    rendSet.setAudioNormalizeEnable(checkAudioNorm->isChecked());
     rendSet.setAudioPattern(editAudioName->text());
     rendSet.setAudioPatternOffset(spinAudioNum->value());
     rendSet.setAudioPatternWidth(spinAudioNumWidth->value());
@@ -581,6 +607,8 @@ void RenderDialog::Private::updateFromSettings()
     // -- audio --
 
     checkAudio->setChecked(rendSet.audioEnable());
+    checkAudioSplit->setChecked(rendSet.audioSplitEnable());
+    checkAudioNorm->setChecked(rendSet.audioNormalizeEnable());
     editAudioName->setText(rendSet.audioPattern());
     spinAudioNum->setValue(rendSet.audioPatternOffset());
     spinAudioNumWidth->setValue(rendSet.audioPatternWidth());
@@ -648,7 +676,10 @@ void RenderDialog::Private::updateActivity()
 {
     groupImage->setEnabled(rendSet.imageEnable());
     groupAudio->setEnabled(rendSet.audioEnable());
-    butGo->setEnabled( rendSet.imageEnable() || rendSet.audioEnable() );
+    groupAudioSplit->setEnabled(rendSet.audioSplitEnable());
+    butGo->setEnabled( rendSet.imageEnable()
+                       || rendSet.audioEnable()
+                       || rendSet.audioSplitEnable() );
 
     QImageWriter w("./bla", rendSet.imageFormatExt().toUtf8());
     spinImageQuality->setVisible(w.supportsOption(QImageIOHandler::Quality));
