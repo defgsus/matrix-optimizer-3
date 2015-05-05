@@ -36,9 +36,10 @@ public:
         T_TORUS,
         T_UV_SPHERE,
         T_GRID_XZ,
-        T_LINE_GRID
+        T_LINE_GRID,
+        T_POINT_GRID
     };
-    static const uint numTypes = T_LINE_GRID + 1;
+    static const uint numTypes = T_POINT_GRID + 1;
     static const QStringList typeIds;
     static const QStringList typeNames;
 

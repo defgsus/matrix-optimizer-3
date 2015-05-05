@@ -24,6 +24,7 @@
 #include "groupwidget.h"
 #include "equationeditor.h"
 #include "geom/geometry.h"
+#include "geom/geometrymodifierenum.h"
 #include "geom/geometrymodifierscale.h"
 #include "geom/geometrymodifiertesselate.h"
 #include "geom/geometrymodifiertranslate.h"
@@ -506,6 +507,40 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         };
     }
 
+    if (auto enu = dynamic_cast<GEOM::GeometryModifierEnum*>(modifier_))
+    {
+        MO__CHECKBOX(cbindex, tr("point, line and triangle index"),
+                     tr("If enabled, the index of each primitive is attached to each vertex"),
+                     enu->getDoIndex());
+
+        auto lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
+            auto label = new QLabel(tr("attribute name"), this);
+            group_->addWidget(label);
+            lh->addWidget(label);
+
+            auto indexName = new QLineEdit(this);
+            group_->addWidget(indexName);
+            indexName->setText(enu->getIndexName());
+            indexName->setStatusTip(tr("The name of the attribute as it should appear in the shader"));
+            connect(indexName, SIGNAL(textChanged(QString)),
+                    this, SLOT(updateFromWidgets_()));
+            lh->addWidget(indexName);
+
+        funcUpdateFromWidgets_ = [=]()
+        {
+            enu->setDoIndex(cbindex->isChecked());
+            enu->setIndexName(indexName->text());
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            cbindex->setChecked(enu->getDoIndex());
+            indexName->setText(enu->getIndexName());
+        };
+    }
+
 
 
     if (auto extrude = dynamic_cast<GEOM::GeometryModifierExtrude*>(modifier_))
@@ -888,7 +923,11 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                                 && settings->type() !=
                                 GEOM::GeometryModifierCreate::T_LINE_GRID),
     //            hasTriangle = (canTriangle && (settings_->asTriangles || isFile)),
-                has2Segments = (settings->type() ==
+                has3Segments = (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_LINE_GRID
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_POINT_GRID),
+                has2Segments = has3Segments || (settings->type() ==
                                 GEOM::GeometryModifierCreate::T_UV_SPHERE
                                || settings->type() ==
                                 GEOM::GeometryModifierCreate::T_GRID_XZ
@@ -900,8 +939,6 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                                 GEOM::GeometryModifierCreate::T_CYLINDER_OPEN
                                || settings->type() ==
                                 GEOM::GeometryModifierCreate::T_TORUS),
-                has3Segments = (has2Segments && settings->type() ==
-                                GEOM::GeometryModifierCreate::T_LINE_GRID),
                 hasSmallRadius = (settings->type() ==
                                 GEOM::GeometryModifierCreate::T_TORUS);
 

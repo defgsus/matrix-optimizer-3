@@ -74,6 +74,17 @@ out vec2 v_texCoord;
     #endif
 #endif
 
+// precalc some instance variables
+vec3 mo_calc_instance()
+{
+    return
+    v_instance = vec3(
+                float(gl_InstanceID) / max(1., u_instance_count),
+                float(gl_InstanceID) / max(1., u_instance_count - 1),
+                float(gl_InstanceID));
+}
+vec3 _mo_calc_instance_dummy_ = mo_calc_instance();
+
 mat3 mo_general_normal_matrix(in vec3 norm)
 {
     vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
@@ -176,11 +187,6 @@ vec4 mo_ftransform(in vec4 pos)
 
 void main()
 {
-    // precalc some instance variables
-    v_instance = vec3(
-                    float(gl_InstanceID) / max(1., u_instance_count),
-                    float(gl_InstanceID) / max(1., u_instance_count - 1),
-                    float(gl_InstanceID));
 
     // ---------------- experimental billboard ---------------------
 

@@ -334,7 +334,24 @@ void GeometryFactory::createLineGrid(Geometry * g, int sizeX, int sizeY, int siz
 #undef MO__INDEX
 }
 
+void GeometryFactory::createPointGrid(Geometry * g, int sizeX, int sizeY, int sizeZ)
+{
+    sizeX = std::max(1, sizeX);
+    sizeY = std::max(1, sizeY);
+    sizeZ = std::max(1, sizeZ);
 
+    const Float
+            ox = (Float)sizeX / 2 - 0.5,
+            oy = (Float)sizeY / 2 - 0.5,
+            oz = (Float)sizeZ / 2 - 0.5;
+
+    for (int z=0; z<sizeZ; ++z)
+    for (int y=0; y<sizeY; ++y)
+    for (int x=0; x<sizeX; ++x)
+    {
+        g->addPoint( g->addVertex(x-ox, y-oy, z-oz) );
+    }
+}
 
 
 void GeometryFactory::createUVSphere(Geometry * g, Float rad, uint segu, uint segv, bool asTriangles, const Vec3 & o)

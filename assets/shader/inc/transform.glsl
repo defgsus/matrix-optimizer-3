@@ -1,21 +1,27 @@
 #include <rotate>
 
-/** Creates a translation matrix */
+/* Creates a translation matrix */
 mat4 translate4(in vec3 vec);
 mat4 translate(in vec3 vec) { return translate4(vec); }
-/** Translates the matrix */
+
+/* Translates a matrix */
 mat4 translate4(in mat4 m, in vec3 vec);
 mat4 translate(in mat4 m, in vec3 vec) { return translate4(m, vec); }
-/** Creates a scaling matrix */
-mat3 scale3(in float s);
-/** Creates a scaling matrix */
-mat4 scale4(in float s);
-mat4 scale(in float s) { return scale4(s); }
-/** Scales a matrix */
+
+/* Scales a 3x3 matrix */
 mat3 scale3(in mat3 m, in float s);
-/** Scales a matrix */
+mat3 scale(in mat3 m, in float s) { return scale3(m, s); }
+
+/* Scales a 4x4 matrix */
 mat4 scale4(in mat4 m, in float s);
 mat4 scale(in mat4 m, in float s) { return scale4(m, s); }
+
+/* Creates a scaling matrix */
+mat3 scale3(in float s);
+mat4 scale4(in float s);
+/* default is 4x4 */
+mat4 scale(in float s) { return scale4(s); }
+
 
 
 

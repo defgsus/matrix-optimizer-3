@@ -289,7 +289,8 @@ HEADERS += \
     src/object/audio/noiseao.h \
     src/object/audio/playbufferao.h \
     src/object/audio/convolveao.h \
-    src/audio/tool/convolvebuffer.h
+    src/audio/tool/convolvebuffer.h \
+    src/geom/geometrymodifierenum.h
 
 
 SOURCES += \
@@ -540,5 +541,6 @@ SOURCES += \
     src/object/audio/noiseao.cpp \
     src/object/audio/playbufferao.cpp \
     src/object/audio/convolveao.cpp \
-    src/audio/tool/convolvebuffer.cpp
+    src/audio/tool/convolvebuffer.cpp \
+    src/geom/geometrymodifierenum.cpp
 

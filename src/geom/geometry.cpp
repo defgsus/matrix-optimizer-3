@@ -201,11 +201,44 @@ Geometry::UserAttribute * Geometry::addAttribute(const QString &name, unsigned i
     return a;
 }
 
+void Geometry::setAttribute(const QString &name, AttributeType x)
+{
+    auto a = getAttribute(name);
+    if (!a)
+        a = addAttribute(name, 1);
+
+    a->curValue[0] = x;
+}
+
+void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y)
+{
+    auto a = getAttribute(name);
+    if (!a)
+        a = addAttribute(name, 2);
+
+    a->curValue[0] = x;
+    if (a->curValue.size() >= 2)
+        a->curValue[1] = y;
+}
+
+void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z)
+{
+    auto a = getAttribute(name);
+    if (!a)
+        a = addAttribute(name, 3);
+
+    a->curValue[0] = x;
+    if (a->curValue.size() >= 2)
+        a->curValue[1] = y;
+    if (a->curValue.size() >= 3)
+        a->curValue[2] = z;
+}
+
 void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z, AttributeType w)
 {
     auto a = getAttribute(name);
     if (!a)
-        return;
+        a = addAttribute(name, 4);
 
     a->curValue[0] = x;
     if (a->curValue.size() >= 2)
@@ -215,6 +248,34 @@ void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType 
     if (a->curValue.size() >= 4)
         a->curValue[3] = w;
 }
+
+Geometry::UserAttribute * Geometry::addEnumerationAttribute(const QString &name)
+{
+    auto a = addAttribute(name, 4);
+
+    for (size_t i=0; i<numVertices(); ++i)
+    {
+        a->data[i * 4] = i;
+        a->data[i * 4 + 1] = 0.f;
+        a->data[i * 4 + 2] = 0.f;
+        a->data[i * 4 + 3] = 0.f;
+    }
+
+    for (size_t i=0; i<numLines(); ++i)
+    {
+        a->data[lineIndex_[i * 2 + 0] * 4 + 1] = i;
+        a->data[lineIndex_[i * 2 + 1] * 4 + 1] = i;
+    }
+
+    for (size_t i=0; i<numTriangles(); ++i)
+    {
+        a->data[triIndex_[i * 3 + 0] * 4 + 2] = i;
+        a->data[triIndex_[i * 3 + 1] * 4 + 2] = i;
+        a->data[triIndex_[i * 3 + 2] * 4 + 2] = i;
+    }
+    return a;
+}
+
 
 
 long unsigned int Geometry::memory() const

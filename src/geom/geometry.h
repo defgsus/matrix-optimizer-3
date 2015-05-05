@@ -62,7 +62,10 @@ public:
         QString attributeName;
         unsigned int numComponents;
         std::vector<AttributeType>
-            data, curValue;
+        /** size == numComponents() * numVertices() */
+            data,
+        /** size == numComponents() */
+        curValue;
     };
 
     // ------ enums ----------
@@ -203,6 +206,10 @@ public:
     /** Adds a float attribute with @p numComponents per vertex. */
     UserAttribute * addAttribute(const QString& name, unsigned int numComponents);
 
+    /** Creates an attribute containing the vertex indices.
+        <point, line, tri, ...> */
+    UserAttribute * addEnumerationAttribute(const QString& name);
+
     /** Returns false if the triangle is degenerate (e.g. on of the edges is too small) */
     static bool checkTriangle(const Vec3&, const Vec3&, const Vec3&);
 
@@ -225,7 +232,10 @@ public:
         { curU_ = u; curV_ = v; }
 
     /** Sets the current attribute. Any subsequent call to addVertex() will use this attribute. */
-    void setAttribute(const QString& name, AttributeType x, AttributeType y = 0, AttributeType z = 0, AttributeType w = 0);
+    void setAttribute(const QString& name, AttributeType x);
+    void setAttribute(const QString& name, AttributeType x, AttributeType y);
+    void setAttribute(const QString& name, AttributeType x, AttributeType y, AttributeType z);
+    void setAttribute(const QString& name, AttributeType x, AttributeType y, AttributeType z, AttributeType w);
 
     ColorType currentRed() const { return curR_; }
     ColorType currentGreen() const { return curG_; }
