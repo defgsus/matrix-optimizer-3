@@ -729,8 +729,9 @@ public:
     void setTransformation(const Mat4& mat)
         { p_transformation_ = mat; }
 
-    /** Apply all transformations of this object to the given matrix. */
-    void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
+    /** Base implementation applies all transformation objects inside this object to the given matrix.
+        XXX Made virtual to override Camera's matrix... */
+    virtual void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
 
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }

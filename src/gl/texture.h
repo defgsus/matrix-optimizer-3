@@ -43,6 +43,9 @@ public:
 
     virtual ~Texture();
 
+    /** Create a texture using settings from @p other */
+    static Texture * constructFrom(const Texture * other);
+
     // -------------- static ----------------------
 
     /** Creates a new Texture from an image.
@@ -167,6 +170,9 @@ public:
     QImage getImage() const;
 
 private:
+
+    Texture(const Texture&);
+    void operator=(const Texture&);
 
     /** device memory counter */
     static long int memory_used_;

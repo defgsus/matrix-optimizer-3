@@ -24,6 +24,7 @@
         <file alias="constants">assets/shader/inc/constants.glsl</file>
         <file alias="noise">assets/shader/inc/noise.glsl</file>
         <file alias="fnoise">assets/shader/inc/fnoise.glsl</file>
+        <file alias="transform">assets/shader/inc/transform.glsl</file>
     </qresource>
     <qresource prefix="/shader/inc/dh">
         <file alias="hash">assets/shader/inc/dh/hash.glsl</file>

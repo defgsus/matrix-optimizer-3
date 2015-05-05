@@ -60,7 +60,7 @@ public:
 
     // ----- setter -----
 
-    void setFloats(gl::GLfloat x, gl::GLfloat y, gl::GLfloat z, gl::GLfloat w)
+    void setFloats(gl::GLfloat x, gl::GLfloat y = 0.f, gl::GLfloat z = 0.f, gl::GLfloat w = 0.f)
     { floats[0] = x; floats[1] = y; floats[2] = z; floats[3] = w; }
     void set(const Mat4&);
     void set(const Vec3&v) { setFloats(v.x, v.y, v.z, 1.); }

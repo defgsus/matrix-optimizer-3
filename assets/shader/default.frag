@@ -30,6 +30,7 @@ const float HALF_PI = 1.5707963268;
 
 // --- input from vertex shader ---
 
+in vec3 v_instance;
 in vec3 v_pos;
 in vec3 v_pos_world;
 in vec3 v_pos_eye;
@@ -56,6 +57,7 @@ out vec4 out_color;
 
 uniform float u_time;
 uniform vec3 u_cam_pos;
+uniform float u_instance_count;
 
 #ifdef MO_ENABLE_LIGHTING
     uniform float u_diffuse_exp;
@@ -287,7 +289,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
             // normalized direction towards lightsource
             vec3 lightvecn = lightvec / dist;
             // normalized direction towards lightsource in surface-normal space
-            vec3 ldir = v_normal_space * lightvecn;
+            vec3 ldir = ( v_normal_space * lightvecn );
 
             // calculate influence from distance attenuation
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);

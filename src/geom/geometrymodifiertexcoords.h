@@ -31,9 +31,11 @@ public:
     Float getScaleY() const { return scaleY_; }
     bool getInvertX() const { return invertX_; }
     bool getInvertY() const { return invertY_; }
+    bool getDoMapTriangles() const { return doMapTri_; }
 
     // ------------ setter -------------------
 
+    void setDoMapTriangles(bool e) { doMapTri_ = e; }
     void setOffsetX(Float s) { offsetX_ = s; }
     void setOffsetY(Float s) { offsetY_ = s; }
     void setScaleX(Float s) { scaleX_ = s; }
@@ -44,7 +46,7 @@ public:
 private:
 
     Float offsetX_, offsetY_, scaleX_, scaleY_;
-    bool invertX_, invertY_;
+    bool invertX_, invertY_, doMapTri_;
 };
 
 

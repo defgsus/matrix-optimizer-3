@@ -17,3 +17,7 @@
 #ifndef HALF_PI
 #   define HALF_PI (1.5707963268)
 #endif
+
+/** Converts degree to radians */
+float degree(float degree) { return degree * PI / 180.; }
+

@@ -218,6 +218,18 @@ void FrameBufferObject::release()
     release_();
 }
 
+Texture * FrameBufferObject::swapColorTexture(Texture * tex)
+{
+    // change attachment
+    GLenum err, target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
+    MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, tex->handle(), 0), err );
+    if (err != GL_NO_ERROR) return 0;
+
+    std::swap(colorTex_, tex);
+    return tex;
+}
+
 bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
 {
     if (!cubemap_)

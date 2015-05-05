@@ -25,6 +25,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "param/parametertext.h"
+#include "param/parameterint.h"
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
 #include "util/texturemorphsetting.h"
@@ -147,6 +148,16 @@ void Model3d::createParameters()
                                          tr("The point size is between size and max size depending on distance to camera"),
                                          false, true, false);
 
+        numDup_ = params()->createIntParameter("num_instances", tr("gl instances"),
+                                               tr("Draws the model multiple times while changing the "
+                                                  "gl_InstanceID variable in the shader"),
+                                               1, true, true);
+        numDup_->setMinValue(1);
+        /*
+        dupRange_ = params()->createFloatParameter("dup_range", tr("duplicate time range"),
+                                                   tr("The range of time over which duplicates are drawn"),
+                                                   -1., 0.01);
+        */
     params()->endParameterGroup();
 
 
@@ -184,7 +195,43 @@ void Model3d::createParameters()
         glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl position"),
                         tr("A piece of glsl code to modify vertex positions"),
                         TT_GLSL,
-                        "vec3 mo_modify_position(in vec3 pos) {\n\treturn pos;\n}\n"
+                        "// -- uniforms --\n"
+                        "// float u_time\n"
+                        "// vec3 u_cam_pos\n"
+                        "// vec4 u_color\n"
+                        "// mat4 u_projection\n"
+                        "// mat4 u_cubeViewTransform\n"
+                        "// mat4 u_viewTransform\n"
+                        "// mat4 u_transform\n"
+                        "// -- vertex attributes --\n"
+                        "// vec4 a_position\n"
+                        "// vec4 a_color\n"
+                        "// vec3 a_normal\n"
+                        "// vec2 a_texCoord\n"
+                        "// -- special stuff --\n"
+                        "// vec3 v_instance\n\n"
+                        "vec3 mo_modify_position(in vec3 pos)\n{\n\treturn pos;\n}\n\n"
+                        , true, false);
+
+        glslTransform_ = params()->createTextParameter("glsltransform", tr("glsl position"),
+                        tr("A piece of glsl code to modify vertex positions"),
+                        TT_GLSL,
+                        "// -- uniforms --\n"
+                        "// float u_time\n"
+                        "// vec3 u_cam_pos\n"
+                        "// vec4 u_color\n"
+                        "// mat4 u_projection\n"
+                        "// mat4 u_cubeViewTransform\n"
+                        "// mat4 u_viewTransform\n"
+                        "// mat4 u_transform\n"
+                        "// -- vertex attributes --\n"
+                        "// vec4 a_position\n"
+                        "// vec4 a_color\n"
+                        "// vec3 a_normal\n"
+                        "// vec2 a_texCoord\n"
+                        "// -- special stuff --\n"
+                        "// vec3 v_instance\n\n"
+                        "mat4 mo_user_transform()\n{\n\treturn mat4(1.);\n}\n"
                         , true, false);
 
         glslVertexOut_ = params()->createTextParameter("glsl_color", tr("glsl vertex output"),
@@ -207,6 +254,7 @@ void Model3d::createParameters()
                            "// vec3 a_normal\n"
                            "// vec2 a_texCoord\n"
                            "// -- input to fragment stage (changeable) --\n"
+                           "// vec3 v_instance\n"
                            "// vec3 v_pos\n"
                            "// vec3 v_pos_world\n"
                            "// vec3 v_pos_eye\n"
@@ -234,6 +282,7 @@ void Model3d::createParameters()
                        "// sampler2D tex_0 !\n"
                        "// sampler2D tex_norm_0 !\n"
                        "// -- input from vertex stage --\n"
+                       "// vec3 v_instance\n"
                        "// vec3 v_pos\n"
                        "// vec3 v_pos_world\n"
                        "// vec3 v_pos_eye\n"
@@ -260,6 +309,7 @@ void Model3d::createParameters()
                        "// sampler2D tex_0 !\n"
                        "// sampler2D tex_norm_0 !\n"
                        "// -- input from vertex stage --\n"
+                       "// vec3 v_instance\n"
                        "// vec3 v_pos\n"
                        "// vec3 v_pos_world\n"
                        "// vec3 v_pos_eye\n"
@@ -368,6 +418,7 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == vertexFx_
             || p == glslDoOverride_
             || p == glslVertex_
+            || p == glslTransform_
             || p == glslVertexOut_
             || p == glslFragmentOut_
             || p == glslNormal_
@@ -404,6 +455,7 @@ void Model3d::updateParameterVisibility()
 
     bool glsl = glslDoOverride_->baseValue();
     glslVertex_->setVisible(glsl);
+    glslTransform_->setVisible(glsl);
     glslVertexOut_->setVisible(glsl);
     glslFragmentOut_->setVisible(glsl);
     glslNormal_->setVisible(glsl);
@@ -602,6 +654,7 @@ void Model3d::setupDrawable_()
                 + glslVertex_->value() + "\n#line 1\n"
                 + glslVertexOut_->value() + "\n";
         src->replace("//%mo_override_vert%", text);
+        src->replace("//%mo_override_vert2%", "#line 1\n" + glslTransform_->value() + "\n");
         src->replace("//%mo_override_frag%", "#line 1\n" + glslFragmentOut_->value() + "\n");
         src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
     }
@@ -632,6 +685,7 @@ void Model3d::setupDrawable_()
             {
                 glslVertex_->addErrorMessage(msg.line, msg.text);
                 glslVertexOut_->addErrorMessage(msg.line, msg.text);
+                glslTransform_->addErrorMessage(msg.line, msg.text);
             }
             if (msg.program == GL::Shader::P_FRAGMENT
                 || msg.program == GL::Shader::P_LINKER)
@@ -644,8 +698,8 @@ void Model3d::setupDrawable_()
 
     // get uniforms
     u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
-
     u_cam_pos_ = draw_->shader()->getUniform("u_cam_pos");
+    u_instance_count_ = draw_->shader()->getUniform("u_instance_count");
 
     const bool isvertfx = vertexFx_->baseValue();
     u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
@@ -720,6 +774,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         texture_->bind();
         textureBump_->bind(1);
 
+        const int numDup = numDup_->value(time, thread);
+
         // update uniforms
         const auto bright = cbright_->value(time, thread);
         draw_->setAmbientColor(
@@ -728,6 +784,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                     cb_->value(time, thread) * bright,
                     ca_->value(time, thread));
 
+        if (u_instance_count_)
+            u_instance_count_->floats[0] = numDup;
         if (u_diff_exp_)
             u_diff_exp_->floats[0] = diffExp_->value(time, thread);
         if (u_bump_scale_)
@@ -784,7 +842,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                             viewTrans,
                             trans,
                             &rs.lightSettings(),
-                            time);
+                            time, numDup);
     }
     else
         MO_DEBUG_MODEL("Model3d::renderGl: drawable not ready");

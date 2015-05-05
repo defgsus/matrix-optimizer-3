@@ -41,6 +41,7 @@ Camera::Camera(QObject *parent) :
     ObjectGl        (parent),
     renderMode_     (RM_FULLDOME_CUBE),
     alphaBlend_     (this),
+    useOverrideMatrix_  (false),
     blendTexture_   (0)
 {
     setName("Camera");
@@ -430,6 +431,33 @@ const Mat4& Camera::cameraViewMatrix(uint index) const
         default: return MATH::CubeMapMatrix::positiveZ; break;
     }
 }
+
+void Camera::setOverrideMatrix(const Mat4 &m)
+{
+    overrideMatrix_ = m;
+    useOverrideMatrix_ = true;
+}
+
+void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) const
+{
+    if (useOverrideMatrix_)
+    {
+        // XXX Just for the moment...
+        if (thread == MO_AUDIO_THREAD)
+        {
+            cheat_ += 0.001f * (overrideMatrix_ - cheat_);
+            matrix = cheat_;
+        }
+        else
+            matrix = overrideMatrix_;
+    }
+    else
+    {
+        Object::calculateTransformation(matrix, time, thread);
+        cheat_ = matrix;
+    }
+}
+
 
 void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 {

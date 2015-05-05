@@ -330,7 +330,7 @@ void Drawable::renderShader(const Mat4 &proj,
                             const Mat4 &viewTrans,
                             const Mat4 &trans,
                             const LightSettings * lights,
-                            Double time)
+                            Double time, int instanceCount)
 {
     MO_ASSERT(vao_, "no vertex array object specified in Drawable(" << name_ << ")::render()");
     //MO_ASSERT(uniformProj_ != invalidGl, "");
@@ -376,7 +376,7 @@ void Drawable::renderShader(const Mat4 &proj,
     /* XXX if (drawTypeSet_)
         vao_->drawElements(drawType_);
     else*/
-        vao_->drawElements();
+        vao_->drawElements(instanceCount);
 
     //MO_DEBUG("Drawable('" << name_ << "') drawn");
 

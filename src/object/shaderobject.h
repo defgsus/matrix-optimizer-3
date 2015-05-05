@@ -29,7 +29,7 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_SHADER; }
     virtual bool isShader() const Q_DECL_OVERRIDE { return true; }
 
-    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+    //virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -55,9 +55,9 @@ public slots:
 
 private:
 
-    std::vector<GL::FrameBufferObject*> fbo_;
-    std::vector<GL::ScreenQuad*>
-        shaderQuad_, screenQuad_;
+    GL::FrameBufferObject *fbo_;
+    GL::ScreenQuad *shaderQuad_, *screenQuad_;
+    GL::Texture * swapTex_;
 
     ParameterFloat * p_out_r_, * p_out_g_, * p_out_b_, * p_out_a_;
     ParameterSelect * p_magInterpol_;

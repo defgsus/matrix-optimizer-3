@@ -251,6 +251,8 @@ void AudioPlayerThread::run()
     setCurrentThreadName("AUPLAY");
     MO_DEBUG_AUPLAY("Thread::run()");
 
+    doStop = false;
+
     uint    bufferSize = p->device.bufferSize(),
             numChannelsOut = p->device.numOutputChannels(),
             numAhead = 4;

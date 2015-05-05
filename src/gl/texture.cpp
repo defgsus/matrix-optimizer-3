@@ -111,6 +111,19 @@ Texture::~Texture()
         MO_GL_WARNING("destructor of bound texture!");
 }
 
+Texture * Texture::constructFrom(const Texture * t)
+{
+    if (t->isCube())
+        return new Texture(t->width(), t->height(),
+                           t->format(), t->input_format_,
+                           t->type(), 0,0,0,0,0,0, t->rep_);
+    else
+        return new Texture(t->width(), t->height(),
+                           t->format(), t->input_format_,
+                           t->type(), 0, t->rep_);
+}
+
+
 bool Texture::isCube() const
 {
      return target_ == GL_TEXTURE_CUBE_MAP;

@@ -332,6 +332,13 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         auto lh = new QHBoxLayout();
         group_->addLayout(lh);
 
+            MO__CHECKBOX(cbmaptri, tr("map triangles"),
+                 tr("Assigns the texture coordinates to the triangle corners"),
+                 tex->getDoMapTriangles());
+
+        lh = new QHBoxLayout();
+        group_->addLayout(lh);
+
             auto label = new QLabel(tr("offset"), this);
             group_->addWidget(label);
             lh->addWidget(label);
@@ -375,6 +382,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
         funcUpdateFromWidgets_ = [=]()
         {
+            tex->setDoMapTriangles(cbmaptri->isChecked());
             tex->setOffsetX(spinox->value());
             tex->setOffsetY(spinoy->value());
             tex->setScaleX(spinx->value());
@@ -385,6 +393,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
         funcUpdateWidgets_ = [=]()
         {
+            cbmaptri->setChecked(tex->getDoMapTriangles());
             spinox->setValue(tex->getOffsetX());
             spinoy->setValue(tex->getOffsetY());
             spinx->setValue(tex->getScaleX());

@@ -77,6 +77,12 @@ public:
     /** Returns the framebuffer on which the camera renders, or NULL */
     GL::FrameBufferObject * fbo(uint thread) const;
 
+    void setOverrideMatrix(const Mat4& m);
+    void clearOverrideMatrix() { useOverrideMatrix_ = false; }
+
+    void calculateTransformation(Mat4& matrix, Double time, uint thread) const
+                                                                    Q_DECL_OVERRIDE;
+
 signals:
 
 public slots:
@@ -104,7 +110,9 @@ private:
     RenderMode renderMode_;
     AlphaBlendSetting alphaBlend_;
 
-    Mat4 sliceMatrix_;
+    Mat4 sliceMatrix_, overrideMatrix_;
+    bool useOverrideMatrix_;
+    mutable Mat4 cheat_;
 
     GL::Texture * blendTexture_;
 };

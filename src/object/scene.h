@@ -303,12 +303,11 @@ public slots:
 
     /** Sets the index of the camera to control will setFreeCameraMatrix(),
         -1 for no free camera. */
-    void setFreeCameraIndex(int index) { freeCameraIndex_ = index; render_(); }
+    void setFreeCameraIndex(int index);
     int freeCameraIndex() const { return freeCameraIndex_; }
 
-    /** Sets the camera matrix in free-camera-mode,
-        used when scene is rendered next time. */
-    void setFreeCameraMatrix(const MO::Mat4& mat) { freeCameraMatrix_ = mat; render_(); }
+    /** Sets the camera matrix in free-camera-mode */
+    void setFreeCameraMatrix(const MO::Mat4& mat);
 
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */
@@ -419,8 +418,7 @@ private:
     int debugRenderOptions_;
 
     int freeCameraIndex_;
-    Mat4 freeCameraMatrix_, freeCameraMatrixGfx_;
-    std::vector<Mat4> freeCameraMatrixAudio_;
+    Mat4 freeCameraMatrix_;
 
     ProjectionSystemSettings * projectionSettings_;
     uint projectorIndex_;

@@ -24,7 +24,8 @@ GeometryModifierTexCoords::GeometryModifierTexCoords()
       scaleX_   (1.0),
       scaleY_   (1.0),
       invertX_  (false),
-      invertY_  (false)
+      invertY_  (false),
+      doMapTri_ (false)
 {
 
 }
@@ -38,26 +39,42 @@ void GeometryModifierTexCoords::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geotexcoords", 1);
+    io.writeHeader("geotexcoords", 2);
 
     io << offsetX_ << offsetY_
        << scaleX_ << scaleY_
        << invertX_ << invertY_;
+
+    io << doMapTri_;
 }
 
 void GeometryModifierTexCoords::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geotexcoords", 1);
+    const auto ver = io.readHeader("geotexcoords", 2);
 
     io >> offsetX_ >> offsetY_
        >> scaleX_ >> scaleY_
        >> invertX_ >> invertY_;
+
+    if (ver >= 2)
+        io >> doMapTri_;
 }
 
 void GeometryModifierTexCoords::execute(Geometry *g)
 {
+    // map triangles
+    if (doMapTri_)
+    {
+        for (uint i=0; i<g->numTriangles(); ++i)
+        {
+            g->setTexCoord(g->triangleIndex(i, 0), Vec2(0,0));
+            g->setTexCoord(g->triangleIndex(i, 1), Vec2(0,1));
+            g->setTexCoord(g->triangleIndex(i, 2), Vec2(1,1));
+        }
+    }
+
     if (offsetX_ != 0.0 || offsetY_ != 0.0)
         g->shiftTextureCoords(offsetX_, offsetY_);
 

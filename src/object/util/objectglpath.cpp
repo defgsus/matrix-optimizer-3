@@ -555,7 +555,7 @@ void ObjectGlPath::initGl()
 
 }
 
-void ObjectGlPath::render(Double time)
+void ObjectGlPath::render(Double )
 {
     //
 }

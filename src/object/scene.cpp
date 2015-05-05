@@ -630,7 +630,6 @@ void Scene::setNumberThreads(uint num)
     screenQuad_.resize(num);
     lightSettings_.resize(num);
     debugRenderer_.resize(num);
-    freeCameraMatrixAudio_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
@@ -1159,6 +1158,7 @@ void Scene::calculateSceneTransform(uint thread, Double time)
 
 void Scene::calculateSceneTransform_(uint thread, Double time)
 {
+#if 0
     // interpolate free camera
     if (freeCameraIndex_ >= 0)
     {
@@ -1166,15 +1166,17 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
         //freeCameraMatrixGfx_ += (Float)1 / 30 *
         //        (glm::inverse(freeCameraMatrix_) - freeCameraMatrixGfx_);
     }
+#endif
 
     // init root matrix for all other objects below scene
     clearTransformation();
 
-    int camcount = 0;
+//    int camcount = 0;
 
     // calculate transformations
     for (auto &o : posObjects_)
     {
+#if 0
         // see if this object is a user-controlled camera
         bool freecam = false;
         if (o->isCamera())
@@ -1183,22 +1185,43 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
                 freecam = true;
             ++camcount;
         }
-
+#endif
         if (o->active(time, thread))
         {
-            if (!freecam)
-            {
+//            if (!freecam)
+//            {
                 // get parent transformation
                 Mat4 matrix(o->parentObject()->transformation());
                 // apply object's transformation
                 o->calculateTransformation(matrix, time, thread);
                 // write back
                 o->setTransformation(matrix);
-            }
-            else
-                o->setTransformation(freeCameraMatrixGfx_);
+//            }
+//            else
+//                o->setTransformation(freeCameraMatrixGfx_);
         }
     }
+}
+
+void Scene::setFreeCameraIndex(int index)
+{
+    freeCameraIndex_ = index;
+    for (auto c : cameras_)
+        c->clearOverrideMatrix();
+    if (freeCameraIndex_ >= 0 && freeCameraIndex_ < cameras_.size())
+        cameras_[freeCameraIndex_]->setOverrideMatrix(freeCameraMatrix_);
+    render_();
+}
+
+void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
+{
+    freeCameraMatrix_ = glm::inverse(mat);
+    if (freeCameraIndex_ < 0 || freeCameraIndex_ >= cameras_.size())
+        return;
+
+    cameras_[freeCameraIndex_]->setOverrideMatrix(freeCameraMatrix_);
+
+    render_();
 }
 
 

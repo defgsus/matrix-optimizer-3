@@ -87,8 +87,10 @@ public:
             gl::GLuint numberVertices, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW);
 
-    /** Consecutively draws all element arrays added with createIndexBuffer() */
-    bool drawElements() const;
+    /** Consecutively draws all element arrays added with createIndexBuffer().
+        If @p instanceCount > 1, a couple of instances will be drawn and
+        the built-in variable gl_InstanceID will reflect the instance number. */
+    bool drawElements(int instanceCount = 1) const;
 
     /** Draws the vertex array object and overrides the settings from createIndexBuffer().
         If @p numberVertices <= 0, the number from createIndexBuffer() is used.

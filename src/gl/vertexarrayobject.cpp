@@ -233,7 +233,7 @@ void VertexArrayObject::unbind()
 }
 
 
-bool VertexArrayObject::drawElements() const
+bool VertexArrayObject::drawElements(int instanceCount) const
 {
     if (elementBuffers_.empty())
     {
@@ -256,11 +256,20 @@ bool VertexArrayObject::drawElements() const
             return false;
         }
 
-        MO_CHECK_GL_RET_COND(rep_, glDrawElements(
+        if (instanceCount <= 1)
+            MO_CHECK_GL_RET_COND(rep_, glDrawElements(
                                     ebuffer.primitiveType,
                                     ebuffer.numVertices,
                                     ebuffer.valueType,
-                                    (void*)0), e);
+                                    (void*)0), e)
+        else
+            MO_CHECK_GL_RET_COND(rep_, glDrawElementsInstanced(
+                                    ebuffer.primitiveType,
+                                    ebuffer.numVertices,
+                                    ebuffer.valueType,
+                                    (void*)0,
+                                    instanceCount), e);
+
     }
 
     MO_CHECK_GL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

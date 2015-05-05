@@ -92,7 +92,8 @@ public:
                       const Mat4& viewTrans,
                       const Mat4& trans,
                       const LightSettings * lights = 0,
-                      Double time = -1.);
+                      Double time = -1.,
+                      int instanceCount = 1);
 
     void renderImmediate();
 

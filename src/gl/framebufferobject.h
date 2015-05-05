@@ -82,6 +82,7 @@ public:
 
     // ------------- setter ----------------------
 
+
     // ------------ opengl interface -------------
 
     bool bind();
@@ -93,6 +94,11 @@ public:
 
     /** Releases the opengl resources */
     void release();
+
+    /** Replaces the current color texture with @p t and returns the unused texture.
+        @note Error handling is bad here, if something goes wrong the fbo is probably unuseable.
+        @note Settings and formats must match and fbo must be bound! */
+    Texture * swapColorTexture(Texture * t);
 
     /** Attach one of the cubemap textures to the colorbuffer.
         @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].

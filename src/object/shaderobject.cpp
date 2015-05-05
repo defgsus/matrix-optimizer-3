@@ -36,6 +36,7 @@ MO_REGISTER_OBJECT(ShaderObject)
 
 ShaderObject::ShaderObject(QObject *parent)
     : ObjectGl      (parent)
+    , swapTex_      (0)
     , alphaBlend_   (this)
     , userUniforms_ (new UserUniformSetting(this))
 {
@@ -46,10 +47,6 @@ ShaderObject::ShaderObject(QObject *parent)
 
 ShaderObject::~ShaderObject()
 {
-    for (auto i : fbo_)
-        delete i;
-    for (auto i : screenQuad_)
-        delete i;
 }
 
 void ShaderObject::serialize(IO::DataStream & io) const
@@ -74,10 +71,6 @@ void ShaderObject::createParameters()
         GL::ShaderSource tmp;
         tmp.loadFragmentSource(":/shader/shaderobject.frag");
 
-        p_split_ = params()->createIntParameter("split", tr("segments"),
-                                    tr("Split rendering of the output into separate regions for better gui response"),
-                                    1, 1, 1024, 1, true, false);
-
         p_fragment_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment shader"),
                 tr("A piece of glsl code to set the output fragment color"),
                 TT_GLSL,
@@ -88,6 +81,11 @@ void ShaderObject::createParameters()
                                       1024, 16, 4096*4, 16, true, false);
         p_height_ = params()->createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
+
+        p_split_ = params()->createIntParameter("split", tr("segments"),
+                                    tr("Split rendering of the output into separate regions for better gui response"),
+                                    1, 1, 4096, 1, true, false);
+
 
     params()->endParameterGroup();
 
@@ -149,25 +147,8 @@ void ShaderObject::updateParameterVisibility()
     userUniforms_->updateParameterVisibility();
 }
 
-void ShaderObject::setNumberThreads(uint num)
-{
-    ObjectGl::setNumberThreads(num);
 
-    uint oldnum = fbo_.size();
-
-    fbo_.resize(num);
-    shaderQuad_.resize(num);
-    screenQuad_.resize(num);
-
-    for (uint i=oldnum; i<num; ++i)
-    {
-        fbo_[i] = 0;
-        shaderQuad_[i] = 0;
-        screenQuad_[i] = 0;
-    }
-}
-
-void ShaderObject::initGl(uint thread)
+void ShaderObject::initGl(uint )
 {
     // size of ShaderObject frame
 
@@ -191,15 +172,15 @@ void ShaderObject::initGl(uint thread)
     });
 
     // create quad and compile shader
-    shaderQuad_[thread] = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
+    shaderQuad_ = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
     try
     {
-        shaderQuad_[thread]->create(src, 0);
+        shaderQuad_->create(src, 0);
     }
     catch (Exception& e)
     {
         // send errors to editor widget
-        for (const GL::Shader::CompileMessage & msg : shaderQuad_[thread]->shader()->compileMessages())
+        for (const GL::Shader::CompileMessage & msg : shaderQuad_->shader()->compileMessages())
         {
             if (msg.program == GL::Shader::P_FRAGMENT
                 || msg.program == GL::Shader::P_LINKER)
@@ -211,17 +192,17 @@ void ShaderObject::initGl(uint thread)
     }
 
     // shader-quad uniforms
-    u_resolution_ = shaderQuad_[thread]->shader()->getUniform("u_resolution", false);
+    u_resolution_ = shaderQuad_->shader()->getUniform("u_resolution", false);
     if (u_resolution_)
         u_resolution_->setFloats(width, height,
                              1.f / std::max(1, width),
                              1.f / std::max(1, height));
-    u_time_ = shaderQuad_[thread]->shader()->getUniform("u_time", false);
-    u_transformation_ = shaderQuad_[thread]->shader()->getUniform("u_transformation", false);
+    u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
+    u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
     if (u_transformation_)
         u_transformation_->setAutoSend(true);
 
-    userUniforms_->tieToShader(shaderQuad_[thread]->shader());
+    userUniforms_->tieToShader(shaderQuad_->shader());
 
 
     // screen-quad
@@ -234,26 +215,26 @@ void ShaderObject::initGl(uint thread)
     if (doAa)
         defines += QString("\n#define MO_ANTIALIAS (%1)").arg(aa);
 
-    screenQuad_[thread] = new GL::ScreenQuad(idName() + "_outquad", GL::ER_THROW);
-    screenQuad_[thread]->create(
+    screenQuad_ = new GL::ScreenQuad(idName() + "_outquad", GL::ER_THROW);
+    screenQuad_->create(
                 ":/shader/framebufferdraw.vert",
                 ":/shader/framebufferdraw.frag",
                 defines);
 
     // uniforms
 
-    u_out_color_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
+    u_out_color_ = screenQuad_->shader()->getUniform("u_color", true);
     u_out_color_->setFloats(1,1,1,1);
     if (doAa)
     {
-        u_out_resolution_ = screenQuad_[thread]->shader()->getUniform("u_resolution", true);
+        u_out_resolution_ = screenQuad_->shader()->getUniform("u_resolution", true);
     }
     else
         u_out_resolution_ = 0;
 
     // create framebuffer
 
-    fbo_[thread] = new GL::FrameBufferObject(
+    fbo_ = new GL::FrameBufferObject(
                 width,
                 height,
                 gl::GL_RGBA,
@@ -262,23 +243,32 @@ void ShaderObject::initGl(uint thread)
                 false,
                 GL::ER_THROW);
 
-    fbo_[thread]->create();
-    fbo_[thread]->unbind();
+    fbo_->create();
+    fbo_->unbind();
 
     /// @todo maybe input projector slice somehow to ShaderObject?
 }
 
-void ShaderObject::releaseGl(uint thread)
+void ShaderObject::releaseGl(uint )
 {
     userUniforms_->releaseGl();
 
-    screenQuad_[thread]->release();
-    delete screenQuad_[thread];
-    screenQuad_[thread] = 0;
+    screenQuad_->release();
+    delete screenQuad_;
+    screenQuad_ = 0;
 
-    fbo_[thread]->release();
-    delete fbo_[thread];
-    fbo_[thread] = 0;
+    shaderQuad_->release();
+    delete shaderQuad_;
+    shaderQuad_ = 0;
+
+    if (swapTex_)
+        swapTex_->release();
+    delete swapTex_;
+    swapTex_ = 0;
+
+    fbo_->release();
+    delete fbo_;
+    fbo_ = 0;
 }
 
 void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double time)
@@ -288,9 +278,23 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     const int w = p_width_->baseValue(),
               h = p_height_->baseValue();
 
-    fbo_[thread]->bind();
+    fbo_->bind();
+
+    // exchange render target
+    if (1)
+    {
+        // create a swap buffer
+        if (!swapTex_)
+        {
+            swapTex_ = GL::Texture::constructFrom(fbo_->colorTexture());
+            swapTex_->create();
+        }
+        swapTex_ = fbo_->swapColorTexture(swapTex_);
+        swapTex_->bind();
+    }
 
     MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
+    MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
     MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
 
     // --- set shader uniforms ---
@@ -305,12 +309,12 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     // --- render ---
 
-    shaderQuad_[thread]->draw(w, h, p_split_->baseValue());
+    shaderQuad_->draw(w, h, p_split_->baseValue());
 
     gl::glFlush();
     gl::glFinish();
 
-    fbo_[thread]->unbind();
+    fbo_->unbind();
 }
 
 
@@ -334,30 +338,28 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
 
     // -- render fbo frame onto current context --
 
-    // our framebuffer
-    GL::FrameBufferObject * fbo = fbo_[thread];
-
     // set blendmode
     alphaBlend_.apply(time, thread);
 
     // bind the color texture from the fbo
     MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
-    fbo->colorTexture()->bind();
+    fbo_->colorTexture()->bind();
 
     // set interpolation mode
     if (p_magInterpol_->baseValue())
-        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+        fbo_->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
     else
-        fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+        fbo_->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
 
     // set edge-clamp
     // XXX not sure if needed or if should be parameterized..
-    fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
-    fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
+    fbo_->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
+    fbo_->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
-    screenQuad_[thread]->drawCentered(width, height, aspectRatio_);
+    // draw the texture
+    screenQuad_->drawCentered(width, height, aspectRatio_);
 
-    fbo->colorTexture()->unbind();
+    fbo_->colorTexture()->unbind();
 
     gl::glFinish();
 }
