@@ -34,7 +34,8 @@ DEFINES += MO_DISABLE_CGAL
 #require audio input and output devices to be separate devices
 mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
-                MO_DISABLE_DUMB
+                MO_DISABLE_DUMB \
+                MO_DISABLE_LADSPA
 }
 
 # for optirun bug
@@ -60,6 +61,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -langelscript \
+        -ldl    # dynamic linking
 #        -lCGAL \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }

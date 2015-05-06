@@ -110,7 +110,9 @@ HEADERS += \
     src/gui/scenedescdialog.h \
     src/gui/widget/wavetracerwidget.h \
     src/gui/wavetracerdialog.h \
-    src/gui/widget/cameracontrolwidget.h
+    src/gui/widget/cameracontrolwidget.h \
+    src/gui/widget/audiopluginwidget.h \
+    src/gui/audioplugindialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -220,4 +222,6 @@ SOURCES += \
     src/gui/scenedescdialog.cpp \
     src/gui/widget/wavetracerwidget.cpp \
     src/gui/wavetracerdialog.cpp \
-    src/gui/widget/cameracontrolwidget.cpp
+    src/gui/widget/cameracontrolwidget.cpp \
+    src/gui/widget/audiopluginwidget.cpp \
+    src/gui/audioplugindialog.cpp

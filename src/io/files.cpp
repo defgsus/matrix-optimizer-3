@@ -21,7 +21,7 @@ namespace MO {
 namespace IO {
 
 
-QString Files::directory(FileType ft)
+QString Files::directory(FileType ft, bool retCur)
 {
     // check for directory settings
     QString key = "Directory/" + fileTypeIds[ft];
@@ -32,8 +32,12 @@ QString Files::directory(FileType ft)
         // or take directory of filename
         dir = settings()->getValue("File/" + fileTypeIds[ft]).toString();
         if (dir.isEmpty())
+        {
+            if (!retCur)
+                return QString();
             // or return current path if both unknown
             return QDir::currentPath();
+        }
 
         QFileInfo info(dir);
         return info.absolutePath();

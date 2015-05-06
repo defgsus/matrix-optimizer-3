@@ -98,7 +98,7 @@ protected: // ---------------- protected virtual interface ---------------------
     /** Sets the desired number of channels.
         Call this in constructor or in onParameterChanged()/onParametersLoaded().
         Calls ObjectEditor::emitAudioChannelsChanged() when connected. */
-    void setNumberAudioInputsOutputs(uint num, bool emitSignal = true);
+    void setNumberAudioInputsOutputs(uint numIn, uint numOut, bool emitSignal = true);
 
     // ------------------- runtime virtuals ------------------------------
 
@@ -118,6 +118,9 @@ protected: // ---------------- protected virtual interface ---------------------
         The inputs and outputs are in audioInputs() and audioOutputs() respectively.
         Called by audio thread. */
     virtual void processAudio(uint bufferSize, SamplePos pos, uint thread) = 0;
+
+    /** Call this to clear the audio output channels from inside processAudio(). */
+    void writeNullBlock(SamplePos pos, uint thread);
 
 private:
     class PrivateAO;

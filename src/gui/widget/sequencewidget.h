@@ -25,6 +25,7 @@ class Sequence;
 namespace GUI {
 namespace PAINTER { class ValueCurve; class ValueCurveData; }
 
+/** Widget for a sequence on a Track */
 class SequenceWidget : public QWidget
 {
     Q_OBJECT

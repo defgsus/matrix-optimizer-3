@@ -82,6 +82,8 @@ SequenceView::SequenceView(QWidget *parent) :
 
     // connect ruler click to scene time
     connect(rulerX_, SIGNAL(doubleClicked(Double)), this, SLOT(rulerXClicked_(Double)));
+    // value ruler click to focus on value range
+    connect(rulerY_, SIGNAL(doubleClicked(Double)), this, SLOT(adjustViewspaceVertically()));
 
     // playbar
     playBar_ = new TimeBar(this);
@@ -283,6 +285,28 @@ void SequenceView::setViewSpace(const UTIL::ViewSpace & v)
     if (seqFloatView_)
         seqFloatView_->setViewSpace(v);
 
+}
+
+void SequenceView::adjustViewspaceVertically()
+{
+    auto v = viewSpace();
+
+    if (!sequence_)
+    {
+        v.setY(-1.);
+        v.setScaleY(2.);
+    }
+
+    if (auto sf = dynamic_cast<SequenceFloat*>(sequence_))
+    {
+        Double mi, ma, range;
+        sf->getMinMaxValue(v.mapXTo(0.), v.mapXTo(1.), mi, ma, MO_GUI_THREAD);
+        range = ma - mi;
+        v.setY(mi - range * 0.05);
+        v.setScaleY(range * 1.1);
+    }
+
+    setViewSpace(v);
 }
 
 void SequenceView::onViewSpaceChanged_(const UTIL::ViewSpace & v)

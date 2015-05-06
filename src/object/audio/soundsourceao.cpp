@@ -26,7 +26,7 @@ SoundSourceAO::SoundSourceAO(QObject *parent)
     : AudioObject   (parent)
 {
     setName("SoundSource");
-    setNumberAudioInputsOutputs(1);
+    setNumberAudioInputsOutputs(1,1);
     setNumberSoundSources(1);
 }
 

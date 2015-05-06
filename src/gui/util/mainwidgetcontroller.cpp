@@ -79,6 +79,9 @@
 #ifndef MO_HAMBURG
 #   include "gui/wavetracerdialog.h"
 #endif
+#ifndef MO_DISABLE_LADSPA
+#   include "gui/audioplugindialog.h"
+#endif
 #include "io/datastream.h"
 #include "io/files.h"
 #include "io/povrayexporter.h"
@@ -513,6 +516,18 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             MidiSettingsDialog diag;
             diag.exec();
         });
+
+#ifndef MO_DISABLE_LADSPA
+        a = new QAction(tr("Audio Plugins"), m);
+        m->addAction(a);
+        a->setIcon(QIcon(":/icon/obj_note.png"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new AudioPluginDialog(window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose, true);
+            diag->show();
+        });
+#endif
 
         a = new QAction(tr("Network settings"), m);
         m->addAction(a);

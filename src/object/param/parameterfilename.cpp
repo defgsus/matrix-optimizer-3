@@ -9,14 +9,16 @@
 */
 
 #include "parameterfilename.h"
-#include "io/datastream.h"
-#include "io/error.h"
-#include "io/log.h"
+#include "modulator.h"
 #include "object/control/trackfloat.h"
 #include "object/scene.h"
 #include "object/util/objecteditor.h"
-#include "modulator.h"
+#include "audio/tool/ladspaplugin.h"
+#include "gui/audioplugindialog.h"
 #include "io/files.h"
+#include "io/datastream.h"
+#include "io/error.h"
+#include "io/log.h"
 
 
 // make ParameterFilename useable in QMetaObject::invokeMethod
@@ -66,7 +68,24 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
     if (!object() || !object()->sceneObject())
         return false;
 
-    QString fn = IO::Files::getOpenFileName(fileType_, parent);
+    QString fn;
+    switch (fileType_)
+    {
+        default:
+            fn = IO::Files::getOpenFileName(fileType_, parent);
+        break;
+
+        case IO::FT_LADSPA:
+        {
+            auto plug = GUI::AudioPluginDialog::selectPlugin(parent);
+            if (plug)
+            {
+                fn = plug->idName();
+                plug->releaseRef();
+            }
+        }
+    }
+
     if (fn.isEmpty())
         return false;
 

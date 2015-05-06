@@ -12,6 +12,7 @@
 #define MOSRC_AUDIO_TOOL_SOUNDFILE_H
 
 #include <QString>
+#include <QList>
 
 #include <types/float.h>
 #include <types/int.h>
@@ -66,9 +67,16 @@ public:
     /** Returns one channel as consecutive data, resampled. */
     std::vector<F32> getResampled(uint sampleRate, uint channel = 0, uint lengthSamples = 0) const;
 
+    /** Fills the audiobuffers,
+        aware of NULL buffers in @p channels. */
+    void getResampled(const QList<AudioBuffer*> channels, SamplePos frame, uint sampleRate, F32 amplitude = 1.f);
+
     // --------- setter ---------------
 
     void appendDeviceData(const F32 * buf, size_t numSamples);
+
+    /** Calls AUDIO::SoundFileManager::releaseSoundFile(this) */
+    void release();
 
     // ------------- io ---------------
 

@@ -524,7 +524,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             group_->addWidget(indexName);
             indexName->setText(enu->getIndexName());
             indexName->setStatusTip(tr("The name of the attribute as it should appear in the shader"));
-            connect(indexName, SIGNAL(textChanged(QString)),
+            connect(indexName, SIGNAL(textEdited(QString)),
                     this, SLOT(updateFromWidgets_()));
             lh->addWidget(indexName);
 

@@ -82,6 +82,7 @@ MO_REGISTER_OBJECT(Synthesizer)
 Synthesizer::Synthesizer(QObject *parent)
     : Object    (parent),
       synth_    (new SynthSetting(this))
+    , doPanic_  (false)
 {
     setName("Synthesizer");
 }
@@ -186,12 +187,7 @@ void Synthesizer::onParameterChanged(Parameter * p)
 
     if (checkVoices)
     {
-        const bool ispoly = p_polyAudio_->baseValue();
-
-        if (   (ispoly && synth_->synth()->numberVoices() != numberSoundSources())
-            || (!ispoly && numberSoundSources() > 1))
-            setNumberSoundSources(ispoly? synth_->synth()->numberVoices() : 1);
-
+        updateAudioSources_();
         setCallbacks_();
     }
 
@@ -209,6 +205,7 @@ void Synthesizer::onParametersLoaded()
     synth_->onParametersLoaded();
 
     updatePosParser_();
+    updateAudioSources_();
     setCallbacks_();
 }
 
@@ -242,22 +239,7 @@ void Synthesizer::setNumberThreads(uint num)
     voiceEqu_.resize(num);
     updatePosParser_();
 }
-/*
-void Synthesizer::setBufferSize(uint bufferSize, uint thread)
-{
-    Object::setBufferSize(bufferSize, thread);
 
-    // copy pointers to audiobuffers
-    audioBuffers_[thread].resize(audios_.size());
-    for (int i=0; i<audios_.size(); ++i)
-        audioBuffers_[thread][i] = audios_[i]->samples(thread);
-
-    audioPos_[thread].resize(audios_.size());
-    audioPosFifo_[thread].resize(audios_.size());
-    for (auto & f : audioPosFifo_[thread])
-        f.clear();
-}
-*/
 void Synthesizer::setCallbacks_()
 {
     if (!p_polyAudio_->baseValue())
@@ -301,18 +283,52 @@ void Synthesizer::setCallbacks_()
             p.sceneTime = data->timeStarted;
 
             // add to fifo
-            audioPosFifo_[data->thread][v->index()].push_back(p);
+            updateBuffers_();
+            audioPosFifo_[v->index()].push_back(p);
         });
     }
+}
+
+/** To be called by audio thread only! */
+void Synthesizer::updateBuffers_()
+{
+    // prepare position buffers
+    if (audioPosFifo_.size() != synth_->synth()->numberVoices())
+    {
+        audioPos_.resize(numberSoundSources());
+        audioPosFifo_.resize(numberSoundSources());
+        for (auto & f : audioPosFifo_)
+            f.clear();
+    }
+}
+
+void Synthesizer::updateAudioSources_()
+{
+    // request correct number of audio sources
+    const bool ispoly = p_polyAudio_->baseValue();
+    const uint voices = ispoly? synth_->synth()->numberVoices() : 1;
+
+    if (voices != numberSoundSources())
+    {
+        panic();
+        setNumberSoundSources(voices);
+    }
+}
+
+void Synthesizer::panic()
+{
+    doPanic_ = true;
 }
 
 void Synthesizer::calculateSoundSourceTransformation(
                                     const TransformationBuffer * objectTransformation,
                                     const QList<AUDIO::SpatialSoundSource*>& snd,
-                                    uint bufferSize, SamplePos pos, uint thread)
+                                    uint bufferSize, SamplePos pos, uint /*thread*/)
 {
     if (!p_polyAudio_->baseValue())
         return;
+
+    updateBuffers_();
 
     for (int i=0; i<snd.size(); ++i)
     {
@@ -324,19 +340,19 @@ void Synthesizer::calculateSoundSourceTransformation(
             const Mat4& trans = objectTransformation->transformation(j);
 
             // get next audio transformation from fifo buffer
-            if (!audioPosFifo_[thread][i].empty()
-                    && time >= audioPosFifo_[thread][i].front().sceneTime)
+            if (!audioPosFifo_[i].empty()
+                    && time >= audioPosFifo_[i].front().sceneTime)
             {
                 /*MO_DEBUG("new transformation: s=" << j
                          << " ss=" << audioPosFifo_[thread][i].front().sample
                          << " t=" << audioPosFifo_[thread][i].front().sceneTime);
                 */
-                audioPos_[thread][i] = audioPosFifo_[thread][i].front().trans;
-                audioPosFifo_[thread][i].pop_front();
+                audioPos_[i] = audioPosFifo_[i].front().trans;
+                audioPosFifo_[i].pop_front();
             }
 
             // current audiosource transformation
-            const Mat4 atrans = audioPos_[thread][i];
+            const Mat4 atrans = audioPos_[i];
 
             snd[i]->transformationBuffer()->setTransformation(trans * atrans, j);
         }
@@ -400,6 +416,12 @@ void Synthesizer::updateAudioTransformations(Double sceneTime, uint size, uint t
 void Synthesizer::calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*> snd,
                                              uint bufferSize, SamplePos pos, uint thread)
 {
+    if (doPanic_)
+    {
+        synth_->synth()->panic();
+        doPanic_ = false;
+    }
+
     if (!p_polyAudio_->baseValue())
     {
         // mono output
@@ -412,8 +434,10 @@ void Synthesizer::calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSour
         // polyphonic output
         synth_->feedSynth(pos, thread, bufferSize);
         // get polyphonic synth output
-        /* YYY synth_->synth()->process(
-                    &snd[], bufferSize(thread));*/
+        std::vector<F32*> ptr(synth_->synth()->numberVoices());
+        for (int i=0; i<(int)synth_->synth()->numberVoices(); ++i)
+            ptr[i] = i < snd.size() ? snd[i]->signal()->writePointer() : 0;
+        synth_->synth()->process(&ptr[0], bufferSize);
     }
 }
 

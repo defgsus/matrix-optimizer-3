@@ -68,6 +68,8 @@ public slots:
     /** Sets the ViewSpace for the shown sequence */
     void setViewSpace(const UTIL::ViewSpace&);
 
+    void adjustViewspaceVertically();
+
     /** Sets the sequence to show, or NULL */
     void setSequence(MO::Sequence *);
 

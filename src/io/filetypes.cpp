@@ -31,7 +31,8 @@ namespace IO {
       "projection-set",
       "povray",
       "equpreset",
-      "helpexp" };
+      "helpexp",
+      "ladspa" };
 
     const QStringList fileTypeNames =
     { QObject::tr("Any"),
@@ -49,7 +50,8 @@ namespace IO {
       QObject::tr("Projection settings"),
       QObject::tr("Povray script"),
       QObject::tr("Equation preset"),
-      QObject::tr("Help export")};
+      QObject::tr("Help export"),
+      QObject::tr("Ladspa directory") };
 
     const QList<QStringList> fileTypeExtensions =
     {
@@ -68,7 +70,8 @@ namespace IO {
         { "xml-proj" },
         { "pov" },
         { "xml-equ" },
-        { "" }
+        { "" },
+        { "so" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -103,6 +106,7 @@ namespace IO {
         { QObject::tr("projector xml files") + " ( *.xml *.xml-proj )" },
         { QObject::tr("povray files") + " ( *.pov )" },
         { QObject::tr("equation xml files") + " ( *.xml *.xml-equ )" },
+        { QObject::tr("* (*)") },
         { QObject::tr("* (*)") }
     };
 

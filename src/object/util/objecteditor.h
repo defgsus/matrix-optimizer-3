@@ -92,6 +92,9 @@ signals:
     /** A parameters visibility has changed (with isVisible() or isVisibleInGraph()) */
     void parameterVisibilityChanged(MO::Parameter*);
 
+    /** All parameter widgets should be recreated */
+    void parametersChanged();
+
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);
 

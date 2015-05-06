@@ -13,7 +13,9 @@
 #include <sndfile.h>
 
 #include "soundfile.h"
+#include "soundfilemanager.h"
 #include "audio/configuration.h"
+#include "audio/tool/audiobuffer.h"
 #include "math/interpol.h"
 #include "math/functions.h"
 #include "io/error.h"
@@ -62,6 +64,11 @@ SoundFile::~SoundFile()
     MO_DEBUG_SND("SoundFile::~SoundFile()");
 
     delete p_;
+}
+
+void SoundFile::release()
+{
+    AUDIO::SoundFileManager::releaseSoundFile(this);
 }
 
 // --------------- getter ------------------------
@@ -144,6 +151,24 @@ std::vector<F32> SoundFile::getResampled(uint sr, uint channel, uint len) const
     return ret;
 }
 
+void SoundFile::getResampled(const QList<AudioBuffer*> channels, SamplePos frame, uint sr, F32 amp)
+{
+    size_t i, num = std::min((int)numberChannels(), channels.size());
+    for (i=0; i<num; ++i)
+    {
+        if (!channels[i])
+            continue;
+
+        // XXX poor eff.
+
+        for (size_t j=0; j<channels[i]->blockSize(); ++j)
+        {
+            Double time = Double(frame + j) / sr;
+            channels[i]->write(j, value(time, i) * amp);
+        }
+    }
+}
+
 
 Double SoundFile::value(Double time, uint channel) const
 {
@@ -160,8 +185,10 @@ Double SoundFile::value(Double time, uint channel) const
 #if 0
         const int16_t * ptr =
                 (const int16_t*)&p_->data[(frame * p_->channels + channel) << 1];
-        return (Double)*ptr / 32768;
-#else
+        return (Double)*ptr / 32768.;
+
+#else // interpolation
+
         const long int fs = p_->channels *2;
         size_t pos = (frame * p_->channels + channel) * 2;
         Double v0,v1,v2,v3,v4,v5;

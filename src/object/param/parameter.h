@@ -77,13 +77,16 @@ public:
     bool isModulated() const { return !modulators_.isEmpty(); }
 
     /** Returns true if the parameter should be visible in the ParameterView */
-    bool isVisible() const { return isVisible_; }
+    bool isVisible() const { return isVisible_ && !isZombie_; }
 
     /** Returns true if the parameter should be visible in the ObjectGraphView */
-    bool isVisibleInGraph() const { return isVisibleGraph_; }
+    bool isVisibleInGraph() const { return isVisibleGraph_ && !isZombie_; }
 
     /** Returns true if the parameter should be visible in the FrontEndView */
-    bool isVisibleInterface() const { return isVisibleInterface_; }
+    bool isVisibleInterface() const { return isVisibleInterface_ && !isZombie_; }
+
+    /** When true, the parameter is neither visible nor saved in a serialization stream */
+    bool isZombie() const { return isZombie_; }
 
     /* Read access to the interface settings */
     //const Properties& interfaceProperties() const { return *iProps_; }
@@ -94,6 +97,7 @@ public:
     void setStatusTip(const QString& tip) { statusTip_ = tip; }
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
+    void setZombie(bool enable) { isZombie_ = enable; }
 
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
@@ -184,7 +188,8 @@ private:
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,
-         isVisible_, isVisibleGraph_, isVisibleInterface_;
+         isVisible_, isVisibleGraph_, isVisibleInterface_,
+         isZombie_;
 
     //QList<QString> modulatorIds_;
 

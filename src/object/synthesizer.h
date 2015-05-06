@@ -50,10 +50,14 @@ public:
                                             uint bufferSize, SamplePos pos, uint thread)
                                             Q_DECL_OVERRIDE;
 
+    void panic();
+
 protected:
 
     void updateAudioSources_();
+    void updateBuffers_();
     void updatePosParser_();
+    //void updateBufferSize_(uint bufferSize, uint thread);
     void setCallbacks_();
 
     struct VoicePos_
@@ -76,12 +80,13 @@ protected:
 
     SynthSetting * synth_;
 
-    /** [thread][audiosource] */
-    std::vector<std::vector<Mat4>> audioPos_;
-    /** [thread][audiosource][voice-in-time] */
-    std::vector<std::vector<std::deque<VoicePos_>>> audioPosFifo_;
+    /** [audiosource] */
+    std::vector<Mat4> audioPos_;
+    /** [audiosource][voice-in-time] */
+    std::vector<std::deque<VoicePos_>> audioPosFifo_;
     /** [thread] */
     std::vector<VoiceEqu_> voiceEqu_;
+    volatile bool doPanic_;
 
     ParameterSelect
         * p_polyAudio_,
@@ -96,6 +101,7 @@ protected:
         * p_equX_,
         * p_equY_,
         * p_equZ_;
+
 };
 
 } // namespace MO

@@ -31,6 +31,7 @@
 #include "object/control/sequencefloat.h"
 #include "object/control/clip.h"
 #include "object/util/objecteditor.h"
+#include "object/param/parametercallback.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
@@ -459,6 +460,26 @@ void ParameterWidget::createWidgets_()
         {
             ptl->reset();
             editor_->setParameterValue(ptl, ptl->getDefaultTimeline());
+        });
+    }
+
+    else
+    // --- callback parameter ---
+    if (ParameterCallback * pc = dynamic_cast<ParameterCallback*>(param_))
+    {
+        //defaultValueName = QString::number(pf->defaultValue());
+
+        auto but = new QToolButton(this);
+        but->setStatusTip(pc->statusTip());
+        l->addWidget(but, -1);
+
+        setFocusProxy(but);
+
+        connect(but, &QToolButton::clicked, [this, pc]()
+        {
+            // TODO: make it always come from GUI thread
+            pc->fire();
+            emit editor_->parameterChanged(pc);
         });
     }
 

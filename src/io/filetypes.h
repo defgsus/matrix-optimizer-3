@@ -36,7 +36,8 @@ namespace IO {
         FT_PROJECTION_SETTINGS,
         FT_POVRAY,
         FT_EQUATION_PRESET,
-        FT_HELP_EXPORT
+        FT_HELP_EXPORT,
+        FT_LADSPA
     };
 
     extern const QStringList fileTypeIds;

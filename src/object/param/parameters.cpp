@@ -11,15 +11,16 @@
 #include <QTextStream>
 
 #include "parameters.h"
-#include "io/datastream.h"
-#include "io/error.h"
+#include "parametercallback.h"
 #include "parameterint.h"
 #include "parameterfloat.h"
 #include "parameterfilename.h"
-#include "parametertext.h"
 #include "parameterselect.h"
+#include "parametertext.h"
 #include "parametertimeline1d.h"
 #include "object/object.h"
+#include "io/datastream.h"
+#include "io/error.h"
 
 namespace MO {
 
@@ -40,10 +41,19 @@ void Parameters::serialize(IO::DataStream & io) const
     // write parameters
     io.writeHeader("params", 1);
 
-    io << (qint32)parameters_.size();
+    // deterimine parameters to save
+    qint32 count = 0;
+    for (auto p : parameters_)
+        if (!p->isZombie())
+            ++count;
+
+    io << count;
 
     for (auto p : parameters_)
     {
+        if (p->isZombie())
+            continue;
+
         io << p->idName();
 
         auto pos = io.beginSkip();
@@ -571,6 +581,48 @@ ParameterFilename * Parameters::createFilenameParameter(
     return param;
 }
 
+ParameterCallback * Parameters::createCallbackParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            std::function<void()> callback)
+{
+    ParameterCallback * param = 0;
+
+    // see if already there
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterCallback*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested filename "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterCallback(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        // ... none
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(false);
+    param->setEditable(false);
+    param->setStatusTip(statusTip);
+    param->setCallback(callback);
+
+    param->setGroup(curGroupId_, curGroupName_);
+
+    return param;
+}
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,

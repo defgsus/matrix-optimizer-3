@@ -95,7 +95,6 @@ public:
     /** Ends the current Parameter group */
     void endParameterGroup();
 
-
     /** Creates the desired parameter,
         or returns an already created parameter object.
         When the Parameter was present before, all it's settings are still overwritten.
@@ -163,6 +162,9 @@ public:
                 IO::FileType fileType,
                 const QString& defaultValue = QString(), bool editable = true);
 
+    ParameterCallback * createCallbackParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                std::function<void()> callback);
 
     /** Creates a timeline parameter.
         Ownership of @p defaultValue stays with caller.

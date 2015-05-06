@@ -53,6 +53,7 @@ namespace MO {
 
     class Parameter;
     class Parameters;
+    class ParameterCallback;
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;

@@ -27,6 +27,23 @@
 #include "io/settings.h"
 
 namespace MO {
+
+
+/** @todo This needs to be placed somewhere central */
+QString textTypeId(TextType tt)
+{
+    switch (tt)
+    {
+        case TT_PLAIN_TEXT: return "plain";
+        case TT_EQUATION: return "equ";
+        case TT_APP_STYLESHEET: return "css";
+        case TT_ANGELSCRIPT: return "angelscript";
+        case TT_GLSL: return "glsl";
+    }
+    return QString();
+}
+
+
 namespace GUI {
 
 class TextEditDialog::Private
@@ -70,7 +87,7 @@ TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
     p_->textType = textType;
     p_->rejected = false;
 
-    setObjectName("_TextEditDialog");
+    setObjectName("_TextEditDialog_" + textTypeId(textType));
     setWindowTitle(tr("editor"));
 
     setMinimumSize(320, 200);

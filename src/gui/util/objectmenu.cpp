@@ -210,6 +210,9 @@ QMenu * ObjectMenu::createParameterMenu(Object *o, QWidget *parent,
     QString curId = "-1";
     for (auto i = params.begin(); i != params.end(); ++i)
     {
+        if (!i.value()->isVisible())
+            continue;
+
         // create new group
         if (curId != i.key())
         {

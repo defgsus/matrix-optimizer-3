@@ -20,15 +20,16 @@
 
 namespace MO {
 
-Parameter::Parameter(Object * object, const QString& id, const QString& name) :
-    object_     (object),
-    idName_     (id),
-    name_       (name),
-    isEditable_ (false),
-    isModulateable_(false),
-    isVisible_  (true),
-    isVisibleGraph_(false),
-    isVisibleInterface_(false)
+Parameter::Parameter(Object * object, const QString& id, const QString& name)
+    : object_           (object)
+    , idName_           (id)
+    , name_             (name)
+    , isEditable_       (false)
+    , isModulateable_   (false)
+    , isVisible_        (true)
+    , isVisibleGraph_   (false)
+    , isVisibleInterface_(false)
+    , isZombie_         (false)
     //iProps_     (new Properties)
 {
 }

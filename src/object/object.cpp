@@ -1222,13 +1222,18 @@ void Object::setSampleRate(uint samplerate)
 void Object::setNumberSoundSources(uint num)
 {
     p_numberSoundSources_ = num;
+    auto e = editor();
+    if (e)
+        emit e->audioConnectionsChanged();
 }
 
 void Object::setNumberMicrophones(uint num)
 {
-    /** @todo update audio dsp path on microphone change.
-        This would also need to be done for virtual sound sources. */
+    /* @todo update audio dsp path on soundSource/microphone change. */
     p_numberMicrophones_ = num;
+    auto e = editor();
+    if (e)
+        emit e->audioConnectionsChanged();
 }
 
 void Object::calculateSoundSourceTransformation(

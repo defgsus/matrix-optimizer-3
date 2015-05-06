@@ -198,6 +198,7 @@ public:
     SynthVoice * noteOn(uint startSample, Double freq, int note, Float velocity,
                         uint numCombinedUnison, void *userData);
     void noteOff(uint stopSample, int note);
+    void panic();
     /** Mono output */
     void process(F32 * output, uint bufferLength);
     /** Multichannel output */
@@ -409,6 +410,13 @@ void Synth::Private::noteOff(uint /*stopSample*/, int note)
     }
 }
 
+void Synth::Private::panic()
+{
+    for (auto i : voices)
+    {
+        i->p_->active = i->p_->cued = false;
+    }
+}
 
 void Synth::Private::process(F32 *output, uint bufferLength)
 {
@@ -480,10 +488,13 @@ void Synth::Private::process(F32 *output, uint bufferLength)
 void Synth::Private::process(F32 ** outputs, uint bufferLength)
 {
     // for each voice
-    for (uint voicecount = 0; voicecount < voices.size(); ++voicecount)
+    for (uint voicenum = 0; voicenum < voices.size(); ++voicenum)
     {
-        F32 * output = outputs[voicecount];
-        SynthVoice::Private * v = voices[voicecount]->p_;
+        F32 * output = outputs[voicenum];
+        if (!output)
+            continue;
+
+        SynthVoice::Private * v = voices[voicenum]->p_;
 
         // if voice is inactive (and won't become active)
         if (!v->active && !v->cued)
@@ -515,7 +526,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                 v->cued = false;
                 // send callback
                 if (cbStart_)
-                    cbStart_(voices[voicecount]);
+                    cbStart_(voices[voicenum]);
 
                 // clear first part of buffer
                 memset(output, 0, sizeof(F32) * start);
@@ -570,7 +581,7 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
                     memset(output+1, 0, sizeof(F32) * (bufferLength - sample - 1));
                 // send callback
                 if (cbEnd_)
-                    cbEnd_(voices[voicecount]);
+                    cbEnd_(voices[voicenum]);
                 break;
             }
 
@@ -586,6 +597,9 @@ void Synth::Private::process(F32 ** outputs, uint bufferLength)
         v->lifetime += bufferLength - start;
     }
 }
+
+
+
 
 // ------------------------------------ synth ------------------------------------
 
@@ -785,6 +799,8 @@ void Synth::noteOff(int note)
 {
     p_->noteOff(0, note);
 }
+
+void Synth::panic() { p_->panic(); }
 
 void Synth::process(F32 *output, uint bufferLength)
 {

@@ -290,7 +290,12 @@ HEADERS += \
     src/object/audio/playbufferao.h \
     src/object/audio/convolveao.h \
     src/audio/tool/convolvebuffer.h \
-    src/geom/geometrymodifierenum.h
+    src/geom/geometrymodifierenum.h \
+    src/io/ladspaloader.h \
+    src/audio/tool/ladspaplugin.h \
+    src/object/audio/pluginao.h \
+    src/object/param/parametercallback.h \
+    src/object/audio/waveplayerao.h
 
 
 SOURCES += \
@@ -542,5 +547,10 @@ SOURCES += \
     src/object/audio/playbufferao.cpp \
     src/object/audio/convolveao.cpp \
     src/audio/tool/convolvebuffer.cpp \
-    src/geom/geometrymodifierenum.cpp
+    src/geom/geometrymodifierenum.cpp \
+    src/io/ladspaloader.cpp \
+    src/audio/tool/ladspaplugin.cpp \
+    src/object/audio/pluginao.cpp \
+    src/object/param/parametercallback.cpp \
+    src/object/audio/waveplayerao.cpp
 

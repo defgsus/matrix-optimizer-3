@@ -102,7 +102,8 @@ void AudioObject::onParameterChanged(Parameter * p)
     Object::onParameterChanged(p);
 
     if (p_ao_->channelsAdjustable && p == p_ao_->paramChannels)
-        setNumberAudioInputsOutputs(p_ao_->paramChannels->baseValue());
+        setNumberAudioInputsOutputs(p_ao_->paramChannels->baseValue(),
+                                    p_ao_->paramChannels->baseValue());
 }
 
 void AudioObject::onParametersLoaded()
@@ -110,7 +111,8 @@ void AudioObject::onParametersLoaded()
     Object::onParametersLoaded();
 
     if (p_ao_->channelsAdjustable)
-        setNumberAudioInputsOutputs(p_ao_->paramChannels->baseValue());
+        setNumberAudioInputsOutputs(p_ao_->paramChannels->baseValue(),
+                                    p_ao_->paramChannels->baseValue());
 }
 
 void AudioObject::setNumberChannelsAdjustable(bool e)
@@ -150,13 +152,13 @@ void AudioObject::setNumberAudioInputs(int num, bool emitSignal)
         editor()->emitAudioChannelsChanged(this);
 }
 
-void AudioObject::setNumberAudioInputsOutputs(uint num, bool emitSignal)
+void AudioObject::setNumberAudioInputsOutputs(uint numIn, uint numOut, bool emitSignal)
 {
-    bool changed = p_ao_->numOutputs != num
-            || p_ao_->numInputs != (int)num;
+    bool changed = p_ao_->numOutputs != numIn
+            || p_ao_->numInputs != (int)numOut;
 
-    p_ao_->numOutputs =
-    p_ao_->numInputs = num;
+    p_ao_->numInputs = numIn;
+    p_ao_->numOutputs = numOut;
 
     if (changed && emitSignal && editor())
         editor()->emitAudioChannelsChanged(this);
@@ -227,7 +229,6 @@ void AudioObject::clientFakeAudio(uint bufferSize, SamplePos pos, uint thread)
 }
 
 
-
 Double AudioObject::getAudioOutputAsFloat(uint channel, Double time, uint thread) const
 {
     auto outs = audioOutputs(thread);
@@ -254,6 +255,23 @@ Double AudioObject::getAudioOutputAsFloat(uint channel, Double time, uint thread
     return outs[channel]->read(pos);
     */
 }
+
+void AudioObject::writeNullBlock(SamplePos , uint thread)
+{
+    const auto & outputs = audioOutputs(thread);
+
+    if (outputs.isEmpty())
+        return;
+
+    // XXX Could be smart here using samplepos
+    // and stop filling buffers after
+    // AUDIO::AudioBuffer::numBlocks() is filled
+
+    for (auto o : outputs)
+        if (o)
+            o->writeNullBlock();
+}
+
 
 
 } // namespace MO

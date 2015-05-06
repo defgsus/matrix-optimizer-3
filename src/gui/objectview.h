@@ -59,6 +59,9 @@ public slots:
         If the Parameter is not displayed, this function does nothing. */
     void updateParameterVisibility(MO::Parameter*);
 
+    /** Fully recreate the parameter widgets */
+    void updateParameters();
+
     void updateObjectName();
 
 protected slots:

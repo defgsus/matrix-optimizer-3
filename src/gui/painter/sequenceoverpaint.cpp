@@ -50,8 +50,8 @@ void SequenceOverpaint::paint(QPainter &p, const QRect &rect)
         // -- inside / outside indicator --
 
         int left = viewspace_.mapXFrom(0.0) * p.window().width(),
-            // Sequences in Clips are unbounded
-            right = sequence_->parentClip() ?
+            // Sequences outside tracks are unbounded
+            right = !sequence_->parentTrack() ?
                     rect.right()
                   : viewspace_.mapXFrom(sequence_->length() / sequence_->speed()) * p.window().width();
 

@@ -77,6 +77,8 @@ void ParameterView::setObject(Object *object)
         editor_ = scene_->editor();
         connect(editor_, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(updateWidgetValue_(MO::Parameter*)));
+        connect(editor_, SIGNAL(parametersChanged()),
+                this, SLOT(updateParameters()));
         connect(editor_, SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged(MO::Sequence*)));
     }
@@ -200,6 +202,10 @@ void ParameterView::createWidgets_()
     QWidget * prev = 0;
     for (auto p : parameters_)
     {
+        // visibility
+        if (p->isZombie())
+            continue;
+
         auto w = new ParameterWidget(p, this);
         paramMap_.insert(p, w);
 
@@ -209,8 +215,8 @@ void ParameterView::createWidgets_()
                 this, SIGNAL(statusTipChanged(QString)));
 
         // visibility
-        if (!p->isVisible())
-            w->setVisible(false);
+//        if (!p->isVisible())
+//            w->setVisible(false);
 
         if (!p->groupId().isEmpty())
         {
@@ -255,7 +261,15 @@ void ParameterView::updateWidgetValue_(Parameter * p)
         i.value()->updateWidgetValue();
 }
 
-
+void ParameterView::updateParameters()
+{
+    if (object_)
+    {
+        clearWidgets_();
+        parameters_ = object_->params()->parameters();
+        createWidgets_();
+    }
+}
 
 } // namespace GUI
 } // namespace MO

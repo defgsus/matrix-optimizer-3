@@ -344,7 +344,7 @@ QString HelpSystem::getObjectDoc(const Object * o)
 
     html << "<h1>"
          << "<img src=\"_oi_" << o->className() << "\"/>"
-         << o->name() << "</h1>";
+         << o->name().toHtmlEscaped() << "</h1>";
 
     QVariant v = loadResource("_od_" + o->className(), HtmlResource);
     if (v.isValid())
@@ -352,7 +352,7 @@ QString HelpSystem::getObjectDoc(const Object * o)
     else
         html << tr("No description currently available on this object");
 
-    html << "<a name=\"parameters\"></a><h2>" << o->name() << " " << tr("parameters") << "</h2>";
+    html << "<a name=\"parameters\"></a><h2>" << o->name().toHtmlEscaped() << " " << tr("parameters") << "</h2>";
 
     html << o->params()->getParameterDoc();
 
@@ -651,7 +651,7 @@ void HelpSystem::addObjectIndex_(QString &doc)
             if (!j->isAudioObject())
                 str += "<img src=\"_oi_" + j->className() + "#24#24\"/>";
             // name
-            str += j->name() + "</a></li>\n";
+            str += j->name().toHtmlEscaped() + "</a></li>\n";
         }
         str += "</ul></li>";
     }

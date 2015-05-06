@@ -253,6 +253,9 @@ public:
         (sustain==0) or enter into RELEASE evelope state. */
     void noteOff(int note);
 
+    /** Turn all notes off imediately. */
+    void panic();
+
     /** Generates @p bufferLength samples of synthesizer music.
         The output will be mono and @p output is expected to point
         at a buffer of size @p bufferLength. */

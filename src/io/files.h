@@ -24,7 +24,7 @@ public:
     Files() { }
 
     /** Returns directory for given filetype */
-    static QString directory(FileType);
+    static QString directory(FileType, bool returnCurrentPathIfNotDefined = true);
 
     /** Returns the last filename for given filetype */
     static QString filename(FileType);
