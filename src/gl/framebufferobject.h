@@ -82,6 +82,8 @@ public:
 
     // ------------- setter ----------------------
 
+    const QString& name() const { return name_; }
+    void setName(const QString& name);
 
     // ------------ opengl interface -------------
 
@@ -127,6 +129,8 @@ private:
 
     int attachments_;
     bool cubemap_;
+
+    QString name_;
 };
 
 

@@ -87,7 +87,8 @@ bool ModulatorFloat::hasAmplitude() const
 
 bool ModulatorFloat::hasTimeOffset() const
 {
-    return sourceType_ != ST_AUDIO_OBJECT;
+    return true;
+        //sourceType_ != ST_AUDIO_OBJECT;
 }
 
 

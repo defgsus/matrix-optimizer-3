@@ -17,6 +17,7 @@
 #include "parameterfilename.h"
 #include "parameterselect.h"
 #include "parametertext.h"
+#include "parametertexture.h"
 #include "parametertimeline1d.h"
 #include "object/object.h"
 #include "io/datastream.h"
@@ -596,7 +597,7 @@ ParameterCallback * Parameters::createCallbackParameter(
         }
         else
         {
-            MO_ASSERT(false, "object '" << idName() << "' requested filename "
+            MO_ASSERT(false, "object '" << idName() << "' requested callback "
                       "parameter '" << id << "' "
                       "which is already present as parameter of type " << p->typeName());
         }
@@ -623,6 +624,47 @@ ParameterCallback * Parameters::createCallbackParameter(
 
     return param;
 }
+
+ParameterTexture * Parameters::createTextureParameter(
+            const QString& id, const QString& name, const QString& statusTip)
+{
+    ParameterTexture * param = 0;
+
+    // see if already there
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterTexture*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested texture "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterTexture(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        // ... none
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(true);
+    param->setEditable(false);
+    param->setStatusTip(statusTip);
+
+    param->setGroup(curGroupId_, curGroupName_);
+    return param;
+}
+
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,

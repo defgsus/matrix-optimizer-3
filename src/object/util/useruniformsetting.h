@@ -61,7 +61,8 @@ public:
         Shader must be compiled. */
     void tieToShader(GL::Shader *);
 
-    /** Update all found uniform values */
+    /** Update all found uniform values.
+        Will also bind textures when needed. */
     void updateUniforms(Double time, uint thread);
 
     void releaseGl();
@@ -77,13 +78,15 @@ private:
     {
         UT_NONE,
         UT_F1, UT_F2, UT_F3, UT_F4,
-        UT_T1, UT_T2, UT_T3, UT_T4
+        UT_T1, UT_T2, UT_T3, UT_T4,
+        UT_TEX
     };
 
     struct Uniform
     {
         bool isUsed() const;
-        bool isTexture() const;
+        bool isTextureInput() const;
+        bool isBufferTexture() const;
 
         uint gltype,
              num_floats;
@@ -92,6 +95,7 @@ private:
         ParameterSelect * p_type;
         ParameterInt * p_length;
         ParameterFloat * p_timerange;
+        ParameterTexture * p_tex;
         QVector<ParameterFloat*> p_float;
 
         GL::Uniform * uniform;

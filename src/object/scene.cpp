@@ -812,6 +812,7 @@ void Scene::createSceneGl_(uint thread)
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 false, GL::ER_THROW);
+    fboFinal_[thread]->setName("scene_final");
     fboFinal_[thread]->create();
     fboFinal_[thread]->unbind();
 
@@ -880,6 +881,7 @@ void Scene::resizeFbo_(uint thread)
                 GL::FrameBufferObject::A_DEPTH,
                 false,
                 GL::ER_THROW);
+    fboFinal_[thread]->setName("scene_final");
     fboFinal_[thread]->create();
 
     emit sceneFboChanged();

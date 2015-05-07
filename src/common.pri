@@ -296,7 +296,10 @@ HEADERS += \
     src/object/audio/pluginao.h \
     src/object/param/parametercallback.h \
     src/object/audio/waveplayerao.h \
-    src/audio/3rd/ladspa.h
+    src/audio/3rd/ladspa.h \
+    src/object/param/modulatortexture.h \
+    src/object/interface/valuetextureinterface.h \
+    src/object/param/parametertexture.h
 
 
 SOURCES += \
@@ -553,5 +556,7 @@ SOURCES += \
     src/audio/tool/ladspaplugin.cpp \
     src/object/audio/pluginao.cpp \
     src/object/param/parametercallback.cpp \
-    src/object/audio/waveplayerao.cpp
+    src/object/audio/waveplayerao.cpp \
+    src/object/param/modulatortexture.cpp \
+    src/object/param/parametertexture.cpp
 

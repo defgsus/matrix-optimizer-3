@@ -8,13 +8,15 @@
     <p>created 05/20/2012, pulled-in 8/1/2014</p>
 */
 
+#include <atomic>
+
 #include <QImage>
 
 #include "texture.h"
 #include "img/image.h"
+#include "io/streamoperators_glbinding.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "io/streamoperators_glbinding.h"
 
 using namespace gl;
 
@@ -22,6 +24,8 @@ namespace MO {
 namespace GL {
 
 long int Texture::memory_used_ = 0;
+
+namespace { static std::atomic_uint_fast64_t tex_count_(0); }
 
 Texture::Texture(ErrorReporting report)
     :   rep_            (report),
@@ -43,6 +47,7 @@ Texture::Texture(ErrorReporting report)
         type_			(GL_NONE)
 {
     MO_DEBUG_IMG("Texture::Texture()");
+    name_ = QString("tex%1").arg(tex_count_++);
 }
 
 Texture::Texture(gl::GLsizei width, gl::GLsizei height,
@@ -70,6 +75,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
     MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
+    name_ = QString("tex%1").arg(tex_count_++);
 }
 
 Texture::Texture(gl::GLsizei width, gl::GLsizei height,
@@ -101,6 +107,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_px << ", " << ptr_nx << ", "
                 << ptr_py << ", " << ptr_ny << ", " << ptr_pz << ", " << ptr_nz << ")");
+    name_ = QString("tex%1").arg(tex_count_++);
 }
 
 Texture::~Texture()
@@ -113,14 +120,18 @@ Texture::~Texture()
 
 Texture * Texture::constructFrom(const Texture * t)
 {
+    Texture * c;
     if (t->isCube())
-        return new Texture(t->width(), t->height(),
+        c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
                            t->type(), 0,0,0,0,0,0, t->rep_);
     else
-        return new Texture(t->width(), t->height(),
+        c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
                            t->type(), 0, t->rep_);
+
+    c->name_ += "_from_" + t->name();
+    return c;
 }
 
 
@@ -664,6 +675,8 @@ Texture * Texture::createFromImage(const Image & img, gl::GLenum gpu_format, Err
     Texture * tex = new Texture(
                 img.width(), img.height(),
                 gpu_format, format, img.glEnumForType(), 0, rep);
+
+    tex->name_ += "_from_img";
 
     if (!tex->create())
     {

@@ -8,6 +8,10 @@
     <p>created 8/1/2014</p>
 */
 
+#include <atomic>
+
+#include <QString>
+
 #include "framebufferobject.h"
 #include "texture.h"
 #include "io/error.h"
@@ -19,11 +23,14 @@ using namespace gl;
 namespace MO {
 namespace GL {
 
+namespace { static std::atomic_uint_fast64_t fbo_count_(0); }
+
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type, bool cubemap,
             ErrorReporting report)
     : FrameBufferObject(width, height, format, format, type, 0, cubemap, report)
 {
+
 }
 
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
@@ -76,6 +83,17 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             depthTex_ = new Texture(width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, 0, 0, 0, 0, 0, report);
         }
     }
+
+    setName(QString("fbo%1").arg(fbo_count_++));
+}
+
+void FrameBufferObject::setName(const QString &name)
+{
+    name_ = name;
+    if (colorTex_)
+        colorTex_->setName(name + "_color");//_" + colorTex_->name());
+    if (depthTex_)
+        depthTex_->setName(name + "_depth_");// + depthTex_->name());
 }
 
 FrameBufferObject::~FrameBufferObject()
@@ -275,6 +293,7 @@ Texture * FrameBufferObject::takeColorTexture()
         colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(),
                                 0, 0, 0, 0, 0, 0, rep_);
     }
+    setName(name());
 
     return t;
 }
@@ -291,13 +310,17 @@ Texture * FrameBufferObject::takeDepthTexture()
 
     Texture * t = depthTex_;
 
-    // create new one
-    if (!cubemap_)
-        depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(), 0, rep_);
-    else
+    if (attachments_ & A_DEPTH)
     {
-        depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(),
-                                0, 0, 0, 0, 0, 0, rep_);
+        // create new one
+        if (!cubemap_)
+            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(), 0, rep_);
+        else
+        {
+            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(),
+                                    0, 0, 0, 0, 0, 0, rep_);
+        }
+        setName(name());
     }
 
     return t;

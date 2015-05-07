@@ -147,6 +147,11 @@ void ShaderObject::updateParameterVisibility()
     userUniforms_->updateParameterVisibility();
 }
 
+const GL::Texture * ShaderObject::valueTexture(Double , uint ) const
+{
+    return fbo_ ? fbo_->colorTexture() : 0;
+}
+
 
 void ShaderObject::initGl(uint )
 {
@@ -242,6 +247,7 @@ void ShaderObject::initGl(uint )
                 0,//GL::FrameBufferObject::A_DEPTH,
                 false,
                 GL::ER_THROW);
+    fbo_->setName(name());
 
     fbo_->create();
     fbo_->unbind();
@@ -305,6 +311,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     if (u_transformation_)
         u_transformation_->set(transformation());
 
+    MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     userUniforms_->updateUniforms(time, thread);
 
     // --- render ---

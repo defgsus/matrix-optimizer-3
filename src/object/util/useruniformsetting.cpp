@@ -14,6 +14,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametertext.h"
+#include "object/param/parametertexture.h"
 #include "object/param/parameterselect.h"
 #include "gl/opengl.h"
 #include "gl/shader.h"
@@ -29,10 +30,16 @@ bool UserUniformSetting::Uniform::isUsed() const
     return p_type->baseValue() != 0;
 }
 
-bool UserUniformSetting::Uniform::isTexture() const
+bool UserUniformSetting::Uniform::isBufferTexture() const
 {
     int ut = p_type->baseValue();
     return ut == UT_T1 || ut == UT_T2 || ut == UT_T3 || ut == UT_T4;
+}
+
+bool UserUniformSetting::Uniform::isTextureInput() const
+{
+    int ut = p_type->baseValue();
+    return ut == UT_TEX;
 }
 
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
@@ -79,10 +86,12 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
             ("uniformtype%1_" + id_suffix).arg(i),
             tr("uniform%1 type").arg(i + 1),
             tr("The type of the uniform variable"),
-            { "none", "float", "vec2", "vec3", "vec4", "texture1D", "texture1D2", "texture1D3", "texture1D4" },
-            { tr("none"), "float", "vec2", "vec3", "vec4", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
-            { tr("none"), "float", "vec2", "vec3", "vec4", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
-            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_T1, UT_T2, UT_T3, UT_T4 },
+            { "none", "float", "vec2", "vec3", "vec4", "texture1D", "texture1D2", "texture1D3", "texture1D4", "texture" },
+            { tr("none"), "float", "vec2", "vec3", "vec4",
+              "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D", "texture" },
+            { tr("none"), "float", "vec2", "vec3", "vec4",
+              "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D", "texture" },
+            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_T1, UT_T2, UT_T3, UT_T4, UT_TEX },
             0,
             true, false);
 
@@ -98,6 +107,10 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
                                                 tr("The time range in seconds to fill the texture"),
                                                 1., -10000., 10000.,
                                                 .1, true, true);
+
+        u.p_tex = params->createTextureParameter(("uniformtex%1_" + id_suffix).arg(i),
+                                                tr("uniform%1 texture").arg(i + 1),
+                                                tr("A texture input from somewhere else"));
 
         static QString compName[] = { "x", "y", "z", "w" };
         for (int j=0; j<4; ++j)
@@ -143,7 +156,7 @@ void UserUniformSetting::updateParameterVisibility()
         if (type == UT_F4 || type == UT_T4)
             u.num_floats = 4;
 
-        if (u.isTexture())
+        if (u.isBufferTexture())
         {
             u.p_length->setVisible(true);
             u.p_timerange->setVisible(true);
@@ -157,7 +170,9 @@ void UserUniformSetting::updateParameterVisibility()
         for (uint i = 0; i<4; ++i)
             u.p_float[i]->setVisible(i < u.num_floats);
 
-        u.p_name->setVisible(u.num_floats > 0);
+        u.p_name->setVisible(u.num_floats > 0 || type == UT_TEX);
+
+        u.p_tex->setVisible(type == UT_TEX);
     }
 
     uploadTime_ = -1.12341212; // be sure to upload uniforms next time
@@ -175,7 +190,7 @@ QString UserUniformSetting::getDeclarations() const
     if (u.isUsed() && !u.p_name->value().isEmpty())
     {
         QString typestr;
-        switch (u.p_type->baseValue())
+        switch ((UniformType)u.p_type->baseValue())
         {
             case UT_F1: typestr = "float"; break;
             case UT_F2: typestr = "vec2"; break;
@@ -185,6 +200,8 @@ QString UserUniformSetting::getDeclarations() const
             case UT_T2:
             case UT_T3:
             case UT_T4: typestr = "sampler1D"; break;
+            case UT_TEX: typestr = "sampler2D"; break;
+            case UT_NONE: break;
         }
 
         decl += "uniform " + typestr + " " + u.p_name->value() + ";\n";
@@ -198,7 +215,7 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
     for (Uniform & u : uniforms_)
     if (u.isUsed() && !u.p_name->value().isEmpty())
     {
-        if (!u.isTexture())
+        if (!u.isBufferTexture())
         {
             u.uniform = s->getUniform(u.p_name->value(), false);
 
@@ -207,7 +224,8 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
                         u.uniform->type() == gl::GL_FLOAT
                      || u.uniform->type() == gl::GL_FLOAT_VEC2
                      || u.uniform->type() == gl::GL_FLOAT_VEC3
-                     || u.uniform->type() == gl::GL_FLOAT_VEC4))
+                     || u.uniform->type() == gl::GL_FLOAT_VEC4
+                     || u.uniform->type() == gl::GL_SAMPLER_2D))
                 u.uniform = 0;
         }
         // create a texture
@@ -248,9 +266,18 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
     for (Uniform & u : uniforms_)
     if (u.uniform)
     {
+        if (u.isTextureInput())
+        {
+            if (auto tex = u.p_tex->value(time, thread))
+            {
+                MO_PRINT(tex->name());
+                tex->bind();
+            }
+        }
+        else
         if (!u.texture)
         {
-            // copy current value
+            // copy single float value
             for (uint i=0; i<u.num_floats; ++i)
                 u.uniform->floats[i] = u.p_float[i]->value(time, thread);
         }

@@ -12,10 +12,11 @@
 #define MOSRC_OBJECT_CAMERA_H
 
 #include "objectgl.h"
+#include "object/interface/valuetextureinterface.h"
 
 namespace MO {
 
-class Camera : public ObjectGl
+class Camera : public ObjectGl, public ValueTextureInterface
 {
     Q_OBJECT
 public:
@@ -76,6 +77,9 @@ public:
 
     /** Returns the framebuffer on which the camera renders, or NULL */
     GL::FrameBufferObject * fbo(uint thread) const;
+
+    /** Texture output interface */
+    const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
 
     void setOverrideMatrix(const Mat4& m);
     void clearOverrideMatrix() { useOverrideMatrix_ = false; }

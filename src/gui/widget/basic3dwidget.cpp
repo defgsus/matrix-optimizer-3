@@ -382,6 +382,7 @@ void Basic3DWidget::createGLStuff_()
                                          gl::GL_RGBA, gl::GL_FLOAT,
                                          (renderMode_ == RM_FULLDOME_CUBE),
                                          GL::ER_THROW);
+        fbo_->setName("widget");
         fbo_->create();
         fbo_->unbind();
     }

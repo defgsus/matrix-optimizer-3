@@ -306,6 +306,7 @@ void Camera::initGl(uint thread)
                 GL::FrameBufferObject::A_DEPTH,
                 cubeMapped,
                 GL::ER_THROW);
+    fbo_[thread]->setName(name());
 
     fbo_[thread]->create();
     fbo_[thread]->unbind();
@@ -515,6 +516,14 @@ GL::FrameBufferObject * Camera::fbo(uint thread) const
         return 0;
     }
 }
+
+const GL::Texture * Camera::valueTexture(Double , uint thread) const
+{
+    if (thread < fbo_.size() && fbo_[thread])
+        return fbo_[thread]->colorTexture();
+    return 0;
+}
+
 
 void Camera::drawFramebuffer(uint thread, Double time)
 {

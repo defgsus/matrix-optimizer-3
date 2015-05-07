@@ -5,6 +5,7 @@
     - multi-channel audio out
  - LADSPA plugin support
  - activity float parameter
+ - Model3d multi-instancing
  - Wave Tracer for generating impulse responses from scalar fields
  - smooth oscillator waveforms
  - migrated sequencer view (still experimental)

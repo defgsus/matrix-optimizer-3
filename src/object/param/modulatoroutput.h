@@ -21,9 +21,9 @@ namespace MO {
 class Object;
 
 
-// **** XXX NOT USEd YET ****
+// **** XXX NOT USEd ****
 
-
+//  Name is a bit stupid, as this would be an output, not a modulator
 class ModulatorOutput
 {
     // to set p_channel_;

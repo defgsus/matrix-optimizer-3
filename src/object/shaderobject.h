@@ -12,12 +12,13 @@
 #define MOSRC_OBJECT_SHADEROBJECT_H
 
 #include "objectgl.h"
+#include "object/interface/valuetextureinterface.h"
 
 namespace MO {
 
 class UserUniformSetting;
 
-class ShaderObject : public ObjectGl
+class ShaderObject : public ObjectGl, public ValueTextureInterface
 {
     Q_OBJECT
 public:
@@ -40,6 +41,9 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
 
+    /** texture output interface */
+    virtual const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
+
     // ---------- specific stuff -----------
 
     /** Draws the contents of the framebuffer on a [-1,1] quad.
@@ -47,7 +51,7 @@ public:
     void drawFramebuffer(uint thread, Double time, int width, int height);
 
     /** Returns the internal framebuffer on which the shader renders, or NULL */
-    GL::FrameBufferObject * fbo(uint thread) const;
+    GL::FrameBufferObject * fbo() const { return fbo_; }
 
 signals:
 
@@ -63,6 +67,7 @@ private:
     ParameterSelect * p_magInterpol_;
     ParameterInt * p_width_, * p_height_, * p_aa_, * p_split_;
     ParameterText * p_fragment_;
+
     GL::Uniform
         * u_resolution_,
         * u_time_,

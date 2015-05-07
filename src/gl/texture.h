@@ -71,6 +71,9 @@ public:
     /** Calculated memory of texture in bytes */
     gl::GLsizei memory() const { return memory_; }
 
+    const QString& name() const { return name_; }
+    void setName(const QString& name) { name_ = name; }
+
     /** Approximated memory usage of all textures */
     static long int memoryAll() { return memory_used_; }
 
@@ -215,6 +218,8 @@ private:
         input_format_,
     /** data type */
         type_;
+
+    QString name_;
 };
 
 } // namespace GL

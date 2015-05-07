@@ -59,6 +59,7 @@ namespace MO {
     class ParameterFloat;
     class ParameterSelect;
     class ParameterText;
+    class ParameterTexture;
     class ParameterTimeline1D;
 
     class TransformationBuffer;
