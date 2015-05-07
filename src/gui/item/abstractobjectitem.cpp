@@ -257,8 +257,10 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
     if (change == ItemChildRemovedChange)
     {
         bool isao = p_oi_->object && p_oi_->object->isAudioObject();
+
         // collapse if no child left
-        if (!isao && isExpanded() && object()->childObjects().isEmpty())
+        if (!isao && isExpanded() && object()->childObjects().isEmpty()
+                && !hasConnectors())
         {
             setExpanded(false);
             setExpandVisible(false);
@@ -916,6 +918,12 @@ void AbstractObjectItem::adjustRightItems()
 }
 #endif
 // --------------------------------------- shape and draw -----------------------------------------
+
+bool AbstractObjectItem::hasConnectors() const
+{
+    return !p_oi_->inputItems.isEmpty()
+            || !p_oi_->outputItems.isEmpty();
+}
 
 QPointF AbstractObjectItem::inputPos(uint c) const
 {

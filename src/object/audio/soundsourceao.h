@@ -23,6 +23,8 @@ class SoundSourceAO : public AudioObject
 public:
     MO_OBJECT_CONSTRUCTOR(SoundSourceAO)
 
+    virtual Type type() const Q_DECL_OVERRIDE { return T_SOUND_OBJECT; }
+
     virtual void createParameters() Q_DECL_OVERRIDE;
 
     virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,

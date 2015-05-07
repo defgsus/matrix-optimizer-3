@@ -1002,6 +1002,8 @@ void MainWidgetController::onObjectAdded_(Object * o)
     updateSequenceView_(o);
     objectGraphView()->setFocusObject(o);
     objectView()->setObject(o);
+
+    onSceneChanged_();
 }
 
 void MainWidgetController::onObjectDeleted_(const Object * o)
@@ -1012,6 +1014,7 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
 
+    onSceneChanged_();
 
     // XXX refine this!
     //updateSequenceView_(0);
@@ -1029,6 +1032,7 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
     sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
 
+    onSceneChanged_();
 }
 
 
@@ -1706,7 +1710,11 @@ void MainWidgetController::newScene()
     if (!isOkayToChangeScene())
         return;
 
-    setScene_( ObjectFactory::createSceneObject() );
+    // create a new scene with a group inside
+    auto s = ObjectFactory::createSceneObject();
+    s->addObject( s, ObjectFactory::createObject("Group") );
+
+    setScene_( s );
     currentSceneFilename_.clear();
     IO::Files::setFilename(IO::FT_SCENE, "");
     sceneNotSaved_ = false;

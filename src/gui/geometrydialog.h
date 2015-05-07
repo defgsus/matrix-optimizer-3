@@ -111,6 +111,7 @@ protected:
     QVBoxLayout * modifierLayout_;
     QSet<GEOM::GeometryModifier*> expandedModifiers_;
 
+    QTimer * updateTimer_;
     QStatusBar * statusBar_;
     QProgressBar * progressBar_;
     QLabel * labelInfo_;

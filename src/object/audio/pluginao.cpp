@@ -225,10 +225,16 @@ QString PluginAO::getAudioOutputName(uint channel) const
 
 void PluginAO::setPlugin(AUDIO::LadspaPlugin * p)
 {
-    bool change = p != p_->plugin;
+    if (p_->plugin == p)
+        return;
+
+    bool firstTime = true;
 
     if (p_->plugin)
+    {
+        firstTime = false;
         p_->plugin->releaseRef();
+    }
     p_->plugin = p;
 
     if (p_->plugin)
@@ -238,7 +244,7 @@ void PluginAO::setPlugin(AUDIO::LadspaPlugin * p)
         //MO_DEBUG("PluginAO: plugin '" << p_->plugin->name() << "' initialized");
     }
 
-    p_->updateParameters(change);
+    p_->updateParameters(!firstTime);
     p_->updateChannels();
 
     p_->hasNewPlugin = true;

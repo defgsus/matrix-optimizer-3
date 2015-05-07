@@ -97,7 +97,7 @@ public:
     F32* samples(uint thread) { return &sample_[thread][0]; }
 
     /** Writes the current sampleblock to the delay history.
-        Scene object takes care of that, you don't have to worry. */
+        Scene object takes care of that, noone has to worry. */
     void pushDelay(uint thread);
 
 private:

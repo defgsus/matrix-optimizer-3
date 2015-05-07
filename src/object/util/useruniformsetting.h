@@ -73,9 +73,18 @@ private:
     Object * object_;
     uint num_;
 
+    enum UniformType
+    {
+        UT_NONE,
+        UT_F1, UT_F2, UT_F3, UT_F4,
+        UT_T1, UT_T2, UT_T3, UT_T4
+    };
+
     struct Uniform
     {
         bool isUsed() const;
+        bool isTexture() const;
+
         uint gltype,
              num_floats;
 
@@ -87,6 +96,7 @@ private:
 
         GL::Uniform * uniform;
         GL::Texture * texture;
+        std::vector<float> texBuf;
     };
 
     QVector<Uniform> uniforms_;

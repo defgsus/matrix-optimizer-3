@@ -98,6 +98,8 @@ public:
 
     // ---------- connector positions ------------------
 
+    bool hasConnectors() const;
+
     /** Returns the audio connector position in local coords */
     QPointF inputPos(uint channel = 0) const;
 

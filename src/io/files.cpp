@@ -214,7 +214,7 @@ void Files::findFiles(FileType ft, const QString &directory,
     QDir dir(directory);
 
     dir.setFilter(QDir::Files | QDir::NoDotAndDotDot
-                  | QDir::Readable | QDir::Writable | QDir::Hidden);
+                  | QDir::Readable  | QDir::Hidden);
     //dir.setSorting(QDir::Name | QDir::IgnoreCase | QDir::LocaleAware);
 
     QStringList filters;

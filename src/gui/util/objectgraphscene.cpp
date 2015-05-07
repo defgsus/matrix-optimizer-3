@@ -1352,6 +1352,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
             {
                 ScopedObjectChange lock(root, m);
                 m->setGeometrySettings(diag.getGeometrySettings());
+                editor->emitObjectChanged(m);
             }
         });
     }

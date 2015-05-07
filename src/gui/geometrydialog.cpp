@@ -21,6 +21,7 @@
 #include <QProgressBar>
 #include <QMenu>
 #include <QCloseEvent>
+#include <QTimer>
 
 #include "geometrydialog.h"
 #include "geom/geometry.h"
@@ -64,6 +65,12 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
         *settings_ = *set;
 
     createMainWidgets_();
+
+    // little delay before recreating geometry
+    updateTimer_ = new QTimer(this);
+    updateTimer_->setSingleShot(true);
+    updateTimer_->setInterval(300);
+    connect(updateTimer_, SIGNAL(timeout()), this, SLOT(onChanged_()));
 
     createModifierWidgets_();
 
@@ -420,7 +427,7 @@ void GeometryDialog::createModifierWidgets_()
         connect(w, SIGNAL(expandedChange(GEOM::GeometryModifier*,bool)),
                 this, SLOT(modifierExpandedChanged_(GEOM::GeometryModifier*,bool)));
         connect(w, SIGNAL(valueChanged(GEOM::GeometryModifier*)),
-                this, SLOT(onChanged_()));
+                updateTimer_, SLOT(start()));
     }
 
     // a "stretch" that can be deleted later

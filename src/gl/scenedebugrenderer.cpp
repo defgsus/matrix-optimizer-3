@@ -23,9 +23,9 @@
 #include "gl/cameraspace.h"
 #include "geom/geometry.h"
 #include "geom/objloader.h"
-#include "audio/audiosource.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/spatial/spatialmicrophone.h"
+#include "audio/spatial/spatialsoundsource.h"
 
 namespace MO {
 namespace GL {
@@ -61,11 +61,24 @@ struct SceneDebugRenderer::Private
         QList<AUDIO::SpatialMicrophone*> mics;
     };
 
+    /** likewise for sounds */
+    struct Sound
+    {
+        Sound(Object*);
+        ~Sound();
+
+        Object * object; //! link to parent
+        TransformationBuffer * trans;
+        AUDIO::AudioBuffer * buf;
+        QList<AUDIO::SpatialSoundSource*> snds;
+    };
+
     SceneDebugRenderer * p;
     Scene * scene;
     QList<Camera*> cameras;
     QList<LightSource*> lightSources;
     QList<std::shared_ptr<Micro>> microphones;
+    QList<std::shared_ptr<Sound>> sounds;
 
     bool glReady;
 
@@ -123,17 +136,29 @@ void SceneDebugRenderer::Private::updateTree()
     lightSources = scene->findChildObjects<LightSource>(QString(), true);
 
     // get all objects with microphones
-    QList<Object*> micobjs = scene->findChildObjects<Object>([](const Object*o)
+    QList<Object*> objs = scene->findChildObjects<Object>([](const Object*o)
     {
         return o->numberMicrophones() > 0;
     }, true);
-//    QList<Object*> all = scene_->findChildObjects(Object::TG_ALL, true);
 
-    for (Object * o : micobjs)
+    for (Object * o : objs)
     {
         auto mic = new Micro(o);
         microphones.push_back( std::shared_ptr<Micro>(mic) );
     }
+
+    // sound source objects
+    objs = scene->findChildObjects<Object>([](const Object*o)
+    {
+        return o->numberSoundSources() > 0;
+    }, true);
+
+    for (Object * o : objs)
+    {
+        auto mic = new Sound(o);
+        sounds.push_back( std::shared_ptr<Sound>(mic) );
+    }
+
 
 }
 
@@ -156,6 +181,27 @@ SceneDebugRenderer::Private::Micro::~Micro()
     delete buf;
     delete trans;
 }
+
+SceneDebugRenderer::Private::Sound::Sound(Object * o)
+    : object    (o)
+    , trans     (new TransformationBuffer(1))
+    , buf       (new AUDIO::AudioBuffer(1))
+{
+    for (uint i=0; i<object->numberSoundSources(); ++i)
+    {
+        auto snd = new AUDIO::SpatialSoundSource(buf, 0);
+        snds.append(snd);
+    }
+}
+
+SceneDebugRenderer::Private::Sound::~Sound()
+{
+    for (auto s : snds)
+        delete s;
+    delete buf;
+    delete trans;
+}
+
 
 void SceneDebugRenderer::Private::initGl()
 {
@@ -312,14 +358,27 @@ void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread,
             drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
         }
     }
-/*
+
     if (options & Scene::DD_AUDIO_SOURCES)
-    for (AUDIO::AudioSource * a : audioSources_)
+    for (auto & ps : sounds)
     {
-        const Mat4& trans = a->transformation(thread, 0);
-        drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
+        const Sound * s = ps.get();
+        if (!s->object->activeAtAll())
+            continue;
+        s->trans->setTransformation(s->object->transformation(), 0);
+        SamplePos pos = 0;
+        // calc one sample of transformations
+        s->object->calculateSoundSourceTransformation(
+                    s->trans, s->snds, 1, pos, thread);
+        // draw
+        for (const AUDIO::SpatialSoundSource * snd : s->snds)
+        {
+            const Mat4& trans = snd->transformationBuffer()->transformation(0);
+            drawAudioSource->renderShader(proj, cubeView * trans, view * trans, trans);
+        }
+
     }
-*/
+
 }
 
 
