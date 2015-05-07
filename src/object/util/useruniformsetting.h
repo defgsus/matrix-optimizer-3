@@ -100,6 +100,7 @@ private:
     };
 
     QVector<Uniform> uniforms_;
+    Double uploadTime_;
 };
 
 } // namespace MO

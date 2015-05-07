@@ -16,6 +16,7 @@
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/envelopefollower.h"
+#include "io/time.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -163,9 +164,6 @@ void AudioEngine::process(const F32 * inputs, F32 * outputs)
     // run audio block
     p_->path.calcAudio(p_->curSample);
 
-    // advance scene time
-    p_->curSample += p_->conf.bufferSize();
-
     // copy output buffers
     int k=0;
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
@@ -178,6 +176,9 @@ void AudioEngine::process(const F32 * inputs, F32 * outputs)
         p_->envValues[k] = env.process(b->readPointer(), 1, b->blockSize());
         ++k;
     }
+
+    // advance scene time
+    p_->curSample += p_->conf.bufferSize();
 }
 
 void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
@@ -205,9 +206,6 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
     // run audio block
     p_->path.calcAudio(p_->curSample);
 
-    // advance scene time
-    p_->curSample += p_->conf.bufferSize();
-
     // copy output buffers
     int k=0;
     for (const AUDIO::AudioBuffer * b : p_->path.audioOutputs())
@@ -222,6 +220,9 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
         p_->envValues[k] = env.process(b->readPointer(), 1, b->blockSize());
         ++k;
     }
+
+    // advance scene time
+    p_->curSample += p_->conf.bufferSize();
 }
 
 

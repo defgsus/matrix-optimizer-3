@@ -249,6 +249,8 @@ void main()
 
 
         mat3 lightmat = mo_light_matrix() * inverse(mo_user_trans_n_);
+        // remove scaling
+        lightmat = mat3(normalize(lightmat[0]), normalize(lightmat[1]), normalize(lightmat[2]));
 
     // pass all light relevant settings to fragment shader
     #ifdef MO_FRAGMENT_LIGHTING

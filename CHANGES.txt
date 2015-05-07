@@ -1,6 +1,6 @@
 3.0.2.46
 
- - disk rendering
+ - disk render features
     - multi-threaded image writer
     - multi-channel audio out
  - LADSPA plugin support
@@ -11,4 +11,4 @@
  - reactivated microphone group (still experimental)
  - fix immediate text update on button in code editor
    - alt/ctrl + enter/return for compile/update
- - lots of other gui things
+ - lots of other gui fixes

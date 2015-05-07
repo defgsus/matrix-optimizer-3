@@ -8,6 +8,8 @@
     <p>created 02.12.2014</p>
 */
 
+#include <tuple>
+
 #include <QThread>
 #include <QMessageBox>
 #include <QReadWriteLock>
@@ -63,6 +65,9 @@ public:
     LiveAudioEngine * parent;
     AudioEngine * engine;
     bool engineChanged;
+    Double
+        lastBufferTime,
+        lastBufferTimeStamp;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
@@ -296,7 +301,19 @@ SamplePos LiveAudioEngine::pos() const
 
 Double LiveAudioEngine::second() const
 {
+    if (!isPlayback())
+        return p_->engine->second();
+
+#if 0
+    // buffer time and timestamp need to be atomic in one somehow..
+    // very unstable otherwise
+    Double t = applicationTime() - p_->lastBufferTimeStamp;
+    return p_->lastBufferTime + t;
+#else
+    /** @todo find concept for gfx time,
+        this returns only the time at the beginning of the dsp buffer */
     return p_->engine->second();
+#endif
 }
 
 const F32 * LiveAudioEngine::outputEnvelope() const
@@ -504,6 +521,9 @@ void LiveAudioEngine::stop()
 void LiveAudioEngine::Private::audioCallback(const F32 * in, F32 * out)
 {
     audioInQueue.produce(in);
+
+    lastBufferTime = engine->second();
+    lastBufferTimeStamp = applicationTime();
 
     // ---- process output ----
 

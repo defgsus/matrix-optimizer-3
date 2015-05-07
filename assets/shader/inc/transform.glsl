@@ -22,6 +22,12 @@ mat4 scale4(in float s);
 /* default is 4x4 */
 mat4 scale(in float s) { return scale4(s); }
 
+/** Creates an orientation matrix, looking along 'look' with 'up' as sky.
+    Both vectors need to be normalized */
+mat3 lookAt3(in vec3 look, in vec3 up);
+mat4 lookAt4(in vec3 look, in vec3 up);
+/* default is 4x4 */
+mat4 lookAt(in vec3 look, in vec3 up) { return lookAt4(look, up); }
 
 
 
@@ -59,4 +65,21 @@ mat4 scale4(in mat4 m, in float s)
         m[1] *= s;
         m[2] *= s;
         return m;
+}
+
+
+mat4 lookAt4(in vec3 look, in vec3 up)
+{
+    vec3 s = normalize(cross(look, up));
+    up = cross(s, look);
+
+    return mat4(vec4(s, 0.), vec4(up, 0.), vec4(look, 0.),
+                                  vec4(0.,0.,0.,1.));
+}
+
+mat3 lookAt3(in vec3 look, in vec3 up)
+{
+    vec3 s = normalize(cross(look, up));
+    up = cross(s, look);
+    return mat3(s, up, look);
 }

@@ -66,6 +66,7 @@ public:
     static void createGridXZ(Geometry *, int sizeX, int sizeZ, bool with_coordinate_system);
     static void createLineGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
     static void createPointGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
+    static void createQuadGrid(Geometry *, int sizeX, int sizeY, int sizeZ);
 
     /** mono-spaced line font [0,1] */
     static void createFont(Geometry *, const Mat4& matrix, uint16_t utf16);

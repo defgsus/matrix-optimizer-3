@@ -26,7 +26,7 @@ const QStringList GeometryModifierCreate::typeIds =
     "file", "quad",
     "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
     "cyl", "cylo", "torus", "uvsphere",
-    "gridxz", "lgrid", "pgrid"
+    "gridxz", "lgrid", "pgrid", "qgrid"
 };
 
 const QStringList GeometryModifierCreate::typeNames =
@@ -45,7 +45,8 @@ const QStringList GeometryModifierCreate::typeNames =
     QObject::tr("uv-sphere"),
     QObject::tr("coordinate system"),
     QObject::tr("line-grid"),
-    QObject::tr("point-grid")
+    QObject::tr("point-grid"),
+    QObject::tr("quad-grid")
 };
 
 GeometryModifierCreate::GeometryModifierCreate()
@@ -138,6 +139,10 @@ void GeometryModifierCreate::execute(Geometry * g)
 
     case T_POINT_GRID:
         GeometryFactory::createPointGrid(g, segmentsX_, segmentsY_, segmentsZ_);
+    break;
+
+    case T_QUAD_GRID:
+        GeometryFactory::createQuadGrid(g, segmentsX_, segmentsY_, segmentsZ_);
     break;
 
     case T_UV_SPHERE:

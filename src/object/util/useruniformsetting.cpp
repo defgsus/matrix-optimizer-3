@@ -36,9 +36,10 @@ bool UserUniformSetting::Uniform::isTexture() const
 }
 
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
-    : QObject   (object),
-      object_   (object),
-      num_      (maxUnis)
+    : QObject       (object)
+    , object_       (object)
+    , num_          (maxUnis)
+    , uploadTime_   (-1.1234)
 {
 }
 
@@ -158,6 +159,8 @@ void UserUniformSetting::updateParameterVisibility()
 
         u.p_name->setVisible(u.num_floats > 0);
     }
+
+    uploadTime_ = -1.12341212; // be sure to upload uniforms next time
 }
 
 QString UserUniformSetting::getDeclarations() const
@@ -230,15 +233,24 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
             }
         }
     }
+
+    uploadTime_ = -1.12341212;
 }
 
 void UserUniformSetting::updateUniforms(Double time, uint thread)
 {
+#if 0 // does not account for changes to incoming parameters
+    if (uploadTime_ == time)
+        return;
+    uploadTime_ = time;
+#endif
+
     for (Uniform & u : uniforms_)
     if (u.uniform)
     {
         if (!u.texture)
         {
+            // copy current value
             for (uint i=0; i<u.num_floats; ++i)
                 u.uniform->floats[i] = u.p_float[i]->value(time, thread);
         }
@@ -258,6 +270,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
                 for (uint i=0; i<u.num_floats; ++i)
                     u.texBuf[j * u.num_floats + i] = u.p_float[i]->value(ti, thread);
             }
+
             /** @todo Need to incorporate texture slots!! */
             u.texture->bind();
             u.texture->upload(&u.texBuf[0]);
