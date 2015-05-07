@@ -27,8 +27,8 @@ public:
     enum TextureType
     {
         TEX_NONE,
+        TEX_PARAM,
         TEX_FILE,
-        TEX_ANGELSCRIPT,
         TEX_MASTER_FRAME,
         TEX_MASTER_FRAME_DEPTH,
         TEX_CAMERA_FRAME,
@@ -133,8 +133,9 @@ private:
     ParameterSelect * paramType_, *paramInterpol_,
                     *paramWrapX_, *paramWrapY_;
     ParameterFilename * paramFilename_;
-    ParameterText * paramAngelScript_;
+    //ParameterText * paramAngelScript_;
     ParameterInt * paramCamera_;
+    ParameterTexture * paramTex_;
 };
 
 } // namespace MO

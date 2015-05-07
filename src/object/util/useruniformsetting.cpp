@@ -110,7 +110,7 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
 
         u.p_tex = params->createTextureParameter(("uniformtex%1_" + id_suffix).arg(i),
                                                 tr("uniform%1 texture").arg(i + 1),
-                                                tr("A texture input from somewhere else"));
+                                                tr("Connects to a texture from somewhere else"));
 
         static QString compName[] = { "x", "y", "z", "w" };
         for (int j=0; j<4; ++j)
@@ -235,7 +235,10 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
             u.uniform = s->getUniform(u.p_name->value(), false);
             // update texture
             if (!u.texture)
+            {
                 u.texture = new GL::Texture();
+                u.texture->setName("float_input");
+            }
             if ((int)u.texture->width() != u.p_length->baseValue())
             {
                 // find input format
@@ -255,7 +258,7 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
     uploadTime_ = -1.12341212;
 }
 
-void UserUniformSetting::updateUniforms(Double time, uint thread)
+void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot)
 {
 #if 0 // does not account for changes to incoming parameters
     if (uploadTime_ == time)
@@ -268,10 +271,12 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
     {
         if (u.isTextureInput())
         {
-            if (auto tex = u.p_tex->value(time, thread))
+            if (const GL::Texture * tex = u.p_tex->value(time, thread))
             {
-                MO_PRINT(tex->name());
+                MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
                 tex->bind();
+                u.uniform->ints[0] = texSlot;
+                ++texSlot;
             }
         }
         else
@@ -284,7 +289,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
         else
         {
             uint len = u.texture->width(),
-                    bsize = len * u.num_floats;
+                 bsize = len * u.num_floats;
             // update buffer size
             if (u.texBuf.size() != bsize)
                 u.texBuf.resize(bsize);
@@ -298,8 +303,11 @@ void UserUniformSetting::updateUniforms(Double time, uint thread)
                     u.texBuf[j * u.num_floats + i] = u.p_float[i]->value(ti, thread);
             }
 
-            /** @todo Need to incorporate texture slots!! */
+            MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
             u.texture->bind();
+            u.uniform->ints[0] = texSlot;
+            ++texSlot;
+
             u.texture->upload(&u.texBuf[0]);
         }
     }

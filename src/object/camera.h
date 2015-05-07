@@ -105,7 +105,7 @@ private:
         *p_cameraOrthoScale_, *p_cameraOrthoMix_,
         *p_backR_, *p_backG_, *p_backB_, *p_backA_,
         *p_near_, *p_far_;
-    ParameterSelect * p_cameraMode_, *p_magInterpol_;
+    ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_;
     ParameterInt * p_width_, * p_height_,
                  * p_cubeRes_;
     GL::Uniform * uColor_, * uAngle_;

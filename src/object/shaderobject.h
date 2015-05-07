@@ -64,7 +64,7 @@ private:
     GL::Texture * swapTex_;
 
     ParameterFloat * p_out_r_, * p_out_g_, * p_out_b_, * p_out_a_;
-    ParameterSelect * p_magInterpol_;
+    ParameterSelect * p_magInterpol_, * p_enableOut_;
     ParameterInt * p_width_, * p_height_, * p_aa_, * p_split_;
     ParameterText * p_fragment_;
 

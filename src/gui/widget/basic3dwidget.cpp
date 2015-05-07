@@ -516,8 +516,6 @@ void Basic3DWidget::paintGL()
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
         screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
-        fbo_->colorTexture()->unbind();
-
     }
 
     if (renderMode_ == RM_FULLDOME_CUBE)
@@ -561,7 +559,6 @@ void Basic3DWidget::paintGL()
         MO_CHECK_GL( gl::glDisable(GL_DEPTH_TEST) );
         fbo_->colorTexture()->bind();
         screenQuad_->drawCentered(width(), height(), (Float)fbo_->width() / fbo_->height());
-        fbo_->colorTexture()->unbind();
     }
 }
 

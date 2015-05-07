@@ -20,6 +20,12 @@ namespace GL { class Texture; }
 class ParameterTexture : public Parameter
 {
 public:
+    /*
+    enum Type
+    {
+        T_TEXTURE_2D,
+        T_TEXTURE_CUBE
+    };*/
 
     ParameterTexture(Object * object, const QString& idName, const QString& name);
 
@@ -31,11 +37,12 @@ public:
     // ---------------- getter -----------------
 
     const GL::Texture* value(Double time, uint thread) const;
-    //GL::Texture * baseValue() const { return ownTex_; }
+    //Type type() const { return type_; }
 
     // ---------------- setter -----------------
 
-    //void setOwnTexture(GL::Texture * v) { ownTex_ = v; }
+    /* Set this upon creation */
+    //void setType(Type) { type_ = type; }
 
     // --------- modulation -----------
 

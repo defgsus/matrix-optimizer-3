@@ -291,20 +291,10 @@ bool Texture::bind() const
     MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
     if (err != GL_NO_ERROR)
         return false;
-    /*
-    if (target_ != GL_TEXTURE_CUBE_MAP)
-        MO_CHECK_GL_RET_COND( rep_, glEnable(target_), err );
-    */
 
     return err == GL_NO_ERROR;
 }
 
-void Texture::unbind() const
-{
-    /*if (target_ != GL_TEXTURE_CUBE_MAP)
-        MO_CHECK_GL_COND( rep_, glDisable(target_) );
-    */
-}
 
 void Texture::release()
 {

@@ -97,6 +97,12 @@ void ShaderObject::createParameters()
 
     params()->beginParameterGroup("output", tr("output"));
 
+        p_enableOut_ = params()->createBooleanParameter("master_out", tr("enable"),
+                           tr("Enables or disables sampling the output to the main framebuffer"),
+                           tr("The shader will render internally but not contribute to the main framebuffer"),
+                           tr("The shader will render it's output ontop the main framebuffer"),
+                            true, true, true);
+
         p_out_r_ = params()->createFloatParameter("red", "red", tr("Red amount of output color"), 1.0, 0.1);
         p_out_g_ = params()->createFloatParameter("green", "green", tr("Green amount of output color"), 1.0, 0.1);
         p_out_b_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of output color"), 1.0, 0.1);
@@ -286,6 +292,10 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     fbo_->bind();
 
+    // zero will be feedback buffer
+    uint texSlot = 1;
+    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0) );
+
     // exchange render target
     if (1)
     {
@@ -311,12 +321,13 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     if (u_transformation_)
         u_transformation_->set(transformation());
 
-    MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
-    userUniforms_->updateUniforms(time, thread);
+    userUniforms_->updateUniforms(time, thread, texSlot);
 
     // --- render ---
 
-    shaderQuad_->draw(w, h, p_split_->baseValue());
+    MO_EXTEND_EXCEPTION(
+        shaderQuad_->draw(w, h, p_split_->baseValue())
+                , "in ShaderObject::renderGl()")
 
     gl::glFlush();
     gl::glFinish();
@@ -327,6 +338,9 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
 void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int height)
 {
+    if (p_enableOut_->value(time, thread) == 0)
+        return;
+
     gl::glFinish();
 
     // -- shader uniforms --
@@ -363,10 +377,10 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
     fbo_->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
     fbo_->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
-    // draw the texture
-    screenQuad_->drawCentered(width, height, aspectRatio_);
-
-    fbo_->colorTexture()->unbind();
+    MO_EXTEND_EXCEPTION(
+        // draw the texture
+        screenQuad_->drawCentered(width, height, aspectRatio_)
+                , "in ShaderObject::drawFrameBuffer()");
 
     gl::glFinish();
 }

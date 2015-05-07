@@ -146,6 +146,12 @@ void Camera::createParameters()
 
     params()->beginParameterGroup("output", tr("output"));
 
+        p_enableOut_ = params()->createBooleanParameter("master_out", tr("enable"),
+                       tr("Enables or disables sampling the output to the main framebuffer"),
+                       tr("The camera will render internally but not contribute to the main framebuffer"),
+                       tr("The camera will render it's output ontop the main framebuffer"),
+                       true, true, true);
+
         p_cameraMix_ = params()->createFloatParameter("cammix", tr("camera mix"),
                           tr("Defines the opaqueness/transparency of the camera [0,1]"),
                           1.0,
@@ -527,6 +533,9 @@ const GL::Texture * Camera::valueTexture(Double , uint thread) const
 
 void Camera::drawFramebuffer(uint thread, Double time)
 {
+    if (p_enableOut_->value(time, thread) == 0)
+        return;
+
     // -- shader uniforms --
 
     uColor_->floats[3] = p_cameraMix_->value(time, thread);
@@ -577,7 +586,6 @@ void Camera::drawFramebuffer(uint thread, Double time)
     else
         screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
 
-    fbo->colorTexture()->unbind();
 }
 
 

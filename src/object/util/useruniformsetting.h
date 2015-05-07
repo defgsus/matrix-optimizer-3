@@ -62,8 +62,9 @@ public:
     void tieToShader(GL::Shader *);
 
     /** Update all found uniform values.
-        Will also bind textures when needed. */
-    void updateUniforms(Double time, uint thread);
+        Will also bind textures when needed, starting with @p texSlot,
+        which is increased for every bound texture. */
+    void updateUniforms(Double time, uint thread, uint& texSlot);
 
     void releaseGl();
 

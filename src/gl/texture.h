@@ -90,11 +90,8 @@ public:
 
     // -------- openGL interface ---------------
 
-    /** bind texture handle and enable texture target */
+    /** Binds the texture handle to the current slot */
     bool bind() const;
-
-    /** disable corresponding texture target */
-    void unbind() const;
 
     /** Convenience function for glTexParameteri(target, param, value) */
     void setTexParameter(gl::GLenum param, gl::GLint value) const;

@@ -1106,8 +1106,6 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
     else
         screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
 
-    fboFinal_[thread]->colorTexture()->unbind();
-
     //if (outputFbo)
     //    outputFbo->unbind();
 }

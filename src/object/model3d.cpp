@@ -773,6 +773,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         // bind textures
         texture_->bind();
         textureBump_->bind(1);
+        uint texSlot = 2;
 
         const int numDup = numDup_->value(time, thread);
 
@@ -793,7 +794,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         if (u_vertex_extrude_)
             u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
 
-        uniformSetting_->updateUniforms(time, thread);
+        uniformSetting_->updateUniforms(time, thread, texSlot);
 
         if (texture_->isEnabled())
         {
