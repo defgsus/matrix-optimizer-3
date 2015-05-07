@@ -34,7 +34,12 @@ class Waveform
         T_TRIANGLE,
         T_SQUARE,
         T_NOISE,
-        T_VORONOI_NOISE
+        T_VORONOI_NOISE,
+        T_RAMP_SM,
+        T_SAW_RISE_SM,
+        T_SAW_DECAY_SM,
+        T_TRIANGLE_SM,
+        T_SQUARE_SM
     };
     /** Number of waveform types Waveform::Type */
     const static int T_MAX_TYPES = T_NOISE + 1;
@@ -65,8 +70,11 @@ class Waveform
     static Double limitPulseWidth(Double pw)
         { return std::max(minPulseWidth(), std::min(maxPulseWidth(), pw )); }
 
-    /** Returns true if the specified type supports the pulsewidth setting */
+    /** Returns true if the specified type supports the pulsewidth parameter */
     static bool supportsPulseWidth(Type);
+
+    /** Returns true if the specified type supports the smoothing parameter */
+    static bool supportsSmooth(Type);
 
     /** Returns the f(x) for the specified time and type. */
     static Double waveform(Double time, Type type);
@@ -77,6 +85,14 @@ class Waveform
         @see supportsPulseWidth() */
     static Double waveform(Double time, Type type, Double pulseWidth);
 
+    /** Returns the f(x) for the specified time and type.
+        @p pulseWidth and @p smooth is only used by types that support it.
+        @note pulseWidth must be between minPulseWidth() and maxPulseWidth()
+        and smooth must be between [0, 1].
+        @see supportsPulseWidth(), supportsSmooth() */
+    static Double waveform(Double time, Type type, Double pulseWidth, Double smooth);
+
+    /** Generic additive sine wave function */
     static Double spectralWave(Double time,
                                Double numPartials,
                                Double octaveStep,

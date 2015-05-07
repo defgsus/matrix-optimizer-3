@@ -278,6 +278,10 @@ void SequenceFloat::createParameters()
                    0.5, AUDIO::Waveform::minPulseWidth(), AUDIO::Waveform::maxPulseWidth(), 0.05,
                    true, false);
 
+        p_smooth_ = params()->createFloatParameter("smooth", tr("smoothness"),
+                   tr("A factor by wich to smooth off edges [0, 1]"),
+                   0.0, 0., 1., 0.05);
+
     params()->endParameterGroup();
 
     // ---- spectral osc -----
@@ -450,6 +454,7 @@ void SequenceFloat::updateParameterVisibility()
     const bool loop = looping();
     const bool looplap = loop && p_loopOverlapMode_->baseValue() != LOT_OFF;
     const bool pw = (osc && AUDIO::Waveform::supportsPulseWidth(oscillatorMode())) || equ;
+    const bool sm = (osc && AUDIO::Waveform::supportsSmooth(oscillatorMode()));// || equ;
     const bool oscwtpw = (oscwt && AUDIO::Waveform::supportsPulseWidth(oscillatorMode()));
     const bool add = sequenceType() == ST_ADD_OSC;
     const bool addwt = sequenceType() == ST_ADD_WT;
@@ -460,6 +465,7 @@ void SequenceFloat::updateParameterVisibility()
     p_frequency_->setVisible(freq);
     p_phase_->setVisible(freq);
     p_pulseWidth_->setVisible(pw);
+    p_smooth_->setVisible(sm);
     p_loopOverlapMode_->setVisible(loop);
     p_loopOverlap_->setVisible(looplap);
     p_loopOverlapOffset_->setVisible(looplap);
@@ -769,7 +775,8 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
                 * AUDIO::Waveform::waveform(time,
                             (AUDIO::Waveform::Type)p_oscMode_->baseValue(),
-                        AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)));
+                        AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)),
+                                                         p_smooth_->value(gtime, thread));
 
         case ST_ADD_OSC:
             return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)

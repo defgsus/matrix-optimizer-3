@@ -405,7 +405,7 @@ struct math_func<double>
     static void quant_2			(double ** v) { RES = std::floor(A / B) * B; }
     static void mod_2			(double ** v) { RES = std::fmod(A, B); }
     static void smod_2			(double ** v)
-        { RES = (RES<0.0)? std::fmod(A, B) : B - std::fmod(-A, B); }
+        { RES = (A >= 0.0)? std::fmod(A, B) : B - std::fmod(-A, B); }
 
     // ----------------- binary operator -------------------------
 

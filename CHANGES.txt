@@ -3,9 +3,12 @@
  - disk rendering
     - multi-threaded image writer
     - multi-channel audio out
+ - LADSPA plugin support
  - activity float parameter
- - fix immediate text update on button in code editor
-   - alt/ctrl + enter/return for compile/update
  - Wave Tracer for generating impulse responses from scalar fields
+ - smooth oscillator waveforms
  - migrated sequencer view (still experimental)
  - reactivated microphone group (still experimental)
+ - fix immediate text update on button in code editor
+   - alt/ctrl + enter/return for compile/update
+ - lots of other gui things

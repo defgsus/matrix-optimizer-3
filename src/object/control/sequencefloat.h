@@ -225,6 +225,7 @@ private:
         * p_frequency_,
         * p_phase_,
         * p_pulseWidth_,
+        * p_smooth_,
         * p_oscWtPulseWidth_,
 
         * p_specNum_,
