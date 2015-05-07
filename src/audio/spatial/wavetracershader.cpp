@@ -223,7 +223,7 @@ void WaveTracerShader::Private::defaultSettings()
         "#include <iq/distfunc>\n"
         "#include <dh/hash>\n"
         "#include <noise>\n\n"
-        "float DE_room(in vec3 p)\n{\n\t// inverted box as room\n"
+        "float DE_room(in vec3 p)\n{\n"
             "\t// noisy surface\n"
             "\t//p += 0.003 * noise3(p*30.);\n\n"
             "\t// two rooms\n"

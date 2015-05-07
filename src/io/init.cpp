@@ -11,19 +11,31 @@
 
 #include <QtGlobal>
 
-//#ifdef Q_OS_LINUX
-//#   include <X11/Xlib.h>
-//#endif
-
 #include "init.h"
+#include "io/error.h"
+
+#ifdef Q_OS_LINUX
+#   include <X11/Xlib.h>
+#endif
 
 namespace MO {
 
 void startOfProgram()
 {
-//#ifdef Q_OS_LINUX
-//    XInitThreads();
-//#endif
+#ifdef Q_OS_LINUX
+    struct dummy_
+    {
+        static int errHandler(Display * , XErrorEvent * e)
+        {
+            MO_WARNING("Catch X11 error " << e->error_code);
+            return 0;
+        }
+    };
+
+    XSetErrorHandler(dummy_::errHandler);
+
+    XInitThreads();
+#endif
 
 }
 

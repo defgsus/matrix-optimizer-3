@@ -132,6 +132,10 @@ int main(int argc, char *argv[])
     // application scope
     int ret;
     {
+        // any 3rd library code that needs global initialization
+        // goes in here
+        MO::startOfProgram();
+
         // create QApplication
         MO::createApplication(argc, argv);
         std::unique_ptr<MO::Application> app_deleter(MO::application());
@@ -141,10 +145,6 @@ int main(int argc, char *argv[])
         // tests with QApplication
         //{ MO::TestHelpSystem test; return test.run(); }
         //{ MO::TestCommandLineParser test; return test.run(argc, argv, 1); }
-
-        // any 3rd library code that needs global initialization
-        // goes in here
-        MO::startOfProgram();
 
         // ------ start program ---------
 

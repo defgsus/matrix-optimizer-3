@@ -11,10 +11,10 @@
 #ifndef MO_DISABLE_LADSPA
 
 #include <dlfcn.h>
-#include <ladspa.h>
 #include <cstdlib>
 
 #include "ladspaloader.h"
+#include "audio/3rd/ladspa.h"
 #include "audio/tool/ladspaplugin.h"
 #include "io/files.h"
 #include "io/error.h"
@@ -154,9 +154,17 @@ size_t LadspaLoader::loadLibrary(const QString &fn)
 AUDIO::LadspaPlugin * LadspaLoader::loadPlugin(const QString &filename, const QString &label)
 {
     LadspaLoader loader;
-    size_t num = loader.loadLibrary(filename);
-    if (!num)
+    try
+    {
+        size_t num = loader.loadLibrary(filename);
+        if (!num)
+            return 0;
+    }
+    catch (const Exception& e)
+    {
+        MO_WARNING("Loading plugin library failed\n" << e.what());
         return 0;
+    }
 
     auto plug = loader.getPlugin(filename, label);
     if (plug)

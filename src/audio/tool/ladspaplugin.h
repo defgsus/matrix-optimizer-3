@@ -13,10 +13,10 @@
 #ifndef MOSRC_AUDIO_TOOL_LADSPAPLUGIN_H
 #define MOSRC_AUDIO_TOOL_LADSPAPLUGIN_H
 
-#include <ladspa.h>
 
 #include <QString>
 
+#include "audio/3rd/ladspa.h"
 #include "types/refcounted.h"
 #include "types/float.h"
 

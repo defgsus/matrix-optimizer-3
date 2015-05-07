@@ -10,6 +10,7 @@
 
 #include <QOffscreenSurface>
 
+
 #include "offscreencontext.h"
 #include "scenerenderer.h"
 #include "gl/opengl.h"
@@ -17,6 +18,10 @@
 #include "gl/opengl_undef.h"
 #include <QOpenGLContext>
 #include "gl/opengl_undef.h"
+
+//#ifdef Q_OS_LINUX
+//#   include "X11/Xlib.h"
+//#endif
 
 namespace MO {
 namespace GL {
@@ -58,7 +63,17 @@ bool OffscreenContext::createGl()
     setSurface(p_os_surface_);
     qcontext()->setFormat(p_os_surface_->format());
 
-    if (!qcontext()->create())
+//#ifdef Q_OS_LINUX
+//    XLockDisplay(???);
+//#endif
+
+    bool r = qcontext()->create();
+
+//#ifdef Q_OS_LINUX
+//    XUnlockDisplay();
+//#endif
+
+    if (!r)
         return false;
 
     if (!qcontext()->makeCurrent(p_os_surface_))

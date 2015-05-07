@@ -295,7 +295,8 @@ HEADERS += \
     src/audio/tool/ladspaplugin.h \
     src/object/audio/pluginao.h \
     src/object/param/parametercallback.h \
-    src/object/audio/waveplayerao.h
+    src/object/audio/waveplayerao.h \
+    src/audio/3rd/ladspa.h
 
 
 SOURCES += \
