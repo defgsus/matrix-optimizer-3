@@ -5,6 +5,7 @@ uniform sampler2D   u_tex;          // input texture
 uniform vec2        u_size_sigma;   // size, smoothness
 uniform vec2        u_direction;    // (1,0) or (0,1)
 uniform float       u_num;          // number samples
+uniform float       u_alpha;        // output alpha
 
 /* http://callumhay.blogspot.de/2010/09/gaussian-blur-shader-glsl.html */
 
@@ -32,5 +33,16 @@ void main()
         inc.xy *= inc.yz;
     }
 
-    fragColor = c / sum;
+    c /= sum;
+
+    fragColor = clamp(vec4(1.,1.,1., u_alpha) * (
+#if MO_ALPHA_MODE == 1
+        vec4(c.xyz, 1.)
+#elif MO_ALPHA_MODE == 2
+        vec4(c.xyz, length(c.xyz) / sqrt(3.))
+#else
+        c
+#endif
+
+        ), 0., 1.);
 }

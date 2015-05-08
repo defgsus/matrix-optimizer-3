@@ -45,7 +45,8 @@ struct BlurTO::Private
         GL::Uniform
                 * u_size_sigma,
                 * u_num,
-                * u_dir;
+                * u_dir,
+                * u_alpha;
     };
 
     BlurTO * to;
@@ -54,9 +55,11 @@ struct BlurTO::Private
     ParameterFloat
             * p_size,
             * p_sigma,
-            * p_num;
+            * p_num,
+            * p_alpha;
     ParameterSelect
-            * p_sizeIsPixels;
+            * p_sizeIsPixels,
+            * p_alphaMode;
 };
 
 
@@ -127,12 +130,28 @@ void BlurTO::Private::createParameters()
 
         p_sigma = to->params()->createFloatParameter(
                     "sigma", tr("smoothness"), tr("A modifier to adjust the amount of blur, range is about [0, 1]"),
-                    0.0, 0.1);
+                    1.0,  0.05);
         p_sigma->setMinValue(0.);
 
         p_num = to->params()->createFloatParameter(
                     "num", tr("num samples"), tr("Size of the blur kernel - there will be (width*2+1)*2 samples"),
                     10.0,  1., 1000.,  1.);
+
+        p_alphaMode = to->params()->createSelectParameter(
+                    "alpha_mode", tr("alpha channel"),
+                    tr("The way the alpha channel is calculated"),
+        { "blur", "fix", "mag" },
+        { tr("blur"), tr("fixed"), tr("magnitude") },
+        { tr("The alpha channels is blurred the same way as the other channels"),
+          tr("The alpha channel remains a fixed value"),
+          tr("The alpha channel is set to the magnitude of the blured color channels") },
+        { 0, 1, 2 },
+                    0, true, true);
+
+        p_alpha = to->params()->createFloatParameter(
+                    "alpha", tr("alpha"), tr("A modifier for the output alpha channel - controls transparency"),
+                    1.0,  0.05);
+        p_alpha->setMinValue(0.);
 
     to->params()->endParameterGroup();
 }
@@ -140,12 +159,9 @@ void BlurTO::Private::createParameters()
 void BlurTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
-/*
-    if (p == p_to_->p_width
-        || p == p_to_->p_height
-        || p == p_to_->p_aa)
+
+    if (p == p_->p_alphaMode)
         requestReinitGl();
-        */
 }
 
 void BlurTO::onParametersLoaded()
@@ -168,23 +184,19 @@ void BlurTO::Private::initGl()
 {
     // shader-quad
 
-    GL::ShaderSource src;
-    try
-    {
-        src.loadVertexSource(":/shader/to/default.vert");
-        src.loadFragmentSource(":/shader/to/blur.frag");
-    }
-    catch (Exception& )
-    {
-        // XXX Signal to gui
-        throw;
-    }
-
     for (int i=0; i<2; ++i)
     {
+        // setup a shader stage
         Stage s;
         s.index = i;
         s.dir = i == 0 ? Vec2(1, 0) : Vec2(0, 1);
+
+        GL::ShaderSource src;
+        src.loadVertexSource(":/shader/to/default.vert");
+        src.loadFragmentSource(":/shader/to/blur.frag");
+        src.pasteDefaultIncludes();
+        if (i == 1)
+            src.addDefine(QString("#define MO_ALPHA_MODE %1").arg(p_alphaMode->baseValue()));
 
         auto shader = to->createShaderQuad(src, { "u_tex" })->shader();
 
@@ -193,6 +205,7 @@ void BlurTO::Private::initGl()
         s.u_size_sigma = shader->getUniform("u_size_sigma", true);
         s.u_num = shader->getUniform("u_num", true);
         s.u_dir = shader->getUniform("u_direction", true);
+        s.u_alpha = shader->getUniform("u_alpha", true);
 
         stages << s;
     }
@@ -200,7 +213,7 @@ void BlurTO::Private::initGl()
 
 void BlurTO::Private::releaseGl()
 {
-
+    stages.clear();
 }
 
 void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
@@ -221,15 +234,20 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double t
 
     // get other values
     Float size = p_size->value(time, thread),
-          sigma = std::max(0.001, p_sigma->value(time, thread) * numSam * .5);
+          sigma = std::max(0.001, p_sigma->value(time, thread) * numSam * .5),
+          alpha = p_alpha->value(time, thread);
 
     // for each stage
     for (const Stage & s : stages)
     {
+//        MO_PRINT("SRAGE " << s.index);
+//        s.u_alpha->shader()->dumpUniforms();
+
         // update uniforms
         s.u_size_sigma->setFloats( size, sigma );
         s.u_num->setFloats( numSam );
         s.u_dir->setFloats( six * s.dir.x, siy * s.dir.y );
+        s.u_alpha->setFloats( alpha );
 
         uint texSlot = 0;
         to->renderShaderQuad(s.index, time, thread, texSlot);

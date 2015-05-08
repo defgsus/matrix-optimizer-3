@@ -119,12 +119,10 @@ void ColorTO::Private::createParameters()
 void ColorTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
-/*
-    if (p == p_to_->p_width
-        || p == p_to_->p_height
-        || p == p_to_->p_aa)
-        requestReinitGl();
-        */
+
+    /*if (p == p_->p_)
+        requestReinitGl();*/
+
 }
 
 void ColorTO::onParametersLoaded()
@@ -173,7 +171,7 @@ void ColorTO::Private::releaseGl()
 
 }
 
-void ColorTO::Private::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void ColorTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
 {
     // update uniforms
 

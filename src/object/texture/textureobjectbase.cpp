@@ -25,6 +25,12 @@
 #include "io/datastream.h"
 #include "io/log.h"
 
+#if 0
+#   define MO_TO_DEBUG(arg__) MO_DEBUG("TextureObjectBase(" << name() << ")::" << arg__)
+#else
+#   define MO_TO_DEBUG(unused__)
+#endif
+
 using namespace gl;
 
 namespace MO {
@@ -48,6 +54,7 @@ struct TextureObjectBase::PrivateTO
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
     void drawFramebuffer(uint thread, Double time, int width, int height);
     void renderShaderQuad(uint index, Double time, uint thread, uint& texSlot);
+    const QString& name() const { return to->name(); } // for debug
 
     /** A quad and shader with associated uniforms */
     struct ShaderQuad
@@ -161,7 +168,7 @@ void TextureObjectBase::PrivateTO::createParameters()
         {
             p_textures.push_back( to->params()->createTextureParameter(
                                             QString("to_tex%1").arg(i),
-                                            tr("texture %1").arg(i+1),
+                                            tr("input %1").arg(i+1),
                                             tr("A texture input")) );
         }
 
@@ -254,13 +261,14 @@ void TextureObjectBase::renderShaderQuad(uint index, Double time, uint thread, u
 
 void TextureObjectBase::PrivateTO::initGl()
 {
+    MO_TO_DEBUG("initGl()");
+
     // size of frame
 
     int width = p_width->baseValue(),
         height = p_height->baseValue();
 
     aspectRatio = (Float)width/std::max(1, height);
-
 
     // screen-quad
 
@@ -294,54 +302,34 @@ void TextureObjectBase::PrivateTO::initGl()
         u_out_resolution = screenQuad->shader()->getUniform("u_resolution", true);
     else
         u_out_resolution = 0;
-
-    // create framebuffer
-
-    outputTex = 0;
-    fbo = new GL::FrameBufferObject(
-                width,
-                height,
-                gl::GL_RGBA,
-                gl::GL_FLOAT,
-                0,//GL::FrameBufferObject::A_DEPTH,
-                false,
-                GL::ER_THROW);
-    fbo->setName(to->name());
-
-    try
-    {
-        fbo->create();
-    }
-    catch (Exception&)
-    {
-        releaseGl();
-        throw;
-    }
-    fbo->unbind();
 }
 
 void TextureObjectBase::PrivateTO::releaseGl()
 {
+    MO_TO_DEBUG("releaseGl()");
+
     for (auto & q : shaderQuads)
         q.quad->release();
     shaderQuads.clear();
 
-    if (screenQuad)
+    if (screenQuad && screenQuad->isCreated())
         screenQuad->release();
     delete screenQuad;
     screenQuad = 0;
 
-    if (swapTex)
+    if (swapTex && swapTex->isAllocated())
         swapTex->release();
     delete swapTex;
     swapTex = 0;
 
-    if (fbo)
+    if (fbo && fbo->isCreated())
         fbo->release();
     delete fbo;
     fbo = 0;
     outputTex = 0;
 }
+
+
 
 GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
 {
@@ -351,6 +339,39 @@ GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
 void TextureObjectBase::PrivateTO::createShaderQuad(
         const GL::ShaderSource& csrc, const QList<QString>& texNames)
 {
+    MO_TO_DEBUG("createShaderQuad() curnum == " << shaderQuads.size());
+
+    // create framebuffer if we havn't already
+
+    outputTex = 0;
+    if (!fbo)
+    {
+        int width = p_width->baseValue(),
+            height = p_height->baseValue();
+
+        aspectRatio = (Float)width/std::max(1, height);
+        fbo = new GL::FrameBufferObject(
+                width,
+                height,
+                gl::GL_RGBA,
+                gl::GL_FLOAT,
+                0,//GL::FrameBufferObject::A_DEPTH,
+                false,
+                GL::ER_THROW);
+        fbo->setName(to->name());
+
+        try
+        {
+            fbo->create();
+        }
+        catch (Exception&)
+        {
+            releaseGl();
+            throw;
+        }
+        fbo->unbind();
+    }
+
     // create quad and compile shader
 
     ShaderQuad quad;
@@ -397,6 +418,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
 
 void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uint thread, uint& texSlot)
 {
+    MO_TO_DEBUG("renderShaderQuad(" << index << ", " << time << ", " << thread << ", " << texSlot << ")");
+
     if (!fbo || index >= (uint)shaderQuads.size())
         return;
 

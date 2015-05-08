@@ -51,7 +51,7 @@ TextureSetting::~TextureSetting()
 {
     if (texture_)
     {
-        if (texture_->isCreated())
+        if (texture_->isHandle())
             MO_GL_WARNING("destruction of TextureSetting with allocated texture");
 
         delete texture_;

@@ -109,7 +109,8 @@ void ScreenQuad::release()
 {
     MO_ASSERT(quad_, "ScreenQuad::release() on uninitialized object");
 
-    quad_->releaseOpenGl();
+    if (quad_->isCreated())
+        quad_->releaseOpenGl();
 
     delete quad_;
     quad_ = 0;

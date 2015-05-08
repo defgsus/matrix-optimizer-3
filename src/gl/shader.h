@@ -46,6 +46,9 @@ public:
 
     // ----- getter -----
 
+    /** The linked shader */
+    Shader * shader() const { return shader_; }
+
     /** Name as in the shader source */
     const QString& name() const { return name_; }
     /** Type of the uniform (as OpenGL enum) */
@@ -75,7 +78,7 @@ private:
     friend void privateUniformDeleter(Uniform*);
 
     /** Constructor (initializes all to zero) */
-    Uniform();
+    Uniform(Shader * s);
     /** Private destructor to avoid stupid things. */
     ~Uniform() { }
 
@@ -86,6 +89,7 @@ private:
     gl::GLint size_;
     gl::GLint location_;
     bool autoSend_;
+    Shader * shader_;
 };
 
 

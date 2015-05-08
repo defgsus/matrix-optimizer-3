@@ -58,10 +58,15 @@ public:
         OpenGL context must be present of course. */
     static Texture * createFromImage(const QImage&, gl::GLenum gpu_format, ErrorReporting = ER_THROW);
 
+    /** Creates a new Texture from an image file.
+        Returns NULL on fail, or throws exception.
+        OpenGL context must be present. */
+    static Texture * createFromImage(const QString& filename, gl::GLenum gpu_format, ErrorReporting rep = ER_THROW);
+
     // --------------- getter ---------------------
 
     /** Returns whether the texture can be bound/created/uploaded. */
-    bool isCreated() const { return handle_ != invalidGl; }
+    bool isHandle() const { return handle_ != invalidGl; }
     /** Returns whether the texture is allocated on the device. */
     bool isAllocated() const { return uploaded_; }
 

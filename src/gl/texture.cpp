@@ -114,8 +114,8 @@ Texture::~Texture()
 {
     MO_DEBUG_IMG("Texture::~Texture()");
 
-    if (isCreated())
-        MO_GL_WARNING("destructor of bound texture!");
+    if (isHandle())
+        MO_GL_WARNING("destructor of bound texture '" << name() << "'");
 }
 
 Texture * Texture::constructFrom(const Texture * t)
@@ -267,7 +267,7 @@ void Texture::releaseTexture_()
 {
     MO_DEBUG_IMG("Texture::releaseTexture_()");
 
-    if (!isCreated()) return;
+    if (!isHandle()) return;
 
     MO_CHECK_GL_COND( rep_, glDeleteTextures(1, &handle_) );
 
@@ -380,7 +380,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
     MO_DEBUG_IMG("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level
                 << ", cubetgt=" << cube_target << ")");
 
-    if (!isCreated())
+    if (!isHandle())
     {
         if (rep_ == ER_THROW)
             MO_GL_ERROR("Texture::upload() on uninitialized Texture");
@@ -711,6 +711,17 @@ Texture * Texture::createFromImage(const QImage & input_img, gl::GLenum gpu_form
     return createFromImage(img, gpu_format, rep);
 }
 
+Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format, ErrorReporting rep)
+{
+    QImage img(filename);
+    if (img.isNull())
+    {
+        MO_GL_ERROR_COND(rep, "Could not load image file\n'" << filename << "'");
+        return 0;
+    }
+
+    return createFromImage(img, gpu_format, rep);
+}
 
 } // namespace GL
 } // namespace MO

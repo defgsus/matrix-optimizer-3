@@ -25,11 +25,12 @@ void privateUniformDeleter(Uniform * u) { delete u; }
 void privateAttributeDeleter(Attribute * a) { delete a; }
 
 
-Uniform::Uniform()
-    :   type_    (GLenum(0)),
-        size_    (0),
-        location_(0),
-        autoSend_(true)
+Uniform::Uniform(Shader * s)
+    : type_     (GLenum(0))
+    , size_     (0)
+    , location_ (0)
+    , autoSend_ (true)
+    , shader_   (s)
 {
     floats[0] = floats[1] = floats[2] = floats[3] = 0.f;
     ints[0] = ints[1] = ints[2] = ints[3] = 0;
@@ -84,7 +85,7 @@ Shader::~Shader()
 void Shader::setSource(const ShaderSource * s)
 {
     if (s->isEmpty())
-        MO_GL_ERROR_COND(rep_, "Shader(" << name_ << ")::setSource() with empty ShaderSource");
+        MO_GL_ERROR_COND(rep_, "Shader(" << name_ << ")::setSource() with empty source");
 
     *source_ = *s;
     sourceChanged_ = true;
@@ -330,7 +331,7 @@ void Shader::getUniforms_()
     // get each uniform data
     for (int i=0; i<numu; ++i)
     {
-        Uniform * u = new Uniform;
+        Uniform * u = new Uniform(this);
 
         // plain old char* strings always need a bit of extra code ..
         GLsizei length;

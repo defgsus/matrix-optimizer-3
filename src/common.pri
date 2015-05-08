@@ -302,7 +302,8 @@ HEADERS += \
     src/object/param/parametertexture.h \
     src/object/texture/textureobjectbase.h \
     src/object/texture/colorto.h \
-    src/object/texture/blurto.h
+    src/object/texture/blurto.h \
+    src/object/texture/imageto.h
 
 
 SOURCES += \
@@ -564,5 +565,6 @@ SOURCES += \
     src/object/param/parametertexture.cpp \
     src/object/texture/textureobjectbase.cpp \
     src/object/texture/colorto.cpp \
-    src/object/texture/blurto.cpp
+    src/object/texture/blurto.cpp \
+    src/object/texture/imageto.cpp
 

@@ -435,7 +435,7 @@ void DomePreviewWidget::releaseGL()
     // release textures
     for (auto i : ptexture_)
     {
-        if (i->isCreated())
+        if (i->isHandle())
             i->release();
         delete i;
     }
@@ -515,7 +515,7 @@ void DomePreviewWidget::prepareDrawGL()
             int s = ptextureDrawable_.size();
             for (uint i=s; i<ptexture_.size(); ++i)
             {
-                if (ptexture_[i]->isCreated())
+                if (ptexture_[i]->isHandle())
                     ptexture_[i]->release();
                 delete ptexture_[i];
             }

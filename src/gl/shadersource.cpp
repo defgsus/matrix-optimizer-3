@@ -100,7 +100,7 @@ void ShaderSource::finalize()
 
     p_addDefine_(vert_, "#define MO_VERTEX", true);
     p_addDefine_(frag_, "#define MO_FRAGMENT", true);
-
+    //MO_PRINT(frag_);
     finalized_ = true;
 }
 

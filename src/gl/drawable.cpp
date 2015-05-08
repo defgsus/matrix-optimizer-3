@@ -304,7 +304,8 @@ void Drawable::releaseOpenGl()
 
     if (vao_)
     {
-        vao_->release();
+        if (vao_->isCreated())
+            vao_->release();
         delete vao_;
     }
     vao_ = 0;

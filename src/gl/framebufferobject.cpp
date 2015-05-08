@@ -149,10 +149,10 @@ void FrameBufferObject::release_()
     MO_CHECK_GL_COND(rep_, glDeleteFramebuffers(1, &fbo_) );
     fbo_ = invalidGl;
 
-    if (colorTex_->isCreated())
+    if (colorTex_->isHandle())
         colorTex_->release();
 
-    if (depthTex_ && depthTex_->isCreated())
+    if (depthTex_ && depthTex_->isHandle())
         depthTex_->release();
 }
 
@@ -171,7 +171,7 @@ bool FrameBufferObject::create()
         return false;
     }
 
-    if (!colorTex_->isCreated())
+    if (!colorTex_->isHandle())
     {
         if (!colorTex_->create())
         {
@@ -180,7 +180,7 @@ bool FrameBufferObject::create()
         }
     }
 
-    if (depthTex_ && !depthTex_->isCreated())
+    if (depthTex_ && !depthTex_->isHandle())
     {
         if (!depthTex_->create())
         {
