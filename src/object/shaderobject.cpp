@@ -111,7 +111,7 @@ void ShaderObject::createParameters()
                       1.0,
                       0.0, 1.0, 0.05);
 
-        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_out");
+        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_", "_out");
 
         p_magInterpol_ = params()->createBooleanParameter("cammaginterpol", tr("interpolation"),
                                                 tr("The interpolation mode for pixel magnification"),

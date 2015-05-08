@@ -299,7 +299,10 @@ HEADERS += \
     src/audio/3rd/ladspa.h \
     src/object/param/modulatortexture.h \
     src/object/interface/valuetextureinterface.h \
-    src/object/param/parametertexture.h
+    src/object/param/parametertexture.h \
+    src/object/texture/textureobjectbase.h \
+    src/object/texture/colorto.h \
+    src/object/texture/blurto.h
 
 
 SOURCES += \
@@ -558,5 +561,8 @@ SOURCES += \
     src/object/param/parametercallback.cpp \
     src/object/audio/waveplayerao.cpp \
     src/object/param/modulatortexture.cpp \
-    src/object/param/parametertexture.cpp
+    src/object/param/parametertexture.cpp \
+    src/object/texture/textureobjectbase.cpp \
+    src/object/texture/colorto.cpp \
+    src/object/texture/blurto.cpp
 

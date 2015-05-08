@@ -46,7 +46,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
 
 int ParameterTexture::getModulatorTypes() const
 {
-    return Object::T_SHADER | Object::T_CAMERA;
+    return Object::T_SHADER | Object::T_CAMERA | Object::T_TEXTURE;
 }
 
 const GL::Texture * ParameterTexture::value(Double time, uint thread) const

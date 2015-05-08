@@ -17,7 +17,6 @@
 #include "projectionsystemsettings.h"
 #include "projectormapper.h"
 #include "gl/shader.h"
-#include "gl/shadersource.h"
 #include "gl/screenquad.h"
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"

@@ -26,6 +26,7 @@
 #include "object/param/parametertimeline1d.h"
 #include "object/camera.h"
 #include "object/shaderobject.h"
+#include "object/texture/textureobjectbase.h"
 #include "object/control/track.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/clipcontroller.h"
@@ -198,7 +199,7 @@ void Scene::findObjects_()
     // all objects that draw their frames into the output
     frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
     {
-        return o->isCamera() | o->isShader();
+        return o->isCamera() | o->isShader() | o->isTexture();
     }, true);
 
     // not all objects need there transformation calculated
@@ -1070,6 +1071,10 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
             static_cast<Camera*>(drawer)->drawFramebuffer(thread, time);
         else if (drawer->isShader())
             static_cast<ShaderObject*>(drawer)->drawFramebuffer(thread, time,
+                                                                fboFinal_[thread]->width(),
+                                                                fboFinal_[thread]->height());
+        else if (drawer->isTexture())
+            static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(thread, time,
                                                                 fboFinal_[thread]->width(),
                                                                 fboFinal_[thread]->height());
     }

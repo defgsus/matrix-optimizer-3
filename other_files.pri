@@ -55,5 +55,9 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/diskrender.html \
     assets/shader/wavetracer.frag \
     assets/shader/wavetracer.vert \
-    assets/shader/inc/transform.glsl
+    assets/shader/inc/transform.glsl \
+    assets/shader/to/default.vert \
+    assets/shader/to/color.frag \
+    assets/shader/to/blur.frag \
+    assets/shader/to/header.glsl
     assets/help/en/object/model3d.html

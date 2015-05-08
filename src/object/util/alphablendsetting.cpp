@@ -55,9 +55,14 @@ AlphaBlendSetting::AlphaBlendSetting(Object * parent)
 
 void AlphaBlendSetting::createParameters(Mode defaultType, bool with_parent, const QString &suff)
 {
+    createParameters(defaultType, with_parent, "", suff);
+}
+
+void AlphaBlendSetting::createParameters(Mode defaultType, bool with_parent, const QString& prefix, const QString &suff)
+{
     MO_ASSERT(object_, "");
 
-    p_type_ = object_->params()->createSelectParameter("_blendmode" + suff,
+    p_type_ = object_->params()->createSelectParameter(prefix + "blendmode" + suff,
                                     tr("alpha blending"),
                                     tr("Selects how succesive drawing actions are composed"),
                                    modeIds,

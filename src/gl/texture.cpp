@@ -130,7 +130,7 @@ Texture * Texture::constructFrom(const Texture * t)
                            t->format(), t->input_format_,
                            t->type(), 0, t->rep_);
 
-    c->name_ += "_from_" + t->name();
+    c->name_ += t->name() + "(copy)";
     return c;
 }
 

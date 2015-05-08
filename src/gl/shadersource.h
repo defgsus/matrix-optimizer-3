@@ -98,9 +98,13 @@ public:
     /** Replacess all #include <...> statements for which a files is in the app resources */
     void pasteDefaultIncludes();
 
+    /** To be called before compilation.
+        Adds default defines. */
+    void finalize();
+
 private:
 
-    void p_addDefine_(QString& src, const QString& def_line) const;
+    void p_addDefine_(QString& src, const QString& def_line, bool addBefore = false) const;
     void p_pasteIncludes_(QString& src, std::function<QString(const QString&, bool)> func, int lvl);
 
     QString vert_, frag_,
@@ -111,6 +115,8 @@ private:
         unLightDiffExp_,
         unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;
+
+    bool finalized_;
 };
 
 } // namespace GL

@@ -120,7 +120,8 @@ public:
         T_OSCILLATOR        = 1<<19,
         T_AUDIO_OBJECT      = 1<<20,
         T_ANGELSCRIPT       = 1<<21,
-        T_SHADER            = 1<<22
+        T_SHADER            = 1<<22,
+        T_TEXTURE           = 1<<23
     };
     enum TypeGroups
     {
@@ -287,6 +288,7 @@ public:
     virtual bool isAudioObject() const { return false; }
     virtual bool isScript() const { return false; }
     virtual bool isShader() const { return false; }
+    virtual bool isTexture() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */

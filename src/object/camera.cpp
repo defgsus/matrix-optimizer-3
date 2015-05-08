@@ -157,7 +157,7 @@ void Camera::createParameters()
                           1.0,
                           0.0, 1.0, 0.05);
 
-        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_camout");
+        alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_", "_camout");
 
         p_magInterpol_ = params()->createBooleanParameter("cammaginterpol", tr("interpolation"),
                                                 tr("The interpolation mode for pixel magnification"),

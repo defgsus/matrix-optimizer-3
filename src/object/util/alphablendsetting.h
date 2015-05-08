@@ -48,6 +48,7 @@ public:
     /** Creates the blending-related parameters in parent Object.
         Each parameter id is appended with @p id_suffix, to enable
         more than one option set for an Object. */
+    void createParameters(Mode defaultMode, bool with_parent, const QString& prefix, const QString& id_suffix);
     void createParameters(Mode defaultMode, bool with_parent, const QString& id_suffix);
 
     /** Sets the visibility of the parameters according to current settings. */

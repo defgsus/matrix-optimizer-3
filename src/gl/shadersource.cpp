@@ -35,7 +35,8 @@ ShaderSource::ShaderSource()
       anPos_        ("a_position"),
       anCol_        ("a_color"),
       anNorm_       ("a_normal"),
-      anTexCoord_   ("a_texCoord")
+      anTexCoord_   ("a_texCoord"),
+      finalized_    (false)
 {
 }
 
@@ -60,6 +61,7 @@ void ShaderSource::loadFragmentSource(const QString &filename)
                     << f.errorString());
 
     frag_ = f.readAll();
+    finalized_ = false;
 }
 
 
@@ -71,6 +73,7 @@ void ShaderSource::loadVertexSource(const QString &filename)
                     << f.errorString());
 
     vert_ = f.readAll();
+    finalized_ = false;
 }
 
 void ShaderSource::loadDefaultSource()
@@ -88,6 +91,17 @@ void ShaderSource::addDefine(const QString &defineCommand)
 {
     p_addDefine_(vert_, defineCommand);
     p_addDefine_(frag_, defineCommand);
+}
+
+void ShaderSource::finalize()
+{
+    if (finalized_)
+        return;
+
+    p_addDefine_(vert_, "#define MO_VERTEX", true);
+    p_addDefine_(frag_, "#define MO_FRAGMENT", true);
+
+    finalized_ = true;
 }
 
 void ShaderSource::replace(const QString &before, const QString &after, bool adjustLineNumber)
@@ -110,6 +124,8 @@ void ShaderSource::replaceIncludes(std::function<QString (const QString &, bool)
     p_pasteIncludes_(frag_, func, 0);
 
     //MO_PRINT("[" + frag_ + "]");
+
+    finalized_ = false; // XXX Not exactly sure
 }
 
 void ShaderSource::pasteDefaultIncludes()
@@ -233,21 +249,21 @@ void ShaderSource::replaceWithLineNumber(QString &src, const QString &before, co
 //    MO_DEBUG("[" + src + "]");
 }
 
-void ShaderSource::p_addDefine_(QString &src, const QString &def_line) const
+void ShaderSource::p_addDefine_(QString &src, const QString &def_line, bool addBefore) const
 {
     QString line = def_line;
     if (!line.endsWith("\n"))
         line.append("\n");
 
-    // look for other defines
+    // add after other defines
     int i = src.lastIndexOf("#define");
-    if (i>=0)
+    if (!addBefore && i>=0)
     {
         src.insert(src.indexOf("\n", i) + 1, line);
         return;
     }
 
-    // look for extensions
+    // insert after extensions
     i = src.lastIndexOf("#extension");
     if (i>=0)
     {
@@ -255,7 +271,7 @@ void ShaderSource::p_addDefine_(QString &src, const QString &def_line) const
         return;
     }
 
-    // look for version
+    // insert after version
     i = src.lastIndexOf("#version");
     if (i>=0)
     {

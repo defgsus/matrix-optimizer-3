@@ -87,7 +87,7 @@ void ObjectGl::createParameters()
             { DWM_PARENT, DWM_ON, DWM_OFF },
             p_defaultDepthWriteMode_, true, false);
 
-        p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_OGl_");
+        p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_", "_OGl_");
         /*
         paramAlphaBlend_ = createSelectParameter("rendset_abm", tr("alpha blending"),
             tr("Selects how semi-transparent objects are composed on screen"),

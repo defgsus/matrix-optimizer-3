@@ -37,6 +37,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
+#include "object/param/parametertexture.h"
 #include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
@@ -481,6 +482,13 @@ void ParameterWidget::createWidgets_()
             pc->fire();
             emit editor_->parameterChanged(pc);
         });
+    }
+
+    else
+    // --- texture parameter ---
+    if (/*ParameterTexture * pt = */dynamic_cast<ParameterTexture*>(param_))
+    {
+
     }
 
     else
