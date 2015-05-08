@@ -204,12 +204,14 @@ void ShaderObject::initGl(uint )
 
     // shader-quad uniforms
     u_resolution_ = shaderQuad_->shader()->getUniform("u_resolution", false);
+    u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
+    u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
+    u_fb_tex_ = shaderQuad_->shader()->getUniform("u_feedback", false);
+
     if (u_resolution_)
         u_resolution_->setFloats(width, height,
                              1.f / std::max(1, width),
                              1.f / std::max(1, height));
-    u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
-    u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
     if (u_transformation_)
         u_transformation_->setAutoSend(true);
 
@@ -292,27 +294,6 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     fbo_->bind();
 
-    // zero will be feedback buffer
-    uint texSlot = 1;
-    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0) );
-
-    // exchange render target
-    if (1)
-    {
-        // create a swap buffer
-        if (!swapTex_)
-        {
-            swapTex_ = GL::Texture::constructFrom(fbo_->colorTexture());
-            swapTex_->create();
-        }
-        swapTex_ = fbo_->swapColorTexture(swapTex_);
-        swapTex_->bind();
-    }
-
-    MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
-    MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
-    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
-
     // --- set shader uniforms ---
 
     if (u_time_)
@@ -321,9 +302,33 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     if (u_transformation_)
         u_transformation_->set(transformation());
 
+    uint texSlot = 0;
     userUniforms_->updateUniforms(time, thread, texSlot);
 
+    // exchange render target and bind previous frame
+    if (u_fb_tex_)
+    {
+        // create a swap buffer
+        if (!swapTex_)
+        {
+            swapTex_ = GL::Texture::constructFrom(fbo_->colorTexture());
+            swapTex_->create();
+        }
+        swapTex_ = fbo_->swapColorTexture(swapTex_);
+
+        // bind previous frame
+        MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
+        swapTex_->bind();
+        u_fb_tex_->ints[0] = texSlot;
+        ++texSlot;
+    }
+
+
     // --- render ---
+
+    MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
+    MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
+    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
 
     MO_EXTEND_EXCEPTION(
         shaderQuad_->draw(w, h, p_split_->baseValue())

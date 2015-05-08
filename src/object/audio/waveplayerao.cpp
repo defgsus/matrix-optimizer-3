@@ -292,7 +292,7 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
 
     // get wave data range
     Double wlen = wave->lengthSeconds();
-    if (mode == M_SYNCED)
+    if (mode == M_SYNCED && maxLength > 0.)
         wlen = std::min(wlen, maxLength);
 
     // sample from wave data

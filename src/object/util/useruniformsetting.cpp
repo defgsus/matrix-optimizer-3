@@ -280,7 +280,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
             }
         }
         else
-        if (!u.texture)
+        if (!u.isBufferTexture())
         {
             // copy single float value
             for (uint i=0; i<u.num_floats; ++i)

@@ -72,6 +72,7 @@ private:
         * u_resolution_,
         * u_time_,
         * u_transformation_,
+        * u_fb_tex_,
         * u_out_color_, * u_out_resolution_;
 
     Float aspectRatio_;
