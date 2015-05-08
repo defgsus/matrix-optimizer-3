@@ -29,6 +29,7 @@
 #include "object/control/derivativeobjectfloat.h"
 #include "object/synthesizer.h"
 #include "object/audio/filterao.h"
+#include "object/texture/blurto.h"
 #include "object/ascriptobject.h"
 #include "object/oscillograph.h"
 #include "io/error.h"
@@ -66,7 +67,9 @@ struct AppIcons::Private
         I_ANGELSCRIPT,
         I_OSCILLOGRAPH,
         I_GLSL,
-        I_DERIVATIVE
+        I_DERIVATIVE,
+        I_TEX,
+        I_TO_BLUR
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -135,20 +138,13 @@ void AppIcons::Private::init()
     nameMap_.insert(I_OSCILLOGRAPH, ":/icon/obj_oscillograph.png");
     nameMap_.insert(I_GLSL, ":/icon/obj_glsl.png");
     nameMap_.insert(I_DERIVATIVE, ":/icon/obj_derivative.png");
+    nameMap_.insert(I_TEX, ":/icon/obj_tex.png");
+    nameMap_.insert(I_TO_BLUR, ":/icon/obj_to_blur.png");
 }
 
 
 AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 {
-    if (o->isClip())
-        return I_CLIP;
-
-    if (o->isShader())
-        return I_GLSL;
-
-    if (o->isClipController())
-        return I_CLIP_CONTROL;
-
     if (o->isTransformation())
     {
         if (qobject_cast<const Translation*>(o))
@@ -175,17 +171,6 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_AUDIO;
     }
 
-    if (o->type() & Object::T_GROUP) return I_GROUP;
-    if (o->isTrack()) return I_TRACK;
-    if (o->type() & Object::TG_FLOAT) return I_PARAMETER;
-    if (o->isCamera()) return I_CAMERA;
-    if (o->isMicrophone()) return I_MICROPHONE;
-    if (o->isSoundSource()) return I_SOUNDSOURCE;
-    if (o->isGl()) return I_3D;
-    if (o->isParameter()) return I_PARAMETER;
-    if (o->isLightSource()) return I_LIGHT;
-    if (o->isModulatorObject()) return I_MODULATOR;
-
     if (qobject_cast<const AScriptObject*>(o))
         return I_ANGELSCRIPT;
 
@@ -199,6 +184,24 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (qobject_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
 #endif
+
+    if (qobject_cast<const BlurTO*>(o))
+        return I_TO_BLUR;
+
+    if (o->isClip()) return I_CLIP;
+    if (o->isShader()) return I_GLSL;
+    if (o->isTexture()) return I_TEX;
+    if (o->isClipController()) return I_CLIP_CONTROL;
+    if (o->type() & Object::T_GROUP) return I_GROUP;
+    if (o->isTrack()) return I_TRACK;
+    if (o->type() & Object::TG_FLOAT) return I_PARAMETER;
+    if (o->isCamera()) return I_CAMERA;
+    if (o->isMicrophone()) return I_MICROPHONE;
+    if (o->isSoundSource()) return I_SOUNDSOURCE;
+    if (o->isGl()) return I_3D;
+    if (o->isParameter()) return I_PARAMETER;
+    if (o->isLightSource()) return I_LIGHT;
+    if (o->isModulatorObject()) return I_MODULATOR;
 
     return I_NONE;
 }
@@ -217,6 +220,7 @@ AppIcons::Private::IconId AppIcons::Private::idForType(int type) const
         case Object::T_AUDIO_OBJECT: return I_AUDIO;
         case Object::T_ANGELSCRIPT: return I_ANGELSCRIPT;
         case Object::T_SHADER: return I_GLSL;
+        case Object::T_TEXTURE: return I_TEX;
     }
     if (type & Object::TG_TRACK) return I_TRACK;
     if (type & Object::TG_FLOAT) return I_PARAMETER;

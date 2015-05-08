@@ -407,7 +407,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     fbo->bind();
 
     // exchange render target for multi-stage rendering
-    if (shaderQuads.size() > 1)
+    if (shaderQuads.size() > 1 && index > 0)
     {
         // create a swap buffer
         if (!swapTex)
@@ -484,7 +484,6 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(uint thread, Double time, int
     auto tex = to->valueTexture(time, thread);
     if (!tex)
         return;
-    MO_PRINT(tex->name());
 
     // -- shader uniforms --
 

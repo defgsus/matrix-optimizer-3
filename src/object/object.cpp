@@ -332,10 +332,15 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
 
 int Object::objectPriority(const Object *o)
 {
+    // need to adjust ObjectFactory::objectPriorityName() as well
+
     if (o->isTransformation())
-        return 4;
-    if (o->isGl() || o->isLightSource())
+        return 5;
+    if (o->isTexture())
         return 3;
+    if (o->isGl() || o->isLightSource())
+        return 4;
+    // 2 = meta
     if (o->type() & TG_MODULATOR)
         return 1;
     if (o->isAudioUnit() || o->isAudioObject())

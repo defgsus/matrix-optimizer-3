@@ -70,8 +70,9 @@ QString ObjectFactory::objectPriorityName(int priority)
 {
     switch (priority)
     {
-        case 4: return tr("Transformation");
-        case 3: return tr("Visual");
+        case 5: return tr("Transformation");
+        case 4: return tr("Visual");
+        case 3: return tr("Texture");
         case 2: return tr("Meta");
         case 1: return tr("Control");
         case 0: return tr("Audio");
@@ -105,6 +106,9 @@ int ObjectFactory::hueForObject(int type)
     else
     if (type == Object::T_LIGHTSOURCE)
         return 60;
+    else
+    if (type == Object::T_SHADER || type == Object::T_TEXTURE)
+        return 45;
     else
     if (type & Object::TG_TRACK)
         return 100;

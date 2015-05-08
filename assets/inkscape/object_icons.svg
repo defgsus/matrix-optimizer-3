@@ -123,6 +123,18 @@
        x2="362.02143"
        y2="327.54075"
        gradientUnits="userSpaceOnUse" />
+    <filter
+       inkscape:collect="always"
+       id="filter4174"
+       x="-0.042518384"
+       width="1.0850368"
+       y="-0.12273811"
+       height="1.2454762">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.77924496"
+         id="feGaussianBlur4176" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -132,8 +144,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="437.53328"
-     inkscape:cy="453.30449"
+     inkscape:cx="567.66281"
+     inkscape:cy="496.16163"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -2699,5 +2711,57 @@
        inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_derivative.png"
        inkscape:export-xdpi="164"
        inkscape:export-ydpi="164" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-7-23-1-0"
+       width="68.188736"
+       height="68.188736"
+       x="513.41071"
+       y="-724.16577"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_tex.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <text
+       xml:space="preserve"
+       style="font-size:23.56935883px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       x="668.51343"
+       y="554.22968"
+       id="text3652-6"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_tex.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164"><tspan
+         sodipodi:role="line"
+         id="tspan3654-9"
+         x="668.51343"
+         y="554.22968"
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-family:Rekha;-inkscape-font-specification:Rekha Medium">TEX</tspan></text>
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-7-23-1-0-0"
+       width="68.188736"
+       height="68.188736"
+       x="583.26776"
+       y="-729.09442"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_to_blur.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <text
+       xml:space="preserve"
+       style="font-size:23.56935882999999876px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;filter:url(#filter4174)"
+       x="673.44208"
+       y="624.08673"
+       id="text3652-6-2"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_to_blur.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164"><tspan
+         sodipodi:role="line"
+         id="tspan3654-9-8"
+         x="673.44208"
+         y="624.08673"
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-family:Rekha;-inkscape-font-specification:Rekha Medium">TEX</tspan></text>
   </g>
 </svg>

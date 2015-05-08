@@ -1392,9 +1392,6 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
     if (list.empty() && !with_template)
         return 0;
 
-    // sort by priority
-    qStableSort(list.begin(), list.end(), sortObjectList_Priority);
-
     QMenu * menu = new QMenu();
 
     // from template
@@ -1408,13 +1405,21 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
 
     if (!list.empty())
     {
+        // sort by priority
+        qStableSort(list.begin(), list.end(), sortObjectList_Priority);
+
         int curprio = Object::objectPriority( list.front() );
+        QMenu * sub = new QMenu(menu);
+        sub->setTitle(ObjectFactory::objectPriorityName(curprio));
+        menu->addMenu(sub);
         for (auto o : list)
         {
             if (curprio != Object::objectPriority(o))
             {
-                menu->addSeparator();
                 curprio = Object::objectPriority(o);
+                sub = new QMenu(menu);
+                sub->setTitle(ObjectFactory::objectPriorityName(curprio));
+                menu->addMenu(sub);
             }
 
             QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), scene);
@@ -1428,7 +1433,7 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_t
                 if (o->className() == "Scale")
                     a->setShortcut(Qt::ALT + Qt::SHIFT + Qt::Key_S);
             }
-            menu->addAction(a);
+            sub->addAction(a);
         }
     }
 

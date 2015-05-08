@@ -55,5 +55,7 @@
         <file alias="obj_oscillograph.png">assets/icon/obj_oscillograph.png</file>
         <file alias="obj_glsl.png">assets/icon/obj_glsl.png</file>
         <file alias="obj_derivative.png">assets/icon/obj_derivative.png</file>
+        <file alias="obj_tex.png">assets/icon/obj_tex.png</file>
+        <file alias="obj_to_blur.png">assets/icon/obj_to_blur.png</file>
     </qresource>
 </RCC>
