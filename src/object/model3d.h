@@ -84,7 +84,8 @@ private:
     UserUniformSetting * uniformSetting_;
 
     ParameterFloat * cr_, *cg_, *cb_, *ca_, *cbright_,
-        *diffExp_, *bumpScale_,
+        *diffAmt_, *diffExp_, *specAmt_, *specExp_,
+        *bumpScale_,
         *vertexExtrude_, *paramLineWidth_,
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
     ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
@@ -92,7 +93,7 @@ private:
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_, *glslNormal_;
     ParameterInt * numDup_;
 
-    GL::Uniform * u_cam_pos_, * u_diff_exp_, * u_bump_scale_,
+    GL::Uniform * u_cam_pos_, * u_light_amt_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_, * u_instance_count_;
 
     bool doRecompile_;

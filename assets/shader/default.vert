@@ -66,11 +66,10 @@ out vec4 v_color;
 out vec4 v_ambient_color;
 out vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
-    #ifdef MO_FRAGMENT_LIGHTING
-        out mat3 v_normal_space;                    // matrix to convert into normal-space
-    #else
-        out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light in normal-space
-                                                    // w is distance attenuation
+    out mat3 v_normal_space;                    // matrix to convert into normal-space
+    #ifndef MO_FRAGMENT_LIGHTING
+    out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light
+                                                // w is distance attenuation
     #endif
 #endif
 
@@ -253,9 +252,10 @@ void main()
         // remove scaling
         lightmat = mat3(normalize(lightmat[0]), normalize(lightmat[1]), normalize(lightmat[2]));
 
+        v_normal_space = lightmat;
+
     // pass all light relevant settings to fragment shader
     #ifdef MO_FRAGMENT_LIGHTING
-        v_normal_space = lightmat;
 
     // calculate as much as possible in vertex shader
     #else
@@ -268,8 +268,6 @@ void main()
             float dist = length(lightvec);
             // normalized direction towards lightsource
             vec3 lightvecn = lightvec / dist;
-            // normalized direction towards lightsource in surface-normal space
-            vec3 ldir = (lightmat * lightvecn);
 
             // calculate influence from distance attenuation
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
@@ -282,7 +280,7 @@ void main()
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            v_light_dir[i] = vec4(ldir, att);
+            v_light_dir[i] = vec4(lightvecn, att);
         }
     #endif
 

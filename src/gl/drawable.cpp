@@ -218,9 +218,9 @@ void Drawable::compileShader_()
     if (u)
         u->ints[0] = 1;
 
-    auto diffExp = shader_->getUniform(shaderSource_->uniformNameDiffuseExponent());
-    if (diffExp)
-        diffExp->floats[0] = 1.0;
+    auto lightAmt = shader_->getUniform(shaderSource_->uniformNameLightAmt());
+    if (lightAmt)
+        lightAmt->setFloats(1., 1., .3, 10.);
 
     uniColor_ = shader_->getUniform(shaderSource_->uniformNameColor());
     if (uniColor_)

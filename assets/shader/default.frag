@@ -37,10 +37,9 @@ in vec4 v_color;
 in vec4 v_ambient_color;
 in vec2 v_texCoord;
 #ifdef MO_ENABLE_LIGHTING
+    in mat3 v_normal_space;
     #ifndef MO_FRAGMENT_LIGHTING
         in vec4 v_light_dir[MO_NUM_LIGHTS];
-    #else
-        in mat3 v_normal_space;
     #endif
 #endif
 
@@ -56,7 +55,7 @@ uniform vec3 u_cam_pos;
 uniform float u_instance_count;
 
 #ifdef MO_ENABLE_LIGHTING
-    uniform float u_diffuse_exp;
+    uniform vec4 u_light_amt;
     uniform float u_light_diffuse_exp[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
@@ -136,9 +135,8 @@ vec2 mo_normalmap_lookup(in vec2 st)
             ;
 }
 
-/** Light directions are already in surface normal space,
-    so this is either the normal-map or <0,0,1> */
-vec3 mo_normal =
+/** Normal in normal space */
+vec3 mo_normal_ns =
 #ifndef MO_ENABLE_NORMALMAP
     vec3(0., 0., 1.);
 #else
@@ -148,6 +146,8 @@ vec3 mo_normal =
             u_bump_scale
         );
 #endif
+/** Normal back in object space */
+vec3 mo_normal;
 
 
 #ifdef MO_ENABLE_TEXTURE_POST_PROCESS
@@ -246,33 +246,36 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
     // dot-product of light normal and vertex normal gives linear light influence
     float d = max(0.0, dot(mo_normal, light_normal) );
     // shaping the linear light influence
-    float diffuse = pow(d, shinyness);
+    float diffuse = pow(d, u_light_amt.y *shinyness);
 
-    //vec3 halfvec = reflect( v_cam_dir, v_normal_eye );
-    //float spec = pow( max(0.0, dot(v_light_dir_eye[i], halfvec)), 10.0);
+    // specular
+    vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), v_normal);
+    d = max(0.0, dot(light_normal, ref));
+    float spec = pow(d, u_light_amt.w * shinyness);
 
-    return vec4(diffuse * color.xyz, 0.0);
+    return vec4((
+                u_light_amt.x * diffuse +
+                u_light_amt.z * spec ) * color.xyz, 0.0);
     //return vec4(diffuse * color.xyz + spec * (0.5+0.5*color.xyz), 0.);
     //return vec4(spec * (0.5+0.5*color.xyz), 0.);
 }
 
 #ifndef MO_FRAGMENT_LIGHTING
 
-    vec4 mo_light_color()
+    vec4 mo_calc_light_color()
     {
         vec4 c = vec4(0., 0., 0., 0.);
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
             c += mo_calc_light_color(
-                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i],
-                            u_diffuse_exp * u_light_diffuse_exp[i]);
+                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], u_light_diffuse_exp[i]);
 
         return c;
     }
 
 #else
 
-    vec4 mo_light_color()
+    vec4 mo_calc_light_color()
     {
         vec4 c = vec4(0., 0., 0., 0.);
 
@@ -284,8 +287,6 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
             float dist = length(lightvec);
             // normalized direction towards lightsource
             vec3 lightvecn = lightvec / dist;
-            // normalized direction towards lightsource in surface-normal space
-            vec3 ldir = ( v_normal_space * lightvecn );
 
             // calculate influence from distance attenuation
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
@@ -298,8 +299,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            c += mo_calc_light_color(ldir, att * u_light_color[i],
-                                     u_diffuse_exp * u_light_diffuse_exp[i]);
+            c += mo_calc_light_color(lightvecn, att * u_light_color[i], u_light_diffuse_exp[i]);
         }
 
         return c;
@@ -310,10 +310,11 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
 
 #else // MO_ENABLE_LIGHTING
 
-vec4 mo_light_color() { return vec4(0.); }
+vec4 mo_calc_light_color() { return vec4(0.); }
 
 #endif
 
+vec4 mo_light_color; // global access for user
 
 vec4 mo_toon_color()
 {
@@ -336,12 +337,16 @@ void main()
     // 'ambient' or base color
     vec4 ambcol = mo_ambient_color();
 
+#ifdef MO_ENABLE_LIGHTING
 #ifdef MO_ENABLE_FRAGMENT_OVERRIDE
-    mo_normal = mo_modify_normal(mo_normal);
+    mo_normal_ns = mo_modify_normal(mo_normal_ns);
+#endif
+    mo_normal = v_normal_space * mo_normal_ns;
 #endif
 
+    mo_light_color = mo_calc_light_color();
     // add light to the base color
-    vec4 col = ambcol + mo_light_color();
+    vec4 col = ambcol + mo_light_color;
     //vec4 col = vec4(v_cam_dir, 1.0);
     //vec4 col = vec4(v_pos * 0.5 + 0.5, 1.0);
     //col *= mo_toon_color();

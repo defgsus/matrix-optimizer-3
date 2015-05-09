@@ -54,7 +54,7 @@ Model3d::Model3d(QObject * parent)
       textureMorph_ (new TextureMorphSetting(this)),
       textureBumpMorph_(new TextureMorphSetting(this)),
       uniformSetting_(new UserUniformSetting(this)),
-      u_diff_exp_   (0),
+      u_light_amt_  (0),
       u_bump_scale_ (0),
       u_vertex_extrude_(0),
       doRecompile_  (false)
@@ -161,7 +161,7 @@ void Model3d::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("shaderset", "shader settings");
+    params()->beginParameterGroup("light", "lighting");
 
         lightMode_ = params()->createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
@@ -176,11 +176,25 @@ void Model3d::createParameters()
             LM_PER_FRAGMENT,
             true, false);
 
+        diffAmt_ = params()->createFloatParameter("diffuseamt", tr("diffuse"),
+                                   tr("Amount of diffuse lighting"),
+                                   1.0, 0.1);
+
         diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
-                                   tr("Exponent for the diffuse lighting - the higher, the narrower "
-                                      "is the light cone"),
+                                   tr("Exponent for the diffuse lighting - the higher, the narrower"),
                                    4.0, 0.1);
         diffExp_->setMinValue(0.001);
+
+        specAmt_ = params()->createFloatParameter("specularamt", tr("specular"),
+                                   tr("Amount of specular light reflection"),
+                                   .5, 0.1);
+
+        specExp_ = params()->createFloatParameter("specexp", tr("specular exponent"),
+                                   tr("Exponent for the diffuse lighting - the higher, the narrower"),
+                                   10.0, 0.1);
+        specExp_->setMinValue(0.001);
+
+    params()->beginParameterGroup("glsl", "glsl");
 
         // --- glsl ---
 
@@ -192,7 +206,7 @@ void Model3d::createParameters()
                                          true, false);
 
 
-        glslVertex_ = params()->createTextParameter("glslvertex", tr("glsl position"),
+        glslVertex_ = params()->createTextParameter("glslvertex", tr("vertex position"),
                         tr("A piece of glsl code to modify vertex positions"),
                         TT_GLSL,
                         "// -- uniforms --\n"
@@ -213,7 +227,7 @@ void Model3d::createParameters()
                         "vec3 mo_modify_position(in vec3 pos)\n{\n\treturn pos;\n}\n\n"
                         , true, false);
 
-        glslTransform_ = params()->createTextParameter("glsltransform", tr("glsl position"),
+        glslTransform_ = params()->createTextParameter("glsltransform", tr("vertex transform"),
                         tr("A piece of glsl code to modify vertex positions"),
                         TT_GLSL,
                         "// -- uniforms --\n"
@@ -231,10 +245,14 @@ void Model3d::createParameters()
                         "// vec2 a_texCoord\n"
                         "// -- special stuff --\n"
                         "// vec3 v_instance\n\n"
-                        "mat4 mo_user_transform()\n{\n\treturn mat4(1.);\n}\n"
+                        "#include <transform>\n#include <constants>\n\n"
+                        "mat4 mo_user_transform()\n{\n"
+                        "\tmat4 m = mat4(1.);\n"
+                        "\t//m = rotate(m, degree(45.) * a_position.y);\n"
+                        "\treturn m;\n}\n"
                         , true, false);
 
-        glslVertexOut_ = params()->createTextParameter("glsl_color", tr("glsl vertex output"),
+        glslVertexOut_ = params()->createTextParameter("glsl_color", tr("vertex output"),
                         tr("A piece of glsl code to modify vertex output"),
                         TT_GLSL,
                            "// " + tr("Please be aware that this interface is likely to change in the future!") +
@@ -269,7 +287,7 @@ void Model3d::createParameters()
                            "void mo_modify_vertex_output()\n{\n\t\n}\n"
                         , true, false);
 
-        glslNormal_ = params()->createTextParameter("glsl_normal", tr("glsl fragment normal "),
+        glslNormal_ = params()->createTextParameter("glsl_normal", tr("fragment normal"),
                     tr("A piece of glsl code to change the fragment normal before lighting"),
                     TT_GLSL,
                        "// " + tr("Please be aware that this interface is likely to change in the future!") +
@@ -288,15 +306,17 @@ void Model3d::createParameters()
                        "// vec3 v_pos_eye\n"
                        "// vec3 v_normal\n"
                        "// vec3 v_normal_eye\n"
+                       "// mat3 v_normal_space\n"
                        "// vec3 v_texCoord\n"
                        "// vec3 v_cam_dir\n"
                        "// vec4 v_color\n"
                        "// vec4 v_ambient_color\n"
                        "\n"
+                       "// a direction of (0,0,1) is the default normal\n"
                        "vec3 mo_modify_normal(in vec3 n)\n{\n\treturn n;\n}\n"
                     , true, false);
 
-        glslFragmentOut_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment output"),
+        glslFragmentOut_ = params()->createTextParameter("glsl_fragment", tr("fragment output"),
                     tr("A piece of glsl code to set or modify the output fragment color"),
                     TT_GLSL,
                        "// " + tr("Please be aware that this interface is likely to change in the future!") +
@@ -315,12 +335,14 @@ void Model3d::createParameters()
                        "// vec3 v_pos_eye\n"
                        "// vec3 v_normal\n"
                        "// vec3 v_normal_eye\n"
+                       "// mat3 v_normal_space\n"
                        "// vec3 v_texCoord\n"
                        "// vec3 v_cam_dir\n"
                        "// vec4 v_color\n"
                        "// vec4 v_ambient_color\n"
                        "// -- lighting --\n"
-                       "// vec3 mo_normal()\n"
+                       "// vec3 mo_normal\n"
+                       "// vec4 mo_light_color\n"
                        "// ... todo\n"
                        "// -- output to rasterizer --\n"
                        "// vec4 out_color\n"
@@ -697,7 +719,7 @@ void Model3d::setupDrawable_()
     }
 
     // get uniforms
-    u_diff_exp_ = draw_->shader()->getUniform(src->uniformNameDiffuseExponent());
+    u_light_amt_ = draw_->shader()->getUniform(src->uniformNameLightAmt());
     u_cam_pos_ = draw_->shader()->getUniform("u_cam_pos");
     u_instance_count_ = draw_->shader()->getUniform("u_instance_count");
 
@@ -787,8 +809,12 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
         if (u_instance_count_)
             u_instance_count_->floats[0] = numDup;
-        if (u_diff_exp_)
-            u_diff_exp_->floats[0] = diffExp_->value(time, thread);
+        if (u_light_amt_)
+            u_light_amt_->setFloats(
+                        diffAmt_->value(time, thread),
+                        diffExp_->value(time, thread),
+                        specAmt_->value(time, thread),
+                        specExp_->value(time, thread));
         if (u_bump_scale_)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
         if (u_vertex_extrude_)
