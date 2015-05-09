@@ -393,7 +393,7 @@ struct math_func<double>
     static void assign_if_3		(double ** v) { RES = A != 0? B : C; }
 
     static void abs_1			(double ** v) { RES = std::abs(A); }
-    static void sign_1			(double ** v) { RES = A > 0.0? -1.0 : A < 0.0? -1.0 : 0.0; }
+    static void sign_1			(double ** v) { RES = A > 0.0? 1.0 : A < 0.0? -1.0 : 0.0; }
     static void floor_1			(double ** v) { RES = std::floor(A); }
     static void ceil_1			(double ** v) { RES = std::ceil(A); }
     static void round_1			(double ** v) { RES = std::floor(A + 0.5); }

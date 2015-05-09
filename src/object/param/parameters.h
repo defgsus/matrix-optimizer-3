@@ -188,6 +188,16 @@ public:
                 Double minTime, Double maxTime, Double minValue, Double maxValue,
                 bool editable = true);
 
+
+    ParameterSelect * createTextureFormatParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                int minChan = 2, int maxChan = 4);
+    ParameterSelect * createTextureTypeParameter(
+                const QString& id, const QString& name, const QString& statusTip);
+    /** Combines the two values from texture format and type parameters and
+        returns the correct format GLenum. */
+    static int getTexFormat(int format, int type);
+
 private:
 
     Object * object_;

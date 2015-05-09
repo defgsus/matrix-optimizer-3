@@ -77,7 +77,8 @@ struct TextureObjectBase::PrivateTO
     uint maxIns;
 
     ParameterFloat * p_out_r, * p_out_g, * p_out_b, * p_out_a;
-    ParameterSelect * p_magInterpol, * p_enableOut;
+    ParameterSelect * p_magInterpol, * p_enableOut,
+                * p_texType, * p_texFormat;
     ParameterInt * p_width, * p_height, * p_aa, * p_split;
     ParameterText * p_fragment;
     QList<ParameterTexture*> p_textures;
@@ -147,7 +148,7 @@ void TextureObjectBase::createParameters()
 void TextureObjectBase::PrivateTO::createParameters()
 {
 
-    to->params()->beginParameterGroup("to_res", tr("resolution"));
+    to->params()->beginParameterGroup("to_res", tr("resolution and format"));
 
         p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
@@ -157,6 +158,12 @@ void TextureObjectBase::PrivateTO::createParameters()
         p_split = to->params()->createIntParameter("to_split", tr("segments"),
                                     tr("Split rendering of the output into separate regions for better gui response"),
                                     1, 1, 4096, 1, true, false);
+
+        p_texFormat = to->params()->createTextureFormatParameter("to_format", tr("texture format"),
+                                                    tr("The channel format of the output texture"));
+        p_texType = to->params()->createTextureTypeParameter("to_type", tr("texture type"),
+                                                    tr("The type-per-channel of the output texture"));
+
 
     to->params()->endParameterGroup();
 
@@ -213,7 +220,9 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
 
     if (p == p_to_->p_width
         || p == p_to_->p_height
-        || p == p_to_->p_aa)
+        || p == p_to_->p_aa
+        || p == p_to_->p_texFormat
+        || p == p_to_->p_texType)
         requestReinitGl();
 }
 
@@ -347,13 +356,17 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     if (!fbo)
     {
         int width = p_width->baseValue(),
-            height = p_height->baseValue();
+            height = p_height->baseValue(),
+            format = p_texFormat->baseValue(),
+            type = p_texType->baseValue();
 
         aspectRatio = (Float)width/std::max(1, height);
+
         fbo = new GL::FrameBufferObject(
                 width,
                 height,
-                gl::GL_RGBA,
+                gl::GLenum(Parameters::getTexFormat(format, type)),
+                gl::GLenum(format),
                 gl::GL_FLOAT,
                 0,//GL::FrameBufferObject::A_DEPTH,
                 false,

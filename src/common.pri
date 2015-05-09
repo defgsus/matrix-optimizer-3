@@ -303,7 +303,8 @@ HEADERS += \
     src/object/texture/textureobjectbase.h \
     src/object/texture/colorto.h \
     src/object/texture/blurto.h \
-    src/object/texture/imageto.h
+    src/object/texture/imageto.h \
+    src/object/textobject.h
 
 
 SOURCES += \
@@ -566,5 +567,6 @@ SOURCES += \
     src/object/texture/textureobjectbase.cpp \
     src/object/texture/colorto.cpp \
     src/object/texture/blurto.cpp \
-    src/object/texture/imageto.cpp
+    src/object/texture/imageto.cpp \
+    src/object/textobject.cpp
 

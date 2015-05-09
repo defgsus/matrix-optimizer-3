@@ -86,6 +86,10 @@ void ShaderObject::createParameters()
                                     tr("Split rendering of the output into separate regions for better gui response"),
                                     1, 1, 4096, 1, true, false);
 
+        p_texFormat_ = params()->createTextureFormatParameter("texture_format", tr("texture format"),
+                                                    tr("The channel format of the output texture"));
+        p_texType_ = params()->createTextureTypeParameter("texture_type", tr("texture type"),
+                                                    tr("The type-per-channel of the output texture"));
 
     params()->endParameterGroup();
 
@@ -136,6 +140,8 @@ void ShaderObject::onParameterChanged(Parameter * p)
         || p == p_fragment_
         || p == p_aa_
         || p == p_split_
+        || p == p_texFormat_
+        || p == p_texType_
         || userUniforms_->needsReinit(p))
         requestReinitGl();
 }
@@ -247,10 +253,13 @@ void ShaderObject::initGl(uint )
 
     // create framebuffer
 
+    int format = p_texFormat_->baseValue(),
+        type = p_texType_->baseValue();
     fbo_ = new GL::FrameBufferObject(
                 width,
                 height,
-                gl::GL_RGBA,
+                gl::GLenum(Parameters::getTexFormat(format, type)),
+                gl::GLenum(format),
                 gl::GL_FLOAT,
                 0,//GL::FrameBufferObject::A_DEPTH,
                 false,
@@ -326,6 +335,8 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     // --- render ---
 
+    MO_CHECK_GL( glDisable(GL_BLEND) )
+
     MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
     MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
     MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
@@ -364,12 +375,12 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
 
     // -- render fbo frame onto current context --
 
-    // set blendmode
-    alphaBlend_.apply(time, thread);
-
     // bind the color texture from the fbo
     MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     fbo_->colorTexture()->bind();
+
+    // set blendmode
+    alphaBlend_.apply(time, thread);
 
     // set interpolation mode
     if (p_magInterpol_->baseValue())

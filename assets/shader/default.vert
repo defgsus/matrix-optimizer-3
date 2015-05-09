@@ -93,10 +93,10 @@ mat3 mo_general_normal_matrix(in vec3 norm)
 }
 
 /** Returns the matrix to multiply the light-direction normal */
-mat3 mo_light_matrix()
+mat3 mo_light_matrix(mat4 transform)
 {
     // normal in world coordinates
-    vec3 norm = transpose(inverse(mat3(u_transform))) * a_normal;
+    vec3 norm = transpose(inverse(mat3(transform))) * a_normal;
 
     vec3 tangent =  vec3(-norm.z, -norm.y,  norm.x);
     vec3 binormal = vec3(-norm.x,  norm.z, -norm.y);
@@ -248,7 +248,8 @@ void main()
 #ifdef MO_ENABLE_LIGHTING
 
 
-        mat3 lightmat = mo_light_matrix() * inverse(mo_user_trans_n_);
+        mat3 lightmat = mo_light_matrix(u_transform * mo_user_trans_);
+                    //* inverse(mo_user_trans_n_);
         // remove scaling
         lightmat = mat3(normalize(lightmat[0]), normalize(lightmat[1]), normalize(lightmat[2]));
 

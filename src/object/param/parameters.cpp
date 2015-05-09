@@ -20,6 +20,7 @@
 #include "parametertexture.h"
 #include "parametertimeline1d.h"
 #include "object/object.h"
+#include "gl/opengl.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -745,5 +746,104 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
     return param;
 }
 
+
+
+int Parameters::getTexFormat(int format, int type)
+{
+    // 8-bit float is default on openGL (i presume)
+    if (type == gl::GL_RGBA && format != gl::GL_R)
+        return format;
+
+    switch (gl::GLenum(format))
+    {
+        case gl::GL_R:
+            /** @ŧodo work out single channel texture formats/types */
+            switch (gl::GLenum(type))
+            {
+                case gl::GL_RGBA: return (int)gl::GL_INTENSITY8;
+                case gl::GL_RGBA16F: return (int)gl::GL_INTENSITY8;
+                case gl::GL_RGBA32F: return (int)gl::GL_R32F;
+                default: break;
+            }
+        break;
+
+        case gl::GL_RG:
+            switch (gl::GLenum(type))
+            {
+                case gl::GL_RGBA16F: return (int)gl::GL_RG16F;
+                case gl::GL_RGBA32F: return (int)gl::GL_RG32F;
+                default: break;
+            }
+        break;
+
+        case gl::GL_RGB:
+            switch (gl::GLenum(type))
+            {
+                case gl::GL_RGBA16F: return (int)gl::GL_RGB16F;
+                case gl::GL_RGBA32F: return (int)gl::GL_RGB32F;
+                default: break;
+            }
+        break;
+
+        case gl::GL_RGBA:
+            switch (gl::GLenum(type))
+            {
+                case gl::GL_RGBA16F: return (int)gl::GL_RGBA16F;
+                case gl::GL_RGBA32F: return (int)gl::GL_RGBA32F;
+                default: break;
+            }
+        break;
+
+        default: break;
+    }
+
+    // fallback
+    return (int)gl::GL_RGBA;
+}
+
+ParameterSelect * Parameters::createTextureFormatParameter(
+        const QString& id, const QString& name, const QString& statusTip, int minChan, int maxChan)
+{
+    QStringList ids, names, tips;
+    QList<int> values;
+    if (minChan <= 1 && 1 <= maxChan)
+    {
+        values << (int)gl::GL_R; ids << "R"; names << "R"; tips << "";
+    }
+    if (minChan <= 2 && 2 <= maxChan)
+    {
+        values << (int)gl::GL_RG; ids << "RG"; names << "RG"; tips << "";
+    }
+    if (minChan <= 3 && 3 <= maxChan)
+    {
+        values << (int)gl::GL_RGB; ids << "RGB"; names << "RGB"; tips << "";
+    }
+    if (minChan <= 4 && 4 <= maxChan)
+    {
+        values << (int)gl::GL_RGBA; ids << "RGBA"; names << "RGBA"; tips << "";
+    }
+    MO_ASSERT(values.size(), "wrong channel limit in Object("
+              << object()->idName() << ")::createTextureFormatParameter()");
+
+    return createSelectParameter(
+                id, name, statusTip,
+                ids, names, tips, values,
+                values.back(),
+                true, false);
+}
+
+
+ParameterSelect * Parameters::createTextureTypeParameter(
+        const QString& id, const QString& name, const QString& statusTip)
+{
+    return createSelectParameter(id, name, statusTip,
+                { "8f", "16f", "32f" },
+                { "8 bit float", "16 bit float", "32 bit float" },
+                { "8 bit float", "16 bit float", "32 bit float" },
+                { (int)gl::GL_RGBA, (int)gl::GL_RGBA16F, (int)gl::GL_RGBA32F },
+                (int)gl::GL_RGBA,
+                true, false);
+
+}
 
 } // namespace MO

@@ -2,20 +2,22 @@
 
 // -- inputs from program --
 
-uniform vec4 u_resolution;      // width, height, 1./width, 1./height
-uniform float u_time;           // scene time in seconds
-uniform mat4 u_transformation;  // object's own transformation matrix
+uniform vec4      u_resolution;     // width, height, 1./width, 1./height
+uniform float     u_time;           // scene time in seconds
+uniform mat4      u_transformation; // object's own transformation matrix (including parents)
+uniform sampler2D u_feedback;       // the previous output frame
 
-//%user_uniforms%               // uniform parameters are added here (don't touch)
+//%user_uniforms%                   // uniform parameters are added here (don't touch)
 
 // -- inputs from vertex shader --
 
-in vec2 v_pos;                  // the pixel position, normalized to [-1,1]
-in vec2 v_screen;               // the pixel position, true resolution [0, width/height)
+in vec2 v_texCoord;                 // the texture uv position, range [0,1]
+in vec2 v_pos;                      // the pixel position, normalized to [-1,1]
+in vec2 v_screen;                   // the pixel position, true resolution [0, width/height)
 
 // -- output to framebuffer --
 
-out vec4 fragColor;             // color output
+out vec4 fragColor;                 // color output
 
 
 const float PI = 3.14159265358979;

@@ -121,7 +121,8 @@ public:
         T_AUDIO_OBJECT      = 1<<20,
         T_ANGELSCRIPT       = 1<<21,
         T_SHADER            = 1<<22,
-        T_TEXTURE           = 1<<23
+        T_TEXTURE           = 1<<23,
+        T_TEXT              = 1<<24 // a text source of some kind
     };
     enum TypeGroups
     {
@@ -289,6 +290,7 @@ public:
     virtual bool isScript() const { return false; }
     virtual bool isShader() const { return false; }
     virtual bool isTexture() const { return false; }
+    virtual bool isText() const { return false; }
 
     /** The base class method returns whether any of the Parameters of
         the object are modulated. */
