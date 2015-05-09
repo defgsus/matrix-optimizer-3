@@ -18,6 +18,7 @@
 #include "gl/context.h"
 #include "io/datastream.h"
 #include "scene.h"
+#include "textobject.h"
 #include "param/parameters.h"
 #include "param/parameterselect.h"
 
@@ -128,14 +129,22 @@ QString ObjectGl::getGlslInclude(const QString &url, bool do_search) const
             return QString::fromUtf8(f_.readAll());
     }
 
-#undef MO__LOAD
 
     // in objects
     Object * o = findObjectByNamePath(url);
+    if (!o && sceneObject())
+        o = sceneObject()->findObjectByNamePath(url);
     if (!o)
         return QString();
 
-    /// @todo text objects
+    if (o->isText())
+    {
+        auto to = static_cast<TextObject*>(o);
+        auto tex = to->valueText(0, 0);
+        if (tex.second == TT_GLSL)
+            return tex.first;
+    }
+
     return QString();
 }
 

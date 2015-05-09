@@ -12,10 +12,11 @@
 #define MOSRC_OBJECT_TEXTOBJECT_H
 
 #include "object.h"
+#include "object/interface/valuetextinterface.h"
 
 namespace MO {
 
-class TextObject : public Object
+class TextObject : public Object, ValueTextInterface
 {
     Q_OBJECT
 public:
@@ -24,10 +25,19 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_TEXT; }
     virtual bool isText() const Q_DECL_OVERRIDE { return true; }
 
-signals:
+    virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-public slots:
+    virtual QPair<QString, TextType> valueText(Double time, uint thread) const
+                        Q_DECL_OVERRIDE;
+private:
 
+    void updateParamType_();
+
+    ParameterText * pText_;
+    ParameterSelect * pType_;
 };
 
 } // namespace MO

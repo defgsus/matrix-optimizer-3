@@ -304,7 +304,8 @@ HEADERS += \
     src/object/texture/colorto.h \
     src/object/texture/blurto.h \
     src/object/texture/imageto.h \
-    src/object/textobject.h
+    src/object/textobject.h \
+    src/object/interface/valuetextinterface.h
 
 
 SOURCES += \

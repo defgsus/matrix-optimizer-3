@@ -80,7 +80,7 @@ public:
     uint numberLightSources() const { return p_numberLightSources_; }
 
     /** Returns the source for the include url, or an empty string */
-    QString getGlslInclude(const QString& url, bool do_search) const;
+    QString getGlslInclude(const QString& url, bool include_system_defaults) const;
 
     // ------------- opengl virtual interface -----------
 

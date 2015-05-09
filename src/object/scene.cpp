@@ -1353,4 +1353,5 @@ void Scene::setProjectorIndex(uint index)
     render_();
 }
 
+
 } // namespace MO

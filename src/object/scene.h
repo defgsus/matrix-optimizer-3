@@ -267,9 +267,6 @@ public slots:
 
     /** @} */
 
-    // --------------- tracks ------------------
-
-
     // ------------- runtime -------------------
 
     /** Call before deleting the scene.
