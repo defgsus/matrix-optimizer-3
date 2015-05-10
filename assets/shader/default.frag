@@ -243,9 +243,11 @@ vec4 mo_ambient_color()
 
 
 
-#ifdef MO_ENABLE_LIGHTING
+//%mo_override_light%
 
-vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness)
+
+#ifdef MO_ENABLE_LIGHTING
+vec4 mo_calc_light_color(in int index, in vec3 light_normal, in vec4 color, in float shinyness)
 {
     // dot-product of light normal and vertex normal gives linear light influence
     float d = max(0.0, dot(mo_normal, light_normal) );
@@ -256,6 +258,10 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
     vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), mo_normal);
     d = max(0.0, dot(light_normal, ref));
     float spec = pow(d, u_light_amt.w * shinyness);
+
+#ifdef MO_ENABLE_LIGHT_OVERRIDE
+    mo_modify_light(index, light_normal, color, diffuse, spec);
+#endif
 
     return vec4((
                 u_light_amt.x * diffuse +
@@ -303,7 +309,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
                 att *= mix(1.0, diratt, u_light_dirmix[i]);
             }
 
-            c += mo_calc_light_color(lightvecn, att * u_light_color[i], u_light_diffuse_exp[i]);
+            c += mo_calc_light_color(i, lightvecn, att * u_light_color[i], u_light_diffuse_exp[i]);
         }
 
         return c;

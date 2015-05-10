@@ -316,6 +316,40 @@ void Model3d::createParameters()
                        "vec3 mo_modify_normal(in vec3 n)\n{\n\treturn n;\n}\n"
                     , true, false);
 
+        glslLight_ = params()->createTextParameter("glsl_light_mix", tr("fragment lighting"),
+                    tr("A piece of glsl code to set or modify the output fragment color"),
+                    TT_GLSL,
+                       "// " + tr("Please be aware that this interface is likely to change in the future!") +
+                       "\n\n"
+                       "// " + tr("You have access to these values (! means: if available)") + ":\n"
+                       "// -- uniforms --\n"
+                       "// float u_time\n"
+                       "// vec3 u_cam_pos\n"
+                       "// float u_bump_scale\n"
+                       "// sampler2D tex_0 !\n"
+                       "// sampler2D tex_norm_0 !\n"
+                       "// -- input from vertex stage --\n"
+                       "// vec3 v_instance\n"
+                       "// vec3 v_pos\n"
+                       "// vec3 v_pos_world\n"
+                       "// vec3 v_pos_eye\n"
+                       "// vec3 v_normal\n"
+                       "// vec3 v_normal_eye\n"
+                       "// mat3 v_normal_space\n"
+                       "// vec3 v_texCoord\n"
+                       "// vec3 v_cam_dir\n"
+                       "// vec4 v_color\n"
+                       "// vec4 v_ambient_color\n"
+                       "// -- lighting --\n"
+                       "// vec3 mo_normal\n"
+                       "\n"
+                       "// " + tr("The lighting has already been calculated at this point") +
+                       "\n// " + tr("Modify color, diffuse or specular before mixing") +
+                       "\nvoid mo_modify_light(in int index, in vec3 light_normal,\n"
+                       "                     inout vec4 color, inout float diffuse, inout float specular)\n"
+                       "{\n\t\n}\n"
+                    , true, false);
+
         glslFragmentOut_ = params()->createTextParameter("glsl_fragment", tr("fragment output"),
                     tr("A piece of glsl code to set or modify the output fragment color"),
                     TT_GLSL,
@@ -444,6 +478,7 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == glslVertexOut_
             || p == glslFragmentOut_
             || p == glslNormal_
+            || p == glslLight_
             || p == usePointCoord_
             || p == pointSizeAuto_
             || texturePostProc_->needsRecompile(p)
@@ -670,6 +705,7 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
         src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
         src->addDefine("#define MO_ENABLE_NORMAL_OVERRIDE");
+        src->addDefine("#define MO_ENABLE_LIGHT_OVERRIDE");
         QString text =
                   "#line 1\n"
                 + glslVertex_->value() + "\n#line 1\n"
@@ -678,6 +714,7 @@ void Model3d::setupDrawable_()
         src->replace("//%mo_override_vert2%", "#line 1\n" + glslTransform_->value() + "\n");
         src->replace("//%mo_override_frag%", "#line 1\n" + glslFragmentOut_->value() + "\n");
         src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
+        src->replace("//%mo_override_light%", "#line 1\n" + glslLight_->value() + "\n");
     }
     // resolve includes
     src->replaceIncludes([this](const QString& url, bool do_search)
