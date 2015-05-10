@@ -16,6 +16,7 @@
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertexture.h"
+#include "object/util/objecteditor.h"
 #include "gl/context.h"
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
@@ -52,6 +53,7 @@ struct TextureObjectBase::PrivateTO
     void initGl();
     void releaseGl();
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
+    void createFbo(const QSize& s);
     void drawFramebuffer(uint thread, Double time, int width, int height);
     void renderShaderQuad(uint index, Double time, uint thread, uint& texSlot);
     const QString& name() const { return to->name(); } // for debug
@@ -78,7 +80,7 @@ struct TextureObjectBase::PrivateTO
 
     ParameterFloat * p_out_r, * p_out_g, * p_out_b, * p_out_a;
     ParameterSelect * p_magInterpol, * p_enableOut,
-                * p_texType, * p_texFormat;
+                * p_texType, * p_texFormat, *p_resMode;
     ParameterInt * p_width, * p_height, * p_aa, * p_split;
     ParameterText * p_fragment;
     QList<ParameterTexture*> p_textures;
@@ -129,6 +131,43 @@ Float TextureObjectBase::aspectRatio() const
     return p_to_->aspectRatio;
 }
 
+uint TextureObjectBase::numberTextureInputs() const
+{
+    return p_to_->maxIns;
+}
+
+bool TextureObjectBase::hasTextureInput(uint index) const
+{
+    if (index >= (uint)p_to_->p_textures.size())
+        return false;
+    return p_to_->p_textures[index]->isModulated();
+}
+
+void TextureObjectBase::setEnableMasterOut(bool enable, bool sendGui)
+{
+    if (sendGui)
+    {
+        auto e = editor();
+        MO_ASSERT(e, "can't set parameter");
+        e->setParameterValue(p_to_->p_enableOut, enable);
+    }
+    else
+        p_to_->p_enableOut->setValue(enable);
+}
+
+void TextureObjectBase::setResolutionMode(ResolutionMode mode, bool sendGui)
+{
+    if (sendGui)
+    {
+        auto e = editor();
+        MO_ASSERT(e, "can't set parameter");
+        e->setParameterValue(p_to_->p_resMode, mode);
+    }
+    else
+        p_to_->p_resMode->setValue(mode);
+}
+
+
 void TextureObjectBase::initMaximumTextureInputs(uint num)
 {
     p_to_->maxIns = num;
@@ -149,6 +188,16 @@ void TextureObjectBase::PrivateTO::createParameters()
 {
 
     to->params()->beginParameterGroup("to_res", tr("resolution and format"));
+
+        p_resMode  = to->params()->createSelectParameter("to_res_mode", tr("resolution"),
+                    tr("Selects how the resolution is defined"),
+                    { "custom", "input" },
+                    { tr("custom"), tr("input") },
+                    { tr("Resolution can be freely set"),
+                      tr("The resolution from the input texture is used") },
+                    { RM_CUSTOM, RM_INPUT },
+                    RM_CUSTOM,
+                    true, false);
 
         p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
@@ -236,7 +285,9 @@ void TextureObjectBase::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
-
+    bool res = p_to_->p_resMode->baseValue() == RM_CUSTOM;
+    p_to_->p_width->setVisible(res);
+    p_to_->p_height->setVisible(res);
 }
 
 GL::FrameBufferObject * TextureObjectBase::fbo() const
@@ -339,24 +390,13 @@ void TextureObjectBase::PrivateTO::releaseGl()
 }
 
 
-
-GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
+void TextureObjectBase::PrivateTO::createFbo(const QSize &s)
 {
-    return index < (uint)p_to_->shaderQuads.size() ? p_to_->shaderQuads[index].quad : 0;
-}
-
-void TextureObjectBase::PrivateTO::createShaderQuad(
-        const GL::ShaderSource& csrc, const QList<QString>& texNames)
-{
-    MO_TO_DEBUG("createShaderQuad() curnum == " << shaderQuads.size());
-
-    // create framebuffer if we havn't already
-
     outputTex = 0;
     if (!fbo)
     {
-        int width = p_width->baseValue(),
-            height = p_height->baseValue(),
+        int width = s.width(),
+            height = s.height(),
             format = p_texFormat->baseValue(),
             type = p_texType->baseValue();
 
@@ -384,6 +424,22 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
         }
         fbo->unbind();
     }
+}
+
+
+GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
+{
+    return index < (uint)p_to_->shaderQuads.size() ? p_to_->shaderQuads[index].quad : 0;
+}
+
+void TextureObjectBase::PrivateTO::createShaderQuad(
+        const GL::ShaderSource& csrc, const QList<QString>& texNames)
+{
+    MO_TO_DEBUG("createShaderQuad() curnum == " << shaderQuads.size());
+
+    // create framebuffer if we havn't already
+    //if (!fbo)
+        //createFbo(16, 16);
 
     // create quad and compile shader
 
@@ -403,7 +459,7 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     try
     {
         quad.quad->create(src, 0);
-        auto shader = screenQuad->shader();
+        auto shader = quad.quad->shader();
 
         // uniforms
 
@@ -433,8 +489,39 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
 {
     MO_TO_DEBUG("renderShaderQuad(" << index << ", " << time << ", " << thread << ", " << texSlot << ")");
 
-    if (!fbo || index >= (uint)shaderQuads.size())
+    if (index >= (uint)shaderQuads.size())
         return;
+
+    // get input res
+    uint width = p_width->baseValue(),
+         height = p_height->baseValue();
+    if (p_resMode->baseValue() == RM_INPUT)
+    {
+        for (int i=0; i<p_textures.length(); ++i)
+        {
+            const GL::Texture * tex = p_textures[i]->value(time, thread);
+            if (tex)
+            {
+                width = tex->width();
+                height = tex->height();
+                break;
+            }
+        }
+
+    }
+
+    // update FBO resolution
+    if (!fbo)
+        createFbo(QSize(width, height));
+    else
+    if (fbo->width() != width || fbo->height() != height)
+    {
+        fbo->release();
+        delete fbo;
+        fbo = 0;
+        createFbo(QSize(width, height));
+    }
+
 
     const ShaderQuad & quad = shaderQuads[index];
 
@@ -494,6 +581,8 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0) );
 
     // --- render ---
+
+    MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
 
     MO_EXTEND_EXCEPTION(
         quad.quad->draw(res.width(), res.height(), p_split->baseValue())

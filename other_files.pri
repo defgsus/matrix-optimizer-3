@@ -59,5 +59,8 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/to/default.vert \
     assets/shader/to/color.frag \
     assets/shader/to/blur.frag \
-    assets/shader/to/header.glsl
+    assets/shader/to/header.glsl \
+    assets/shader/inc/color.glsl \
+    assets/shader/to/key.frag \
+    assets/shader/to/mix.frag
     assets/help/en/object/model3d.html

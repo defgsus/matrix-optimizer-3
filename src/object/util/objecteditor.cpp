@@ -9,6 +9,7 @@
 */
 
 #include <QMessageBox>
+#include <QPoint>
 
 #include "objecteditor.h"
 #include "object/object.h"
@@ -21,7 +22,10 @@
 #include "object/audioobject.h"
 #include "object/objectfactory.h"
 #include "object/control/modulatorobject.h"
+#include "object/texture/textureobjectbase.h"
+#include "object/shaderobject.h"
 #include "object/util/audioobjectconnections.h"
+#include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
@@ -390,6 +394,57 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
 }
 
 
+
+
+void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int insert_index)
+{
+    // find tex input to connect
+    Parameter * texParam = 0;
+    const auto params = newObject->params()->parameters();
+    for (Parameter * p : params)
+    if (p->isModulateable() && p->typeName() == "texture")
+    {
+        texParam = p;
+        break;
+    }
+
+    // be smart about some settings
+    bool doMasterOut = false;
+    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(newObject))
+    {
+        to->setEnableMasterOut(doMasterOut = true);
+        to->setResolutionMode(TextureObjectBase::RM_INPUT);
+    }
+    // disable output in source module
+    if (doMasterOut)
+    {
+        if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(object))
+            to->setEnableMasterOut(false, true);
+    }
+
+    // find correct parent
+    Object * parent = object->parentObject();
+    if (!parent) // is scene already?
+        parent = object;
+
+    // find position
+    if (!newObject->hasAttachedData(Object::DT_GRAPH_POS))
+    {
+        QPoint gridPos = object->getAttachedData(Object::DT_GRAPH_POS).toPoint();
+        gridPos.rx() += 2;
+        newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
+    }
+
+    // add to scene
+    addObject(parent, newObject, insert_index);
+
+    // connect
+    if (texParam)
+    {
+        addModulator(texParam, object->idName(), "");
+    }
+
+}
 
 
 

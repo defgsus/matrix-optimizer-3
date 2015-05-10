@@ -636,11 +636,10 @@ void Model3d::setupDrawable_()
     src->loadDefaultSource();
 
     if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
-    {
         src->addDefine("#define MO_ENABLE_LIGHTING");
-        src->addDefine(QString("#define MO_NUM_LIGHTS %1")
-                       .arg(numberLightSources()));
-    }
+    // still pass light info
+    src->addDefine(QString("#define MO_NUM_LIGHTS %1")
+                   .arg(numberLightSources()));
     if (lightMode_->baseValue() == LM_PER_FRAGMENT)
         src->addDefine("#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())

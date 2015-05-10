@@ -22,6 +22,12 @@ class TextureObjectBase : public ObjectGl, public ValueTextureInterface
     Q_OBJECT
 public:
 
+    enum ResolutionMode
+    {
+        RM_CUSTOM,
+        RM_INPUT
+    };
+
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(TextureObjectBase);
     ~TextureObjectBase();
 
@@ -43,6 +49,15 @@ public:
 
     QSize resolution() const;
     Float aspectRatio() const;
+    /** Number of maximum inputs for this object */
+    uint numberTextureInputs() const;
+    /** Returns true, when the @p index'th parameter is attached to a texture output */
+    bool hasTextureInput(uint index) const;
+
+    /** Sets the master-out parameter.
+        if @p sendGui, this will be done via ObjectEditor */
+    void setEnableMasterOut(bool enable, bool sendGui = false);
+    void setResolutionMode(ResolutionMode mode, bool sendGui = false);
 
     // ------ texture connections --------
 

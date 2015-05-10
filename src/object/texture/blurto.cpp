@@ -118,7 +118,7 @@ void BlurTO::Private::createParameters()
     to->initParameterGroupExpanded("blur");
 
         p_size = to->params()->createFloatParameter(
-                    "size", tr("size"), tr("Radius of the blur kernel"), 1.0,  1.);
+                    "size", tr("size"), tr("Radius of the blur kernel"), 10.0,  1.);
         p_size->setMinValue(1.);
 
         p_sizeIsPixels = to->params()->createBooleanParameter(

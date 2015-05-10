@@ -1004,7 +1004,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
                 // render each opengl object per camera & per cube-face
                 for (ObjectGl * o : glObjects_)
-                if (!o->isShader() // don't render shader objects per camera
+                if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
                     && o->active(time, thread))
                 {
                     o->p_renderGl_(renderSet, thread, time);
@@ -1028,7 +1028,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
     // --- render ShaderObjects ----
 
-    if (!shaderObjects_.isEmpty())
+    /** @todo needs to be in order with cameras, which are also frameDrawers */
+    if (!frameDrawers_.isEmpty())
     {
         GL::RenderSettings renderSet;
         GL::CameraSpace camSpace;
@@ -1039,7 +1040,8 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
         try
         {
-            for (ShaderObject * o : shaderObjects_)
+            for (ObjectGl * o : frameDrawers_)
+            if (!o->isCamera())
             if (o->active(time, thread))
             {
                 o->p_renderGl_(renderSet, thread, time);
@@ -1047,7 +1049,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         }
         catch (Exception & e)
         {
-            e << "\nin Scene::renderScene(" << thread << ")";
+            e << "\nin Scene::renderScene(" << thread << "): fbo-renderers";
             throw;
         }
     }

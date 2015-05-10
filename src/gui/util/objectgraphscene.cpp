@@ -40,6 +40,7 @@
 #include "object/util/objectmodulatorgraph.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
+#include "object/interface/valuetextureinterface.h"
 #include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
@@ -108,7 +109,8 @@ public:
     void showPopup(); ///< Runs popup after actions have been created
     void createNewObjectMenu(Object * o);
     void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
-    QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts);
+    QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts,
+                              bool childObjects = true, int groups = Object::TG_ALL);
     void createObjectEditMenu(Object * o);
 
     void snapToEndConnect(const QPointF& scenePos);
@@ -1248,6 +1250,7 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
     QAction * a;
 
+    // create new child
     actions.append( a = new QAction(obj && obj != root ?
                 tr("new child object") : tr("new object"), scene) );
 
@@ -1264,6 +1267,25 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
         if (onew)
             scene->addObject(obj, onew, popupGridPos - objPos);
     });
+
+    // append texture processor
+    if (dynamic_cast<ValueTextureInterface*>(obj))
+    {
+        menu = createObjectsMenu(obj, true, false, false, Object::T_SHADER | Object::T_TEXTURE);
+        if (menu)
+        {
+            actions.append( a = new QAction(tr("append texture processor"), scene) );
+            a->setMenu(menu);
+
+            connect(menu, &QMenu::triggered, [=](QAction*act)
+            {
+                QString id = act->data().toString();
+                Object * onew = ObjectFactory::createObject(id);
+                if (onew)
+                    editor->appendTextureProcessor(obj, onew);
+            });
+        }
+    }
 
 }
 
@@ -1386,9 +1408,15 @@ namespace {
     }
 }
 
-QMenu * ObjectGraphScene::Private::createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts)
+QMenu * ObjectGraphScene::Private::createObjectsMenu(
+        Object *parent, bool with_template, bool with_shortcuts, bool child_only, int groups)
 {
-    QList<const Object*> list(ObjectFactory::possibleChildObjects(parent));
+    QList<const Object*> list;
+    if (child_only)
+        list = ObjectFactory::possibleChildObjects(parent);
+    else
+        list = ObjectFactory::objects(groups);
+
     if (list.empty() && !with_template)
         return 0;
 
@@ -1640,7 +1668,6 @@ void ObjectGraphScene::addModulator(Parameter * p, const QString &idName)
     p_->recreateModulatorItems();
 }
 */
-
 
 
 // ------------------------------- clipboard ---------------------------------------------

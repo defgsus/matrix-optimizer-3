@@ -305,7 +305,9 @@ HEADERS += \
     src/object/texture/blurto.h \
     src/object/texture/imageto.h \
     src/object/textobject.h \
-    src/object/interface/valuetextinterface.h
+    src/object/interface/valuetextinterface.h \
+    src/object/texture/keyto.h \
+    src/object/texture/mixto.h
 
 
 SOURCES += \
@@ -569,5 +571,7 @@ SOURCES += \
     src/object/texture/colorto.cpp \
     src/object/texture/blurto.cpp \
     src/object/texture/imageto.cpp \
-    src/object/textobject.cpp
+    src/object/textobject.cpp \
+    src/object/texture/keyto.cpp \
+    src/object/texture/mixto.cpp
 

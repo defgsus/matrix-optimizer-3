@@ -159,6 +159,12 @@ void ShaderObject::updateParameterVisibility()
     userUniforms_->updateParameterVisibility();
 }
 
+QSize ShaderObject::resolution() const
+{
+    return fbo_ ? QSize(fbo_->width(), fbo_->height())
+                : QSize();
+}
+
 const GL::Texture * ShaderObject::valueTexture(Double , uint ) const
 {
     return fbo_ ? fbo_->colorTexture() : 0;

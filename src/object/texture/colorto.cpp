@@ -39,12 +39,13 @@ struct ColorTO::Private
     ColorTO * to;
 
     ParameterFloat
-            * p_r, * p_g, * p_b, * p_a,
-            * p_sat;
+            * p_bright, * p_bright2, * p_r, * p_g, * p_b, * p_a,
+            * p_sat, *p_hue, *p_gamma, *p_gamma_r, *p_gamma_g, *p_gamma_b;
 
     GL::Uniform
             * u_color,
-            * u_hsv;
+            * u_hsv,
+            * u_gamma_exp;
 };
 
 
@@ -102,16 +103,36 @@ void ColorTO::Private::createParameters()
     to->params()->beginParameterGroup("color", tr("color"));
     to->initParameterGroupExpanded("color");
 
-        p_r = to->params()->createFloatParameter("red", "red", tr("Red amount of output color"), 1.0, 0.1);
-        p_g = to->params()->createFloatParameter("green", "green", tr("Green amount of output color"), 1.0, 0.1);
-        p_b = to->params()->createFloatParameter("blue", "blue", tr("Blue amount of output color"), 1.0, 0.1);
+        p_hue = to->params()->createFloatParameter(
+                    "hue", tr("hue"), tr("Hue value [0,1]"), 0.0,  0.05);
+
+        p_r = to->params()->createFloatParameter("red", tr("red"), tr("Red amount of output color"), 1.0, 0.1);
+        p_g = to->params()->createFloatParameter("green", tr("green"), tr("Green amount of output color"), 1.0, 0.1);
+        p_b = to->params()->createFloatParameter("blue", tr("blue"), tr("Blue amount of output color"), 1.0, 0.1);
         p_a = to->params()->createFloatParameter("alpha", tr("alpha"),
-                      tr("Defines the opaqueness/transparency of the output [0,1]"),
-                      1.0,
-                      0.0, 1.0, 0.05);
+                    tr("Defines the opaqueness/transparency of the output [0,1]"),
+                    1.0,
+                    0.0, 1.0, 0.05);
 
         p_sat = to->params()->createFloatParameter(
-                    "saturation", "saturation", tr("Satturation"), 1.0,  0.0, 1.,  0.1);
+                    "saturation", tr("saturation"), tr("Saturation"), 1.0,  0.0, 1.,  0.1);
+
+        p_bright = to->params()->createFloatParameter("bright", tr("brightness"), tr("Amplifier for output color"), 1.0, 0.1);
+
+
+        p_gamma = to->params()->createFloatParameter(
+                    "gamma", tr("gamma"), tr("Gamma"), 1.0,  0.001, 1000.,  0.1);
+
+        p_gamma_r = to->params()->createFloatParameter(
+                    "gammar", tr("gamma red"), tr("Gamma of red channel"), 1.0,  0.001, 1000.,  0.1);
+
+        p_gamma_g = to->params()->createFloatParameter(
+                    "gammag", tr("gamma green"), tr("Gamma of green channel"), 1.0,  0.001, 1000.,  0.1);
+
+        p_gamma_b = to->params()->createFloatParameter(
+                    "gammab", tr("gamma blur"), tr("Gamma of blue channel"), 1.0,  0.001, 1000.,  0.1);
+
+        p_bright2 = to->params()->createFloatParameter("bright2", tr("brightness"), tr("Amplifier for output color after gamma"), 1.0, 0.1);
 
     to->params()->endParameterGroup();
 }
@@ -164,6 +185,7 @@ void ColorTO::Private::initGl()
 
     u_color = shader->getUniform("u_color", false);
     u_hsv = shader->getUniform("u_hsv", false);
+    u_gamma_exp = shader->getUniform("u_gamma_exp", false);
 }
 
 void ColorTO::Private::releaseGl()
@@ -176,15 +198,26 @@ void ColorTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double 
     // update uniforms
 
     if (u_color)
-        u_color->setFloats( p_r->value(time, thread),
-                            p_g->value(time, thread),
-                            p_b->value(time, thread),
+    {
+        float b = p_bright->value(time, thread);
+        u_color->setFloats( p_r->value(time, thread) * b,
+                            p_g->value(time, thread) * b,
+                            p_b->value(time, thread) * b,
                             p_a->value(time, thread));
+    }
 
     if (u_hsv)
-        u_hsv->setFloats(   0.f,
+        u_hsv->setFloats(   p_hue->value(time, thread),
                             p_sat->value(time, thread),
-                            0.f);
+                            p_bright2->value(time, thread));
+
+    if (u_gamma_exp)
+    {
+        Double g = p_gamma->value(time, thread);
+        u_gamma_exp->setFloats( 1./(g*p_gamma_r->value(time, thread)),
+                                1./(g*p_gamma_g->value(time, thread)),
+                                1./(g*p_gamma_b->value(time, thread)));
+    }
 
     to->renderShaderQuad(time, thread);
 }

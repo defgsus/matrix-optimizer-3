@@ -53,6 +53,9 @@ public:
     /** Returns the internal framebuffer on which the shader renders, or NULL */
     GL::FrameBufferObject * fbo() const { return fbo_; }
 
+    /** Returns the resolution of the internal framebuffer */
+    QSize resolution() const;
+
 signals:
 
 public slots:

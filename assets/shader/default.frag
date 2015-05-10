@@ -53,8 +53,12 @@ out vec4 out_color;
 uniform float u_time;
 uniform vec3 u_cam_pos;
 uniform float u_instance_count;
+uniform mat4 u_projection;                  // projection matrix
+uniform mat4 u_cubeViewTransform;           // cube-map * view * transform
+uniform mat4 u_viewTransform;               // view * transform
+uniform mat4 u_transform;                   // transformation only
 
-#ifdef MO_ENABLE_LIGHTING
+#if MO_NUM_LIGHTS
     uniform vec4 u_light_amt;
     uniform float u_light_diffuse_exp[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
@@ -249,7 +253,7 @@ vec4 mo_calc_light_color(in vec3 light_normal, in vec4 color, in float shinyness
     float diffuse = pow(d, u_light_amt.y *shinyness);
 
     // specular
-    vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), v_normal);
+    vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), mo_normal);
     d = max(0.0, dot(light_normal, ref));
     float spec = pow(d, u_light_amt.w * shinyness);
 

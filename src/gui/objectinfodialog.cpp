@@ -27,6 +27,8 @@
 #include "object/model3d.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/modulatorobjectfloat.h"
+#include "object/texture/textureobjectbase.h"
+#include "object/shaderobject.h"
 #include "object/param/parameters.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
@@ -129,6 +131,20 @@ void ObjectInfoDialog::setObject(Object * o)
           << "<br/>depth write: " << gl->depthWriteModeNames[gl->depthWriteMode()]
           << "<br/>alpha blend: " << AlphaBlendSetting::modeNames[gl->alphaBlendMode()]
           << "</p>";
+    }
+
+    // ---------- resolution -----------
+
+    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(o))
+    {
+        auto r = to->resolution();
+        s << "<p>resolution: " << r.width() << "x" << r.height() << "</p>\n";
+    }
+
+    if (ShaderObject * sh = qobject_cast<ShaderObject*>(o))
+    {
+        auto r = sh->resolution();
+        s << "<p>resolution: " << r.width() << "x" << r.height() << "</p>\n";
     }
 
     // ---------- matrix ---------------
