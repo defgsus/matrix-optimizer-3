@@ -167,3 +167,51 @@ vec4 noise1d(in vec3 x)
             d0.y * (k2 + k5*u.z + k4*u.x + k7*u.z*u.x),
             d0.z * (k3 + k6*u.x + k5*u.y + k7*u.x*u.y) );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// --- signed [-1,1] versions ---
+
+/** One noise value from one dimension */
+float snoise1(float x) { return noise1(x) * 2. - 1.; }
+
+/** Two noise values from one dimension */
+vec2 snoise2(float x) { return noise2(x) * 2. - 1.; }
+
+/** Three noise values from one dimension */
+vec3 snoise3(float x) { return noise3(x) * 2. - 1.; }
+
+/** One noise value from two dimensions */
+float snoise1(in vec2 x) { return noise1(x) * 2. - 1.; }
+
+/** Two noise values from two dimensions */
+vec2 snoise2(in vec2 x) { return noise2(x) * 2. - 1.; }
+
+/** Three noise values from two dimensions */
+vec3 snoise3(in vec2 x) { return noise3(x) * 2. - 1.; }
+
+/** One noise value from three dimensions */
+float snoise1(in vec3 x) { return noise1(x) * 2. - 1.; }
+
+/** Two noise values from three dimensions */
+vec2 snoise2(in vec3 x) { return noise2(x) * 2. - 1.; }
+
+/** Three noise values from three dimensions */
+vec3 snoise3(in vec3 x) { return noise3(x) * 2. - 1.; }
+
+/** One value and three derivatives for three dimensions
+    http://www.iquilezles.org/www/articles/morenoise/morenoise.htm */
+vec4 snoise1d(in vec3 x) { return noise1d(x) * 2. - 1.; }

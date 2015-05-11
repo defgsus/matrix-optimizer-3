@@ -48,10 +48,10 @@ public:
 
     // -------------- static ----------------------
 
-    /** Creates a new Texture from an image.
+    /* Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
-    static Texture * createFromImage(const Image&, gl::GLenum gpu_format, ErrorReporting = ER_THROW);
+    //static Texture * createFromImage(const Image&, gl::GLenum gpu_format, ErrorReporting = ER_THROW);
 
     /** Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.

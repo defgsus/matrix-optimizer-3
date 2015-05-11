@@ -519,6 +519,11 @@ public:
         @note Call ancestor's implementation before your derived code! */
     virtual void updateParameterVisibility() { }
 
+    /** This is called when Scene::installDependency() was called,
+        in the requested object made an action.
+        XXX Will be refined later, currently only used for TextObject */
+    virtual void onDependency(Object * ) { }
+
 public:
 
     /** Returns the number of threads, this object is assigned for */

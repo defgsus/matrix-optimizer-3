@@ -23,7 +23,6 @@
 #include "gl/texture.h"
 #include "gl/screenquad.h"
 #include "gl/framebufferobject.h"
-#include "img/image.h"
 #include "util/texturesetting.h"
 #include "util/colorpostprocessingsetting.h"
 #include "math/vector.h"

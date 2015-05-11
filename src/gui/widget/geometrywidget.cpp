@@ -17,8 +17,6 @@
 #include "gl/lightsettings.h"
 #include "gl/compatibility.h"
 #include "geom/geometry.h"
-#include "img/image.h"
-#include "img/imagegenerator.h"
 #include "io/settings.h"
 
 #include "gl/opengl_undef.h"
@@ -142,9 +140,10 @@ void GeometryWidget::drawGL(const Mat4& projection,
     {
         if (!texNorm_)
         {
-            Image img, norm;
-            img.loadImage(":/texture/default_texture.png");
-            ImageGenerator::createNormalmap(&norm, &img);
+            QImage img, norm;
+            img.load(":/texture/default_texture.png");
+            /** @todo nice normalmap in geometrywidget */
+            //ImageGenerator::createNormalmap(&norm, &img);
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0 + 1));
             texNorm_ = GL::Texture::createFromImage(
                         norm, GL_RGB, GL::ER_IGNORE);

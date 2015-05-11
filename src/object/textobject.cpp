@@ -12,6 +12,7 @@
 #include "object/param/parameters.h"
 #include "object/param/parametertext.h"
 #include "object/param/parameterselect.h"
+#include "object/scene.h"
 #include "io/datastream.h"
 
 namespace MO {
@@ -68,7 +69,9 @@ void TextObject::onParameterChanged(Parameter * p)
 
     if (p == pType_)
         updateParamType_();
-    //if (p == pText_)
+
+    if (p == pText_ && sceneObject())
+        sceneObject()->notifyParameterChange(pText_);
 }
 
 void TextObject::onParametersLoaded()

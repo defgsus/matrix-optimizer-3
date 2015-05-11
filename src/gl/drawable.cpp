@@ -214,9 +214,9 @@ void Drawable::compileShader_()
     // --- get variable locations ---
 
     // XXX set default slot for normal-map
-    GL::Uniform * u = shader_->getUniform("tex_norm_0");
-    if (u)
-        u->ints[0] = 1;
+    //GL::Uniform * u = shader_->getUniform("tex_norm_0");
+    //if (u)
+    //    u->ints[0] = 1;
 
     auto lightAmt = shader_->getUniform(shaderSource_->uniformNameLightAmt());
     if (lightAmt)

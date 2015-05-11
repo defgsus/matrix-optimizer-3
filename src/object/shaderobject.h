@@ -69,7 +69,7 @@ private:
     ParameterFloat * p_out_r_, * p_out_g_, * p_out_b_, * p_out_a_;
     ParameterSelect * p_magInterpol_, * p_enableOut_,
                 * p_texType_, * p_texFormat_;
-    ParameterInt * p_width_, * p_height_, * p_aa_, * p_split_;
+    ParameterInt * p_width_, * p_height_, * p_aa_, * p_split_, * p_passes_;
     ParameterText * p_fragment_;
 
     GL::Uniform
@@ -77,7 +77,8 @@ private:
         * u_time_,
         * u_transformation_,
         * u_fb_tex_,
-        * u_out_color_, * u_out_resolution_;
+        * u_out_color_, * u_out_resolution_,
+        * u_pass_;
 
     Float aspectRatio_;
     AlphaBlendSetting alphaBlend_;

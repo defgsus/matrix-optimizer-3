@@ -9,11 +9,11 @@
 */
 
 #include <atomic>
+#include <memory>
 
 #include <QImage>
 
 #include "texture.h"
-#include "img/image.h"
 #include "io/streamoperators_glbinding.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -639,7 +639,7 @@ QImage Texture::getImage() const
 
 // ------------------------ static ----------------------------
 
-
+#if 0
 Texture * Texture::createFromImage(const Image & img, gl::GLenum gpu_format, ErrorReporting rep)
 {
     MO_DEBUG_IMG("Texture::createFromImage(" << img << ", " << gpu_format << ")");
@@ -710,6 +710,109 @@ Texture * Texture::createFromImage(const QImage & input_img, gl::GLenum gpu_form
 
     return createFromImage(img, gpu_format, rep);
 }
+#endif
+
+Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, ErrorReporting rep)
+{
+    MO_DEBUG_IMG("Texture::createFromQImage(" << &img << ", " << gpu_format << ")");
+
+    if (img.isNull())
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with NULL qimage");
+        return 0;
+    }
+
+    if (img.width() == 0 || img.height() == 0 )
+    {
+        MO_GL_ERROR_COND(rep, "createFromImage() with empty qimage");
+        return 0;
+    }
+
+    // determine texture format from image format
+
+    GLenum iformat = GL_RGBA;
+    GLenum itype = GL_UNSIGNED_BYTE;
+
+    // create and bind
+    Texture * tex = new Texture(
+                img.width(), img.height(),
+                gpu_format, iformat, itype, 0, rep);
+    tex->name_ += "_from_img";
+
+    std::unique_ptr<Texture> texDel(tex);
+
+    if (!tex->create())
+        return 0;
+
+    // upload image data
+
+    try
+    {
+        const QImage * pimg = &img;
+        QImage cpy;
+        if (img.format() != QImage::Format_RGBA8888)
+        {
+            cpy = img.convertToFormat(QImage::Format_RGBA8888);
+            pimg = &cpy;
+        }
+
+        // create empty texture
+        GLenum err;
+        MO_CHECK_GL_RET_COND( rep,
+        gl::glTexImage2D(
+            tex->target_,
+            // mipmap level
+            0,
+            // color components
+            GLint(gpu_format),
+            // size
+            img.width(), img.height(),
+            // boarder
+            0,
+            // input format
+            iformat,
+            // data type
+            itype,
+            // ptr
+            0)
+        , err);
+        if (err != GL_NO_ERROR)
+            return 0;
+
+        // upload line-by-line
+        // 'cause Qt stores it's images upside-down
+        for (int i=0; i<img.height(); ++i)
+        {
+            MO_CHECK_GL_RET_COND( rep,
+                gl::glTexSubImage2D(tex->target_, 0,
+                                    0, i, img.width(), 1,
+                                    iformat, itype,
+                                    pimg->constScanLine(img.height()-1-i))
+                                  , err);
+            if (err != GL_NO_ERROR)
+            {
+                tex->release();
+                return 0;
+            }
+        }
+
+    }
+    catch (Exception & e)
+    {
+        if (rep == ER_THROW)
+        {
+            e << "\non creating texture from image " << img.width() << "x" << img.height();
+            if (tex->isHandle())
+                tex->release();
+            throw;
+        }
+        else
+            return 0;
+    }
+
+    return texDel.release();
+}
+
 
 Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format, ErrorReporting rep)
 {

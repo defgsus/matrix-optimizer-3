@@ -53,6 +53,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onDependency(Object *) Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -80,7 +81,7 @@ public:
     uint numberLightSources() const { return p_numberLightSources_; }
 
     /** Returns the source for the include url, or an empty string */
-    QString getGlslInclude(const QString& url, bool include_system_defaults) const;
+    QString getGlslInclude(const QString& url, bool include_system_defaults);
 
     // ------------- opengl virtual interface -----------
 

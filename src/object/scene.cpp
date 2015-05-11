@@ -17,6 +17,7 @@
 #include "io/log.h"
 #include "io/datastream.h"
 #include "object/objectfactory.h"
+#include "object/param/modulator.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
@@ -430,6 +431,8 @@ void Scene::deleteObject(Object *object)
     {
         ScopedSceneLockWrite lock(this);
 
+        removeDependencies(object);
+
         // remove audio connections
         audioConnections()->remove(object);
         //audioConnections()->dump(std::cout);
@@ -472,6 +475,8 @@ void Scene::deleteObjects(const QList<Object*>& objects)
         for (auto object : objects)
         {
             MO_ASSERT(object->parentObject(), "Scene::deleteObjects(): "<<object<<" without parent");
+
+            removeDependencies(object);
 
             // remove audio connections
             audioConnections()->remove(object);
@@ -694,6 +699,62 @@ void Scene::notifyParameterVisibility(Parameter *p)
     if (editor_)
         emit editor_->parameterVisibilityChanged(p);
     emit parameterVisibilityChanged(p);
+}
+
+void Scene::notifyParameterChange(ParameterText * par)
+{
+    if (!par->object())
+        return;
+
+    // check for text parameters
+    // XXX They don't exists in that form yet
+    /*
+    for (Object * o : allObjects_)
+    {
+        if (o == par->object())
+            continue;
+
+        for (Parameter * p : o->params()->parameters())
+            if (p->typeName() == "text")
+                for (Modulator * m : p->modulators())
+                    if (m->modulator() == par->object())
+                    {
+                        o->onParameterChanged(p);
+                        goto next;
+                    }
+                }
+        next:;
+    }*/
+
+    // see if anyone depends on this parameter
+    auto it = dependMap_.lowerBound(par->object());
+    while (it != dependMap_.end() && it.key() == par->object())
+    {
+        it.value()->onDependency(par->object());
+        ++it;
+    }
+}
+
+void Scene::installDependency(Object *object, Object *source)
+{
+    if (dependMap_.find(source, object) == dependMap_.end())
+        dependMap_.insert(source, object);
+}
+
+void Scene::removeDependency(Object *object, Object *source)
+{
+    dependMap_.remove(source, object);
+}
+
+void Scene::removeDependencies(Object *object)
+{
+    auto copy = dependMap_;
+    dependMap_.clear();
+    for (auto i = copy.begin(); i != copy.end(); ++i)
+    {
+        if (i.value() != object)
+            dependMap_.insert(i.key(), i.value());
+    }
 }
 
 // --------------------- tracks ------------------------------
@@ -970,7 +1031,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         // position all objects
         calculateSceneTransform_(thread, time);
 
-        // update lighting settings
+        // update lighting uniform-ready data
         updateLightSettings_(thread, time);
 
         GL::RenderSettings renderSet;
@@ -1026,7 +1087,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
     }
 
 
-    // --- render ShaderObjects ----
+    // --- render ShaderObjects and TextureObjects ----
 
     /** @todo needs to be in order with cameras, which are also frameDrawers */
     if (!frameDrawers_.isEmpty())

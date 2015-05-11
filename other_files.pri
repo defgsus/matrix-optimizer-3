@@ -62,5 +62,6 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/to/header.glsl \
     assets/shader/inc/color.glsl \
     assets/shader/to/key.frag \
-    assets/shader/to/mix.frag
+    assets/shader/to/mix.frag \
+    assets/shader/inc/project.glsl
     assets/help/en/object/model3d.html

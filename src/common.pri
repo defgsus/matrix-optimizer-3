@@ -83,12 +83,10 @@ HEADERS += \
     src/math/cubemapmatrix.h \
     src/geom/geometrycreator.h \
     src/geom/freecamera.h \
-    src/img/image.h \
     src/io/files.h \
     src/object/param/modulator.h \
     src/object/param/modulatorfloat.h \
     src/io/currentthread.h \
-    src/img/imagegenerator.h \
     src/object/lightsource.h \
     src/gl/lightsettings.h \
     src/audio/audio_fwd.h \
@@ -371,12 +369,10 @@ SOURCES += \
     src/math/cubemapmatrix.cpp \
     src/geom/geometrycreator.cpp \
     src/geom/freecamera.cpp \
-    src/img/image.cpp \
     src/io/files.cpp \
     src/object/param/modulator.cpp \
     src/object/param/modulatorfloat.cpp \
     src/io/currentthread.cpp \
-    src/img/imagegenerator.cpp \
     src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
     src/audio/tool/envelopefollower.cpp \
@@ -574,4 +570,6 @@ SOURCES += \
     src/object/textobject.cpp \
     src/object/texture/keyto.cpp \
     src/object/texture/mixto.cpp
+
+OTHER_FILES +=
 

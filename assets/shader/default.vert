@@ -65,8 +65,8 @@ out vec3 v_normal_eye;
 out vec4 v_color;
 out vec4 v_ambient_color;
 out vec2 v_texCoord;
-#ifdef MO_ENABLE_LIGHTING
-    out mat3 v_normal_space;                    // matrix to convert into normal-space
+out mat3 v_normal_space;                    // matrix to convert into normal-space
+#if MO_NUM_LIGHTS
     #ifndef MO_FRAGMENT_LIGHTING
     out vec4 v_light_dir[MO_NUM_LIGHTS];        // surface-towards light
                                                 // w is distance attenuation
@@ -244,15 +244,16 @@ void main()
 
 
 
+    // --- normal space ---
+
+    mat3 lightmat = mo_light_matrix(u_transform * mo_user_trans_);
+                //* inverse(mo_user_trans_n_);
+    // remove scaling
+    lightmat = mat3(normalize(lightmat[0]), normalize(lightmat[1]), normalize(lightmat[2]));
+
+    v_normal_space = lightmat;
+
 #ifdef MO_ENABLE_LIGHTING
-
-
-        mat3 lightmat = mo_light_matrix(u_transform * mo_user_trans_);
-                    //* inverse(mo_user_trans_n_);
-        // remove scaling
-        lightmat = mat3(normalize(lightmat[0]), normalize(lightmat[1]), normalize(lightmat[2]));
-
-        v_normal_space = lightmat;
 
     // pass all light relevant settings to fragment shader
     #ifdef MO_FRAGMENT_LIGHTING

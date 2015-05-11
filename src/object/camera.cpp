@@ -110,7 +110,7 @@ void Camera::createParameters()
 
         p_near_ = params()->createFloatParameter("camnear", tr("near plane"),
                                             tr("Near plane of camera frustum - everything closer can not be drawn"),
-                                            0.001,
+                                            0.05,
                                             0.00001, 100000.0, 0.05);
         p_far_ = params()->createFloatParameter("camfar", tr("far plane"),
                                             tr("Far plane of camera frustum - everything farther away can not be drawn"),
@@ -542,7 +542,6 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
     if (renderMode_ == RM_FULLDOME_CUBE)
         uAngle_->floats[0] = p_cameraFdAngle_->value(time, thread);
-
 
     // -- render camera frame onto current context --
 

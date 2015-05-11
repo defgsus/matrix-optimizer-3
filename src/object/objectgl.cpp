@@ -117,8 +117,14 @@ void ObjectGl::onParameterChanged(Parameter *p)
     }
 }
 
+void ObjectGl::onDependency(Object * o)
+{
+    Object::onDependency(o);
+    requestReinitGl();
+}
 
-QString ObjectGl::getGlslInclude(const QString &url, bool do_search) const
+
+QString ObjectGl::getGlslInclude(const QString &url, bool do_search)
 {
     // --- built-in ---
 
@@ -142,7 +148,11 @@ QString ObjectGl::getGlslInclude(const QString &url, bool do_search) const
         auto to = static_cast<TextObject*>(o);
         auto tex = to->valueText(0, 0);
         if (tex.second == TT_GLSL)
+        {
+            if (sceneObject())
+                sceneObject()->installDependency(this, o);
             return tex.first;
+        }
     }
 
     return QString();
@@ -193,6 +203,10 @@ void ObjectGl::p_initGl_(uint thread)
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
     if (!p_glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
+
+    // clear text dependency before shader compilation
+    if (sceneObject())
+        sceneObject()->removeDependencies(this);
 
     MO_EXTEND_EXCEPTION(
         initGl(thread),

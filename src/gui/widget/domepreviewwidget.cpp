@@ -22,7 +22,6 @@
 #include "gl/compatibility.h"
 #include "gl/shadersource.h"
 #include "gl/texture.h"
-#include "img/image.h"
 #include "math/vector.h"
 #include "io/log.h"
 #include "io/settings.h"
@@ -613,10 +612,7 @@ void DomePreviewWidget::createTexture_(GL::Texture **tex, int index)
     p.drawText(qimg.rect(), Qt::AlignCenter | Qt::AlignVCenter,
                QString("%1").arg(index+1));
 
-    Image img;
-    img.createFrom(qimg);
-
-    *tex = GL::Texture::createFromImage(img, gl::GL_RGB);
+    *tex = GL::Texture::createFromImage(qimg, gl::GL_RGB);
 
     //tex->create(320,200,gl::GL_RGB,gl::GL_FLOAT,0);
 }

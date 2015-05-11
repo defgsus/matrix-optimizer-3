@@ -79,8 +79,8 @@ private:
     {
         UT_NONE,
         UT_F1, UT_F2, UT_F3, UT_F4,
-        UT_T1, UT_T2, UT_T3, UT_T4,
-        UT_TEX
+        UT_TEX, UT_TEX_C,
+        UT_T1, UT_T2, UT_T3, UT_T4
     };
 
     struct Uniform

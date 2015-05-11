@@ -95,7 +95,8 @@ private:
     ParameterInt * numDup_;
 
     GL::Uniform * u_cam_pos_, * u_light_amt_, * u_bump_scale_,
-                * u_vertex_extrude_, * u_pointsize_, * u_instance_count_;
+                * u_vertex_extrude_, * u_pointsize_, * u_instance_count_,
+                * u_tex_0_, *u_texn_0_;
 
     bool doRecompile_;
 };

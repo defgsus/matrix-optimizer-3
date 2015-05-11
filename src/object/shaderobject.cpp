@@ -65,17 +65,7 @@ void ShaderObject::createParameters()
 {
     ObjectGl::createParameters();
 
-    params()->beginParameterGroup("shader", tr("shader"));
-    initParameterGroupExpanded("shader");
-
-        GL::ShaderSource tmp;
-        tmp.loadFragmentSource(":/shader/shaderobject.frag");
-
-        p_fragment_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment shader"),
-                tr("A piece of glsl code to set the output fragment color"),
-                TT_GLSL,
-                tmp.fragmentSource()
-                , true, false);
+    params()->beginParameterGroup("res", tr("resolution and format"));
 
         p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
@@ -91,13 +81,32 @@ void ShaderObject::createParameters()
         p_texType_ = params()->createTextureTypeParameter("texture_type", tr("texture type"),
                                                     tr("The type-per-channel of the output texture"));
 
+        params()->endParameterGroup();
+
+    params()->beginParameterGroup("shader", tr("shader"));
+    initParameterGroupExpanded("shader");
+
+        GL::ShaderSource tmp;
+        tmp.loadFragmentSource(":/shader/shaderobject.frag");
+
+        p_fragment_ = params()->createTextParameter("glsl_fragment", tr("glsl fragment shader"),
+                tr("A piece of glsl code to set the output fragment color"),
+                TT_GLSL,
+                tmp.fragmentSource()
+                , true, false);
+
+        p_passes_ = params()->createIntParameter("passes", tr("number of passes"),
+                                    tr("Runs the shader multiple times, reusing the previous output as input for each pass"),
+                                    1,  1, 4096,  1, true, true);
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("useruniforms", tr("user uniforms"));
 
         userUniforms_->createParameters("");
 
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("output", tr("output"));
 
@@ -219,6 +228,7 @@ void ShaderObject::initGl(uint )
     u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
     u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
     u_fb_tex_ = shaderQuad_->shader()->getUniform("u_feedback", false);
+    u_pass_ = shaderQuad_->shader()->getUniform("u_pass", false);
 
     if (u_resolution_)
         u_resolution_->setFloats(width, height,
@@ -317,7 +327,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     if (u_transformation_)
         u_transformation_->set(transformation());
 
-    uint texSlot = 0;
+    uint texSlot = 0, swapTexSlot = 0;
     userUniforms_->updateUniforms(time, thread, texSlot);
 
     // exchange render target and bind previous frame
@@ -334,8 +344,8 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
         // bind previous frame
         MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
         swapTex_->bind();
-        u_fb_tex_->ints[0] = texSlot;
-        ++texSlot;
+        u_fb_tex_->ints[0] = swapTexSlot = texSlot;
+        //++texSlot;
     }
 
 
@@ -345,11 +355,27 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 
     MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
     MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
-    MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
 
-    MO_EXTEND_EXCEPTION(
-        shaderQuad_->draw(w, h, p_split_->baseValue())
-                , "in ShaderObject::renderGl()")
+    int numPasses = p_passes_->value(time, thread);
+    for (int i=0; i<numPasses; ++i)
+    {
+        // swap texture for each pass
+        if (u_fb_tex_ && i > 0)
+        {
+            swapTex_ = fbo_->swapColorTexture(swapTex_);
+            swapTex_->bind();
+        }
+
+        // update a view uniforms
+        if (u_pass_)
+            u_pass_->setFloats(i, Float(i)/numPasses, Float(i)/std::max(1, numPasses-1), numPasses);
+
+        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
+
+        MO_EXTEND_EXCEPTION(
+            shaderQuad_->draw(w, h, p_split_->baseValue())
+                    , "in ShaderObject::renderGl()");
+    }
 
     gl::glFlush();
     gl::glFinish();

@@ -20,7 +20,6 @@
 #include "object/param/parametertexture.h"
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"
-#include "img/image.h"
 #include "script/angelscript_image.h"
 #include "io/filemanager.h"
 #include "io/datastream.h"
@@ -353,9 +352,9 @@ bool TextureSetting::setTextureFromImage_(const QString& fn)
     texture_ = 0;
     constTexture_ = 0;
 
-    Image img;
-    if (!img.loadImage(fn) &&
-        !img.loadImage(":/texture/error.png"))
+    QImage img;
+    if (!img.load(fn) &&
+        !img.load(":/texture/error.png"))
         return false;
 
     texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);

@@ -220,6 +220,17 @@ public:
     /** Used by Parameter to emit a parameterVisibilityChanged() */
     void notifyParameterVisibility(Parameter * p);
 
+    /** Updates receivers of the text parameter.
+        @todo Generalize modulation receiver notification! */
+    void notifyParameterChange(ParameterText * p);
+
+    /** Installs a (runtime) dependency.
+        XXX This will be refined in the future.
+        Experiment feature to propagate changed in TextObject to shaders. */
+    void installDependency(Object * dependendObject, Object * source);
+    void removeDependency(Object * dependendObject, Object * source);
+    void removeDependencies(Object * dependendObject);
+
 signals:
 
     /** Scene should be re-rendered */
@@ -435,6 +446,8 @@ private:
     //QList<AudioUnit*> topLevelAudioUnits_;
     QList<Object*> deletedObjects_;
     QMap<QString, ModulatorObjectFloat*> uiModsFloat_;
+
+    QMultiMap<Object*, Object*> dependMap_;
 
     // ---------- properties -------------------
 

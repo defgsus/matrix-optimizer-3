@@ -39,7 +39,7 @@ bool UserUniformSetting::Uniform::isBufferTexture() const
 bool UserUniformSetting::Uniform::isTextureInput() const
 {
     int ut = p_type->baseValue();
-    return ut == UT_TEX;
+    return ut == UT_TEX || ut == UT_TEX_C;
 }
 
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
@@ -75,25 +75,26 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
         u.texture = 0;
 
 
+        u.p_type = params->createSelectParameter(
+            ("uniformtype%1_" + id_suffix).arg(i),
+            tr("uniform%1 type").arg(i + 1),
+            tr("The type of the uniform variable"),
+            { "none", "float", "vec2", "vec3", "vec4",
+              "texture", "texturecube", "texture1D", "texture1D2", "texture1D3", "texture1D4" },
+            { tr("none"), "float", "vec2", "vec3", "vec4",
+              "texture", "texture cube", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
+            { tr("none"), "float", "vec2", "vec3", "vec4",
+              "texture", "texture cube", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
+            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_TEX, UT_TEX_C, UT_T1, UT_T2, UT_T3, UT_T4 },
+            0,
+            true, false);
+
         u.p_name = params->createTextParameter(("uniformname%1_" + id_suffix).arg(i),
                                                tr("uniform%1 name").arg(i + 1),
                                                tr("The name of the uniform variable as it should go into the header of the shader"),
                                                TT_PLAIN_TEXT,
                                                "",
                                                true, false);
-
-        u.p_type = params->createSelectParameter(
-            ("uniformtype%1_" + id_suffix).arg(i),
-            tr("uniform%1 type").arg(i + 1),
-            tr("The type of the uniform variable"),
-            { "none", "float", "vec2", "vec3", "vec4", "texture1D", "texture1D2", "texture1D3", "texture1D4", "texture" },
-            { tr("none"), "float", "vec2", "vec3", "vec4",
-              "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D", "texture" },
-            { tr("none"), "float", "vec2", "vec3", "vec4",
-              "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D", "texture" },
-            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_T1, UT_T2, UT_T3, UT_T4, UT_TEX },
-            0,
-            true, false);
 
         u.p_length = params->createIntParameter(("uniformtexlen%1_" + id_suffix).arg(i),
                                                 tr("uniform%1 length").arg(i + 1),
@@ -170,9 +171,9 @@ void UserUniformSetting::updateParameterVisibility()
         for (uint i = 0; i<4; ++i)
             u.p_float[i]->setVisible(i < u.num_floats);
 
-        u.p_name->setVisible(u.num_floats > 0 || type == UT_TEX);
+        u.p_name->setVisible(u.num_floats > 0 || u.isTextureInput());
 
-        u.p_tex->setVisible(type == UT_TEX);
+        u.p_tex->setVisible(u.isTextureInput());
     }
 
     uploadTime_ = -1.12341212; // be sure to upload uniforms next time
@@ -201,6 +202,7 @@ QString UserUniformSetting::getDeclarations() const
             case UT_T3:
             case UT_T4: typestr = "sampler1D"; break;
             case UT_TEX: typestr = "sampler2D"; break;
+            case UT_TEX_C: typestr = "samplerCube"; break;
             case UT_NONE: break;
         }
 
@@ -225,7 +227,8 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
                      || u.uniform->type() == gl::GL_FLOAT_VEC2
                      || u.uniform->type() == gl::GL_FLOAT_VEC3
                      || u.uniform->type() == gl::GL_FLOAT_VEC4
-                     || u.uniform->type() == gl::GL_SAMPLER_2D))
+                     || u.uniform->type() == gl::GL_SAMPLER_2D
+                     || u.uniform->type() == gl::GL_SAMPLER_CUBE))
                 u.uniform = 0;
         }
         // create a texture
@@ -273,10 +276,16 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
         {
             if (const GL::Texture * tex = u.p_tex->value(time, thread))
             {
+                MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
                 MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
                 tex->bind();
                 u.uniform->ints[0] = texSlot;
                 ++texSlot;
+                /*if (tex->isCube())
+                {
+                    tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
+                    tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
+                }*/
             }
         }
         else

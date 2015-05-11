@@ -516,6 +516,7 @@ void Model3d::updateParameterVisibility()
     glslVertexOut_->setVisible(glsl);
     glslFragmentOut_->setVisible(glsl);
     glslNormal_->setVisible(glsl);
+    glslLight_->setVisible(glsl);
 
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
@@ -764,6 +765,8 @@ void Model3d::setupDrawable_()
 
     u_pointsize_ = draw_->shader()->getUniform("u_pointsize_dist", false);
 
+    u_tex_0_ = draw_->shader()->getUniform("tex_0");
+    u_texn_0_ = draw_->shader()->getUniform("tex_norm_0");
     if (texture_->isEnabled())
     {
         if (texturePostProc_->isEnabled())
@@ -828,11 +831,6 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
     {
         MO_DEBUG_MODEL("Model3d::renderGl: drawing");
 
-        // bind textures
-        texture_->bind();
-        textureBump_->bind(1);
-        uint texSlot = 2;
-
         const int numDup = numDup_->value(time, thread);
 
         // update uniforms
@@ -856,7 +854,12 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         if (u_vertex_extrude_)
             u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
 
+        uint texSlot = 0;
         uniformSetting_->updateUniforms(time, thread, texSlot);
+
+        // bind the model3d specific textures
+        if (u_tex_0_) { texture_->bind(texSlot); u_tex_0_->ints[0] = texSlot++; }
+        if (u_texn_0_) { textureBump_->bind(texSlot); u_texn_0_->ints[0] = texSlot++; }
 
         if (texture_->isEnabled())
         {

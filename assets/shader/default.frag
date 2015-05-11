@@ -36,8 +36,9 @@ in vec3 v_normal_eye;
 in vec4 v_color;
 in vec4 v_ambient_color;
 in vec2 v_texCoord;
-#ifdef MO_ENABLE_LIGHTING
-    in mat3 v_normal_space;
+in mat3 v_normal_space;
+
+#if MO_NUM_LIGHTS
     #ifndef MO_FRAGMENT_LIGHTING
         in vec4 v_light_dir[MO_NUM_LIGHTS];
     #endif
@@ -347,12 +348,14 @@ void main()
     // 'ambient' or base color
     vec4 ambcol = mo_ambient_color();
 
-#ifdef MO_ENABLE_LIGHTING
+//#ifdef MO_ENABLE_LIGHTING
 #ifdef MO_ENABLE_FRAGMENT_OVERRIDE
+    // normal in normal space
     mo_normal_ns = mo_modify_normal(mo_normal_ns);
 #endif
+    // normal back in world space
     mo_normal = v_normal_space * mo_normal_ns;
-#endif
+//#endif
 
     mo_light_color = mo_calc_light_color();
     // add light to the base color

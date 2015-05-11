@@ -21,7 +21,6 @@
 #include "gl/texture.h"
 #include "gl/rendersettings.h"
 #include "gl/cameraspace.h"
-#include "img/image.h"
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
 //#include "param/parameterselect.h"
