@@ -305,7 +305,13 @@ HEADERS += \
     src/object/textobject.h \
     src/object/interface/valuetextinterface.h \
     src/object/texture/keyto.h \
-    src/object/texture/mixto.h
+    src/object/texture/mixto.h \
+    src/object/param/parametertransformation.h \
+    src/object/interface/valuetransformationinterface.h \
+    src/object/transform/transformationinput.h \
+    src/object/param/modulatortransformation.h \
+    src/object/transform/mirrortrans.h \
+    src/object/transform/cleartrans.h
 
 
 SOURCES += \
@@ -569,7 +575,12 @@ SOURCES += \
     src/object/texture/imageto.cpp \
     src/object/textobject.cpp \
     src/object/texture/keyto.cpp \
-    src/object/texture/mixto.cpp
+    src/object/texture/mixto.cpp \
+    src/object/param/parametertransformation.cpp \
+    src/object/transform/transformationinput.cpp \
+    src/object/param/modulatortransformation.cpp \
+    src/object/transform/mirrortrans.cpp \
+    src/object/transform/cleartrans.cpp
 
 OTHER_FILES +=
 

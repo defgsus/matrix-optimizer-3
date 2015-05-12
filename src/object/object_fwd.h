@@ -20,7 +20,8 @@ namespace MO {
         TT_EQUATION,
         TT_APP_STYLESHEET,
         TT_ANGELSCRIPT,
-        TT_GLSL
+        TT_GLSL,
+        TT_OBJECT_WILDCARD
     };
 
     namespace IO { class DataStream; }
@@ -50,6 +51,9 @@ namespace MO {
     class TrackFloat;
 
     class ValueFloatInterface;
+    class ValueTextInterface;
+    class ValueTextureInterface;
+    class ValueTransformationInterface;
 
     class Parameter;
     class Parameters;
@@ -58,9 +62,10 @@ namespace MO {
     class ParameterFilename;
     class ParameterFloat;
     class ParameterSelect;
+    class ParameterTimeline1D;
     class ParameterText;
     class ParameterTexture;
-    class ParameterTimeline1D;
+    class ParameterTransformation;
 
     class TransformationBuffer;
     class Transformation;
@@ -71,9 +76,11 @@ namespace MO {
     class LookAt;
     class Mix;
 
-    class ModulatorOutput;
     class Modulator;
     class ModulatorFloat;
+    class ModulatorOutput;
+    class ModulatorTexture;
+    class ModulatorTransformation;
 
     class ModulatorObject;
     class ModulatorObjectFloat;

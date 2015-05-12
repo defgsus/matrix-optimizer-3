@@ -197,6 +197,12 @@ void Scene::findObjects_()
     // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
+    // render objects per camera
+    glObjectsPerCamera_.clear();
+    for (int i=0; i<cameras_.size(); ++i)
+        glObjectsPerCamera_ << cameras_[i]->getRenderObjects();
+
+
     // all objects that draw their frames into the output
     frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
     {
@@ -1042,9 +1048,15 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         renderSet.setFinalFramebuffer(fboFinal_[thread]);
 
         // render scene from each camera
-        for (Camera * camera : cameras_)
-        if (camera->active(time, thread))
+        for (int cindex = 0; cindex < cameras_.size(); ++cindex)
+        if (cameras_[cindex]->active(time, thread))
         {
+            Camera * camera = cameras_[cindex];
+
+            // update the list of to-render objects
+            if (camera->needsUpdateRenderObjects())
+                glObjectsPerCamera_[cindex] = camera->getRenderObjects();
+
             // get camera viewspace
             camera->initCameraSpace(camSpace, thread, time);
 
@@ -1064,7 +1076,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                 camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
                 // render each opengl object per camera & per cube-face
-                for (ObjectGl * o : glObjects_)
+                for (ObjectGl * o : glObjectsPerCamera_[cindex])
                 if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
                     && o->active(time, thread))
                 {

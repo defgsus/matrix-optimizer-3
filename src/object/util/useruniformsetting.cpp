@@ -276,16 +276,17 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
         {
             if (const GL::Texture * tex = u.p_tex->value(time, thread))
             {
-                MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
+                //MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
                 MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
                 tex->bind();
                 u.uniform->ints[0] = texSlot;
                 ++texSlot;
-                /*if (tex->isCube())
+                /// @todo generalize texture read parameters for texture inputs
+                if (tex->isCube())
                 {
                     tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
                     tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
-                }*/
+                }
             }
         }
         else

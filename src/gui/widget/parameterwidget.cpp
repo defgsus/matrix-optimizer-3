@@ -495,7 +495,7 @@ void ParameterWidget::createWidgets_()
         MO_ASSERT(false, "could not create widget for Parameter '" << param_->idName() << "'");
 
 
-    if (defaultValueName.isEmpty())
+    if (defaultValueName.isNull())
         breset->setVisible(false);
     else
         breset->setStatusTip(tr("Sets the value of the parameter back to the default value (%1)")

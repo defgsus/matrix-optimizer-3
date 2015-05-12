@@ -16,9 +16,10 @@
 #include "parameterfloat.h"
 #include "parameterfilename.h"
 #include "parameterselect.h"
+#include "parametertimeline1d.h"
 #include "parametertext.h"
 #include "parametertexture.h"
-#include "parametertimeline1d.h"
+#include "parametertransformation.h"
 #include "object/object.h"
 #include "gl/opengl.h"
 #include "io/datastream.h"
@@ -844,6 +845,49 @@ ParameterSelect * Parameters::createTextureTypeParameter(
                 (int)gl::GL_RGBA,
                 true, false);
 
+}
+
+ParameterTransformation * Parameters::createTransformationParameter(
+        const QString &id, const QString &name, const QString &statusTip, const Mat4& defaultValue)
+{
+    ParameterTransformation* param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto pf = dynamic_cast<ParameterTransformation*>(p))
+        {
+            param = pf;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested transformation "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterTransformation(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setDefaultValue(defaultValue);
+    param->setStatusTip(statusTip);
+    param->setModulateable(true);
+    param->setEditable(false);
+
+    param->setGroup(curGroupId_, curGroupName_);
+
+    return param;
 }
 
 } // namespace MO

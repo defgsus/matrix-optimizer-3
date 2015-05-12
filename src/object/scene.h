@@ -438,6 +438,7 @@ private:
     QList<Object*> posObjects_;
     //QList<Object*> posObjectsAudio_;
     QList<Camera*> cameras_;
+    QList<QList<ObjectGl*>> glObjectsPerCamera_;
     QList<ObjectGl*> glObjects_, frameDrawers_;
     QList<ShaderObject*> shaderObjects_;
     //QList<Object*> audioObjects_;

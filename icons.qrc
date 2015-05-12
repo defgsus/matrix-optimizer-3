@@ -57,5 +57,8 @@
         <file alias="obj_derivative.png">assets/icon/obj_derivative.png</file>
         <file alias="obj_tex.png">assets/icon/obj_tex.png</file>
         <file alias="obj_to_blur.png">assets/icon/obj_to_blur.png</file>
+        <file alias="obj_trans_clear.png">assets/icon/obj_trans_clear.png</file>
+        <file alias="obj_trans_input.png">assets/icon/obj_trans_input.png</file>
+        <file alias="obj_trans_mirror.png">assets/icon/obj_trans_mirror.png</file>
     </qresource>
 </RCC>

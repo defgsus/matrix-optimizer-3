@@ -22,6 +22,9 @@
 #include "object/transform/look.h"
 #include "object/transform/lookat.h"
 #include "object/transform/mix.h"
+#include "object/transform/transformationinput.h"
+#include "object/transform/mirrortrans.h"
+#include "object/transform/cleartrans.h"
 #include "object/scene.h"
 #include "object/control/trackfloat.h"
 #include "object/control/sequencefloat.h"
@@ -54,6 +57,9 @@ struct AppIcons::Private
         I_LOOK,
         I_LOOKAT,
         I_MIX,
+        I_CLEAR,
+        I_MIRROR,
+        I_INPUT,
         I_GROUP,
         I_LIGHT,
         I_MODULATOR,
@@ -124,6 +130,9 @@ void AppIcons::Private::init()
     nameMap_.insert(I_LOOK, ":/icon/obj_look.png");
     nameMap_.insert(I_LOOKAT, ":/icon/obj_lookat.png");
     nameMap_.insert(I_MIX, ":/icon/obj_mix.png");
+    nameMap_.insert(I_CLEAR, ":/icon/obj_trans_clear.png");
+    nameMap_.insert(I_MIRROR, ":/icon/obj_trans_mirror.png");
+    nameMap_.insert(I_INPUT, ":/icon/obj_trans_input.png");
     nameMap_.insert(I_GROUP, ":/icon/obj_group.png");
     nameMap_.insert(I_LIGHT, ":/icon/obj_light.png");
     nameMap_.insert(I_MODULATOR, ":/icon/obj_modulator.png");
@@ -161,6 +170,12 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
             return I_LOOKAT;
         if (qobject_cast<const Mix*>(o))
             return I_MIX;
+        if (qobject_cast<const ClearTrans*>(o))
+            return I_CLEAR;
+        if (qobject_cast<const MirrorTrans*>(o))
+            return I_MIRROR;
+        if (qobject_cast<const TransformationInput*>(o))
+            return I_INPUT;
     }
 
     if (o->isAudioObject())

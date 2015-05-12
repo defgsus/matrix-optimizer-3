@@ -1,0 +1,43 @@
+/** @file mirrortrans.h
+
+    @brief
+
+    <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 12.05.2015</p>
+*/
+
+#ifndef MOSRC_OBJECT_TRANSFORM_MIRRORTRANS_H
+#define MOSRC_OBJECT_TRANSFORM_MIRRORTRANS_H
+
+#include "transformation.h"
+
+namespace MO {
+
+
+class MirrorTrans : public Transformation
+{
+    Q_OBJECT
+public:
+    MO_OBJECT_CONSTRUCTOR(MirrorTrans);
+
+    virtual void createParameters() Q_DECL_OVERRIDE;
+
+    virtual void applyTransformation(Mat4& matrix, Double time, uint thread) const
+                                                        Q_DECL_OVERRIDE;
+
+signals:
+
+public slots:
+
+protected:
+
+    ParameterFloat
+        * x_, * y_, * z_,
+        * ax_, * ay_, * az_;
+};
+
+} // namespace MO
+
+#endif // MOSRC_OBJECT_TRANSFORM_MIRRORTRANS_H

@@ -135,6 +135,34 @@
          stdDeviation="0.77924496"
          id="feGaussianBlur4176" />
     </filter>
+    <marker
+       inkscape:stockid="Arrow2Mstart"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mstart-4"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4034-8"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(0.6,0.6)" />
+    </marker>
+    <marker
+       inkscape:stockid="Arrow2Mend"
+       orient="auto"
+       refY="0"
+       refX="0"
+       id="Arrow2Mend-8"
+       style="overflow:visible">
+      <path
+         inkscape:connector-curvature="0"
+         id="path4037-8"
+         style="fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         transform="scale(-0.6,-0.6)" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -144,8 +172,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="567.66281"
-     inkscape:cy="496.16163"
+     inkscape:cx="173.17467"
+     inkscape:cy="381.87592"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -2763,5 +2791,121 @@
          x="673.44208"
          y="624.08673"
          style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-family:Rekha;-inkscape-font-specification:Rekha Medium">TEX</tspan></text>
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-5-2"
+       width="68.188736"
+       height="68.188736"
+       x="708.26782"
+       y="-74.451515"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_clear.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:none"
+       d="M 52.413694,730.72368 28.690986,754.55273"
+       id="path3776-7-4"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_clear.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_input.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-158.73723"
+       x="708.26782"
+       height="68.188736"
+       width="68.188736"
+       id="rect4211"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect4215"
+       width="68.188736"
+       height="68.188736"
+       x="708.26782"
+       y="-238.73723"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_clear.png"
+       sodipodi:nodetypes="cc"
+       inkscape:connector-curvature="0"
+       id="path4611"
+       d="m 28.690986,730.72368 23.722708,23.82905"
+       style="fill:none;stroke:#000000;stroke-width:2.4;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:none" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_input.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-158.73723"
+       x="707.91071"
+       height="68.188736"
+       width="68.188736"
+       id="rect4613"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.79999995000000013;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-mid:none;marker-end:url(#Arrow1Send)"
+       d="m 109.83805,742.20582 26.07142,-0.20666"
+       id="path4617"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_input.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect4619"
+       width="68.188736"
+       height="68.188736"
+       x="707.91071"
+       y="-239.09438"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:none;stroke:#000000;stroke-width:2.79999995;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0;marker-start:none;marker-end:none"
+       d="m 205.19519,721.84868 -0.35714,40.15048"
+       id="path4621"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cc"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       sodipodi:type="arc"
+       style="fill:none;stroke:#000000;stroke-width:2.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="path6455"
+       sodipodi:cx="216.42857"
+       sodipodi:cy="742.00507"
+       sodipodi:rx="5.7142859"
+       sodipodi:ry="5.7142859"
+       d="m 222.14286,742.00507 a 5.7142859,5.7142859 0 1 1 -11.42857,0 5.7142859,5.7142859 0 1 1 11.42857,0 z"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164" />
+    <path
+       d="m 222.14286,742.00507 a 5.7142859,5.7142859 0 1 1 -11.42857,0 5.7142859,5.7142859 0 1 1 11.42857,0 z"
+       sodipodi:ry="5.7142859"
+       sodipodi:rx="5.7142859"
+       sodipodi:cy="742.00507"
+       sodipodi:cx="216.42857"
+       id="path6457"
+       style="fill:none;stroke:#000000;stroke-width:2.79999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       sodipodi:type="arc"
+       transform="translate(-22.928571,0)"
+       inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164" />
   </g>
 </svg>

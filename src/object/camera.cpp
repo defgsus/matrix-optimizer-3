@@ -24,6 +24,7 @@
 #include "param/parameterfloat.h"
 #include "param/parameterselect.h"
 #include "param/parameterint.h"
+#include "param/parametertext.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
 #include "projection/projectionsystemsettings.h"
@@ -37,12 +38,13 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Camera)
 
-Camera::Camera(QObject *parent) :
-    ObjectGl        (parent),
-    renderMode_     (RM_FULLDOME_CUBE),
-    alphaBlend_     (this),
-    useOverrideMatrix_  (false),
-    blendTexture_   (0)
+Camera::Camera(QObject *parent)
+    : ObjectGl              (parent)
+    , renderMode_           (RM_FULLDOME_CUBE)
+    , alphaBlend_           (this)
+    , useOverrideMatrix_    (false)
+    , wildcardChanged_      (true)
+    , blendTexture_         (0)
 {
     setName("Camera");
 
@@ -127,6 +129,20 @@ void Camera::createParameters()
 
     params()->endParameterGroup();
 
+    params()->beginParameterGroup("camobjects", tr("rendered objects"));
+
+        p_wcInclude_ = params()->createTextParameter("cam_include", tr("include objects"),
+                                     tr("Wildcard expressions of which objects should be rendered"),
+                                     TT_OBJECT_WILDCARD,
+                                     "*", true, false);
+
+        p_wcIgnore_ = params()->createTextParameter("cam_ignore", tr("ignore objects"),
+                                     tr("Wildcard expressions of which objects should not be rendered"),
+                                     TT_OBJECT_WILDCARD,
+                                     "", true, false);
+
+    params()->endParameterGroup();
+
     params()->beginParameterGroup("camback", tr("background"));
 
         p_backR_ = params()->createFloatParameter("cambackr", tr("red"),
@@ -180,12 +196,16 @@ void Camera::onParameterChanged(Parameter * p)
 
     if (p == p_width_ || p == p_height_ || p == p_cubeRes_)
         requestReinitGl();
+
+    if (p == p_wcIgnore_ || p == p_wcInclude_)
+        wildcardChanged_ = true;
 }
 
 void Camera::onParametersLoaded()
 {
     ObjectGl::onParametersLoaded();
     renderMode_ = (RenderMode)p_cameraMode_->baseValue();
+    wildcardChanged_ = true;
 }
 
 void Camera::updateParameterVisibility()
@@ -415,7 +435,7 @@ uint Camera::numCubeTextures(uint thread, Double time) const
     if (renderMode_ != RM_FULLDOME_CUBE)
         return 1;
 
-    return (p_cameraAngle_->value(time, thread) >= 250.f)
+    return (p_cameraFdAngle_->value(time, thread) >= 250.f)
                ? 6 : 5;
 
 }
@@ -587,5 +607,36 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
 }
 
+
+QList<ObjectGl*> Camera::getRenderObjects()
+{
+    wildcardChanged_ = false;
+
+    QList<ObjectGl*> list;
+
+    auto s = sceneObject();
+    if (!s)
+        return list;
+
+    const QString
+            inc = p_wcInclude_->baseValue(),
+            ign = p_wcIgnore_->baseValue();
+
+    auto objs = s->findChildObjects<ObjectGl>(QString(), true);
+
+    if (inc == "*" && ign.isEmpty())
+        return objs;
+
+    QRegExp eInc(inc, Qt::CaseSensitive, QRegExp::WildcardUnix),
+            eIgn(ign, Qt::CaseSensitive, QRegExp::WildcardUnix);
+
+    for (ObjectGl * o : objs)
+    {
+        if (eInc.exactMatch(o->name()) && !eIgn.exactMatch(o->name()))
+            list << o;
+    }
+
+    return list;
+}
 
 } // namespace MO

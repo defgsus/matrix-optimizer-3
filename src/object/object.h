@@ -20,9 +20,10 @@
 #include <QSet>
 #include <QMap>
 
+#include "object_fwd.h"
+#include "interface/valuetransformationinterface.h"
 #include "types/int.h"
 #include "types/vector.h"
-#include "object_fwd.h"
 #include "io/filetypes.h"
 
 /** Maximum time in seconds (for widgets mainly) */
@@ -81,7 +82,8 @@ namespace Private {
 /** Abstract base of all Objects in MO
 
 */
-class Object : public QObject
+class Object : public QObject,
+               public ValueTransformationInterface
 {
     Q_OBJECT
 
@@ -728,6 +730,10 @@ public:
 
     /** Returns the transformation matrix of this object */
     const Mat4& transformation() const { return p_transformation_; }
+
+    /** ValueTransformationInterface */
+    virtual Mat4 valueTransformation(Double , uint ) const Q_DECL_OVERRIDE
+        { return p_transformation_; }
 
     /** Returns the position of this object */
     Vec3 position() const

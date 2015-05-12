@@ -51,6 +51,14 @@ public:
     /** Returns the mode of rendering */
     RenderMode renderMode() const { return renderMode_; }
 
+    /** Returns the list of objects that should be rendered according
+        to wildcard parameters. */
+    QList<ObjectGl*> getRenderObjects();
+
+    /** Returns true when the wildcard parameters have changed and
+        getRenderObjects() should be called again. */
+    bool needsUpdateRenderObjects() const { return wildcardChanged_; }
+
     //GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
     /** Returns number of cubemap textures needed. */
@@ -108,6 +116,8 @@ private:
     ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_;
     ParameterInt * p_width_, * p_height_,
                  * p_cubeRes_;
+    ParameterText * p_wcInclude_,
+                  * p_wcIgnore_;
     GL::Uniform * uColor_, * uAngle_;
 
     Float aspectRatio_;
@@ -115,7 +125,7 @@ private:
     AlphaBlendSetting alphaBlend_;
 
     Mat4 sliceMatrix_, overrideMatrix_;
-    bool useOverrideMatrix_;
+    bool useOverrideMatrix_, wildcardChanged_;
     mutable Mat4 cheat_;
 
     GL::Texture * blendTexture_;

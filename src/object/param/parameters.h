@@ -16,7 +16,7 @@
 #include <QSet>
 
 #include "object/object_fwd.h"
-#include "types/float.h"
+#include "types/vector.h"
 #include "types/int.h"
 #include "io/filetypes.h"
 
@@ -197,6 +197,10 @@ public:
     /** Combines the two values from texture format and type parameters and
         returns the correct format GLenum. */
     static int getTexFormat(int format, int type);
+
+
+    ParameterTransformation * createTransformationParameter(
+            const QString& id, const QString& name, const QString& statusTip, const Mat4& defaultValue = Mat4(1.));
 
 private:
 

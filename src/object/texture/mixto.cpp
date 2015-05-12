@@ -182,7 +182,8 @@ void MixTO::Private::initGl()
     for (uint i=0; i<to->numberTextureInputs(); ++i)
         texNames << QString("u_tex_%1").arg(i);
 
-    auto shader = to->createShaderQuad(src, texNames)->shader();
+    //auto shader =
+            to->createShaderQuad(src, texNames)->shader();
 
     // uniforms
 
