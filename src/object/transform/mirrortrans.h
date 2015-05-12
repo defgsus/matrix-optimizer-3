@@ -23,6 +23,7 @@ public:
     MO_OBJECT_CONSTRUCTOR(MirrorTrans);
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void applyTransformation(Mat4& matrix, Double time, uint thread) const
                                                         Q_DECL_OVERRIDE;
@@ -36,6 +37,8 @@ protected:
     ParameterFloat
         * x_, * y_, * z_,
         * ax_, * ay_, * az_;
+    ParameterSelect
+        * mPos_, * mOri_;
 };
 
 } // namespace MO

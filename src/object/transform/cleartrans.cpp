@@ -47,20 +47,20 @@ void ClearTrans::createParameters()
 
         cPos_ = params()->createBooleanParameter("clear_pos", tr("clear position"),
                                                  tr("Removes the position from the transformation"),
-                                                 tr("The position is cleared"),
                                                  tr("The position is left alone"),
+                                                 tr("The position is cleared"),
                                                  false, true, true);
 
         cScale_ = params()->createBooleanParameter("clear_scale", tr("clear scale"),
                                                  tr("Removes the scaling from the transformation"),
-                                                 tr("The scale is reset to 1"),
                                                  tr("The scale is left alone"),
+                                                 tr("The scale is reset to 1"),
                                                  false, true, true);
 
         cRot_ = params()->createBooleanParameter("clear_rot", tr("clear rotation"),
                                                  tr("Removes the rotation from the transformation"),
-                                                 tr("The rotation is cleared"),
                                                  tr("The rotation is left alone"),
+                                                 tr("The rotation is cleared"),
                                                  false, true, true);
 
     params()->endParameterGroup();
