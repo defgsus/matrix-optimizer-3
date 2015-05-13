@@ -41,9 +41,11 @@ ObjectGl::ObjectGl(QObject *parent)
       p_defaultDepthWriteMode_  (DWM_PARENT),
       p_defaultAlphaBlendMode_  (AlphaBlendSetting::M_PARENT),
       p_enableCreateRenderSettings_(true),
+      p_updateModeVisible_      (true),
+      p_updateRequest_          (true),
       p_paramDepthTest_         (0),
-      p_paramDepthWrite_        (0)
-      //paramAlphaBlend_        (0)
+      p_paramDepthWrite_        (0),
+      p_paramUpdateMode_        (0)
 {
 }
 
@@ -59,48 +61,59 @@ void ObjectGl::deserialize(IO::DataStream & io)
     io.readHeader("ogl", 1);
 }
 
+ObjectGl::UpdateMode ObjectGl::updateMode() const
+{
+     return p_paramUpdateMode_
+             ? (UpdateMode)p_paramUpdateMode_->baseValue()
+             : p_defaultUpdateMode_;
+}
+
 void ObjectGl::createParameters()
 {
     Object::createParameters();
+
+    params()->beginParameterGroup("active", tr("activity"));
+
+        p_paramUpdateMode_ = params()->createSelectParameter("rendset_update", tr("render"),
+            tr("Selects when and how often the object is rendered"),
+            { "always", "change" },
+            { tr("every frame"), tr("on change") },
+            { tr("The object is rendered every frame"),
+              tr("The object is only rendered when it's parameters have been changed") },
+            { UM_ALWAYS, UM_ON_CHANGE },
+            p_defaultUpdateMode_, true, false);
+        p_paramUpdateMode_->setVisible(p_updateModeVisible_);
+
+    params()->endParameterGroup();
+
 
     if (p_enableCreateRenderSettings_)
     {
         params()->beginParameterGroup("renderset", tr("render settings"));
 
-        p_paramDepthTest_ = params()->createSelectParameter("rendset_dtm", tr("depth testing"),
-            tr("Selects whether a test against the depth-map should be performed"),
-            { "p", "on", "off" },
-            depthTestModeNames,
-            { tr("Uses the same setting as the parent object"),
-              tr("Depth-testing is on - the object will be hidden by closer objects."),
-              tr("Depth-testing is off - "
-                 "the object will paint itself regardless of other objects.") },
-            { DTM_PARENT, DTM_ON, DTM_OFF },
-            p_defaultDepthTestMode_, true, false);
+            p_paramDepthTest_ = params()->createSelectParameter("rendset_dtm", tr("depth testing"),
+                tr("Selects whether a test against the depth-map should be performed"),
+                { "p", "on", "off" },
+                depthTestModeNames,
+                { tr("Uses the same setting as the parent object"),
+                  tr("Depth-testing is on - the object will be hidden by closer objects."),
+                  tr("Depth-testing is off - "
+                     "the object will paint itself regardless of other objects.") },
+                { DTM_PARENT, DTM_ON, DTM_OFF },
+                p_defaultDepthTestMode_, true, false);
 
-        p_paramDepthWrite_ = params()->createSelectParameter("rendset_dwm", tr("depth writing"),
-            tr("Selects whether the depth information of the object should be written"),
-            { "p", "on", "off" },
-            depthWriteModeNames,
-            { tr("Uses the same setting as the parent object"),
-              tr("Depth-writing is on - the depth information can be used by other objects."),
-              tr("Depth-writing is off - the depth information will simply be discarded.") },
-            { DWM_PARENT, DWM_ON, DWM_OFF },
-            p_defaultDepthWriteMode_, true, false);
+            p_paramDepthWrite_ = params()->createSelectParameter("rendset_dwm", tr("depth writing"),
+                tr("Selects whether the depth information of the object should be written"),
+                { "p", "on", "off" },
+                depthWriteModeNames,
+                { tr("Uses the same setting as the parent object"),
+                  tr("Depth-writing is on - the depth information can be used by other objects."),
+                  tr("Depth-writing is off - the depth information will simply be discarded.") },
+                { DWM_PARENT, DWM_ON, DWM_OFF },
+                p_defaultDepthWriteMode_, true, false);
 
-        p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_", "_OGl_");
-        /*
-        paramAlphaBlend_ = createSelectParameter("rendset_abm", tr("alpha blending"),
-            tr("Selects how semi-transparent objects are composed on screen"),
-            { "p", "off", "mix", "add" },
-            alphaBlendModeNames,
-            { tr("Uses the same setting as the parent object"),
-              tr("No alpha blending occures - the alpha value is ignored"),
-              tr("The colors are cross-faded depending on the alpha value"),
-              tr("The colors are simply added on top") },
-            { ABM_PARENT, ABM_OFF, ABM_MIX, ABM_ADD },
-            defaultAlphaBlendMode_, true, false);
-*/
+            p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_", "_OGl_");
+
         params()->endParameterGroup();
     }
 }
@@ -109,6 +122,8 @@ void ObjectGl::onParameterChanged(Parameter *p)
 {
     Object::onParameterChanged(p);
 
+    p_updateRequest_ = true;
+
     if (   p == p_paramDepthTest_
         || p == p_paramDepthWrite_
         || p_alphaBlend_.hasParameter(p))
@@ -116,6 +131,11 @@ void ObjectGl::onParameterChanged(Parameter *p)
         rootObject()->propagateRenderMode(0);
     }
 }
+
+/*void ObjectGl::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+}*/
 
 void ObjectGl::onDependency(Object * o)
 {
@@ -267,6 +287,8 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double tim
 
 void ObjectGl::requestRender()
 {
+    p_updateRequest_ = true;
+
     Scene * scene = sceneObject();
     if (!scene)
         return;

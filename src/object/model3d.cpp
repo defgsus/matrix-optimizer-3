@@ -57,7 +57,8 @@ Model3d::Model3d(QObject * parent)
       u_light_amt_  (0),
       u_bump_scale_ (0),
       u_vertex_extrude_(0),
-      doRecompile_  (false)
+      doRecompile_  (false),
+      loadedVersion_(0)
 {
     setName("Model3D");
 }
@@ -71,7 +72,8 @@ void Model3d::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);
 
-    io.writeHeader("m3d", 4);
+    io.writeHeader("m3d", 5);
+    // v5 changes mo_modify_light()
 
     // v2
     geomSettings_->serialize(io);
@@ -86,7 +88,7 @@ void Model3d::deserialize(IO::DataStream & io)
 {
     ObjectGl::deserialize(io);
 
-    const int ver = io.readHeader("m3d", 4);
+    const int ver = loadedVersion_ = io.readHeader("m3d", 5);
 
     if (ver >= 2)
         geomSettings_->deserialize(io);
@@ -96,6 +98,20 @@ void Model3d::deserialize(IO::DataStream & io)
 
     if (ver >= 4)
         textureBump_->deserialize(io);
+}
+
+void Model3d::updateCodeVersion_()
+{
+    if (!loadedVersion_)
+        return;
+
+    if (loadedVersion_ < 5)
+    {
+        QString s = glslLight_->value();
+        s.replace("mo_modify_light(in int index,",
+                  "mo_modify_light(in int index, in vec3 surface_normal,");
+        glslLight_->setValue(s);
+    }
 }
 
 void Model3d::createParameters()
@@ -178,7 +194,7 @@ void Model3d::createParameters()
 
         diffAmt_ = params()->createFloatParameter("diffuseamt", tr("diffuse"),
                                    tr("Amount of diffuse lighting"),
-                                   1.0, 0.1);
+                                   .3, 0.1);
 
         diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
                                    tr("Exponent for the diffuse lighting - the higher, the narrower"),
@@ -187,7 +203,7 @@ void Model3d::createParameters()
 
         specAmt_ = params()->createFloatParameter("specularamt", tr("specular"),
                                    tr("Amount of specular light reflection"),
-                                   .5, 0.1);
+                                   .2, 0.1);
 
         specExp_ = params()->createFloatParameter("specexp", tr("specular exponent"),
                                    tr("Exponent for the diffuse lighting - the higher, the narrower"),
@@ -345,7 +361,7 @@ void Model3d::createParameters()
                        "\n"
                        "// " + tr("The lighting has already been calculated at this point") +
                        "\n// " + tr("Modify color, diffuse or specular before mixing") +
-                       "\nvoid mo_modify_light(in int index, in vec3 light_normal,\n"
+                       "\nvoid mo_modify_light(in int index, in vec3 surface_normal, in vec3 light_normal,\n"
                        "                     inout vec4 color, inout float diffuse, inout float specular)\n"
                        "{\n\t\n}\n"
                     , true, false);
@@ -464,6 +480,11 @@ void Model3d::createParameters()
 
 
 
+}
+
+void Model3d::onParametersLoaded()
+{
+    updateCodeVersion_();
 }
 
 void Model3d::onParameterChanged(Parameter *p)

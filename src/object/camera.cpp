@@ -48,7 +48,7 @@ Camera::Camera(QObject *parent)
 {
     setName("Camera");
 
-    setCreateRenderSettings(false);
+    initCreateRenderSettings(false);
 }
 
 Camera::~Camera()
@@ -607,6 +607,28 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
 }
 
+//namespace {
+
+    void getRenderObjects2(Object * root, QList<ObjectGl*>& list,
+                          const QRegExp& rInc, const QRegExp& rIgn)
+    {
+        for (Object* o : root->childObjects())
+        {
+            if (rIgn.exactMatch(o->name()))
+                continue;
+
+            if (o->isGl() && rInc.exactMatch(o->name()))
+            {
+                list << static_cast<ObjectGl*>(o);
+            }
+
+            getRenderObjects2(o, list, rInc, rIgn);
+        }
+    }
+
+//}
+
+
 
 QList<ObjectGl*> Camera::getRenderObjects()
 {
@@ -622,20 +644,13 @@ QList<ObjectGl*> Camera::getRenderObjects()
             inc = p_wcInclude_->baseValue(),
             ign = p_wcIgnore_->baseValue();
 
-    auto objs = s->findChildObjects<ObjectGl>(QString(), true);
-
     if (inc == "*" && ign.isEmpty())
-        return objs;
+        return s->findChildObjects<ObjectGl>(QString(), true);
 
     QRegExp eInc(inc, Qt::CaseSensitive, QRegExp::WildcardUnix),
             eIgn(ign, Qt::CaseSensitive, QRegExp::WildcardUnix);
 
-    for (ObjectGl * o : objs)
-    {
-        if (eInc.exactMatch(o->name()) && !eIgn.exactMatch(o->name()))
-            list << o;
-    }
-
+    getRenderObjects2(s, list, eInc, eIgn);
     return list;
 }
 

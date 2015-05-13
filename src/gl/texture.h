@@ -73,6 +73,11 @@ public:
     /** When true, target() is GL_TEXTURE_CUBE_MAP */
     bool isCube() const;
 
+    /** Returns a number which can be used to check if the texture has changed.
+        Used by texture-in objects.
+        hash will count upwards on every call to setChanged() */
+    int hash() const { return hash_; }
+
     /** Calculated memory of texture in bytes */
     gl::GLsizei memory() const { return memory_; }
 
@@ -94,6 +99,9 @@ public:
 
 
     // -------- openGL interface ---------------
+
+    /** Signals a change to the texture. Will change the number returned in hash() */
+    void setChanged() { hash_++; }
 
     /** Binds the texture handle to the current slot */
     bool bind() const;
@@ -222,6 +230,7 @@ private:
         type_;
 
     QString name_;
+    int hash_;
 };
 
 } // namespace GL

@@ -97,7 +97,7 @@ TextureObjectBase::TextureObjectBase(QObject *parent)
     : ObjectGl      (parent)
     , p_to_         (new PrivateTO(this))
 {
-    setCreateRenderSettings(false);
+    initCreateRenderSettings(false);
 }
 
 TextureObjectBase::~TextureObjectBase()

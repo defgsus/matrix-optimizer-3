@@ -939,14 +939,18 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
                                 GEOM::GeometryModifierCreate::T_CYLINDER_OPEN
                                || settings->type() ==
                                 GEOM::GeometryModifierCreate::T_TORUS),
+                has1Segment = has2Segments || (settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CONE_OPEN
+                               || settings->type() ==
+                                GEOM::GeometryModifierCreate::T_CONE_CLOSED),
                 hasSmallRadius = (settings->type() ==
                                 GEOM::GeometryModifierCreate::T_TORUS);
 
         group_->setVisible(editFilename, isFile);
         group_->setVisible(butLoadModelFile, isFile);
 
-        group_->setVisible(labelSeg, has2Segments );
-        group_->setVisible(spinSegX, has2Segments );
+        group_->setVisible(labelSeg, has1Segment  );
+        group_->setVisible(spinSegX, has1Segment  );
         group_->setVisible(spinSegY, has2Segments );
         group_->setVisible(spinSegZ, has3Segments );
 

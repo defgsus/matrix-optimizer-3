@@ -197,12 +197,6 @@ void Scene::findObjects_()
     // all objects that need to be rendered
     glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
-    // render objects per camera
-    glObjectsPerCamera_.clear();
-    for (int i=0; i<cameras_.size(); ++i)
-        glObjectsPerCamera_ << cameras_[i]->getRenderObjects();
-
-
     // all objects that draw their frames into the output
     frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
     {
@@ -247,6 +241,20 @@ void Scene::findObjects_()
              );
 #endif
 }
+
+void Scene::updateWeakNameLinks()
+{
+    // render objects per camera
+    glObjectsPerCamera_.clear();
+    for (Camera * c : cameras_)
+        glObjectsPerCamera_ << c->getRenderObjects();
+
+    // XXX strong connections should maybe not be handled here
+    // this function is called from updateTree_()
+    //dependMap_
+}
+
+
 
 /*
 void Scene::initGlChilds_()
@@ -599,6 +607,9 @@ void Scene::updateTree_()
     // collect all modulators for each object
     updateModulators_();
 
+    // get camera render targets mainly
+    updateWeakNameLinks();
+
     // update the rendermodes
     propagateRenderMode(0);
 
@@ -612,6 +623,7 @@ void Scene::updateTree_()
         render_();
     }
 }
+
 void Scene::updateChildrenChanged_()
 {
     MO_DEBUG_TREE("Scene::updateChildrenChanged_() ");
@@ -620,6 +632,7 @@ void Scene::updateChildrenChanged_()
         if (o->p_childrenHaveChanged_)
             o->p_childrenChanged_();
 }
+
 
 void Scene::updateNumberThreads_()
 {
@@ -1053,6 +1066,11 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         {
             Camera * camera = cameras_[cindex];
 
+            // skip camera?
+            if (camera->updateMode() == ObjectGl::UM_ON_CHANGE
+                && !camera->isUpdateRequest())
+                continue;
+
             // update the list of to-render objects
             if (camera->needsUpdateRenderObjects())
                 glObjectsPerCamera_[cindex] = camera->getRenderObjects();
@@ -1078,7 +1096,9 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                 // render each opengl object per camera & per cube-face
                 for (ObjectGl * o : glObjectsPerCamera_[cindex])
                 if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
-                    && o->active(time, thread))
+                    && o->active(time, thread)
+                    && (o->updateMode() == ObjectGl::UM_ALWAYS
+                        || o->isUpdateRequest()))
                 {
                     o->p_renderGl_(renderSet, thread, time);
                 }
@@ -1088,8 +1108,12 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                     debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
             }
 
-            camera->finishGlFrame(thread, time);
+            // okay, we've painted them
+            for (ObjectGl * o : glObjectsPerCamera_[cindex])
+                o->clearUpdateRequest();
 
+            camera->finishGlFrame(thread, time);
+            camera->clearUpdateRequest();
         }
     }
     catch (Exception & e)
@@ -1114,15 +1138,18 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         try
         {
             for (ObjectGl * o : frameDrawers_)
-            if (!o->isCamera())
-            if (o->active(time, thread))
+            if (!o->isCamera()
+                    && o->active(time, thread)
+                    && (o->updateMode() == ObjectGl::UM_ALWAYS
+                        || o->isUpdateRequest()))
             {
                 o->p_renderGl_(renderSet, thread, time);
+                o->clearUpdateRequest();
             }
         }
         catch (Exception & e)
         {
-            e << "\nin Scene::renderScene(" << thread << "): fbo-renderers";
+            e << "\nin Scene::renderScene(" << thread << "): frame-drawers";
             throw;
         }
     }
@@ -1206,23 +1233,7 @@ void Scene::updateLightSettings_(uint thread, Double time)
     {
         if (lightSources_[i]->active(time, thread))
         {
-            const Vec3 pos = lightSources_[i]->position();
-            l->setPosition(i, pos[0], pos[1], pos[2]);
-
-            const Vec4 col = lightSources_[i]->lightColor(thread, time);
-            l->setColor(i, col[0], col[1], col[2], col[3]);
-
-            const Float mix = lightSources_[i]->lightDirectionalMix(thread, time);
-            l->setDirectionMix(i, mix);
-
-            const Float diffexp = lightSources_[i]->diffuseExponent(thread, time);
-            l->setDiffuseExponent(i, diffexp);
-
-            if (mix > 0)
-            {
-                const Vec4 dir = lightSources_[i]->lightDirection(thread, time);
-                l->setDirection(i, dir[0], dir[1], dir[2], dir[3]);
-            }
+            lightSources_[i]->getLightSettings(l, i, time, thread);
         }
         else
             // XXX there should be a runtime switch in shader!
@@ -1303,6 +1314,8 @@ void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
 
     render_();
 }
+
+
 
 
 // ---------------------- runtime --------------------------

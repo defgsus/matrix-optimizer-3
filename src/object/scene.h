@@ -356,7 +356,11 @@ private:
 
     /** Tell everyone the number of light sources */
     void updateNumberLights_();
-
+public:
+    /** Well.., individually updates objects which functioning might depend
+        on names of other objects. */
+    void updateWeakNameLinks();
+private:
     /** Creates the framebuffer object */
     void createSceneGl_(uint thread);
     void releaseSceneGl_(uint thread);

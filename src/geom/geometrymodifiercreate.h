@@ -33,6 +33,8 @@ public:
         T_DODECAHEDRON,
         T_CYLINDER_CLOSED,
         T_CYLINDER_OPEN,
+        T_CONE_CLOSED,
+        T_CONE_OPEN,
         T_TORUS,
         T_UV_SPHERE,
         T_GRID_XZ,

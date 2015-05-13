@@ -44,7 +44,8 @@ Texture::Texture(ErrorReporting report)
         target_			(GL_NONE),
         format_			(GL_NONE),
         input_format_	(GL_NONE),
-        type_			(GL_NONE)
+        type_			(GL_NONE),
+        hash_           (-1)
 {
     MO_DEBUG_IMG("Texture::Texture()");
     name_ = QString("tex%1").arg(tex_count_++);
@@ -70,7 +71,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       target_		(GL_TEXTURE_2D),
       format_		(format),
       input_format_	(input_format),
-      type_			(type)
+      type_			(type),
+      hash_           (-1)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format
@@ -101,7 +103,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       target_		(GL_TEXTURE_CUBE_MAP),
       format_		(format),
       input_format_	(input_format),
-      type_			(type)
+      type_			(type),
+      hash_           (-1)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format

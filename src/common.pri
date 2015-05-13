@@ -311,7 +311,8 @@ HEADERS += \
     src/object/transform/transformationinput.h \
     src/object/param/modulatortransformation.h \
     src/object/transform/mirrortrans.h \
-    src/object/transform/cleartrans.h
+    src/object/transform/cleartrans.h \
+    src/object/texture/randomto.h
 
 
 SOURCES += \
@@ -580,7 +581,8 @@ SOURCES += \
     src/object/transform/transformationinput.cpp \
     src/object/param/modulatortransformation.cpp \
     src/object/transform/mirrortrans.cpp \
-    src/object/transform/cleartrans.cpp
+    src/object/transform/cleartrans.cpp \
+    src/object/texture/randomto.cpp
 
 OTHER_FILES +=
 

@@ -25,7 +25,7 @@ const QStringList GeometryModifierCreate::typeIds =
 {
     "file", "quad",
     "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
-    "cyl", "cylo", "torus", "uvsphere",
+    "cyl", "cylo", "cone", "coneo", "torus", "uvsphere",
     "gridxz", "lgrid", "pgrid", "qgrid"
 };
 
@@ -41,6 +41,8 @@ const QStringList GeometryModifierCreate::typeNames =
     QObject::tr("dodecahedron"),
     QObject::tr("cylinder (closed)"),
     QObject::tr("cylinder (open)"),
+    QObject::tr("cone (closed)"),
+    QObject::tr("cone (open)"),
     QObject::tr("torus"),
     QObject::tr("uv-sphere"),
     QObject::tr("coordinate system"),
@@ -172,6 +174,14 @@ void GeometryModifierCreate::execute(Geometry * g)
 
     case T_CYLINDER_OPEN:
         GeometryFactory::createCylinder(g, 1.f, 1.f, segmentsX_, segmentsY_, true, asTriangles_);
+    break;
+
+    case T_CONE_CLOSED:
+        GeometryFactory::createCone(g, 1.f, 1.f, segmentsX_, false, asTriangles_);
+    break;
+
+    case T_CONE_OPEN:
+        GeometryFactory::createCone(g, 1.f, 1.f, segmentsX_, true, asTriangles_);
     break;
 
     case T_TORUS:

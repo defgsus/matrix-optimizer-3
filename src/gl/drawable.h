@@ -123,7 +123,7 @@ private:
         uniformLightPos_,
         uniformLightColor_,
         uniformLightDirection_,
-        uniformLightDirectionMix_,
+        uniformLightDirectionParam_,
         uniformLightDiffuseExp_,
         uniformSceneTime_;
 

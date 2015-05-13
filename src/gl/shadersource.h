@@ -53,7 +53,7 @@ public:
     const QString& uniformNameLightPos() const { return unLightPos_; }
     const QString& uniformNameLightColor() const { return unLightColor_; }
     const QString& uniformNameLightDirection() const { return unLightDir_; }
-    const QString& uniformNameLightDirectionMix() const { return unLightDirMix_; }
+    const QString& uniformNameLightDirectionParam() const { return unLightDirPar_; }
     const QString& uniformNameLightDiffuseExponent() const { return unLightDiffExp_; }
 
     const QString& attribNamePosition() const { return anPos_; }
@@ -111,7 +111,7 @@ private:
         unSceneTime_,
         unProj_, unCVT_, unVT_, unT_,
         unLightAmt_, unBumpScale_,
-        unLightPos_, unLightColor_, unLightDir_, unLightDirMix_,
+        unLightPos_, unLightColor_, unLightDir_, unLightDirPar_,
         unLightDiffExp_,
         unColor_,
         anPos_, anCol_, anNorm_, anTexCoord_;

@@ -130,7 +130,7 @@ void ColorTO::Private::createParameters()
                     "gammag", tr("gamma green"), tr("Gamma of green channel"), 1.0,  0.001, 1000.,  0.1);
 
         p_gamma_b = to->params()->createFloatParameter(
-                    "gammab", tr("gamma blur"), tr("Gamma of blue channel"), 1.0,  0.001, 1000.,  0.1);
+                    "gammab", tr("gamma blue"), tr("Gamma of blue channel"), 1.0,  0.001, 1000.,  0.1);
 
         p_bright2 = to->params()->createFloatParameter("bright2", tr("brightness"), tr("Amplifier for output color after gamma"), 1.0, 0.1);
 

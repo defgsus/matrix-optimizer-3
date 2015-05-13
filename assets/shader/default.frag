@@ -65,8 +65,8 @@ uniform mat4 u_transform;                   // transformation only
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     #ifdef MO_FRAGMENT_LIGHTING
-        uniform vec4 u_light_direction[MO_NUM_LIGHTS];
-        uniform float u_light_dirmix[MO_NUM_LIGHTS];
+        uniform vec3 u_light_direction[MO_NUM_LIGHTS];
+        uniform vec3 u_light_direction_param[MO_NUM_LIGHTS]; // range min, range max, mix
     #endif
 #endif
 
@@ -248,27 +248,25 @@ vec4 mo_ambient_color()
 
 
 #ifdef MO_ENABLE_LIGHTING
-vec4 mo_calc_light_color(in int index, in vec3 light_normal, in vec4 color, in float shinyness)
+vec4 mo_calc_light_color(in int index, in vec3 s_normal, in vec3 light_normal, in vec4 color, in float shinyness)
 {
     // dot-product of light normal and vertex normal gives linear light influence
-    float d = max(0.0, dot(mo_normal, light_normal) );
+    float d = max(0.0, dot(s_normal, light_normal) );
     // shaping the linear light influence
     float diffuse = pow(d, u_light_amt.y *shinyness);
 
     // specular
-    vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), mo_normal);
+    vec3 ref = reflect( normalize(v_pos_world - u_cam_pos), s_normal);
     d = max(0.0, dot(light_normal, ref));
     float spec = pow(d, u_light_amt.w * shinyness);
 
 #ifdef MO_ENABLE_LIGHT_OVERRIDE
-    mo_modify_light(index, light_normal, color, diffuse, spec);
+    mo_modify_light(index, s_normal, light_normal, color, diffuse, spec);
 #endif
 
     return vec4((
                 u_light_amt.x * diffuse +
                 u_light_amt.z * spec ) * color.xyz, 0.0);
-    //return vec4(diffuse * color.xyz + spec * (0.5+0.5*color.xyz), 0.);
-    //return vec4(spec * (0.5+0.5*color.xyz), 0.);
 }
 
 #ifndef MO_FRAGMENT_LIGHTING
@@ -279,21 +277,23 @@ vec4 mo_calc_light_color(in int index, in vec3 light_normal, in vec4 color, in f
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
             c += mo_calc_light_color(
-                        v_light_dir[i].xyz, v_light_dir[i].w * u_light_color[i], u_light_diffuse_exp[i]);
+                        v_light_dir[i].xyz, mo_normal, v_light_dir[i].w * u_light_color[i], u_light_diffuse_exp[i]);
 
         return c;
     }
 
 #else
 
-    vec4 mo_calc_light_color()
+    // returns the light influence from every source
+    // for the given surface
+    vec4 mo_calc_light_color(in vec3 world_pos, in vec3 world_normal)
     {
         vec4 c = vec4(0., 0., 0., 0.);
 
         for (int i=0; i<MO_NUM_LIGHTS; ++i)
         {
             // vector towards light in world coords
-            vec3 lightvec = u_light_pos[i] - v_pos_world;
+            vec3 lightvec = u_light_pos[i] - world_pos;
             // distance to lightsource
             float dist = length(lightvec);
             // normalized direction towards lightsource
@@ -303,19 +303,26 @@ vec4 mo_calc_light_color(in int index, in vec3 light_normal, in vec4 color, in f
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
             // attenuation from direction
-            if (u_light_dirmix[i]>0)
+            if (u_light_direction_param[i].z>0)
             {
-                float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
-                                    u_light_direction[i].w);
-                att *= mix(1.0, diratt, u_light_dirmix[i]);
+                float d = .5 + .5 * dot(u_light_direction[i].xyz, lightvecn);
+                float diratt = smoothstep(u_light_direction_param[i].x,
+                                          u_light_direction_param[i].y, d);
+                att *= mix(1.0, diratt, u_light_direction_param[i].z);
             }
 
-            c += mo_calc_light_color(i, lightvecn, att * u_light_color[i], u_light_diffuse_exp[i]);
+            c += mo_calc_light_color(i, world_normal, lightvecn, att * u_light_color[i], u_light_diffuse_exp[i]);
         }
 
         return c;
     }
 
+    // returns the light influence from every source
+    // for the current surface
+    vec4 mo_calc_light_color()
+    {
+        return mo_calc_light_color(v_pos_world, mo_normal);
+    }
 
 #endif // !MO_FRAGMENT_LIGHTING
 

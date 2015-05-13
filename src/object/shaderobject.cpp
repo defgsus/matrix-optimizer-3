@@ -42,7 +42,7 @@ ShaderObject::ShaderObject(QObject *parent)
 {
     setName("Shader");
 
-    setCreateRenderSettings(false);
+    initCreateRenderSettings(false);
 }
 
 ShaderObject::~ShaderObject()

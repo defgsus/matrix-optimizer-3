@@ -29,17 +29,10 @@ public:
 
     /** Returns the color at given time.
         The fourth component is the distance attenuation factor. */
-    Vec4 lightColor(uint thread, Double time) const;
+    Vec4 lightColor(Double time, uint thread) const;
 
-    /** Returns the direction normal of the lightsource (xyz)
-        and the exponent in w.
-        The object transformation must be calculated already! */
-    Vec4 lightDirection(uint thread, Double time) const;
-
-    /** Returns the float [0,1] to mix between omni-directional and directional */
-    Float lightDirectionalMix(uint thread, Double time) const;
-
-    Float diffuseExponent(uint thread, Double time) const;
+    /** fill the settings container with current values */
+    void getLightSettings(GL::LightSettings *, uint index, Double time, uint thread);
 
 signals:
 
@@ -48,7 +41,8 @@ public slots:
 private:
 
     ParameterFloat *all_, *r_, *g_, *b_,
-            *dist_, *directional_, *directionExp_,
+            *dist_, *directional_,
+            *directionAngle_, *directionRange_,
             *diffuseExp_;
 
 };

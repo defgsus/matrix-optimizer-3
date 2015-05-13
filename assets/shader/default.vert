@@ -40,7 +40,7 @@ uniform float u_instance_count;
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec4 u_light_direction[MO_NUM_LIGHTS];
-    uniform float u_light_dirmix[MO_NUM_LIGHTS];
+    uniform vec3 u_light_direction_param[MO_NUM_LIGHTS]; // range min, range max, mix
 #endif
 
 #ifdef MO_ENABLE_VERTEX_EFFECTS
@@ -274,11 +274,12 @@ void main()
             float att = 1.0 / (1.0 + u_light_color[i].w * dist * dist);
 
             // attenuation from direction
-            if (u_light_dirmix[i]>0.)
+            if (u_light_direction_param[i].z>0.)
             {
-                float diratt = pow( max(0.0, dot(u_light_direction[i].xyz, lightvecn)),
-                                    u_light_direction[i].w);
-                att *= mix(1.0, diratt, u_light_dirmix[i]);
+                float d = .5 + .5 * dot(u_light_direction[i].xyz, lightvecn);
+                float diratt = smoothstep(u_light_direction_param[i].x,
+                                          u_light_direction_param[i].y, d);
+                att *= mix(1.0, diratt, u_light_direction_param[i].z);
             }
 
             v_light_dir[i] = vec4(lightvecn, att);

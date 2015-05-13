@@ -267,10 +267,10 @@ void Drawable::compileShader_()
     else
         uniformLightDirection_ = invalidGl;
 
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirectionMix()))
-        uniformLightDirectionMix_ = u->location();
+    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirectionParam()))
+        uniformLightDirectionParam_ = u->location();
     else
-        uniformLightDirectionMix_ = invalidGl;
+        uniformLightDirectionParam_ = invalidGl;
 
     if (auto u = shader_->getUniform(shaderSource_->uniformNameSceneTime()))
         uniformSceneTime_ = u->location();
@@ -365,11 +365,11 @@ void Drawable::renderShader(const Mat4 &proj,
         if (uniformLightColor_ != invalidGl)
             MO_CHECK_GL( glUniform4fv(uniformLightColor_, lights->count(), lights->colors()) );
         if (uniformLightDirection_ != invalidGl)
-            MO_CHECK_GL( glUniform4fv(uniformLightDirection_, lights->count(), lights->directions()) );
-        if (uniformLightDirectionMix_ != invalidGl)
-            MO_CHECK_GL( glUniform1fv(uniformLightDirectionMix_, lights->count(), lights->directionMix()) );
+            MO_CHECK_GL( glUniform3fv(uniformLightDirection_, lights->count(), lights->directions()) );
+        if (uniformLightDirectionParam_ != invalidGl)
+            MO_CHECK_GL( glUniform3fv(uniformLightDirectionParam_, lights->count(), lights->directionParam()) );
         if (uniformLightDiffuseExp_ != invalidGl)
-            MO_CHECK_GL( glUniform1fv(uniformLightDiffuseExp_, lights->count(), lights->diffuseExponent()) );
+            MO_CHECK_GL( glUniform1fv(uniformLightDiffuseExp_, lights->count(), lights->diffuseExponents()) );
 
     }
 

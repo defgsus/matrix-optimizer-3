@@ -38,16 +38,16 @@ public:
         d is the distance attenuation factor. */
     const Float * colors() const { return &colors_[0]; }
 
-    /** Returns count() sequential x,y,z,exp pairs.
-        The direction vector is normalized.
-        exp is the exponent for the dot-product */
+    /** Returns count() sequential floats */
+    const Float * diffuseExponents() const { return &diffuseExp_[0]; }
+
+    /** Returns count() sequential x,y,z pairs.
+        The direction vector is normalized. */
     const Float * directions() const { return &directions_[0]; }
 
-    /** Returns count() sequential floats for mixing between
-        omni-directional (0) and directional (1) */
-    const Float * directionMix() const { return &directionMix_[0]; }
-
-    const Float * diffuseExponent() const { return &diffuseExp_[0]; }
+    /** Returns count() sequential min,max,mix pairs for setting
+        directional light parameters */
+    const Float * directionParam() const { return &directionParam_[0]; }
 
     // --------------- setter ---------------
 
@@ -56,9 +56,9 @@ public:
 
     void setPosition(uint index, Float x, Float y, Float z);
     void setColor(uint index, Float r, Float g, Float b, Float d = 0.0);
-    void setDirection(uint index, Float nx, Float ny, Float nz, Float exp);
-    void setDirectionMix(uint index, Float mix);
     void setDiffuseExponent(uint index, Float exp);
+    void setDirection(uint index, Float nx, Float ny, Float nz);
+    void setDirectionParam(uint index, Float mix, Float angle_min, Float angle_max);
 
 private:
 
@@ -66,7 +66,7 @@ private:
         positions_,
         colors_,
         directions_,
-        directionMix_,
+        directionParam_,
         diffuseExp_;
 
     uint count_;

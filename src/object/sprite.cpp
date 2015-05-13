@@ -38,7 +38,7 @@ Sprite::Sprite(QObject * parent)
     setName("Sprite");
 
     //setDefaultDepthTestMode(DTM_OFF);
-    setDefaultDepthWriteMode(DWM_OFF);
+    initDefaultDepthWriteMode(DWM_OFF);
 }
 
 void Sprite::serialize(IO::DataStream & io) const

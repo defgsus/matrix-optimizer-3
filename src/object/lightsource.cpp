@@ -9,10 +9,11 @@
 */
 
 #include "lightsource.h"
-#include "io/datastream.h"
 #include "param/parameters.h"
 #include "param/parameterfloat.h"
+#include "gl/lightsettings.h"
 #include "math/vector.h"
+#include "io/datastream.h"
 #include "io/log.h"
 
 namespace MO {
@@ -67,16 +68,19 @@ void LightSource::createParameters()
         directional_ = params()->createFloatParameter("directional", tr("directional"),
                                 tr("Mix between omni-directional (0) and directional light (1) "),
                                 0.0, 0.0, 1.0, 0.1);
-        directionExp_ = params()->createFloatParameter("directionexp", tr("angle exponent"),
-                                tr("Exponent for the directional influence "
-                                   "- the higher, the narrower the angle"),
-                                10.0, 0.1);
-        directionExp_->setMinValue(0.001);
+
+        directionAngle_ = params()->createFloatParameter("directionangle", tr("cone angle"),
+                                tr("Angle of light cone in degree"),
+                                30.0,  1.);
+        directionRange_ = params()->createFloatParameter("directionrange", tr("smoothness"),
+                                tr("Blend area of the light cone in degree "),
+                                10.0,  1.);
+
 
     params()->endParameterGroup();
 }
 
-Vec4 LightSource::lightColor(uint thread, Double time) const
+Vec4 LightSource::lightColor(Double time, uint thread) const
 {
     const Float all = all_->value(time, thread);
     return Vec4(r_->value(time, thread) * all,
@@ -85,22 +89,33 @@ Vec4 LightSource::lightColor(uint thread, Double time) const
                 dist_->value(time, thread) * 0.001);
 }
 
-Vec4 LightSource::lightDirection(uint thread, Double time) const
+void LightSource::getLightSettings(GL::LightSettings * l, uint i, Double time, uint thread)
 {
-    const Mat4& trans= glm::inverse(transformation());
-    const Vec3 dir = MATH::normalize_safe(
-                Vec3(trans[0][2], trans[1][2], trans[2][2]));
-    return Vec4(dir[0], dir[1], dir[2], directionExp_->value(time, thread));
+    const Vec3 pos = position();
+    l->setPosition(i, pos[0], pos[1], pos[2]);
+
+    const Vec4 col = lightColor(time, thread);
+    l->setColor(i, col[0], col[1], col[2], col[3]);
+
+    l->setDiffuseExponent(i, diffuseExp_->value(time, thread));
+
+    Float mix = directional_->value(time, thread),
+            rmin = 0.f, rmax = 0.f;
+    if (mix > 0.f)
+    {
+        const Float ang = directionAngle_->value(time, thread);
+        rmax = directionRange_->value(time, thread) / 2.;
+        rmin = ang - rmax;
+        rmax = ang + rmax;
+
+        const Mat4& trans= glm::inverse(transformation());
+        const Vec3 dir = MATH::normalize_safe(
+                    Vec3(trans[0][2], trans[1][2], trans[2][2]));
+
+        l->setDirection(i, dir[0], dir[1], dir[2]);
+    }
+    l->setDirectionParam(i, mix, rmin, rmax);
 }
 
-Float LightSource::lightDirectionalMix(uint thread, Double time) const
-{
-    return directional_->value(time, thread);
-}
-
-Float LightSource::diffuseExponent(uint thread, Double time) const
-{
-    return diffuseExp_->value(time, thread);
-}
 
 } // namespace MO

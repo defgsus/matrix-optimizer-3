@@ -709,6 +709,84 @@ void GeometryFactory::createCylinder(Geometry * g, Float rad, Float height,
 }
 
 
+void GeometryFactory::createCone(Geometry * g, Float rad, Float height,
+                                     uint seg, bool open, bool asTriangles)
+{
+    std::vector<uint> vCircle, vTop;
+
+    // create circle vertices
+    seg = std::max((uint)3, seg);
+    for (uint x=0; x<seg; ++x)
+    {
+        const Float tx = (Float)x / (seg-1);
+        g->setTexCoord(tx, 0.);
+        const Float a = (Float)x / seg * TWO_PI;
+        vCircle.push_back( g->addVertex(rad * std::sin(a), 0., rad * std::cos(a)) );
+    }
+
+    // top point(s)
+    if (g->sharedVertices())
+    {
+        // no use for creating multiple tex coords
+        g->setTexCoord(1., .5);
+        vTop.resize( vCircle.size(),
+            g->addVertex(0, height, 0) );
+    }
+    else
+    {
+        for (size_t i=0; i<vCircle.size(); ++i)
+        {
+            const Float tx = (Float)i / (seg-1);
+            g->setTexCoord(tx, 1.);
+            vTop.push_back(
+                        g->addVertexAlways(0., height, 0.));
+        }
+
+    }
+
+    // create surface
+
+    if (!asTriangles)
+    {
+        for (size_t x=0; x<vCircle.size(); ++x)
+        {
+            g->addLine(vCircle[x], vCircle[(x+1) % seg]);
+            // connect to top point
+            g->addLine(vCircle[x], vTop[(x+1) % seg]);
+        }
+
+        // cap
+        if (!open)
+        {
+            g->setTexCoord(0,0);
+            uint imid = g->addVertex(0, 0, 0);
+
+            for (size_t x=0; x<vCircle.size(); ++x)
+                g->addLine(vCircle[x], imid);
+        }
+    }
+    else
+    {
+        for (size_t x=0; x<vCircle.size(); ++x)
+        {
+            g->addTriangle(vCircle[x], vCircle[(x+1) % seg], vTop[(x+1) % seg]);
+            g->addTriangle(vCircle[x], vTop[(x+1) % seg], vTop[x]);
+        }
+
+        // cap
+        if (!open)
+        {
+            g->setTexCoord(0,0);
+            uint imid = g->addVertex(0, 0, 0);
+
+            for (size_t x=0; x<vCircle.size(); ++x)
+                g->addTriangle(vCircle[x], imid, vCircle[(x+1) % seg]);
+        }
+    }
+}
+
+
+
 
 void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
                                   uint segu, uint segv, bool asTriangles, const Vec3 & offset)

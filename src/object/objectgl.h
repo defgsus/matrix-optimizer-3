@@ -45,6 +45,12 @@ public:
 
     static const QStringList depthWriteModeNames;
 
+    enum UpdateMode
+    {
+        UM_ALWAYS,
+        UM_ON_CHANGE
+    };
+
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
@@ -53,6 +59,7 @@ public:
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    //virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
     virtual void onDependency(Object *) Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
@@ -80,6 +87,16 @@ public:
     /** Number of lights, the shader should support */
     uint numberLightSources() const { return p_numberLightSources_; }
 
+    /** The currently active update mode */
+    UpdateMode updateMode() const;
+
+    /** This will return true when the object wants to render */
+    bool isUpdateRequest() const { return p_updateRequest_; }
+    /** Clears the update request flag.
+        @note This is not done automatically in render function,
+        because e.g. models may need to be rendered per cubeface. */
+    void clearUpdateRequest() { p_updateRequest_ = false; }
+
     /** Returns the source for the include url, or an empty string */
     QString getGlslInclude(const QString& url, bool include_system_defaults);
 
@@ -105,10 +122,12 @@ public:
     // ----------------- render state -------------------
 
     /* these must all be called before createParameters, e.g. in object constructor */
-    void setCreateRenderSettings(bool enable) { p_enableCreateRenderSettings_ = enable; }
-    void setDefaultDepthTestMode(DepthTestMode m) { p_defaultDepthTestMode_ = m; }
-    void setDefaultDepthWriteMode(DepthWriteMode m) { p_defaultDepthWriteMode_ = m; }
-    void setDefaultAlphaBlendMode(AlphaBlendSetting::Mode m) { p_defaultAlphaBlendMode_ = m; }
+    void initCreateRenderSettings(bool enable) { p_enableCreateRenderSettings_ = enable; }
+    void initDefaultDepthTestMode(DepthTestMode m) { p_defaultDepthTestMode_ = m; }
+    void initDefaultDepthWriteMode(DepthWriteMode m) { p_defaultDepthWriteMode_ = m; }
+    void initDefaultAlphaBlendMode(AlphaBlendSetting::Mode m) { p_defaultAlphaBlendMode_ = m; }
+    void initDefaultUpdateMode(UpdateMode m, bool visible = true)
+        { p_defaultUpdateMode_ = m; p_updateModeVisible_ = visible; }
 
     DepthTestMode defaultDepthTestMode() const { return p_defaultDepthTestMode_; }
     DepthWriteMode defaultDepthWriteMode() const { return p_defaultDepthWriteMode_; }
@@ -144,9 +163,15 @@ private:
     DepthTestMode p_defaultDepthTestMode_, p_curDepthTestMode_;
     DepthWriteMode p_defaultDepthWriteMode_, p_curDepthWriteMode_;
     AlphaBlendSetting::Mode p_defaultAlphaBlendMode_, p_curAlphaBlendMode_;
+    UpdateMode p_defaultUpdateMode_;
 
-    bool p_enableCreateRenderSettings_;
-    ParameterSelect *p_paramDepthTest_, *p_paramDepthWrite_;//, *p_paramAlphaBlend_;
+    bool p_enableCreateRenderSettings_,
+         p_updateModeVisible_,
+         p_updateRequest_;
+    ParameterSelect
+        *p_paramDepthTest_,
+        *p_paramDepthWrite_,
+        *p_paramUpdateMode_;
 };
 
 } // namespace MO

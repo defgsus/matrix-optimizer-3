@@ -195,7 +195,12 @@ void ObjectEditor::setObjectName(Object *object, const QString &name)
     object->setName(name);
 
     if (changed)
+    {
+        if (scene())
+            // XXX Should be more than that
+            scene()->updateWeakNameLinks();
         emit objectNameChanged(object);
+    }
 }
 
 void ObjectEditor::setObjectHue(Object *object, int hue)

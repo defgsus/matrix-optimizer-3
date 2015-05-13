@@ -54,6 +54,9 @@ public:
     static void createCylinder(Geometry *, Float rad, Float height, uint segu, uint segv, bool open,
                                bool asTriangles);
 
+    static void createCone(Geometry *, Float rad, Float height, uint seg, bool open,
+                               bool asTriangles);
+
     static void createTorus(Geometry *, Float rad_outer, Float rad_inner, uint segu, uint segv,
                             bool asTriangles, const Vec3 & offset = Vec3(0));
 

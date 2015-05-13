@@ -54,6 +54,7 @@ protected:
     virtual void numberLightSourcesChanged(uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
@@ -71,6 +72,9 @@ private slots:
     void resetCreator_();
 
 private:
+
+    void updateCodeVersion_();
+
     GL::Drawable * draw_;
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryFactorySettings * geomSettings_;
@@ -99,6 +103,7 @@ private:
                 * u_tex_0_, *u_texn_0_;
 
     bool doRecompile_;
+    int loadedVersion_;
 };
 
 } // namespace MO

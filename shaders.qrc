@@ -27,6 +27,7 @@
         <file alias="transform">assets/shader/inc/transform.glsl</file>
         <file alias="color">assets/shader/inc/color.glsl</file>
         <file alias="project">assets/shader/inc/project.glsl</file>
+        <file alias="raytrace">assets/shader/inc/raytrace.glsl</file>
     </qresource>
     <qresource prefix="/shader/inc/dh">
         <file alias="hash">assets/shader/inc/dh/hash.glsl</file>
@@ -41,6 +42,7 @@
         <file alias="blur.frag">assets/shader/to/blur.frag</file>
         <file alias="key.frag">assets/shader/to/key.frag</file>
         <file alias="mix.frag">assets/shader/to/mix.frag</file>
+        <file alias="random.frag">assets/shader/to/random.frag</file>
     </qresource>
     <qresource prefix="/shader/inc/to">
         <file alias="header">assets/shader/to/header.glsl</file>
