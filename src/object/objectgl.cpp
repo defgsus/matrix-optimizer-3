@@ -37,9 +37,11 @@ ObjectGl::ObjectGl(QObject *parent)
     : Object                    (parent),
       p_alphaBlend_             (this),
       p_numberLightSources_     (0),
+      p_renderCount_            (0),
       p_defaultDepthTestMode_   (DTM_PARENT),
       p_defaultDepthWriteMode_  (DWM_PARENT),
       p_defaultAlphaBlendMode_  (AlphaBlendSetting::M_PARENT),
+      p_defaultUpdateMode_      (UM_ALWAYS),
       p_enableCreateRenderSettings_(true),
       p_updateModeVisible_      (true),
       p_updateRequest_          (true),
@@ -279,6 +281,7 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double tim
     MO_EXTEND_EXCEPTION(
 
         renderGl(rs, thread, time);
+        ++p_renderCount_;
 
         , "in ObjectGl '" << idName() << "', thread=" << thread
     );
@@ -298,6 +301,7 @@ void ObjectGl::requestRender()
 
 void ObjectGl::requestReinitGl()
 {
+    p_updateRequest_ = true;
     for (uint i=0; i<numberThreads(); ++i)
     {
         p_needsInitGl_[i] = true;

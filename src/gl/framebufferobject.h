@@ -84,6 +84,8 @@ public:
 
     const QString& name() const { return name_; }
     void setName(const QString& name);
+    /** Calls Texture::setChanged for all attached textures */
+    void setChanged();
 
     // ------------ opengl interface -------------
 

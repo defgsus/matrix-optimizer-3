@@ -380,6 +380,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     gl::glFlush();
     gl::glFinish();
 
+    fbo_->setChanged();
     fbo_->unbind();
 }
 

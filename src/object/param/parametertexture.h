@@ -37,7 +37,9 @@ public:
     // ---------------- getter -----------------
 
     const GL::Texture* value(Double time, uint thread) const;
-    //Type type() const { return type_; }
+
+    /** Returns true when the texture is different since the last call to value() */
+    bool hasChanged(Double time, uint thread) const Q_DECL_OVERRIDE;
 
     // ---------------- setter -----------------
 
@@ -51,6 +53,9 @@ public:
     virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
 private:
+
+    mutable const GL::Texture * lastTex_;
+    mutable std::vector<int> lastHash_;
 
 };
 

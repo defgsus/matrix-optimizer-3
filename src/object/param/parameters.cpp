@@ -175,6 +175,15 @@ void Parameters::getModulatorIds(QSet<QString>& set) const
     }
 }
 
+bool Parameters::haveInputsChanged(Double time, uint thread) const
+{
+    for (Parameter * p : parameters_)
+        if (!p->isZombie() && p->isModulated() && p->hasChanged(time, thread))
+            return true;
+
+    return false;
+}
+
 void Parameters::removeModulators(const QList<QString> &ids)
 {
     for (auto p : parameters_)

@@ -230,7 +230,7 @@ void TextureObjectBase::PrivateTO::createParameters()
 
     to->params()->endParameterGroup();
 
-    to->params()->beginParameterGroup("to_output", tr("output"));
+    to->params()->beginParameterGroup("to_output", tr("master output"));
 
         p_enableOut = to->params()->createBooleanParameter("to_master_out", tr("enable"),
                            tr("Enables or disables sampling the output to the main framebuffer"),
@@ -590,6 +590,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
 
     gl::glFlush();
     gl::glFinish();
+    fbo->setChanged();
 
     // get the actual output of last stage
     outputTex = fbo->colorTexture();

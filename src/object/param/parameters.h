@@ -80,6 +80,10 @@ public:
         This functions works also before modulator objects are resolved. */
     void getModulatorIds(QSet<QString>&) const;
 
+    /** Pulling change request for Parameters.
+        XXX Only for ParameterTexture right now. */
+    bool haveInputsChanged(Double time, uint thread) const;
+
     // -------------- setter --------------------
 
     /** Removes all modulators with the given id.

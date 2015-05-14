@@ -9,12 +9,12 @@
 */
 
 #include "parametertexture.h"
+#include "modulatortexture.h"
+#include "object/scene.h"
+#include "gl/texture.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/control/trackfloat.h"
-#include "object/scene.h"
-#include "modulatortexture.h"
 
 //Q_DECLARE_METATYPE(MO::ParameterTexture*);
 //namespace { static int register_param = qMetaTypeId<MO::ParameterTexture*>(); }
@@ -23,7 +23,9 @@
 namespace MO {
 
 ParameterTexture::ParameterTexture(Object * object, const QString& id, const QString& name)
-    :   Parameter       (object, id, name)
+    : Parameter       (object, id, name)
+    , lastTex_          (0)
+
 {
 }
 
@@ -53,12 +55,36 @@ const GL::Texture * ParameterTexture::value(Double time, uint thread) const
 {
     // take the first valid
     for (auto m : modulators())
-        if (auto t = static_cast<ModulatorTexture*>(m)->value(time, thread))
-            return t;
+    if (auto t = static_cast<ModulatorTexture*>(m)->value(time, thread))
+    {
+        if (t)
+        {
+            if (thread >= lastHash_.size())
+                lastHash_.resize(thread+1);
+            lastHash_[thread] = t->hash();
+        }
+        return lastTex_ = t;
+    }
 
-    return 0;
+    return lastTex_ = 0;
 }
 
+bool ParameterTexture::hasChanged(Double time, uint thread) const
+{
+    if (thread >= lastHash_.size())
+        return true;
+
+    const GL::Texture * t = 0;
+    for (auto m : modulators())
+        if ((t = static_cast<ModulatorTexture*>(m)->value(time, thread)))
+            break;
+
+    if (t != lastTex_)
+        return true;
+    if (t)
+        return t->hash() != lastHash_[thread];
+    return false;
+}
 
 
 Modulator * ParameterTexture::getModulator(const QString& id, const QString& outputId)

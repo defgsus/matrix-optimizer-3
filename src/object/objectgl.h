@@ -97,6 +97,9 @@ public:
         because e.g. models may need to be rendered per cubeface. */
     void clearUpdateRequest() { p_updateRequest_ = false; }
 
+    /** Number of times p_renderGl_() was called */
+    unsigned long renderCount() const { return p_renderCount_; }
+
     /** Returns the source for the include url, or an empty string */
     QString getGlslInclude(const QString& url, bool include_system_defaults);
 
@@ -157,6 +160,8 @@ private:
 
     /** Number of lights that this object's shader is currently compiled for */
     uint p_numberLightSources_;
+
+    unsigned long p_renderCount_;
 
     // --- render state ---
 

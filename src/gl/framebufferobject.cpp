@@ -96,6 +96,14 @@ void FrameBufferObject::setName(const QString &name)
         depthTex_->setName(name + "_depth_");// + depthTex_->name());
 }
 
+void FrameBufferObject::setChanged()
+{
+    if (colorTex_)
+        colorTex_->setChanged();
+    if (colorTex_)
+        colorTex_->setChanged();
+}
+
 FrameBufferObject::~FrameBufferObject()
 {
     MO_DEBUG_GL("FrameBufferObject::~FrameBufferObject()");

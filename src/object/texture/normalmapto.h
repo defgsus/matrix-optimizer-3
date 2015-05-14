@@ -1,27 +1,27 @@
-/** @file randomto.h
+/** @file normalmapto.h
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 13.05.2015</p>
+    <p>created 14.05.2015</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_RANDOMTO_H
-#define MOSRC_OBJECT_TEXTURE_RANDOMTO_H
+#ifndef MOSRC_OBJECT_TEXTURE_NORMALMAPTO_H
+#define MOSRC_OBJECT_TEXTURE_NORMALMAPTO_H
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
-/** A more sophisticated noise generator */
-class RandomTO : public TextureObjectBase
+/** A sophisticated noise generator */
+class NormalMapTO : public TextureObjectBase
 {
 public:
 
-    MO_OBJECT_CONSTRUCTOR(RandomTO);
-    ~RandomTO();
+    MO_OBJECT_CONSTRUCTOR(NormalMapTO);
+    ~NormalMapTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -45,4 +45,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_RANDOMTO_H
+#endif // MOSRC_OBJECT_TEXTURE_NORMALMAPTO_H

@@ -312,7 +312,8 @@ HEADERS += \
     src/object/param/modulatortransformation.h \
     src/object/transform/mirrortrans.h \
     src/object/transform/cleartrans.h \
-    src/object/texture/randomto.h
+    src/object/texture/randomto.h \
+    src/object/texture/normalmapto.h
 
 
 SOURCES += \
@@ -582,7 +583,9 @@ SOURCES += \
     src/object/param/modulatortransformation.cpp \
     src/object/transform/mirrortrans.cpp \
     src/object/transform/cleartrans.cpp \
-    src/object/texture/randomto.cpp
+    src/object/texture/randomto.cpp \
+    src/object/texture/normalmapto.cpp
 
-OTHER_FILES +=
+OTHER_FILES += \
+    assets/shader/to/derivative.frag
 

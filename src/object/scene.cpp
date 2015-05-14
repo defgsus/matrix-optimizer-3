@@ -1096,10 +1096,13 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                 // render each opengl object per camera & per cube-face
                 for (ObjectGl * o : glObjectsPerCamera_[cindex])
                 if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
-                    && o->active(time, thread)
-                    && (o->updateMode() == ObjectGl::UM_ALWAYS
-                        || o->isUpdateRequest()))
+                    && o->active(time, thread))
                 {
+                    // XXX Not working for cube-maps
+                    if (o->updateMode() == ObjectGl::UM_ON_CHANGE
+                        && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
+                            continue;
+
                     o->p_renderGl_(renderSet, thread, time);
                 }
 
@@ -1108,12 +1111,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                     debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
             }
 
-            // okay, we've painted them
-            for (ObjectGl * o : glObjectsPerCamera_[cindex])
-                o->clearUpdateRequest();
-
             camera->finishGlFrame(thread, time);
-            camera->clearUpdateRequest();
         }
     }
     catch (Exception & e)
@@ -1140,11 +1138,13 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
             for (ObjectGl * o : frameDrawers_)
             if (!o->isCamera()
                     && o->active(time, thread)
-                    && (o->updateMode() == ObjectGl::UM_ALWAYS
-                        || o->isUpdateRequest()))
+                    )
             {
+                if (o->updateMode() == ObjectGl::UM_ON_CHANGE
+                    && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
+                        continue;
+
                 o->p_renderGl_(renderSet, thread, time);
-                o->clearUpdateRequest();
             }
         }
         catch (Exception & e)
@@ -1154,6 +1154,9 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         }
     }
 
+    // okay, we've painted them
+    for (ObjectGl * o : glObjects_)
+        o->clearUpdateRequest();
 
 //    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());    
 

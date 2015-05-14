@@ -127,7 +127,8 @@ void ObjectInfoDialog::setObject(Object * o)
 
     if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
     {
-        s << "<p>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
+        s << "<p>render count: " << gl->renderCount()
+          << "<br/>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
           << "<br/>depth write: " << gl->depthWriteModeNames[gl->depthWriteMode()]
           << "<br/>alpha blend: " << AlphaBlendSetting::modeNames[gl->alphaBlendMode()]
           << "</p>";

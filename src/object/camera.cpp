@@ -520,6 +520,8 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
                               p_backA_->value(time, thread)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
+    fbo_[thread]->setChanged();
+
 }
 
 void Camera::finishGlFrame(uint thread, Double)

@@ -177,6 +177,8 @@ QString Parameter::infoIdName() const
     return s;
 }
 
+
+
 void Parameter::setVisible(bool visible)
 {
     if (visible != isVisible_)
