@@ -314,9 +314,6 @@ public:
     /** Returns a name that is unique among the direct children of the object */
     QString makeUniqueName(const QString& name) const;
 
-    /** Returns a priority for each object type */
-    static int objectPriority(const Object *);
-
     // ----------- attached data ------------------
 
     /** Attaches data to the object.
@@ -616,11 +613,23 @@ public:
 
     // ------------ modulator outputs ----------------
 
-    /** Returns the modulator outputs of this object. */
-    const QList<ModulatorOutput*>& modulatorOutputs() const { return p_modulatorOuts_; }
+    /** Returns the number of desired outputs for the specific signal type */
+    uint getNumberOutputs(SignalType ) const;
 
-    /** Returns the ModulatorOutput matching the output id, or NULL */
-    ModulatorOutput * getModulatorOutput(const QString& id) const;
+    /** Returns a map with the number of outputs per signal type */
+    const QMap<SignalType, uint>& getNumberOutputs() const { return p_outputMap_; }
+
+    /** Returns the name of the specific output.
+        Override to change names. */
+    virtual QString getOutputName(SignalType, uint channel) const;
+
+    /** Returns the name of the signal type.
+        XXX Found no better place just yet */
+    static QString getSignalName(SignalType);
+
+    /** Sets the desired number of outputs per signal type.
+        If @p emitSignal is true, the ObjectEditor, if attached, will be notified. */
+    void setNumberOutputs(SignalType t, uint num, bool emitSignal = true);
 
 protected:
 
@@ -820,7 +829,7 @@ private:
 
     // ---------- outputs --------------------
 
-    QList<ModulatorOutput*> p_modulatorOuts_;
+    QMap<SignalType, uint> p_outputMap_;
 
     // ---------- per-thread store -----------
 

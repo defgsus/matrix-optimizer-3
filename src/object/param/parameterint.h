@@ -30,6 +30,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("int"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_INT; }
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 

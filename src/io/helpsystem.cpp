@@ -628,7 +628,7 @@ void HelpSystem::addObjectIndex_(QString &doc)
     QMap<QString, QList<const Object*>> map;
     for (auto o : list)
     {
-        QString groupName = ObjectFactory::objectPriorityName(Object::objectPriority(o));
+        QString groupName = ObjectFactory::objectPriorityName(ObjectFactory::objectPriority(o));
         auto i = map.find(groupName);
         if (i == map.end())
             map.insert(groupName, QList<const Object*>() << o);

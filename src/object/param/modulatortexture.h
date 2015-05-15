@@ -45,8 +45,6 @@ public:
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const Q_DECL_OVERRIDE;
 
-    uint channel() const { return channel_; }
-
     /** Returns the modulation-value at given time,
         or NULL if there is no texture. */
     const GL::Texture* value(Double time, uint thread) const;
@@ -61,7 +59,6 @@ protected:
 
 private:
 
-    uint channel_;
     ValueTextureInterface * texFace_;
 };
 

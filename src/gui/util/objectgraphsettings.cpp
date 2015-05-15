@@ -131,10 +131,26 @@ QBrush ObjectGraphSettings::brushOutline(const Object *o, bool selected)
 QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
 {
     int hue = -1;
-    if (i->isAudioConnector())
-        hue = 0;
-    if (i->isParameter())
-        hue = 120;
+    switch (i->signalType())
+    {
+
+        case ST_FLOAT:
+        case ST_INT: hue = ObjectFactory::hueForObject(Object::T_SEQUENCE_FLOAT);
+            break;
+        case ST_SELECT:
+        case ST_TEXT:
+        case ST_FILENAME:
+        case ST_TIMELINE1D:
+        case ST_CALLBACK:
+            break;
+        case ST_TRANSFORMATION: hue = ObjectFactory::hueForObject(Object::T_TRANSFORMATION);
+            break;
+        case ST_TEXTURE: hue = ObjectFactory::hueForObject(Object::T_TEXTURE);
+            break;
+        case ST_AUDIO: hue = 0;
+            break;
+    }
+
     int sat = hue == -1 ? 0 : 100;
     int bright = 150;
 

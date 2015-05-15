@@ -201,7 +201,15 @@ void ParameterWidget::createWidgets_()
     bvis_->setStatusTip(tr("Click to open the context menu for the visibility of the parameter in other views"));
     bvis_->setFixedSize(butfs, butfs);
     bvis_->setCheckable(true);
+#if 0
     connect(bvis_, SIGNAL(pressed()), this, SLOT(openVisibilityPopup()));
+#else
+    connect(bvis_, &QToolButton::clicked, [=]()
+    {
+        editor_->setParameterVisibleInGraph(param_, !param_->isVisibleInGraph());
+        updateButtons();
+    });
+#endif
 
     // label
     QLabel * label = new QLabel(param_->name(), this);

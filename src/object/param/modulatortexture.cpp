@@ -20,7 +20,6 @@ namespace MO {
 ModulatorTexture::ModulatorTexture(const QString &name, const QString &modulatorId, const QString& outputId,
                                Parameter * p, Object *parent)
     : Modulator     (name, modulatorId, outputId, p, parent)
-    , channel_      (0)
     , texFace_      (0)
 {
 }
@@ -83,7 +82,7 @@ const GL::Texture * ModulatorTexture::value(Double time, uint thread) const
         return 0;
 
     if (texFace_)
-        return texFace_->valueTexture(time, thread);
+        return texFace_->valueTexture(outputChannel(), time, thread);
 
     return 0;
 }

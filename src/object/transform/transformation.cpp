@@ -18,6 +18,7 @@ Transformation::Transformation(QObject *parent) :
     Object(parent)
 {
     setName("Transformation");
+    setNumberOutputs(ST_TRANSFORMATION, 1);
 }
 
 void Transformation::serialize(IO::DataStream & io) const

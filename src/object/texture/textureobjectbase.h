@@ -74,7 +74,7 @@ protected:
 public:
 
     /** texture output interface */
-    virtual const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
+    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad.
         @p width and @p height are the size of the viewport of the current context. */

@@ -53,8 +53,6 @@ public:
         Valid after Modulator::setModulator() */
     SourceType sourceType() const { return sourceType_; }
 
-    uint channel() const { return channel_; }
-
     /** Returns true if the SourceType supports amplitude modulations */
     bool hasAmplitude() const;
     /** Returns true if the SourceType supports timeoffset modulations */
@@ -83,7 +81,6 @@ protected:
 private:
 
     SourceType sourceType_;
-    uint channel_;
     ModulatorOutputStaticFloat * outStaticFloat_;
     ValueFloatInterface * interface_;
 

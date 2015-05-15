@@ -34,6 +34,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     virtual const QString& typeName() const = 0;
+    virtual SignalType signalType() const = 0;
 
     // -------------- documentation -------------
 

@@ -1001,12 +1001,12 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
     //Double time = sceneTime_;
 
+    // read-lock is sufficient because we
+    // modify only thread-local storage
+    ScopedSceneLockRead lock(this);
+
     try
     {
-        // read-lock is sufficient because we
-        // modify only thread-local storage
-        ScopedSceneLockRead lock(this);
-
         // ---------- lazy resource managment -------------
 
         // free deleted objects resources
@@ -1053,77 +1053,16 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         // update lighting uniform-ready data
         updateLightSettings_(thread, time);
 
-        GL::RenderSettings renderSet;
-        GL::CameraSpace camSpace;
-
-        renderSet.setLightSettings(&lightSettings(thread));
-        renderSet.setCameraSpace(&camSpace);
-        renderSet.setFinalFramebuffer(fboFinal_[thread]);
-
-        // render scene from each camera
-        for (int cindex = 0; cindex < cameras_.size(); ++cindex)
-        if (cameras_[cindex]->active(time, thread))
-        {
-            Camera * camera = cameras_[cindex];
-
-            // skip camera?
-            if (camera->updateMode() == ObjectGl::UM_ON_CHANGE
-                && !camera->isUpdateRequest())
-                continue;
-
-            // update the list of to-render objects
-            if (camera->needsUpdateRenderObjects())
-                glObjectsPerCamera_[cindex] = camera->getRenderObjects();
-
-            // get camera viewspace
-            camera->initCameraSpace(camSpace, thread, time);
-
-            // get camera view-matrix
-            const Mat4& cammat = camera->transformation();
-            camSpace.setPosition(Vec3(cammat[3][0], cammat[3][1], cammat[3][2]));
-            const Mat4 viewm = glm::inverse(cammat);
-            camSpace.setViewMatrix(viewm);
-
-            // for each cubemap
-            const uint numCubeMaps = camera->numCubeTextures(thread, time);
-            for (uint i=0; i<numCubeMaps; ++i)
-            {
-                // start camera frame
-                camera->startGlFrame(thread, time, i);
-
-                camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
-
-                // render each opengl object per camera & per cube-face
-                for (ObjectGl * o : glObjectsPerCamera_[cindex])
-                if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
-                    && o->active(time, thread))
-                {
-                    // XXX Not working for cube-maps
-                    if (o->updateMode() == ObjectGl::UM_ON_CHANGE
-                        && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
-                            continue;
-
-                    o->p_renderGl_(renderSet, thread, time);
-                }
-
-                // render debug objects
-                if (debugRenderOptions_)
-                    debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
-            }
-
-            camera->finishGlFrame(thread, time);
-        }
     }
     catch (Exception & e)
     {
-        e << "\nin Scene::renderScene(" << thread << ")";
+        e << "\nin Scene::renderScene(" << thread << ") preface";
         throw;
     }
 
 
     // --- render ShaderObjects and TextureObjects ----
 
-    /** @todo needs to be in order with cameras, which are also frameDrawers */
     if (!frameDrawers_.isEmpty())
     {
         GL::RenderSettings renderSet;
@@ -1135,16 +1074,80 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
         try
         {
-            for (ObjectGl * o : frameDrawers_)
-            if (!o->isCamera()
-                    && o->active(time, thread)
-                    )
-            {
-                if (o->updateMode() == ObjectGl::UM_ON_CHANGE
-                    && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
-                        continue;
+            uint cindex = 0;
 
-                o->p_renderGl_(renderSet, thread, time);
+            // for each object that renders
+            for (ObjectGl * o : frameDrawers_)
+            {
+                if (o->active(time, thread))
+                {
+                    // shaders and texture processors
+                    if (o->isShader() || o->isTexture())
+                    {
+                        if (o->updateMode() == ObjectGl::UM_ALWAYS
+                            || o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread))
+                        {
+                            o->p_renderGl_(renderSet, thread, time);
+                        }
+                    }
+
+                    // camera
+                    else if (o->isCamera())
+                    {
+                        Camera * camera = static_cast<Camera*>(o);
+
+                        // skip camera?
+                        /*if (camera->updateMode() == ObjectGl::UM_ON_CHANGE
+                            && !camera->isUpdateRequest())
+                            continue;*/
+
+                        // update the list of to-render objects
+                        if (camera->needsUpdateRenderObjects())
+                            glObjectsPerCamera_[cindex] = camera->getRenderObjects();
+
+                        // get camera viewspace
+                        camera->initCameraSpace(camSpace, thread, time);
+
+                        // get camera view-matrix
+                        const Mat4& cammat = camera->transformation();
+                        camSpace.setPosition(Vec3(cammat[3][0], cammat[3][1], cammat[3][2]));
+                        const Mat4 viewm = glm::inverse(cammat);
+                        camSpace.setViewMatrix(viewm);
+
+                        // for each cubemap
+                        const uint numCubeMaps = camera->numCubeTextures(thread, time);
+                        for (uint i=0; i<numCubeMaps; ++i)
+                        {
+                            // start camera frame
+                            camera->startGlFrame(thread, time, i);
+
+                            camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
+
+                            // render each opengl object per camera & per cube-face
+                            for (ObjectGl * o : glObjectsPerCamera_[cindex])
+                            if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
+                                && o->active(time, thread))
+                            {
+                                // XXX Not working for cube-maps
+                                if (o->updateMode() == ObjectGl::UM_ON_CHANGE
+                                    && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
+                                        continue;
+
+                                o->p_renderGl_(renderSet, thread, time);
+                            }
+
+                            // render debug objects
+                            if (debugRenderOptions_)
+                                debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
+                        }
+
+                        camera->finishGlFrame(thread, time);
+                    }
+
+                } // active
+
+                if (o->isCamera())
+                    ++cindex;
             }
         }
         catch (Exception & e)

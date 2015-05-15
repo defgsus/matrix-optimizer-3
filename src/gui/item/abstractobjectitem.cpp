@@ -666,8 +666,24 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     QList<Parameter*> params = object->params()->getVisibleGraphParameters();
     for (Parameter * p : params)
     {
-        inputItems.append( new ObjectGraphConnectItem(true, p, item) );
+        inputItems.append( new ObjectGraphConnectItem(p, item) );
     }
+
+    // desired signal outputs
+    auto map = object->getNumberOutputs();
+    for (auto it = map.begin(); it != map.end(); ++it)
+    {
+        for (uint i = 0; i < it.value(); ++i)
+        {
+            // dont show outputs of output AO
+            if (it.key() == ST_AUDIO && qobject_cast<AudioOutAO*>(object))
+                continue;
+
+            outputItems.append(
+                new ObjectGraphConnectItem(false, it.key(), i, object->getOutputName(it.key(), i), item) );
+        }
+    }
+
 
     // audio input/output items
     if (AudioObject * ao = qobject_cast<AudioObject*>(object))
@@ -678,16 +694,18 @@ void AbstractObjectItem::PrivateOI::createConnectors()
         {
             if (ao->numAudioInputs() >= 0)
                 for (int i=0; i<ao->numAudioInputs(); ++i)
-                    inputItems.append( new ObjectGraphConnectItem(true, i, ao->getAudioInputName(i), item) );
+                    inputItems.append( new ObjectGraphConnectItem(
+                                           true, ST_AUDIO, i, ao->getAudioInputName(i), item) );
             else
-                inputItems.append( new ObjectGraphConnectItem(true, 0, ao->getAudioInputName(0), item) );
+                inputItems.append( new ObjectGraphConnectItem(
+                                       true, ST_AUDIO, 0, ao->getAudioInputName(0), item) );
         }
-
+        /*
         if (!qobject_cast<AudioOutAO*>(ao))
         {
             for (uint i=0; i<ao->numAudioOutputs(); ++i)
                 outputItems.append( new ObjectGraphConnectItem(false, i, ao->getAudioOutputName(i), item) );
-        }
+        }*/
 
     }
 
@@ -783,18 +801,18 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 void AbstractObjectItem::updateConnectors()
 {
     // clear previous items
-    if (scene())
     for (auto i : p_oi_->inputItems)
     {
-        scene()->removeItem(i);
+        if (scene())
+            scene()->removeItem(i);
         delete i;
     }
     p_oi_->inputItems.clear();
 
-    if (scene())
     for (auto i : p_oi_->outputItems)
     {
-        scene()->removeItem(i);
+        if (scene())
+            scene()->removeItem(i);
         delete i;
     }
     p_oi_->outputItems.clear();
@@ -828,7 +846,7 @@ int AbstractObjectItem::channelForPosition(const QPointF &localPos)
     for (QGraphicsItem * c : list)
     if (c->isVisible() && c->type() == ObjectGraphConnectItem::Type)
         if (c->shape().contains(localPos - c->pos()))
-            if (static_cast<ObjectGraphConnectItem*>(c)->isAudioConnector())
+            //if (static_cast<ObjectGraphConnectItem*>(c)->isAudioConnector())
                 return static_cast<ObjectGraphConnectItem*>(c)->channel();
     return -1;
 }
@@ -928,7 +946,8 @@ bool AbstractObjectItem::hasConnectors() const
 QPointF AbstractObjectItem::inputPos(uint c) const
 {
     for (auto i : p_oi_->inputItems)
-        if (i->isAudioConnector() && i->channel() == c)
+        if (//i->signalType() == ST_AUDIO &&
+                i->channel() == c)
             return i->pos();
 
     QRectF r(rect());
@@ -939,7 +958,8 @@ QPointF AbstractObjectItem::inputPos(uint c) const
 QPointF AbstractObjectItem::outputPos(uint c) const
 {
     for (auto i : p_oi_->outputItems)
-        if (i->isAudioConnector() && i->channel() == c)
+        if (//i->isAudioConnector() &&
+                i->channel() == c)
             return i->pos();
 
     QRectF r(rect());
@@ -958,11 +978,12 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
 
 QPointF AbstractObjectItem::outputPos(Modulator * m) const
 {
-    if (m->isAudioToFloatConverter())
-        return outputPos(static_cast<ModulatorFloat*>(m)->channel());
+//    if (m->isAudioToFloatConverter())
+//        return outputPos(static_cast<ModulatorFloat*>(m)->channel());
+    return outputPos(m->outputChannel());
 
-    QRectF r(rect());
-    return QPointF(r.right(), r.bottom() - 4);
+//    QRectF r(rect());
+//    return QPointF(r.right(), r.bottom() - 4);
 }
 
 QRectF AbstractObjectItem::rect() const

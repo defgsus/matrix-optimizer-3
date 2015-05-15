@@ -34,7 +34,7 @@ public:
     virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE { }
 
     /* texture output interface */
-    virtual const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
+    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
     virtual void getNeededFiles(IO::FileList&) Q_DECL_OVERRIDE;
 

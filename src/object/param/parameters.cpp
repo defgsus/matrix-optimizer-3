@@ -85,8 +85,10 @@ void Parameters::deserialize(IO::DataStream & io)
         Parameter * p = findParameter(id);
         if (!p)
         {
+#ifdef MO_DEBUG
             MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
                                 "in input stream.");
+#endif
             io.skip(length);
         }
         else

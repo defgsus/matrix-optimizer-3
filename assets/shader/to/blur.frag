@@ -1,11 +1,17 @@
 #include <to/header>
 #include <constants>
 
+// define USE_MASK 0,1
+// define USE_SIZE3 0,1
+
 uniform sampler2D   u_tex;          // input texture
+uniform sampler2D   u_tex_mask;     // texture mask
 uniform vec2        u_size_sigma;   // size, smoothness
+uniform vec3        u_size3;        // three sizes
 uniform vec2        u_direction;    // (1,0) or (0,1)
 uniform float       u_num;          // number samples
 uniform float       u_alpha;        // output alpha
+uniform vec3        u_mask_range;
 
 /* http://callumhay.blogspot.de/2010/09/gaussian-blur-shader-glsl.html */
 
@@ -14,6 +20,14 @@ void main()
     float sigma = u_size_sigma.y,
           size = u_size_sigma.x,
           sum;
+
+#if USE_MASK
+    sigma = max(0.001,
+                sigma * smoothstep(u_mask_range.x, u_mask_range.y,
+                                   abs(texture(u_tex_mask, v_texCoord.xy).x - u_mask_range.z))
+                );
+#endif
+
     vec3 inc;
     inc.x = 1. / (sqrt(TAU) * sigma);
     inc.y = exp(-.5 / (sigma * sigma));

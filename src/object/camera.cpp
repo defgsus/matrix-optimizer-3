@@ -49,6 +49,7 @@ Camera::Camera(QObject *parent)
     setName("Camera");
 
     initCreateRenderSettings(false);
+    setNumberOutputs(ST_TEXTURE, 2);
 }
 
 Camera::~Camera()
@@ -545,10 +546,15 @@ GL::FrameBufferObject * Camera::fbo(uint thread) const
     }
 }
 
-const GL::Texture * Camera::valueTexture(Double , uint thread) const
+const GL::Texture * Camera::valueTexture(uint channel, Double , uint thread) const
 {
     if (thread < fbo_.size() && fbo_[thread])
-        return fbo_[thread]->colorTexture();
+    {
+        if (channel == 0)
+            return fbo_[thread]->colorTexture();
+        else
+            return fbo_[thread]->depthTexture();
+    }
     return 0;
 }
 
@@ -609,7 +615,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
 }
 
-//namespace {
+namespace {
 
     void getRenderObjects2(Object * root, QList<ObjectGl*>& list,
                           const QRegExp& rInc, const QRegExp& rIgn)
@@ -628,7 +634,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
         }
     }
 
-//}
+}
 
 
 

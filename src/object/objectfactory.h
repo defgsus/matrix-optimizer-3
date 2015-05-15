@@ -65,6 +65,9 @@ public:
         or NULL if @p className is unknown. */
     static const Object * getObject(const QString& className);
 
+    /** Returns a priority for each object type */
+    static int objectPriority(const Object *);
+
     /** Translated name of the object group, or empty string for unknown */
     static QString objectPriorityName(int priority);
 

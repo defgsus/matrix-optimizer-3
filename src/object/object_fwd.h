@@ -24,6 +24,21 @@ namespace MO {
         TT_OBJECT_WILDCARD
     };
 
+    /** General groups of object outputs and/or parameters */
+    enum SignalType
+    {
+        ST_FLOAT,
+        ST_INT,
+        ST_SELECT,
+        ST_TEXT,
+        ST_FILENAME,
+        ST_TRANSFORMATION,
+        ST_TEXTURE,
+        ST_TIMELINE1D,
+        ST_AUDIO,
+        ST_CALLBACK
+    };
+
     namespace IO { class DataStream; }
     namespace GL { class LightSettings; class CameraSpace; }
     namespace MATH { class Timeline1D; }

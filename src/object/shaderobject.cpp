@@ -41,8 +41,8 @@ ShaderObject::ShaderObject(QObject *parent)
     , userUniforms_ (new UserUniformSetting(this))
 {
     setName("Shader");
-
     initCreateRenderSettings(false);
+    setNumberOutputs(ST_TEXTURE, 1);
 }
 
 ShaderObject::~ShaderObject()
@@ -174,7 +174,7 @@ QSize ShaderObject::resolution() const
                 : QSize();
 }
 
-const GL::Texture * ShaderObject::valueTexture(Double , uint ) const
+const GL::Texture * ShaderObject::valueTexture(uint , Double , uint ) const
 {
     return fbo_ ? fbo_->colorTexture() : 0;
 }

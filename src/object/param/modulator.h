@@ -13,6 +13,8 @@
 
 #include <QString>
 
+#include "object/object_fwd.h"
+
 namespace MO {
 namespace IO { class DataStream; }
 
@@ -30,7 +32,8 @@ public:
     /** Construct a modulator coming from object @p modulatorId
         and belonging to @p parent / @p param */
     Modulator(const QString& name,
-              const QString& modulatorId, const QString& outputId,
+              const QString& modulatorId,
+              const QString& outputId,
               Parameter * parm, Object * parent = 0);
     virtual ~Modulator() { }
 
@@ -50,18 +53,16 @@ public:
         (typically the name of the Parameter that is modulated) */
     const QString& name() const { return name_; }
 
-    /** Returns some description of source and destination */
-    QString nameAutomatic() const;
-
     /** Returns parent object (The parent of the Parameter) */
     Object * parent() const { return parent_; }
 
     /** Returns the set idName for finding the modulating object */
     const QString& modulatorId() const { return modulatorId_; }
+
     const QString& outputId() const { return outputId_; }
 
-    /** Returns the modulating object */
-    Object * modulator() const { return modulator_; }
+    /** Returns some description of source and destination */
+    QString nameAutomatic() const;
 
     /** Returns the parameter who owns this Modulator connection */
     Parameter * parameter() const { return param_; }
@@ -69,12 +70,18 @@ public:
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const = 0;
 
-    /** Returns true if this sticks to an audio output of a module.
-        Only valid after setModulator(). */
-    bool isAudioToFloatConverter() const;
+    // ---- following only work after the
+    // ---- modulating object is assigned
 
-    /** Returns the channel number if this isAudioToFloatConverter() */
-    uint getAudioOutputChannel() const;
+    uint outputChannel() const { return channel_; }
+    //SignalType signalType() const { return signalType_; }
+
+    /** Returns the modulating object */
+    Object * modulator() const { return modulator_; }
+
+    /* Returns true if this sticks to an audio output of a module.
+        Only valid after setModulator(). */
+    //bool isAudioToFloatConverter() const;
 
     // ------------- setter --------------
 
@@ -96,11 +103,16 @@ protected:
     /** Called when the modulating object has been set. */
     virtual void modulatorChanged_() = 0;
 
+    /* Can be called from modulatorChanged_() once the actual output channel is known. */
+    //void setChannel(uint i) { channel_ = i; }
+    //void setSignalType(SignalType s) { signalType_ = s; }
+
 private:
 
     Object * parent_, * modulator_;
 
     QString name_, modulatorId_, outputId_;
+    uint channel_;
 
     Parameter * param_;
 };

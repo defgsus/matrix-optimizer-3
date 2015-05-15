@@ -29,6 +29,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("transformation"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_TRANSFORMATION; }
 
     //virtual QString getDocType() const Q_DECL_OVERRIDE;
 

@@ -33,6 +33,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("timeline1d"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_TIMELINE1D; }
 
     virtual Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 

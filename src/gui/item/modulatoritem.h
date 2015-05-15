@@ -20,6 +20,7 @@ namespace GUI {
 class AbstractObjectItem;
 class ObjectGraphScene;
 
+/** The 'cable' between objects and parameters */
 class ModulatorItem : public QGraphicsItem
 {
 public:

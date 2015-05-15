@@ -28,6 +28,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("select"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_SELECT; }
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;
     virtual QString getDocValues() const Q_DECL_OVERRIDE;

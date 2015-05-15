@@ -67,11 +67,12 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
                 << width << ", " << height << ", " << format << ", " << type <<
                 ", " << cubemap << ")");
 
+    colorTex_.resize(1);
     if (!cubemap_)
-        colorTex_ = new Texture(width, height, format, input_format, type, 0, report);
+        colorTex_[0] = new Texture(width, height, format, input_format, type, 0, report);
     else
     {
-        colorTex_ = new Texture(width, height, format, input_format, type, 0, 0, 0, 0, 0, 0, report);
+        colorTex_[0] = new Texture(width, height, format, input_format, type, 0, 0, 0, 0, 0, 0, report);
     }
 
     if (attachments_ & A_DEPTH)
@@ -87,21 +88,34 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
     setName(QString("fbo%1").arg(fbo_count_++));
 }
 
+void FrameBufferObject::addColorTextures(uint num)
+{
+    for (uint i=0; i<num; ++i)
+    {
+        auto tex = new Texture(width(), height(),
+                               colorTex_[0]->format(), colorTex_[0]->format(),
+                               colorTex_[0]->type(), 0, rep_);
+        colorTex_.push_back( tex );
+    }
+}
+
 void FrameBufferObject::setName(const QString &name)
 {
     name_ = name;
-    if (colorTex_)
-        colorTex_->setName(name + "_color");//_" + colorTex_->name());
+    for (uint i=0; i<colorTex_.size(); ++i)
+    if (colorTex_[i])
+        colorTex_[i]->setName(name + "_color" + QString::number(i));//_" + colorTex_->name());
     if (depthTex_)
         depthTex_->setName(name + "_depth_");// + depthTex_->name());
 }
 
 void FrameBufferObject::setChanged()
 {
-    if (colorTex_)
-        colorTex_->setChanged();
-    if (colorTex_)
-        colorTex_->setChanged();
+    for (auto tex : colorTex_)
+        if (tex)
+            tex->setChanged();
+    if (depthTex_)
+        depthTex_->setChanged();
 }
 
 FrameBufferObject::~FrameBufferObject()
@@ -112,18 +126,21 @@ FrameBufferObject::~FrameBufferObject()
         MO_GL_WARNING("destructor of unreleased FrameBufferObject");
 
     delete depthTex_;
-    delete colorTex_;
+    for (auto tex : colorTex_)
+        delete tex;
 }
 
 
 uint FrameBufferObject::width() const
 {
-    return colorTex_->width();
+    return !colorTex_.empty() && colorTex_[0]
+            ? colorTex_[0]->width() : 0;
 }
 
 uint FrameBufferObject::height() const
 {
-    return colorTex_->height();
+    return !colorTex_.empty() && colorTex_[0]
+            ? colorTex_[0]->height() : 0;
 }
 
 void FrameBufferObject::setViewport() const
@@ -157,8 +174,9 @@ void FrameBufferObject::release_()
     MO_CHECK_GL_COND(rep_, glDeleteFramebuffers(1, &fbo_) );
     fbo_ = invalidGl;
 
-    if (colorTex_->isHandle())
-        colorTex_->release();
+    for (auto t : colorTex_)
+        if (t->isHandle())
+            t->release();
 
     if (depthTex_ && depthTex_->isHandle())
         depthTex_->release();
@@ -173,15 +191,17 @@ bool FrameBufferObject::create()
         release_();
 
     // check for size setting
-    if (colorTex_->width() == 0 || colorTex_->height() == 0)
+    if (colorTex_.empty() || !colorTex_[0]
+        || colorTex_[0]->width() == 0 || colorTex_[0]->height() == 0)
     {
         MO_GL_ERROR_COND(rep_, "No size given for frame buffer object creation");
         return false;
     }
 
-    if (!colorTex_->isHandle())
+    for (auto t : colorTex_)
+    if (!t->isHandle())
     {
-        if (!colorTex_->create())
+        if (!t->create())
         {
             MO_GL_ERROR_COND(rep_, "could not create colorbuffer for framebuffer");
             return false;
@@ -203,11 +223,16 @@ bool FrameBufferObject::create()
     MO_CHECK_GL_RET_COND(rep_, glBindFramebuffer(GL_FRAMEBUFFER, fbo_), err );
     if (err != GL_NO_ERROR) return false;
 
-    // attach color texture
     GLenum target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
-    MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
-    if (err != GL_NO_ERROR) return false;
+
+    // attach color textures
+    int k=0;
+    for (auto tex : colorTex_)
+    {
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, target, tex->handle(), 0), err );
+        if (err != GL_NO_ERROR) return false;
+    }
 
     // for depth testing
     MO_CHECK_GL_RET_COND(rep_, glGenRenderbuffers(1, &rbo_), err );
@@ -224,8 +249,9 @@ bool FrameBufferObject::create()
     else
     {
         // attach internal storage for depth
+        // XXX Should not do it automatically
         MO_CHECK_GL_RET_COND(rep_, glRenderbufferStorage(
-                GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, colorTex_->width(), colorTex_->height() ), err );
+                GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width(), height() ), err );
         if (err != GL_NO_ERROR) return false;
         MO_CHECK_GL_RET_COND(rep_, glFramebufferRenderbuffer(
                 GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_), err );
@@ -244,7 +270,7 @@ void FrameBufferObject::release()
     release_();
 }
 
-Texture * FrameBufferObject::swapColorTexture(Texture * tex)
+Texture * FrameBufferObject::swapColorTexture(Texture * tex, uint index)
 {
     // change attachment
     GLenum err, target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
@@ -252,11 +278,11 @@ Texture * FrameBufferObject::swapColorTexture(Texture * tex)
             GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, tex->handle(), 0), err );
     if (err != GL_NO_ERROR) return 0;
 
-    std::swap(colorTex_, tex);
+    std::swap(colorTex_[index], tex);
     return tex;
 }
 
-bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
+bool FrameBufferObject::attachCubeTexture(gl::GLenum target, uint i)
 {
     if (!cubemap_)
     {
@@ -264,7 +290,7 @@ bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
         return false;
     }
 
-    if (!colorTex_ || !colorTex_->isAllocated())
+    if (!colorTex_[i] || !colorTex_[i]->isAllocated())
     {
         MO_GL_ERROR_COND(rep_, "FrameBufferObject::attachCubeTexture() on uninitialized cube-map");
         return false;
@@ -272,7 +298,7 @@ bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
 
     GLenum err;
     MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, colorTex_->handle(), 0), err );
+            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, target, colorTex_[i]->handle(), 0), err );
     if (err != GL_NO_ERROR)
         return false;
     if (attachments_ & A_DEPTH)
@@ -284,21 +310,25 @@ bool FrameBufferObject::attachCubeTexture(gl::GLenum target)
 
 }
 
-bool FrameBufferObject::downloadColorTexture(void *ptr)
+bool FrameBufferObject::downloadColorTexture(void *ptr, uint index)
 {
-    return colorTex_->download(ptr);
+    return colorTex_[index]->download(ptr);
 }
 
-Texture * FrameBufferObject::takeColorTexture()
+Texture * FrameBufferObject::takeColorTexture(uint index)
 {
-    Texture * t = colorTex_;
+    Texture * t = colorTex_[index];
 
     // create new one
     if (!cubemap_)
-        colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(), 0, rep_);
+        colorTex_[index] = new Texture(width(), height(),
+                                       colorTex_[index]->format(), colorTex_[index]->format(),
+                                       colorTex_[index]->type(), 0, rep_);
     else
     {
-        colorTex_ = new Texture(width(), height(), colorTex_->format(), colorTex_->format(), colorTex_->type(),
+        colorTex_[index] = new Texture(width(), height(),
+                                       colorTex_[index]->format(), colorTex_[index]->format(),
+                                       colorTex_[index]->type(),
                                 0, 0, 0, 0, 0, 0, rep_);
     }
     setName(name());
@@ -322,10 +352,11 @@ Texture * FrameBufferObject::takeDepthTexture()
     {
         // create new one
         if (!cubemap_)
-            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(), 0, rep_);
+            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(),
+                                    colorTex_[0]->type(), 0, rep_);
         else
         {
-            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_->type(),
+            depthTex_ = new Texture(width(), height(), depthTex_->format(), depthTex_->format(), colorTex_[0]->type(),
                                     0, 0, 0, 0, 0, 0, rep_);
         }
         setName(name());

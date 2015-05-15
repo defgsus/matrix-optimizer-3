@@ -106,6 +106,7 @@ QString TextEditWidget::getText() const
 
     switch (p_->textType)
     {
+        case TT_OBJECT_WILDCARD:
         case TT_PLAIN_TEXT:
         case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
@@ -124,6 +125,7 @@ void TextEditWidget::setText(const QString & text, bool send_signal)
 
     switch (p_->textType)
     {
+        case TT_OBJECT_WILDCARD:
         case TT_PLAIN_TEXT:
         case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
@@ -154,6 +156,7 @@ void TextEditWidget::Private::createWidgets()
 
         switch (textType)
         {
+            case TT_OBJECT_WILDCARD:
             case TT_APP_STYLESHEET:
             case TT_PLAIN_TEXT:
                 plainText = new QTextEdit(widget);

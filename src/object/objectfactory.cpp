@@ -66,6 +66,24 @@ ObjectFactory& ObjectFactory::instance()
     return *instance_;
 }
 
+int ObjectFactory::objectPriority(const Object *o)
+{
+    // need to adjust ObjectFactory::objectPriorityName() as well
+
+    if (o->isTransformation())
+        return 5;
+    if (o->isTexture())
+        return 3;
+    if (o->isGl() || o->isLightSource())
+        return 4;
+    // 2 = meta
+    if (o->type() & Object::TG_MODULATOR)
+        return 1;
+    if (o->isAudioUnit() || o->isAudioObject())
+        return 0;
+    return 2;
+}
+
 QString ObjectFactory::objectPriorityName(int priority)
 {
     switch (priority)
@@ -446,10 +464,10 @@ int ObjectFactory::getBestInsertIndex(Object *parent, Object *newChild, int idx)
         idx = num;
 
     // find place according to priority
-    const int p = Object::objectPriority(newChild);
+    const int p = ObjectFactory::objectPriority(newChild);
     for (int i = 0; i < num; ++i)
     {
-        const int pi = Object::objectPriority( parent->childObjects()[i] );
+        const int pi = ObjectFactory::objectPriority( parent->childObjects()[i] );
         if (idx <= i && pi <= p)
             return i;
         if (pi < p)

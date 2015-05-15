@@ -24,7 +24,6 @@ ModulatorFloat::ModulatorFloat(const QString &name, const QString &modulatorId, 
                                Parameter * p, Object *parent)
     : Modulator     (name, modulatorId, outputId, p, parent),
       sourceType_   (ST_NONE),
-      channel_      (0),
       outStaticFloat_   (0),
       interface_    (0),
       amplitude_    (1.0),
@@ -108,7 +107,6 @@ void ModulatorFloat::modulatorChanged_()
     if (qobject_cast<AudioObject*>(modulator()))
     {
         sourceType_ = ST_AUDIO_OBJECT;
-        channel_ = getAudioOutputChannel();
     }
 
     else
@@ -146,7 +144,7 @@ Double ModulatorFloat::value(Double time, uint thread) const
         case ST_AUDIO_OBJECT:
             return amplitude_ *
                     static_cast<AudioObject*>(modulator())
-                        ->getAudioOutputAsFloat(channel_, time, MO_AUDIO_THREAD);
+                        ->getAudioOutputAsFloat(outputChannel(), time, MO_AUDIO_THREAD);
     }
 
     return 0.0;

@@ -121,7 +121,7 @@ void ImageTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * ImageTO::valueTexture(Double , uint ) const
+const GL::Texture * ImageTO::valueTexture(uint , Double , uint ) const
 {
     return tex_;
 }

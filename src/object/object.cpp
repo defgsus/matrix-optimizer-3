@@ -94,9 +94,6 @@ Object::~Object()
 #endif
 
     delete p_parameters_;
-
-    for (auto m : p_modulatorOuts_)
-        delete m;
 }
 
 void Object::addRef()
@@ -330,23 +327,6 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
         c->dumpTreeIds(out, " " + prefix);
 }
 
-int Object::objectPriority(const Object *o)
-{
-    // need to adjust ObjectFactory::objectPriorityName() as well
-
-    if (o->isTransformation())
-        return 5;
-    if (o->isTexture())
-        return 3;
-    if (o->isGl() || o->isLightSource())
-        return 4;
-    // 2 = meta
-    if (o->type() & TG_MODULATOR)
-        return 1;
-    if (o->isAudioUnit() || o->isAudioObject())
-        return 0;
-    return 2;
-}
 
 Object * Object::findContainingObject(const int typeFlags)
 {
@@ -1386,40 +1366,49 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
     return pairs;
 }
 
-
-void Object::setModulatorOutputs(const QList<ModulatorOutput*>& mods)
+uint Object::getNumberOutputs(SignalType t) const
 {
-    MO_DEBUG_MOD("Object::setModulatorOutputs(size=" << mods.size() << ")");
-
-    // delete previous
-    for (auto m : p_modulatorOuts_)
-        delete m;
-
-    // update
-    p_modulatorOuts_ = mods;
-
-    // set channel indices
-    uint k = 0;
-    for (auto m : p_modulatorOuts_)
-        m->p_channel_ = k++;
-
-    if (editor())
-        editor()->emitObjectChanged(this);
+    auto it = p_outputMap_.find(t);
+    return it == p_outputMap_.end() ? 0 : it.value();
 }
 
-ModulatorOutput * Object::getModulatorOutput(const QString &id) const
+QString Object::getSignalName(SignalType t)
 {
-    MO_DEBUG_MOD("Object::getModulatorOutput(" << id << ")");
-
-    for (auto m : p_modulatorOuts_)
-        if (m->id() == id)
-        {
-            MO_DEBUG_MOD("found");
-            return m;
-        }
-
-    MO_DEBUG_MOD("not found among " << p_modulatorOuts_.size() << " outputs");
-    return 0;
+    switch (t)
+    {
+        case ST_FLOAT: return tr("float");
+        case ST_INT: return tr("int");
+        case ST_SELECT: return tr("select");
+        case ST_TEXT: return tr("text");
+        case ST_FILENAME: return tr("filename");
+        case ST_TRANSFORMATION: return tr("transformation");
+        case ST_TEXTURE: return tr("texture");
+        case ST_TIMELINE1D: return tr("timeline1d");
+        case ST_AUDIO: return tr("audio");
+        case ST_CALLBACK: return tr("callback");
+    }
+    return QString();
 }
+
+QString Object::getOutputName(SignalType t, uint channel) const
+{
+    return QString("%1 %2").arg(getSignalName(t)).arg(channel);
+}
+
+void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
+{
+    MO_DEBUG_MOD("Object::setNumberOutputs(" << t << ", " << num << ", " << emitSignal << ")");
+
+    // check for change
+    auto it = p_outputMap_.find(t);
+    if (it != p_outputMap_.end() && num != it.value())
+        return;
+
+    p_outputMap_.insert(t, num);
+
+    if (emitSignal && editor()) // XXX Need a signal for that
+        editor()->emitAudioChannelsChanged(this);
+}
+
 
 } // namespace MO

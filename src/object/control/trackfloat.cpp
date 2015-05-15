@@ -21,6 +21,7 @@ TrackFloat::TrackFloat(QObject *parent) :
     Track(parent)
 {
     setName("TrackFloat");
+    setNumberOutputs(ST_FLOAT, 1);
 }
 
 void TrackFloat::serialize(IO::DataStream & io) const

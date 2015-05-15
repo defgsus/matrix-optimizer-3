@@ -16,8 +16,7 @@
 namespace MO {
 namespace GL { class Texture; }
 
-/** A texture value output.
-    *Currently* single channel... */
+/** A texture output. */
 class ValueTextureInterface
 {
 public:
@@ -25,7 +24,7 @@ public:
 
     /** Return a ready-to-use texture or NULL.
         Texture is not required to be bound on return. */
-    virtual const GL::Texture * valueTexture(Double time, uint thread) const = 0;
+    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const = 0;
 
 };
 

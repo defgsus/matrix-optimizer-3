@@ -46,7 +46,8 @@ struct BlurTO::Private
                 * u_size_sigma,
                 * u_num,
                 * u_dir,
-                * u_alpha;
+                * u_alpha,
+                * u_mask_range;
     };
 
     BlurTO * to;
@@ -56,10 +57,14 @@ struct BlurTO::Private
             * p_size,
             * p_sigma,
             * p_num,
-            * p_alpha;
+            * p_alpha,
+            * p_mask_min,
+            * p_mask_max,
+            * p_mask_thresh;
     ParameterSelect
             * p_sizeIsPixels,
-            * p_alphaMode;
+            * p_alphaMode,
+            * m_mask;
 };
 
 
@@ -68,7 +73,7 @@ BlurTO::BlurTO(QObject *parent)
     , p_                (new Private(this))
 {
     setName("Blur");
-    initMaximumTextureInputs(1);
+    initMaximumTextureInputs(2);
 }
 
 BlurTO::~BlurTO()
@@ -130,12 +135,29 @@ void BlurTO::Private::createParameters()
 
         p_sigma = to->params()->createFloatParameter(
                     "sigma", tr("smoothness"), tr("A modifier to adjust the amount of blur, range is about [0, 1]"),
-                    1.0,  0.05);
+                    .7,  0.05);
         p_sigma->setMinValue(0.);
 
         p_num = to->params()->createFloatParameter(
                     "num", tr("num samples"), tr("Size of the blur kernel - there will be (width*2+1)*2 samples"),
                     10.0,  1., 1000.,  1.);
+
+        m_mask = to->params()->createBooleanParameter(
+                    "use_mask", tr("use blur mask"),
+                    tr("Enables a texture to be used as a modifier for the blur smoothness"),
+                    tr("Off"), tr("Connect a texture to the second input"),
+                    false,
+                    true, false);
+        p_mask_min = to->params()->createFloatParameter(
+                    "mask_min", tr("mask range min"), tr("The mask value for which the blurring is weakest"),
+                    0.,  .01);
+        p_mask_max = to->params()->createFloatParameter(
+                    "mask_max", tr("mask range max"), tr("The mask value for which the blurring is strongest"),
+                    1.,  .01);
+        p_mask_thresh = to->params()->createFloatParameter(
+                    "mask_thresh", tr("mask range threshold"), tr("A value for shifting where the blurring is strongest"),
+                    0.,  .01);
+
 
         p_alphaMode = to->params()->createSelectParameter(
                     "alpha_mode", tr("alpha channel"),
@@ -146,7 +168,7 @@ void BlurTO::Private::createParameters()
           tr("The alpha channel remains a fixed value"),
           tr("The alpha channel is set to the magnitude of the blured color channels") },
         { 0, 1, 2 },
-                    0, true, true);
+                    1, true, true);
 
         p_alpha = to->params()->createFloatParameter(
                     "alpha", tr("alpha"), tr("A modifier for the output alpha channel - controls transparency"),
@@ -160,7 +182,8 @@ void BlurTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == p_->p_alphaMode)
+    if (p == p_->p_alphaMode
+            || p == p_->m_mask)
         requestReinitGl();
 }
 
@@ -174,7 +197,9 @@ void BlurTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
 
-
+    bool mask = p_->m_mask->baseValue();
+    p_->p_mask_min->setVisible(mask);
+    p_->p_mask_max->setVisible(mask);
 }
 
 
@@ -195,10 +220,12 @@ void BlurTO::Private::initGl()
         src.loadVertexSource(":/shader/to/default.vert");
         src.loadFragmentSource(":/shader/to/blur.frag");
         src.pasteDefaultIncludes();
+
+        src.addDefine(QString("#define USE_MASK %1").arg(m_mask->baseValue()));
         if (i == 1)
             src.addDefine(QString("#define MO_ALPHA_MODE %1").arg(p_alphaMode->baseValue()));
 
-        auto shader = to->createShaderQuad(src, { "u_tex" })->shader();
+        auto shader = to->createShaderQuad(src, { "u_tex", "u_tex_mask" })->shader();
 
         // uniforms
 
@@ -206,6 +233,7 @@ void BlurTO::Private::initGl()
         s.u_num = shader->getUniform("u_num", true);
         s.u_dir = shader->getUniform("u_direction", true);
         s.u_alpha = shader->getUniform("u_alpha", true);
+        s.u_mask_range = shader->getUniform("u_mask_range", false);
 
         stages << s;
     }
@@ -235,7 +263,10 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double t
     // get other values
     Float size = p_size->value(time, thread),
           sigma = std::max(0.001, p_sigma->value(time, thread) * numSam * .5),
-          alpha = p_alpha->value(time, thread);
+          alpha = p_alpha->value(time, thread),
+          maskmin = p_mask_min->value(time, thread),
+          maskmax = p_mask_max->value(time, thread),
+          maskthresh = p_mask_thresh->value(time, thread);
 
     // for each stage
     for (const Stage & s : stages)
@@ -248,6 +279,8 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double t
         s.u_num->setFloats( numSam );
         s.u_dir->setFloats( six * s.dir.x, siy * s.dir.y );
         s.u_alpha->setFloats( alpha );
+        if (s.u_mask_range)
+            s.u_mask_range->setFloats(maskmin, maskmax, maskthresh);
 
         uint texSlot = 0;
         to->renderShaderQuad(s.index, time, thread, texSlot);

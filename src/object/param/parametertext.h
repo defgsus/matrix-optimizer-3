@@ -30,6 +30,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("text"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_TEXT; }
 
     Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 

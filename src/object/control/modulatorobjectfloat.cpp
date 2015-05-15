@@ -25,6 +25,7 @@ ModulatorObjectFloat::ModulatorObjectFloat(QObject *parent) :
     offset_     (0.0)
 {
     setName("ModulatorFloat");
+    setNumberOutputs(ST_FLOAT, 1);
 }
 
 void ModulatorObjectFloat::serialize(IO::DataStream & io) const

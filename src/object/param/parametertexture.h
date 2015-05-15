@@ -33,6 +33,7 @@ public:
     virtual void deserialize(IO::DataStream&);
 
     const QString& typeName() const { static QString s("texture"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_TEXTURE; }
 
     // ---------------- getter -----------------
 

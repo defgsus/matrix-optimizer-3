@@ -798,7 +798,7 @@ void ObjectGraphScene::Private::snapToEndConnect(const QPointF& scenePos)
 
 void ObjectGraphScene::Private::endConnection()
 {
-    if (connectStartConnectItem->isAudioConnector())
+    if (connectStartConnectItem->signalType() == ST_AUDIO)
     {
         auto aoFrom = qobject_cast<AudioObject*>(connectStartItem->object()),
              aoTo = qobject_cast<AudioObject*>(connectEndItem->object());
@@ -827,6 +827,22 @@ void ObjectGraphScene::Private::endConnection()
         {
             MO_WARNING("aoFrom/aoTo not found " << aoFrom << "/" << aoTo
                        << ". Could not establish audio connection");
+        }
+    }
+    // any type
+    else
+    {
+        auto from = connectStartItem->object(),
+                to = connectEndItem->object();
+        if (from && to && connectEndConnectItem)
+        {
+            if (connectEndConnectItem->isParameter())
+            {
+                editor->addModulator(
+                            connectEndConnectItem->parameter(),
+                            from->idName(),
+                            QString::number(connectStartConnectItem->channel()));
+            }
         }
     }
 
@@ -1404,7 +1420,7 @@ namespace {
     // for sorting the insert-object list
     bool sortObjectList_Priority(const Object * o1, const Object * o2)
     {
-        return Object::objectPriority(o1) > Object::objectPriority(o2);
+        return ObjectFactory::objectPriority(o1) > ObjectFactory::objectPriority(o2);
     }
 }
 
@@ -1436,15 +1452,15 @@ QMenu * ObjectGraphScene::Private::createObjectsMenu(
         // sort by priority
         qStableSort(list.begin(), list.end(), sortObjectList_Priority);
 
-        int curprio = Object::objectPriority( list.front() );
+        int curprio = ObjectFactory::objectPriority( list.front() );
         QMenu * sub = new QMenu(menu);
         sub->setTitle(ObjectFactory::objectPriorityName(curprio));
         menu->addMenu(sub);
         for (auto o : list)
         {
-            if (curprio != Object::objectPriority(o))
+            if (curprio != ObjectFactory::objectPriority(o))
             {
-                curprio = Object::objectPriority(o);
+                curprio = ObjectFactory::objectPriority(o);
                 sub = new QMenu(menu);
                 sub->setTitle(ObjectFactory::objectPriorityName(curprio));
                 menu->addMenu(sub);

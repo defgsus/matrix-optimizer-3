@@ -564,7 +564,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     // [So we know which audio objects to process even if they are
     //  not connected to other audio objects]
     for (Modulator * m : all_modulators)
-        if (m->isAudioToFloatConverter())
+        if (m->modulator()->isAudioObject())
             addAudioToModulator(m);
 
 
@@ -618,7 +618,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
         // but modulator-outputs
         // [can be safely added to the back because they don't depend on one another]
         for (Modulator * m : all_modulators)
-            if (m->isAudioToFloatConverter())
+            if (m->modulator()->isAudioObject())
                 // if the graph does not contain it already
                 if (!dspgraph.node(static_cast<AudioObject*>(m->modulator())))
                     audioObjectList << static_cast<AudioObject*>(m->modulator());
@@ -1061,13 +1061,13 @@ void ObjectDspPath::Private::addAudioToModulator(Modulator * m)
     {
         // create new entry
         QSet<uint> cons;
-        cons.insert( m->getAudioOutputChannel() );
+        cons.insert( m->outputChannel() );
         audioToModulator.insert( ao, cons );
     }
     else
     {
         // add to exisiting entry
-        i.value().insert( m->getAudioOutputChannel() );
+        i.value().insert( m->outputChannel() );
     }
 }
 

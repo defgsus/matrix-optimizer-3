@@ -23,9 +23,9 @@ MO_REGISTER_OBJECT(DerivativeObjectFloat)
 
 DerivativeObjectFloat::DerivativeObjectFloat(QObject *parent)
     : Object        (parent)
-
 {
     setName("DerivativeFloat");
+    setNumberOutputs(ST_FLOAT, 1);
 }
 
 void DerivativeObjectFloat::serialize(IO::DataStream & io) const

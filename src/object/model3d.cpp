@@ -61,6 +61,7 @@ Model3d::Model3d(QObject * parent)
       loadedVersion_(0)
 {
     setName("Model3D");
+    initDefaultUpdateMode(UM_ALWAYS, false);
 }
 
 Model3d::~Model3d()
@@ -108,8 +109,8 @@ void Model3d::updateCodeVersion_()
     if (loadedVersion_ < 5)
     {
         QString s = glslLight_->value();
-        s.replace("mo_modify_light(in int index,",
-                  "mo_modify_light(in int index, in vec3 surface_normal,");
+        s.replace("mo_modify_light(in int index, in vec3 light_normal",
+                  "mo_modify_light(in int index, in vec3 surface_normal, in vec3 light_normal");
         glslLight_->setValue(s);
     }
 }

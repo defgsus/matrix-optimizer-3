@@ -109,6 +109,7 @@ SequenceFloat::SequenceFloat(QObject *parent)
 
 {
     setName("SequenceFloat");
+    setNumberOutputs(ST_FLOAT, 1);
 }
 
 SequenceFloat::~SequenceFloat()

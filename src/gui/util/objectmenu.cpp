@@ -33,7 +33,7 @@ namespace
 {
     bool sortObjectList_Priority(const Object * o1, const Object * o2)
     {
-        return Object::objectPriority(o1) > Object::objectPriority(o2);
+        return ObjectFactory::objectPriority(o1) > ObjectFactory::objectPriority(o2);
     }
 }
 
@@ -53,13 +53,13 @@ QMenu * ObjectMenu::createObjectMenu(int objectTypeFlags, QWidget *parent)
     qStableSort(list.begin(), list.end(), sortObjectList_Priority);
 
     QMenu * menu = new QMenu(parent);
-    int curprio = Object::objectPriority( list.front() );
+    int curprio = ObjectFactory::objectPriority( list.front() );
     for (auto o : list)
     {
-        if (curprio != Object::objectPriority(o))
+        if (curprio != ObjectFactory::objectPriority(o))
         {
             menu->addSeparator();
-            curprio = Object::objectPriority(o);
+            curprio = ObjectFactory::objectPriority(o);
         }
 
         QAction * a = new QAction(AppIcons::iconForObject(o), o->name(), parent);
@@ -380,7 +380,7 @@ IconBar * ObjectMenu::createObjectToolBar(int objectTypeFlags, QWidget *parent)
                      o->name(),
                      NewObjectMimeType,
                      o->className().toUtf8(),
-                     ObjectFactory::objectPriorityName(Object::objectPriority(o)));
+                     ObjectFactory::objectPriorityName(ObjectFactory::objectPriority(o)));
     }
 
     bar->finish();

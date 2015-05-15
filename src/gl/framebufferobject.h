@@ -56,6 +56,9 @@ public:
 
     ~FrameBufferObject();
 
+    /** Adds @p num additional color render targets.
+        Must be called before create() */
+    void addColorTextures(uint num);
 
     // ------------- getter ----------------------
 
@@ -64,19 +67,20 @@ public:
     /** If true, the color-texture is a texture cube */
     bool isCubemap() const { return cubemap_; }
 
+    uint width() const;
+    uint height() const;
+    uint numColorTextures() const { return colorTex_.size(); }
+
     /** Returns the associated color texture */
-    const Texture * colorTexture() const { return colorTex_; }
+    const Texture * colorTexture(uint index = 0) const { return colorTex_[index]; }
     /** Returns the associated color texture, or NULL */
     const Texture * depthTexture() const { return depthTex_; }
 
     /** Returns the associated color texture.
         The texture is detached from the fbo and will not be released or used further.
         You need to call create() to make the fbo useable again. */
-    Texture * takeColorTexture();
+    Texture * takeColorTexture(uint index = 0);
     Texture * takeDepthTexture();
-
-    uint width() const;
-    uint height() const;
 
     float aspect() { return float(width()) / std::max(1u, height()); }
 
@@ -102,17 +106,17 @@ public:
     /** Replaces the current color texture with @p t and returns the unused texture.
         @note Error handling is bad here, if something goes wrong the fbo is probably unuseable.
         @note Settings and formats must match and fbo must be bound! */
-    Texture * swapColorTexture(Texture * t);
+    Texture * swapColorTexture(Texture * t, uint index = 0);
 
     /** Attach one of the cubemap textures to the colorbuffer.
         @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].
         Prior, create() must have been successfully called and
         the framebuffer object must be in cubemap mode. */
-    bool attachCubeTexture(gl::GLenum target);
+    bool attachCubeTexture(gl::GLenum target, uint index = 0);
 
     /** Downloads the color texture from the device.
         NOT available for cubemap textures. */
-    bool downloadColorTexture(void * ptr);
+    bool downloadColorTexture(void * ptr, uint index = 0);
     bool downloadDepthTexture(void * ptr);
 
     /** Convenience function sets opengl viewport to (0,0, width, height) */
@@ -125,7 +129,8 @@ private:
 
     ErrorReporting rep_;
 
-    Texture * colorTex_, * depthTex_;
+    std::vector<Texture*> colorTex_;
+    Texture * depthTex_;
 
     gl::GLuint fbo_, rbo_;
 

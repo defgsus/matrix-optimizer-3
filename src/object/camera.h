@@ -87,7 +87,7 @@ public:
     GL::FrameBufferObject * fbo(uint thread) const;
 
     /** Texture output interface */
-    const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
+    const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
     void setOverrideMatrix(const Mat4& m);
     void clearOverrideMatrix() { useOverrideMatrix_ = false; }

@@ -23,6 +23,7 @@ TextObject::TextObject(QObject *parent) :
     Object(parent)
 {
     setName("Text");
+    setNumberOutputs(ST_TEXT, 1);
 }
 
 void TextObject::serialize(IO::DataStream & io) const

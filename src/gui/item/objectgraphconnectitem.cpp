@@ -28,13 +28,15 @@
 namespace MO {
 namespace GUI {
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, uint channel, const QString& toolTip,
+ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, SignalType signal, uint channel,
+                                               const QString& toolTip,
                                                AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
       isInput_              (isInput),
       channel_              (channel),
+      signalType_           (signal),
       param_                (0),
       text_                 (0),
       hovered_              (false),
@@ -52,12 +54,13 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, uint channel, const
     setText(toolTip);
 }
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, Parameter * p, AbstractObjectItem *object)
+ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
-      isInput_              (isInput),
+      isInput_              (true),
       channel_              (0),
+      signalType_           (p->signalType()),
       param_                (p),
       text_                 (0),
       hovered_              (false),
@@ -170,7 +173,7 @@ void ObjectGraphConnectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
 void ObjectGraphConnectItem::mousePressEvent(QGraphicsSceneMouseEvent *)
 {
-    if (qobject_cast<AudioObject*>(objectItem_->object()))
+    //if (qobject_cast<AudioObject*>(objectItem_->object()))
         objectItem_->objectScene()->startConnection(this);
 
     update();

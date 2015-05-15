@@ -98,6 +98,8 @@ TextureObjectBase::TextureObjectBase(QObject *parent)
     , p_to_         (new PrivateTO(this))
 {
     initCreateRenderSettings(false);
+    initDefaultUpdateMode(UM_ON_CHANGE);
+    setNumberOutputs(ST_TEXTURE, 1);
 }
 
 TextureObjectBase::~TextureObjectBase()
@@ -295,7 +297,7 @@ GL::FrameBufferObject * TextureObjectBase::fbo() const
     return p_to_->fbo;
 }
 
-const GL::Texture * TextureObjectBase::valueTexture(Double , uint ) const
+const GL::Texture * TextureObjectBase::valueTexture(uint , Double , uint ) const
 {
     if (p_to_->outputTex)
         return p_to_->outputTex;
@@ -607,7 +609,7 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(uint thread, Double time, int
     gl::glFinish();
 
     // get output texture
-    auto tex = to->valueTexture(time, thread);
+    auto tex = to->valueTexture(0, time, thread);
     if (!tex)
         return;
 

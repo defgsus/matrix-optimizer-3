@@ -13,6 +13,8 @@
 
 #include <QGraphicsItem>
 
+#include "object/object_fwd.h"
+
 namespace MO {
 class Parameter;
 class Object;
@@ -26,9 +28,11 @@ public:
 
     enum { Type = UserType + 2 };
 
-    ObjectGraphConnectItem(bool isInput, uint channel, const QString& toolTip, AbstractObjectItem * parent);
+    ObjectGraphConnectItem(bool isInput, SignalType, uint channel,
+                           const QString& toolTip, AbstractObjectItem * parent);
 
-    ObjectGraphConnectItem(bool isInput, Parameter * , AbstractObjectItem * parent);
+    /** Creates an input for a Parameter */
+    ObjectGraphConnectItem(Parameter * , AbstractObjectItem * parent);
 
     uint channel() const { return channel_; }
 
@@ -41,9 +45,8 @@ public:
 
     bool isInput() const { return isInput_; }
     bool isOutput() const { return !isInput_; }
-
-    bool isAudioConnector() const { return !param_; }
     bool isParameter() const { return param_; }
+    SignalType signalType() const { return signalType_; }
 
     bool isHovered() const { return hovered_; }
 
@@ -73,6 +76,7 @@ private:
 
     bool isInput_;
     uint channel_;
+    SignalType signalType_;
 
     Parameter * param_;
 
