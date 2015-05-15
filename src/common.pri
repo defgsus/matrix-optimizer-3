@@ -313,7 +313,8 @@ HEADERS += \
     src/object/transform/mirrortrans.h \
     src/object/transform/cleartrans.h \
     src/object/texture/randomto.h \
-    src/object/texture/normalmapto.h
+    src/object/texture/normalmapto.h \
+    src/object/texture/lensdistto.h
 
 
 SOURCES += \
@@ -584,7 +585,8 @@ SOURCES += \
     src/object/transform/mirrortrans.cpp \
     src/object/transform/cleartrans.cpp \
     src/object/texture/randomto.cpp \
-    src/object/texture/normalmapto.cpp
+    src/object/texture/normalmapto.cpp \
+    src/object/texture/lensdistto.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

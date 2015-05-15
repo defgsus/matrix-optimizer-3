@@ -1,44 +1,29 @@
-/** @file mixto.h
+/** @file lensdistto.h
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 10.05.2015</p>
+    <p>created 15.05.2015</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_MIXTO_H
-#define MOSRC_OBJECT_TEXTURE_MIXTO_H
+#ifndef MOSRC_OBJECT_TEXTURE_LENSDISTTO_H
+#define MOSRC_OBJECT_TEXTURE_LENSDISTTO_H
+
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
-/** Mixer for multiple channels */
-class MixTO : public TextureObjectBase
+/** Classic lens distorion with chromatic abberation and user function */
+class LensDistTO : public TextureObjectBase
 {
     Q_OBJECT
 public:
 
-    enum CombineFunc
-    {
-        CF_ADD,
-        CF_SUB,
-        CF_MUL,
-        CF_DIV,
-        CF_MIN,
-        CF_MAX
-    };
-    enum ModFunc
-    {
-        MF_NONE,
-        MF_INVERT,
-        MF_INVERT_ALL
-    };
-
-    MO_OBJECT_CONSTRUCTOR(MixTO);
-    ~MixTO();
+    MO_OBJECT_CONSTRUCTOR(LensDistTO);
+    ~LensDistTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -63,4 +48,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_MIXTO_H
+#endif // MOSRC_OBJECT_TEXTURE_LENSDISTTO_H

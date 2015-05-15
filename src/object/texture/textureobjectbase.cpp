@@ -479,6 +479,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     {
         // XXX Should send errors to gui/module somehow
 
+        /// @todo Send compile messages from TextureObjectBase::compileShaderQuad() to caller
+
         // clean-up
         delete quad.quad;
 

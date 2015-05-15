@@ -328,7 +328,6 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
             u_range->setFloats(0.f, tol, th);
         else
             u_range->setFloats(tol, 0.f, th);
-        MO_PRINT(th);
     }
     // color compare
     else

@@ -37,11 +37,15 @@ struct MixTO::Private
     void initGl();
     void releaseGl();
     void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    QString getModSyntax(ModFunc);
 
     MixTO * to;
 
     ParameterSelect
-            * p_func;
+            * p_func,
+            * p_mod1,
+            * p_mod2,
+            * p_keep_alpha;
 };
 
 
@@ -110,6 +114,31 @@ void MixTO::Private::createParameters()
         CF_ADD,
         true, false);
 
+        p_mod1 = to->params()->createSelectParameter("mod1", tr("first argument"),
+        tr("Modifies the first argument to the combination function"),
+        { "asis", "invert", "invertall" },
+        { tr("as is"), tr("invert colors"), tr("invert all") },
+        { tr("No change"), tr("Invert the color channels"), tr("Invert all channels including alpha") },
+        { MF_NONE, MF_INVERT, MF_INVERT_ALL },
+        MF_NONE,
+        true, false);
+
+        p_mod2 = to->params()->createSelectParameter("mod2", tr("second argument"),
+        tr("Modifies the second argument to the combination function"),
+        { "asis", "invert", "invertall" },
+        { tr("as is"), tr("invert colors"), tr("invert all") },
+        { tr("No change"), tr("Invert the color channels"), tr("Invert all channels including alpha") },
+        { MF_NONE, MF_INVERT, MF_INVERT_ALL },
+        MF_NONE,
+        true, false);
+
+        p_keep_alpha = to->params()->createBooleanParameter("keep_alpha", tr("keep alpha"),
+        tr("When selected, the alpha channel of the first input will stay unchanged"),
+        { tr("The alpha channel is combined just like the other channels") },
+        { tr("Alpha stays unchanged") },
+        true,
+        true, false);
+
     to->params()->endParameterGroup();
 }
 
@@ -117,7 +146,10 @@ void MixTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == p_->p_func)
+    if (p == p_->p_func
+        || p == p_->p_mod1
+        || p == p_->p_mod2
+        || p == p_->p_keep_alpha)
         requestReinitGl();
 
     for (auto par : textureParams())
@@ -137,7 +169,17 @@ void MixTO::updateParameterVisibility()
 }
 
 
-
+QString MixTO::Private::getModSyntax(ModFunc t)
+{
+    QString source;
+    switch (t)
+    {
+        case MF_NONE: break;
+        case MF_INVERT: source = "X.rgb = 1. - X.rgb;"; break;
+        case MF_INVERT_ALL: source = "X = 1. - X;"; break;
+    }
+    return source;
+}
 
 void MixTO::Private::initGl()
 {
@@ -151,18 +193,27 @@ void MixTO::Private::initGl()
         src.pasteDefaultIncludes();
         src.addDefine(QString("#define NUM_TEX %1").arg(to->numberTextureInputs()));
 
+        // pase mod functions
+        QString source =  getModSyntax( (ModFunc)p_mod1->baseValue() ),
+                source2 = getModSyntax( (ModFunc)p_mod2->baseValue() );;
+        source.replace("X", "a");
+        source2.replace("X", "b");
+        src.replace("//%mod_func%", "\t" + source + "\n\t" + source2, true);
+
         // paste combine function
-        QString source;
         switch ((CombineFunc)p_func->baseValue())
         {
-            case CF_ADD: source = "return a + b;"; break;
-            case CF_SUB: source = "return a - b;"; break;
-            case CF_MUL: source = "return a * b;"; break;
-            case CF_DIV: source = "return a / b;"; break;
-            case CF_MIN: source = "return min(a, b);"; break;
-            case CF_MAX: source = "return max(a, b);"; break;
+            case CF_ADD: source = "c = a + b;"; break;
+            case CF_SUB: source = "c = a - b;"; break;
+            case CF_MUL: source = "c = a * b;"; break;
+            case CF_DIV: source = "c = a / b;"; break;
+            case CF_MIN: source = "c = min(a, b);"; break;
+            case CF_MAX: source = "c = max(a, b);"; break;
         }
         src.replace("//%combine_func%", "\t" + source, true);
+
+        if (p_keep_alpha->baseValue())
+            src.replace("//%restore_func%", "\tc.a = pa.a;\n");
 
         // create calls for each additional texture input
         source.clear();
@@ -170,6 +221,8 @@ void MixTO::Private::initGl()
             if (to->hasTextureInput(i))
                 source += QString("\tPROC_LAYER(%1);\n").arg(i);
         src.replace("//%call_func%", source);
+
+        MO_PRINT(src.fragmentSource());
 
     }
     catch (Exception& )

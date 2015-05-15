@@ -13,7 +13,12 @@ uniform sampler2D   u_tex_7;
 
 vec4 combine_layer(in int layer, in vec4 a, in vec4 b)
 {
+    vec4 pa = a;
+//%mod_func%
+    vec4 c;
 //%combine_func%
+//%restore_func%
+    return c;
 }
 
 void main(void)
