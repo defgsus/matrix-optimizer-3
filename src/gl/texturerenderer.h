@@ -49,7 +49,7 @@ public:
 private:
 
     FrameBufferObject * fbo_;
-    ScreenQuad * quad_;
+    ScreenQuad * quad_, * fquad_;
     ErrorReporting rep_;
     uint w_, h_;
 };

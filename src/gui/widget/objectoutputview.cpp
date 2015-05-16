@@ -47,6 +47,12 @@ void ObjectOutputView::setObject(Object * o)
     updateLabels_();
 }
 
+void ObjectOutputView::updateObject()
+{
+    if (object_)
+        updateLabels_();
+}
+
 void ObjectOutputView::createWidgets_()
 {
     auto l0 = new QHBoxLayout(this);
@@ -57,6 +63,8 @@ void ObjectOutputView::createWidgets_()
         l0->addWidget(l);
         labels_ << l;
     }
+
+    l0->addStretch(2);
 }
 
 void ObjectOutputView::updateLabels_()

@@ -40,7 +40,8 @@ public slots:
 
     /** Assigns the object to view, or NULL */
     void setObject(Object *);
-
+    /** Update the view with assigned object */
+    void updateObject();
 private:
 
     void createWidgets_();

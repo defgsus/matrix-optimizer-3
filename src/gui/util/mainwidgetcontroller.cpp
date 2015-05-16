@@ -190,6 +190,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(valueFloatChanged(MO::ValueFloatInterface*)), this, SLOT(onValueFloatChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onParamChanged_()));
     connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
     {
@@ -913,6 +914,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     objectGraphView_->setRootObject(scene_);
     objectView_->setObject(0);
+    objectOutputView()->setObject(0);
 
     seqView_->setScene(scene_);
     seqView_->setNothing();
@@ -1328,6 +1330,13 @@ void MainWidgetController::onParamVisChanged_()
     frontItemEditor_->setItem(0);
     if (scene_)
         frontScene_->setRootObject(scene_);
+}
+
+void MainWidgetController::onParamChanged_()
+{
+    // Most stuff is handled by the views themselves
+
+    objectOutputView()->updateObject();
 }
 
 void MainWidgetController::onSceneChanged_()

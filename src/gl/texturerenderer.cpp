@@ -22,6 +22,7 @@ namespace GL {
 TextureRenderer::TextureRenderer(uint w, uint h, ErrorReporting rep)
     : fbo_      (0),
       quad_     (0),
+      fquad_    (0),
       rep_      (rep),
       w_        (w),
       h_        (h)
@@ -30,6 +31,7 @@ TextureRenderer::TextureRenderer(uint w, uint h, ErrorReporting rep)
 
 TextureRenderer::~TextureRenderer()
 {
+    delete fquad_;
     delete quad_;
     delete fbo_;
 }
@@ -71,14 +73,26 @@ bool TextureRenderer::createGl()
 
     // create quad instance
     if (!quad_)
-    {
         quad_ = new ScreenQuad("texrender", rep_);
-    }
 
     // create opengl object
     if (!quad_->isCreated())
     {
-        if (!quad_->create())
+        if (!quad_->create("#define MO_ANTIALIAS 4"))
+        {
+            releaseGl();
+            return false;
+        }
+    }
+
+    // create quad instance
+    if (!fquad_)
+        fquad_ = new ScreenQuad("ftexrender", rep_);
+
+    // create opengl object
+    if (!fquad_->isCreated())
+    {
+        if (!fquad_->create("#define MO_ANTIALIAS 4\n#define MO_FULLDOME_CUBE"))
         {
             releaseGl();
             return false;
@@ -90,6 +104,11 @@ bool TextureRenderer::createGl()
 
 void TextureRenderer::releaseGl()
 {
+    if (fquad_ && fquad_->isCreated())
+        fquad_->release();
+    delete fquad_;
+    fquad_ = 0;
+
     if (quad_ && quad_->isCreated())
         quad_->release();
     delete quad_;
@@ -121,8 +140,10 @@ bool TextureRenderer::render(const Texture * tex, bool bindTexture)
 
     // prepare fbo
     fbo_->setViewport();
-    MO_CHECK_GL( glClearColor(1, 0, 1, 1.0) );
+    MO_CHECK_GL( glClearColor(0, 0, 0, 1) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    MO_CHECK_GL( glEnable(GL_BLEND) );
+    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     // bind texture
     if (bindTexture)
@@ -143,12 +164,14 @@ bool TextureRenderer::render(const Texture * tex, bool bindTexture)
     tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
     // render quad
-    if (!quad_->draw(w_, h_))
-        return false;
-
+    bool r;
+    if (tex->isCube())
+        r = fquad_->draw(w_, h_);
+    else
+        r = quad_->draw(w_, h_);
 
     fbo_->unbind();
-    return true;
+    return r;
 }
 
 } // namespace GL

@@ -40,6 +40,8 @@ MO_REGISTER_OBJECT(Camera)
 
 Camera::Camera(QObject *parent)
     : ObjectGl              (parent)
+    , fbo_                  (0)
+    , screenQuad_           (0)
     , renderMode_           (RM_FULLDOME_CUBE)
     , alphaBlend_           (this)
     , useOverrideMatrix_    (false)
@@ -54,10 +56,8 @@ Camera::Camera(QObject *parent)
 
 Camera::~Camera()
 {
-    for (auto i : fbo_)
-        delete i;
-    for (auto i : screenQuad_)
-        delete i;
+    delete fbo_;
+    delete screenQuad_;
 }
 
 void Camera::serialize(IO::DataStream & io) const
@@ -235,19 +235,9 @@ void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);
 
-    uint oldnum = fbo_.size();
-
-    fbo_.resize(num);
-    screenQuad_.resize(num);
-
-    for (uint i=oldnum; i<num; ++i)
-    {
-        fbo_[i] = 0;
-        screenQuad_[i] = 0;
-    }
 }
 
-void Camera::initGl(uint thread)
+void Camera::initGl(uint )
 {
     const Scene * scene = sceneObject();
     MO_ASSERT(scene, "Camera::initGl() without scene object");
@@ -302,8 +292,8 @@ void Camera::initGl(uint thread)
     if (sliced)
         defines += "\n#define MO_BLEND_TEXTURE";
 
-    screenQuad_[thread] = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
-    screenQuad_[thread]->create(
+    screenQuad_ = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
+    screenQuad_->create(
                 ":/shader/framebuffercamera.vert",
                 ":/shader/framebuffercamera.frag",
                 defines,
@@ -311,21 +301,21 @@ void Camera::initGl(uint thread)
 
     // uniforms
 
-    uColor_ = screenQuad_[thread]->shader()->getUniform("u_color", true);
+    uColor_ = screenQuad_->shader()->getUniform("u_color", true);
     uColor_->setFloats(1,1,1,1);
     if (cubeMapped)
-        uAngle_ = screenQuad_[thread]->shader()->getUniform("u_angle", true);
+        uAngle_ = screenQuad_->shader()->getUniform("u_angle", true);
 
     // set edgeblend-texture slot
     if (sliced)
     {
-        auto btex = screenQuad_[thread]->shader()->getUniform("tex_blend", true);
+        auto btex = screenQuad_->shader()->getUniform("tex_blend", true);
         btex->ints[0] = 1;
     }
 
     // create framebuffer
 
-    fbo_[thread] = new GL::FrameBufferObject(
+    fbo_ = new GL::FrameBufferObject(
                 width,
                 height,
                 gl::GLenum(scene->frameBufferFormat()),
@@ -333,10 +323,10 @@ void Camera::initGl(uint thread)
                 GL::FrameBufferObject::A_DEPTH,
                 cubeMapped,
                 GL::ER_THROW);
-    fbo_[thread]->setName(name());
+    fbo_->setName(name());
 
-    fbo_[thread]->create();
-    fbo_[thread]->unbind();
+    fbo_->create();
+    fbo_->unbind();
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
@@ -353,24 +343,26 @@ void Camera::initGl(uint thread)
         emit sceneObject()->CameraFboChanged(this);
 }
 
-void Camera::releaseGl(uint thread)
+void Camera::releaseGl(uint )
 {
     if (blendTexture_)
         blendTexture_->release();
     blendTexture_ = 0;
 
-    screenQuad_[thread]->release();
-    delete screenQuad_[thread];
-    screenQuad_[thread] = 0;
+    if (screenQuad_)
+        screenQuad_->release();
+    delete screenQuad_;
+    screenQuad_ = 0;
 
-    fbo_[thread]->release();
-    delete fbo_[thread];
-    fbo_[thread] = 0;
+    if (fbo_)
+        fbo_->release();
+    delete fbo_;
+    fbo_ = 0;
 }
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
 {
-    cam.setSize(fbo_[thread]->width(), fbo_[thread]->height());
+    cam.setSize(fbo_->width(), fbo_->height());
 
     const Float
             near = p_near_->value(time, thread),
@@ -489,24 +481,23 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
 
 void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 {
-    GL::FrameBufferObject * fbo = fbo_[thread];
-    fbo->bind();
+    fbo_->bind();
 
     // attach each cubemap texture
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         switch (cubeMapIndex)
         {
-            case 0:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
-            case 1:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
-            case 2:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
-            case 3:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
-            case 4:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
-            default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
+            case 0:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
+            case 1:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
+            case 2:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
+            case 3:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
+            case 4:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
+            default: fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
         }
     }
 
-    MO_CHECK_GL( glViewport(0, 0, fbo->width(), fbo->height()) );
+    MO_CHECK_GL( glViewport(0, 0, fbo_->width(), fbo_->height()) );
 
     // --- set default render state ---
 
@@ -521,41 +512,31 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
                               p_backA_->value(time, thread)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
-    fbo_[thread]->setChanged();
+    fbo_->setChanged();
 
 }
 
-void Camera::finishGlFrame(uint thread, Double)
+void Camera::finishGlFrame(uint , Double)
 {
-    fbo_[thread]->unbind();
+    fbo_->unbind();
 }
 
-GL::FrameBufferObject * Camera::fbo(uint thread) const
+/** @todo this is interface is to be removed in favour for valueTexture() */
+GL::FrameBufferObject * Camera::fbo() const
 {
-    if (thread < fbo_.size())
-    {
-        if (!fbo_[thread])
-            MO_WARNING("request for camera fbo [" << thread << "], but fbo is not created yet");
-        return fbo_[thread];
-    }
-    else
-    {
-        MO_WARNING("request for camera framebuffer[" << thread << "] "
-                   "is out of range (" << fbo_.size() << ")");
+    if (!fbo_)
+        MO_WARNING("request for camera fbo but fbo is not created yet");
+    return fbo_;
+}
+
+const GL::Texture * Camera::valueTexture(uint channel, Double , uint ) const
+{
+    if (!fbo_)
         return 0;
-    }
-}
-
-const GL::Texture * Camera::valueTexture(uint channel, Double , uint thread) const
-{
-    if (thread < fbo_.size() && fbo_[thread])
-    {
-        if (channel == 0)
-            return fbo_[thread]->colorTexture();
-        else
-            return fbo_[thread]->depthTexture();
-    }
-    return 0;
+    if (channel == 1)
+        return fbo_->depthTexture();
+    else
+        return fbo_->colorTexture();
 }
 
 
@@ -574,7 +555,7 @@ void Camera::drawFramebuffer(uint thread, Double time)
     // -- render camera frame onto current context --
 
     // camera's framebuffer
-    GL::FrameBufferObject * fbo = fbo_[thread];
+    GL::FrameBufferObject * fbo = fbo_;
 
     // final framebuffer
     const GL::FrameBufferObject
@@ -609,9 +590,9 @@ void Camera::drawFramebuffer(uint thread, Double time)
     /** @todo hack to stretch into projector slice -
         for some very unknown reason the size was off on Hamburg clients... */
     if (isClient() && renderMode() == RM_PROJECTOR_SLICE)
-        screenQuad_[thread]->draw(scenefbo->width(), scenefbo->height());
+        screenQuad_->draw(scenefbo->width(), scenefbo->height());
     else
-        screenQuad_[thread]->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
+        screenQuad_->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
 
 }
 

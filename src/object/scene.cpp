@@ -976,7 +976,7 @@ GL::FrameBufferObject * Scene::fboMaster(uint thread) const
         return 0;
 }
 
-GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
+GL::FrameBufferObject * Scene::fboCamera(uint , uint camera_index) const
 {
     if ((int)camera_index >= cameras_.size())
     {
@@ -984,7 +984,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint thread, uint camera_index) const
                    << " is out of range (" << cameras_.size() << ")");
         return 0;
     }
-    return cameras_[camera_index]->fbo(thread);
+    return cameras_[camera_index]->fbo();
 }
 
 

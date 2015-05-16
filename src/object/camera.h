@@ -84,7 +84,7 @@ public:
     void drawFramebuffer(uint thread, Double time);
 
     /** Returns the framebuffer on which the camera renders, or NULL */
-    GL::FrameBufferObject * fbo(uint thread) const;
+    GL::FrameBufferObject * fbo() const;
 
     /** Texture output interface */
     const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
@@ -103,10 +103,9 @@ private:
 
     void updateFboSize_();
 
-    //std::vector<std::vector<Mat4>> projection_;
-    std::vector<GL::FrameBufferObject*> fbo_;
+    GL::FrameBufferObject* fbo_;
 
-    std::vector<GL::ScreenQuad*> screenQuad_;
+    GL::ScreenQuad* screenQuad_;
 
     ParameterFloat * p_cameraMix_,
         *p_cameraAngle_, *p_cameraFdAngle_,
