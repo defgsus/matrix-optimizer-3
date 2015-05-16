@@ -112,7 +112,8 @@ HEADERS += \
     src/gui/wavetracerdialog.h \
     src/gui/widget/cameracontrolwidget.h \
     src/gui/widget/audiopluginwidget.h \
-    src/gui/audioplugindialog.h
+    src/gui/audioplugindialog.h \
+    src/gui/widget/objectoutputview.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -224,4 +225,5 @@ SOURCES += \
     src/gui/wavetracerdialog.cpp \
     src/gui/widget/cameracontrolwidget.cpp \
     src/gui/widget/audiopluginwidget.cpp \
-    src/gui/audioplugindialog.cpp
+    src/gui/audioplugindialog.cpp \
+    src/gui/widget/objectoutputview.cpp

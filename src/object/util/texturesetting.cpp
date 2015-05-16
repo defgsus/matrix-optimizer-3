@@ -470,24 +470,5 @@ bool TextureSetting::bind(uint slot)
     return r;
 }
 
-void TextureSetting::unbind(uint slot)
-{
-    if (paramType_->baseValue() == TEX_NONE)
-        return;
-
-    if (constTexture_)
-    {
-        // set active slot
-        slot += uint(GL_TEXTURE0);
-        GLint act;
-        MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
-        if ((GLint)slot != act)
-            MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
-
-        // set back
-        if ((GLint)slot != act)
-            MO_CHECK_GL( glActiveTexture(GLenum(act)) );
-    }
-}
 
 } // namespace MO

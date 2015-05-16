@@ -108,11 +108,9 @@ public:
         leads to undefined behaviour. */
     void releaseGl();
 
-    /** Binds the texture to the active slot.
+    /** Binds the texture to the given slot.
         Does nothing if type is TT_NONE */
     bool bind(uint slot = 0);
-    /** Does nothing if type is TT_NONE */
-    void unbind(uint slot = 0);
 
 protected slots:
 

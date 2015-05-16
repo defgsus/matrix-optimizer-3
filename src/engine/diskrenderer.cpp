@@ -453,7 +453,7 @@ bool DiskRenderer::Private::writeImage()
         gl::glFinish();
 
         fbo->colorTexture()->bind();
-        tempImage = fbo->colorTexture()->getImage();
+        tempImage = fbo->colorTexture()->toQImage();
         if (tempImage.isNull())
             return false;
 

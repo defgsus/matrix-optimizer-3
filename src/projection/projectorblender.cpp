@@ -274,7 +274,7 @@ void ProjectorBlender::Private::exportMaps(const QString &directory)
 
         // export via QImage
 
-        QImage img = fbo.colorTexture()->getImage();
+        QImage img = fbo.colorTexture()->toQImage();
 
         QFileInfo fi(QDir(directory), QString("edgemap_%1.png").arg(i));
         if (!img.save(fi.absoluteFilePath()))

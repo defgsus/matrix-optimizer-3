@@ -28,6 +28,7 @@
 #include "gui/objectgraphview.h"
 #include "gui/frontview.h"
 #include "gui/frontitemeditor.h"
+#include "gui/widget/objectoutputview.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
@@ -164,6 +165,9 @@ void MainWindow::createDockWidgets_()
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);

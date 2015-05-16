@@ -596,7 +596,7 @@ QString Texture::info_str() const
 */
 
 
-QImage Texture::getImage() const
+QImage Texture::toQImage() const
 {
     MO_DEBUG_IMG("Texture::getImage()");
 

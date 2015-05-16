@@ -49,6 +49,7 @@ class FrontScene;
 class FrontView;
 class FrontItemEditor;
 class RecentFiles;
+class ObjectOutputView;
 
 class MainWidgetController : public QObject
 {
@@ -75,6 +76,7 @@ public:
     FrontView * frontView() const { return frontView_; }
     FrontItemEditor * frontItemEditor() const { return frontItemEditor_; }
     SequenceView * sequenceView() const { return seqView_; }
+    ObjectOutputView * objectOutputView() const { return objectOutputView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerView * serverView() const { return serverView_; }
@@ -227,6 +229,7 @@ private:
     FrontScene * frontScene_;
     FrontView * frontView_;
     FrontItemEditor * frontItemEditor_;
+    ObjectOutputView * objectOutputView_;
 
     TransportWidget * transportWidget_;
 

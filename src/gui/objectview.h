@@ -20,6 +20,7 @@ class QLabel;
 namespace MO {
 class Object;
 class Parameter;
+namespace GL { class TextureRenderer; }
 namespace GUI {
 
 class ParameterView;
@@ -30,6 +31,7 @@ class ObjectView : public QWidget
     Q_OBJECT
 public:
     explicit ObjectView(QWidget *parent = 0);
+    ~ObjectView();
 
     /** The currently edited object */
     Object * object() const { return object_; }
@@ -64,6 +66,9 @@ public slots:
 
     void updateObjectName();
 
+    /** Update texture display */
+    void updateImage();
+
 protected slots:
 
     void infoPopup_();
@@ -80,10 +85,11 @@ private:
 
     Object * object_;
 
+    GL::TextureRenderer * texRender_;
     ParameterView * paramView_;
     QVBoxLayout * layout_;
     QToolButton * icon_;
-    QLabel * label_, *label2_;
+    QLabel * label_, *label2_, *labelImg_;
     ObjectListWidget * list_;
 };
 

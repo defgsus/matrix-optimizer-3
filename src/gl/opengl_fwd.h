@@ -36,6 +36,7 @@ namespace GL {
     class Shader;
     class ShaderSource;
     class Texture;
+    class TextureRenderer;
     class Uniform;
     class VertexArrayObject;
     class Window;

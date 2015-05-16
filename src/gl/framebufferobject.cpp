@@ -145,9 +145,8 @@ uint FrameBufferObject::height() const
 
 void FrameBufferObject::setViewport() const
 {
-    int pixelsize = 1; //devicePixelRatio(); // Retina support
     MO_DEBUG_GL("FrameBufferObject::setViewport()")
-    MO_CHECK_GL_COND(rep_, glViewport(0,0, width()*pixelsize, height()*pixelsize) );
+    MO_CHECK_GL_COND(rep_, glViewport(0,0, width(), height()) );
 }
 
 

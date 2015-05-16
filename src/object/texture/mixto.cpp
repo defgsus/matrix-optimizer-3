@@ -222,8 +222,7 @@ void MixTO::Private::initGl()
                 source += QString("\tPROC_LAYER(%1);\n").arg(i);
         src.replace("//%call_func%", source);
 
-        MO_PRINT(src.fragmentSource());
-
+        //MO_PRINT(src.fragmentSource());
     }
     catch (Exception& )
     {

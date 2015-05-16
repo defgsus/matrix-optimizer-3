@@ -54,6 +54,7 @@
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
 #include "gui/scenedescdialog.h"
+#include "gui/widget/objectoutputview.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
 #   include "engine/serverengine.h"
@@ -292,6 +293,9 @@ void MainWidgetController::createObjects_()
             this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
 
     glWindow_->show();
+
+    // object output view
+    objectOutputView_ = new ObjectOutputView(window_);
 
     // sysinfo at some interval
     sysInfoTimer_ = new QTimer(this);
@@ -1002,6 +1006,7 @@ void MainWidgetController::onObjectAdded_(Object * o)
     updateSequenceView_(o);
     objectGraphView()->setFocusObject(o);
     objectView()->setObject(o);
+    objectOutputView()->setObject(o);
 
     onSceneChanged_();
 }
@@ -1010,14 +1015,14 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
 {
     // update clipview
     clipView_->removeObject(o);
-    objectView_->setObject(0);
+
+    // XXX refine this!
+    objectView()->setObject(0);
+    objectOutputView()->setObject(0);
     sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
 
     onSceneChanged_();
-
-    // XXX refine this!
-    //updateSequenceView_(0);
 }
 
 void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
@@ -1027,8 +1032,8 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
         clipView_->removeObject(o);
 
     // XXX refine this!
-    //updateSequenceView_(0);
-    objectView_->setObject(0);
+    objectView()->setObject(0);
+    objectOutputView()->setObject(0);
     sequenceView()->setNothing();
     sequencer()->setCurrentObject(0);
 
@@ -1199,6 +1204,7 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
 
     // update object editor
     objectView_->setObject(o);
+    objectOutputView()->setObject(o);
 
     if (!o)
     {
@@ -1269,6 +1275,9 @@ void MainWidgetController::onObjectSelectedObjectView_(Object * o)
     {
         showClipView_(true, o);
     }
+
+    objectOutputView()->setObject(o);
+
 /*
     // update sequencer
     else
@@ -1292,6 +1301,7 @@ void MainWidgetController::onObjectSelectedSequencer_(Sequence * o)
     // jump to sequence in tree view
     objectGraphView()->setFocusObject(o);
     objectView()->selectObject(o);
+    objectOutputView()->setObject(o);
     // show sequence
     updateSequenceView_(o);
 }
@@ -1309,6 +1319,7 @@ void MainWidgetController::onSequenceClicked_()
 
     objectGraphView()->setFocusObject(obj);
     objectView()->selectObject(obj);
+    objectOutputView()->setObject(obj);
 }
 
 void MainWidgetController::onParamVisChanged_()
