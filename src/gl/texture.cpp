@@ -732,8 +732,11 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
     }
 
     // determine texture format from image format
-
+#if QT_VERSION >= 0x050200
     GLenum iformat = GL_RGBA;
+#else
+    GLenum iformat = GL_RGB;
+#endif
     GLenum itype = GL_UNSIGNED_BYTE;
 
     // create and bind
@@ -753,9 +756,15 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
     {
         const QImage * pimg = &img;
         QImage cpy;
-        if (img.format() != QImage::Format_RGBA8888)
+
+#if QT_VERSION >= 0x050200
+        QImage::Format fmt = QImage::Format_RGBA8888;
+#else
+        QImage::Format fmt = QImage::Format_RGB888;
+#endif
+        if (img.format() != fmt)
         {
-            cpy = img.convertToFormat(QImage::Format_RGBA8888);
+            cpy = img.convertToFormat(fmt);
             pimg = &cpy;
         }
 

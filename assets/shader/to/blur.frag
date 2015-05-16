@@ -19,7 +19,7 @@ void main()
 {
     float sigma = u_size_sigma.y,
           size = u_size_sigma.x,
-          sum;
+          sum = 0.;
 
 #if USE_MASK
     sigma = max(0.001,
