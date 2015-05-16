@@ -379,6 +379,7 @@ void Drawable::renderShader(const Mat4 &proj,
         vao_->drawElements(drawType_);
     else*/
 
+    if (vao_->isCreated())
         vao_->drawElements(instanceCount);
 
     //MO_DEBUG("Drawable('" << name_ << "') drawn");

@@ -61,6 +61,8 @@ bool VertexArrayObject::create()
         return false;
     }
 
+    clear();
+
     GLenum e;
     MO_CHECK_GL_RET_COND(rep_, glGenVertexArrays(1, &vao_), e );
     if (e != GL_NO_ERROR) return false;
@@ -76,6 +78,11 @@ void VertexArrayObject::release()
     MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
     vao_ = invalidGl;
 
+    clear();
+}
+
+void VertexArrayObject::clear()
+{
     for (auto &b : buffers_)
     {
         b.second.buf->release();
@@ -209,6 +216,8 @@ BufferObject * VertexArrayObject::createIndexBuffer(
     buffer.valueType = valueType;
     buffer.numVertices = numberVertices;
     buffer.primitiveType = primitiveType;
+    buffer.attribute = 0;
+    buffer.attribLocation = 0;
     elementBuffers_.push_back(buffer);
 
     // all ok, don't delete the buffer

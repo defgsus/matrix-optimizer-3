@@ -213,11 +213,6 @@ void main()
     // set final vertex position
     gl_Position = mo_ftransform(vertex_pos);
 
-    // attributes that might be modified by user code
-#ifdef MO_ENABLE_VERTEX_OVERRIDE
-    mo_modify_vertex_output();
-#endif
-
     // ------------------- standard vertex stage ----------------
 #else
 
@@ -234,11 +229,6 @@ void main()
 
     // set final vertex position
     gl_Position = mo_ftransform(a_position);
-
-    // attributes that might be modified by user code
-#ifdef MO_ENABLE_VERTEX_OVERRIDE
-    mo_modify_vertex_output();
-#endif
 
 #endif // !MO_ENABLE_BILLBOARD
 
@@ -293,6 +283,11 @@ void main()
     float di = length(gl_Position.xyz);
     float difac = 1. / (1. + u_pointsize_dist.z * di);
     gl_PointSize = u_pointsize_dist.x + difac * u_pointsize_dist.y;
+#endif
+
+    // attributes that might be modified by user code
+#ifdef MO_ENABLE_VERTEX_OVERRIDE
+    mo_modify_vertex_output();
 #endif
 
 }

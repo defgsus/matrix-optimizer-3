@@ -340,10 +340,16 @@ void GeometryFactory::createPointGrid(Geometry * g, int sizeX, int sizeY, int si
     sizeY = std::max(1, sizeY);
     sizeZ = std::max(1, sizeZ);
 
+    if (sizeX == 1 && sizeY == 1 && sizeZ == 1)
+    {
+        g->addPoint( g->addVertex(0.f, 0.f, 0.f) );
+        return;
+    }
+
     const Float
-            ox = (Float)sizeX / 2 - 0.5,
-            oy = (Float)sizeY / 2 - 0.5,
-            oz = (Float)sizeZ / 2 - 0.5;
+            ox = (Float)sizeX / 2.f - 0.5f,
+            oy = (Float)sizeY / 2.f - 0.5f,
+            oz = (Float)sizeZ / 2.f - 0.5f;
 
     for (int z=0; z<sizeZ; ++z)
     for (int y=0; y<sizeY; ++y)

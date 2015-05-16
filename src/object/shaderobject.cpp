@@ -36,6 +36,7 @@ MO_REGISTER_OBJECT(ShaderObject)
 
 ShaderObject::ShaderObject(QObject *parent)
     : ObjectGl      (parent)
+    , fbo_          (0)
     , swapTex_      (0)
     , alphaBlend_   (this)
     , userUniforms_ (new UserUniformSetting(this))

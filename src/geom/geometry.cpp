@@ -895,6 +895,27 @@ void Geometry::unGroupVertices()
             addLine(t1, t2);
         }
     }
+
+    if (numPoints())
+    {
+        auto index = pointIndex_;
+        pointIndex_.clear();
+
+        // for each previous point..
+        for (uint i=0; i<index.size(); ++i)
+        {
+            IndexType
+                i1 = index[i],
+
+                t1 = addVertex(vertex[i1*3], vertex[i1*3+1], vertex[i1*3+2],
+                               normal[i1*3], normal[i1*3+1], normal[i1*3+2],
+                               color[i1*4], color[i1*4+1], color[i1*4+2], color[i1*4+3],
+                               texcoord[i1*2], texcoord[i1*2+1]);
+
+            // .. create a new unique point
+            addPoint(t1);
+        }
+    }
 }
 
 void Geometry::convertToLines()
@@ -1902,6 +1923,9 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
     // --- color ---
     if (auto a = s->getAttribute(s->source()->attribNameColor()))
     {
+        MO_ASSERT(color_.size() >= numVertices() * numColorComponents(),
+                  color_.size() << " >= " << numVertices() << " * " << numColorComponents());
+
         vao->createAttribBuffer(GL::VertexArrayObject::A_COLOR,
                                 a->location(),
                                 colorEnum, numColorComponents(),
@@ -1912,6 +1936,9 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
     // --- normal ---
     if (auto a = s->getAttribute(s->source()->attribNameNormal()))
     {
+        MO_ASSERT(normal_.size() >= numVertices() * numNormalComponents(),
+                  normal_.size() << " >= " << numVertices() << " * " << numNormalComponents());
+
         vao->createAttribBuffer(GL::VertexArrayObject::A_NORMAL,
                                 a->location(),
                                 normalEnum, numNormalComponents(),
@@ -1922,6 +1949,9 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
     // --- texcoord ---
     if (auto a = s->getAttribute(s->source()->attribNameTexCoord()))
     {
+        MO_ASSERT(texcoord_.size() >= numVertices() * numTextureCoordComponents(),
+                  texcoord_.size() << " >= " << numVertices() << " * " << numTextureCoordComponents());
+
         vao->createAttribBuffer(GL::VertexArrayObject::A_TEX_COORD,
                                 a->location(),
                                 textureCoordEnum, numTextureCoordComponents(),
@@ -1946,21 +1976,31 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
 
     // --- indices ---
     if (numTriangles())
+    {
+        MO_ASSERT(numVertices(), "");
         vao->createIndexBuffer(GL_TRIANGLES,
                                indexEnum,
                                numTriangles() * numTriangleIndexComponents(),
                                triangleIndices());
+    }
+
     if (numLines())
+    {
+        MO_ASSERT(numVertices(), "");
         vao->createIndexBuffer(GL_LINES,
                                indexEnum,
                                numLines() * numLineIndexComponents(),
                                lineIndices());
+    }
 
     if (numPoints())
+    {
+        MO_ASSERT(numVertices(), "");
         vao->createIndexBuffer(GL_POINTS,
                                indexEnum,
                                numPoints(),
                                pointIndices());
+    }
 
     vao->unbind();
 }

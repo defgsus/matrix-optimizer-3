@@ -1048,7 +1048,7 @@ UdpAudioConnection * ObjectDspPath::Private::getUdpOutput()
 
 void ObjectDspPath::Private::addAudioToModulator(Modulator * m)
 {
-    MO_ASSERT(m->isAudioToFloatConverter(), "");
+    MO_ASSERT(m->modulator() && m->modulator()->isAudioObject(), "");
     AudioObject * ao = static_cast<AudioObject*>(m->modulator());
     if (!ao)
     {

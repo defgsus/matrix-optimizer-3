@@ -60,6 +60,7 @@ public:
     bool create();
     /** Releases the vertex array object and all buffers */
     void release();
+    void clear();
 
     /** Binds the vertex array object (not needed for the draw methods) */
     bool bind();
