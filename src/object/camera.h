@@ -125,7 +125,8 @@ private:
 
     Mat4 sliceMatrix_, overrideMatrix_;
     bool useOverrideMatrix_, wildcardChanged_;
-    mutable Mat4 cheat_;
+    mutable std::vector<Mat4> cheat_;
+    Double overrideMatrixTime_;
 
     GL::Texture * blendTexture_;
 };

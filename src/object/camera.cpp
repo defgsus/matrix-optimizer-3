@@ -235,6 +235,7 @@ void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);
 
+    cheat_.resize(num);
 }
 
 void Camera::initGl(uint )
@@ -455,6 +456,7 @@ const Mat4& Camera::cameraViewMatrix(uint index) const
 void Camera::setOverrideMatrix(const Mat4 &m)
 {
     overrideMatrix_ = m;
+    //overrideMatrixTime_ = time;
     useOverrideMatrix_ = true;
 }
 
@@ -463,18 +465,32 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
     if (useOverrideMatrix_)
     {
         // XXX Just for the moment...
+
+        Float inc = 1.f / 10.f;
         if (thread == MO_AUDIO_THREAD)
-        {
-            cheat_ += 0.001f * (overrideMatrix_ - cheat_);
-            matrix = cheat_;
-        }
-        else
-            matrix = overrideMatrix_;
+            inc = 6.f*sampleRateInv();
+
+        cheat_[thread] += inc * (overrideMatrix_ - cheat_[thread]);
+
+        Vec3 v = glm::normalize(Vec3(cheat_[thread][0]));
+        cheat_[thread][0].x = v.x;
+        cheat_[thread][0].y = v.y;
+        cheat_[thread][0].z = v.z;
+        v = glm::normalize(Vec3(cheat_[thread][1]));
+        cheat_[thread][1].x = v.x;
+        cheat_[thread][1].y = v.y;
+        cheat_[thread][1].z = v.z;
+        v = glm::normalize(Vec3(cheat_[thread][2]));
+        cheat_[thread][2].x = v.x;
+        cheat_[thread][2].y = v.y;
+        cheat_[thread][2].z = v.z;
+
+        matrix = cheat_[thread];
     }
     else
     {
         Object::calculateTransformation(matrix, time, thread);
-        cheat_ = matrix;
+        cheat_[thread] = matrix;
     }
 }
 
