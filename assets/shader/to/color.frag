@@ -6,10 +6,14 @@ uniform sampler2D   u_tex;
 uniform vec4        u_color;
 uniform vec3        u_hsv;
 uniform vec3        u_gamma_exp;
+uniform int         u_invert;
 
 void main(void)
 {
     vec4 col = texture(u_tex, v_texCoord.xy);
+
+    if (u_invert > 0)
+        col.xyz = 1. - col.xyz;
 
     // hsv
     vec3 hsv = rgb2hsv(col.xyz);
@@ -25,5 +29,5 @@ void main(void)
     // gamma
     col.xyz = pow(col.xyz, u_gamma_exp) * u_hsv.z;
 
-    fragColor = col;
+    fragColor = mo_color_range(col);
 }

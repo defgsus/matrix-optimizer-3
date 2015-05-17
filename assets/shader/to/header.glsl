@@ -20,5 +20,12 @@ out         vec4        fragColor;
 
 uniform     float       u_time;
 uniform     vec4        u_resolution;       // <xres,yres,1/xres,1/yres>
+uniform     vec4        u_color_range_min;
+uniform     vec4        u_color_range_max;
+
+vec4 mo_color_range(in vec4 c)
+{
+    return max(u_color_range_min, min(u_color_range_max, c ));
+}
 
 #endif

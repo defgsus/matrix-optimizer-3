@@ -66,6 +66,9 @@ protected:
     /** Calls this in constructor to provide a hint for the maximum number
         of texture inputs. Default is 0 */
     void initMaximumTextureInputs(uint num);
+    /** Calls this in constructor to get the color range parameters.
+        Default is false. */
+    void initEnableColorRange(bool);
 
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams();

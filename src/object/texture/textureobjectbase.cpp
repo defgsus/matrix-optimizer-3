@@ -44,8 +44,9 @@ struct TextureObjectBase::PrivateTO
         , fbo           (0)
         , screenQuad    (0)
         , swapTex       (0)
-        , outputTex      (0)
+        , outputTex     (0)
         , maxIns        (0)
+        , hasColorRange (false)
         , alphaBlend    (to)
     { }
 
@@ -65,7 +66,9 @@ struct TextureObjectBase::PrivateTO
         GL::Uniform
                 * u_resolution,
                 * u_time,
-                * u_transformation;
+                * u_transformation,
+                * u_color_range_min,
+                * u_color_range_max;
         QList<GL::Uniform*> u_tex;
     };
 
@@ -77,8 +80,13 @@ struct TextureObjectBase::PrivateTO
     GL::Texture *swapTex;
     const GL::Texture * outputTex;
     uint maxIns;
+    bool hasColorRange;
 
-    ParameterFloat * p_out_r, * p_out_g, * p_out_b, * p_out_a;
+    ParameterFloat  * p_out_r, * p_out_g, * p_out_b, * p_out_a,
+                    * p_r_min, * p_r_max,
+                    * p_g_min, * p_g_max,
+                    * p_b_min, * p_b_max,
+                    * p_a_min, * p_a_max;
     ParameterSelect * p_magInterpol, * p_enableOut,
                 * p_texType, * p_texFormat, *p_resMode;
     ParameterInt * p_width, * p_height, * p_aa, * p_split;
@@ -175,6 +183,11 @@ void TextureObjectBase::initMaximumTextureInputs(uint num)
     p_to_->maxIns = num;
 }
 
+void TextureObjectBase::initEnableColorRange(bool e)
+{
+    p_to_->hasColorRange = e;
+}
+
 const QList<ParameterTexture*>& TextureObjectBase::textureParams()
 {
     return p_to_->p_textures;
@@ -232,6 +245,28 @@ void TextureObjectBase::PrivateTO::createParameters()
 
     to->params()->endParameterGroup();
 
+    if (hasColorRange)
+    {
+        to->params()->beginParameterGroup("to_crange", tr("color range"));
+        p_r_min = to->params()->createFloatParameter("to_red_min", tr("red min"),
+                                                     tr("Minimum value of channel"), 0.0, 0.05);
+        p_r_max = to->params()->createFloatParameter("to_red_max", tr("red max"),
+                                                     tr("Maximum value of channel"), 1.0, 0.05);
+        p_g_min = to->params()->createFloatParameter("to_green_min", tr("green min"),
+                                                     tr("Minimum value of channel"), 0.0, 0.05);
+        p_g_max = to->params()->createFloatParameter("to_green_max", tr("green max"),
+                                                     tr("Maximum value of channel"), 1.0, 0.05);
+        p_b_min = to->params()->createFloatParameter("to_blue_min", tr("blue min"),
+                                                     tr("Minimum value of channel"), 0.0, 0.05);
+        p_b_max = to->params()->createFloatParameter("to_blue_max", tr("blue max"),
+                                                     tr("Maximum value of channel"), 1.0, 0.05);
+        p_a_min = to->params()->createFloatParameter("to_alpha_min", tr("alpha min"),
+                                                     tr("Minimum value of channel"), 0.0, 0.05);
+        p_a_max = to->params()->createFloatParameter("to_alpha_max", tr("alpha max"),
+                                                     tr("Maximum value of channel"), 1.0, 0.05);
+        to->params()->endParameterGroup();
+    }
+
     to->params()->beginParameterGroup("to_output", tr("master output"));
 
         p_enableOut = to->params()->createBooleanParameter("to_master_out", tr("enable"),
@@ -240,9 +275,9 @@ void TextureObjectBase::PrivateTO::createParameters()
                            tr("The texture object will render it's output ontop the main framebuffer"),
                            false, true, true);
 
-        p_out_r = to->params()->createFloatParameter("to_red", "red", tr("Red amount of output color"), 1.0, 0.1);
-        p_out_g = to->params()->createFloatParameter("to_green", "green", tr("Green amount of output color"), 1.0, 0.1);
-        p_out_b = to->params()->createFloatParameter("to_blue", "blue", tr("Blue amount of output color"), 1.0, 0.1);
+        p_out_r = to->params()->createFloatParameter("to_red", tr("red"), tr("Red amount of output color"), 1.0, 0.1);
+        p_out_g = to->params()->createFloatParameter("to_green", tr("green"), tr("Green amount of output color"), 1.0, 0.1);
+        p_out_b = to->params()->createFloatParameter("to_blue", tr("blue"), tr("Blue amount of output color"), 1.0, 0.1);
         p_out_a = to->params()->createFloatParameter("to_alpha", tr("alpha"),
                       tr("Defines the opaqueness/transparency of the output [0,1]"),
                       1.0,
@@ -468,6 +503,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
         quad.u_time = shader->getUniform("u_time", false);
         quad.u_resolution = shader->getUniform("u_resolution", false);
         quad.u_transformation = shader->getUniform("u_transformation", false);
+        quad.u_color_range_min = shader->getUniform("u_color_range_min", false);
+        quad.u_color_range_max = shader->getUniform("u_color_range_max", false);
 
         for (auto & n : texNames)
             quad.u_tex << shader->getUniform(n, false);
@@ -558,6 +595,21 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
         quad.u_time->floats[0] = time;
     if (quad.u_resolution)
         quad.u_resolution->setFloats(res.width(), res.height());
+    if (hasColorRange)
+    {
+        if (quad.u_color_range_min)
+            quad.u_color_range_min->setFloats(
+                        p_r_min->value(time, thread),
+                        p_g_min->value(time, thread),
+                        p_b_min->value(time, thread),
+                        p_a_min->value(time, thread));
+        if (quad.u_color_range_max)
+            quad.u_color_range_max->setFloats(
+                        p_r_max->value(time, thread),
+                        p_g_max->value(time, thread),
+                        p_b_max->value(time, thread),
+                        p_a_max->value(time, thread));
+    }
 
     // --- bind textures ---
 

@@ -41,11 +41,13 @@ struct ColorTO::Private
     ParameterFloat
             * p_bright, * p_bright2, * p_r, * p_g, * p_b, * p_a,
             * p_sat, *p_hue, *p_gamma, *p_gamma_r, *p_gamma_g, *p_gamma_b;
-
+    ParameterSelect
+            * p_invert;
     GL::Uniform
             * u_color,
             * u_hsv,
-            * u_gamma_exp;
+            * u_gamma_exp,
+            * u_invert;
 };
 
 
@@ -55,6 +57,7 @@ ColorTO::ColorTO(QObject *parent)
 {
     setName("Color");
     initMaximumTextureInputs(1);
+    initEnableColorRange(true);
 }
 
 ColorTO::~ColorTO()
@@ -103,6 +106,12 @@ void ColorTO::Private::createParameters()
     to->params()->beginParameterGroup("color", tr("color"));
     to->initParameterGroupExpanded("color");
 
+        p_invert = to->params()->createBooleanParameter("invert", tr("invert"),
+                                tr("Invert the input colors"),
+                                tr("Off"),
+                                tr("On"),
+                                false, true, true);
+
         p_hue = to->params()->createFloatParameter(
                     "hue", tr("hue"), tr("Hue value [0,1]"), 0.0,  0.05);
 
@@ -141,7 +150,7 @@ void ColorTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    /*if (p == p_->p_)
+    /*if (p == p_->p_invert)
         requestReinitGl();*/
 
 }
@@ -186,6 +195,7 @@ void ColorTO::Private::initGl()
     u_color = shader->getUniform("u_color", false);
     u_hsv = shader->getUniform("u_hsv", false);
     u_gamma_exp = shader->getUniform("u_gamma_exp", false);
+    u_invert = shader->getUniform("u_invert", false);
 }
 
 void ColorTO::Private::releaseGl()
@@ -218,6 +228,9 @@ void ColorTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double 
                                 1./(g*p_gamma_g->value(time, thread)),
                                 1./(g*p_gamma_b->value(time, thread)));
     }
+
+    if (u_invert)
+        u_invert->ints[0] = p_invert->baseValue();
 
     to->renderShaderQuad(time, thread);
 }

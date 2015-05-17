@@ -161,7 +161,7 @@ void Camera::createParameters()
 
     params()->endParameterGroup();
 
-    params()->beginParameterGroup("output", tr("output"));
+    params()->beginParameterGroup("output", tr("master output"));
 
         p_enableOut_ = params()->createBooleanParameter("master_out", tr("enable"),
                        tr("Enables or disables sampling the output to the main framebuffer"),
