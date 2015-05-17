@@ -685,7 +685,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     }
 
 
-    // audio input/output items
+    // audio input items
     if (AudioObject * ao = qobject_cast<AudioObject*>(object))
     {
         //item->setUnexpandedSize(QSize(1, 1));

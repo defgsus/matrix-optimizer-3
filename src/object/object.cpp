@@ -1401,7 +1401,7 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
 
     // check for change
     auto it = p_outputMap_.find(t);
-    if (it != p_outputMap_.end() && num != it.value())
+    if (it != p_outputMap_.end() && num == it.value())
         return;
 
     p_outputMap_.insert(t, num);

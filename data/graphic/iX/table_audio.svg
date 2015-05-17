@@ -26,21 +26,12 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <defs
-     id="defs3172">
-    <filter
-       inkscape:collect="always"
-       id="filter4775">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="7.1025376"
-         id="feGaussianBlur4777" />
-    </filter>
-  </defs>
+     id="defs3172" />
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -115,12 +106,12 @@
          x="45.060543"
          y="537.08691"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         id="tspan3617">* node-based dsp engine</tspan><tspan
+         id="tspan3617">* modular dsp engine</tspan><tspan
          sodipodi:role="line"
          x="45.060543"
          y="587.08691"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         id="tspan3621">* seemsless transition </tspan><tspan
+         id="tspan3621">* seemless transition </tspan><tspan
          sodipodi:role="line"
          x="45.060543"
          y="637.08691"
@@ -130,20 +121,30 @@
          x="45.060543"
          y="687.08691"
          id="tspan3593"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu">* geomety-based </tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"></tspan><tspan
          sodipodi:role="line"
          x="45.060543"
          y="737.08691"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-         id="tspan3609">   early reflections</tspan><tspan
+         id="tspan3202">* geomety-based </tspan><tspan
          sodipodi:role="line"
          x="45.060543"
          y="787.08691"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+         id="tspan3609">   early reflections</tspan><tspan
+         sodipodi:role="line"
+         x="45.060543"
+         y="837.08691"
          id="tspan3587"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu">* wave-tracing</tspan><tspan
          sodipodi:role="line"
          x="45.060543"
-         y="837.08691"
+         y="887.08691"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
+         id="tspan3204" /><tspan
+         sodipodi:role="line"
+         x="45.060543"
+         y="937.08691"
          id="tspan3583"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu" /></text>
   </g>
