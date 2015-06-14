@@ -64,9 +64,14 @@ class AudioBuffer
     void writeBlock(const F32 *block) { memcpy(writePointer(), block, p_blockSize_ * sizeof(F32)); }
 
     /** Inserts one block of data into the buffer,
-        while advancing @p stride samples for every read sample.
+        advancing @p stride samples for every read sample.
         @p block must point to at least blockSize() * @p stride floats */
     void writeBlock(const F32 *block, size_t stride);
+
+    /** Inserts one block of data into the buffer, multiplied by @p amp,
+        advancing @p stride samples for every read sample.
+        @p block must point to at least blockSize() * @p stride floats */
+    void writeBlockMul(const F32 *block, F32 amp, size_t stride = 1);
 
     /** Inserts one block of zeros into the buffer */
     void writeNullBlock() { memset(writePointer(), 0, p_blockSize_ * sizeof(F32)); }

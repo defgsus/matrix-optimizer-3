@@ -315,7 +315,8 @@ HEADERS += \
     src/object/texture/randomto.h \
     src/object/texture/normalmapto.h \
     src/object/texture/lensdistto.h \
-    src/gl/texturerenderer.h
+    src/gl/texturerenderer.h \
+    src/object/audio/microphoneao.h
 
 
 SOURCES += \
@@ -588,7 +589,8 @@ SOURCES += \
     src/object/texture/randomto.cpp \
     src/object/texture/normalmapto.cpp \
     src/object/texture/lensdistto.cpp \
-    src/gl/texturerenderer.cpp
+    src/gl/texturerenderer.cpp \
+    src/object/audio/microphoneao.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

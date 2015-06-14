@@ -80,6 +80,7 @@ struct TextureObjectBase::PrivateTO
     GL::Texture *swapTex;
     const GL::Texture * outputTex;
     uint maxIns;
+    QStringList inpNames;
     bool hasColorRange;
 
     ParameterFloat  * p_out_r, * p_out_g, * p_out_b, * p_out_a,
@@ -183,6 +184,12 @@ void TextureObjectBase::initMaximumTextureInputs(uint num)
     p_to_->maxIns = num;
 }
 
+void TextureObjectBase::initMaximumTextureInputs(const QStringList& names)
+{
+    p_to_->maxIns = names.size();
+    p_to_->inpNames = names;
+}
+
 void TextureObjectBase::initEnableColorRange(bool e)
 {
     p_to_->hasColorRange = e;
@@ -239,7 +246,9 @@ void TextureObjectBase::PrivateTO::createParameters()
         {
             p_textures.push_back( to->params()->createTextureParameter(
                                             QString("to_tex%1").arg(i),
-                                            tr("input %1").arg(i+1),
+                                            i < (uint)inpNames.size()
+                                                ? inpNames[i]
+                                                : tr("input %1").arg(i+1),
                                             tr("A texture input")) );
         }
 

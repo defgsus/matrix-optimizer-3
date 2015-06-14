@@ -314,7 +314,7 @@ void ObjectDspPath::calcAudio(SamplePos pos)
     bool serv = false;
 #endif
 
-    // ----------- process audio objects ---------------
+    // ----------- process audio dsp objects ---------------
 
     // process audio objects
     for (Private::ObjectBuffer * b : p_->audioObjects)
@@ -401,10 +401,14 @@ void ObjectDspPath::calcAudio(SamplePos pos)
                     b->microphones,
                     config().bufferSize(),
                     pos, p_->thread);
-        // sample soundsources
+        // process each mic
         for (AUDIO::SpatialMicrophone * m : b->microphones)
         {
+            // sample soundsources
             m->spatialize(b->microphoneInputSoundSources);
+            // virtual interface
+            b->object->processMicrophoneBuffers(b->microphones, pos, p_->thread);
+            // forward buffer
             m->signal()->nextBlock();
         }
     }

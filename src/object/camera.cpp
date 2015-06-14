@@ -485,7 +485,10 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
         cheat_[thread][2].y = v.y;
         cheat_[thread][2].z = v.z;
 
-        matrix = cheat_[thread];
+        if (thread == MO_GFX_THREAD)
+            matrix = overrideMatrix_;
+        else
+            matrix = cheat_[thread];
     }
     else
     {

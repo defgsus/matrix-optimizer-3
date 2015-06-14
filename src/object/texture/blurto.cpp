@@ -73,7 +73,7 @@ BlurTO::BlurTO(QObject *parent)
     , p_                (new Private(this))
 {
     setName("Blur");
-    initMaximumTextureInputs(2);
+    initMaximumTextureInputs( { tr("input"), tr("mask") } );
 }
 
 BlurTO::~BlurTO()

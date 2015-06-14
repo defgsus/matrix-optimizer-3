@@ -70,6 +70,7 @@ bool ModulatorFloat::canBeModulator(const Object * o) const
     return
             (dynamic_cast<const ValueFloatInterface*>(o) != 0)
          || (o->type() == Object::T_AUDIO_OBJECT)
+         || (o->hasAudioOutput())
     ;
 }
 

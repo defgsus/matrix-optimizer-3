@@ -1624,6 +1624,10 @@ void MainWidgetController::start()
             serverEngine().sendAudioConfig( audioEngine_->config() );
 #endif
 
+    // update sampling rate
+    if (scene_->sampleRate() != audioEngine_->config().sampleRate())
+        scene_->setSceneSampleRate(audioEngine_->config().sampleRate());
+
     // audio input/output channels may have changed
     // XXX not smart - but reliable
     objectGraphView()->setRootObject(scene_);

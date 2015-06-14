@@ -8,8 +8,8 @@
     <p>created 01.12.2014</p>
 */
 
-#ifndef AUDIOOBJECT_H
-#define AUDIOOBJECT_H
+#ifndef MOSRC_OBJECT_AUDIOOBJECT_H
+#define MOSRC_OBJECT_AUDIOOBJECT_H
 
 #include "object.h"
 
@@ -42,6 +42,9 @@ public:
 
     virtual QString getAudioInputName(uint channel) const { return QString("in %1").arg(channel + 1); }
     virtual QString getAudioOutputName(uint channel) const { return QString("out %1").arg(channel + 1); }
+
+    /** Override of Object base method */
+    bool hasAudioOutput() const Q_DECL_OVERRIDE { return numAudioOutputs() != 0; }
 
     // ---------- dsp ---------------
 
@@ -130,4 +133,4 @@ private:
 } // namespace MO
 
 
-#endif // AUDIOOBJECT_H
+#endif // MOSRC_OBJECT_AUDIOOBJECT_H

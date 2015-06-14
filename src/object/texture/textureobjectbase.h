@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_TEXTURE_TEXTUREOBJECTBASE_H
 #define MOSRC_OBJECT_TEXTURE_TEXTUREOBJECTBASE_H
 
+#include <QStringList>
+
 #include "object/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
 
@@ -66,6 +68,7 @@ protected:
     /** Calls this in constructor to provide a hint for the maximum number
         of texture inputs. Default is 0 */
     void initMaximumTextureInputs(uint num);
+    void initMaximumTextureInputs(const QStringList& names);
     /** Calls this in constructor to get the color range parameters.
         Default is false. */
     void initEnableColorRange(bool);

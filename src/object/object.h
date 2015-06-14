@@ -728,6 +728,10 @@ public:
                                         const QList<AUDIO::SpatialMicrophone*>&,
                                         uint bufferSize, SamplePos pos, uint thread);
 
+    /** Override to sample or change the current dsp-block of each virtual microphone. */
+    virtual void processMicrophoneBuffers(
+            const QList<AUDIO::SpatialMicrophone*>& microphones, SamplePos pos, uint thread)
+        { Q_UNUSED(microphones); Q_UNUSED(pos); Q_UNUSED(thread); }
 public:
     // --------------- 3d --------------------------
 
