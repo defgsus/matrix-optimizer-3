@@ -13,6 +13,7 @@
 #include "videostreamreader.h"
 
 #include <QGLWidget>
+#include <QImage>
 
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>

@@ -1,4 +1,4 @@
-/** @file videostreamreader.h
+/   ** @file videostreamreader.h
 
     @brief play video URIs through gstreamer
 
@@ -10,15 +10,16 @@
 
 #ifndef MO_DISABLE_GST
 
-#ifndef VIDEOSTREAMREADER_H
-#define VIDEOSTREAMREADER_H
+#ifndef MOSRC_VIDEO_VIDEOSTREAMREADER_H
+#define MOSRC_VIDEO_VIDEOSTREAMREADER_H
 
 #include <iostream>
 #include <string>
 #include <sstream>
+
 #include <gst/gst.h>
 
-#include <QImage>
+class QImage;
 
 class VideoStreamReader {
 
@@ -29,24 +30,29 @@ public:
 
     ~VideoStreamReader();
 
+    // -------- getter/state --------
+
+    int width()  const { return m_width;  }
+    int height() const { return m_height; }
+
+    bool isPlaying() const { return m_isPlaying; }
+    bool isPaused()  const { return m_isPaused; }
+
+    // -------- interface -----------
+
     void initialize(std::string &uri);
 
-    void pause();
     void play();
     void stop();
+    void pause();
 
     void seek_time(float sec);
 
     unsigned char* getGlTexture();
 
-    int width()  { return m_width;  }
-    int height() { return m_height; }
-
     void requestWidth(int w) { v_width = w; }
     void requestFormat(std::string &format) { v_format = format; }
 
-    bool isPlaying() { return m_isPlaying; }
-    bool isPaused() { return m_isPaused; }
 
 private:
     GstElement *m_pipeline, *m_sink;

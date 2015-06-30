@@ -31,11 +31,17 @@ DEFINES += MO_DISABLE_GST
 #thought would be nice, but the dependencies are a bit broken for ubuntu 14
 DEFINES += MO_DISABLE_CGAL
 
+# dear macies, see for yourself if you need those features
+mac { DEFINES += \
 #require audio input and output devices to be separate devices
-mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO \
+                MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
+                # tracker-model player library
                 MO_DISABLE_DUMB \
-                MO_DISABLE_LADSPA
+                # linux audio plugins
+                MO_DISABLE_LADSPA \
+                # neuro-imaging io library
+                MO_DISABLE_NIFTI
 }
 
 # for optirun bug
@@ -61,9 +67,9 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -langelscript \
+#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking
 #        -lCGAL \
-#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 else: win32 {
 LIBS += -lkernel32 -lpsapi \

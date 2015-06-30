@@ -316,7 +316,8 @@ HEADERS += \
     src/object/texture/normalmapto.h \
     src/object/texture/lensdistto.h \
     src/gl/texturerenderer.h \
-    src/object/audio/microphoneao.h
+    src/object/audio/microphoneao.h \
+    src/object/texture/texture3dgento.h
 
 
 SOURCES += \
@@ -590,7 +591,8 @@ SOURCES += \
     src/object/texture/normalmapto.cpp \
     src/object/texture/lensdistto.cpp \
     src/gl/texturerenderer.cpp \
-    src/object/audio/microphoneao.cpp
+    src/object/audio/microphoneao.cpp \
+    src/object/texture/texture3dgento.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag
