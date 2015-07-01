@@ -46,6 +46,7 @@ struct TextureObjectBase::PrivateTO
         , swapTex       (0)
         , outputTex     (0)
         , maxIns        (0)
+        , fboDepth      (1)
         , hasColorRange (false)
         , alphaBlend    (to)
     { }
@@ -54,7 +55,7 @@ struct TextureObjectBase::PrivateTO
     void initGl();
     void releaseGl();
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
-    void createFbo(const QSize& s);
+    void createFbo(const QSize& s, uint depth = 1);
     void drawFramebuffer(uint thread, Double time, int width, int height);
     void renderShaderQuad(uint index, Double time, uint thread, uint& texSlot);
     const QString& name() const { return to->name(); } // for debug
@@ -79,7 +80,7 @@ struct TextureObjectBase::PrivateTO
     QList<ShaderQuad> shaderQuads;
     GL::Texture *swapTex;
     const GL::Texture * outputTex;
-    uint maxIns;
+    uint maxIns, fboDepth;
     QStringList inpNames;
     bool hasColorRange;
 
@@ -90,7 +91,7 @@ struct TextureObjectBase::PrivateTO
                     * p_a_min, * p_a_max;
     ParameterSelect * p_magInterpol, * p_enableOut,
                 * p_texType, * p_texFormat, *p_resMode;
-    ParameterInt * p_width, * p_height, * p_aa, * p_split;
+    ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
     ParameterText * p_fragment;
     QList<ParameterTexture*> p_textures;
 
@@ -195,6 +196,11 @@ void TextureObjectBase::initEnableColorRange(bool e)
     p_to_->hasColorRange = e;
 }
 
+void TextureObjectBase::init3dFramebuffer(uint depth)
+{
+    p_to_->fboDepth = depth;
+}
+
 const QList<ParameterTexture*>& TextureObjectBase::textureParams()
 {
     return p_to_->p_textures;
@@ -221,9 +227,11 @@ void TextureObjectBase::PrivateTO::createParameters()
                     RM_CUSTOM,
                     true, false);
 
-        p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of rendered frame in pixels"),
+        p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of texture in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
-        p_height = to->params()->createIntParameter("to_height", tr("height"), tr("Height of rendered frame in pixels"),
+        p_height = to->params()->createIntParameter("to_height", tr("height"), tr("Height of texture in pixels"),
+                                      1024, 16, 4096*4, 16, true, false);
+        p_depth = to->params()->createIntParameter("to_depth", tr("depth"), tr("Depth of texture in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
 
         p_split = to->params()->createIntParameter("to_split", tr("segments"),
@@ -315,6 +323,7 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
 
     if (p == p_to_->p_width
         || p == p_to_->p_height
+        || p == p_to_->p_depth
         || p == p_to_->p_aa
         || p == p_to_->p_texFormat
         || p == p_to_->p_texType)
@@ -334,6 +343,7 @@ void TextureObjectBase::updateParameterVisibility()
     bool res = p_to_->p_resMode->baseValue() == RM_CUSTOM;
     p_to_->p_width->setVisible(res);
     p_to_->p_height->setVisible(res);
+    p_to_->p_depth->setVisible(res && false);
 }
 
 GL::FrameBufferObject * TextureObjectBase::fbo() const
@@ -436,7 +446,7 @@ void TextureObjectBase::PrivateTO::releaseGl()
 }
 
 
-void TextureObjectBase::PrivateTO::createFbo(const QSize &s)
+void TextureObjectBase::PrivateTO::createFbo(const QSize &s, uint depth)
 {
     outputTex = 0;
     if (!fbo)
@@ -447,10 +457,12 @@ void TextureObjectBase::PrivateTO::createFbo(const QSize &s)
             type = p_texType->baseValue();
 
         aspectRatio = (Float)width/std::max(1, height);
+        fboDepth = depth;
 
         fbo = new GL::FrameBufferObject(
                 width,
                 height,
+                depth,
                 gl::GLenum(Parameters::getTexFormat(format, type)),
                 gl::GLenum(format),
                 gl::GL_FLOAT,
@@ -560,16 +572,17 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
 
     }
 
-    // update FBO resolution
+    // update FBO/resolution
     if (!fbo)
-        createFbo(QSize(width, height));
+        createFbo(QSize(width, height), fboDepth);
     else
-    if (fbo->width() != width || fbo->height() != height)
+    if (fbo->width() != width || fbo->height() != height
+            || fbo->depth() != fboDepth)
     {
         fbo->release();
         delete fbo;
         fbo = 0;
-        createFbo(QSize(width, height));
+        createFbo(QSize(width, height), fboDepth);
     }
 
 

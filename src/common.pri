@@ -317,7 +317,7 @@ HEADERS += \
     src/object/texture/lensdistto.h \
     src/gl/texturerenderer.h \
     src/object/audio/microphoneao.h \
-    src/object/texture/texture3dgento.h
+    src/object/texture/generate3dto.h
 
 
 SOURCES += \
@@ -592,7 +592,7 @@ SOURCES += \
     src/object/texture/lensdistto.cpp \
     src/gl/texturerenderer.cpp \
     src/object/audio/microphoneao.cpp \
-    src/object/texture/texture3dgento.cpp
+    src/object/texture/generate3dto.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

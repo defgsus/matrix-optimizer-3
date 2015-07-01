@@ -54,6 +54,13 @@ public:
             bool cubemap = false,
             ErrorReporting reporting = ER_THROW);
 
+    explicit FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
+            gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
+            int attachmentMask,
+            bool cubemap = false,
+            ErrorReporting reporting = ER_THROW);
+
     ~FrameBufferObject();
 
     /** Adds @p num additional color render targets.
@@ -69,6 +76,8 @@ public:
 
     uint width() const;
     uint height() const;
+    /** Depth of texture3d, 1 if texture2d. */
+    uint depth() const;
     uint numColorTextures() const { return colorTex_.size(); }
 
     /** Returns the associated color texture */

@@ -39,6 +39,7 @@ Texture::Texture(ErrorReporting report)
         uploaded_		(false),
         width_			(0),
         height_			(0),
+        depth_          (0),
         memory_ 		(0),
         handle_			(invalidGl),
         target_			(GL_NONE),
@@ -50,6 +51,7 @@ Texture::Texture(ErrorReporting report)
     MO_DEBUG_IMG("Texture::Texture()");
     name_ = QString("tex%1").arg(tex_count_++);
 }
+
 
 Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                  gl::GLenum format, gl::GLenum input_format,
@@ -65,7 +67,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       ptr_nz_         (0),
       uploaded_		(false),
       width_		(width),
-      height_		(height),
+      height_         (height),
+      depth_          (0),
       memory_ 		(0),
       handle_		(invalidGl),
       target_		(GL_TEXTURE_2D),
@@ -74,7 +77,37 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       type_			(type),
       hash_           (-1)
 {
-    MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
+    MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height
+                << ", " << format << ", " << input_format
+                << ", " << type << ", " << ptr_to_data << ")");
+    name_ = QString("tex%1").arg(tex_count_++);
+}
+
+Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
+                 gl::GLenum format, gl::GLenum input_format,
+                 gl::GLenum type, void *ptr_to_data,
+                 ErrorReporting report)
+    : rep_          (report),
+      ptr_			(ptr_to_data),
+      ptr_px_         (0),
+      ptr_nx_         (0),
+      ptr_py_         (0),
+      ptr_ny_         (0),
+      ptr_pz_         (0),
+      ptr_nz_         (0),
+      uploaded_		(false),
+      width_		(width),
+      height_		(height),
+      depth_        (depth),
+      memory_ 		(0),
+      handle_		(invalidGl),
+      target_		(GL_TEXTURE_3D),
+      format_		(format),
+      input_format_	(input_format),
+      type_			(type),
+      hash_           (-1)
+{
+    MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height << "x" << depth
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
     name_ = QString("tex%1").arg(tex_count_++);
@@ -128,6 +161,10 @@ Texture * Texture::constructFrom(const Texture * t)
         c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
                            t->type(), 0,0,0,0,0,0, t->rep_);
+    else if (t->is3d())
+        c = new Texture(t->width(), t->height(), t->depth(),
+                           t->format(), t->input_format_,
+                           t->type(), 0, t->rep_);
     else
         c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
@@ -141,6 +178,11 @@ Texture * Texture::constructFrom(const Texture * t)
 bool Texture::isCube() const
 {
      return target_ == GL_TEXTURE_CUBE_MAP;
+}
+
+bool Texture::is3d() const
+{
+    return target_ == gl::GL_TEXTURE_3D;
 }
 
 bool Texture::create(gl::GLsizei width,
@@ -179,6 +221,7 @@ bool Texture::create(gl::GLsizei width,
     return upload_(ptr_, 0);
 }
 
+
 bool Texture::create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
@@ -193,6 +236,7 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height,
     target_ = GL_TEXTURE_2D;
     width_ = width;
     height_ = height;
+    depth_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -209,6 +253,43 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height,
     if (!bind())
     {
         MO_GL_WARNING("Could not bind 2D-texture for creation");
+        return false;
+    }
+
+    return upload_(ptr_, 0);
+}
+
+bool Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
+                void* ptr_to_data)
+{
+    MO_DEBUG_IMG("Texture::create(" << width << "x" << height << "x" << depth
+                << ", " << format << ", " << input_format
+                << ", " << type << ", " << ptr_to_data << ")");
+
+    releaseTexture_();
+
+    target_ = GL_TEXTURE_3D;
+    width_ = width;
+    height_ = height;
+    depth_ = depth;
+    handle_ = genTexture_();
+    uploaded_ = false;
+    format_ = format;
+    input_format_ = input_format;
+    type_ = type;
+    ptr_ = ptr_to_data;
+    ptr_px_ =
+    ptr_nx_ =
+    ptr_py_ =
+    ptr_ny_ =
+    ptr_pz_ =
+    ptr_nz_ = 0;
+
+    if (!bind())
+    {
+        MO_GL_WARNING("Could not bind 3D-texture for creation");
         return false;
     }
 
@@ -233,6 +314,7 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height,
     target_ = GL_TEXTURE_CUBE_MAP;
     width_ = width;
     height_ = height;
+    depth_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -423,6 +505,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
             }
         break;
 
+
         case GL_TEXTURE_2D:
 
             MO_CHECK_GL_RET_COND( rep_,
@@ -453,7 +536,44 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
             if (!uploaded_)
             {
                 uploaded_ = true;
-                memory_ = width_ * GL::channelSize(format_) * GL::typeSize(type_);
+                memory_ = width_ * height_ * GL::channelSize(format_) * GL::typeSize(type_);
+                memory_used_ += memory_;
+            }
+
+        break;
+
+        case GL_TEXTURE_3D:
+
+            MO_CHECK_GL_RET_COND( rep_,
+            gl::glTexImage3D(
+                target_,
+                // mipmap level
+                mipmap_level,
+                // color components
+                GLint(format_),
+                // size
+                width_, height_, depth_,
+                // boarder
+                0,
+                // input format
+                input_format_,
+                // data type
+                type_,
+                // ptr
+                ptr)
+            , err);
+
+            if (err != GL_NO_ERROR)
+            {
+                MO_GL_WARNING("Texture::upload_() failed");
+                return false;
+            }
+
+            if (!uploaded_)
+            {
+                uploaded_ = true;
+                memory_ = width_ * height_ * depth_
+                        * GL::channelSize(format_) * GL::typeSize(type_);
                 memory_used_ += memory_;
             }
 

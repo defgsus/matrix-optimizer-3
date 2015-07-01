@@ -28,7 +28,7 @@ namespace { static std::atomic_uint_fast64_t fbo_count_(0); }
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type, bool cubemap,
             ErrorReporting report)
-    : FrameBufferObject(width, height, format, format, type, 0, cubemap, report)
+    : FrameBufferObject(width, height, 1, format, format, type, 0, cubemap, report)
 {
 
 }
@@ -37,7 +37,7 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum in_format, gl::GLenum type,
             bool cubemap,
             ErrorReporting report)
-    : FrameBufferObject(width, height, format, in_format, type, 0, cubemap, report)
+    : FrameBufferObject(width, height, 1, format, in_format, type, 0, cubemap, report)
 {
 
 }
@@ -46,12 +46,23 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
             int attachmentMask, bool cubemap,
             ErrorReporting report)
-    : FrameBufferObject(width, height, format, format, type, attachmentMask, cubemap, report)
+    : FrameBufferObject(width, height, 1, format, format, type, attachmentMask, cubemap, report)
 {
 
 }
 
-FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
+FrameBufferObject::FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height,
+            gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
+            int attachmentMask, bool cubemap,
+            ErrorReporting report)
+    : FrameBufferObject(width, height, 1, format, input_format, type, attachmentMask, cubemap, report)
+{
+
+}
+
+FrameBufferObject::FrameBufferObject(
+            gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask, bool cubemap,
             ErrorReporting report)
@@ -64,12 +75,18 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
       cubemap_      (cubemap)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
-                << width << ", " << height << ", " << format << ", " << type <<
-                ", " << cubemap << ")");
+                << width << "x" << height << "x" << depth
+                << ", " << format << ", " << type
+                << ", " << cubemap << ")");
 
     colorTex_.resize(1);
     if (!cubemap_)
-        colorTex_[0] = new Texture(width, height, format, input_format, type, 0, report);
+    {
+        if (depth < 2)
+            colorTex_[0] = new Texture(width, height, format, input_format, type, 0, report);
+        else
+            colorTex_[0] = new Texture(width, height, depth, format, input_format, type, 0, report);
+    }
     else
     {
         colorTex_[0] = new Texture(width, height, format, input_format, type, 0, 0, 0, 0, 0, 0, report);
@@ -92,9 +109,13 @@ void FrameBufferObject::addColorTextures(uint num)
 {
     for (uint i=0; i<num; ++i)
     {
-        auto tex = new Texture(width(), height(),
+        auto tex = depth() < 2
+                ? new Texture(width(), height(),
                                colorTex_[0]->format(), colorTex_[0]->format(),
-                               colorTex_[0]->type(), 0, rep_);
+                               colorTex_[0]->type(), 0, rep_)
+                : new Texture(width(), height(), depth(),
+                            colorTex_[0]->format(), colorTex_[0]->format(),
+                            colorTex_[0]->type(), 0, rep_);
         colorTex_.push_back( tex );
     }
 }
@@ -141,6 +162,13 @@ uint FrameBufferObject::height() const
 {
     return !colorTex_.empty() && colorTex_[0]
             ? colorTex_[0]->height() : 0;
+}
+
+
+uint FrameBufferObject::depth() const
+{
+    return !colorTex_.empty() && colorTex_[0] && colorTex_[0]->is3d()
+            ? colorTex_[0]->depth() : 1;
 }
 
 void FrameBufferObject::setViewport() const
@@ -228,8 +256,16 @@ bool FrameBufferObject::create()
     int k=0;
     for (auto tex : colorTex_)
     {
-        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
-                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, target, tex->handle(), 0), err );
+        if (!tex->is3d())
+        {
+            MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+                    GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, target, tex->handle(), 0), err );
+        }
+        else
+        {
+            MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture3D(
+                    GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, target, tex->handle(), 0, 0), err );
+        }
         if (err != GL_NO_ERROR) return false;
     }
 
@@ -272,9 +308,20 @@ void FrameBufferObject::release()
 Texture * FrameBufferObject::swapColorTexture(Texture * tex, uint index)
 {
     // change attachment
-    GLenum err, target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
-    MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
-            GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, tex->handle(), 0), err );
+    GLenum
+        err,
+        target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
+
+    if (!tex->is3d())
+    {
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, tex->handle(), 0), err );
+    }
+    else
+    {
+        MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture3D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target, tex->handle(), 0, 0), err );
+    }
     if (err != GL_NO_ERROR) return 0;
 
     std::swap(colorTex_[index], tex);

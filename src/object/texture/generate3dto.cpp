@@ -1,4 +1,4 @@
-/** @file texture3dGento.cpp
+/** @file Generate3dTO.cpp
 
     @brief
 
@@ -8,7 +8,7 @@
     <p>created 6/30/2015</p>
 */
 
-#include "texture3dgento.h"
+#include "generate3dto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -26,11 +26,11 @@ using namespace gl;
 
 namespace MO {
 
-//MO_REGISTER_OBJECT(Texture3dGenTO)
+MO_REGISTER_OBJECT(Generate3dTO)
 
-struct Texture3dGenTO::Private
+struct Generate3dTO::Private
 {
-    Private(Texture3dGenTO * to)
+    Private(Generate3dTO * to)
         : to            (to)
     { }
 
@@ -39,8 +39,9 @@ struct Texture3dGenTO::Private
     void releaseGl();
     void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
 
-    Texture3dGenTO * to;
+    Generate3dTO * to;
 
+    GL::FrameBufferObject * fbo;
     GL::Uniform * u_depth_slice;
 
     ParameterInt
@@ -52,55 +53,56 @@ struct Texture3dGenTO::Private
 };
 
 
-Texture3dGenTO::Texture3dGenTO(QObject *parent)
+Generate3dTO::Generate3dTO(QObject *parent)
     : TextureObjectBase (parent)
     , p_                (new Private(this))
 {
-    setName("Texture3D-Generator");
+    setName("Generator3d");
+    init3dFramebuffer(32);
 }
 
-Texture3dGenTO::~Texture3dGenTO()
+Generate3dTO::~Generate3dTO()
 {
     delete p_;
 }
 
-void Texture3dGenTO::serialize(IO::DataStream & io) const
+void Generate3dTO::serialize(IO::DataStream & io) const
 {
     TextureObjectBase::serialize(io);
-    io.writeHeader("to3dgen", 1);
+    io.writeHeader("togen3d", 1);
 }
 
-void Texture3dGenTO::deserialize(IO::DataStream & io)
+void Generate3dTO::deserialize(IO::DataStream & io)
 {
     TextureObjectBase::deserialize(io);
-    io.readHeader("to3dgen", 1);
+    io.readHeader("togen3d", 1);
 }
 
-void Texture3dGenTO::createParameters()
+void Generate3dTO::createParameters()
 {
     TextureObjectBase::createParameters();
     p_->createParameters();
 }
 
-void Texture3dGenTO::initGl(uint thread)
+void Generate3dTO::initGl(uint thread)
 {
     TextureObjectBase::initGl(thread);
     p_->initGl();
 }
 
-void Texture3dGenTO::releaseGl(uint thread)
+void Generate3dTO::releaseGl(uint thread)
 {
     p_->releaseGl();
     TextureObjectBase::releaseGl(thread);
 }
 
-void Texture3dGenTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void Generate3dTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
 {
     p_->renderGl(rset, thread, time);
 }
 
 
-void Texture3dGenTO::Private::createParameters()
+void Generate3dTO::Private::createParameters()
 {
     to->params()->beginParameterGroup("tex3d", tr("Gen-surface texture"));
     to->initParameterGroupExpanded("tex3d");
@@ -136,7 +138,7 @@ void Texture3dGenTO::Private::createParameters()
     to->params()->endParameterGroup();
 }
 
-void Texture3dGenTO::onParameterChanged(Parameter * p)
+void Generate3dTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
@@ -147,13 +149,13 @@ void Texture3dGenTO::onParameterChanged(Parameter * p)
         requestReinitGl();
 }
 
-void Texture3dGenTO::onParametersLoaded()
+void Generate3dTO::onParametersLoaded()
 {
     TextureObjectBase::onParametersLoaded();
 
 }
 
-void Texture3dGenTO::updateParameterVisibility()
+void Generate3dTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
 }
@@ -161,7 +163,7 @@ void Texture3dGenTO::updateParameterVisibility()
 
 
 
-void Texture3dGenTO::Private::initGl()
+void Generate3dTO::Private::initGl()
 {
     // shader-quad
 
@@ -177,12 +179,12 @@ void Texture3dGenTO::Private::initGl()
     u_depth_slice = shader->getUniform("u_depth_slice");
 }
 
-void Texture3dGenTO::Private::releaseGl()
+void Generate3dTO::Private::releaseGl()
 {
 
 }
 
-void Texture3dGenTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void Generate3dTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
 {
     int depth = p_depth->baseValue();
 

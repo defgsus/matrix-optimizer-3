@@ -1,4 +1,4 @@
-/** @file texture3dgento.h
+/** @file Generate3dTO.h
 
     @brief
 
@@ -8,21 +8,21 @@
     <p>created 6/30/2015</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_TEXTURE3DGENTO_H
-#define MOSRC_OBJECT_TEXTURE_TEXTURE3DGENTO_H
+#ifndef MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H
+#define MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
 /** A 3D-Texture generator sampling a scalar-field function */
-class Texture3dGenTO : public TextureObjectBase
+class Generate3dTO : public TextureObjectBase
 {
     Q_OBJECT
 public:
 
-    MO_OBJECT_CONSTRUCTOR(Texture3dGenTO);
-    ~Texture3dGenTO();
+    MO_OBJECT_CONSTRUCTOR(Generate3dTO);
+    ~Generate3dTO();
 
     //virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -49,4 +49,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_TEXTURE3DGENTO_H
+#endif // MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H

@@ -65,13 +65,16 @@ public:
 
 protected:
 
-    /** Calls this in constructor to provide a hint for the maximum number
+    /** Call this in constructor to provide a hint for the maximum number
         of texture inputs. Default is 0 */
     void initMaximumTextureInputs(uint num);
     void initMaximumTextureInputs(const QStringList& names);
-    /** Calls this in constructor to get the color range parameters.
+    /** Call this in constructor to get the color range parameters.
         Default is false. */
     void initEnableColorRange(bool);
+    /** Call this in constructor to set the framebuffer color-texture to
+        a 3d texture. Default is 1 (2d texture). */
+    void init3dFramebuffer(uint depth);
 
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams();

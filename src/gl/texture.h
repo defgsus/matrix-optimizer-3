@@ -31,6 +31,14 @@ public:
                 void* ptr_to_data,
                 ErrorReporting reporting = ER_THROW);
 
+    /** 3d, explicit format, input_format, type */
+    explicit Texture(
+                gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
+                void* ptr_to_data,
+                ErrorReporting reporting = ER_THROW);
+
     /** cubemap, explicit format, input_format, type */
     explicit Texture(
                 gl::GLsizei width, gl::GLsizei height,
@@ -73,6 +81,9 @@ public:
     /** When true, target() is GL_TEXTURE_CUBE_MAP */
     bool isCube() const;
 
+    /** Returns true when texture target equals GL_TEXTURE_3D */
+    bool is3d() const;
+
     /** Returns a number which can be used to check if the texture has changed.
         Used by texture-in objects.
         hash will count upwards on every call to setChanged() */
@@ -89,6 +100,7 @@ public:
 
     uint width() const { return width_; }
     uint height() const { return height_; }
+    uint depth() const { return depth_; }
     gl::GLenum format() const { return format_; }
     gl::GLenum type() const { return type_; }
     gl::GLenum target() const { return target_; }
@@ -100,8 +112,8 @@ public:
 
     // -------- openGL interface ---------------
 
-    /** Signals a change to the texture. Will change the number returned in hash() */
-    void setChanged() { hash_++; }
+    /** Sets a change to the texture. Will change the number returned in hash() */
+    void setChanged() { ++hash_; }
 
     /** Binds the texture handle to the current slot */
     bool bind() const;
@@ -113,14 +125,20 @@ public:
     /** create() (re-)defines the piece of data that Texture should work with.
         The data is created or uploaded depending if @p ptr_to_data is not NULL. */
 
+    /** create 1d, explicit format, input_format, type */
+    bool create(gl::GLsizei width,
+                gl::GLenum format, gl::GLenum input_format,
+                gl::GLenum type,
+                void* ptr_to_data);
+
     /** create 2d, explicit format, input_format, type */
     bool create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data);
 
-    /** create 1d, explicit format, input_format, type */
-    bool create(gl::GLsizei width,
+    /** create 3d, explicit format, input_format, type */
+    bool create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data);
@@ -214,6 +232,7 @@ private:
     gl::GLsizei
         width_,
         height_,
+        depth_,
     /** calculated memory of texture in bytes */
         memory_;
     gl::GLuint
