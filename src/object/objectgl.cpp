@@ -302,7 +302,7 @@ void ObjectGl::requestRender()
 void ObjectGl::requestReinitGl()
 {
     p_updateRequest_ = true;
-    for (uint i=0; i<numberThreads(); ++i)
+    for (uint i=0; i<p_needsInitGl_.size(); ++i)
     {
         p_needsInitGl_[i] = true;
     }

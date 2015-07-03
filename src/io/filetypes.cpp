@@ -111,5 +111,18 @@ namespace IO {
     };
 
 
+    FileType guessFiletype(const QString& fn)
+    {
+        for (int i = 1; i < fileTypeExtensions.size(); ++i)
+        {
+            for (const auto & ext : fileTypeExtensions[i])
+            {
+                if (fn.endsWith(ext))
+                    return FileType(i);
+            }
+        }
+        return FT_ANY;
+    }
+
 } // namespace IO
 } // namespace MO

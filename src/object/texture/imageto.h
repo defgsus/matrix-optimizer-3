@@ -40,12 +40,14 @@ public:
 
     // ---------- specific stuff -----------
 
+    void setImageFilename(const QString& fn);
 signals:
 
 public slots:
 
 private:
 
+    QString initFilename_;
     ParameterFilename * pFilename_;
     GL::Texture * tex_;
 };

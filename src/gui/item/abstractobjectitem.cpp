@@ -20,6 +20,7 @@
 #include <QCursor>
 #include <QDrag>
 #include <QMessageBox>
+#include <QUrl>
 
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
@@ -307,6 +308,15 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
     e->ignore();
 
+//    for (const auto & i : e->mimeData()->formats())
+//        MO_PRINT(i);
+
+    // filename(s)
+    if (e->mimeData()->hasUrls())
+    {
+        e->accept();
+    }
+
     // drop of real object
     if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
     {
@@ -318,9 +328,6 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
             return;
         }
 
-        p_oi_->dragHover = true;
-        p_oi_->setDragGoalPos(e->pos());
-        update();
         e->accept();
     }
 
@@ -334,12 +341,15 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
             return;
         // check if dropable
         if (object()->canHaveChildren(Object::Type(typ)))
-        {
-            p_oi_->dragHover = true;
-            p_oi_->setDragGoalPos(e->pos());
-            update();
             e->accept();
-        }
+    }
+
+    // drag indicators
+    if (e->isAccepted())
+    {
+        p_oi_->dragHover = true;
+        p_oi_->setDragGoalPos(e->pos());
+        update();
     }
 }
 
@@ -364,7 +374,35 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
     e->ignore();
     p_oi_->dragHover = false;
-    update();
+    update(); // remove drag indicators
+
+    // filename(s)
+    if (e->mimeData()->hasUrls())
+    {
+        const auto list = e->mimeData()->urls();
+        QList<Object*> objs;
+        QList<QUrl> notworking;
+        for (const auto & url : list)
+        {
+            if (auto o = ObjectFactory::createObjectFromUrl(url))
+                objs << o;
+            else
+                notworking << url;
+        }
+        // add them all at once
+        if (!objs.isEmpty())
+            objectScene()->addObjects(object(), objs, mapToGrid(e->pos()));
+        // print errors
+        if (!notworking.isEmpty())
+        {
+            QString msg = QObject::tr("The following urls could not be wrapped into an object.");
+            for (const auto & url : notworking)
+            {
+                msg.append("\n" + url.toString());
+            }
+            QMessageBox::information(0, QObject::tr("Filename drop"), msg);
+        }
+    }
 
     // drop of real object
     if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))

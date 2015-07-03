@@ -673,6 +673,12 @@ void SequenceFloat::setEquationText(const QString & t)
     }
 }
 
+void SequenceFloat::setSoundFilename(const QString & fn)
+{
+    p_soundFile_->setValue(fn);
+}
+
+
 Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
 {
     // fade in/out

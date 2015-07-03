@@ -26,6 +26,8 @@ MO_REGISTER_OBJECT(ImageTO)
 
 ImageTO::ImageTO(QObject *parent)
     : TextureObjectBase (parent)
+    , initFilename_     (":/texture/mo_black.png")
+    , pFilename_        (0)
     , tex_              (0)
 {
     setName("Image");
@@ -59,7 +61,7 @@ void ImageTO::createParameters()
         pFilename_ = params()->createFilenameParameter(
                     "filename", tr("image file"), tr("Filename of the image"),
                     IO::FT_TEXTURE,
-                    ":/texture/mo_black.png");
+                    initFilename_);
 
     params()->endParameterGroup();
 }
@@ -81,8 +83,19 @@ void ImageTO::onParametersLoaded()
 void ImageTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
+}
 
-
+void ImageTO::setImageFilename(const QString &fn)
+{
+    if (!pFilename_)
+        initFilename_ = fn;
+    else
+    {
+        if (fn == pFilename_->baseValue())
+            return;
+        pFilename_->setValue(fn);
+        requestReinitGl();
+    }
 }
 
 void ImageTO::getNeededFiles(IO::FileList & files)

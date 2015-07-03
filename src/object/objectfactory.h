@@ -44,6 +44,11 @@ public:
     /** Creates the desired object for className, or returns NULL */
     static Object * createObject(const QString& className, bool createParametersAndObjects = true);
 
+    /** Creates the appropriate object from an url (filename),
+        or returns NULL the filename does not fit.
+        E.g. creates a ImageTO from an image file */
+    static Object * createObjectFromUrl(const QUrl& url);
+
     /** Returns a new Scene object */
     static Scene * createSceneObject();
 

@@ -174,6 +174,7 @@ public:
         { p_loopOverlapMode_->setValue(mode); }
 
     void setEquationText(const QString&);
+    void setSoundFilename(const QString&);
 
     void setUseFrequency(bool enable) { p_useFreq_->setValue(enable); }
 

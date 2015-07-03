@@ -48,6 +48,10 @@ namespace IO {
     typedef QPair<QString, FileType> FileListEntry;
     typedef QList<FileListEntry> FileList;
 
+    /** Returns the FileType by using the extension found in filename.
+        Returns FT_ANY if no match was found */
+    FileType guessFiletype(const QString& filename);
+
 } // namespace IO
 } // namespace MO
 

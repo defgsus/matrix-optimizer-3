@@ -13,6 +13,8 @@
 #include <QBitmap>
 #include <QFile>
 #include <QMessageBox>
+#include <QUrl>
+#include <QFileInfo>
 
 #include "objectfactory.h"
 #include "io/datastream.h"
@@ -35,6 +37,7 @@
 #include "object/control/sequencefloat.h"
 #include "object/control/modulatorobjectfloat.h"
 #include "object/synthesizer.h"
+#include "object/texture/imageto.h"
 #include "util/audioobjectconnections.h"
 #include "audio/filterao.h"
 #include "io/files.h"
@@ -352,6 +355,39 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
     }
 
     return obj;
+}
+
+Object * ObjectFactory::createObjectFromUrl(const QUrl& url)
+{
+    if (!url.isLocalFile())
+        return 0;
+    // get filename
+    const QString fn = url.toString(QUrl::PreferLocalFile);
+    if (fn.isEmpty())
+        return 0;
+    const QString shortfn = QFileInfo(fn).fileName();
+
+    // get file type
+    auto ft = IO::guessFiletype(fn);
+
+    // images
+    if (ft == IO::FT_TEXTURE)
+    if (auto o = create_object<ImageTO>(shortfn))
+    {
+        o->setImageFilename(fn);
+        return o;
+    }
+
+    // audio files
+    if (ft == IO::FT_SOUND_FILE)
+    if (auto o = create_object<SequenceFloat>(shortfn))
+    {
+        o->setSequenceType(SequenceFloat::ST_SOUNDFILE);
+        o->setSoundFilename(fn);
+        return o;
+    }
+
+    return 0;
 }
 
 Scene * ObjectFactory::createSceneObject()

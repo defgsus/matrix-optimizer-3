@@ -1666,10 +1666,18 @@ void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjec
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
-    // set pos for all items
-    int k=0;
+    // find first place to insert
+    QPoint po = gridPos;
+    if (auto it = itemForObject(parent))
+    {
+        po = nextFreePosition(it, po);
+    }
+    // set pos for all items in advance
     for (auto o : newObjects)
-        o->setAttachedData(gridPos + QPoint(0, k++), Object::DT_GRAPH_POS);
+    {
+        o->setAttachedData(po, Object::DT_GRAPH_POS);
+        ++po.ry();
+    }
 
     p_->root->editor()->addObjects(parent, newObjects, insert_index);
 }
