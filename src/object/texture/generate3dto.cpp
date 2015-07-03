@@ -8,6 +8,8 @@
     <p>created 6/30/2015</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #include "generate3dto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
@@ -168,9 +170,11 @@ void Generate3dTO::Private::initGl()
     // shader-quad
 
     GL::ShaderSource src;
-    src.loadVertexSource(":/shader/to/gen3d.vert");
+    src.loadVertexSource(":/shader/to/default.vert");
     src.loadFragmentSource(":/shader/to/gen3d.frag");
     src.pasteDefaultIncludes();
+
+    src.replace("//%mo_user_code%", p_glsl->baseValue(), true);
 
     auto shader = to->createShaderQuad(src)->shader();
 
@@ -201,3 +205,5 @@ void Generate3dTO::Private::renderGl(const GL::RenderSettings& , uint thread, Do
 
 
 } // namespace MO
+
+#endif // #ifndef MO_DISABLE_EXP

@@ -45,6 +45,10 @@ public:
     /** Returns the item at global grid position, or NULL */
     AbstractObjectItem * objectItemAt(const QPoint& globalPos);
 
+    /** Returns the child item inside @p parent, or NULL.
+        If @p parent is NULL, the objectItemAt(const QPoint&) method will be used. */
+    AbstractObjectItem * objectItemAt(AbstractObjectItem * parent, const QPoint& posInParent);
+
     // -------------- coords -------------------
 
     /** Translates a global point into grid coordinates */

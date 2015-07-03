@@ -8,6 +8,8 @@
     <p>created 6/30/2015</p>
 */
 
+#ifndef MO_DISABLE_EXP
+
 #ifndef MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H
 #define MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H
 
@@ -50,3 +52,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_TEXTURE_GENERATE3DTO_H
+
+#endif // #ifndef MO_DISABLE_EXP

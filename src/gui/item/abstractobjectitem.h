@@ -180,6 +180,7 @@ protected:
     virtual void hoverLeaveEvent(QGraphicsSceneHoverEvent*) Q_DECL_OVERRIDE;
 
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
     virtual void dragLeaveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
     virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
 

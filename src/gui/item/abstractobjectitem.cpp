@@ -69,18 +69,22 @@ public:
     void createConnectors();
     void updateConnectorPositions();
     void layoutChildItems();
+    /** Helper to set the drag goal indicator from
+        a LOCAL position */
+    void setDragGoalPos(const QPointF& p);
 
 
     AbstractObjectItem * item; ///< parent item class
     Object * object;
     bool expanded, hover, dragHover, layouted, dragging;
-    QPoint pos; ///< pos in grid
-    QSize size, ///< size in grid coords
+    QPoint pos, //! pos in grid
+            dragGoalPos; //! temp. drag gui indicator
+    QSize size, //! size in grid coords
         unexpandedSize,
         minimumSize;
     QIcon icon;
     QPixmap iconPixmap;
-    QBrush brushBack, brushBackSel;
+    QBrush brushBack, brushBackSel, brushDragIndicator;
     ObjectGraphExpandItem * itemExp;
     QGraphicsSimpleTextItem * itemName;
     QList<ObjectGraphConnectItem*>
@@ -282,6 +286,22 @@ QVariant AbstractObjectItem::itemChange(GraphicsItemChange change, const QVarian
     return ret;
 }
 
+void AbstractObjectItem::PrivateOI::setDragGoalPos(const QPointF& p)
+{
+    auto np = item->mapToGrid(p);
+    if (ObjectGraphScene * s = item->objectScene())
+    {
+        np = s->nextFreePosition(item, np);
+        if (np != dragGoalPos)
+        {
+            dragGoalPos = np;
+            item->update();
+        }
+    }
+    else
+        dragGoalPos = np;
+}
+
 
 void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
@@ -299,6 +319,7 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         }
 
         p_oi_->dragHover = true;
+        p_oi_->setDragGoalPos(e->pos());
         update();
         e->accept();
     }
@@ -313,7 +334,12 @@ void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
             return;
         // check if dropable
         if (object()->canHaveChildren(Object::Type(typ)))
+        {
+            p_oi_->dragHover = true;
+            p_oi_->setDragGoalPos(e->pos());
+            update();
             e->accept();
+        }
     }
 }
 
@@ -326,11 +352,19 @@ void AbstractObjectItem::dragLeaveEvent(QGraphicsSceneDragDropEvent * )
     }
 }
 
+void AbstractObjectItem::dragMoveEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // update drag goal indicator
+    if (p_oi_->dragHover)
+        p_oi_->setDragGoalPos(e->pos());
+}
+
 
 void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
     e->ignore();
     p_oi_->dragHover = false;
+    update();
 
     // drop of real object
     if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
@@ -368,7 +402,9 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
         objectScene()->addObject(object(),
                                  ObjectFactory::createObject(classn),
-                                 mapToGrid(e->scenePos()) - gridPos());
+                                 mapToGrid(e->pos())
+                                 //mapToGrid(e->scenePos()) - gridPos()
+                                 );
 
         e->accept();
         return;
@@ -467,10 +503,12 @@ void AbstractObjectItem::mouseMoveEvent(QGraphicsSceneMouseEvent * e)
         if (newGrid != gridPos())
         {
             // check if space is free
-            // XXX not working for big objects
-            auto it = sc->objectItemAt(newGrid + (parentObjectItem()
+            // XXX not working for moving expanded objects
+            /// @todo fix check for overlapping objects when moving in scene editor
+            auto it = sc->objectItemAt(parentObjectItem(),
+                                       newGrid /*+ (parentObjectItem()
                                        ? parentObjectItem()->globalGridPos()
-                                       : QPoint(0,0)));
+                                       : QPoint(0,0))*/);
             if (it == 0 || it == this || object()->hasParentObject(it->object()))
             {
                 if ((newGrid.x() == 0 || newGrid.y() == 0))
@@ -653,6 +691,8 @@ void AbstractObjectItem::updateColors()
 {
     p_oi_->brushBack = ObjectGraphSettings::brushOutline(object());
     p_oi_->brushBackSel = ObjectGraphSettings::brushOutline(object(), true);
+    p_oi_->brushDragIndicator = p_oi_->brushBack;
+    p_oi_->brushDragIndicator.setColor(QColor(255,255,255,100));
     p_oi_->icon = AppIcons::iconForObject(object(),
                                 ObjectFactory::colorForObject(object()));
     p_oi_->iconPixmap = p_oi_->icon.pixmap(ObjectGraphSettings::iconSize());
@@ -1033,6 +1073,18 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     p->drawPixmap(si.width()/2,
                   si.height()/2,
                   p_oi_->iconPixmap);
+
+    // -- drag goal indicator --
+    if (p_oi_->dragHover)
+    {
+        p->setPen(Qt::NoPen);
+        p->setBrush(p_oi_->brushDragIndicator);
+        int w = ObjectGraphSettings::gridSize().width();
+        auto r = QRectF(w * p_oi_->dragGoalPos.x(),
+                        w * p_oi_->dragGoalPos.y(),
+                        w, w);
+        p->drawRoundedRect(r, 0.1 * w, 0.1 * w);
+    }
 }
 
 

@@ -250,6 +250,7 @@ bool FrameBufferObject::create()
     MO_CHECK_GL_RET_COND(rep_, glBindFramebuffer(GL_FRAMEBUFFER, fbo_), err );
     if (err != GL_NO_ERROR) return false;
 
+    // 2d texture or cubemap
     GLenum target = cubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
 
     // attach color textures
@@ -264,7 +265,7 @@ bool FrameBufferObject::create()
         else
         {
             MO_CHECK_GL_RET_COND(rep_, glFramebufferTexture3D(
-                    GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, target, tex->handle(), 0, 0), err );
+                    GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + k++, GL_TEXTURE_3D, tex->handle(), 0, 0), err );
         }
         if (err != GL_NO_ERROR) return false;
     }

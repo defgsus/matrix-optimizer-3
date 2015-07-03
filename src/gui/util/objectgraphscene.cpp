@@ -661,6 +661,37 @@ AbstractObjectItem * ObjectGraphScene::objectItemAt(const QPoint &gridPos)
     return 0;
 }
 
+AbstractObjectItem * ObjectGraphScene::objectItemAt(
+        AbstractObjectItem * parent, const QPoint &pos)
+{
+    // NOTE: Lets not rely on QGraphicsScene::itemAt because
+    // cables could come in the way
+
+    if (!parent)
+        return objectItemAt(pos);
+
+    if (!p_->root)
+        return 0;
+
+    const auto list = parent->childItems();
+    for (QGraphicsItem * gi : list)
+    if (gi->type() >= AbstractObjectItem::T_BASE)
+    {
+        auto oi = static_cast<AbstractObjectItem*>(gi);
+        // check if pos is inside child
+        auto r = oi->gridRect();
+        if (pos.x() < r.x() || pos.y() < r.y()
+            || pos.x() > r.right() || pos.y() > r.bottom())
+            continue;
+        // check for sub-child
+        if (auto ret = objectItemAt(oi, pos - r.topLeft()))
+            return ret;
+        // return this child
+        return oi;
+    }
+    return 0;
+}
+
 QPoint ObjectGraphScene::nextFreePosition(Object *parent, const QPoint &pos1) const
 {
     auto item = itemForObject(parent);
@@ -676,15 +707,15 @@ QPoint ObjectGraphScene::nextFreePosition(AbstractObjectItem * item, const QPoin
     // limit to child area
     pos.setX( std::max(pos.x(), 1));
     pos.setY( std::max(pos.y(), 1));
-//    MO_DEBUG("find next free pos for " << pos.x() << ", " << pos.y());
+    //MO_DEBUG("find next free pos for " << pos.x() << ", " << pos.y());
     auto i = p_->childItemAt(item, pos);
     while (i != 0 && i != item)
     {
-//        qDebug() << "failed for" << pos;
+        //qDebug() << "failed for" << pos;
         ++pos.ry();
         i = p_->childItemAt(item, pos);
     }
-
+    //MO_DEBUG("return pos == " << pos.x() << ", " << pos.y());
     return pos;
 }
 
@@ -1082,7 +1113,11 @@ void ObjectGraphScene::Private::showPopup()
 
     popup->addActions(actions);
 
-    popup->popup(QCursor::pos());
+    // don't dispay if empty (first two actions are title & separator)
+    if (actions.size() < 3)
+        popup->close();
+    else
+        popup->popup(QCursor::pos());
 }
 
 void ObjectGraphScene::Private::clearActions()

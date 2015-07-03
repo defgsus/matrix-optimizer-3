@@ -45,6 +45,7 @@
         <file alias="random.frag">assets/shader/to/random.frag</file>
         <file alias="derivative.frag">assets/shader/to/derivative.frag</file>
         <file alias="lens.frag">assets/shader/to/lens.frag</file>
+        <file alias="gen3d.frag">assets/shader/to/gen3d.frag</file>
     </qresource>
     <qresource prefix="/shader/inc/to">
         <file alias="header">assets/shader/to/header.glsl</file>

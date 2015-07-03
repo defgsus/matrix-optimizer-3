@@ -66,5 +66,6 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/inc/project.glsl \
     assets/shader/inc/raytrace.glsl \
     assets/shader/to/random.frag \
-    assets/shader/to/lens.frag
+    assets/shader/to/lens.frag \
+    assets/shader/to/gen3d.frag
     assets/help/en/object/model3d.html
