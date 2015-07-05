@@ -112,7 +112,7 @@ void PlayBufferAO::createParameters()
                                                    1.0, 0.05);
     p_->paramFile = params()->createFilenameParameter("playbuf_file", tr("filename"),
                                                       tr("The file to play from the buffer"),
-                                                      IO::FT_SOUND_FILE,
+                                                      IO::FT_SOUND,
                                                       "data/audio/speek/84macs.wav");
     p_->paramMode = params()->createSelectParameter("playbuf_mode", tr("buffer mode"),
                                                     tr("Selects the mode the buffer is used"),

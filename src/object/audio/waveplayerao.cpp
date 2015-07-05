@@ -121,7 +121,7 @@ void WavePlayerAO::createParameters()
 
         p_->paramFilename = params()->createFilenameParameter("fn", tr("filename"),
                                                           tr("Select a file to play"),
-                                                          IO::FT_SOUND_FILE);
+                                                          IO::FT_SOUND);
 
         p_->paramMode = params()->createSelectParameter("time_mode", tr("time mode"),
                                             tr("Selects the kind of timing to use"),

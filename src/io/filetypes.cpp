@@ -32,7 +32,9 @@ namespace IO {
       "povray",
       "equpreset",
       "helpexp",
-      "ladspa" };
+      "ladspa",
+      "text"
+    };
 
     const QStringList fileTypeNames =
     { QObject::tr("Any"),
@@ -51,7 +53,9 @@ namespace IO {
       QObject::tr("Povray script"),
       QObject::tr("Equation preset"),
       QObject::tr("Help export"),
-      QObject::tr("Ladspa directory") };
+      QObject::tr("Ladspa directory"),
+      QObject::tr("Text")
+    };
 
     const QList<QStringList> fileTypeExtensions =
     {
@@ -71,7 +75,8 @@ namespace IO {
         { "pov" },
         { "xml-equ" },
         { "" },
-        { "so" }
+        { "so" },
+        { "txt", "asc" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -107,7 +112,8 @@ namespace IO {
         { QObject::tr("povray files") + " ( *.pov )" },
         { QObject::tr("equation xml files") + " ( *.xml *.xml-equ )" },
         { QObject::tr("* (*)") },
-        { QObject::tr("* (*)") }
+        { QObject::tr("* (*)") },
+        { QObject::tr("text files") + " ( *.txt *.asc )" },
     };
 
 
@@ -116,6 +122,7 @@ namespace IO {
         for (int i = 1; i < fileTypeExtensions.size(); ++i)
         {
             for (const auto & ext : fileTypeExtensions[i])
+            if (!ext.isEmpty())
             {
                 if (fn.endsWith(ext))
                     return FileType(i);

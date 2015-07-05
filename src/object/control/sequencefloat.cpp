@@ -210,7 +210,7 @@ void SequenceFloat::createParameters()
         p_soundFile_ = params()->createFilenameParameter("sndfilen", tr("filename"),
                                                   tr("The filename of the audio file"
                                                      " - Note that the file will be buffered in memory completely"),
-                                                  IO::FT_SOUND_FILE);
+                                                  IO::FT_SOUND);
         p_soundFileChannel_ = params()->createIntParameter("sndfilechan", tr("channel"),
                       tr("Selects which channel to play from the sound file"),
                       0, true, true);

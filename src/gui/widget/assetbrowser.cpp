@@ -61,6 +61,9 @@ void AssetBrowser::Private::createWidgets()
             treeView = new QTreeView(widget);
             lv->addWidget(treeView);
 
+            treeView->setDragEnabled(true);
+            treeView->setDragDropMode(QTreeView::DragOnly);
+
 
 }
 
@@ -72,6 +75,7 @@ void AssetBrowser::Private::updateModel()
     fsmodel->setRootPath(QDir::currentPath());
 
     treeView->setModel(fsmodel);
+    treeView->setRootIndex(fsmodel->index(QDir::currentPath()));
 }
 
 

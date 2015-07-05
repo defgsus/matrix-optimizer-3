@@ -21,6 +21,7 @@
 #include <QDrag>
 #include <QMessageBox>
 #include <QUrl>
+#include <QFileInfo>
 
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
@@ -381,13 +382,24 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
     {
         const auto list = e->mimeData()->urls();
         QList<Object*> objs;
-        QList<QUrl> notworking;
-        for (const auto & url : list)
+        QList<QString> notworking;
+        for (const QUrl& url : list)
         {
-            if (auto o = ObjectFactory::createObjectFromUrl(url))
-                objs << o;
-            else
-                notworking << url;
+            QString shortfn = QFileInfo(url.toString()).fileName();
+            try
+            {
+                if (auto o = ObjectFactory::createObjectFromUrl(url))
+                    objs << o;
+                else
+                    notworking << QObject::tr("%1: format not supported")
+                                  .arg(shortfn);
+            }
+            catch (const Exception& e)
+            {
+                notworking << QObject::tr("%1: %2")
+                              .arg(shortfn)
+                              .arg(e.what());
+            }
         }
         // add them all at once
         if (!objs.isEmpty())
@@ -396,11 +408,11 @@ void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
         if (!notworking.isEmpty())
         {
             QString msg = QObject::tr("The following urls could not be wrapped into an object.");
-            for (const auto & url : notworking)
+            for (const auto & text : notworking)
             {
-                msg.append("\n" + url.toString());
+                msg.append("\n" + text);
             }
-            QMessageBox::information(0, QObject::tr("Filename drop"), msg);
+            QMessageBox::information(0, QObject::tr("File drop"), msg);
         }
     }
 

@@ -46,8 +46,8 @@ public:
 
     // ---------------- setter -----------------
 
-    void setValue(const QString& fn) { value_ = fn; }
-    void setDefaultValue(const QString& fn) { defaultValue_ = fn; }
+    void setValue(const QString& text) { value_ = text; }
+    void setDefaultValue(const QString& text) { defaultValue_ = text; }
     void setTextType(TextType t) { textType_ = t; }
 
     void setVariableNames(const QStringList& names) { varNames_ = names; }

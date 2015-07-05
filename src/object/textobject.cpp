@@ -38,6 +38,11 @@ void TextObject::deserialize(IO::DataStream & io)
     io.readHeader("text", 1);
 }
 
+void TextObject::setText(const QString &text, TextType type)
+{
+    pType_->setValue(type);
+    pText_->setValue(text);
+}
 
 
 void TextObject::createParameters()

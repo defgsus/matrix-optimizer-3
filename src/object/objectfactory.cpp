@@ -37,6 +37,7 @@
 #include "object/control/sequencefloat.h"
 #include "object/control/modulatorobjectfloat.h"
 #include "object/synthesizer.h"
+#include "object/textobject.h"
 #include "object/texture/imageto.h"
 #include "util/audioobjectconnections.h"
 #include "audio/filterao.h"
@@ -379,11 +380,32 @@ Object * ObjectFactory::createObjectFromUrl(const QUrl& url)
     }
 
     // audio files
-    if (ft == IO::FT_SOUND_FILE)
+    if (ft == IO::FT_SOUND)
     if (auto o = create_object<SequenceFloat>(shortfn))
     {
         o->setSequenceType(SequenceFloat::ST_SOUNDFILE);
         o->setSoundFilename(fn);
+        return o;
+    }
+
+    // text files
+    if (ft == IO::FT_TEXT)
+    if (auto o = create_object<TextObject>(shortfn))
+    {
+        QFile f(fn);
+        if (!f.open(QFile::ReadOnly | QFile::Text))
+            MO_IO_ERROR(READ, tr("Could not open text file '%1' for reading\n%2")
+                        .arg(shortfn)
+                        .arg(f.errorString()));
+        /// @todo Support encoding options for reading general text files
+        o->setText(QString::fromUtf8(f.readAll()), TT_PLAIN_TEXT);
+        return o;
+    }
+
+    // object templates
+    if (ft == IO::FT_OBJECT_TEMPLATE)
+    {
+        auto o = loadObject(fn);
         return o;
     }
 

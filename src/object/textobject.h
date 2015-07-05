@@ -32,6 +32,10 @@ public:
 
     virtual QPair<QString, TextType> valueText(Double time, uint thread) const
                         Q_DECL_OVERRIDE;
+
+    /** Sets the text content and type */
+    void setText(const QString& text, TextType type);
+
 private:
 
     void updateParamType_();

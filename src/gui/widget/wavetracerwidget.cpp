@@ -784,7 +784,7 @@ void WaveTracerWidget::playIr()
 
 bool WaveTracerWidget::loadSound()
 {
-    QString fn = IO::Files::getOpenFileName(IO::FT_SOUND_FILE, this);
+    QString fn = IO::Files::getOpenFileName(IO::FT_SOUND, this);
     if (fn.isEmpty())
         return false;
 

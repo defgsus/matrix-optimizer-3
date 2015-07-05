@@ -29,7 +29,7 @@ namespace IO {
         FT_GEOMETRY_SETTINGS,
         FT_INTERFACE_XML,
         FT_INTERFACE_PRESET,
-        FT_SOUND_FILE,
+        FT_SOUND,
         FT_IMPULSE_RESPONSE,
         /** Like .mod and .s3m */
         FT_TRACKER,
@@ -37,7 +37,8 @@ namespace IO {
         FT_POVRAY,
         FT_EQUATION_PRESET,
         FT_HELP_EXPORT,
-        FT_LADSPA
+        FT_LADSPA,
+        FT_TEXT
     };
 
     extern const QStringList fileTypeIds;
