@@ -30,6 +30,7 @@
 #include "gui/frontitemeditor.h"
 #include "gui/widget/objectoutputview.h"
 #include "gui/widget/transportwidget.h"
+#include "gui/widget/assetbrowser.h"
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
 #include "io/error.h"
@@ -164,6 +165,9 @@ void MainWindow::createDockWidgets_()
     removeDockWidget(dock);
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
+    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("Browser"), controller_->assetBrowser());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());

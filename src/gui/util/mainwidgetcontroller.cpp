@@ -54,6 +54,7 @@
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
 #include "gui/scenedescdialog.h"
+#include "gui/widget/assetbrowser.h"
 #include "gui/widget/objectoutputview.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
@@ -130,6 +131,11 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sequencer_        (0),
       clipView_         (0),
       seqView_          (0),
+      frontScene_       (0),
+      frontView_        (0),
+      frontItemEditor_  (0),
+      objectOutputView_ (0),
+      assetBrowser_     (0),
       transportWidget_  (0),
       isVisibleSequencer_(true),
       isVisibleClipView_(true),
@@ -270,6 +276,9 @@ void MainWidgetController::createObjects_()
             statusBar_, SLOT(showMessage(QString)));
     connect(seqView_, SIGNAL(clicked()),
             this, SLOT(onSequenceClicked_()));
+
+    // asset browser
+    assetBrowser_ = new AssetBrowser(window_);
 
     // server/client view
     serverView_ = 0;

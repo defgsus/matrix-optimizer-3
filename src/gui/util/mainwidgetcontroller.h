@@ -50,6 +50,7 @@ class FrontView;
 class FrontItemEditor;
 class RecentFiles;
 class ObjectOutputView;
+class AssetBrowser;
 
 class MainWidgetController : public QObject
 {
@@ -78,6 +79,7 @@ public:
     SequenceView * sequenceView() const { return seqView_; }
     ObjectOutputView * objectOutputView() const { return objectOutputView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
+    AssetBrowser * assetBrowser() const { return assetBrowser_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
@@ -231,7 +233,7 @@ private:
     FrontView * frontView_;
     FrontItemEditor * frontItemEditor_;
     ObjectOutputView * objectOutputView_;
-
+    AssetBrowser * assetBrowser_;
     TransportWidget * transportWidget_;
 
     bool isVisibleSequencer_,

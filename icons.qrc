@@ -60,5 +60,7 @@
         <file alias="obj_trans_clear.png">assets/icon/obj_trans_clear.png</file>
         <file alias="obj_trans_input.png">assets/icon/obj_trans_input.png</file>
         <file alias="obj_trans_mirror.png">assets/icon/obj_trans_mirror.png</file>
+        <file alias="obj_text.png">assets/icon/obj_text.png</file>
+        <file alias="obj_microphone_group.png">assets/icon/obj_microphone_group.png</file>
     </qresource>
 </RCC>

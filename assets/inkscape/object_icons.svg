@@ -172,15 +172,15 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="173.17467"
-     inkscape:cy="381.87592"
+     inkscape:cx="428.22551"
+     inkscape:cy="309.23997"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1920"
-     inkscape:window-height="1056"
+     inkscape:window-width="1440"
+     inkscape:window-height="851"
      inkscape:window-x="0"
-     inkscape:window-y="24"
+     inkscape:window-y="25"
      inkscape:window-maximized="1"
      inkscape:snap-global="false"
      borderlayer="true">
@@ -2907,5 +2907,129 @@
        inkscape:export-filename="/home/defgsus/prog/C/mo/matrixoptimizer3/assets/icon/obj_trans_mirror.png"
        inkscape:export-xdpi="164"
        inkscape:export-ydpi="164" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone_group.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-314.4982"
+       x="703.60095"
+       height="68.188736"
+       width="68.188736"
+       id="rect3736"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <g
+       id="g3742"
+       transform="matrix(0.6068722,0,0,0.6068722,121.70362,291.47455)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone_group.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001">
+      <path
+         sodipodi:type="arc"
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+         id="path3738"
+         sodipodi:cx="340.8002"
+         sodipodi:cy="64.685532"
+         sodipodi:rx="11.237947"
+         sodipodi:ry="11.237947"
+         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         transform="translate(-48.232233,667.02031)"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+         d="m 283.09781,737.76675 -14.62812,14.90458 3.83723,3.46056 14.83149,-14.8296"
+         id="path3740"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccc"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+    </g>
+    <g
+       transform="matrix(-0.6068722,0,0,0.6068722,440.02989,291.49621)"
+       id="g3746"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone_group.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001">
+      <path
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         transform="translate(-48.232233,667.02031)"
+         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         sodipodi:ry="11.237947"
+         sodipodi:rx="11.237947"
+         sodipodi:cy="64.685532"
+         sodipodi:cx="340.8002"
+         id="path3748"
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+         sodipodi:type="arc" />
+      <path
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         sodipodi:nodetypes="cccc"
+         inkscape:connector-curvature="0"
+         id="path3750"
+         d="m 283.09781,737.76675 -14.62812,14.90458 3.83723,3.46056 14.83149,-14.8296"
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038" />
+    </g>
+    <g
+       id="g3752"
+       transform="matrix(-0.44134463,-0.41654386,-0.41654386,0.44134463,714.48619,527.17987)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone_group.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001">
+      <path
+         sodipodi:type="arc"
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+         id="path3754"
+         sodipodi:cx="340.8002"
+         sodipodi:cy="64.685532"
+         sodipodi:rx="11.237947"
+         sodipodi:ry="11.237947"
+         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         transform="translate(-48.232233,667.02031)"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+      <path
+         style="fill:none;stroke:#000000;stroke-width:3.4000001;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:13.60000038"
+         d="m 283.09781,737.76675 -14.62812,14.90458 3.83723,3.46056 14.83149,-14.8296"
+         id="path3756"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cccc"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+    </g>
+    <rect
+       inkscape:export-ydpi="164"
+       inkscape:export-xdpi="164"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_text.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-399.59436"
+       x="704.48212"
+       height="68.188736"
+       width="68.188736"
+       id="rect3758"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <text
+       inkscape:export-ydpi="164"
+       inkscape:export-xdpi="164"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_text.png"
+       sodipodi:linespacing="125%"
+       id="text3760"
+       y="748.76337"
+       x="342.41846"
+       style="font-size:34.10548019px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:500;font-stretch:normal;font-family:Rekha;-inkscape-font-specification:Rekha Medium"
+         y="748.76337"
+         x="342.41846"
+         id="tspan3762"
+         sodipodi:role="line">abc</tspan></text>
   </g>
 </svg>

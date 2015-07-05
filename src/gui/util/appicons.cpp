@@ -35,6 +35,8 @@
 #include "object/texture/blurto.h"
 #include "object/ascriptobject.h"
 #include "object/oscillograph.h"
+#include "object/microphonegroup.h"
+#include "object/textobject.h"
 #include "io/error.h"
 
 namespace MO {
@@ -75,7 +77,9 @@ struct AppIcons::Private
         I_GLSL,
         I_DERIVATIVE,
         I_TEX,
-        I_TO_BLUR
+        I_TO_BLUR,
+        I_TEXT,
+        I_MICROPHONE_GROUP
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -149,6 +153,8 @@ void AppIcons::Private::init()
     nameMap_.insert(I_DERIVATIVE, ":/icon/obj_derivative.png");
     nameMap_.insert(I_TEX, ":/icon/obj_tex.png");
     nameMap_.insert(I_TO_BLUR, ":/icon/obj_to_blur.png");
+    nameMap_.insert(I_TEXT, ":/icon/obj_text.png");
+    nameMap_.insert(I_MICROPHONE_GROUP, ":/icon/obj_microphone_group.png");
 }
 
 
@@ -202,6 +208,12 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 
     if (qobject_cast<const BlurTO*>(o))
         return I_TO_BLUR;
+
+    if (qobject_cast<const TextObject*>(o))
+        return I_TEXT;
+
+    if (qobject_cast<const MicrophoneGroup*>(o))
+        return I_MICROPHONE_GROUP;
 
     if (o->isClip()) return I_CLIP;
     if (o->isShader()) return I_GLSL;
