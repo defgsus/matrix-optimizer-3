@@ -25,11 +25,22 @@
 
 namespace MO {
 
+AudioObjectConnection::AudioObjectConnection()
+    : p_from_           (0),
+      p_to_             (0),
+      p_outputChannel_  (0),
+      p_inputChannel_   (0),
+      p_numChannels_    (0)
+{
+}
+
 AudioObjectConnection::AudioObjectConnection(
         AudioObject *from, AudioObject *to,
         uint outputChannel, uint inputChannel,
         uint numChannels)
-    : p_from_           (from),
+    : p_fromId_         (from->idName()),
+      p_toId_           (to->idName()),
+      p_from_           (from),
       p_to_             (to),
       p_outputChannel_  (outputChannel),
       p_inputChannel_   (inputChannel),
@@ -49,9 +60,18 @@ bool AudioObjectConnection::operator == (const AudioObjectConnection& o) const
 
 std::ostream& operator << (std::ostream& out, const AudioObjectConnection& c)
 {
-    out << "Con(" << c.from()->name() << ":" << c.outputChannel()
-           << ", " << c.to()->name() << ":" << c.inputChannel()
-           << ", " << c.numChannels() << ")";
+    out << "Con(";
+    if (c.from())
+        out << c.from()->name();
+    else
+        out << "0x0(" << c.fromId() << ")";
+    out << ":" << c.outputChannel() << ", ";
+    if (c.to())
+        out << c.to()->name();
+    else
+        out << "0x0(" << c.toId() << ")";
+    out << ":" << c.inputChannel()
+        << ", " << c.numChannels() << ")";
     return out;
 }
 
@@ -101,7 +121,7 @@ void AudioObjectConnections::serialize(IO::DataStream & io) const
 
     io << quint32(cons_.size());
     for (auto c : cons_)
-        io << c->from()->idName() << c->to()->idName()
+        io << c->fromId() << c->toId()
            << quint32(c->outputChannel())
            << quint32(c->inputChannel())
            << quint32(c->numChannels());
@@ -139,11 +159,76 @@ void AudioObjectConnections::deserialize(IO::DataStream & io, Object * rootObjec
 
 }
 
+void AudioObjectConnections::deserialize(IO::DataStream & io)
+{
+    clear();
+
+    io.readHeader("aocons", 1);
+
+    quint32 num;
+
+    io >> num;
+
+    if (num > 0)
+    {
+        for (uint i=0; i<num; ++i)
+        {
+            auto con = new AudioObjectConnection;
+
+            io >> con->p_fromId_ >> con->p_toId_
+               >> con->p_outputChannel_ >> con->p_inputChannel_
+               >> con->p_numChannels_;
+
+            cons_.insert(con);
+        }
+    }
+
+}
+
+void AudioObjectConnections::assignPointers(Object *rootObject)
+{
+    QMap<QString, Object*> map;
+    rootObject->getIdMap(map);
+
+    for (AudioObjectConnection * con : *this)
+    {
+        if (!con->from() || !con->to())
+        {
+            auto from = map.find(con->fromId()),
+                 to = map.find(con->toId());
+            if (from != map.end() && to != map.end())
+            {
+                con->p_from_ = static_cast<AudioObject*>(from.value());
+                con->p_to_ = static_cast<AudioObject*>(to.value());
+            }
+        }
+    }
+}
+
+bool AudioObjectConnections::isUnassigned() const
+{
+    for (auto con : *this)
+        if (con->from() == 0 || con->to() == 0)
+            return true;
+    return false;
+}
+
 void AudioObjectConnections::dump(std::ostream & out) const
 {
     out << "AudioObjectConnections:\n";
     for (AudioObjectConnection * c : cons_)
-        out << " " << c->from()->name() << "->" << c->to()->name();
+    {
+        out << " ";
+        if (c->from())
+            out << c->from()->name();
+        else
+            out << "0x0(" << c->fromId() << ")";
+        out << "->";
+        if (c->to())
+            out << c->to()->name();
+        else
+            out << "0x0(" << c->toId() << ")";
+    }
     out << "\n--fromMap--\n";
     for (auto i = fromMap_.begin(); i!=fromMap_.end(); ++i)
         out << i->first << ", " << i->second << "\n";
@@ -276,7 +361,7 @@ AudioObjectConnection * AudioObjectConnections::connect(const AudioObjectConnect
     toMap_.insert(std::make_pair(con->to(), con));
     fromMap_.insert(std::make_pair(con->from(), con));
 
-    hasLoop();
+    //hasLoop();
 
     return con;
 }
@@ -371,6 +456,25 @@ void AudioObjectConnections::remove(Object *obj)
 AudioObjectConnections AudioObjectConnections::reducedTo(const Object* tree) const
 {
     QList<AudioObject*> list = tree->findChildObjects<AudioObject>(QString(), true);
+
+    AudioObjectConnections cons;
+
+    // go through all connections
+    for (AudioObjectConnection* c : *this)
+    {
+        if (list.contains(c->from()) && list.contains(c->to()))
+            cons.connect(*c);
+    }
+
+    return cons;
+}
+
+AudioObjectConnections AudioObjectConnections::reducedTo(const QList<const Object*>& trees) const
+{
+    QList<AudioObject*> list;
+
+    for (auto t : trees)
+        list << t->findChildObjects<AudioObject>(QString(), true);
 
     AudioObjectConnections cons;
 

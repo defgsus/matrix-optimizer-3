@@ -15,6 +15,7 @@
 #include <QModelIndex>
 
 #include "object/object.h"
+#include "object/util/audioobjectconnections.h"
 
 namespace MO {
 
@@ -28,6 +29,7 @@ public:
     static const QString typeMimeType;
     static const QString numMimeType;
     static const QString orderMimeType;
+    static const QString audioConMimeType;
 
     // ----------- info ----------------
 
@@ -39,7 +41,7 @@ public:
         first Object in clipboard */
     static bool isObjectTypeInClipboard(int typeFlags);
 
-    virtual QStringList formats() const;
+    //virtual QStringList formats() const;
 
     // ------------ store --------------
 
@@ -66,10 +68,14 @@ public:
 
     /** Restore the first tree/branch */
     Object * getObjectTree() const;
-    /** Restore all trees/branches */
+    /** Restore all trees/branches. */
     QList<Object*> getObjectTrees() const;
     /** Returns the top-level object IDs */
     QList<QString> getObjectTreeIds() const;
+
+    /** Returns the audio connections previously stored */
+    AudioObjectConnections * getAudioConnections(Object * rootObject = 0) const;
+    bool hasAudioConnections() const;
 
     // ------ for drag/drop -------------
 

@@ -386,9 +386,11 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
         ScopedSceneLockWrite lock(this);
 
         parent->addObject_(newChild, insert_index);
-        // get internal audio cons
+        // get attached audio cons
         if (auto acon = newChild->getAssignedAudioConnections())
         {
+            if (acon->isUnassigned())
+                acon->assignPointers(this);
             audioConnections()->addFrom(*acon);
             newChild->assignAudioConnections(0);
         }
@@ -414,9 +416,11 @@ void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int inse
             // add (could be faster with a list version...)
             parent->addObject_(n, insert_index++);
 
-            // get internal audio cons
+            // get attached audio cons
             if (auto acon = n->getAssignedAudioConnections())
             {
+                if (acon->isUnassigned())
+                    acon->assignPointers(this);
                 audioConnections()->addFrom(*acon);
                 n->assignAudioConnections(0);
             }

@@ -150,7 +150,8 @@ public slots:
     bool moveObject(Object * object, Object * newParent, int newIndex = -1);
 
     /** Works the same as addObject().
-        If @p parent is a valueTextureInterface and @p newObject has a texture input, they will be connected. */
+        If @p object is a ValueTextureInterface and @p newObject has a texture input,
+        they will be connected. */
     void appendTextureProcessor(Object * object, Object * newObject, int insert_index = -1);
 
     // ----------- properties ------------------

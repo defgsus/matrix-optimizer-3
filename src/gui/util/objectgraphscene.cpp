@@ -1652,17 +1652,19 @@ void ObjectGraphScene::onParameterVisibilityChanged_(Parameter * )
 
 // ----------------------------------- editing -------------------------------------------
 
-void ObjectGraphScene::addObject(Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
+void ObjectGraphScene::addObject(
+        Object *parent, Object *newObject, const QPoint& gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
     newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
     p_->nextSelectedObject = newObject;
-    p_->root->editor()->addObject(parent, newObject, insert_index);    
+    p_->root->editor()->addObject(parent, newObject, insert_index);
 }
 
-void ObjectGraphScene::addObjects(Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
+void ObjectGraphScene::addObjects(
+        Object *parent, const QList<Object *> newObjects, const QPoint &gridPos, int insert_index)
 {
     MO_ASSERT(p_->root && p_->root->editor(), "Can't edit");
 
@@ -1790,6 +1792,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     QList<Object*> copies = objdata->getObjectTrees();
 
     // XXX how to copy/paste gui settings???
+    // UPDATE: Almost all settings are now saved in Object::attachedData()
 
     // find object to paste in
     Object * root = p_->root;

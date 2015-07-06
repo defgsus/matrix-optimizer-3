@@ -13,6 +13,8 @@
 
 #include "objecttreemimedata.h"
 #include "object/object.h"
+#include "object/scene.h"
+//#include "object/util/audioobjectconnections.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -24,6 +26,7 @@ const QString ObjectTreeMimeData::objectMimeType = "matrixoptimizer/object-tree"
 const QString ObjectTreeMimeData::typeMimeType = "matrixoptimizer/object-type";
 const QString ObjectTreeMimeData::numMimeType = "matrixoptimizer/num-object-tree";
 const QString ObjectTreeMimeData::orderMimeType = "matrixoptimizer/object-tree-order";
+const QString ObjectTreeMimeData::audioConMimeType = "matrixoptimizer/audio-connections";
 
 
 ObjectTreeMimeData::ObjectTreeMimeData() :
@@ -31,12 +34,12 @@ ObjectTreeMimeData::ObjectTreeMimeData() :
 {
 
 }
-
+/*
 QStringList ObjectTreeMimeData::formats() const
 {
     return QStringList() << objectMimeType;
 }
-
+*/
 bool ObjectTreeMimeData::isObjectInClipboard()
 {
     return application()->clipboard()->mimeData()->formats()
@@ -97,36 +100,26 @@ void ObjectTreeMimeData::storeObjectTrees(const QList<const Object *>& o)
         o[i]->serializeTree(io);
     }
     setData(objectMimeType, a);
+
+    // store audio connections
+    a.clear();
+    io.device()->reset();
+    if (!o.isEmpty())
+    {
+        auto s = o[0]->sceneObject();
+        auto con = s->audioConnections()->reducedTo(o);
+        con.serialize(io);
+    }
+    setData(audioConMimeType, a);
 }
 
-void ObjectTreeMimeData::storeObjectTrees(const QList<Object *>& o)
+void ObjectTreeMimeData::storeObjectTrees(const QList<Object*>& objs)
 {
-    QByteArray a;
-    IO::DataStream io(&a, QIODevice::WriteOnly);
-
-    // store number
-    io << (qint32)o.size();
-    setData(numMimeType, a);
-
-    // store types
-    a.clear();
-    io.device()->reset();
-    io << (qint32)o.size();
-    for (int i=0; i<o.size(); ++i)
-    {
-        io << (qint64)o[i]->type();
-    }
-    setData(typeMimeType, a);
-
-    // store objects
-    a.clear();
-    io.device()->reset();
-    io << (qint32)o.size();
-    for (int i=0; i<o.size(); ++i)
-    {
-        o[i]->serializeTree(io);
-    }
-    setData(objectMimeType, a);
+    // convert to list of <const Object*>
+    QList<const Object*> list;
+    for (auto o : objs)
+        list << o;
+    storeObjectTrees(list);
 }
 
 void ObjectTreeMimeData::storeOrder(const QList<int>& order)
@@ -205,8 +198,17 @@ Object * ObjectTreeMimeData::getObjectTree() const
     if (num < 1)
         MO_IO_ERROR(READ, "No objects stored in clipboard");
 
-    // return first
-    return Object::deserializeTree(io);
+    // return first object
+    Object * obj = Object::deserializeTree(io);
+
+    // attach audio connections
+    if (hasAudioConnections())
+    {
+        if (auto con = getAudioConnections(obj))
+            obj->assignAudioConnections(con);
+    }
+
+    return obj;
 }
 
 QList<Object*> ObjectTreeMimeData::getObjectTrees() const
@@ -227,6 +229,18 @@ QList<Object*> ObjectTreeMimeData::getObjectTrees() const
     {
         list.append( Object::deserializeTree(io) );
     }
+
+    // attach audio connections
+    if (!list.isEmpty() && hasAudioConnections())
+    {
+        if (auto con = getAudioConnections())
+        {
+            for (auto o : list)
+                con->assignPointers(o);
+            list.last()->assignAudioConnections(con);
+        }
+    }
+
     return list;
 }
 
@@ -265,8 +279,27 @@ QList<int> ObjectTreeMimeData::getOrder() const
 
 bool ObjectTreeMimeData::hasOrder() const
 {
-    return data(orderMimeType).size();
+    return !data(orderMimeType).isEmpty();
 }
 
+bool ObjectTreeMimeData::hasAudioConnections() const
+{
+    return !data(audioConMimeType).isEmpty();
+}
+
+AudioObjectConnections * ObjectTreeMimeData::getAudioConnections(Object * root) const
+{
+    QByteArray a = data(audioConMimeType);
+    if (a.isEmpty())
+        MO_IO_ERROR(READ, "No audio-connections data in clipboard");
+    IO::DataStream io(a);
+
+    auto con = new AudioObjectConnections;
+    if (root)
+        con->deserialize(io, root);
+    else
+        con->deserialize(io);
+    return con;
+}
 
 } // namespace MO

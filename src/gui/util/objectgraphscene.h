@@ -124,7 +124,8 @@ public slots:
         @p newObject is completely given away. If it can't be added to parent, it will be deleted
         and a message is displayed to the user.
         @p gridPos is local inside parent. */
-    void addObject(Object * parent, Object * newObject, const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
+    void addObject(Object * parent, Object * newObject,
+                   const QPoint &gridPos = QPoint(1,1), int insert_index = -1);
 
     /** Adds an object to object-tree and item-tree.
         The items in @p newObjects are completely given away. If they can't be added to parent,

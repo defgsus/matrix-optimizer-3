@@ -14,6 +14,7 @@
 #include <map>
 #include <set>
 
+#include <QString>
 #include <QList>
 
 #include "types/int.h"
@@ -27,6 +28,7 @@ class Object;
 class AudioObjectConnection
 {
 public:
+    AudioObjectConnection();
     AudioObjectConnection(AudioObject * from, AudioObject * to,
                uint outputChannel = 0, uint inputChannel = 0,
                uint numChannels = 1);
@@ -35,6 +37,8 @@ public:
     bool operator != (const AudioObjectConnection& other) const
         { return !(*this == other); }
 
+    const QString& fromId() const { return p_fromId_; }
+    const QString& toId() const { return p_toId_; }
     AudioObject * from() const { return p_from_; }
     AudioObject * to() const { return p_to_; }
     uint outputChannel() const { return p_outputChannel_; }
@@ -42,6 +46,8 @@ public:
     uint numChannels() const { return p_numChannels_; }
 
 private:
+    friend class AudioObjectConnections;
+    QString p_fromId_, p_toId_;
     AudioObject * p_from_, * p_to_;
     uint p_outputChannel_, p_inputChannel_,
          p_numChannels_;
@@ -53,7 +59,7 @@ std::ostream& operator << (std::ostream& out, const AudioObjectConnection&);
 
 /** Container for holding the edges between AudioObjects.
     <p>This is the actual data structure used by Scene to store the
-    connections between audio objects. The information is [de]serailized in
+    connections between audio objects. The information is [de]serialized in
     Scene::[de]serializeAfterChilds().
     */
 class AudioObjectConnections
@@ -76,7 +82,19 @@ public:
     // -------------------- io -----------------------
 
     void serialize(IO::DataStream&) const;
+    /** Reads connections from io stream.
+        @p rootObject is used to querry the pointers for each connected object. */
     void deserialize(IO::DataStream&, Object * rootObject);
+    /** Reads connections from io stream.
+        Will only read the object IDs which creates an invalid class.
+        Use assignPointers() to make the class useable. */
+    void deserialize(IO::DataStream&);
+
+    /** Assigns the object pointers for each connection according to the ids. */
+    void assignPointers(Object * rootObject);
+    /** Returns true if any of the connections has unassigned pointers */
+    bool isUnassigned() const;
+
 
     void dump(std::ostream&) const;
 
@@ -133,6 +151,10 @@ public:
     /** Returns a new connection container containing only the connections
         that are in the given tree (from and to). */
     AudioObjectConnections reducedTo(const Object * tree) const;
+
+    /** Returns a new connection container containing only the connections
+        that are in the given trees (from and to). */
+    AudioObjectConnections reducedTo(const QList<const Object*>& tree) const;
 
 private:
 
