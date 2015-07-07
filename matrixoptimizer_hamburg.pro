@@ -62,6 +62,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -langelscript \
+        -ldl
 #        -lCGAL \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }

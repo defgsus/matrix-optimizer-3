@@ -753,13 +753,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(but, SIGNAL(clicked()), script, SLOT(executeScript()));
             diag->show();
         });
-
+#ifndef MO_HAMBURG
         a = new QAction(tr("export AngelScript namespace"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
             exportAngelScriptFunctions("./angelscript_export.xml");
         });
+#endif
 #endif
 
     // ######### HELP MENU #########

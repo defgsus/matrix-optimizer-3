@@ -3,7 +3,7 @@
 
 <h2>Introduction</h2>
 
-<p>Objects in this software are all things that can be put into the <b>object tree</b>. They can roughly be categorized into the following types:</p>
+<p>Objects in this software are all things that can be put into the <b>object tree</b> or <b>scene tree</b>. They can roughly be categorized into the following types:</p>
 <ul>
 <li><a href="#transformations">transformations</a></li>
 <li><a href="#controlobjects">control objects</a></li>
@@ -13,7 +13,7 @@
 
 <p>The object tree has the <b>Scene</b> object as it's root. All other objects are placed into the scene as children. Most objects can have children and therefore can create a hierarchy of objects. In general, in this software, an object placed inside another objects is called it's <b>children</b> and the object in which is is placed is called the <b>parent</b>. Objects can have multiple children but only one parent.</p>
 
-<p>In general, the tree hierarchy is a means of grouping objects together. Some object positions in the tree, however, have a special meaning, as e.g. <a href="#transformations">transformation objects</a>. Also the <b>order</b> of objects on the same level is important. This order is unrelated to the position of objects in the scene view. To change the order of objects, locate the <a href="objectview.html">object view</a> and drag around the objects in the browser list as desired.</p>
+<p>In general, the tree hierarchy is a means of grouping objects together. Some object's positions in the tree, however, have a special meaning, as e.g. <a href="#transformations">transformation objects</a>. Also the <b>order</b> of objects on the same level is important. This order is unrelated to the position of objects in the scene view. To change the order of objects, locate the <a href="objectview.html">object view</a> and drag around the objects in the browser list as desired.</p>
 
 <p>The properties or settings of an object, for example, the color of a 3D-model, or the resolution of a camera, are controlled by <a href="parameters">parameters</a>. Parameters themselves do not appear in the object tree. They are displayed and edited in the <a href="parameterview.html">parameter view</a>.</p>
 
@@ -63,7 +63,8 @@
 <p>This is no transformation in itself but rather a container for transformations. All children transformations can be mixed in or out with the <b>mix</b> parameter.</p>
 <p>Note that 'mixing' between transformations does not always make sense. It works without problem for scale and position. But mixing into a 180 degree rotation will not rotate the object during the transition, instead it will look like a scale transformation. Think of the mix transformation as only mixing between the <b>result</b> of two transformations.</p>
 
-
+<h3>input, clear &amp; mirror</h3>
+<p>TODO...</p>
 
 
 <a name="soundobjects"></a>
@@ -130,5 +131,5 @@
 
 <h3>audio / control conversion</h3>
 <p>Special topic, TODO!!</p>
-<p>... one thing though, audio outputs will be buffered for 3 seconds when they are connected via a control signal (green cable). So a parameter can look up 3 seconds of the past audio output.</p>
-<p>... and another thing. Converting control signals to audio signals is also possible by dragging the control object onto the audio input connector. Depending on the complexity of the control signal, this might be computationally expensive, because the signal must be calculated for every audio sample instead of, say, for every screen refresh. The <a href="_object_ParameterAO.html">audio parameter</a> object converts a modulateable parameter to an audio signal at an adjustable sample rate.</p>
+<p>... one thing though, audio outputs can be directly connected to control inputs (red -> green). The audio outputs will be buffered for 3 seconds when they are connected via a control signal (green cable). So a parameter can look up 3 seconds of the past audio output.</p>
+<p>... and another thing. Converting control signals to audio signals is <b>currently</b> not possible directly. Use the <a href="_object_ParameterAO.html">Parameter</a> audio object to convert a control signal. Depending on the complexity of the control signal, this might be computationally expensive, because the signal must be calculated for every audio sample instead of, say, for every screen refresh. To save computation time you can choose to sample the control signal at a lower sampling rate.</p>

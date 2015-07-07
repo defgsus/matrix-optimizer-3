@@ -30,13 +30,15 @@
 #include "object/control/sequencefloat.h"
 #include "object/control/modulatorobjectfloat.h"
 #include "object/control/derivativeobjectfloat.h"
-#include "object/synthesizer.h"
 #include "object/audio/filterao.h"
 #include "object/texture/blurto.h"
 #include "object/ascriptobject.h"
 #include "object/oscillograph.h"
-#include "object/microphonegroup.h"
 #include "object/textobject.h"
+#ifndef MO_DISABLE_SPATIAL
+#   include "object/synthesizer.h"
+#   include "object/microphonegroup.h"
+#endif
 #include "io/error.h"
 
 namespace MO {
@@ -202,6 +204,8 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_DERIVATIVE;
 
 #ifndef MO_DISABLE_SPATIAL
+    if (qobject_cast<const MicrophoneGroup*>(o))
+        return I_MICROPHONE_GROUP;
     if (qobject_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
 #endif
@@ -211,9 +215,6 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 
     if (qobject_cast<const TextObject*>(o))
         return I_TEXT;
-
-    if (qobject_cast<const MicrophoneGroup*>(o))
-        return I_MICROPHONE_GROUP;
 
     if (o->isClip()) return I_CLIP;
     if (o->isShader()) return I_GLSL;

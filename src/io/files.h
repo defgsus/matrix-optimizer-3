@@ -12,6 +12,7 @@
 #define MOSRC_IO_FILES_H
 
 #include <QStringList>
+#include <QWidget>
 
 #include "filetypes.h"
 

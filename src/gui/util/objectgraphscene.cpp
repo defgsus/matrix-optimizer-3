@@ -1114,7 +1114,8 @@ void ObjectGraphScene::Private::showPopup()
     popup->addActions(actions);
 
     // don't dispay if empty (first two actions are title & separator)
-    if (actions.size() < 3)
+    if (actions.size() <= 1
+        || (actions.size() <= 2 && actions[1]->isSeparator()))
         popup->close();
     else
         popup->popup(QCursor::pos());

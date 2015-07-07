@@ -156,8 +156,11 @@ void Application::setPaletteFor(QWidget * w)
 
 void Application::aboutMO()
 {
-    QString str = MO::applicationName();
-    str += "\ncreated by Stefan Berke\nand Martin Hünniger, Stephan S. Hepper, Jan Zehn";
+    QString str = "<html>" + MO::applicationName();
+    str += "<p>created by Stefan Berke<br/>"
+           "and Martin Hünniger, Stephan S. Hepper, Jan Zehn</p>";
+    str += "<p>3rd party APIs:</p>" + MO::apiVersionString();
+    str += "</html>";
     QMessageBox::about(0, tr("Matrix Optimizer"), str);
 }
 

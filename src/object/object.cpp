@@ -1081,6 +1081,11 @@ void Object::idNamesChanged(const QMap<QString, QString> & map)
     // children
     for (auto c : childObjects())
         c->idNamesChanged(map);
+
+    // attached audio connections
+    // (of pasted/loaded objects)
+    if (p_aoCons_)
+        p_aoCons_->idNamesChanged(map);
 }
 
 void Object::propagateRenderMode(ObjectGl *parent)

@@ -16,6 +16,7 @@
 
 #include <QString>
 #include <QList>
+#include <QMap>
 
 #include "types/int.h"
 
@@ -95,6 +96,8 @@ public:
     /** Returns true if any of the connections has unassigned pointers */
     bool isUnassigned() const;
 
+    /** Renames the ids (must be done before assignPointers()) */
+    void idNamesChanged(const QMap<QString, QString> & map);
 
     void dump(std::ostream&) const;
 

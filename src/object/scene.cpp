@@ -413,12 +413,15 @@ void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int inse
         {
             // make the name unique
             n->setName( parent->makeUniqueName(n->name()) );
-            // add (could be faster with a list version...)
-            parent->addObject_(n, insert_index++);
+            // add (XXX could be faster with a list version...)
+            parent->addObject_(n, insert_index);
+            if (insert_index >= 0)
+                ++insert_index;
 
             // get attached audio cons
             if (auto acon = n->getAssignedAudioConnections())
             {
+                //acon->dump(std::cout);
                 if (acon->isUnassigned())
                     acon->assignPointers(this);
                 audioConnections()->addFrom(*acon);

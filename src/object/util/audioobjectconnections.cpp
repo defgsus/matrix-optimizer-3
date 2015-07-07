@@ -62,12 +62,12 @@ std::ostream& operator << (std::ostream& out, const AudioObjectConnection& c)
 {
     out << "Con(";
     if (c.from())
-        out << c.from()->name();
+        out << c.from()->idName();
     else
         out << "0x0(" << c.fromId() << ")";
     out << ":" << c.outputChannel() << ", ";
     if (c.to())
-        out << c.to()->name();
+        out << c.to()->idName();
     else
         out << "0x0(" << c.toId() << ")";
     out << ":" << c.inputChannel()
@@ -213,21 +213,40 @@ bool AudioObjectConnections::isUnassigned() const
     return false;
 }
 
+void AudioObjectConnections::idNamesChanged(const QMap<QString, QString> & map)
+{
+    for (AudioObjectConnection * con : cons_)
+    {
+        if (!con->fromId().isEmpty())
+        {
+            auto i = map.find(con->fromId());
+            if (i != map.end())
+                con->p_fromId_ = i.value();
+        }
+        if (!con->toId().isEmpty())
+        {
+            auto i = map.find(con->toId());
+            if (i != map.end())
+                con->p_toId_ = i.value();
+        }
+    }
+}
+
 void AudioObjectConnections::dump(std::ostream & out) const
 {
     out << "AudioObjectConnections:\n";
     for (AudioObjectConnection * c : cons_)
     {
-        out << " ";
         if (c->from())
-            out << c->from()->name();
+            out << c->from()->idName();
         else
             out << "0x0(" << c->fromId() << ")";
-        out << "->";
+        out << ":" << c->outputChannel() << "->";
         if (c->to())
-            out << c->to()->name();
+            out << c->to()->idName();
         else
             out << "0x0(" << c->toId() << ")";
+        out << ":" << c->inputChannel() << "\n";
     }
     out << "\n--fromMap--\n";
     for (auto i = fromMap_.begin(); i!=fromMap_.end(); ++i)

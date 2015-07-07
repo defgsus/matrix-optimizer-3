@@ -1,5 +1,7 @@
 3.0.2.46
 
+ - texture connections
+ - texture processing objects
  - disk render features
     - multi-threaded image writer
     - multi-channel audio out
@@ -13,3 +15,4 @@
  - fix immediate text update on button in code editor
    - alt/ctrl + enter/return for compile/update
  - lots of other gui fixes
+ - copy/paste objects keeps audio connections

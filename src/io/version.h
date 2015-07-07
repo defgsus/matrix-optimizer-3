@@ -50,6 +50,9 @@ const QString& versionString();
 /** Returns "Matrix Optimizer [version] [suffix] */
 const QString& applicationName();
 
+/** Returns a html string of the versions of all included APIs */
+QString apiVersionString();
+
 } // namespace MO
 
 #endif // MOSRC_IO_VERSION_H

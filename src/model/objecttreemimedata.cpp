@@ -108,6 +108,7 @@ void ObjectTreeMimeData::storeObjectTrees(const QList<const Object *>& o)
     {
         auto s = o[0]->sceneObject();
         auto con = s->audioConnections()->reducedTo(o);
+        //con.dump(std::cout);
         con.serialize(io);
     }
     setData(audioConMimeType, a);
@@ -235,8 +236,8 @@ QList<Object*> ObjectTreeMimeData::getObjectTrees() const
     {
         if (auto con = getAudioConnections())
         {
-            for (auto o : list)
-                con->assignPointers(o);
+            //for (auto o : list)
+            //    con->assignPointers(o);
             list.last()->assignAudioConnections(con);
         }
     }
