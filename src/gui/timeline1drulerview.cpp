@@ -20,7 +20,7 @@ namespace MO {
 namespace GUI {
 
 
-Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *parent)
+Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1d *timeline, QWidget *parent)
     :   QWidget(parent),
         timelineView_   (new Timeline1DView(timeline, this)),
         rulerX_         (new Ruler(this)),
@@ -91,12 +91,12 @@ Timeline1DRulerView::Timeline1DRulerView(MATH::Timeline1D *timeline, QWidget *pa
     timelineView_->setViewSpace(timelineView_->viewSpace(), true);
 }
 
-MATH::Timeline1D * Timeline1DRulerView::timeline() const
+MATH::Timeline1d * Timeline1DRulerView::timeline() const
 {
     return timelineView_->timeline();
 }
 
-void Timeline1DRulerView::setTimeline(MATH::Timeline1D *timeline)
+void Timeline1DRulerView::setTimeline(MATH::Timeline1d *timeline)
 {
     timelineView_->setTimeline(timeline);
 }

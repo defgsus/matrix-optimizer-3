@@ -37,9 +37,9 @@ namespace MO {
 class Timeline1AS : public RefCounted
 {
 public:
-    MATH::Timeline1D * tl;
+    MATH::Timeline1d * tl;
 
-    typedef MATH::Timeline1D WrappedClass;
+    typedef MATH::Timeline1d WrappedClass;
 
     static const unsigned int num = 1;
 
@@ -50,12 +50,12 @@ public:
     // ----- ctor -----
 
     Timeline1AS()
-        : tl    (new MATH::Timeline1D)
+        : tl    (new MATH::Timeline1d)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS()");
     }
 
-    Timeline1AS(MATH::Timeline1D * tl)
+    Timeline1AS(MATH::Timeline1d * tl)
         : tl    (tl)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS(" << tl << ")");
@@ -124,10 +124,10 @@ public:
 template <class Vec, unsigned int NUM>
 class TimelineXAS : public RefCounted
 {
-    MATH::Timeline1D tl[NUM];
+    MATH::Timeline1d tl[NUM];
 public:
 
-    typedef MATH::Timeline1D WrappedClass;
+    typedef MATH::Timeline1d WrappedClass;
 
     static const unsigned int num = NUM;
 
@@ -275,14 +275,14 @@ void register_timeline_enums(asIScriptEngine * engine)
     std::string enumType = "TimelinePointType";
     int r; Q_UNUSED(r);
     r = engine->RegisterEnum(enumType.c_str()); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::Timeline1D::Point::CONSTANT); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::Timeline1D::Point::LINEAR); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::Timeline1D::Point::SMOOTH); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::Timeline1D::Point::SYMMETRIC); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::Timeline1D::Point::SYMMETRIC2); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::Timeline1D::Point::SPLINE4_SYM); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::Timeline1D::Point::SPLINE4); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::Timeline1D::Point::SPLINE6); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::Timeline1d::Point::CONSTANT); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::Timeline1d::Point::LINEAR); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::Timeline1d::Point::SMOOTH); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::Timeline1d::Point::SYMMETRIC); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::Timeline1d::Point::SYMMETRIC2); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::Timeline1d::Point::SPLINE4_SYM); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::Timeline1d::Point::SPLINE4); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::Timeline1d::Point::SPLINE6); assert( r >= 0 );
 }
 
 template <class Class>
@@ -388,19 +388,19 @@ void registerAngelScript_timeline(asIScriptEngine *engine)
     }
 }
 
-Timeline1AS * timeline_to_angelscript(MATH::Timeline1D * tl)
+Timeline1AS * timeline_to_angelscript(MATH::Timeline1d * tl)
 {
     return new Timeline1AS(tl);
 }
 
-Timeline1AS * timeline_to_angelscript(const MATH::Timeline1D & tl)
+Timeline1AS * timeline_to_angelscript(const MATH::Timeline1d & tl)
 {
     auto as = new Timeline1AS();
     *as->tl = tl;
     return as;
 }
 
-const MATH::Timeline1D& get_timeline(const Timeline1AS*as)
+const MATH::Timeline1d& get_timeline(const Timeline1AS*as)
 {
     return *(as->tl);
 }

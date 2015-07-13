@@ -20,41 +20,41 @@
 namespace MO {
 namespace MATH {
 
-const char *Timeline1D::Point::getName(Point::Type type)
+const char *Timeline1d::Point::getName(Point::Type type)
 {
     switch (type)
     {
         default:
-        case Timeline1D::Point::DEFAULT:     return "default";    break;
-        case Timeline1D::Point::CONSTANT:    return "constant";   break;
-        case Timeline1D::Point::LINEAR:      return "linear";     break;
-        case Timeline1D::Point::SMOOTH:      return "smooth*";    break;
-        case Timeline1D::Point::SYMMETRIC:   return "symmetric*"; break;
-        case Timeline1D::Point::SYMMETRIC2:  return "hermite";    break;
-        case Timeline1D::Point::SPLINE4_SYM: return "symmetric4*";break;
-        case Timeline1D::Point::SPLINE4:     return "spline4";    break;
-        case Timeline1D::Point::SPLINE6:     return "spline6";    break;
+        case Timeline1d::Point::DEFAULT:     return "default";    break;
+        case Timeline1d::Point::CONSTANT:    return "constant";   break;
+        case Timeline1d::Point::LINEAR:      return "linear";     break;
+        case Timeline1d::Point::SMOOTH:      return "smooth*";    break;
+        case Timeline1d::Point::SYMMETRIC:   return "symmetric*"; break;
+        case Timeline1d::Point::SYMMETRIC2:  return "hermite";    break;
+        case Timeline1d::Point::SPLINE4_SYM: return "symmetric4*";break;
+        case Timeline1d::Point::SPLINE4:     return "spline4";    break;
+        case Timeline1d::Point::SPLINE6:     return "spline6";    break;
     }
 }
 
-const char *Timeline1D::Point::getPersistentName(Point::Type type)
+const char *Timeline1d::Point::getPersistentName(Point::Type type)
 {
     switch (type)
     {
         default:
-        case Timeline1D::Point::DEFAULT:     return "def";     break;
-        case Timeline1D::Point::CONSTANT:    return "const";   break;
-        case Timeline1D::Point::LINEAR:      return "linear";  break;
-        case Timeline1D::Point::SMOOTH:      return "smooth";  break;
-        case Timeline1D::Point::SYMMETRIC:   return "sym";     break;
-        case Timeline1D::Point::SYMMETRIC2:  return "hermite"; break;
-        case Timeline1D::Point::SPLINE4_SYM: return "sym4";    break;
-        case Timeline1D::Point::SPLINE4:     return "spline4"; break;
-        case Timeline1D::Point::SPLINE6:     return "spline6"; break;
+        case Timeline1d::Point::DEFAULT:     return "def";     break;
+        case Timeline1d::Point::CONSTANT:    return "const";   break;
+        case Timeline1d::Point::LINEAR:      return "linear";  break;
+        case Timeline1d::Point::SMOOTH:      return "smooth";  break;
+        case Timeline1d::Point::SYMMETRIC:   return "sym";     break;
+        case Timeline1d::Point::SYMMETRIC2:  return "hermite"; break;
+        case Timeline1d::Point::SPLINE4_SYM: return "sym4";    break;
+        case Timeline1d::Point::SPLINE4:     return "spline4"; break;
+        case Timeline1d::Point::SPLINE6:     return "spline6"; break;
     }
 }
 
-Timeline1D::Point::Type Timeline1D::Point::getTypeForPersistentName(const QString& name)
+Timeline1d::Point::Type Timeline1d::Point::getTypeForPersistentName(const QString& name)
 {
     for (int i=DEFAULT; i<MAX; ++i)
         if (name == getPersistentName((Type)i))
@@ -63,7 +63,7 @@ Timeline1D::Point::Type Timeline1D::Point::getTypeForPersistentName(const QStrin
 }
 
 
-Timeline1D::Timeline1D()
+Timeline1d::Timeline1d()
 {
     // no current point
     cur_ = 0;
@@ -72,14 +72,14 @@ Timeline1D::Timeline1D()
     lowerLimit_ = upperLimit_ = 0;
 }
 
-Timeline1D::~Timeline1D()
+Timeline1d::~Timeline1d()
 {
     // nothing to do
     // data (TpList) will wipe out itself
 }
 
 
-Timeline1D::Timeline1D(const Timeline1D &other)
+Timeline1d::Timeline1d(const Timeline1d &other)
     :   data_   (other.data_),
         cur_    (0),
         lowerLimit_(other.lowerLimit_),
@@ -90,7 +90,7 @@ Timeline1D::Timeline1D(const Timeline1D &other)
 
 }
 
-const Timeline1D& Timeline1D::operator = (const Timeline1D& other)
+const Timeline1d& Timeline1d::operator = (const Timeline1d& other)
 {
     data_ = other.data_;
     cur_ = 0;
@@ -102,17 +102,17 @@ const Timeline1D& Timeline1D::operator = (const Timeline1D& other)
     return *this;
 }
 
-bool Timeline1D::operator == (const Timeline1D& other) const
+bool Timeline1d::operator == (const Timeline1d& other) const
 {
     return data_ == other.data_;
 }
 
-Double Timeline1D::get(Double time) const
+Double Timeline1d::get(Double time) const
 {
     return limit_(getNoLimit(time));
 }
 
-Double Timeline1D::getNoLimit(Double time) const
+Double Timeline1d::getNoLimit(Double time) const
 {
     if (data_.empty()) return 0.0;
 
@@ -174,7 +174,7 @@ Double Timeline1D::getNoLimit(Double time) const
                 ret = i1->second.val;
                 return ret;
             }
-            const Timeline1D::Point
+            const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double f = (time-t1->t)/(t2->t - t1->t);
@@ -192,7 +192,7 @@ Double Timeline1D::getNoLimit(Double time) const
                 ret = i1->second.val;
                 return ret;
             }
-            const Timeline1D::Point
+            const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double f = (time-t1->t)/(t2->t - t1->t);
@@ -211,7 +211,7 @@ Double Timeline1D::getNoLimit(Double time) const
                 ret = i1->second.val;
                 return ret;
             }
-            const Timeline1D::Point
+            const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -237,7 +237,7 @@ Double Timeline1D::getNoLimit(Double time) const
                 ret = i1->second.val;
                 return ret;
             }
-            const Timeline1D::Point
+            const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -279,7 +279,7 @@ Double Timeline1D::getNoLimit(Double time) const
                 d2 = (i3->second.val-i1->second.val)/(i3->second.t-i1->second.t);
             }
 
-            const Timeline1D::Point
+            const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
             Double
@@ -420,13 +420,13 @@ Double Timeline1D::getNoLimit(Double time) const
 
 
 
-void Timeline1D::clear()
+void Timeline1d::clear()
 {
     data_.clear();
 }
 
 
-Timeline1D::Point* Timeline1D::add(Double time, Double value, Point::Type typ)
+Timeline1d::Point* Timeline1d::add(Double time, Double value, Point::Type typ)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -464,7 +464,7 @@ Timeline1D::Point* Timeline1D::add(Double time, Double value, Point::Type typ)
 
 
 
-Timeline1D::Point* Timeline1D::add(Double time, Double value, Double thresh, Point::Type typ)
+Timeline1d::Point* Timeline1d::add(Double time, Double value, Double thresh, Point::Type typ)
 {
     Double v = get(time);
     if (value>=v-thresh && value<=v+thresh) return 0;
@@ -472,7 +472,7 @@ Timeline1D::Point* Timeline1D::add(Double time, Double value, Double thresh, Poi
     return add(time, value, typ);
 }
 
-Timeline1D::Point* Timeline1D::add(Point &p)
+Timeline1d::Point* Timeline1d::add(Point &p)
 {
     add(p.t, p.val, p.type);
 
@@ -481,7 +481,7 @@ Timeline1D::Point* Timeline1D::add(Point &p)
     return cur_;
 }
 
-Timeline1D::Point::Type Timeline1D::currentType_(Double time)
+Timeline1d::Point::Type Timeline1d::currentType_(Double time)
 {
     if (data_.empty()) return Point::SPLINE4_SYM;
 
@@ -493,7 +493,7 @@ Timeline1D::Point::Type Timeline1D::currentType_(Double time)
 }
 
 
-void Timeline1D::remove(Double time)
+void Timeline1d::remove(Double time)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -505,7 +505,7 @@ void Timeline1D::remove(Double time)
     data_.erase(i);
 }
 
-void Timeline1D::remove(TpHash hash)
+void Timeline1d::remove(TpHash hash)
 {
     // check if present
     TpList::iterator i = data_.lower_bound(hash);
@@ -518,7 +518,7 @@ void Timeline1D::remove(TpHash hash)
 }
 
 
-void Timeline1D::setAutoDerivative(TpList::iterator &i)
+void Timeline1d::setAutoDerivative(TpList::iterator &i)
 {
     // prev, next
     TpList::iterator i0,i1;
@@ -555,17 +555,17 @@ void Timeline1D::setAutoDerivative(TpList::iterator &i)
     //qDebug() << "der" << v0 << v1 << i->second.t << i->second.d1;
 }
 
-void Timeline1D::setAutoDerivative(TpList::iterator start, TpList::iterator end)
+void Timeline1d::setAutoDerivative(TpList::iterator start, TpList::iterator end)
 {
     for (;start!=end;start++)
         setAutoDerivative(start);
 }
 
 
-void Timeline1D::shiftTime(Double secOff)
+void Timeline1d::shiftTime(Double secOff)
 {
     // first, copy all points
-    std::list<Timeline1D::Point> plist;
+    std::list<Timeline1d::Point> plist;
 
     for (TpList::iterator i=data_.begin();
             i != data_.end(); i++)
@@ -577,7 +577,7 @@ void Timeline1D::shiftTime(Double secOff)
     clear();
 
     // reinsert with offset
-    for (std::list<Timeline1D::Point>::iterator i = plist.begin();
+    for (std::list<Timeline1d::Point>::iterator i = plist.begin();
             i != plist.end(); i++)
     {
         add(i->t + secOff, i->val, i->type);
@@ -585,7 +585,7 @@ void Timeline1D::shiftTime(Double secOff)
 }
 
 
-void Timeline1D::serialize(IO::DataStream & stream)
+void Timeline1d::serialize(IO::DataStream & stream)
 {
     // version
     stream.writeHeader("timeline", 1);
@@ -607,7 +607,7 @@ void Timeline1D::serialize(IO::DataStream & stream)
     }
 }
 
-void Timeline1D::deserialize(IO::DataStream & stream)
+void Timeline1d::deserialize(IO::DataStream & stream)
 {
     // check version
     //auto ver =
@@ -645,7 +645,7 @@ void Timeline1D::deserialize(IO::DataStream & stream)
 }
 
 
-void Timeline1D::saveFile(const QString &filename)
+void Timeline1d::saveFile(const QString &filename)
 {
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly))
@@ -659,7 +659,7 @@ void Timeline1D::saveFile(const QString &filename)
 }
 
 
-void Timeline1D::loadFile(const QString &filename)
+void Timeline1d::loadFile(const QString &filename)
 {
     QFile f(filename);
     if (!f.open(QIODevice::ReadOnly))
@@ -687,7 +687,7 @@ void Timeline1D::loadFile(const QString &filename)
 
 
 
-void Timeline1D::normalize(Double amp)
+void Timeline1d::normalize(Double amp)
 {
     Double ma = 0.0;
     for (TpList::iterator i=data_.begin();
@@ -707,7 +707,7 @@ void Timeline1D::normalize(Double amp)
 
 
 
-Timeline1D::TpList::iterator Timeline1D::closest(Double t)
+Timeline1d::TpList::iterator Timeline1d::closest(Double t)
 {
     if (data_.empty()) return data_.end();
 
@@ -728,7 +728,7 @@ Timeline1D::TpList::iterator Timeline1D::closest(Double t)
 }
 
 
-void Timeline1D::getMinMax(Double tStart, Double tEnd, Double& minimal, Double& maximal)
+void Timeline1d::getMinMax(Double tStart, Double tEnd, Double& minimal, Double& maximal)
 {
     auto i = closest(tStart);
 

@@ -12,6 +12,7 @@
 #include <QTreeView>
 #include <QToolButton>
 #include <QMessageBox>
+#include <QLabel>
 
 #include "sswimporter.h"
 #include "model/jsontreemodel.h"
@@ -27,8 +28,8 @@ struct SswImporter::Private
 {
     Private(SswImporter * w)
         : widget        (w)
-        , tree          (0)
         , model         (0)
+        , tree          (0)
     {
 
     }
@@ -36,8 +37,9 @@ struct SswImporter::Private
     void createWidgets();
 
     SswImporter * widget;
-    QTreeView * tree;
     JsonTreeModel * model;
+    QTreeView * tree;
+    QLabel * infoLabel;
 };
 
 SswImporter::SswImporter(QWidget *parent)
@@ -76,9 +78,10 @@ void SswImporter::Private::createWidgets()
                 {
                     ssw.load(fn);
                     delete model;
-                    model = ssw.createModel();
+                    model = ssw.createTreeModel();
                     tree->setModel(model);
                     tree->setColumnWidth(0, 500);
+                    infoLabel->setText(ssw.infoString());
                 }
                 catch (const Exception& e)
                 {
@@ -91,6 +94,9 @@ void SswImporter::Private::createWidgets()
 
         tree = new QTreeView(widget);
         lv->addWidget(tree);
+
+        infoLabel = new QLabel(widget);
+        lv->addWidget(infoLabel);
 }
 
 

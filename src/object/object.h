@@ -40,7 +40,7 @@
 
 namespace MO {
 namespace IO { class DataStream; }
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 
 namespace Private {
     /** hidden id access */

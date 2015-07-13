@@ -16,7 +16,7 @@
 #include "types/float.h"
 
 namespace MO {
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 
 class ParameterTimeline1D : public Parameter
 {
@@ -45,28 +45,28 @@ public:
     Double maxTime() const { return maxTime_; }
 
     /** Returns the default timeline, or NULL if none is set */
-    const MATH::Timeline1D * defaultTimeline() const { return default_; }
+    const MATH::Timeline1d * defaultTimeline() const { return default_; }
 
     /** Always returns the default timeline and creates one if neccessary. */
-    const MATH::Timeline1D & getDefaultTimeline();
+    const MATH::Timeline1d & getDefaultTimeline();
 
-    const MATH::Timeline1D & baseValue() { return tl_ ? (const MATH::Timeline1D &)*tl_ : getDefaultTimeline(); }
+    const MATH::Timeline1d & baseValue() { return tl_ ? (const MATH::Timeline1d &)*tl_ : getDefaultTimeline(); }
 
     // ---------------- setter -----------------
 
     /** Read/Write access to timeline.
         This will create an internal MATH::Timeline1D if neccessary. */
-    MATH::Timeline1D * timeline();
+    MATH::Timeline1d * timeline();
 
     /** Sets a new internal timeline, ownership is taken.
         If @p tl == NULL, the internal timeline is deleted. */
-    void setTimeline(MATH::Timeline1D * tl);
+    void setTimeline(MATH::Timeline1d * tl);
 
     /** Sets new internal timeline data */
-    void setValue(const MATH::Timeline1D &);
+    void setValue(const MATH::Timeline1d &);
 
     /** Sets new default content for the internal timeline */
-    void setDefaultTimeline(const MATH::Timeline1D &);
+    void setDefaultTimeline(const MATH::Timeline1d &);
 
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }
@@ -91,7 +91,7 @@ public:
 
 private:
 
-    MATH::Timeline1D * tl_, * default_;
+    MATH::Timeline1d * tl_, * default_;
 
     Double
         minValue_,

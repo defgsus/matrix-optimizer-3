@@ -120,10 +120,10 @@ void TimelineEditDialog::setViewSpace(const UTIL::ViewSpace& vs)
     editor_->setViewSpace(vs);
 }
 
-void TimelineEditDialog::setTimeline(const MATH::Timeline1D & tl)
+void TimelineEditDialog::setTimeline(const MATH::Timeline1d & tl)
 {
     if (!tl_)
-        tl_ = new MATH::Timeline1D();
+        tl_ = new MATH::Timeline1d();
 
     *tl_ = tl;
 

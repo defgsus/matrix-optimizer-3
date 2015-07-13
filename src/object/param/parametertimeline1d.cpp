@@ -67,17 +67,17 @@ void ParameterTimeline1D::deserialize(IO::DataStream &io)
     if (have)
     {
         if (!tl_)
-            tl_ = new MATH::Timeline1D;
+            tl_ = new MATH::Timeline1d;
         tl_->deserialize(io);
     }
 }
 
-MATH::Timeline1D * ParameterTimeline1D::timeline()
+MATH::Timeline1d * ParameterTimeline1D::timeline()
 {
     // create one?
     if (!tl_)
     {
-        tl_ = new MATH::Timeline1D();
+        tl_ = new MATH::Timeline1d();
 
         // with default content?
         if (default_)
@@ -86,29 +86,29 @@ MATH::Timeline1D * ParameterTimeline1D::timeline()
     return tl_;
 }
 
-const MATH::Timeline1D & ParameterTimeline1D::getDefaultTimeline()
+const MATH::Timeline1d & ParameterTimeline1D::getDefaultTimeline()
 {
     if (!default_)
-        default_ = new MATH::Timeline1D();
+        default_ = new MATH::Timeline1d();
 
     return *default_;
 }
 
-void ParameterTimeline1D::setTimeline(MATH::Timeline1D *tl)
+void ParameterTimeline1D::setTimeline(MATH::Timeline1d *tl)
 {
     delete tl_;
     tl_ = tl;
 }
 
-void ParameterTimeline1D::setValue(const MATH::Timeline1D & tl)
+void ParameterTimeline1D::setValue(const MATH::Timeline1d & tl)
 {
     *(timeline()) = tl;
 }
 
-void ParameterTimeline1D::setDefaultTimeline(const MATH::Timeline1D & tl)
+void ParameterTimeline1D::setDefaultTimeline(const MATH::Timeline1d & tl)
 {
     if (!default_)
-        default_ = new MATH::Timeline1D();
+        default_ = new MATH::Timeline1d();
 
     *default_ = tl;
 }
@@ -136,7 +136,7 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
 
-    MATH::Timeline1D backup(*timeline());
+    MATH::Timeline1d backup(*timeline());
 
     // prepare dialog
     GUI::TimelineEditDialog diag(parent);

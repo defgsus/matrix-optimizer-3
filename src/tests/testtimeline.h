@@ -23,7 +23,7 @@ public:
 
 private:
 
-    bool test(MATH::Timeline1D::Point::Type type);
+    bool test(MATH::Timeline1d::Point::Type type);
 
     std::vector<double> writepos, values, readpos;
 };

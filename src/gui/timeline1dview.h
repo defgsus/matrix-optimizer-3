@@ -64,13 +64,13 @@ public:
 
     // ---------- ctor -------------
 
-    explicit Timeline1DView(MATH::Timeline1D * timeline = 0, QWidget *parent = 0);
+    explicit Timeline1DView(MATH::Timeline1d * timeline = 0, QWidget *parent = 0);
     ~Timeline1DView();
 
     // ---------- getter -----------
 
     /** Returns assigned timeline */
-    MATH::Timeline1D * timeline() const { return tl_; }
+    MATH::Timeline1d * timeline() const { return tl_; }
 
     int options() const { return options_; }
 
@@ -87,7 +87,7 @@ public:
 
     /** Assigns a new (or no) Timeline1D and updates the widget.
         No ownership change. */
-    void setTimeline(MATH::Timeline1D * timeline = 0);
+    void setTimeline(MATH::Timeline1d * timeline = 0);
 
     /** Assigns a sequencer overpainter for timelines in sequences */
     void setSequenceOverpaint(PAINTER::SequenceOverpaint * s) { sequenceOverpaint_ = s; }
@@ -176,13 +176,13 @@ protected:
     struct DragPoint_
     {
         bool valid;
-        MATH::Timeline1D::Point
+        MATH::Timeline1d::Point
             oldp,
             newp;
-        MATH::Timeline1D::TpList::iterator
+        MATH::Timeline1d::TpList::iterator
             it;
         DragPoint_() { }
-        DragPoint_(const MATH::Timeline1D::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
+        DragPoint_(const MATH::Timeline1d::TpList::iterator& it) : valid(true), oldp(it->second), newp(it->second), it(it) { }
     };
 
     class Locker_
@@ -206,25 +206,25 @@ protected:
     void setStatusTip_(const QString&);
 
     void clearHover_();
-    void setHover_(const MATH::Timeline1D::Point&);
+    void setHover_(const MATH::Timeline1d::Point&);
     bool isHover_() const;
-    MATH::Timeline1D::TpList::iterator hoverPoint_();
+    MATH::Timeline1d::TpList::iterator hoverPoint_();
 
     void clearSelect_();
-    void addSelect_(const MATH::Timeline1D::Point&, bool do_swap = false);
+    void addSelect_(const MATH::Timeline1d::Point&, bool do_swap = false);
     void addSelect_(const QRect& rect, bool do_swap = false);
     void selectAll_();
     void selectDirection_(int dir);
 
     /** Returns the screen rect for a given point */
-    QRect handleRect_(const MATH::Timeline1D::Point&, RectStyle_ rs);
-    void updateAroundPoint_(const MATH::Timeline1D::Point&);
-    void updateDerivatives_(MATH::Timeline1D::TpList::iterator it, int leftRight = 1);
+    QRect handleRect_(const MATH::Timeline1d::Point&, RectStyle_ rs);
+    void updateAroundPoint_(const MATH::Timeline1d::Point&);
+    void updateDerivatives_(MATH::Timeline1d::TpList::iterator it, int leftRight = 1);
 
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
     void fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, int marginInPixels);
 
-    void changePointType_(MATH::Timeline1D::Point::Type t);
+    void changePointType_(MATH::Timeline1d::Point::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
 
@@ -237,7 +237,7 @@ protected:
 
     // ____________ MEMBER _____________
 
-    MATH::Timeline1D * tl_;
+    MATH::Timeline1d * tl_;
 
     UTIL::ViewSpace space_, ospace_;
 
@@ -265,11 +265,11 @@ protected:
 
     // ---- interaction ----
 
-    MATH::Timeline1D::TpHash
+    MATH::Timeline1d::TpHash
         hoverHash_,
         hoverCurveHash_;
 
-    QSet<MATH::Timeline1D::TpHash>
+    QSet<MATH::Timeline1d::TpHash>
         selectHashSet_;
 
     QVector<DragPoint_>

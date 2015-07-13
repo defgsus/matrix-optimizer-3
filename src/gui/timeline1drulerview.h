@@ -18,7 +18,7 @@
 class QGridLayout;
 
 namespace MO {
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 namespace GUI {
 
 class Timeline1DView;
@@ -28,11 +28,11 @@ class Timeline1DRulerView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit Timeline1DRulerView(MATH::Timeline1D * timeline = 0, QWidget *parent = 0);
+    explicit Timeline1DRulerView(MATH::Timeline1d * timeline = 0, QWidget *parent = 0);
 
     // -------------- components ------------------
 
-    MATH::Timeline1D * timeline() const;
+    MATH::Timeline1d * timeline() const;
 
     Timeline1DView * timelineView() { return timelineView_; }
 
@@ -44,7 +44,7 @@ public:
     // ----------- assignment ------
 
     /** Assigns a new (or no) Timeline1D */
-    void setTimeline(MATH::Timeline1D * timeline = 0);
+    void setTimeline(MATH::Timeline1d * timeline = 0);
 
     /** Sets the options for the background grid as or-wise combination of PAINTER::Grid::Option */
     void setGridOptions(int options);

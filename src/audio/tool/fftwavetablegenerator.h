@@ -40,7 +40,7 @@ public:
     uint size() const { return size_; }
 
     /** Frequency curve */
-    const MATH::Timeline1D & frequencies() const { return freqs_; }
+    const MATH::Timeline1d & frequencies() const { return freqs_; }
 
     // ---------- setter ---------------
 
@@ -48,16 +48,16 @@ public:
     void setSize(uint size) { size_ = nextPowerOfTwo(size); }
 
     /** Sets the frequency curve */
-    void setFrequencies(const MATH::Timeline1D & tl) { freqs_ = tl; }
+    void setFrequencies(const MATH::Timeline1d & tl) { freqs_ = tl; }
 
     /** Sets the phase curve */
-    void setPhases(const MATH::Timeline1D & tl) { phases_ = tl; }
+    void setPhases(const MATH::Timeline1d & tl) { phases_ = tl; }
 
 private:
 
     uint size_;
 
-    MATH::Timeline1D freqs_, phases_;
+    MATH::Timeline1d freqs_, phases_;
 };
 
 // -------------- template implementation -------------------

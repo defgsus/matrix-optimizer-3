@@ -681,7 +681,7 @@ ParameterTexture * Parameters::createTextureParameter(
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
+        const MATH::Timeline1d * defaultValue,
         bool editable)
 {
     return createTimeline1DParameter(id, name, statusTip,
@@ -695,7 +695,7 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
+        const MATH::Timeline1d * defaultValue,
         Double minTime, Double maxTime,
         bool editable)
 {
@@ -709,7 +709,7 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1D * defaultValue,
+        const MATH::Timeline1d * defaultValue,
         Double minTime, Double maxTime, Double minValue, Double maxValue,
         bool editable)
 {

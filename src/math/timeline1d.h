@@ -30,7 +30,7 @@ namespace MATH {
     that means you can set 4096 different points per one-second-of-timeline and time can be maximally
     +/- 524287 seconds or ~8738 minutes or ~145 hours.</p>
 */
-class Timeline1D : public RefCounted
+class Timeline1d : public RefCounted
 {
     public:
 
@@ -117,13 +117,13 @@ class Timeline1D : public RefCounted
     // ------- ctor / dtor -----------
 
     /** default constructor, no parameters */
-    Timeline1D();
-    ~Timeline1D();
+    Timeline1d();
+    ~Timeline1d();
 
     // ------ copy assignment --------
 
-    Timeline1D(const Timeline1D& other);
-    const Timeline1D& operator = (const Timeline1D& other);
+    Timeline1d(const Timeline1d& other);
+    const Timeline1d& operator = (const Timeline1d& other);
 
     // ----------- io ----------------
 
@@ -142,7 +142,7 @@ class Timeline1D : public RefCounted
     // ---------- get ----------------
 
     /** Comparison */
-    bool operator == (const Timeline1D& other) const;
+    bool operator == (const Timeline1d& other) const;
 
     /** return number of que points */
     unsigned int size() const { return data_.size(); }
@@ -354,7 +354,7 @@ class Timeline1D : public RefCounted
 
 };
 
-inline bool Timeline1D::hasAutoDerivative(Point::Type type)
+inline bool Timeline1d::hasAutoDerivative(Point::Type type)
 {
     return (type == Point::SYMMETRIC ||
             type == Point::SYMMETRIC2);

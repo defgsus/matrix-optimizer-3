@@ -30,7 +30,7 @@ namespace {
     class TimelineCurveData : public GUI::PAINTER::ValueCurveData
     {
     public:
-        MATH::Timeline1D * timeline;
+        MATH::Timeline1d * timeline;
         virtual Double value(Double time) const { return timeline->get(time); }
     };
 

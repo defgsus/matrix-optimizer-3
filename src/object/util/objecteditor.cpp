@@ -510,7 +510,7 @@ void ObjectEditor::setParameterValue(ParameterText *p, const QString& v)
     setParameterVal(this, p, v);
 }
 
-void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timeline1D& v)
+void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timeline1d& v)
 {
     setParameterVal(this, p, v);
 }

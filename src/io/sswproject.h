@@ -1,6 +1,9 @@
 /** @file
 
-    @brief
+    @brief SpatialSound Wave loader
+
+    <p>[SpatialSound Wave is copyright Fraunhofer Insitute]
+    <br/>Sounds really slick, eh?</p>
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
@@ -13,13 +16,17 @@
 
 #include <QString>
 
+#include "types/vector.h"
+
 namespace MO {
+namespace MATH { class Timeline1d; }
 
 class JsonTreeModel;
+class SswSource;
 
 /** SpatialSound Wave project loader.
-
-    [SpatialSound Wave is copyright Fraunhofer Insitute]
+    This handles the new (since ~2014) JSON format of the SSW.
+    Previous XML is not supported.
 */
 class SswProject
 {
@@ -27,18 +34,94 @@ public:
     SswProject();
     ~SswProject();
 
+    // ------------- io -------------
 
     /** Loads a uifm file.
         @throws IoException on any error */
     void load(const QString& name);
 
-    /** Creates a tree-model with the json data */
-    JsonTreeModel * createModel() const;
+    // ------ getter interface ------
+
+    /** Creates a tree-model with the json data.
+        The model is suitable to be viewed in a QTreeView.
+        It just displays the plain json data. */
+    JsonTreeModel * createTreeModel() const;
+
+    /** Returns an html info string about all sources */
+    QString infoString() const;
 
 private:
     struct Private;
     Private * p_;
 };
+
+/** Representation of one sound source in a SswProject.
+    *Currently* this structure is read-only,
+    editing of SSW-Projects is not on the table right now. */
+class SswSource
+{
+    friend class SswProject;
+    /* private con/destructor */
+    SswSource(SswProject*);
+    ~SswSource();
+    /* disable copy */
+    SswSource(const SswSource&);
+    void operator = (const SswSource&);
+
+public:
+    // -------- types ----------
+    enum Type
+    {
+        T_POINT,
+        T_PLANE
+    };
+
+    // -------- getter ---------
+
+    SswProject * project() const { return p_project_; }
+    int index() const { return p_index_; }\
+    const QString& label() const { return p_label_; }
+
+    Double startTime() const { return p_start_; }
+    Double endTime() const { return p_end_; }
+    Double lengthTime() const { return p_end_ - p_start_; }
+
+    bool active() const { return p_active_; }
+    const Vec3& position() const { return p_pos_; }
+    Double gainDb() const { return p_gainDb_; }
+    Type type() const { return p_type_; }
+    QString typeName() const;
+
+    // ----- getter with automation -----
+
+    bool active(Double second) const;
+    Vec3 position(Double second) const;
+    Double gainDb(Double second) const;
+    Type type(Double second) const;
+
+private:
+
+    SswProject
+        * p_project_;
+
+    Double
+        p_gainDb_,
+        p_start_,
+        p_end_;
+    Type p_type_;
+    Vec3 p_pos_;
+    bool p_active_;
+    int p_index_;
+    QString p_label_;
+
+    MATH::Timeline1d
+        * p_tl_x_,
+        * p_tl_y_,
+        * p_tl_z_,
+        * p_tl_gainDb_,
+        * p_tl_type_;
+};
+
 
 } // namespace MO
 

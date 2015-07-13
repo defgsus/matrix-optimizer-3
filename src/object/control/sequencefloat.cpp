@@ -539,7 +539,7 @@ void SequenceFloat::deserialize(IO::DataStream &io)
     if (have)
     {
         if (!timeline_)
-            timeline_ = new MATH::Timeline1D;
+            timeline_ = new MATH::Timeline1d;
         timeline_->deserialize(io);
     }
 
@@ -573,7 +573,7 @@ void SequenceFloat::updatePhaseInDegree_()
         updateWavetable_();
 }
 
-void SequenceFloat::setTimeline(const MATH::Timeline1D & tl)
+void SequenceFloat::setTimeline(const MATH::Timeline1d & tl)
 {
     if (sequenceType() != ST_TIMELINE)
         setSequenceType(ST_TIMELINE);
@@ -604,7 +604,7 @@ void SequenceFloat::updateValueObjects_()
     if (sequenceType() == ST_TIMELINE)
     {
         if (!timeline_)
-            timeline_ = new MATH::Timeline1D;
+            timeline_ = new MATH::Timeline1d;
     }
 
     // update equation parser

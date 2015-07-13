@@ -41,7 +41,7 @@ namespace MO {
 
     namespace IO { class DataStream; }
     namespace GL { class LightSettings; class CameraSpace; }
-    namespace MATH { class Timeline1D; }
+    namespace MATH { class Timeline1d; }
     namespace AUDIO
     {
         class SpatialSoundSource;

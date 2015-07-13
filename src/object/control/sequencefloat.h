@@ -20,7 +20,7 @@
 
 namespace PPP_NAMESPACE { class Parser; }
 namespace MO {
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 
 class SequenceFloat : public Sequence, public ValueFloatInterface
 {
@@ -181,10 +181,10 @@ public:
     // ------------ values --------------
 
     /** Sets the sequenceType to ST_TIMELINE if necessary and copies the timeline data */
-    void setTimeline(const MATH::Timeline1D&);
+    void setTimeline(const MATH::Timeline1d&);
 
-    MATH::Timeline1D * timeline() { return timeline_; }
-    const MATH::Timeline1D * timeline() const { return timeline_; }
+    MATH::Timeline1d * timeline() { return timeline_; }
+    const MATH::Timeline1d * timeline() const { return timeline_; }
     PPP_NAMESPACE::Parser * equation(uint thread);
     const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
@@ -205,7 +205,7 @@ private:
     Double value_(Double gtime, Double time, uint thread) const;
     Double fade_(Double gtime, Double localTime, uint thread) const;
 
-    MATH::Timeline1D * timeline_;
+    MATH::Timeline1d * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;
     AUDIO::SoundFile * soundFile_;
 

@@ -169,8 +169,8 @@ void ShaperAO::createParameters()
 
         // -- adjustable curve --
 
-        MATH::Timeline1D deftl;
-        deftl.add(-1, -1, MATH::Timeline1D::Point::SPLINE4_SYM);
+        MATH::Timeline1d deftl;
+        deftl.add(-1, -1, MATH::Timeline1d::Point::SPLINE4_SYM);
         deftl.add(1, 1);
         p_->paramCurve = params()->createTimeline1DParameter("_shaper_curve", tr("input->output curve"),
                                                     tr("The curve mapping from input value to output value"),

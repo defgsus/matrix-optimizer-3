@@ -16,7 +16,7 @@
 class QTimer;
 
 namespace MO {
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 namespace GUI {
 namespace UTIL { class ViewSpace; }
 
@@ -30,7 +30,7 @@ public:
     explicit TimelineEditDialog(QWidget *parent = 0);
     ~TimelineEditDialog();
 
-    const MATH::Timeline1D & timeline() const { return *tl_; }
+    const MATH::Timeline1d & timeline() const { return *tl_; }
 
     int options() const { return options_; }
 
@@ -45,7 +45,7 @@ signals:
 public slots:
 
     /** Sets the timeline data to edit */
-    void setTimeline(const MATH::Timeline1D& tl);
+    void setTimeline(const MATH::Timeline1d& tl);
 
     /** Sets the Timeline1DView::Option options */
     void setOptions(int options);
@@ -56,7 +56,7 @@ private:
 
     void createWidgets_();
 
-    MATH::Timeline1D * tl_;
+    MATH::Timeline1d * tl_;
     Timeline1DRulerView * editor_;
     QTimer * timer_;
     bool autoUpdate_;

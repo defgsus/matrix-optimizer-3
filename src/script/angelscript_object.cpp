@@ -194,7 +194,7 @@ public:
         if (auto seq = qobject_cast<SequenceFloat*>(o))
             if (seq->timeline())
                 return timeline_to_angelscript(*seq->timeline());
-        return timeline_to_angelscript(MATH::Timeline1D());
+        return timeline_to_angelscript(MATH::Timeline1d());
     }
 
     void setTimeline(Timeline1AS * tl)

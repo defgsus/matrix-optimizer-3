@@ -21,7 +21,7 @@
 #include "io/filetypes.h"
 
 namespace MO {
-namespace MATH { class Timeline1D; }
+namespace MATH { class Timeline1d; }
 
 class Parameters
 {
@@ -179,16 +179,16 @@ public:
         when this call returns. */
     ParameterTimeline1D * createTimeline1DParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue = 0, bool editable = true);
+                const MATH::Timeline1d * defaultValue = 0, bool editable = true);
 
     ParameterTimeline1D * createTimeline1DParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue,
+                const MATH::Timeline1d * defaultValue,
                 Double minTime, Double maxTime, bool editable = true);
 
     ParameterTimeline1D * createTimeline1DParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1D * defaultValue,
+                const MATH::Timeline1d * defaultValue,
                 Double minTime, Double maxTime, Double minValue, Double maxValue,
                 bool editable = true);
 
