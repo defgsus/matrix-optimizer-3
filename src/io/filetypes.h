@@ -38,7 +38,8 @@ namespace IO {
         FT_EQUATION_PRESET,
         FT_HELP_EXPORT,
         FT_LADSPA,
-        FT_TEXT
+        FT_TEXT,
+        FT_SSW_PROJECT
     };
 
     extern const QStringList fileTypeIds;

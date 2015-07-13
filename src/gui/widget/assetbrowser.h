@@ -28,6 +28,13 @@ signals:
 
 public slots:
 
+    /** Selects one of the short-cut directories */
+    void selectDirectory(uint index);
+    void setDirectory(uint index, const QString& dir);
+protected:
+
+    void mouseDoubleClickEvent(QMouseEvent*) Q_DECL_OVERRIDE;
+
 private:
 
     struct Private;

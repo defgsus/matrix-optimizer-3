@@ -24,5 +24,6 @@
     </qresource>
     <qresource prefix="/">
         <file alias="stylesheet.css">assets/stylesheet.css</file>
+        <file alias="CHANGES.txt">CHANGES.txt</file>
     </qresource>
 </RCC>

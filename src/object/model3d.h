@@ -13,6 +13,7 @@
 
 
 #include "objectgl.h"
+#include "gl/shadersource.h"
 
 namespace MO {
 
@@ -45,6 +46,8 @@ public:
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(Double time, uint thread) const;
+    /** Returns a copy of the shader code after replacements, includes, etc.. */
+    GL::ShaderSource shaderSource() const;
 
 protected:
 

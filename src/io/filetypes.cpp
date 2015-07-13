@@ -33,7 +33,8 @@ namespace IO {
       "equpreset",
       "helpexp",
       "ladspa",
-      "text"
+      "text",
+      "ssw"
     };
 
     const QStringList fileTypeNames =
@@ -54,7 +55,8 @@ namespace IO {
       QObject::tr("Equation preset"),
       QObject::tr("Help export"),
       QObject::tr("Ladspa directory"),
-      QObject::tr("Text")
+      QObject::tr("Text"),
+      QObject::tr("SSW Project")
     };
 
     const QList<QStringList> fileTypeExtensions =
@@ -76,7 +78,8 @@ namespace IO {
         { "xml-equ" },
         { "" },
         { "so" },
-        { "txt", "asc" }
+        { "txt", "asc" },
+        { "uifm" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -114,6 +117,7 @@ namespace IO {
         { QObject::tr("* (*)") },
         { QObject::tr("* (*)") },
         { QObject::tr("text files") + " ( *.txt *.asc )" },
+        { QObject::tr("SSW-JSON-Project (*.uifm)") },
     };
 
 

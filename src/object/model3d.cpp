@@ -685,6 +685,13 @@ void Model3d::setGeometry(const GEOM::Geometry & g)
     requestRender();
 }
 
+GL::ShaderSource Model3d::shaderSource() const
+{
+    if (!draw_)
+        return GL::ShaderSource();
+    return GL::ShaderSource(*draw_->shaderSource());
+}
+
 void Model3d::setupDrawable_()
 {
     MO_DEBUG_MODEL("Model3d::setupDrawable()");

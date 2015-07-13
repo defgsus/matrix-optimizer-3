@@ -317,7 +317,9 @@ HEADERS += \
     src/object/texture/lensdistto.h \
     src/gl/texturerenderer.h \
     src/object/audio/microphoneao.h \
-    src/object/texture/generate3dto.h
+    src/object/texture/generate3dto.h \
+    $$PWD/io/sswproject.h \
+    $$PWD/model/jsontreemodel.h
 
 
 SOURCES += \
@@ -592,7 +594,9 @@ SOURCES += \
     src/object/texture/lensdistto.cpp \
     src/gl/texturerenderer.cpp \
     src/object/audio/microphoneao.cpp \
-    src/object/texture/generate3dto.cpp
+    src/object/texture/generate3dto.cpp \
+    $$PWD/io/sswproject.cpp \
+    $$PWD/model/jsontreemodel.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

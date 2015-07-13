@@ -425,6 +425,7 @@ void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int inse
                 if (acon->isUnassigned())
                     acon->assignPointers(this);
                 audioConnections()->addFrom(*acon);
+                // remove attachment
                 n->assignAudioConnections(0);
             }
         }

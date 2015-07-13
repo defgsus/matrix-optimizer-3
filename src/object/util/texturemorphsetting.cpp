@@ -125,19 +125,21 @@ bool TextureMorphSetting::isSineMorphEnabled() const
 
 void TextureMorphSetting::getUniforms(GL::Shader * shader, const QString& id_suffix)
 {
+    // Info: DO NOT EXPECT the uniforms to be present because
+    // they might not if there is no light source in the scene
     if (isTransformEnabled())
-        u_tex_transform_ = shader->getUniform("u_tex_transform" + id_suffix, true);
+        u_tex_transform_ = shader->getUniform("u_tex_transform" + id_suffix, false);
 
     if (isSineMorphEnabled())
     {
-        u_tex_morphx_ = shader->getUniform("u_tex_morphx" + id_suffix, true);
-        u_tex_morphy_ = shader->getUniform("u_tex_morphy" + id_suffix, true);
+        u_tex_morphx_ = shader->getUniform("u_tex_morphx" + id_suffix, false);
+        u_tex_morphy_ = shader->getUniform("u_tex_morphy" + id_suffix, false);
     }
 }
 
 void TextureMorphSetting::updateUniforms(Double time, uint thread)
 {
-    if (isTransformEnabled())
+    if (isTransformEnabled() && u_tex_transform_)
     {
         u_tex_transform_->setFloats(
                     pTransX_->value(time, thread),
@@ -148,11 +150,13 @@ void TextureMorphSetting::updateUniforms(Double time, uint thread)
 
     if (isSineMorphEnabled())
     {
-        u_tex_morphx_->setFloats(
+        if (u_tex_morphx_)
+            u_tex_morphx_->setFloats(
                 pSineMorphAmpX_->value(time, thread),
                 pSineMorphFreqX_->value(time, thread) * TWO_PI,
                 pSineMorphPhaseX_->value(time, thread) * TWO_PI, 0);
-        u_tex_morphy_->setFloats(
+        if (u_tex_morphy_)
+            u_tex_morphy_->setFloats(
                 pSineMorphAmpY_->value(time, thread),
                 pSineMorphFreqY_->value(time, thread) * TWO_PI,
                 pSineMorphPhaseY_->value(time, thread) * TWO_PI, 0);

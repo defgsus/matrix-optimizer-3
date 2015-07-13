@@ -113,6 +113,8 @@ void Settings::createDefaultValues_()
                                 = mopath + "/data/scene";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_OBJECT_TEMPLATE]]
                                 = mopath + "/data/object_templates";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_SOUND]]
+                                = mopath + "/data/audio";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_EQUATION_PRESET]]
                                 = mopath + "/data/equations";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_PROJECTION_SETTINGS]]

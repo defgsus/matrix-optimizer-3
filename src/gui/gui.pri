@@ -114,7 +114,8 @@ HEADERS += \
     src/gui/widget/audiopluginwidget.h \
     src/gui/audioplugindialog.h \
     src/gui/widget/objectoutputview.h \
-    src/gui/widget/assetbrowser.h
+    src/gui/widget/assetbrowser.h \
+    $$PWD/sswimporter.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -228,4 +229,5 @@ SOURCES += \
     src/gui/widget/audiopluginwidget.cpp \
     src/gui/audioplugindialog.cpp \
     src/gui/widget/objectoutputview.cpp \
-    src/gui/widget/assetbrowser.cpp
+    src/gui/widget/assetbrowser.cpp \
+    $$PWD/sswimporter.cpp

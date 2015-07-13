@@ -18,6 +18,7 @@
 #include <QScreen>
 #include <QDockWidget>
 #include <QMessageBox>
+#include <QFile>
 
 #include "gui/mainwindow.h"
 #include "io/application.h"
@@ -162,6 +163,15 @@ void Application::aboutMO()
     str += "<p>3rd party APIs:</p>" + MO::apiVersionString();
     str += "</html>";
     QMessageBox::about(0, tr("Matrix Optimizer"), str);
+}
+
+void Application::showChanges()
+{
+    QFile f(":/CHANGES.txt");
+    f.open(QFile::Text | QFile::ReadOnly);
+    QString str = QString::fromUtf8(f.readAll());
+
+    QMessageBox::about(0, tr("Matrix Optimizer changes"), str);
 }
 
 } // namespace MO

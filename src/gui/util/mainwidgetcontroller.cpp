@@ -80,6 +80,8 @@
 #include "gui/renderdialog.h"
 #ifndef MO_HAMBURG
 #   include "gui/wavetracerdialog.h"
+#   include "io/sswproject.h"
+#   include "gui/sswimporter.h"
 #endif
 #ifndef MO_DISABLE_LADSPA
 #   include "gui/audioplugindialog.h"
@@ -613,7 +615,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag->show();
         });
 
-
+        a = new QAction(tr("SSW Import"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new SswImporter(window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->show();
+        });
 #endif
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);
@@ -787,6 +796,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         });
 
         m->addSeparator();
+
+        a = new QAction(tr("Show changes"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), application(), SLOT(showChanges()));
 
         a = new QAction(tr("About Matrix Optimizer"), m);
         m->addAction(a);

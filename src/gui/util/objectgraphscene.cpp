@@ -25,6 +25,7 @@
 #include "gui/item/objectgraphconnectitem.h"
 #include "gui/geometrydialog.h"
 #include "gui/modulatordialog.h"
+#include "gui/texteditdialog.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectmenu.h"
 #include "gui/util/appicons.h"
@@ -1413,21 +1414,45 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
         editor->setObjectHue(obj, hue);
     });
 
-    // edit geometry
-    if (Model3d * m = qobject_cast<Model3d*>(obj))
+    // Model3d specific
+    if (Model3d * model = qobject_cast<Model3d*>(obj))
     {
+        // edit geometry
         a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
         a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
         connect(a, &QAction::triggered, [=]()
         {
-            GeometryDialog diag(&m->geometrySettings());
+            GeometryDialog diag(&model->geometrySettings());
 
             if (diag.exec() == QDialog::Accepted)
             {
-                ScopedObjectChange lock(root, m);
-                m->setGeometrySettings(diag.getGeometrySettings());
-                editor->emitObjectChanged(m);
+                ScopedObjectChange lock(root, model);
+                model->setGeometrySettings(diag.getGeometrySettings());
+                editor->emitObjectChanged(model);
             }
+        });
+
+        // show source code
+        auto sub = new QMenu(tr("Show shader source"));
+        a = actions.addMenu(sub, scene);
+        a->setIcon(QIcon(":/icon/obj_glsl.png"));
+        a->setStatusTip(tr("Shows the full shader source code including user-code, "
+                           "automatic defines and overrides, and include files"));
+
+        a = sub->addAction(tr("vertex shader"));
+        a->setData(0);
+        a = sub->addAction(tr("fragment shader"));
+        a->setData(1);
+
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            QString src = a->data().toInt() == 0
+                    ? model->shaderSource().vertexSource()
+                    : model->shaderSource().fragmentSource();
+
+            auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
+            diag->setAttribute(Qt::WA_DeleteOnClose, true);
+            diag->show();
         });
     }
 

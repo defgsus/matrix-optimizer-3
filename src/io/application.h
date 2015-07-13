@@ -57,6 +57,8 @@ public slots:
     /** About dialog */
     void aboutMO();
 
+    void showChanges();
+
 protected:
 
     virtual bool notify(QObject * o, QEvent * e);

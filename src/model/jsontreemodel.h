@@ -1,34 +1,31 @@
-/** @file qobjecttreemodel.h
+/** @file
 
-    @brief Model to display QObjects
+    @brief
 
-    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 6/27/2014</p>
+    <p>created 7/12/2015</p>
 */
 
-#ifndef MOSRC_MODEL_QOBJECTTREEMODEL_H
-#define MOSRC_MODEL_QOBJECTTREEMODEL_H
+#ifndef MOSRC_MODEL_JSONTREEMODEL_H
+#define MOSRC_MODEL_JSONTREEMODEL_H
+
 
 #include <QAbstractItemModel>
 #include <QStringList>
+#include <QJsonObject>
 
 namespace MO {
 
-class QObjectTreeModel : public QAbstractItemModel
+class JsonTreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit QObjectTreeModel(QObject * rootObject = 0, QObject *parent = 0);
+    explicit JsonTreeModel(QObject *parent = 0);
 
-    void setRootObject(QObject * rootObject);
-    QObject * rootObject() const { return rootObject_; }
-
-    QObject * itemForIndex(const QModelIndex& index) const;
-
-    static QString objectTitle(QObject *);
-    static QString objectRect(QObject *);
+    void setRootObject(const QJsonObject& rootObject);
+    const QJsonObject& rootObject() const { return rootObject_; }
 
     // --- interface impl. ---
 
@@ -46,12 +43,17 @@ signals:
 public slots:
 
 private:
+    struct Wrapper;
 
-    QObject * rootObject_;
+    Wrapper * wrapperForIndex_(const QModelIndex& index) const;
+
+    Wrapper * p_;
+
+    QJsonObject rootObject_;
 
     QStringList headerNames_;
 };
 
 } // namespace MO
 
-#endif // MOSRC_MODEL_QOBJECTTREEMODEL_H
+#endif // MOSRC_MODEL_JSONTREEMODEL_H
