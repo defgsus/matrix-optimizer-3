@@ -191,6 +191,16 @@ struct vecfunc
             std::cos(latitude) * std::cos(longitude));
     }
 
+    static Vec3 pointOnSphere(Float x, Float y)
+    {
+        return MATH::pointOnSphere(x, y);
+    }
+
+    static Vec3 pointOnSphere_2(const Vec2& uv)
+    {
+        return MATH::pointOnSphere(uv.x, uv.y);
+    }
+
     static Vec2 ulam_spiral(int i)
     {
         int x,y;
@@ -428,6 +438,8 @@ void register_vector_2(asIScriptEngine *engine, const char * typ = "vec2")
     // ------------------ non-member functions --------
     MO__REG_FUNC("%1 rotate(%1 &in, float)", vecfunc<Vec2>::rotateZ);
     MO__REG_FUNC("%1 rotateZ(%1 &in, float)", vecfunc<Vec2>::rotateZ);
+
+    MO__REG_FUNC("vec3 pointOnSphere(const %1 &in)", vecfunc<Vec2>::pointOnSphere_2);
 
     MO__REG_FUNC("float noise(const %1 &in)", vecfunc<Vec2>::noisef_2);
     MO__REG_FUNC("%1 noise2(float)", vecfunc<Vec2>::noisev2_1);

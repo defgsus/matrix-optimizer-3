@@ -115,7 +115,7 @@ void ObjectEditor::makeUniqueIds(const Object* root, Object* newBranch)
             // remember old id
             changedIds.insert(o->idName(), newid);
             // and change
-            Private::set_object_id_(o, newid);
+            ObjectPrivate::setObjectId(o, newid);
         }
     }
 
@@ -153,7 +153,7 @@ void ObjectEditor::makeUniqueIds(const Object* root, const QList<Object*> newBra
             // remember old id
             changedIds.insert(o->idName(), newid);
             // and change
-            Private::set_object_id_(o, newid);
+            ObjectPrivate::setObjectId(o, newid);
         }
     }
 

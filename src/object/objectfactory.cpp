@@ -344,7 +344,7 @@ Object * ObjectFactory::createObject(const QString &className, bool createParame
 
     // --- prepare object ---
 
-    Private::set_object_id_(obj, obj->className());
+    ObjectPrivate::setObjectId(obj, obj->className());
     if (obj->name().isEmpty())
         obj->setName(className);
 

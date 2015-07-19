@@ -14,6 +14,7 @@
 #include <QDialog>
 
 namespace MO {
+class Object;
 namespace GUI {
 
 class SswImporter : public QDialog
@@ -26,6 +27,10 @@ public:
 signals:
 
 public slots:
+
+    /** Sets the root-object to insert ssw imports.
+        The object must be tied to a Scene and ObjectEditor. */
+    void setRootObject(Object * o);
 
 private:
     struct Private;

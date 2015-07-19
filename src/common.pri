@@ -1,7 +1,8 @@
 RESOURCES += \
     images.qrc \
     shaders.qrc \
-    models.qrc
+    models.qrc \
+    $$PWD/../templates.qrc
 
 HEADERS += \
     src/types/vector.h \
@@ -319,7 +320,8 @@ HEADERS += \
     src/object/audio/microphoneao.h \
     src/object/texture/generate3dto.h \
     $$PWD/io/sswproject.h \
-    $$PWD/model/jsontreemodel.h
+    $$PWD/model/jsontreemodel.h \
+    $$PWD/geom/shploader.h
 
 
 SOURCES += \
@@ -596,7 +598,8 @@ SOURCES += \
     src/object/audio/microphoneao.cpp \
     src/object/texture/generate3dto.cpp \
     $$PWD/io/sswproject.cpp \
-    $$PWD/model/jsontreemodel.cpp
+    $$PWD/model/jsontreemodel.cpp \
+    $$PWD/geom/shploader.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

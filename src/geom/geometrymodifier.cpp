@@ -24,6 +24,7 @@ GeometryModifier::GeometryModifier(const QString &className, const QString &guiN
     : className_    (className),
       guiName_      (guiName),
       enabled_      (true),
+      p_progress_   (0),
       curObject_    (0)
 {
 
@@ -47,6 +48,7 @@ void GeometryModifier::deserialize(IO::DataStream &io)
 void GeometryModifier::executeBase(Geometry *g, MO::Object * o)
 {
     curObject_ = o;
+    p_progress_ = 0.;
     execute(g);
 }
 

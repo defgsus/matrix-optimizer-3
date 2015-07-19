@@ -161,6 +161,9 @@ void GeometryCreator::onTimer_()
         return;
     }*/
 
+    if (settings_->modifierChain())
+        emit settings_->modifierChain()->progress();
+    else
     if (curGeometry_)
         emit progress(curGeometry_->progress());
 }

@@ -21,6 +21,7 @@ namespace GEOM {
 QMap<QString, GeometryModifier*> * GeometryModifierChain::registeredModifiers_ = 0;
 
 GeometryModifierChain::GeometryModifierChain()
+    : curMod_       (0)
 {
     MO_DEBUG_GEOM("GeometryModifierChain::GeometryModifierChain()");
 }
@@ -55,6 +56,7 @@ void GeometryModifierChain::clear()
 {
     MO_DEBUG_GEOM("GeometryModifierChain::clear()");
 
+    curMod_ = 0;
     for (auto m : modifiers_)
         delete m;
     modifiers_.clear();
@@ -136,7 +138,7 @@ void GeometryModifierChain::getNeededFiles(IO::FileList &files) const
 {
     for (auto m : modifiers())
         if (auto mc = dynamic_cast<GeometryModifierCreate*>(m))
-            if (mc->type() == GeometryModifierCreate::T_FILE)
+            if (mc->type() == GeometryModifierCreate::T_FILE_OBJ)
                 files.append(IO::FileListEntry(mc->filename(), IO::FT_MODEL));
 }
 
@@ -255,6 +257,7 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
 
     modifiers_.removeAll(g);
     delete g;
+    curMod_ = 0;
 
     return true;
 }
@@ -262,6 +265,7 @@ bool GeometryModifierChain::deleteModifier(GeometryModifier *g)
 void GeometryModifierChain::execute(Geometry *g, Object * o) const
 {
     doStop_ = false;
+    curMod_ = 0;
 
     for (auto m : modifiers_)
     {
@@ -269,13 +273,28 @@ void GeometryModifierChain::execute(Geometry *g, Object * o) const
             break;
 
         if (m->isEnabled())
+        {
+            curMod_ = m;
             m->executeBase(g, o);
+        }
     }
 }
 
 void GeometryModifierChain::stop()
 {
     doStop_ = true;
+}
+
+double GeometryModifierChain::progress() const
+{
+    if (curMod_)
+    {
+        // XXX Cast away volatile
+        GeometryModifier * mod = (GeometryModifier*)(curMod_);
+        return mod->progress();
+    }
+    else
+        return 0.;
 }
 
 

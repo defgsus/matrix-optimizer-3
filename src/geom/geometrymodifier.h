@@ -64,6 +64,9 @@ public:
 
     Object * currentObject() const { return curObject_; }
 
+    /** Progress [0,100] */
+    double progress() const { return p_progress_; }
+
     // ----------- virtual interface ---------
 
     /** Always call ancestor's method before your derived code. */
@@ -80,11 +83,18 @@ public:
     /** Applies the modifications */
     virtual void execute(Geometry * g) = 0;
 
+protected:
+
+    /** Call this in execute to update the progress that this
+        modifier is returning when asked. */
+    void setProgress(double p) { p_progress_ = p; }
+
 private:
 
     QString className_, guiName_;
 
     bool enabled_;
+    double p_progress_;
 
     Object * curObject_;
 };

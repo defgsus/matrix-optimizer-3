@@ -26,6 +26,7 @@ namespace IO {
         FT_TEXTURE,
         FT_NORMAL_MAP,
         FT_MODEL,
+        FT_SHAPEFILE,
         FT_GEOMETRY_SETTINGS,
         FT_INTERFACE_XML,
         FT_INTERFACE_PRESET,

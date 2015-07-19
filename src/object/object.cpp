@@ -32,19 +32,21 @@
 
 namespace MO {
 
-namespace Private
+bool ObjectPrivate::registerObject(Object * obj)
 {
-    bool register_object_(Object * obj)
-    {
-        return ObjectFactory::registerObject(obj);
-    }
-
-    void set_object_id_(Object * o, const QString& id)
-    {
-        o->p_idName_ = id;
-    }
-
+    return ObjectFactory::registerObject(obj);
 }
+
+void ObjectPrivate::setObjectId(Object * o, const QString& id)
+{
+    o->p_idName_ = id;
+}
+
+void ObjectPrivate::addObject(Object *parent, Object *newChild, int index)
+{
+    parent->addObject_(newChild, index);
+}
+
 
 Object::Object(QObject *parent)
     : QObject                   (parent)

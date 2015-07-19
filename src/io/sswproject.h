@@ -23,6 +23,7 @@ namespace MATH { class Timeline1d; }
 
 class JsonTreeModel;
 class SswSource;
+class Object;
 
 /** SpatialSound Wave project loader.
     This handles the new (since ~2014) JSON format of the SSW.
@@ -50,6 +51,10 @@ public:
     /** Returns an html info string about all sources */
     QString infoString() const;
 
+    /** Sources with automation.
+        Ready after load() */
+    const QList<SswSource*>& soundSources() const;
+
 private:
     struct Private;
     Private * p_;
@@ -76,6 +81,29 @@ public:
         T_PLANE
     };
 
+    enum AnimationType
+    {
+        AT_XYZ,
+        AT_GAIN,
+        AT_TYPE
+    };
+
+    struct Automation
+    {
+    private:
+        Automation();
+        ~Automation();
+        friend class SswSource;
+        friend class SswProject;
+    public:
+        AnimationType atype;
+        Double start, end;
+        int recordId;
+        MATH::Timeline1d
+            * x, * y, * z,
+            * gainDb, * type;
+    };
+
     // -------- getter ---------
 
     SswProject * project() const { return p_project_; }
@@ -92,12 +120,22 @@ public:
     Type type() const { return p_type_; }
     QString typeName() const;
 
+    const QList<Automation*>& automations() const { return p_automation_; }
+
     // ----- getter with automation -----
 
     bool active(Double second) const;
     Vec3 position(Double second) const;
     Double gainDb(Double second) const;
     Type type(Double second) const;
+
+    // ------ object creation -----------
+
+    /** Creates a Group with a SoundSource and Tracks for automation */
+    Object * createObject();
+    /** Call this, once the object from createObject() is installed in the Scene
+        (and ObjectEditor) */
+    void createSequences(Object * group);
 
 private:
 
@@ -114,12 +152,7 @@ private:
     int p_index_;
     QString p_label_;
 
-    MATH::Timeline1d
-        * p_tl_x_,
-        * p_tl_y_,
-        * p_tl_z_,
-        * p_tl_gainDb_,
-        * p_tl_type_;
+    QList<Automation*> p_automation_;
 };
 
 

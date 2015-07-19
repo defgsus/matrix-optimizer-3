@@ -21,9 +21,14 @@ class GeometryModifierCreate : public GeometryModifier
 {
 public:
 
+    /** Order doesn't matter for persistence
+        as long as typeIds is maintained */
     enum Type
     {
-        T_FILE,
+        T_FILE_OBJ,
+#ifndef MO_DISABLE_SHP
+        T_FILE_SHP,
+#endif
         T_QUAD,
         T_TETRAHEDRON,
         T_BOX,

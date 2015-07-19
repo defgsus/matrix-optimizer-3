@@ -621,6 +621,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             auto diag = new SswImporter(window_);
             diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->setRootObject(scene_);
             diag->show();
         });
 #endif

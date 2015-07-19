@@ -13,6 +13,7 @@
 #include "geometry.h"
 #include "geometryfactory.h"
 #include "objloader.h"
+#include "shploader.h"
 #include "tool/deleter.h"
 #include "io/filemanager.h"
 
@@ -23,7 +24,11 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierCreate)
 
 const QStringList GeometryModifierCreate::typeIds =
 {
-    "file", "quad",
+    "file",
+#ifndef MO_DISABLE_SHP
+    "shp",
+#endif
+    "quad",
     "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
     "cyl", "cylo", "cone", "coneo", "torus", "uvsphere",
     "gridxz", "lgrid", "pgrid", "qgrid"
@@ -31,7 +36,10 @@ const QStringList GeometryModifierCreate::typeIds =
 
 const QStringList GeometryModifierCreate::typeNames =
 {
-    QObject::tr("file"),
+    QObject::tr("Wavefront Object (obj)"),
+#ifndef MO_DISABLE_SHP
+    QObject::tr("Shapefile (shp)"),
+#endif
     QObject::tr("quad"),
     QObject::tr("tetrahedron"),
     QObject::tr("hexahedron (cube)"),
@@ -113,10 +121,19 @@ void GeometryModifierCreate::execute(Geometry * g)
     // create mesh
     switch (type_)
     {
-    case T_FILE:
+    case T_FILE_OBJ:
         if (!filename_.isEmpty())
             ObjLoader::getGeometry(IO::fileManager().localFilename(filename_), g);
     break;
+
+#ifndef MO_DISABLE_SHP
+    case T_FILE_SHP:
+        if (!filename_.isEmpty())
+            ShpLoader::getGeometry(IO::fileManager().localFilename(filename_), g,
+                                   [=](double p){ setProgress(p); });
+    break;
+#endif
+
     case T_QUAD:
         GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles_);
     break;
@@ -191,7 +208,7 @@ void GeometryModifierCreate::execute(Geometry * g)
     }
 
     // unshared-vertices for non-files
-    if (!sharedVertices_ && type_ != T_FILE)
+    if (!sharedVertices_ && type_ != T_FILE_OBJ)
         g->unGroupVertices();
 
     //geometry->addGeometry(*g);

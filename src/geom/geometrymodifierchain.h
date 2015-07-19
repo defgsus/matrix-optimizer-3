@@ -96,6 +96,9 @@ public:
 
     void getNeededFiles(IO::FileList & files) const;
 
+    /** Returns the current progress [0,100] */
+    double progress() const;
+
     // ----------- execution --------------
 
     /** Execute the whole chain.
@@ -109,6 +112,7 @@ private:
 
     QList<GeometryModifier*> modifiers_;
     volatile mutable bool doStop_;
+    volatile mutable GeometryModifier * curMod_;
 
     static QMap<QString, GeometryModifier*> * registeredModifiers_;
 };

@@ -772,8 +772,11 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
         butLoadModelFile->setText("...");
         connect(butLoadModelFile, &QToolButton::clicked, [=]()
         {
-            QString filename =
-                IO::Files::getOpenFileName(IO::FT_MODEL, this);
+            QString filename;
+            if (comboType->currentIndex() == GEOM::GeometryModifierCreate::T_FILE_SHP)
+                filename = IO::Files::getOpenFileName(IO::FT_SHAPEFILE, this);
+            else
+                filename = IO::Files::getOpenFileName(IO::FT_MODEL, this);
 
             if (filename.isEmpty())
                 return;
@@ -915,7 +918,9 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
     {
         const bool
                 isFile = settings->type() ==
-                        GEOM::GeometryModifierCreate::T_FILE,
+                        GEOM::GeometryModifierCreate::T_FILE_OBJ
+                    || settings->type() ==
+                        GEOM::GeometryModifierCreate::T_FILE_SHP,
                 canOnlyTriangle = isFile
                         || settings->type() == GEOM::GeometryModifierCreate::T_BOX_UV,
                 canTriangle = (settings->type() !=

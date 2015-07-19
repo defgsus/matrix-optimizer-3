@@ -219,6 +219,10 @@ private:
 
     Double phaseMult_;
 
+    mutable std::vector<Double>
+        lastMinMaxStart_, lastMinMaxEnd_,
+        lastMinValue_, lastMaxValue_;
+
     ParameterFloat
         * p_offset_,
         * p_amplitude_,

@@ -42,18 +42,24 @@ namespace MO {
 namespace IO { class DataStream; }
 namespace MATH { class Timeline1d; }
 
-namespace Private {
-    /** hidden id access */
-    void set_object_id_(Object * o, const QString& id);
+/** "Private" access to certain functionality of objects,
+    that is not part of the interface */
+class ObjectPrivate
+{
+public:
     /** Installs the object in ObjectFactory.
-        @note Prefere to use MO_REGISTER_OBJECT to do the job */
-    bool register_object_(Object *);
-}
+        @note Use MO_REGISTER_OBJECT to do the job */
+    static bool registerObject(Object *);
+    /** hidden id access */
+    static void setObjectId(Object * o, const QString& id);
+    /** Call to Object::addObject_() */
+    static void addObject(Object * parent, Object * newChild, int index = -1);
+};
 
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
-            ::MO::Private::register_object_( new class__((QObject*)0) ); \
+            ::MO::ObjectPrivate::registerObject( new class__((QObject*)0) ); \
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
@@ -87,8 +93,7 @@ class Object : public QObject,
 {
     Q_OBJECT
 
-    // to set idName_
-    friend void Private::set_object_id_(Object*, const QString&);
+    friend class ObjectPrivate;
     // to edit the tree
     friend class Scene;
 public:

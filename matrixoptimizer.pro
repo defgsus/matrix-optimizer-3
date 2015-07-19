@@ -41,7 +41,9 @@ mac { DEFINES += \
                 # linux audio plugins
                 MO_DISABLE_LADSPA \
                 # neuro-imaging io library
-                MO_DISABLE_NIFTI
+                MO_DISABLE_NIFTI \
+                # shapefiles
+                MO_DISABLE_SHP
 }
 
 # for optirun bug
@@ -67,6 +69,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -langelscript \
+        -lshp \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking
 #        -lCGAL \

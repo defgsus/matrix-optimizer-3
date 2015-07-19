@@ -838,6 +838,35 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
 void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
                     Double& minValue, Double& maxValue, uint thread) const
 {
+    /** @todo need to check for changes of sequence content */
+#if 1
+    bool docalc = false;
+
+    if (thread >= lastMinMaxStart_.size())
+    {
+        lastMinMaxStart_.resize(thread+1);
+        lastMinMaxEnd_.resize(thread+1);
+        lastMinValue_.resize(thread+1);
+        lastMaxValue_.resize(thread+1);
+        docalc = true;
+    }
+    else
+    if (lastMinMaxStart_[thread] != localStart
+            || lastMinMaxEnd_[thread] != localEnd)
+    {
+        lastMinMaxStart_[thread] = localStart;
+        lastMinMaxEnd_[thread] = localEnd;
+        docalc = true;
+    }
+
+    if (!docalc)
+    {
+        minValue = lastMinValue_[thread];
+        maxValue = lastMaxValue_[thread];
+        return;
+    }
+#endif
+
     const Double
         len = localEnd - localStart,
         step = std::max(0.1, len / 5000.0);
@@ -859,6 +888,9 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
     // minimum size
     if (maxValue - minValue < 0.1)
         maxValue += 0.1;
+
+    lastMinValue_[thread] = minValue;
+    lastMaxValue_[thread] = maxValue;
 }
 
 void SequenceFloat::updateWavetable_()
