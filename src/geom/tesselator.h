@@ -29,6 +29,8 @@ public:
     Tesselator();
     ~Tesselator();
 
+    void clear();
+
     // -------------- tesselation ------------------
 
     /** Tesselates the polygon described by @p points.

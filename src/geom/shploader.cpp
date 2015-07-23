@@ -17,6 +17,7 @@
 
 #include "shploader.h"
 #include "geometry.h"
+#include "tesselator.h"
 #include "io/error.h"
 
 namespace MO {
@@ -28,6 +29,7 @@ struct ShpLoader::Private
         : loader    (loader)
         , handle    (0)
         , progress  (0)
+        , geometry  (0)
     {
 
     }
@@ -35,6 +37,8 @@ struct ShpLoader::Private
     ~Private()
     {
         close();
+        if (geometry)
+            geometry->releaseRef();
     }
 
     struct Vertex
@@ -48,14 +52,15 @@ struct ShpLoader::Private
 
     void close();
     void loadFile(const QString &filename, std::function<void(double)> progressFunc = 0);
+    void getShpObject(SHPObject * );
+    void getPolyPart(SHPObject *, int start, int end, bool hasZ);
     void getGeometry(Geometry * g, std::function<void(double)> progressFunc = 0);
 
     ShpLoader * loader;
     SHPHandle handle;
 
     double progress;
-    std::vector<VertexGroup> vertexGroups;
-    //GEOM::Geometry geometry;
+    GEOM::Geometry * geometry;
 
     static QMutex mutex;
     static std::map<QString, ShpLoader*> instances;
@@ -86,6 +91,105 @@ void ShpLoader::loadFile(const QString &filename, std::function<void(double)> pr
 void ShpLoader::getGeometry(Geometry * g, std::function<void(double)> progressFunc) const
 {
     p_->getGeometry(g, progressFunc);
+}
+
+void ShpLoader::Private::getShpObject(SHPObject * shp)
+{
+    Tesselator tess;
+
+    bool hasZ = false;
+    switch (shp->nSHPType)
+    {
+        case SHPT_POINTZ:
+            hasZ = true;
+        case SHPT_POINT:
+        case SHPT_POINTM:
+            for (int j=0; j < shp->nVertices; ++j)
+            {
+                auto i0 = geometry->addVertex(shp->padfX[j], shp->padfY[j],
+                                              hasZ ? shp->padfZ[j] : 0.f);
+                geometry->addPoint(i0);
+            }
+        break;
+
+        case SHPT_ARCZ:
+            hasZ = true;
+        case SHPT_ARC:
+        case SHPT_ARCM:
+            if (shp->nParts)
+            {
+                for (int k=0; k < shp->nParts; ++k)
+                {
+                    const int
+                        start = shp->panPartStart[k],
+                        end = k < shp->nParts - 1
+                            ? shp->panPartStart[k+1] : shp->nVertices;
+                    for (int j=start+1; j < end; ++j)
+                    {
+                        auto i0 = geometry->addVertex(shp->padfX[j-1], shp->padfY[j-1],
+                                                hasZ ? shp->padfZ[j-1] : 0.f);
+                        auto i1 = geometry->addVertex(shp->padfX[j], shp->padfY[j],
+                                                hasZ ? shp->padfZ[j] : 0.f);
+                        geometry->addLine(i0, i1);
+                    }
+                }
+            }
+            else
+            {
+                for (int j=1; j < shp->nVertices; ++j)
+                {
+                    auto i0 = geometry->addVertex(shp->padfX[j-1], shp->padfY[j-1],
+                                                  hasZ ? shp->padfZ[j-1] : 0.f);
+                    auto i1 = geometry->addVertex(shp->padfX[j], shp->padfY[j],
+                                                  hasZ ? shp->padfZ[j] : 0.f);
+                    geometry->addLine(i0, i1);
+                }
+            }
+        break;
+
+        case SHPT_POLYGONZ:
+            hasZ = true;
+        case SHPT_POLYGON:
+        case SHPT_POLYGONM:
+            if (shp->nParts)
+            {
+                for (int k=0; k < shp->nParts; ++k)
+                {
+                    const int
+                        start = shp->panPartStart[k],
+                        end = k < shp->nParts - 1
+                            ? shp->panPartStart[k+1] : shp->nVertices;
+                    getPolyPart(shp, start, end, hasZ);
+                }
+            }
+            else
+            {
+                for (int j=0; j < shp->nVertices; ++j)
+                {
+                    int j1 = (j+1) % shp->nVertices;
+                    auto i0 = geometry->addVertex(shp->padfX[j], shp->padfY[j],
+                                            hasZ ? shp->padfZ[j] : 0.f);
+                    auto i1 = geometry->addVertex(shp->padfX[j1], shp->padfY[j1],
+                                            hasZ ? shp->padfZ[j1] : 0.f);
+                    geometry->addLine(i0, i1);
+                }
+            }
+        break;
+    }
+}
+
+void ShpLoader::Private::getPolyPart(SHPObject * shp, int start, int end, bool hasZ)
+{
+    QVector<Vec2> points;
+    for (int j=start; j < end; ++j)
+    {
+        points << Vec2(shp->padfX[j], shp->padfY[j]);
+//                        hasZ ? shp->padfZ[j] : 0.f);
+    }
+
+    Tesselator tess;
+    tess.tesselate(points);
+    tess.getGeometry(*geometry);
 }
 
 void ShpLoader::getGeometry(const QString &filename, Geometry * g, std::function<void(double)> progressFunc)
@@ -125,23 +229,18 @@ void ShpLoader::Private::loadFile(const QString &filename, std::function<void(do
     int numEntities;
     SHPGetInfo(handle, &numEntities, 0, 0, 0);
 
+    if (!geometry)
+        geometry = new GEOM::Geometry();
+    geometry->clear();
+    geometry->setColor(.5, .5, .5, 1.);
+
     for (int i=0; i<numEntities; ++i)
     {
         SHPObject * shp = SHPReadObject(handle, i);
         if (!shp)
             continue;
 
-        vertexGroups.push_back(VertexGroup());
-        VertexGroup & vgroup = vertexGroups.back();
-
-        // construct with lines
-        for (int j=0; j < shp->nVertices; ++j)
-        {
-            Vertex v;
-            v.x = shp->padfX[j];
-            v.y = shp->padfY[j];
-            vgroup.vertices.push_back(v);
-        }
+        getShpObject(shp);
 
         progress = (double)i / numEntities * 100.;
         if (progressFunc)
@@ -161,49 +260,10 @@ void ShpLoader::Private::close()
 
 void ShpLoader::Private::getGeometry(Geometry * geom, std::function<void(double)> progressFunc)
 {
-    if (!handle)
+    if (!geometry)
         return;
 
-    for (size_t i=0; i<vertexGroups.size(); ++i)
-    {
-        const VertexGroup & vgroup = vertexGroups[i];
-
-        Geometry::IndexType i0, i1;
-        for (size_t j = 0; j<vgroup.vertices.size(); ++j)
-        {
-            i1 = geom->addVertex(vgroup.vertices[j].x,
-                                 vgroup.vertices[j].y, 0);
-            if (j>0)
-                geom->addLine(i0, i1);
-            i0 = i1;
-        }
-
-        progress = (double)i / vertexGroups.size() * 100.;
-        if (progressFunc)
-            progressFunc(progress);
-    }
-
-    /*int numEntities;
-    SHPGetInfo(handle, &numEntities, 0, 0, 0);
-
-    for (int i=0; i<numEntities; ++i)
-    {
-        SHPObject * shp = SHPReadObject(handle, i);
-        if (!shp)
-            continue;
-
-        // construct with lines
-        Geometry::IndexType i0, i1;
-        for (int j=0; j < shp->nVertices; ++j)
-        {
-            i1 = geom->addVertex(shp->padfX[j], shp->padfY[j], 0);
-            if (j>0)
-                geom->addLine(i0, i1);
-            i0 = i1;
-        }
-
-        SHPDestroyObject(shp);
-    } */
+    geom->addGeometry(*geometry);
 }
 
 

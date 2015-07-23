@@ -1823,6 +1823,155 @@ void Geometry::tesselateTriangles(uint level)
     }
 }
 
+void Geometry::tesselateTriangles(VertexType minArea, VertexType minLength, uint level)
+{
+    if (!numTriangles())
+        return;
+    for (uint l = 0; l<level; ++l)
+    {
+        Geometry tess;
+        tess.sharedVertices_ = sharedVertices_;
+        tess.threshold_ = threshold_;
+
+        for (uint i=0; i<numTriangles(); ++i)
+        {
+            const IndexType
+                    t1 = triIndex_[i*3],
+                    t2 = triIndex_[i*3+1],
+                    t3 = triIndex_[i*3+2];
+
+            const Vec3
+                    p1 = getVertex(t1),
+                    p2 = getVertex(t2),
+                    p3 = getVertex(t3),
+                    p12 = 0.5f * (p1 + p2),
+                    p13 = 0.5f * (p1 + p3),
+                    p23 = 0.5f * (p2 + p3),
+
+                    pn1 = getNormal(t1),
+                    pn2 = getNormal(t2),
+                    pn3 = getNormal(t3),
+                    pn12 = 0.5f * (pn1 + pn2),
+                    pn13 = 0.5f * (pn1 + pn3),
+                    pn23 = 0.5f * (pn2 + pn3);
+
+            const Vec4
+                    pc1 = getColor(t1),
+                    pc2 = getColor(t2),
+                    pc3 = getColor(t3),
+                    pc12 = 0.5f * (pc1 + pc2),
+                    pc13 = 0.5f * (pc1 + pc3),
+                    pc23 = 0.5f * (pc2 + pc3);
+
+            const Vec2
+                    pt1 = getTexCoord(t1),
+                    pt2 = getTexCoord(t2),
+                    pt3 = getTexCoord(t3),
+                    pt12 = 0.5f * (pt1 + pt2),
+                    pt13 = 0.5f * (pt1 + pt3),
+                    pt23 = 0.5f * (pt2 + pt3);
+
+
+            const IndexType
+                    n1 = tess.addVertex(p1[0], p1[1], p1[2], pn1[0], pn1[1], pn1[2], pc1[0], pc1[1], pc1[2], pc1[3], pt1[0], pt1[1]),
+                    n2 = tess.addVertex(p2[0], p2[1], p2[2], pn2[0], pn2[1], pn2[2], pc2[0], pc2[1], pc2[2], pc2[3], pt2[0], pt2[1]),
+                    n3 = tess.addVertex(p3[0], p3[1], p3[2], pn3[0], pn3[1], pn3[2], pc3[0], pc3[1], pc3[2], pc3[3], pt3[0], pt3[1]);
+
+            // stop at minimum area
+            if (MATH::triangle_area(p1, p2, p3) < minArea)
+            {
+                tess.addTriangle(n1, n2, n3);
+                continue;
+            }
+
+            // check lengths
+            const bool
+                    split1 = glm::length(p2 - p1) > minLength,
+                    split2 = glm::length(p3 - p2) > minLength,
+                    split3 = glm::length(p1 - p3) > minLength;
+
+            const IndexType
+                    n12 = !split1 ? 0 : tess.addVertex(p12[0], p12[1], p12[2], pn12[0], pn12[1], pn12[2], pc12[0], pc12[1], pc12[2], pc12[3], pt12[0], pt12[1]),
+                    n13 = !split3 ? 0 : tess.addVertex(p13[0], p13[1], p13[2], pn13[0], pn13[1], pn13[2], pc13[0], pc13[1], pc13[2], pc13[3], pt13[0], pt13[1]),
+                    n23 = !split2 ? 0 : tess.addVertex(p23[0], p23[1], p23[2], pn23[0], pn23[1], pn23[2], pc23[0], pc23[1], pc23[2], pc23[3], pt23[0], pt23[1]);
+
+            if (split1)
+            {
+                if (split2)
+                {
+                    if (split3)
+                    {
+                        // full tesselation
+                        tess.addTriangle(n1, n12, n13);
+                        tess.addTriangle(n12, n2, n23);
+                        tess.addTriangle(n12, n23, n13);
+                        tess.addTriangle(n13, n23, n3);
+                    }
+                    else
+                    {
+                        tess.addTriangle(n1, n12, n23);
+                        tess.addTriangle(n12, n2, n23);
+                        tess.addTriangle(n1, n23, n3);
+                    }
+                }
+                else // !split2
+                {
+                    if (split3)
+                    {
+                        tess.addTriangle(n1, n12, n13);
+                        tess.addTriangle(n12, n2, n13);
+                        tess.addTriangle(n2, n3, n13);
+                    }
+                    else
+                    {
+                        // split1 only
+                        tess.addTriangle(n1, n12, n3);
+                        tess.addTriangle(n12, n2, n3);
+                    }
+                }
+            }
+            else // !split1
+            {
+                if (split2)
+                {
+                    if (split3)
+                    {
+                        tess.addTriangle(n1, n23, n13);
+                        tess.addTriangle(n1, n2, n23);
+                        tess.addTriangle(n13, n23, n3);
+                    }
+                    else
+                    {
+                        // split2 only
+                        tess.addTriangle(n1, n2, n23);
+                        tess.addTriangle(n1, n23, n3);
+                    }
+                }
+                else // !split2
+                {
+                    if (split3)
+                    {
+                        // split3 only
+                        tess.addTriangle(n1, n2, n13);
+                        tess.addTriangle(n2, n3, n13);
+                    }
+                    else
+                    {
+                        // no split
+                        tess.addTriangle(n1, n2, n3);
+                    }
+                }
+            }
+
+        }
+
+        // XXX hmm...
+        //progress_ = ???
+
+        *this = tess;
+    }
+}
+
 void Geometry::removePrimitivesRandomly(float probability, int seed)
 {
     std::mt19937 rnd(seed);

@@ -410,14 +410,23 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         MO__SPIN(spinlevel, tr("Order of tesselation. Be careful, this is an exponential value!"),
                  1, 10);
 
+        MO__DOUBLESPIN(spinArea, tr("smallest area to consider for tesselation"),
+                       0.1, 0., 1000000.);
+        MO__DOUBLESPIN(spinLength, tr("smallest side-length to consider for tesselation"),
+                       0.1, 0., 1000000.);
+
         funcUpdateFromWidgets_ = [=]()
         {
             tess->setTesselationLevel(spinlevel->value());
+            tess->setMinArea(spinArea->value());
+            tess->setMinLength(spinLength->value());
         };
 
         funcUpdateWidgets_ = [=]()
         {
             spinlevel->setValue(tess->getTesselationLevel());
+            spinArea->setValue(tess->getMinArea());
+            spinLength->setValue(tess->getMinLength());
         };
     }
 

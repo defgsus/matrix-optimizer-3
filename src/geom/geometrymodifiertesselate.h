@@ -26,14 +26,19 @@ public:
     // ------------- getter ------------------
 
     Float getTesselationLevel() const { return level_; }
+    Float getMinArea() const { return minArea_; }
+    Float getMinLength() const { return minLength_; }
 
     // ------------ setter -------------------
 
     void setTesselationLevel(uint t) { level_ = std::max((uint)1, t); }
+    void setMinArea(Float minArea) { minArea_ = minArea; }
+    void setMinLength(Float minLength) { minLength_ = minLength; }
 
 private:
 
     uint level_;
+    Float minArea_, minLength_;
 };
 
 

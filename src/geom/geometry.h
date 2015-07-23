@@ -366,6 +366,8 @@ public:
 
     /** Split all triangles into smaller ones. */
     void tesselateTriangles(uint level = 1);
+    /** Split all triangles into smaller ones. */
+    void tesselateTriangles(VertexType minArea, VertexType minLength, uint level = 1);
     /** Split all lines into smaller ones. */
     void tesselateLines(uint level = 1);
 

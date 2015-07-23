@@ -100,6 +100,10 @@ Tesselator::~Tesselator()
     delete p_;
 }
 
+void Tesselator::clear()
+{
+    p_->clear();
+}
 
 void Tesselator::tesselate(const QVector<DVec2> & poly, bool trianglesOnly)
 {

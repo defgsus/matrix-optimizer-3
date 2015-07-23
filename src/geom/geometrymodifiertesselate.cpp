@@ -20,6 +20,8 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTesselate)
 GeometryModifierTesselate::GeometryModifierTesselate()
     : GeometryModifier("Tesselate", QObject::tr("tesselate")),
       level_    (1)
+    , minArea_  (0.)
+    , minLength_(0.)
 {
 
 }
@@ -35,24 +37,28 @@ void GeometryModifierTesselate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geotess", 1);
+    io.writeHeader("geotess", 2);
 
     io << level_;
+    // v2
+    io << minArea_ << minLength_;
 }
 
 void GeometryModifierTesselate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geotess", 1);
+    int ver = io.readHeader("geotess", 2);
 
     io >> level_;
+    if (ver >= 2)
+        io >> minArea_ >> minLength_;
 }
 
 
 void GeometryModifierTesselate::execute(Geometry *g)
 {
-    g->tesselateTriangles(level_);
+    g->tesselateTriangles(minArea_, minLength_, level_);
 }
 
 
