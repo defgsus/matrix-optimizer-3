@@ -13,7 +13,7 @@
 
 #include "frontitemeditor.h"
 #include "item/abstractfrontitem.h"
-#include "propertiesview.h"
+#include "propertiesscrollview.h"
 #include "types/properties.h"
 
 namespace MO {
@@ -54,7 +54,7 @@ void FrontItemEditor::createWidgets_()
         lv->addWidget(p_label_);
 
 
-        p_props_ = new PropertiesView(this);
+        p_props_ = new PropertiesScrollView(this);
         lv->addWidget(p_props_);
 
         connect(p_props_, SIGNAL(propertyChanged(QString)),

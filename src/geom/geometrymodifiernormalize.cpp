@@ -22,9 +22,10 @@ GeometryModifierNormalize::GeometryModifierNormalize()
     : GeometryModifier("Normalize", QObject::tr("normalize vertices")),
       n_      (1.0)
 {
-    properties().set("amt", QObject::tr("amount"),
-                     QObject::tr("The amount of how much the normalization is applied"),
-                     1.0, 0., 1., 0.05);
+    properties().set(
+        "amt", QObject::tr("amount"),
+        QObject::tr("The amount of how much the normalization is applied"),
+        1.0, 0., 1., 0.05);
 }
 
 QString GeometryModifierNormalize::statusTip() const

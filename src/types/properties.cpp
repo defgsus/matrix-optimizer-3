@@ -135,7 +135,28 @@ void Properties::swap(Properties &other)
     p_step_.swap(other.p_step_);
     p_name_.swap(other.p_name_);
     p_tip_.swap(other.p_tip_);
+}
 
+void Properties::clear()
+{
+    p_val_.clear();
+    p_def_.clear();
+    p_min_.clear();
+    p_max_.clear();
+    p_step_.clear();
+    p_name_.clear();
+    p_tip_.clear();
+}
+
+void Properties::clear(const QString &id)
+{
+    p_val_.remove(id);
+    p_def_.remove(id);
+    p_min_.remove(id);
+    p_max_.remove(id);
+    p_step_.remove(id);
+    p_name_.remove(id);
+    p_tip_.remove(id);
 }
 
 void Properties::serialize(IO::DataStream & io) const
@@ -459,7 +480,27 @@ bool Properties::change(const QString &id, const QVariant & v)
 void Properties::unify(const Properties &other)
 {
     for (auto i = other.p_val_.begin(); i != other.p_val_.end(); ++i)
+    {
         p_val_.insert(i.key(), i.value());
+        auto j = other.p_def_.find(i.key());
+        if (j != other.p_def_.end())
+            p_def_.insert(i.key(), j.value());
+        j = other.p_min_.find(i.key());
+        if (j != other.p_min_.end())
+            p_min_.insert(i.key(), j.value());
+        j = other.p_max_.find(i.key());
+        if (j != other.p_max_.end())
+            p_max_.insert(i.key(), j.value());
+        j = other.p_step_.find(i.key());
+        if (j != other.p_step_.end())
+            p_step_.insert(i.key(), j.value());
+        auto k = other.p_name_.find(i.key());
+        if (k != other.p_name_.end())
+            p_name_.insert(i.key(), k.value());
+        k = other.p_tip_.find(i.key());
+        if (k != other.p_tip_.end())
+            p_tip_.insert(i.key(), k.value());
+    }
 }
 
 

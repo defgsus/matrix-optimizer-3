@@ -190,10 +190,10 @@ public:
     // --------------- setter -------------------
 
     /** Wipes out everything */
-    void clear() { p_val_.clear(); }
+    void clear();
 
     /** Removes a single item */
-    void clear(const QString& id) { p_val_.remove(id); }
+    void clear(const QString& id);
 
     /* Starts a new group. Adding a new property with set() will assign
         the property to this group */

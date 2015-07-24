@@ -24,7 +24,22 @@ GeometryModifierScale::GeometryModifierScale()
       y_        (1.0),
       z_        (1.0)
 {
-
+    properties().set(
+        "all", QObject::tr("overall scale"),
+        QObject::tr("The scale on all three axis"),
+        1.0, 0.1);
+    properties().set(
+        "x", QObject::tr("x scale"),
+        QObject::tr("The scale on the x axis"),
+        1.0, 0.1);
+    properties().set(
+        "y", QObject::tr("y scale"),
+        QObject::tr("The scale on the y axis"),
+        1.0, 0.1);
+    properties().set(
+        "z", QObject::tr("z scale"),
+        QObject::tr("The scale on the z axis"),
+        1.0, 0.1);
 }
 
 QString GeometryModifierScale::statusTip() const
@@ -48,12 +63,22 @@ void GeometryModifierScale::deserialize(IO::DataStream &io)
 
     io.readHeader("geoscale", 1);
 
-    io >> all_ >> x_ >> y_ >> z_;
+    Float all, x, y, z;
+    io >> all >> x >> y >> z;
+    properties().set("all", all);
+    properties().set("x", x);
+    properties().set("y", y);
+    properties().set("z", z);
 }
 
 void GeometryModifierScale::execute(Geometry *g)
 {
-    g->scale(all_ * x_, all_ * y_, all_ * z_);
+    const Float
+            all = properties().get("all").toDouble(),
+            x = all * properties().get("x").toDouble(),
+            y = all * properties().get("y").toDouble(),
+            z = all * properties().get("z").toDouble();
+    g->scale(x, y, z);
 }
 
 } // namespace GEOM

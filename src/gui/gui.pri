@@ -92,7 +92,6 @@ HEADERS += \
     src/gui/item/abstractguiitem.h \
     src/gui/serverview.h \
     src/gui/widget/qvariantwidget.h \
-    src/gui/propertiesview.h \
     src/gui/frontitemeditor.h \
     src/gui/widget/coloreditwidget.h \
     src/gui/item/frontfloatitem.h \
@@ -115,7 +114,9 @@ HEADERS += \
     src/gui/audioplugindialog.h \
     src/gui/widget/objectoutputview.h \
     src/gui/widget/assetbrowser.h \
-    $$PWD/sswimporter.h
+    $$PWD/sswimporter.h \
+    $$PWD/propertiesscrollview.h \
+    $$PWD/propertiesview.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -207,7 +208,6 @@ SOURCES += \
     src/gui/item/abstractguiitem.cpp \
     src/gui/serverview.cpp \
     src/gui/widget/qvariantwidget.cpp \
-    src/gui/propertiesview.cpp \
     src/gui/frontitemeditor.cpp \
     src/gui/widget/coloreditwidget.cpp \
     src/gui/item/frontfloatitem.cpp \
@@ -230,4 +230,6 @@ SOURCES += \
     src/gui/audioplugindialog.cpp \
     src/gui/widget/objectoutputview.cpp \
     src/gui/widget/assetbrowser.cpp \
-    $$PWD/sswimporter.cpp
+    $$PWD/sswimporter.cpp \
+    $$PWD/propertiesscrollview.cpp \
+    $$PWD/propertiesview.cpp

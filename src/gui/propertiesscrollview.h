@@ -1,17 +1,17 @@
-/** @file
+/** @file propertiesscrolview.h
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 7/24/2015</p>
+    <p>created 24.02.2015</p>
 */
 
-#ifndef MOSRC_GUI_PROPERTIESVIEW_H
-#define MOSRC_GUI_PROPERTIESVIEW_H
+#ifndef MOSRC_GUI_PROPERTIESCROLLSVIEW_H
+#define MOSRC_GUI_PROPERTIESCROLLSVIEW_H
 
-#include <QWidget>
+#include <QScrollArea>
 #include <QMap>
 
 class QVBoxLayout;
@@ -23,12 +23,12 @@ namespace GUI {
 class QVariantWidget;
 
 /** Generic gui display/editor for MO::Properties (types/properties.h) */
-class PropertiesView : public QWidget
+class PropertiesScrollView : public QScrollArea
 {
     Q_OBJECT
 public:
-    explicit PropertiesView(QWidget *parent = 0);
-    ~PropertiesView();
+    explicit PropertiesScrollView(QWidget *parent = 0);
+    ~PropertiesScrollView();
 
     /** Returns read access to the assigned properties */
     const Properties& properties() const { return *p_props_; }
@@ -57,9 +57,11 @@ private:
     Properties * p_props_;
     QMap<QString, QVariantWidget*> p_widgets_;
     QVBoxLayout * p_lv_;
+    QWidget * p_stretch_, * p_container_;
 };
 
 } // namespace GUI
 } // namespace MO
 
-#endif // MOSRC_GUI_PROPERTIESVIEW_H
+
+#endif // MOSRC_GUI_PROPERTIESCROLLSVIEW_H

@@ -23,7 +23,20 @@ GeometryModifierTesselate::GeometryModifierTesselate()
     , minArea_  (0.)
     , minLength_(0.)
 {
-
+    properties().set(
+        "level", QObject::tr("triangulation level"),
+        QObject::tr("Number of successive tesselations"),
+        1u, 1u, 20u);
+    properties().set(
+        "minArea", QObject::tr("minimum area"),
+        QObject::tr("The smallest triangle area that will be considered for tesselation"),
+        0.0, 0.1);
+    properties().setMin("minArea", 0.);
+    properties().set(
+        "minLength", QObject::tr("minimum side-length"),
+        QObject::tr("The length of a triangle vertex that will be considered for tesselation"),
+        0.0, 0.1);
+    properties().setMin("minLength", 0.);
 }
 
 QString GeometryModifierTesselate::statusTip() const
@@ -50,15 +63,23 @@ void GeometryModifierTesselate::deserialize(IO::DataStream &io)
 
     int ver = io.readHeader("geotess", 2);
 
-    io >> level_;
+    uint level;
+    Float minArea=0, minLength=0;
+    io >> level;
     if (ver >= 2)
-        io >> minArea_ >> minLength_;
+        io >> minArea >> minLength;
+    properties().set("level", level);
+    properties().set("minArea", minArea);
+    properties().set("minLength", minLength);
 }
 
 
 void GeometryModifierTesselate::execute(Geometry *g)
 {
-    g->tesselateTriangles(minArea_, minLength_, level_);
+    g->tesselateTriangles(
+                properties().get("minArea").toFloat(),
+                properties().get("minLength").toFloat(),
+                properties().get("level").toUInt());
 }
 
 

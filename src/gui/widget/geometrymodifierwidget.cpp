@@ -128,9 +128,9 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         emit expandedChange(modifier_, false);
     });
 
-//    propView_ = new PropertiesView();
-//    propView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-//    group_->addWidget(propView_);
+    propView_ = new PropertiesView();
+    propView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    group_->addWidget(propView_);
 
 
 #define MO__DOUBLESPIN(var__, statustip__, step__, min__, max__) \
@@ -167,9 +167,11 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         createCreatorWidgets_(creator);
     }
 
-  /*  else
+    else
     {
         propView_->setProperties( modifier_->properties() );
+        connect(propView_, SIGNAL(propertyChanged(QString)),
+                this, SLOT(updateFromWidgets_()));
         funcUpdateFromWidgets_ = [=]()
         {
             modifier_->properties() = propView_->properties();
@@ -180,9 +182,8 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             propView_->setProperties( modifier_->properties() );
         };
 
-    }*/
-
-    //else
+    }
+#if 0
     if (auto scale = dynamic_cast<GEOM::GeometryModifierScale*>(modifier_))
     {
         auto lh = new QHBoxLayout();
@@ -767,7 +768,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         };
     }
 #endif
-
+#endif
 }
 
 void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate * settings)

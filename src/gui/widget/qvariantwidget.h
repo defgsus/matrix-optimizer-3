@@ -27,7 +27,8 @@ public:
 
     explicit QVariantWidget(QWidget *parent = 0);
     explicit QVariantWidget(const QString& n, const QVariant& v, QWidget *parent = 0);
-    explicit QVariantWidget(const QString& n, const QString& id, const Properties* p, QWidget *parent = 0);
+    /** Constructor for a property (more than a QVariant) */
+    explicit QVariantWidget(const QString& id, const Properties* p, QWidget *parent = 0);
 
     /** Returns the currently set value */
     const QVariant& value() const;

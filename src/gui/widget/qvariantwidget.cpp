@@ -33,7 +33,7 @@ struct QVariantWidget::Private
     Private(const QString& n, const QVariant& v, QVariantWidget * w)
         : widget(w), props(0), v(v), name(n),
           ignore_widget(false),
-          l(0), label(0), edit(0) { }
+          layout(0), label(0), edit(0) { }
 
     /** Creates or re-creates the appropriate widgets.
         Can safely be called before or after changing the variant type */
@@ -43,7 +43,7 @@ struct QVariantWidget::Private
 
     QVariantWidget * widget;
     const Properties * props;
-    QString id;
+    QString id, tip;
     QVariant v;
     QString name;
 
@@ -52,17 +52,19 @@ struct QVariantWidget::Private
         f_update_value;
     bool ignore_widget;
 
-    QHBoxLayout * l;
+    QHBoxLayout * layout;
     QLabel * label;
     QWidget * edit;
 };
 
-QVariantWidget::QVariantWidget(const QString& n, const QString& id, const Properties * prop, QWidget *parent)
+QVariantWidget::QVariantWidget(const QString& id, const Properties * prop, QWidget *parent)
     : QWidget       (parent)
-    , p_            (new Private(n, QString(), this))
+    , p_            (new Private(QString(), prop->get(id), this))
 {
     p_->id = id;
     p_->props = prop;
+    p_->name = prop->hasName(id) ? prop->getName(id) : id;
+    p_->tip = prop->getTip(id);
     p_->createWidgets();
 }
 
@@ -112,22 +114,22 @@ void QVariantWidget::onValueChanged_()
 
 void QVariantWidget::Private::createWidgets()
 {
-    if (!l)
+    if (!layout)
     {
-        l = new QHBoxLayout(widget);
-        l->setMargin(2);
+        layout = new QHBoxLayout(widget);
+        layout->setMargin(2);
         //l->setSizeConstraint(QLayout::SetMaximumSize);
     }
 
     if (!label)
     {
         label = new QLabel(name, widget);
-        l->addWidget(label);
+        layout->addWidget(label);
     }
     else
         label->setText(name);
 
-    l->addStretch(1);
+    //layout->addStretch(1);
 
     // clear previous edit widget
     if (edit)
@@ -139,6 +141,8 @@ void QVariantWidget::Private::createWidgets()
         f_update_widget = 0;
     }
 
+    widget->setStatusTip(tip);
+
 
     // ----- create appropriate sub-widgets -----
 
@@ -149,7 +153,7 @@ void QVariantWidget::Private::createWidgets()
     auto layout = new Layout__(edit); \
     layout->setMargin(0);
 
-    switch (v.type())
+    switch ((int)v.type())
     {
         case QMetaType::Bool:
         {
@@ -162,10 +166,12 @@ void QVariantWidget::Private::createWidgets()
         break;
 
         case QMetaType::Int:
+        case QMetaType::UInt:
         {
+            bool hasSign = v.type() == QVariant::UInt;
             auto sb = new SpinBox(widget);
             edit = sb;
-            sb->setRange(-999999999, 999999999);
+            sb->setRange(hasSign ? -999999999 : 0, 999999999);
             if (props)
             {
                 if (props->hasMin(id))
@@ -176,15 +182,20 @@ void QVariantWidget::Private::createWidgets()
                     sb->setSingleStep(props->getStep(id).toInt());
             }
             f_update_widget = [=](){ sb->setValue(v.toInt()); };
-            f_update_value = [=](){ v = sb->value(); };
+            if (hasSign)
+                f_update_value = [=](){ v = sb->value(); };
+            else
+                f_update_value = [=](){ v = (unsigned)sb->value(); };
             connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
         }
         break;
 
         case QMetaType::Double:
+        case QMetaType::Float:
         {
             auto sb = new DoubleSpinBox(widget);
             edit = sb;
+            //sb->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
             sb->setRange(-9999999, 9999999);
             sb->setDecimals(7);
             if (props)
@@ -197,7 +208,10 @@ void QVariantWidget::Private::createWidgets()
                     sb->setSingleStep(props->getStep(id).toDouble());
             }
             f_update_widget = [=](){ sb->setValue(v.toDouble()); };
-            f_update_value = [=](){ v = sb->value(); };
+            if (v.type() == QVariant::Double)
+                f_update_value = [=](){ v = double(sb->value()); };
+            else
+                f_update_value = [=](){ v = float(sb->value()); };
             connect(sb, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
         }
         break;
@@ -352,7 +366,7 @@ void QVariantWidget::Private::createWidgets()
         MO_ASSERT(f_update_widget, "No widget update defined for type '" << v.typeName() << "'");
         MO_ASSERT(f_update_value, "No value update defined for type '" << v.typeName() << "'");
         updateWidget();
-        l->addWidget(edit);
+        layout->addWidget(edit);
     }
     else
     {

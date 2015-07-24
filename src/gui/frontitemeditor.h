@@ -20,7 +20,7 @@ namespace MO {
 namespace GUI {
 
 class AbstractFrontItem;
-class PropertiesView;
+class PropertiesScrollView;
 
 /** Editor for AbstractFrontItem */
 class FrontItemEditor : public QWidget
@@ -60,7 +60,7 @@ private:
 
     AbstractFrontItem * p_item_;
     QList<AbstractFrontItem*> p_items_;
-    PropertiesView * p_props_;
+    PropertiesScrollView * p_props_;
     QLabel * p_label_;
 };
 
