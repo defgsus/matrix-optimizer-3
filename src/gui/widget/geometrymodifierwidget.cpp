@@ -23,6 +23,8 @@
 #include "spinbox.h"
 #include "groupwidget.h"
 #include "equationeditor.h"
+#include "gui/propertiesview.h"
+#include "types/properties.h"
 #include "geom/geometry.h"
 #include "geom/geometrymodifierenum.h"
 #include "geom/geometrymodifierscale.h"
@@ -126,6 +128,10 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         emit expandedChange(modifier_, false);
     });
 
+//    propView_ = new PropertiesView();
+//    propView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+//    group_->addWidget(propView_);
+
 
 #define MO__DOUBLESPIN(var__, statustip__, step__, min__, max__) \
     auto var__ = new DoubleSpinBox(this);           \
@@ -161,6 +167,22 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
         createCreatorWidgets_(creator);
     }
 
+  /*  else
+    {
+        propView_->setProperties( modifier_->properties() );
+        funcUpdateFromWidgets_ = [=]()
+        {
+            modifier_->properties() = propView_->properties();
+        };
+
+        funcUpdateWidgets_ = [=]()
+        {
+            propView_->setProperties( modifier_->properties() );
+        };
+
+    }*/
+
+    //else
     if (auto scale = dynamic_cast<GEOM::GeometryModifierScale*>(modifier_))
     {
         auto lh = new QHBoxLayout();

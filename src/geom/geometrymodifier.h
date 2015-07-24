@@ -15,6 +15,7 @@
 #include <QObject> // for tr() in derived classes
 
 #include "types/float.h"
+#include "types/properties.h"
 
 namespace MO {
 class Object;
@@ -48,24 +49,29 @@ public:
 
     // ------------- getter ------------------
 
-    const QString& className() const { return className_; }
-    const QString& guiName() const { return guiName_; }
+    const QString& className() const { return p_className_; }
+    const QString& guiName() const { return p_guiName_; }
 
     virtual QString statusTip() const = 0;
 
-    bool isEnabled() const { return enabled_; }
+    bool isEnabled() const { return p_enabled_; }
+
+    const Properties& properties() const { return p_props_; }
 
     // ------------ setter -------------------
 
-    void setEnabled(bool enable) { enabled_ = enable; }
+    void setEnabled(bool enable) { p_enabled_ = enable; }
 
-    /** Applies the (virtual) modification/creation */
-    void executeBase(Geometry * g, Object * o);
+    /** Write access to properties */
+    Properties& properties() { return p_props_; }
 
-    Object * currentObject() const { return curObject_; }
+    Object * currentObject() const { return p_curObject_; }
 
     /** Progress [0,100] */
     double progress() const { return p_progress_; }
+
+    /** Applies the (virtual) modification/creation */
+    void executeBase(Geometry * g, Object * o);
 
     // ----------- virtual interface ---------
 
@@ -91,12 +97,14 @@ protected:
 
 private:
 
-    QString className_, guiName_;
+    QString p_className_, p_guiName_;
 
-    bool enabled_;
+    bool p_enabled_;
     double p_progress_;
 
-    Object * curObject_;
+    Object * p_curObject_;
+
+    Properties p_props_;
 };
 
 bool registerGeometryModifier_(GeometryModifier *);

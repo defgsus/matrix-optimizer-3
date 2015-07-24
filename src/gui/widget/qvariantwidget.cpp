@@ -31,7 +31,7 @@ namespace GUI {
 struct QVariantWidget::Private
 {
     Private(const QString& n, const QVariant& v, QVariantWidget * w)
-        : widget(w), v(v), name(n),
+        : widget(w), props(0), v(v), name(n),
           ignore_widget(false),
           l(0), label(0), edit(0) { }
 
@@ -42,6 +42,8 @@ struct QVariantWidget::Private
     void updateWidget();
 
     QVariantWidget * widget;
+    const Properties * props;
+    QString id;
     QVariant v;
     QString name;
 
@@ -55,6 +57,14 @@ struct QVariantWidget::Private
     QWidget * edit;
 };
 
+QVariantWidget::QVariantWidget(const QString& n, const QString& id, const Properties * prop, QWidget *parent)
+    : QWidget       (parent)
+    , p_            (new Private(n, QString(), this))
+{
+    p_->id = id;
+    p_->props = prop;
+    p_->createWidgets();
+}
 
 QVariantWidget::QVariantWidget(const QString& n, const QVariant& v, QWidget *parent)
     : QWidget       (parent),
@@ -155,7 +165,16 @@ void QVariantWidget::Private::createWidgets()
         {
             auto sb = new SpinBox(widget);
             edit = sb;
-            sb->setRange(-9999999, 9999999);
+            sb->setRange(-999999999, 999999999);
+            if (props)
+            {
+                if (props->hasMin(id))
+                    sb->setMinimum(props->getMin(id).toInt());
+                if (props->hasMax(id))
+                    sb->setMaximum(props->getMax(id).toInt());
+                if (props->hasStep(id))
+                    sb->setSingleStep(props->getStep(id).toInt());
+            }
             f_update_widget = [=](){ sb->setValue(v.toInt()); };
             f_update_value = [=](){ v = sb->value(); };
             connect(sb, SIGNAL(valueChanged(int)), widget, SLOT(onValueChanged_()));
@@ -168,6 +187,15 @@ void QVariantWidget::Private::createWidgets()
             edit = sb;
             sb->setRange(-9999999, 9999999);
             sb->setDecimals(7);
+            if (props)
+            {
+                if (props->hasMin(id))
+                    sb->setMinimum(props->getMin(id).toDouble());
+                if (props->hasMax(id))
+                    sb->setMaximum(props->getMax(id).toDouble());
+                if (props->hasStep(id))
+                    sb->setSingleStep(props->getStep(id).toDouble());
+            }
             f_update_widget = [=](){ sb->setValue(v.toDouble()); };
             f_update_value = [=](){ v = sb->value(); };
             connect(sb, SIGNAL(valueChanged(double)), widget, SLOT(onValueChanged_()));
@@ -193,6 +221,24 @@ void QVariantWidget::Private::createWidgets()
                  sb2 = new SpinBox(widget);
             sb1->setRange(0, 9999999);
             sb2->setRange(0, 9999999);
+            if (props)
+            {
+                if (props->hasMin(id))
+                {
+                    sb1->setMinimum(props->getMin(id).toSize().width());
+                    sb2->setMinimum(props->getMin(id).toSize().height());
+                }
+                if (props->hasMax(id))
+                {
+                    sb1->setMaximum(props->getMax(id).toSize().width());
+                    sb2->setMaximum(props->getMax(id).toSize().height());
+                }
+                if (props->hasStep(id))
+                {
+                    sb1->setSingleStep(props->getStep(id).toSize().width());
+                    sb2->setSingleStep(props->getStep(id).toSize().height());
+                }
+            }
             layout->addWidget(sb1);
             layout->addWidget(sb2);
             f_update_widget = [=](){ auto s = v.toSize(); sb1->setValue(s.width()); sb2->setValue(s.height()); };
@@ -209,6 +255,24 @@ void QVariantWidget::Private::createWidgets()
                  sb2 = new DoubleSpinBox(widget);
             sb1->setRange(0, 9999999); sb1->setDecimals(4);
             sb2->setRange(0, 9999999); sb2->setDecimals(4);
+            if (props)
+            {
+                if (props->hasMin(id))
+                {
+                    sb1->setMinimum(props->getMin(id).toSizeF().width());
+                    sb2->setMinimum(props->getMin(id).toSizeF().height());
+                }
+                if (props->hasMax(id))
+                {
+                    sb1->setMaximum(props->getMax(id).toSizeF().width());
+                    sb2->setMaximum(props->getMax(id).toSizeF().height());
+                }
+                if (props->hasStep(id))
+                {
+                    sb1->setSingleStep(props->getStep(id).toSizeF().width());
+                    sb2->setSingleStep(props->getStep(id).toSizeF().height());
+                }
+            }
             layout->addWidget(sb1);
             layout->addWidget(sb2);
             f_update_widget = [=](){ auto s = v.toSize(); sb1->setValue(s.width()); sb2->setValue(s.height()); };
@@ -225,6 +289,24 @@ void QVariantWidget::Private::createWidgets()
                  sb2 = new SpinBox(widget);
             sb1->setRange(-9999999, 9999999);
             sb2->setRange(-9999999, 9999999);
+            if (props)
+            {
+                if (props->hasMin(id))
+                {
+                    sb1->setMinimum(props->getMin(id).toPoint().x());
+                    sb2->setMinimum(props->getMin(id).toPoint().y());
+                }
+                if (props->hasMax(id))
+                {
+                    sb1->setMaximum(props->getMax(id).toPoint().x());
+                    sb2->setMaximum(props->getMax(id).toPoint().y());
+                }
+                if (props->hasStep(id))
+                {
+                    sb1->setSingleStep(props->getStep(id).toPoint().x());
+                    sb2->setSingleStep(props->getStep(id).toPoint().y());
+                }
+            }
             layout->addWidget(sb1);
             layout->addWidget(sb2);
             f_update_widget = [=](){ auto s = v.toPoint(); sb1->setValue(s.x()); sb2->setValue(s.y()); };

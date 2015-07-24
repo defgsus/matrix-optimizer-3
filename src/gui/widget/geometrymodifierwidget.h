@@ -20,6 +20,7 @@ namespace GEOM { class GeometryModifier; class GeometryModifierCreate; }
 namespace GUI {
 
 class GroupWidget;
+class PropertiesView;
 
 class GeometryModifierWidget : public QWidget
 {
@@ -63,6 +64,7 @@ private:
                 funcUpdateWidgets_;
 
     GroupWidget * group_;
+    PropertiesView * propView_;
 };
 
 } // namespace GUI

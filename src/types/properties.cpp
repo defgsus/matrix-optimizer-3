@@ -16,6 +16,12 @@
 #include "io/error.h"
 #include "io/log.h"
 
+#if 0
+#   define MO_DEBUG_PROP(arg__) MO_DEBUG(arg__)
+#else
+#   define MO_DEBUG_PROP(unused__) { }
+#endif
+
 namespace MO {
 
 Properties::NamedStates::NamedStates(const QString& name, const QList<NamedStateHelper> &tuples)
@@ -122,7 +128,14 @@ void Properties::swap(Properties &other)
     if (&other == this)
         return;
 
-    p_props_.swap(other.p_props_);
+    p_val_.swap(other.p_val_);
+    p_def_.swap(other.p_def_);
+    p_min_.swap(other.p_min_);
+    p_max_.swap(other.p_max_);
+    p_step_.swap(other.p_step_);
+    p_name_.swap(other.p_name_);
+    p_tip_.swap(other.p_tip_);
+
 }
 
 void Properties::serialize(IO::DataStream & io) const
@@ -131,8 +144,8 @@ void Properties::serialize(IO::DataStream & io) const
 
     // Note: Reimplementation of QDataStream << QMap<QString,QVariant>
     // because overloading operator << does not catch enums
-    io << quint64(p_props_.size());
-    for (auto i = p_props_.begin(); i != p_props_.end(); ++i)
+    io << quint64(p_val_.size());
+    for (auto i = p_val_.begin(); i != p_val_.end(); ++i)
     {
         io << i.key();
 
@@ -218,7 +231,7 @@ void Properties::deserialize(IO::DataStream & io)
     }
 
     // finally assign
-    p_props_.swap(temp);
+    p_val_.swap(temp);
 }
 
 void Properties::serialize(IO::XmlStream & io) const
@@ -227,7 +240,7 @@ void Properties::serialize(IO::XmlStream & io) const
 
         io.write("version", 1);
 
-        for (auto i = p_props_.begin(); i != p_props_.end(); ++i)
+        for (auto i = p_val_.begin(); i != p_val_.end(); ++i)
         {
             io.newSection("property");
 
@@ -326,37 +339,118 @@ void Properties::deserialize(IO::XmlStream& io)
 
 
 
+QVariant Properties::get(const QString &id, const QVariant& def) const
+{
+    auto i = p_val_.find(id);
+
+    return i == p_val_.end() ? def : i.value();
+}
 
 QVariant Properties::get(const QString &id) const
 {
-    auto i = p_props_.find(id);
+#define MO__GETTER(mem__, ret__) \
+    auto i = mem__.find(id); \
+    if (i == mem__.end()) \
+        MO_DEBUG_PROP("Properties::get[" #mem__ "](\"" << id << "\") unknown"); \
+    return i == mem__.end() ? ret__() : i.value();
 
-#ifdef MO_DO_DEBUG
-    if (i == p_props_.end())
-        MO_DEBUG("Properties::get(\"" << id << "\") unknown");
-#endif
-
-    return i == p_props_.end() ? QVariant() : i.value();
+    MO__GETTER(p_val_, QVariant);
 }
 
-QVariant Properties::get(const QString &id, const QVariant& def) const
+QVariant Properties::getDefault(const QString &id) const
 {
-    auto i = p_props_.find(id);
+    MO__GETTER(p_val_, QVariant);
+}
 
-    return i == p_props_.end() ? def : i.value();
+QVariant Properties::getMin(const QString &id) const
+{
+    MO__GETTER(p_min_, QVariant);
+}
+
+QVariant Properties::getMax(const QString &id) const
+{
+    MO__GETTER(p_max_, QVariant);
+}
+
+QVariant Properties::getStep(const QString &id) const
+{
+    MO__GETTER(p_step_, QVariant);
+}
+
+QString Properties::getName(const QString &id) const
+{
+    MO__GETTER(p_name_, QString);
+}
+
+
+QString Properties::getTip(const QString &id) const
+{
+    MO__GETTER(p_tip_, QString);
+    #undef MO__GETTER
 }
 
 void Properties::set(const QString &id, const QVariant & v)
 {
-    //MO_DEBUG("property '" << id << "': type " << v.typeName() << " (" << v.type() << ")");
-    p_props_.insert(id, v);
+    MO_DEBUG_PROP("Properties::set '" << id << "': " << v << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_val_.insert(id, v);
 }
+
+void Properties::setDefault(const QString &id, const QVariant & v)
+{
+    MO_DEBUG_PROP("Properties::setDefault '" << id << "': " << v << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_def_.insert(id, v);
+}
+
+void Properties::setMin(const QString &id, const QVariant & v)
+{
+    MO_DEBUG_PROP("Properties::setMin '" << id << "': " << v << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_min_.insert(id, v);
+}
+
+void Properties::setMax(const QString &id, const QVariant & v)
+{
+    MO_DEBUG_PROP("Properties::setMax '" << id << "': " << v << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_max_.insert(id, v);
+}
+
+void Properties::setRange(const QString &id, const QVariant & mi, const QVariant & ma)
+{
+    MO_DEBUG_PROP("Properties::setRange '" << id << "': " << mi << "-" << ma << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_min_.insert(id, mi);
+    p_max_.insert(id, ma);
+}
+
+void Properties::setStep(const QString &id, const QVariant & v)
+{
+    MO_DEBUG_PROP("Properties::setStep '" << id << "': " << v << " type "
+                  << v.typeName() << " (" << v.type() << ")");
+    p_step_.insert(id, v);
+}
+
+
+void Properties::setName(const QString &id, const QString& v)
+{
+    MO_DEBUG_PROP("Properties::setName '" << id << "': " << v << ")");
+    p_name_.insert(id, v);
+}
+
+void Properties::setTip(const QString &id, const QString& v)
+{
+    MO_DEBUG_PROP("Properties::setTip '" << id << "': " << v << ")");
+    p_tip_.insert(id, v);
+}
+
 
 bool Properties::change(const QString &id, const QVariant & v)
 {
-    //MO_DEBUG("property '" << id << "': type " << v.typeName() << " (" << v.type() << ")");
-    auto i = p_props_.find(id);
-    if (i == p_props_.end())
+    MO_DEBUG_PROP("property '" << id << "': " << v << " type "<< v.typeName() << " (" << v.type() << ")");
+    auto i = p_val_.find(id);
+    if (i == p_val_.end())
         return false;
     i.value() = v;
     return true;
@@ -364,8 +458,8 @@ bool Properties::change(const QString &id, const QVariant & v)
 
 void Properties::unify(const Properties &other)
 {
-    for (auto i = other.p_props_.begin(); i != other.p_props_.end(); ++i)
-        p_props_.insert(i.key(), i.value());
+    for (auto i = other.p_val_.begin(); i != other.p_val_.end(); ++i)
+        p_val_.insert(i.key(), i.value());
 }
 
 

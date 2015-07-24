@@ -46,7 +46,7 @@ public slots:
     /** Assigns a new set of Properties to edit */
     void setProperties(const Properties& );
 
-    /** Assigns new multiple sets of Properties to edit.
+    /** Assigns multiple sets of Properties to edit.
         A widget is created for each unique id in all Properties. */
     void setProperties(const QList<Properties>& );
 

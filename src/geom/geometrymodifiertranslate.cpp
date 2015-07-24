@@ -9,8 +9,9 @@
 */
 
 #include "geometrymodifiertranslate.h"
-#include "io/datastream.h"
 #include "geometry.h"
+#include "types/properties.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GEOM {
@@ -23,7 +24,15 @@ GeometryModifierTranslate::GeometryModifierTranslate()
       y_        (0.0),
       z_        (0.0)
 {
-
+    properties().set("tx", QObject::tr("x"),
+                     QObject::tr("Translation on x axis"),
+                     0.0, 0.1);
+    properties().set("ty", QObject::tr("y"),
+                     QObject::tr("Translation on y axis"),
+                     0.0, 0.1);
+    properties().set("tz", QObject::tr("z"),
+                     QObject::tr("Translation on z axis"),
+                     0.0, 0.1);
 }
 
 QString GeometryModifierTranslate::statusTip() const

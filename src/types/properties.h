@@ -149,44 +149,90 @@ public:
 
     // ---------------- getter ------------------
 
+    /* XXX Might by helpful but is single-client!?!?:
+        Returns true when properties are new or have changed,
+        and clearChanged() has not been called. */
+    //bool isChanged() const;
+
     /** Returns the given property, or an invalid QVariant */
     QVariant get(const QString& id) const;
 
-    /** Returns the given property, or the default value. */
+    /** Returns the given property, or the given default value. */
     QVariant get(const QString& id, const QVariant& def) const;
 
+    /** Returns the default value for the property, or an invalid QVariant */
+    QVariant getDefault(const QString& id) const;
+    QVariant getMin(const QString& id) const;
+    QVariant getMax(const QString& id) const;
+    QVariant getStep(const QString& id) const;
+    QString getName(const QString& id) const;
+    QString getTip(const QString& id) const;
+
     /** Returns true, when there is a property named @p id */
-    bool has(const QString& id) const { return p_props_.contains(id); }
+    bool has(const QString& id) const { return p_val_.contains(id); }
+
+    /** Returns the default value for the property, or an invalid QVariant */
+    bool hasDefault(const QString& id) const { return p_def_.contains(id); }
+    bool hasMin(const QString& id) const { return p_min_.contains(id); }
+    bool hasMax(const QString& id) const { return p_max_.contains(id); }
+    bool hasStep(const QString& id) const { return p_step_.contains(id); }
+    bool hasName(const QString& id) const { return p_name_.contains(id); }
+    bool hasTip(const QString& id) const { return p_tip_.contains(id); }
 
     /** Returns a css-style list of all properties */
     QString toString(const QString& indent = "") const;
 
     // -------------- iterator ------------------
 
-    Map::const_iterator begin() const { return p_props_.constBegin(); }
-    Map::const_iterator end() const { return p_props_.constEnd(); }
+    Map::const_iterator begin() const { return p_val_.constBegin(); }
+    Map::const_iterator end() const { return p_val_.constEnd(); }
 
     // --------------- setter -------------------
 
     /** Wipes out everything */
-    void clear() { p_props_.clear(); }
+    void clear() { p_val_.clear(); }
 
     /** Removes a single item */
-    void clear(const QString& id) { p_props_.remove(id); }
+    void clear(const QString& id) { p_val_.remove(id); }
 
-    /** Starts a new group. Adding a new property with set() will assign
+    /* Starts a new group. Adding a new property with set() will assign
         the property to this group */
     void beginGroup(const QString&);
 
-    /** Ends a property group. Same as calling beginGroup(""); */
+    /* Ends a property group. Same as calling beginGroup(""); */
     void endGroup() { beginGroup(""); }
 
-    /** Sets the given property */
+    /** Sets the given property (and default value) */
     void set(const QString& id, const QVariant& v);
     /** Sets the given property.
-        Helper to make sure, to user-extended QVariants get caught. */
+        Helper to make sure, that user-extended QVariants get caught. */
     template <class T>
     void set(const QString& id, const T& v) { set(id, QVariant::fromValue(v)); }
+
+    template <class T>
+    void set(const QString& id, const QString& name, const QString& statusTip,
+             const T& defaultValue);
+
+    template <class T>
+    void set(const QString& id, const QString& name, const QString& statusTip,
+             const T& defaultValue, const T& step);
+
+    template <class T>
+    void set(const QString& id, const QString& name, const QString& statusTip,
+             const T& defaultValue, const T& minimum, const T& maximum);
+
+    template <class T>
+    void set(const QString& id, const QString& name, const QString& statusTip,
+             const T& defaultValue, const T& minimum, const T& maximum, const T& step);
+
+    /** Sets the given default value */
+    void setDefault(const QString& id, const QVariant& v);
+    void setMin(const QString& id, const QVariant& v);
+    void setMax(const QString& id, const QVariant& v);
+    void setRange(const QString& id, const QVariant& mi, const QVariant& ma);
+    void setStep(const QString& id, const QVariant& v);
+    void setName(const QString& id, const QString& name);
+    void setTip(const QString& id, const QString& statusTip);
 
     /** Sets the given property if existing. */
     bool change(const QString& id, const QVariant& v);
@@ -213,17 +259,74 @@ public:
 
 private:
 
-    Map p_props_;
-    //QMap<QString, QString> p_groups_;
+    Map p_val_
+      , p_def_
+      , p_min_
+      , p_max_
+      , p_step_;
+
+    QMap<QString, QString>
+        p_name_,
+        p_tip_;
 };
 
 } // namespace MO
-
 
 
 // [add new NamedStates here]
 
 Q_DECLARE_METATYPE(MO::Properties::Alignment)
 
+
+// --------- templ impl. ------------------
+namespace MO {
+
+template <class T>
+void Properties::set(
+        const QString& id, const QString& name, const QString& statusTip,
+        const T& defaultValue)
+{
+    set(id, defaultValue);
+    setName(id, name);
+    setTip(id, statusTip);
+}
+
+template <class T>
+void Properties::set(
+        const QString& id, const QString& name, const QString& statusTip,
+        const T& defaultValue, const T& step)
+{
+    set(id, defaultValue);
+    setName(id, name);
+    setTip(id, statusTip);
+    setStep(id, step);
+}
+
+template <class T>
+void Properties::set(
+        const QString& id, const QString& name, const QString& statusTip,
+        const T& defaultValue, const T& minimum, const T& maximum)
+{
+    set(id, defaultValue);
+    setName(id, name);
+    setTip(id, statusTip);
+    setMin(id, minimum);
+    setMax(id, maximum);
+}
+
+template <class T>
+void Properties::set(
+        const QString& id, const QString& name, const QString& statusTip,
+        const T& defaultValue, const T& minimum, const T& maximum, const T& step)
+{
+    set(id, defaultValue);
+    setName(id, name);
+    setTip(id, statusTip);
+    setMin(id, minimum);
+    setMax(id, maximum);
+    setStep(id, step);
+}
+
+} // namespace MO
 
 #endif // MOSRC_TYPES_PROPERTIES_H

@@ -9,8 +9,9 @@
 */
 
 #include "geometrymodifier.h"
-#include "io/datastream.h"
 #include "geometrymodifierchain.h"
+#include "types/properties.h"
+#include "io/datastream.h"
 
 namespace MO {
 namespace GEOM {
@@ -21,33 +22,34 @@ bool registerGeometryModifier_(GeometryModifier * g)
 }
 
 GeometryModifier::GeometryModifier(const QString &className, const QString &guiName)
-    : className_    (className),
-      guiName_      (guiName),
-      enabled_      (true),
+    : p_className_  (className),
+      p_guiName_    (guiName),
+      p_enabled_    (true),
       p_progress_   (0),
-      curObject_    (0)
+      p_curObject_  (0)
 {
 
 }
+
 
 void GeometryModifier::serialize(IO::DataStream &io) const
 {
     io.writeHeader("geommod", 1);
 
-    io << enabled_;
+    io << p_enabled_;
 }
 
 void GeometryModifier::deserialize(IO::DataStream &io)
 {
     io.readHeader("geommod", 1);
 
-    io >> enabled_;
+    io >> p_enabled_;
 }
 
 
 void GeometryModifier::executeBase(Geometry *g, MO::Object * o)
 {
-    curObject_ = o;
+    p_curObject_ = o;
     p_progress_ = 0.;
     execute(g);
 }
