@@ -56,13 +56,20 @@ void GeometryModifierTranslate::deserialize(IO::DataStream &io)
 
     io.readHeader("geotrans", 1);
 
-    io >> x_ >> y_ >> z_;
+    Float x, y, z;
+    io >> x >> y >> z;
+    properties().set("x", x);
+    properties().set("y", y);
+    properties().set("z", z);
 }
 
 
 void GeometryModifierTranslate::execute(Geometry *g)
 {
-    g->translate(x_, y_, z_);
+    g->translate(
+            properties().get("x").toFloat(),
+            properties().get("y").toFloat(),
+            properties().get("z").toFloat());
 }
 
 } // namespace GEOM

@@ -24,8 +24,8 @@ GeometryModifierNormalize::GeometryModifierNormalize()
 {
     properties().set(
         "amt", QObject::tr("amount"),
-        QObject::tr("The amount of how much the normalization is applied"),
-        1.0, 0., 1., 0.05);
+        QObject::tr("The amount of how much the normalization is applied [0,1]"),
+        1.0, 0.05);
 }
 
 QString GeometryModifierNormalize::statusTip() const
@@ -50,13 +50,15 @@ void GeometryModifierNormalize::deserialize(IO::DataStream &io)
 
     io.readHeader("geonorm", 1);
 
-    io >> n_;
+    Float n;
+    io >> n;
+    properties().set("amt", n);
 }
 
 
 void GeometryModifierNormalize::execute(Geometry *g)
 {
-    g->normalizeSphere(1, n_);
+    g->normalizeSphere(1, properties().get("amt").toFloat());
 }
 
 } // namespace GEOM

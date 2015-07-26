@@ -25,14 +25,39 @@ GeometryModifierDuplicate::GeometryModifierDuplicate()
       numY_     (2),
       numZ_     (1)
 {
+    properties().set(
+        "equ", QObject::tr("equation"),
+        QObject::tr("Equation to modify the vertex coordinates"),
+        QString(
+            "x = x + 2 * dx;\n"
+            "y = y + 2 * dy;\n"
+            "z = z + 2 * dz;")
+        );
 
+    properties().set(
+        "numx", QObject::tr("number x"),
+        QObject::tr("Number of duplications on x-axis"),
+        2u);
+    properties().setMin("numx", 1u);
+
+    properties().set(
+        "numy", QObject::tr("number y"),
+        QObject::tr("Number of duplications on y-axis"),
+        2u);
+    properties().setMin("numy", 1u);
+
+    properties().set(
+        "numz", QObject::tr("number z"),
+        QObject::tr("Number of duplications on z-axis"),
+        2u);
+    properties().setMin("numz", 1u);
 }
 
 QString GeometryModifierDuplicate::statusTip() const
 {
     return QObject::tr("Duplicates the geometry along "
-                       "three axis and applies an equation to each coordinate "
-                       "of the vertices of each new primitive");
+                       "three axis and applies an equation to the vertex "
+                       "coordiantes of each new primitive");
 }
 
 
@@ -51,16 +76,23 @@ void GeometryModifierDuplicate::deserialize(IO::DataStream &io)
 
     const int ver = io.readHeader("geoequdup", 2);
 
-    io >> numX_ >> numY_ >> numZ_;
+    uint numX, numY, numZ;
+    io >> numX >> numY >> numZ;
 
+    QString equ;
     if (ver<2)
     {
         QString equx, equy, equz;
         io >> equx >> equy >> equz;
-        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
     }
     else
-        io >> equ_;
+        io >> equ;
+
+    properties().set("equ", equ);
+    properties().set("numX", numX);
+    properties().set("numY", numY);
+    properties().set("numZ", numZ);
 }
 
 void GeometryModifierDuplicate::execute(Geometry *g)
@@ -74,16 +106,23 @@ void GeometryModifierDuplicate::execute(Geometry *g)
         "d", "dx", "dy", "dz"
     };
 
-    for (uint z=0; z<numZ_; ++z)
-    for (uint y=0; y<numY_; ++y)
-    for (uint x=0; x<numX_; ++x)
+    const uint
+            numX = properties().get("numX").toUInt(),
+            numY = properties().get("numY").toUInt(),
+            numZ = properties().get("numZ").toUInt();
+    const QString
+            equ = properties().get("equ").toString();
+
+    for (uint z=0; z<numZ; ++z)
+    for (uint y=0; y<numY; ++y)
+    for (uint x=0; x<numX; ++x)
     {
         Geometry * geom = new Geometry(*copy);
         geom->transformWithEquation(
-                    equ_,
+                    equ,
                     constants,
                     QList<Double>()
-                        << ((z*numY_+y)*numX_+x) << x << y << z
+                        << ((z*numY+y)*numX+x) << x << y << z
                     );
 
         g->addGeometry(*geom);

@@ -11,10 +11,11 @@
 #ifndef MO_DISABLE_ANGELSCRIPT
 
 #include "geometrymodifierangelscript.h"
-#include "io/datastream.h"
 #include "geometry.h"
 #include "geometryfactory.h"
 #include "script/angelscript_geometry.h"
+#include "object/object_fwd.h"
+#include "io/datastream.h"
 #include "io/log.h"
 
 namespace MO {
@@ -25,8 +26,8 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierAngelScript)
 GeometryModifierAngelScript::GeometryModifierAngelScript()
     : GeometryModifier  ("CreateAS", QObject::tr("angelscript"))
 {
-    script_ =
-            "// angelscript test\n\n"
+    static const QString script =
+            "// angelscript (beta)\n\n"
             "void main()\n"
             "{\n"
                 "\t// get the handle to the current geometry\n"
@@ -35,6 +36,12 @@ GeometryModifierAngelScript::GeometryModifierAngelScript()
                 "\tg.addLine(vec3(0), vec3(1));\n"
             "}\n"
             ;
+
+    properties().set(
+        "script", QObject::tr("angelscript"),
+        QObject::tr("A piece of code to freely create/modify the geometry"),
+        script);
+    properties().setSubType("script", TT_ANGELSCRIPT);
 }
 
 QString GeometryModifierAngelScript::statusTip() const
@@ -57,7 +64,9 @@ void GeometryModifierAngelScript::deserialize(IO::DataStream &io)
 
     io.readHeader("geocreateas", 1);
 
-    io >> script_;
+    QString script;
+    io >> script;
+    properties().set("script", script);
 }
 
 void GeometryModifierAngelScript::execute(Geometry * g)
@@ -71,13 +80,14 @@ void GeometryModifierAngelScript::execute(Geometry * g)
     try
     {
         GeometryEngineAS script(g, currentObject());
-        script.execute(script_);
+        script.execute(properties().get("script").toString());
     }
     catch (const Exception&e)
     {
         // XXX Exceptions disturb the editor right now
         // E.g. somehow the code get's compiled again leading to endless error windows
-        MO_DEBUG("GeometryModifierAngelScript: XXX EXCEPTION: \"" << e.what() << "\"");
+        MO_DEBUG("GeometryModifierAngelScript: XXX EXCEPTION: \""
+                 << e.what() << "\"");
     }
 }
 

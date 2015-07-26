@@ -27,6 +27,8 @@ namespace IO { class DataStream; class XmlStream; }
     Pro: It's a generic type so should work with everything else in Qt.
     Contra: No default values, no tranlated name, etc...
             (but can be added via methods in this class)
+            UPDATE: Have been added now...
+            @todo NamedStates is still a bit hacky..
 */
 class Properties
 {
@@ -167,6 +169,12 @@ public:
     QVariant getStep(const QString& id) const;
     QString getName(const QString& id) const;
     QString getTip(const QString& id) const;
+    /** Returns the subtype of the value.
+        Some value types may have a associated type:
+        QString: MO::TextType (in object/object_fwd.h)
+        @returns -1 if not defined.
+    */
+    int getSubType(const QString& id) const;
 
     /** Returns true, when there is a property named @p id */
     bool has(const QString& id) const { return p_val_.contains(id); }
@@ -178,6 +186,7 @@ public:
     bool hasStep(const QString& id) const { return p_step_.contains(id); }
     bool hasName(const QString& id) const { return p_name_.contains(id); }
     bool hasTip(const QString& id) const { return p_tip_.contains(id); }
+    bool hasSubType(const QString& id) const { return p_subType_.contains(id); }
 
     /** Returns a css-style list of all properties */
     QString toString(const QString& indent = "") const;
@@ -233,11 +242,12 @@ public:
     void setStep(const QString& id, const QVariant& v);
     void setName(const QString& id, const QString& name);
     void setTip(const QString& id, const QString& statusTip);
+    void setSubType(const QString& id, int t);
 
     /** Sets the given property if existing. */
     bool change(const QString& id, const QVariant& v);
     /** Sets the given property if existing.
-        Helper to make sure, to user-extended QVariants get caught. */
+        Helper to make sure, that user-extended QVariants get caught. */
     template <class T>
     bool change(const QString& id, const T& v) { return change(id, QVariant::fromValue(v)); }
 
@@ -259,6 +269,9 @@ public:
 
 private:
 
+    /* XXX These could be refactured in, e.g.:
+        QMap<QString, Property> */
+
     Map p_val_
       , p_def_
       , p_min_
@@ -268,6 +281,9 @@ private:
     QMap<QString, QString>
         p_name_,
         p_tip_;
+
+    QMap<QString, int>
+        p_subType_;
 };
 
 } // namespace MO

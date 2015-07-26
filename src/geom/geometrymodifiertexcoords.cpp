@@ -27,7 +27,36 @@ GeometryModifierTexCoords::GeometryModifierTexCoords()
       invertY_  (false),
       doMapTri_ (false)
 {
+    properties().set(
+        "doMapTri", QObject::tr("map triangles"),
+        QObject::tr("Assigns the texture coordinates to the triangle corners"),
+        false);
 
+    properties().set(
+        "offsetX", QObject::tr("x offset"),
+        QObject::tr("Offset added to the x-axis"),
+        0.f, 0.1f);
+    properties().set(
+        "offsetY", QObject::tr("y offset"),
+        QObject::tr("Offset added to the y-axis"),
+        0.f, 0.1f);
+    properties().set(
+        "scaleX", QObject::tr("x scale"),
+        QObject::tr("Scale on the x-axis"),
+        1.f, 0.1f);
+    properties().set(
+        "scaleY", QObject::tr("y scale"),
+        QObject::tr("Scale on the y-axis"),
+        1.f, 0.1f);
+
+    properties().set(
+        "invertX", QObject::tr("invert x coordinates"),
+        QObject::tr("Inverts the texture coordinates on the x-axis"),
+        false);
+    properties().set(
+        "invertY", QObject::tr("invert y coordinates"),
+        QObject::tr("Inverts the texture coordinates on the y-axis"),
+        false);
 }
 
 QString GeometryModifierTexCoords::statusTip() const
@@ -54,18 +83,30 @@ void GeometryModifierTexCoords::deserialize(IO::DataStream &io)
 
     const auto ver = io.readHeader("geotexcoords", 2);
 
-    io >> offsetX_ >> offsetY_
-       >> scaleX_ >> scaleY_
-       >> invertX_ >> invertY_;
+    Float offsetX, offsetY,
+          scaleX, scaleY;
+    bool invertX, invertY, doMapTri=false;
+
+    io >> offsetX >> offsetY
+       >> scaleX >> scaleY
+       >> invertX >> invertY;
 
     if (ver >= 2)
-        io >> doMapTri_;
+        io >> doMapTri;
+
+    properties().set("offsetX", offsetX);
+    properties().set("offsetY", offsetY);
+    properties().set("scaleX", scaleX);
+    properties().set("scaleY", scaleY);
+    properties().set("invertX", invertX);
+    properties().set("invertY", invertY);
+    properties().set("doMapTri", doMapTri);
 }
 
 void GeometryModifierTexCoords::execute(Geometry *g)
 {
     // map triangles
-    if (doMapTri_)
+    if (properties().get("doMapTri").toBool())
     {
         for (uint i=0; i<g->numTriangles(); ++i)
         {
@@ -75,14 +116,23 @@ void GeometryModifierTexCoords::execute(Geometry *g)
         }
     }
 
-    if (offsetX_ != 0.0 || offsetY_ != 0.0)
-        g->shiftTextureCoords(offsetX_, offsetY_);
+    const Float
+            offsetX = properties().get("offsetX").toFloat(),
+            offsetY = properties().get("offsetY").toFloat(),
+            scaleX = properties().get("scaleX").toFloat(),
+            scaleY = properties().get("scaleY").toFloat();
+    const bool
+            invertX = properties().get("invertX").toBool(),
+            invertY = properties().get("invertY").toBool();
 
-    if (scaleX_ != 1.0 || scaleY_ != 1.0)
-        g->scaleTextureCoords(scaleX_, scaleY_);
+    if (offsetX != 0.f || offsetY != 0.f)
+        g->shiftTextureCoords(offsetX, offsetY);
 
-    if (invertX_ || invertY_)
-        g->invertTextureCoords(invertX_, invertY_);
+    if (scaleX != 1.f || scaleY != 1.f)
+        g->scaleTextureCoords(scaleX, scaleY);
+
+    if (invertX || invertY)
+        g->invertTextureCoords(invertX, invertY);
 }
 
 } // namespace GEOM

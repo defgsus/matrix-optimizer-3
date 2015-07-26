@@ -18,6 +18,7 @@
 namespace MO {
 namespace GUI {
 
+class AbstractScriptWidget;
 
 class TextEditDialog : public QDialog
 {
@@ -32,6 +33,8 @@ public:
     TextType getTextType() const;
 
     QString getText() const;
+
+    AbstractScriptWidget * getScriptWidget() const;
 
     // ------------ setter ---------------
 

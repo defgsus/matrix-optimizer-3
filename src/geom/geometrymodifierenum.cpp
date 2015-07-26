@@ -22,7 +22,15 @@ GeometryModifierEnum::GeometryModifierEnum()
       doIndex_      (true),
       indexName_    ("a_index")
 {
+    properties().set(
+        "indexName", QObject::tr("attribute name"),
+        QObject::tr("The name of the attribute (as used in glsl)"),
+        QString("a_index"));
 
+    properties().set(
+        "doIndex", QObject::tr("vertex index"),
+        QObject::tr("Adds the zero-based index to each vertex"),
+        true);
 }
 
 QString GeometryModifierEnum::statusTip() const
@@ -46,14 +54,19 @@ void GeometryModifierEnum::deserialize(IO::DataStream &io)
 
     io.readHeader("geoenum", 1);
 
-    io >> doIndex_ >> indexName_;
+    bool doIndex;
+    QString indexName;
+    io >> doIndex >> indexName;
+    properties().set("doIndex", doIndex);
+    properties().set("indexName", indexName);
 }
 
 
 void GeometryModifierEnum::execute(Geometry *g)
 {
-    if (doIndex_)
-        g->addEnumerationAttribute(indexName_);
+    if (properties().get("doIndex").toBool())
+        g->addEnumerationAttribute(
+                    properties().get("indexName").toString());
 }
 
 

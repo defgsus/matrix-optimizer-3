@@ -22,7 +22,14 @@ GeometryModifierRemove::GeometryModifierRemove()
       prob_     (0.1),
       seed_     (0)
 {
-
+    properties().set(
+        "prob", QObject::tr("probability"),
+        QObject::tr("Probability of removing a primitive, between 0 and 1"),
+        0.1, 0.0, 1.0, 0.025);
+    properties().set(
+        "seed", QObject::tr("random seed"),
+        QObject::tr("Random seed which determines the pattern of removal"),
+        int(1));
 }
 
 QString GeometryModifierRemove::statusTip() const
@@ -45,12 +52,19 @@ void GeometryModifierRemove::deserialize(IO::DataStream &io)
 
     io.readHeader("georemove", 1);
 
-    io >> prob_ >> seed_;
+    Float prob;
+    int seed;
+    io >> prob >> seed;
+    properties().set("prob", prob);
+    properties().set("seed", seed);
 }
 
 void GeometryModifierRemove::execute(Geometry *g)
 {
-    g->removePrimitivesRandomly(prob_, seed_);
+    g->removePrimitivesRandomly(
+                properties().get("prob").toFloat(),
+                properties().get("seed").toInt()
+                );
 }
 
 } // namespace GEOM

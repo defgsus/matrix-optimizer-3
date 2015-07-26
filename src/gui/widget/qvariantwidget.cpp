@@ -15,12 +15,15 @@
 #include <QLineEdit>
 #include <QCheckBox>
 #include <QComboBox>
+#include <QToolButton>
 
 #include "qvariantwidget.h"
 #include "spinbox.h"
 #include "doublespinbox.h"
 #include "coloreditwidget.h"
+#include "gui/texteditdialog.h"
 #include "types/properties.h"
+#include "object/object_fwd.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -153,6 +156,7 @@ void QVariantWidget::Private::createWidgets()
     auto layout = new Layout__(edit); \
     layout->setMargin(0);
 
+    bool isHandled = true;
     switch ((int)v.type())
     {
         case QMetaType::Bool:
@@ -218,13 +222,48 @@ void QVariantWidget::Private::createWidgets()
 
         case QMetaType::QString:
         {
-            auto e = new QLineEdit(widget);
-            edit = e;
-            e->setReadOnly(false);
-            e->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
-            f_update_widget = [=](){ e->setText(v.toString()); };
-            f_update_value = [=](){ v = e->text(); };
-            connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChanged_()));
+            int subtype = props && props->hasSubType(id)
+                    ? props->getSubType(id)
+                    : -1;
+            MO_PRINT(props << " " << props->getSubType(id));
+            if (subtype != -1)
+            {
+                MO__SUBLAYOUT(QHBoxLayout);
+                auto e = new QLineEdit(widget);
+                e->setReadOnly(true);
+                e->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+                layout->addWidget(e);
+
+                auto b = new QToolButton(widget);
+                b->setText(tr("..."));
+                layout->addWidget(b);
+                connect(b, &QToolButton::clicked, [=]()
+                {
+                    auto diag = new TextEditDialog(TextType(subtype), widget);
+                    diag->setAttribute(Qt::WA_DeleteOnClose);
+                    diag->setText(v.toString());
+                    connect(diag, &TextEditDialog::textChanged, [=]()
+                    {
+                        e->setText(diag->getText());
+                        widget->onValueChanged_();
+                    });
+                    diag->show();
+                });
+                f_update_widget = [=](){ e->setText(v.toString()); /** @todo missing update of dialog */ };
+                f_update_value = [=](){ v = e->text(); };
+
+            }
+            // generic string edit
+            else
+            {
+                auto e = new QLineEdit(widget);
+                edit = e;
+                e->setReadOnly(false);
+                e->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
+                f_update_widget = [=](){ e->setText(v.toString()); };
+                f_update_value = [=](){ v = e->text(); };
+                connect(e, SIGNAL(textChanged(QString)), widget, SLOT(onValueChanged_()));
+            }
         }
         break;
 
@@ -341,12 +380,13 @@ void QVariantWidget::Private::createWidgets()
         break;
 
         default:
+            isHandled = false;
         break;
     }
 
     // Following are QMetaTypes that are runtime constants
     // and can't be used in switch(), e.g. stuff in Q_DECLARE_METATYPE()
-    if (!edit)
+    if (!isHandled)
     {
         // Generic approach for Properties::NamedStates
         if (auto ns = Properties::getNamedStates(v))
@@ -358,6 +398,7 @@ void QVariantWidget::Private::createWidgets()
             f_update_widget = [=](){ cb->setCurrentText(ns->id(v)); };
             f_update_value = [=](){ v = cb->itemData(cb->currentIndex()); };
             connect(cb, SIGNAL(currentIndexChanged(int)), widget, SLOT(onValueChanged_()));
+            isHandled = true;
         }
     }
 
@@ -368,7 +409,8 @@ void QVariantWidget::Private::createWidgets()
         updateWidget();
         layout->addWidget(edit);
     }
-    else
+
+    if (!isHandled)
     {
         MO_WARNING("QVariantWidget: unhandled type '" << v.typeName() << "'");
     }

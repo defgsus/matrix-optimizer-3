@@ -22,7 +22,14 @@ GeometryModifierNormals::GeometryModifierNormals()
       calc_     (true),
       invert_   (false)
 {
-
+    properties().set(
+        "tri", QObject::tr("from triangles"),
+        QObject::tr("Automatically calculates the normals for the triangles"),
+        true);
+    properties().set(
+        "invert", QObject::tr("invert"),
+        QObject::tr("Inverts normals, so that they point into the opposite direction"),
+        false);
 }
 
 QString GeometryModifierNormals::statusTip() const
@@ -46,15 +53,18 @@ void GeometryModifierNormals::deserialize(IO::DataStream &io)
 
     io.readHeader("geonormal", 1);
 
-    io >> calc_ >> invert_;
+    bool calc, invert;
+    io >> calc >> invert;
+    properties().set("tri", calc);
+    properties().set("invert", invert);
 }
 
 
 void GeometryModifierNormals::execute(Geometry *g)
 {
-    if (calc_)
+    if (properties().get("tri").toBool())
         g->calculateTriangleNormals();
-    if (invert_)
+    if (properties().get("invert").toBool())
         g->invertNormals();
 }
 

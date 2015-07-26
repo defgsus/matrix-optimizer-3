@@ -21,7 +21,14 @@ GeometryModifierVertexEquation::GeometryModifierVertexEquation()
     : GeometryModifier("VertexEquation", QObject::tr("vertex equation")),
       equ_      ("x = x;\ny = y;\nz = z")
 {
-
+/*    QStringList vars = {
+        "x", "y", "z", "i", "s", "t",
+        "red", "green", "blue", "alpha", "bright" };
+*/
+    properties().set(
+        "equ", QObject::tr("equation"),
+        QObject::tr("The equation to apply to all the verices"),
+        QString("x = x;\ny = y;\nz = z"));
 }
 
 QString GeometryModifierVertexEquation::statusTip() const
@@ -45,6 +52,7 @@ void GeometryModifierVertexEquation::deserialize(IO::DataStream &io)
 
     const int ver = io.readHeader("geoequvert", 2);
 
+    QString equ;
     if (ver<2)
     {
         QString equx, equy, equz;
@@ -55,15 +63,19 @@ void GeometryModifierVertexEquation::deserialize(IO::DataStream &io)
             equy = "y";
         if (equz.isEmpty())
             equz = "z";
-        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
     }
     else
-        io >> equ_;
+        io >> equ;
+
+    properties().set("equ", equ);
 }
 
 void GeometryModifierVertexEquation::execute(Geometry *g)
 {
-    g->transformWithEquation(equ_);
+    g->transformWithEquation(
+                properties().get("equ").toString()
+                );
 }
 
 } // namespace GEOM

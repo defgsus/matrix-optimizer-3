@@ -118,6 +118,11 @@ TextType TextEditDialog::getTextType() const
     return p_->textType;
 }
 
+AbstractScriptWidget TextEditDialog::getScriptWidget() const
+{
+    return p_->scriptEdit;
+}
+
 QString TextEditDialog::getText() const
 {
     // XXX not used (forgot what it should do, sb)

@@ -30,13 +30,13 @@ GeometryModifierTesselate::GeometryModifierTesselate()
     properties().set(
         "minArea", QObject::tr("minimum area"),
         QObject::tr("The smallest triangle area that will be considered for tesselation"),
-        0.0, 0.1);
-    properties().setMin("minArea", 0.);
+        0.0f, 0.1f);
+    properties().setMin("minArea", 0.f);
     properties().set(
         "minLength", QObject::tr("minimum side-length"),
         QObject::tr("The length of a triangle vertex that will be considered for tesselation"),
-        0.0, 0.1);
-    properties().setMin("minLength", 0.);
+        0.0f, 0.1f);
+    properties().setMin("minLength", 0.f);
 }
 
 QString GeometryModifierTesselate::statusTip() const

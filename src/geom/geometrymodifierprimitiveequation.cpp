@@ -21,7 +21,20 @@ GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
     : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation")),
       equ_     ("x = x;\ny = y;\nz = z")
 {
-
+    /*QStringList vars = {
+            "x", "y", "z", "nx", "ny", "nz", "s", "t", "i", "p",
+            "red", "green", "blue", "alpha", "bright",
+            "x1", "y1", "z1", "x2", "y2", "z2", "x3", "y3", "z3",
+            "nx1", "ny1", "nz1", "nx2", "ny2", "nz2", "nx3", "ny3", "nz3",
+            "s1", "t1", "s2", "t2", "s3", "t3",
+            "red1", "green1", "blue1", "alpha1",
+            "red2", "green2", "blue2", "alpha2",
+            "red3", "green3", "blue3", "alpha3" };
+    */
+    properties().set(
+        "equ", QObject::tr("equation"),
+        QObject::tr("The equation to apply to all the verices per primitive"),
+        QString("x = x;\ny = y;\nz = z"));
 }
 
 QString GeometryModifierPrimitiveEquation::statusTip() const
@@ -45,6 +58,7 @@ void GeometryModifierPrimitiveEquation::deserialize(IO::DataStream &io)
 
     const int ver = io.readHeader("geoequprim", 2);
 
+    QString equ;
     if (ver<2)
     {
         QString equx, equy, equz;
@@ -55,15 +69,17 @@ void GeometryModifierPrimitiveEquation::deserialize(IO::DataStream &io)
             equy = "y";
         if (equz.isEmpty())
             equz = "z";
-        equ_ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
     }
     else
-        io >> equ_;
+        io >> equ;
+    properties().set("equ", equ);
 }
 
 void GeometryModifierPrimitiveEquation::execute(Geometry *g)
 {
-    g->transformPrimitivesWithEquation(equ_);
+    g->transformPrimitivesWithEquation(
+                properties().get("equ").toString());
 }
 
 } // namespace GEOM

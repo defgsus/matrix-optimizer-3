@@ -135,6 +135,7 @@ void Properties::swap(Properties &other)
     p_step_.swap(other.p_step_);
     p_name_.swap(other.p_name_);
     p_tip_.swap(other.p_tip_);
+    p_subType_.swap(other.p_subType_);
 }
 
 void Properties::clear()
@@ -146,6 +147,7 @@ void Properties::clear()
     p_step_.clear();
     p_name_.clear();
     p_tip_.clear();
+    p_subType_.clear();
 }
 
 void Properties::clear(const QString &id)
@@ -157,6 +159,7 @@ void Properties::clear(const QString &id)
     p_step_.remove(id);
     p_name_.remove(id);
     p_tip_.remove(id);
+    p_subType_.remove(id);
 }
 
 void Properties::serialize(IO::DataStream & io) const
@@ -369,44 +372,49 @@ QVariant Properties::get(const QString &id, const QVariant& def) const
 
 QVariant Properties::get(const QString &id) const
 {
-#define MO__GETTER(mem__, ret__) \
+#define MO__GETTER(mem__, ret__, def__) \
     auto i = mem__.find(id); \
     if (i == mem__.end()) \
         MO_DEBUG_PROP("Properties::get[" #mem__ "](\"" << id << "\") unknown"); \
-    return i == mem__.end() ? ret__() : i.value();
+    return i == mem__.end() ? def__ : i.value();
 
-    MO__GETTER(p_val_, QVariant);
+    MO__GETTER(p_val_, QVariant, QVariant());
 }
 
 QVariant Properties::getDefault(const QString &id) const
 {
-    MO__GETTER(p_val_, QVariant);
+    MO__GETTER(p_val_, QVariant, QVariant());
 }
 
 QVariant Properties::getMin(const QString &id) const
 {
-    MO__GETTER(p_min_, QVariant);
+    MO__GETTER(p_min_, QVariant, QVariant());
 }
 
 QVariant Properties::getMax(const QString &id) const
 {
-    MO__GETTER(p_max_, QVariant);
+    MO__GETTER(p_max_, QVariant, QVariant());
 }
 
 QVariant Properties::getStep(const QString &id) const
 {
-    MO__GETTER(p_step_, QVariant);
+    MO__GETTER(p_step_, QVariant, QVariant());
 }
 
 QString Properties::getName(const QString &id) const
 {
-    MO__GETTER(p_name_, QString);
+    MO__GETTER(p_name_, QString, QString());
 }
 
 
 QString Properties::getTip(const QString &id) const
 {
-    MO__GETTER(p_tip_, QString);
+    MO__GETTER(p_tip_, QString, QString());
+}
+
+int Properties::getSubType(const QString &id) const
+{
+    MO__GETTER(p_subType_, Int, -1);
     #undef MO__GETTER
 }
 
@@ -441,7 +449,7 @@ void Properties::setMax(const QString &id, const QVariant & v)
 void Properties::setRange(const QString &id, const QVariant & mi, const QVariant & ma)
 {
     MO_DEBUG_PROP("Properties::setRange '" << id << "': " << mi << "-" << ma << " type "
-                  << v.typeName() << " (" << v.type() << ")");
+                  << mi.typeName() << " (" << mi.type() << ")");
     p_min_.insert(id, mi);
     p_max_.insert(id, ma);
 }
@@ -467,6 +475,13 @@ void Properties::setTip(const QString &id, const QString& v)
 }
 
 
+void Properties::setSubType(const QString &id, int v)
+{
+    MO_DEBUG_PROP("Properties::setSubType '" << id << "': " << v << ")");
+    p_subType_.insert(id, v);
+}
+
+
 bool Properties::change(const QString &id, const QVariant & v)
 {
     MO_DEBUG_PROP("property '" << id << "': " << v << " type "<< v.typeName() << " (" << v.type() << ")");
@@ -482,24 +497,35 @@ void Properties::unify(const Properties &other)
     for (auto i = other.p_val_.begin(); i != other.p_val_.end(); ++i)
     {
         p_val_.insert(i.key(), i.value());
+
         auto j = other.p_def_.find(i.key());
         if (j != other.p_def_.end())
             p_def_.insert(i.key(), j.value());
+
         j = other.p_min_.find(i.key());
         if (j != other.p_min_.end())
             p_min_.insert(i.key(), j.value());
+
         j = other.p_max_.find(i.key());
         if (j != other.p_max_.end())
             p_max_.insert(i.key(), j.value());
+
         j = other.p_step_.find(i.key());
         if (j != other.p_step_.end())
             p_step_.insert(i.key(), j.value());
+
         auto k = other.p_name_.find(i.key());
         if (k != other.p_name_.end())
             p_name_.insert(i.key(), k.value());
+
         k = other.p_tip_.find(i.key());
         if (k != other.p_tip_.end())
             p_tip_.insert(i.key(), k.value());
+
+        auto l = other.p_subType_.find(i.key());
+        if (l != other.p_subType_.end())
+            p_subType_.insert(i.key(), l.value());
+
     }
 }
 

@@ -25,6 +25,30 @@ GeometryModifierExtrude::GeometryModifierExtrude()
       doOuterFaces_ (true),
       doRecogEdges_ (false)
 {
+    properties().set(
+        "const", QObject::tr("extrusion by constant"),
+        QObject::tr("Extrudes triangles along their normal by a constant value"),
+        0.1, 0.05);
+    properties().set(
+        "factor", QObject::tr("extrusion by factor"),
+        QObject::tr("Extrudes triangles vertices along their normal by a factor "
+                    "of the length of adjecent edges"),
+        0.0, 0.05);
+    properties().set(
+        "shiftCenter", QObject::tr("slimify"),
+        QObject::tr("Shifts the extruded vertices towards the center of the triangles"),
+        0.0, 0.05);
+    properties().set(
+        "doFaces", QObject::tr("create orthogonal faces"),
+        QObject::tr("Enables the creation of the outside faces, "
+                    "orthogonal to extruded faces"),
+        true);
+    properties().set(
+        "doCheckEdge", QObject::tr("recognize edges"),
+        QObject::tr("If e.g. two triangles are recognized as forming a quad, "
+                    "no orthogonal face is created for the inner edge"),
+        false);
+
 
 }
 
@@ -56,12 +80,21 @@ void GeometryModifierExtrude::deserialize(IO::DataStream &io)
 
     const int ver = io.readHeader("geoextrude", 3);
 
-    io >> constant_ >> factor_;
+    Float constant, factor, shiftCenter = 0.f;
+    bool doOuterFaces = true, doRecogEdges = false;
+
+    io >> constant >> factor;
 
     if (ver>=2)
-        io >> doOuterFaces_ >> doRecogEdges_;
+        io >> doOuterFaces >> doRecogEdges;
     if (ver>=3)
-        io >> shiftCenter_;
+        io >> shiftCenter;
+
+    properties().set("const", constant);
+    properties().set("factor", factor);
+    properties().set("shift", shiftCenter);
+    properties().set("doFaces", doOuterFaces);
+    properties().set("doCheckEdge", doRecogEdges);
 }
 
 void GeometryModifierExtrude::execute(Geometry *g)
@@ -72,7 +105,12 @@ void GeometryModifierExtrude::execute(Geometry *g)
     Geometry * geom = new Geometry();
     geom->setSharedVertices(g->sharedVertices(), g->sharedVerticesThreshold());
 
-    g->extrudeTriangles(*geom, constant_, factor_, shiftCenter_, doOuterFaces_, doRecogEdges_);
+    g->extrudeTriangles(*geom,
+                        properties().get("const").toFloat(),
+                        properties().get("factor").toFloat(),
+                        properties().get("shift").toFloat(),
+                        properties().get("doFaces").toBool(),
+                        properties().get("doCheckEdge").toBool());
 
     // explicitly ungroup vertices if so desired
     if (!g->sharedVertices())

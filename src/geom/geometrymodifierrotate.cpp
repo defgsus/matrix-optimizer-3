@@ -25,12 +25,27 @@ GeometryModifierRotate::GeometryModifierRotate()
       y_        (0.0),
       z_        (0.0)
 {
-
+    properties().set(
+        "angle", QObject::tr("angle (degree)"),
+        QObject::tr("The rotation angle around the given axis in degree"),
+        0.f);
+    properties().set(
+        "x", QObject::tr("x-axis"),
+        QObject::tr("The x component of the axis vector (internally normalized)"),
+        1.f);
+    properties().set(
+        "y", QObject::tr("y-axis"),
+        QObject::tr("The y component of the axis vector (internally normalized)"),
+        0.f);
+    properties().set(
+        "z", QObject::tr("z-axis"),
+        QObject::tr("The z component of the axis vector (internally normalized)"),
+        0.f);
 }
 
 QString GeometryModifierRotate::statusTip() const
 {
-    return QObject::tr("Rotates the vertices (normals are left untouched)");
+    return QObject::tr("Rotates the vertices (normals are *currently* left untouched)");
 }
 
 
@@ -49,12 +64,24 @@ void GeometryModifierRotate::deserialize(IO::DataStream &io)
 
     io.readHeader("georotate", 1);
 
-    io >> angle_ >> x_ >> y_ >> z_;
+    Float angle, x, y, z;
+    io >> angle >> x >> y >> z;
+    properties().set("angle", angle);
+    properties().set("x", x);
+    properties().set("y", y);
+    properties().set("z", z);
 }
 
 void GeometryModifierRotate::execute(Geometry *g)
 {
-    const Mat4 rot = MATH::rotate(Mat4(1.0), angle_, Vec3(x_, y_, z_));
+    const Mat4 rot = MATH::rotate(Mat4(1.0),
+                properties().get("angle").toFloat(),
+                        Vec3(
+                            properties().get("angle").toFloat(),
+                            properties().get("angle").toFloat(),
+                            properties().get("angle").toFloat()
+                            )
+                                  );
     g->applyMatrix(rot);
 }
 

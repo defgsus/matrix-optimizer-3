@@ -22,7 +22,18 @@ GeometryModifierVertexGroup::GeometryModifierVertexGroup()
       share_        (true),
       threshold_    (Geometry::minimumThreshold)
 {
+    properties().set(
+        "shared", QObject::tr("shared vertices"),
+        QObject::tr("When enabled, primitives share their vertices, "
+                    "otherwise primitives are forced to use unique vertices"),
+        true);
 
+    properties().set(
+        "threshold", QObject::tr("threshold"),
+        QObject::tr("Threshold distance for which vertices are considered the same"),
+        Geometry::minimumThreshold,
+        Geometry::minimumThreshold, 1000000.f,
+        Geometry::minimumThreshold);
 }
 
 QString GeometryModifierVertexGroup::statusTip() const
@@ -47,21 +58,27 @@ void GeometryModifierVertexGroup::deserialize(IO::DataStream &io)
 
     io.readHeader("geovshare", 1);
 
-    io >> share_ >> threshold_;
+    bool share;
+    Float threshold;
+    io >> share >> threshold;
+    properties().set("shared", share);
+    properties().set("threshold", threshold);
 }
 
 void GeometryModifierVertexGroup::execute(Geometry *g)
 {
-    if (share_ && (!g->sharedVertices() || g->sharedVerticesThreshold() != threshold_))
+    const bool share = properties().get("share").toBool();
+
+    if (share && (!g->sharedVertices() || g->sharedVerticesThreshold() != threshold_))
     {
         Geometry * geo = new Geometry(*g);
         g->clear();
-        g->setSharedVertices(true, threshold_);
+        g->setSharedVertices(true, properties().get("threshold").toFloat());
         g->addGeometry(*geo);
         geo->releaseRef();
     }
 
-    if (!share_)
+    if (!share)
     {
         g->setSharedVertices(false);
         g->unGroupVertices();
