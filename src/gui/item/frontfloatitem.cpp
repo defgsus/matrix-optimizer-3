@@ -61,7 +61,7 @@ FrontFloatItem::FrontFloatItem(QGraphicsItem * parent)
 
     initProperty("value-label-visible", true);
     initProperty("value-label-outside", true);
-    initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
+    //initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
     initProperty("value-label-margin", 0);
 }
 
@@ -202,10 +202,11 @@ void FrontFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * style, 
 
         // alignment
         p_->labelRect = metrics.boundingRect(text);
-        p_->labelRect = Properties::align(p_->labelRect, rect(),
+        /*p_->labelRect = Properties::align(p_->labelRect, rect(),
                                          properties().get("value-label-align").value<Properties::Alignment>(),
                                          properties().get("value-label-margin").toInt(),
                                          properties().get("value-label-outside").toBool());
+                                         */
         //rec.moveTop(rec.top() + metrics.height());
 
         // draw

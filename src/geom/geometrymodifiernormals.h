@@ -25,17 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    bool getCalcNormals() const { return calc_; }
-    bool getInvertNormals() const { return invert_; }
-
     // ------------ setter -------------------
-
-    void setCalcNormals(bool doo) { calc_ = doo; }
-    void setInvertNormals(bool doo) { invert_ = doo; }
 
 private:
 
-    bool calc_, invert_;
 };
 
 

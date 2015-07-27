@@ -18,10 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTesselate)
 
 GeometryModifierTesselate::GeometryModifierTesselate()
-    : GeometryModifier("Tesselate", QObject::tr("tesselate")),
-      level_    (1)
-    , minArea_  (0.)
-    , minLength_(0.)
+    : GeometryModifier("Tesselate", QObject::tr("tesselate"))
 {
     properties().set(
         "level", QObject::tr("triangulation level"),
@@ -50,27 +47,26 @@ void GeometryModifierTesselate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geotess", 2);
-
-    io << level_;
-    // v2
-    io << minArea_ << minLength_;
+    io.writeHeader("geotess", 3);
 }
 
 void GeometryModifierTesselate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    int ver = io.readHeader("geotess", 2);
+    int ver = io.readHeader("geotess", 3);
 
-    uint level;
-    Float minArea=0, minLength=0;
-    io >> level;
-    if (ver >= 2)
-        io >> minArea >> minLength;
-    properties().set("level", level);
-    properties().set("minArea", minArea);
-    properties().set("minLength", minLength);
+    if (ver < 3)
+    {
+        uint level;
+        Float minArea=0, minLength=0;
+        io >> level;
+        if (ver >= 2)
+            io >> minArea >> minLength;
+        properties().set("level", level);
+        properties().set("minArea", minArea);
+        properties().set("minLength", minLength);
+    }
 }
 
 

@@ -225,7 +225,7 @@ void QVariantWidget::Private::createWidgets()
             int subtype = props && props->hasSubType(id)
                     ? props->getSubType(id)
                     : -1;
-            MO_PRINT(props << " " << props->getSubType(id));
+            // string display with edit button (->TextEditDialog)
             if (subtype != -1)
             {
                 MO__SUBLAYOUT(QHBoxLayout);
@@ -239,6 +239,7 @@ void QVariantWidget::Private::createWidgets()
                 layout->addWidget(b);
                 connect(b, &QToolButton::clicked, [=]()
                 {
+                    /** @todo script engines need to be passed to dialog */
                     auto diag = new TextEditDialog(TextType(subtype), widget);
                     diag->setAttribute(Qt::WA_DeleteOnClose);
                     diag->setText(v.toString());
@@ -388,18 +389,20 @@ void QVariantWidget::Private::createWidgets()
     // and can't be used in switch(), e.g. stuff in Q_DECLARE_METATYPE()
     if (!isHandled)
     {
+        /*
         // Generic approach for Properties::NamedStates
         if (auto ns = Properties::getNamedStates(v))
         {
             auto cb = new QComboBox(widget);
             edit = cb;
             for (auto & i : *ns)
-                cb->addItem(ns->id(i), i);
+                cb->addItem(ns->id(i), i.value().value());
             f_update_widget = [=](){ cb->setCurrentText(ns->id(v)); };
             f_update_value = [=](){ v = cb->itemData(cb->currentIndex()); };
             connect(cb, SIGNAL(currentIndexChanged(int)), widget, SLOT(onValueChanged_()));
             isHandled = true;
         }
+        */
     }
 
     if (edit)

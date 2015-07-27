@@ -18,8 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPrimitiveEquation)
 
 GeometryModifierPrimitiveEquation::GeometryModifierPrimitiveEquation()
-    : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation")),
-      equ_     ("x = x;\ny = y;\nz = z")
+    : GeometryModifier("PrimitiveEquation", QObject::tr("primitive equation"))
 {
     /*QStringList vars = {
             "x", "y", "z", "nx", "ny", "nz", "s", "t", "i", "p",
@@ -47,33 +46,34 @@ void GeometryModifierPrimitiveEquation::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoequprim", 2);
-
-    io << equ_;
+    io.writeHeader("geoequprim", 3);
 }
 
 void GeometryModifierPrimitiveEquation::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    const int ver = io.readHeader("geoequprim", 2);
+    const int ver = io.readHeader("geoequprim", 3);
 
-    QString equ;
-    if (ver<2)
+    if (ver < 3)
     {
-        QString equx, equy, equz;
-        io >> equx >> equy >> equz;
-        if (equx.isEmpty())
-            equx = "x";
-        if (equy.isEmpty())
-            equy = "y";
-        if (equz.isEmpty())
-            equz = "z";
-        equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        QString equ;
+        if (ver<2)
+        {
+            QString equx, equy, equz;
+            io >> equx >> equy >> equz;
+            if (equx.isEmpty())
+                equx = "x";
+            if (equy.isEmpty())
+                equy = "y";
+            if (equz.isEmpty())
+                equz = "z";
+            equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        }
+        else
+            io >> equ;
+        properties().set("equ", equ);
     }
-    else
-        io >> equ;
-    properties().set("equ", equ);
 }
 
 void GeometryModifierPrimitiveEquation::execute(Geometry *g)

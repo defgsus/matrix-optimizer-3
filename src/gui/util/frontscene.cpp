@@ -752,7 +752,7 @@ void FrontScene::loadPreset(const QString &id)
     {
         if (auto item = itemForId(i.key()))
         {
-            item->setValueVariant( i.value() );
+            item->setValueVariant( i.value().value() );
             item->sendValue();
         }
         //else MO_DEBUG("FrontScene::loadPreset('" << id << "') item '" << i.key() << "' not found");

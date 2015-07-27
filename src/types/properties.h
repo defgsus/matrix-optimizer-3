@@ -36,9 +36,42 @@ public:
 
     // --------------- types --------------------
 
-    /** The default key/value map used for all Properties */
-    typedef QMap<QString, QVariant> Map;
+    struct Property
+    {
+        Property() : p_subType_(-1) { }
 
+        bool isValid() const { return !p_val_.isNull(); }
+
+        const QVariant& value() const { return p_val_; }
+        const QVariant& defaultValue() const { return p_def_; }
+        const QVariant& minimum() const { return p_min_; }
+        const QVariant& maximum() const { return p_max_; }
+        const QVariant& step() const { return p_step_; }
+
+        const QString& name() const { return p_name_; }
+        const QString& tip() const { return p_tip_; }
+
+        int subType() const { return p_subType_; }
+
+    private:
+        friend class Properties;
+        QVariant
+            p_val_,
+            p_def_,
+            p_min_,
+            p_max_,
+            p_step_;
+        QString
+            p_name_,
+            p_tip_;
+        int p_subType_;
+    };
+
+
+    /** The default key/value map used for all Properties */
+    typedef QMap<QString, Property> Map;
+
+#if 0
     /** Helper for value lists,
         e.g. enums and such.
         Adding instances of this class to the Properties framework
@@ -121,7 +154,7 @@ public:
     };
     static const NamedStates alignmentStates;
     static bool isAlignment(const QVariant&);
-
+#endif
 
     // -------------- ctor ----------------------
 
@@ -156,6 +189,9 @@ public:
         and clearChanged() has not been called. */
     //bool isChanged() const;
 
+    /** Returns the Property for the given id, or an invalid Property */
+    const Property& getProperty(const QString& id) const;
+
     /** Returns the given property, or an invalid QVariant */
     QVariant get(const QString& id) const;
 
@@ -177,24 +213,24 @@ public:
     int getSubType(const QString& id) const;
 
     /** Returns true, when there is a property named @p id */
-    bool has(const QString& id) const { return p_val_.contains(id); }
+    bool has(const QString& id) const { return p_map_.contains(id); }
 
     /** Returns the default value for the property, or an invalid QVariant */
-    bool hasDefault(const QString& id) const { return p_def_.contains(id); }
-    bool hasMin(const QString& id) const { return p_min_.contains(id); }
-    bool hasMax(const QString& id) const { return p_max_.contains(id); }
-    bool hasStep(const QString& id) const { return p_step_.contains(id); }
-    bool hasName(const QString& id) const { return p_name_.contains(id); }
-    bool hasTip(const QString& id) const { return p_tip_.contains(id); }
-    bool hasSubType(const QString& id) const { return p_subType_.contains(id); }
+    bool hasDefault(const QString& id) const { return getProperty(id).defaultValue().isValid(); }
+    bool hasMin(const QString& id) const { return getProperty(id).minimum().isValid(); }
+    bool hasMax(const QString& id) const { return getProperty(id).maximum().isValid(); }
+    bool hasStep(const QString& id) const { return getProperty(id).step().isValid(); }
+    bool hasName(const QString& id) const { return !getProperty(id).name().isNull(); }
+    bool hasTip(const QString& id) const { return !getProperty(id).tip().isNull(); }
+    bool hasSubType(const QString& id) const { return getProperty(id).subType() != -1; }
 
     /** Returns a css-style list of all properties */
     QString toString(const QString& indent = "") const;
 
     // -------------- iterator ------------------
 
-    Map::const_iterator begin() const { return p_val_.constBegin(); }
-    Map::const_iterator end() const { return p_val_.constEnd(); }
+    Map::const_iterator begin() const { return p_map_.constBegin(); }
+    Map::const_iterator end() const { return p_map_.constEnd(); }
 
     // --------------- setter -------------------
 
@@ -218,6 +254,8 @@ public:
     template <class T>
     void set(const QString& id, const T& v) { set(id, QVariant::fromValue(v)); }
 
+    /** @{ */
+    /** Initializers for integral or float types */
     template <class T>
     void set(const QString& id, const QString& name, const QString& statusTip,
              const T& defaultValue);
@@ -233,6 +271,12 @@ public:
     template <class T>
     void set(const QString& id, const QString& name, const QString& statusTip,
              const T& defaultValue, const T& minimum, const T& maximum, const T& step);
+    /** @} */
+
+    /** Initializer for selectable values, e.g. enum lists and such */
+    void set(const QString& id, const QString& name, const QString& statusTip,
+             const QStringList& valueIds, const QVariantList& values,
+             const QStringList& valueStatusTips);
 
     /** Sets the given default value */
     void setDefault(const QString& id, const QVariant& v);
@@ -261,29 +305,16 @@ public:
 
 
     // -------------- static helper --------------------
-
+#if 0
     /** Returns the aligned version of @p rect within @p parent.
         @p alignment is an OR combination of Alignment flags. */
     static QRectF align(const QRectF& rect, const QRectF& parent,
                         int alignment = A_CENTER, qreal margin = 0.0, bool outside = false);
+#endif
 
 private:
 
-    /* XXX These could be refactured in, e.g.:
-        QMap<QString, Property> */
-
-    Map p_val_
-      , p_def_
-      , p_min_
-      , p_max_
-      , p_step_;
-
-    QMap<QString, QString>
-        p_name_,
-        p_tip_;
-
-    QMap<QString, int>
-        p_subType_;
+    Map p_map_;
 };
 
 } // namespace MO
@@ -291,7 +322,7 @@ private:
 
 // [add new NamedStates here]
 
-Q_DECLARE_METATYPE(MO::Properties::Alignment)
+//Q_DECLARE_METATYPE(MO::Properties::Alignment)
 
 
 // --------- templ impl. ------------------

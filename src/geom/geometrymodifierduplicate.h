@@ -25,24 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    uint duplicatesX() const { return numX_; }
-    uint duplicatesY() const { return numY_; }
-    uint duplicatesZ() const { return numZ_; }
-
-    const QString& getEquation() const { return equ_; }
-
     // ------------ setter -------------------
-
-    void setEquation(const QString& e) { equ_ = e; }
-
-    void setDuplicatesX(uint num) { numX_ = num; }
-    void setDuplicatesY(uint num) { numY_ = num; }
-    void setDuplicatesZ(uint num) { numZ_ = num; }
 
 private:
 
-    QString equ_;
-    uint numX_, numY_, numZ_;
 };
 
 

@@ -25,21 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getRotationAngle() const { return angle_; }
-    Float getRotationX() const { return x_; }
-    Float getRotationY() const { return y_; }
-    Float getRotationZ() const { return z_; }
-
     // ------------ setter -------------------
-
-    void setRotationAngle(Float s) { angle_ = s; }
-    void setRotationX(Float s) { x_ = s; }
-    void setRotationY(Float s) { y_ = s; }
-    void setRotationZ(Float s) { z_ = s; }
 
 private:
 
-    Float angle_, x_, y_, z_;
 };
 
 

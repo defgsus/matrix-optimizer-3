@@ -19,11 +19,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierRotate)
 
 GeometryModifierRotate::GeometryModifierRotate()
-    : GeometryModifier("Rotate", QObject::tr("rotate")),
-      angle_    (0.0),
-      x_        (1.0),
-      y_        (0.0),
-      z_        (0.0)
+    : GeometryModifier("Rotate", QObject::tr("rotate"))
 {
     properties().set(
         "angle", QObject::tr("angle (degree)"),
@@ -53,23 +49,24 @@ void GeometryModifierRotate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("georotate", 1);
-
-    io << angle_ << x_ << y_ << z_;
+    io.writeHeader("georotate", 2);
 }
 
 void GeometryModifierRotate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("georotate", 1);
+    const int ver = io.readHeader("georotate", 2);
 
-    Float angle, x, y, z;
-    io >> angle >> x >> y >> z;
-    properties().set("angle", angle);
-    properties().set("x", x);
-    properties().set("y", y);
-    properties().set("z", z);
+    if (ver < 2)
+    {
+        Float angle, x, y, z;
+        io >> angle >> x >> y >> z;
+        properties().set("angle", angle);
+        properties().set("x", x);
+        properties().set("y", y);
+        properties().set("z", z);
+    }
 }
 
 void GeometryModifierRotate::execute(Geometry *g)

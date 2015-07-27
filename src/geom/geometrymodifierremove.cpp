@@ -18,14 +18,12 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierRemove)
 
 GeometryModifierRemove::GeometryModifierRemove()
-    : GeometryModifier("Remove", QObject::tr("remove primitives")),
-      prob_     (0.1),
-      seed_     (0)
+    : GeometryModifier("Remove", QObject::tr("remove primitives"))
 {
     properties().set(
         "prob", QObject::tr("probability"),
         QObject::tr("Probability of removing a primitive, between 0 and 1"),
-        0.1, 0.0, 1.0, 0.025);
+        0.1f, 0.0f, 1.0f, 0.025f);
     properties().set(
         "seed", QObject::tr("random seed"),
         QObject::tr("Random seed which determines the pattern of removal"),
@@ -41,22 +39,23 @@ void GeometryModifierRemove::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("georemove", 1);
-
-    io << prob_ << seed_;
+    io.writeHeader("georemove", 2);
 }
 
 void GeometryModifierRemove::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("georemove", 1);
+    const int ver = io.readHeader("georemove", 2);
 
-    Float prob;
-    int seed;
-    io >> prob >> seed;
-    properties().set("prob", prob);
-    properties().set("seed", seed);
+    if (ver < 2)
+    {
+        Float prob;
+        int seed;
+        io >> prob >> seed;
+        properties().set("prob", prob);
+        properties().set("seed", seed);
+    }
 }
 
 void GeometryModifierRemove::execute(Geometry *g)

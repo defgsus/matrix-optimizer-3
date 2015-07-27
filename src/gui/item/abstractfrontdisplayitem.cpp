@@ -32,7 +32,7 @@ AbstractFrontDisplayItem::AbstractFrontDisplayItem(QGraphicsItem * parent)
 
     initProperty("value-label-visible", false);
     initProperty("value-label-outside", true);
-    initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
+    //initProperty("value-label-align", Properties::Alignment(Properties::A_BOTTOM | Properties::A_HCENTER));
     initProperty("value-label-margin", 0);
 }
 

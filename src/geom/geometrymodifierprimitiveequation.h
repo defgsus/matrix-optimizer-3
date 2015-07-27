@@ -26,15 +26,10 @@ public:
 
     // ------------- getter ------------------
 
-    const QString& getEquation() const { return equ_; }
-
     // ------------ setter -------------------
-
-    void setEquation(const QString& e) { equ_ = e; }
 
 private:
 
-    QString equ_;
 };
 
 

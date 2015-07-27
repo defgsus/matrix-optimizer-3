@@ -98,13 +98,16 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geocreate", 1);
+    int ver = io.readHeader("geocreate", 2);
 
-    io.readEnum(type_, T_BOX_UV, typeIds);
-    io >> filename_ >> asTriangles_ >> sharedVertices_
-       >> colorR_ >> colorG_ >> colorB_ >> colorA_
-       >> segmentsX_ >> segmentsY_ >> segmentsZ_
-       >> smallRadius_;
+    if (ver < 2)
+    {
+        io.readEnum(type_, T_BOX_UV, typeIds);
+        io >> filename_ >> asTriangles_ >> sharedVertices_
+           >> colorR_ >> colorG_ >> colorB_ >> colorA_
+           >> segmentsX_ >> segmentsY_ >> segmentsZ_
+           >> smallRadius_;
+    }
 }
 
 void GeometryModifierCreate::execute(Geometry * g)

@@ -118,7 +118,7 @@ TextType TextEditDialog::getTextType() const
     return p_->textType;
 }
 
-AbstractScriptWidget TextEditDialog::getScriptWidget() const
+AbstractScriptWidget * TextEditDialog::getScriptWidget() const
 {
     return p_->scriptEdit;
 }

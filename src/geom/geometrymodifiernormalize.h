@@ -25,15 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getNormalization() const { return n_; }
-
     // ------------ setter -------------------
-
-    void setNormalization(Float n) { n_ = n; }
 
 private:
 
-    Float n_;
 };
 
 

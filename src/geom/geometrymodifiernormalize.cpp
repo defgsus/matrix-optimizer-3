@@ -19,13 +19,12 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierNormalize)
 
 GeometryModifierNormalize::GeometryModifierNormalize()
-    : GeometryModifier("Normalize", QObject::tr("normalize vertices")),
-      n_      (1.0)
+    : GeometryModifier("Normalize", QObject::tr("normalize vertices"))
 {
     properties().set(
         "amt", QObject::tr("amount"),
         QObject::tr("The amount of how much the normalization is applied [0,1]"),
-        1.0, 0.05);
+        1.0f, 0.05f);
 }
 
 QString GeometryModifierNormalize::statusTip() const
@@ -39,20 +38,21 @@ void GeometryModifierNormalize::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geonorm", 1);
-
-    io << n_;
+    io.writeHeader("geonorm", 2);
 }
 
 void GeometryModifierNormalize::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geonorm", 1);
+    const int ver = io.readHeader("geonorm", 2);
 
-    Float n;
-    io >> n;
-    properties().set("amt", n);
+    if (ver < 2)
+    {
+        Float n;
+        io >> n;
+        properties().set("amt", n);
+    }
 }
 
 

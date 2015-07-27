@@ -23,19 +23,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getTranslationX() const { return x_; }
-    Float getTranslationY() const { return y_; }
-    Float getTranslationZ() const { return z_; }
-
     // ------------ setter -------------------
-
-    void setTranslationX(Float s) { x_ = s; }
-    void setTranslationY(Float s) { y_ = s; }
-    void setTranslationZ(Float s) { z_ = s; }
 
 private:
 
-    Float x_, y_, z_;
 };
 
 

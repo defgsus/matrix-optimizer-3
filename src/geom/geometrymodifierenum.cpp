@@ -18,9 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierEnum)
 
 GeometryModifierEnum::GeometryModifierEnum()
-    : GeometryModifier("Enum", QObject::tr("enumeration attribute")),
-      doIndex_      (true),
-      indexName_    ("a_index")
+    : GeometryModifier("Enum", QObject::tr("enumeration attribute"))
 {
     properties().set(
         "indexName", QObject::tr("attribute name"),
@@ -43,22 +41,23 @@ void GeometryModifierEnum::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoenum", 1);
-
-    io << doIndex_ << indexName_;
+    io.writeHeader("geoenum", 2);
 }
 
 void GeometryModifierEnum::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geoenum", 1);
+    const int ver = io.readHeader("geoenum", 2);
 
-    bool doIndex;
-    QString indexName;
-    io >> doIndex >> indexName;
-    properties().set("doIndex", doIndex);
-    properties().set("indexName", indexName);
+    if (ver < 2)
+    {
+        bool doIndex;
+        QString indexName;
+        io >> doIndex >> indexName;
+        properties().set("doIndex", doIndex);
+        properties().set("indexName", indexName);
+    }
 }
 
 

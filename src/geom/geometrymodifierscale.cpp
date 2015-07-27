@@ -18,11 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierScale)
 
 GeometryModifierScale::GeometryModifierScale()
-    : GeometryModifier("Scale", QObject::tr("scale")),
-      all_      (1.0),
-      x_        (1.0),
-      y_        (1.0),
-      z_        (1.0)
+    : GeometryModifier("Scale", QObject::tr("scale"))
 {
     properties().set(
         "all", QObject::tr("overall scale"),
@@ -52,23 +48,24 @@ void GeometryModifierScale::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoscale", 1);
-
-    io << all_ << x_ << y_ << z_;
+    io.writeHeader("geoscale", 2);
 }
 
 void GeometryModifierScale::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geoscale", 1);
+    const int ver = io.readHeader("geoscale", 2);
 
-    Float all, x, y, z;
-    io >> all >> x >> y >> z;
-    properties().set("all", all);
-    properties().set("x", x);
-    properties().set("y", y);
-    properties().set("z", z);
+    if (ver < 2)
+    {
+        Float all, x, y, z;
+        io >> all >> x >> y >> z;
+        properties().set("all", all);
+        properties().set("x", x);
+        properties().set("y", y);
+        properties().set("z", z);
+    }
 }
 
 void GeometryModifierScale::execute(Geometry *g)

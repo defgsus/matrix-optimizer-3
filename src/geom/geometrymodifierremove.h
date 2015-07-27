@@ -24,18 +24,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getRemoveProbability() const { return prob_; }
-    uint getRandomSeed() const { return seed_; }
-
     // ------------ setter -------------------
-
-    void setRemoveProbability(Float p) { prob_ = p; }
-    void setRandomSeed(uint s) { seed_ = s; }
 
 private:
 
-    Float prob_;
-    uint seed_;
 };
 
 

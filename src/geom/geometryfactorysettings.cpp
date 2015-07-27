@@ -192,47 +192,48 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierTesselate();
             modifierChain_->addModifier(geom);
-            geom->setTesselationLevel(tessLevel);
+            geom->properties().set("level", tessLevel);
         }
 
         if (normalizeVertices)
         {
             auto geom = new GeometryModifierNormalize();
             modifierChain_->addModifier(geom);
-            geom->setNormalization(normalization);
+            geom->properties().set("amt", normalization);
         }
 
         if (!sharedVertices)
         {
             auto geom = new GeometryModifierVertexGroup();
             modifierChain_->addModifier(geom);
-            geom->setShared(false);
+            geom->properties().set("shared", false);
         }
 
         if (transformWithEquation)
         {
             auto geom = new GeometryModifierVertexEquation();
             modifierChain_->addModifier(geom);
-            geom->setEquation("x = " + equationX + ";\n"
-                              "y = " + equationY + ";\n"
-                              "z = " + equationZ);
-
+            QString equ = "x = " + equationX + ";\n"
+                          "y = " + equationY + ";\n"
+                          "z = " + equationZ;
+            geom->properties().set("equ", equ);
         }
 
         if (calcNormalsBeforePrimitiveEquation)
         {
             auto geom = new GeometryModifierNormals();
             modifierChain_->addModifier(geom);
-            geom->setCalcNormals(true);
+            geom->properties().set("tri", true);
         }
 
         if (transformPrimitivesWithEquation)
         {
             auto geom = new GeometryModifierPrimitiveEquation();
             modifierChain_->addModifier(geom);
-            geom->setEquation("x = " + pEquationX + ";\n"
-                              "y = " + pEquationY + ";\n"
-                              "z = " + pEquationZ);
+            geom->properties().set("equ",
+                                    "x = " + pEquationX + ";\n"
+                                    "y = " + pEquationY + ";\n"
+                                    "z = " + pEquationZ);
         }
 
         if (extrude)
@@ -241,12 +242,12 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
             {
                 auto geom = new GeometryModifierNormals();
                 modifierChain_->addModifier(geom);
-                geom->setCalcNormals(true);
+                geom->properties().set("tri", true);
             }
             auto geom = new GeometryModifierExtrude();
             modifierChain_->addModifier(geom);
-            geom->setConstant(extrudeConstant);
-            geom->setFactor(extrudeFactor);
+            geom->properties().set("const", extrudeConstant);
+            geom->properties().set("factor", extrudeFactor);
         }
 
         if (convertToLines)
@@ -259,25 +260,25 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         {
             auto geom = new GeometryModifierRemove();
             modifierChain_->addModifier(geom);
-            geom->setRandomSeed(removeSeed);
-            geom->setRemoveProbability(removeProb);
+            geom->properties().set("prob", removeProb);
+            geom->properties().set("seed", removeSeed);
         }
 
         if (calcNormals || invertNormals)
         {
             auto geom = new GeometryModifierNormals();
             modifierChain_->addModifier(geom);
-            geom->setCalcNormals(calcNormals);
-            geom->setInvertNormals(invertNormals);
+            geom->properties().set("tri", calcNormals);
+            geom->properties().set("invert", invertNormals);
         }
 
         {
             auto geom = new GeometryModifierScale();
             modifierChain_->addModifier(geom);
-            geom->setScaleAll(scale);
-            geom->setScaleX(scaleX);
-            geom->setScaleX(scaleY);
-            geom->setScaleX(scaleZ);
+            geom->properties().set("all", scale);
+            geom->properties().set("x", scaleX);
+            geom->properties().set("y", scaleY);
+            geom->properties().set("z", scaleZ);
         }
 
     }

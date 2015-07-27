@@ -53,20 +53,21 @@ void GeometryModifierAngelScript::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geocreateas", 1);
-
-    io << script_;
+    io.writeHeader("geocreateas", 2);
 }
 
 void GeometryModifierAngelScript::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geocreateas", 1);
+    int ver = io.readHeader("geocreateas", 2);
 
-    QString script;
-    io >> script;
-    properties().set("script", script);
+    if (ver < 2)
+    {
+        QString script;
+        io >> script;
+        properties().set("script", script);
+    }
 }
 
 void GeometryModifierAngelScript::execute(Geometry * g)

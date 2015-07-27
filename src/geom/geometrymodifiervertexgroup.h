@@ -25,18 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    bool getShared() const { return share_; }
-    Float getThreshold() const { return threshold_; }
-
     // ------------ setter -------------------
-
-    void setShared(bool s) { share_ = s; }
-    void setThreshold(Float t) { threshold_ = t; }
 
 private:
 
-    bool share_;
-    Float threshold_;
 };
 
 

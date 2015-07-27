@@ -25,24 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getConstant() const { return constant_; }
-    Float getFactor() const { return factor_; }
-    Float getShiftCenter() const { return shiftCenter_; }
-    bool getDoOuterFaces() const { return doOuterFaces_; }
-    bool getDoRecognizeEdges() const { return doRecogEdges_; }
-
     // ------------ setter -------------------
-
-    void setConstant(Float s) { constant_ = s; }
-    void setFactor(Float s) { factor_ = s; }
-    void setShiftCenter(Float s) { shiftCenter_ = s; }
-    void setDoOuterFaces(bool enable) { doOuterFaces_ = enable; }
-    void setDoRecognizeEdges(bool enable) { doRecogEdges_ = enable; }
 
 private:
 
-    Float constant_, factor_, shiftCenter_;
-    bool doOuterFaces_, doRecogEdges_;
 };
 
 

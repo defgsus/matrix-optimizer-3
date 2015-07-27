@@ -19,10 +19,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTranslate)
 
 GeometryModifierTranslate::GeometryModifierTranslate()
-    : GeometryModifier("Translate", QObject::tr("translate")),
-      x_        (0.0),
-      y_        (0.0),
-      z_        (0.0)
+    : GeometryModifier("Translate", QObject::tr("translate"))
 {
     properties().set("tx", QObject::tr("x"),
                      QObject::tr("Translation on x axis"),
@@ -45,22 +42,23 @@ void GeometryModifierTranslate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geotrans", 1);
-
-    io << x_ << y_ << z_;
+    io.writeHeader("geotrans", 2);
 }
 
 void GeometryModifierTranslate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geotrans", 1);
+    const int ver = io.readHeader("geotrans", 2);
 
-    Float x, y, z;
-    io >> x >> y >> z;
-    properties().set("x", x);
-    properties().set("y", y);
-    properties().set("z", z);
+    if (ver < 2)
+    {
+        Float x, y, z;
+        io >> x >> y >> z;
+        properties().set("x", x);
+        properties().set("y", y);
+        properties().set("z", z);
+    }
 }
 
 

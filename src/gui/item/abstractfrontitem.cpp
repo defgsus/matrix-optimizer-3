@@ -130,7 +130,7 @@ AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
     initProperty("label-text", QString());
     initProperty("label-visible", true);
     initProperty("label-outside", true);
-    initProperty("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
+    //initProperty("label-align", Properties::Alignment(Properties::A_TOP | Properties::A_HCENTER));
     initProperty("label-margin", 0);
 
 
@@ -639,11 +639,11 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
         // alignment
         p_labelRect_ = rec;
         p_labelRect_.setSize( p_statictext_name_->size() );
-        p_labelRect_ = Properties::align(p_labelRect_, rec,
+        /*p_labelRect_ = Properties::align(p_labelRect_, rec,
                                          p_props_->get("label-align").value<Properties::Alignment>(),
                                          p_props_->get("label-margin").toInt(),
                                          p_props_->get("label-outside").toBool());
-
+        */
         // draw
         p->setPen(bpen);
         p->drawStaticText(p_labelRect_.topLeft(), *p_statictext_name_);

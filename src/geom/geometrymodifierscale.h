@@ -24,21 +24,9 @@ public:
 
     // ------------- getter ------------------
 
-    Float getScaleAll() const { return all_; }
-    Float getScaleX() const { return x_; }
-    Float getScaleY() const { return y_; }
-    Float getScaleZ() const { return z_; }
-
     // ------------ setter -------------------
 
-    void setScaleAll(Float s) { all_ = s; }
-    void setScaleX(Float s) { x_ = s; }
-    void setScaleY(Float s) { y_ = s; }
-    void setScaleZ(Float s) { z_ = s; }
-
 private:
-
-    Float all_, x_, y_, z_;
 };
 
 

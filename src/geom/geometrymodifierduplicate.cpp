@@ -18,12 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierDuplicate)
 
 GeometryModifierDuplicate::GeometryModifierDuplicate()
-    : GeometryModifier("Duplicate", QObject::tr("duplicate")),
-      equ_      ("x = x + 2 * dx;\n"
-                 "y = y + 2 * dy"),
-      numX_     (2),
-      numY_     (2),
-      numZ_     (1)
+    : GeometryModifier("Duplicate", QObject::tr("duplicate"))
 {
     properties().set(
         "equ", QObject::tr("equation"),
@@ -65,34 +60,35 @@ void GeometryModifierDuplicate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geoequdup", 2);
-
-    io << numX_ << numY_ << numZ_ << equ_;
+    io.writeHeader("geoequdup", 3);
 }
 
 void GeometryModifierDuplicate::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    const int ver = io.readHeader("geoequdup", 2);
+    const int ver = io.readHeader("geoequdup", 3);
 
-    uint numX, numY, numZ;
-    io >> numX >> numY >> numZ;
-
-    QString equ;
-    if (ver<2)
+    if (ver < 3)
     {
-        QString equx, equy, equz;
-        io >> equx >> equy >> equz;
-        equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
-    }
-    else
-        io >> equ;
+        uint numX, numY, numZ;
+        io >> numX >> numY >> numZ;
 
-    properties().set("equ", equ);
-    properties().set("numX", numX);
-    properties().set("numY", numY);
-    properties().set("numZ", numZ);
+        QString equ;
+        if (ver<2)
+        {
+            QString equx, equy, equz;
+            io >> equx >> equy >> equz;
+            equ = "x = " + equx + ";\ny = " + equy + ";\nz = " + equz;
+        }
+        else
+            io >> equ;
+
+        properties().set("equ", equ);
+        properties().set("numX", numX);
+        properties().set("numY", numY);
+        properties().set("numZ", numZ);
+    }
 }
 
 void GeometryModifierDuplicate::execute(Geometry *g)

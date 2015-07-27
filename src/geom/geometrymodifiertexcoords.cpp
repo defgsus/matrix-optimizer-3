@@ -18,14 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierTexCoords)
 
 GeometryModifierTexCoords::GeometryModifierTexCoords()
-    : GeometryModifier("TexCoords", QObject::tr("texture coordinates")),
-      offsetX_  (0.0),
-      offsetY_  (0.0),
-      scaleX_   (1.0),
-      scaleY_   (1.0),
-      invertX_  (false),
-      invertY_  (false),
-      doMapTri_ (false)
+    : GeometryModifier("TexCoords", QObject::tr("texture coordinates"))
 {
     properties().set(
         "doMapTri", QObject::tr("map triangles"),
@@ -68,39 +61,36 @@ void GeometryModifierTexCoords::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geotexcoords", 2);
-
-    io << offsetX_ << offsetY_
-       << scaleX_ << scaleY_
-       << invertX_ << invertY_;
-
-    io << doMapTri_;
+    io.writeHeader("geotexcoords", 3);
 }
 
 void GeometryModifierTexCoords::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    const auto ver = io.readHeader("geotexcoords", 2);
+    const auto ver = io.readHeader("geotexcoords", 3);
 
-    Float offsetX, offsetY,
-          scaleX, scaleY;
-    bool invertX, invertY, doMapTri=false;
+    if (ver < 3)
+    {
+        Float offsetX, offsetY,
+              scaleX, scaleY;
+        bool invertX, invertY, doMapTri=false;
 
-    io >> offsetX >> offsetY
-       >> scaleX >> scaleY
-       >> invertX >> invertY;
+        io >> offsetX >> offsetY
+           >> scaleX >> scaleY
+           >> invertX >> invertY;
 
-    if (ver >= 2)
-        io >> doMapTri;
+        if (ver >= 2)
+            io >> doMapTri;
 
-    properties().set("offsetX", offsetX);
-    properties().set("offsetY", offsetY);
-    properties().set("scaleX", scaleX);
-    properties().set("scaleY", scaleY);
-    properties().set("invertX", invertX);
-    properties().set("invertY", invertY);
-    properties().set("doMapTri", doMapTri);
+        properties().set("offsetX", offsetX);
+        properties().set("offsetY", offsetY);
+        properties().set("scaleX", scaleX);
+        properties().set("scaleY", scaleY);
+        properties().set("invertX", invertX);
+        properties().set("invertY", invertY);
+        properties().set("doMapTri", doMapTri);
+    }
 }
 
 void GeometryModifierTexCoords::execute(Geometry *g)

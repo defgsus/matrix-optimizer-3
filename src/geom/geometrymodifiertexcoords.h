@@ -25,28 +25,10 @@ public:
 
     // ------------- getter ------------------
 
-    Float getOffsetX() const { return offsetX_; }
-    Float getOffsetY() const { return offsetY_; }
-    Float getScaleX() const { return scaleX_; }
-    Float getScaleY() const { return scaleY_; }
-    bool getInvertX() const { return invertX_; }
-    bool getInvertY() const { return invertY_; }
-    bool getDoMapTriangles() const { return doMapTri_; }
-
     // ------------ setter -------------------
-
-    void setDoMapTriangles(bool e) { doMapTri_ = e; }
-    void setOffsetX(Float s) { offsetX_ = s; }
-    void setOffsetY(Float s) { offsetY_ = s; }
-    void setScaleX(Float s) { scaleX_ = s; }
-    void setScaleY(Float s) { scaleY_ = s; }
-    void setInvertX(bool i) { invertX_ = i; }
-    void setInvertY(bool i) { invertY_ = i; }
 
 private:
 
-    Float offsetX_, offsetY_, scaleX_, scaleY_;
-    bool invertX_, invertY_, doMapTri_;
 };
 
 

@@ -288,10 +288,11 @@ void FrontDisplayFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * 
 
         // alignment
         p_->labelRect = metrics.boundingRect(text);
-        p_->labelRect = Properties::align(p_->labelRect, rect(),
+        /*p_->labelRect = Properties::align(p_->labelRect, rect(),
                                          properties().get("value-label-align").value<Properties::Alignment>(),
                                          properties().get("value-label-margin").toInt(),
                                          properties().get("value-label-outside").toBool());
+                                         */
         //rec.moveTop(rec.top() + metrics.height());
 
         // draw

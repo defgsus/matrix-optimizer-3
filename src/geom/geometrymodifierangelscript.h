@@ -27,15 +27,9 @@ public:
 
     // ------------- getter ------------------
 
-    const QString& script() const { return script_; }
-
     // ------------ setter -------------------
 
-    void setScript(const QString& script) { script_ = script; }
-
 private:
-
-    QString script_;
 };
 
 

@@ -18,9 +18,7 @@ namespace GEOM {
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierNormals)
 
 GeometryModifierNormals::GeometryModifierNormals()
-    : GeometryModifier("Normals", QObject::tr("normal modification")),
-      calc_     (true),
-      invert_   (false)
+    : GeometryModifier("Normals", QObject::tr("normal modification"))
 {
     properties().set(
         "tri", QObject::tr("from triangles"),
@@ -42,21 +40,22 @@ void GeometryModifierNormals::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geonormal", 1);
-
-    io << calc_ << invert_;
+    io.writeHeader("geonormal", 2);
 }
 
 void GeometryModifierNormals::deserialize(IO::DataStream &io)
 {
     GeometryModifier::deserialize(io);
 
-    io.readHeader("geonormal", 1);
+    const int ver = io.readHeader("geonormal", 2);
 
-    bool calc, invert;
-    io >> calc >> invert;
-    properties().set("tri", calc);
-    properties().set("invert", invert);
+    if (ver < 2)
+    {
+        bool calc, invert;
+        io >> calc >> invert;
+        properties().set("tri", calc);
+        properties().set("invert", invert);
+    }
 }
 
 

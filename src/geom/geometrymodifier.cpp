@@ -34,16 +34,22 @@ GeometryModifier::GeometryModifier(const QString &className, const QString &guiN
 
 void GeometryModifier::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("geommod", 1);
+    io.writeHeader("geommod", 2);
 
     io << p_enabled_;
+
+    // v2
+    properties().serialize(io);
 }
 
 void GeometryModifier::deserialize(IO::DataStream &io)
 {
-    io.readHeader("geommod", 1);
+    const int ver = io.readHeader("geommod", 2);
 
     io >> p_enabled_;
+
+    if (ver >= 2)
+        properties().deserialize(io);
 }
 
 

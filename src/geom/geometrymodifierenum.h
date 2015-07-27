@@ -24,18 +24,10 @@ public:
 
     // ------------- getter ------------------
 
-    bool getDoIndex() const { return doIndex_; }
-    const QString& getIndexName() const { return indexName_; }
-
     // ------------ setter -------------------
-
-    void setDoIndex(bool e) { doIndex_ = e; }
-    void setIndexName(const QString& n) { indexName_ = n; }
 
 private:
 
-    bool doIndex_;
-    QString indexName_;
 };
 
 
