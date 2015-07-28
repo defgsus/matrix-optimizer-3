@@ -43,13 +43,13 @@ public:
         T_TORUS,
         T_UV_SPHERE,
         T_GRID_XZ,
-        T_LINE_GRID,
         T_POINT_GRID,
+        T_LINE_GRID,
         T_QUAD_GRID
     };
-    static const uint numTypes = T_QUAD_GRID + 1;
+    static Properties::NamedValues namedTypes();
+    /** XXX For backward compatibility - since Properties */
     static const QStringList typeIds;
-    static const QStringList typeNames;
 
     MO_GEOMETRYMODIFIER_CONSTRUCTOR(GeometryModifierCreate)
 

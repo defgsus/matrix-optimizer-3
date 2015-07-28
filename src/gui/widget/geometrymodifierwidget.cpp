@@ -161,13 +161,14 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
             this, SLOT(updateFromWidgets_()));
 
     // -------- create widgets for specific modifier class -----------
-
+/*
     if (auto creator = dynamic_cast<GEOM::GeometryModifierCreate*>(modifier_))
     {
         createCreatorWidgets_(creator);
     }
 
     else
+    */
     {
         propView_->setProperties( modifier_->properties() );
         connect(propView_, SIGNAL(propertyChanged(QString)),
@@ -773,6 +774,7 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
 
 void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate * settings)
 {
+#if 0
     // geometry type
     auto comboType = new QComboBox(this);
     group_->addWidget(comboType);
@@ -1042,7 +1044,7 @@ void GeometryModifierWidget::createCreatorWidgets_(GEOM::GeometryModifierCreate 
 
         //ignoreUpdates = false;
     };
-
+#endif
 }
 
 

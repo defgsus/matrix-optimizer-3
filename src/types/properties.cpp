@@ -115,9 +115,75 @@ const Properties::NamedStates Properties::alignmentStates = Properties::NamedSta
 
 #endif
 
+// --------------------- Properties::NamedValues ------------------------------
 
+bool Properties::NamedValues::hasValue(const QVariant &v) const
+{
+    for (auto & val : p_val_)
+        if (val.v == v)
+            return true;
+    return false;
+}
+
+const Properties::NamedValues::Value&
+    Properties::NamedValues::getByValue(const QVariant &v) const
+{
+    for (auto & val : p_val_)
+        if (val.v == v)
+            return val;
+
+    static Value invalid;
+    return invalid;
+}
+
+const Properties::NamedValues::Value&
+    Properties::NamedValues::get(const QString &id) const
+{
+    auto i = p_val_.find(id);
+    static Value invalid;
+    return i == p_val_.end() ? invalid : i.value();
+}
+
+
+void Properties::NamedValues::set(
+        const QString &id, const QString &name, const QString &statusTip,
+        const QVariant &v)
+{
+    auto i = p_val_.find(id);
+    if (i != p_val_.end())
+    {
+        i.value().id = id;
+        i.value().name = name;
+        i.value().tip = statusTip;
+        i.value().v = v;
+    }
+    else
+    {
+        Value val;
+        val.id = id;
+        val.name = name;
+        val.tip = statusTip;
+        val.v = v;
+        p_val_.insert(id, val);
+    }
+}
+
+void Properties::NamedValues::set(
+        const QString &id, const QString &name,
+        const QVariant &v)
+{
+    set(id, name, "", v);
+}
+
+
+bool Properties::Property::hasNamedValues() const
+{
+    return !p_nv_.p_val_.isEmpty();
+}
 
 // ---------------------------- Properties ------------------------------------
+
+const int Properties::subTypeMask = 0xfff;
 
 Properties::Properties()
 {
@@ -424,6 +490,11 @@ int Properties::getSubType(const QString &id) const
     #undef MO__GETTER
 }
 
+
+
+
+
+
 void Properties::set(const QString &id, const QVariant & v)
 {
     MO_DEBUG_PROP("Properties::set '" << id << "': " << v << " type "
@@ -440,6 +511,7 @@ void Properties::set(const QString &id, const QVariant & v)
     MO__GETPROP
     i.value().p_val_ = v;
 }
+
 
 void Properties::setDefault(const QString &id, const QVariant & v)
 {
@@ -505,6 +577,12 @@ void Properties::setSubType(const QString &id, int v)
     i.value().p_subType_ = v;
 }
 
+void Properties::setNamedValues(const QString &id, const NamedValues &names)
+{
+    MO_DEBUG_PROP("Properties::setNamedValues '" << id << "'");
+    MO__GETPROP
+    i.value().p_nv_ = names;
+}
 
 bool Properties::change(const QString &id, const QVariant & v)
 {

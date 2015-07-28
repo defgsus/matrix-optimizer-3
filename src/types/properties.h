@@ -18,6 +18,8 @@
 namespace MO {
 namespace IO { class DataStream; class XmlStream; }
 
+
+
 /** Generic property container.
     This thing supports all QVariant types.
     Extending QVariant types is a bit tricky though.
@@ -36,6 +38,48 @@ public:
 
     // --------------- types --------------------
 
+    enum SubType
+    {
+        ST_ANY = 0,
+        ST_TEXT = 0x1000,
+        ST_FILENAME = 0x2000
+    };
+    static const int subTypeMask;
+
+
+    /** A class for handling persistent
+        choose-one-of-different-values properties */
+    class NamedValues
+    {
+    public:
+        struct Value
+        {
+            bool isValid() const { return v.isValid(); }
+            QString id, name, tip;
+            QVariant v;
+        };
+
+        bool has(const QString &id) const { return p_val_.contains(id); }
+        bool hasValue(const QVariant &v) const;
+        /** Returns the Value for id, or an invalid Value */
+        const Value& get(const QString& id) const;
+        /** Returns the Value matching v, or an invalid Value */
+        const Value& getByValue(const QVariant& v) const;
+
+        void set(const QString& id, const QString& name,
+                 const QVariant& v);
+        void set(const QString& id, const QString& name,
+                 const QString& statusTip, const QVariant& v);
+
+        QMap<QString, Value>::const_iterator begin() const { return p_val_.cbegin(); }
+        QMap<QString, Value>::const_iterator end() const { return p_val_.cend(); }
+
+    private:
+        friend Properties;
+        QMap<QString, Value> p_val_;
+    };
+
+
     struct Property
     {
         Property() : p_subType_(-1) { }
@@ -53,6 +97,10 @@ public:
 
         int subType() const { return p_subType_; }
 
+        bool hasNamedValues() const;
+        /** Associated NamedValues class, if any */
+        const NamedValues& namedValues() const { return p_nv_; }
+
     private:
         friend class Properties;
         QVariant
@@ -65,11 +113,12 @@ public:
             p_name_,
             p_tip_;
         int p_subType_;
+        NamedValues p_nv_;
     };
-
 
     /** The default key/value map used for all Properties */
     typedef QMap<QString, Property> Map;
+
 
 #if 0
     /** Helper for value lists,
@@ -206,8 +255,10 @@ public:
     QString getName(const QString& id) const;
     QString getTip(const QString& id) const;
     /** Returns the subtype of the value.
-        Some value types may have a associated type:
-        QString: MO::TextType (in object/object_fwd.h)
+        Some value types may have a associated sub-type:
+        QString:
+            ST_TEXT | MO::TextType (in object/object_fwd.h)
+            ST_FILENAME | MO::IO::FileType (in io/filetypes.h)
         @returns -1 if not defined.
     */
     int getSubType(const QString& id) const;
@@ -241,24 +292,22 @@ public:
     void clear(const QString& id);
 
     /* Starts a new group. Adding a new property with set() will assign
-        the property to this group */
-    void beginGroup(const QString&);
+        the property to this group
+        XXX Not implemented */
+    //void beginGroup(const QString&);
 
     /* Ends a property group. Same as calling beginGroup(""); */
-    void endGroup() { beginGroup(""); }
+    //void endGroup() { beginGroup(""); }
 
     /** Sets the given property (and default value) */
     void set(const QString& id, const QVariant& v);
-    /** Sets the given property.
-        Helper to make sure, that user-extended QVariants get caught. */
-    template <class T>
-    void set(const QString& id, const T& v) { set(id, QVariant::fromValue(v)); }
 
-    /** @{ */
-    /** Initializers for integral or float types */
     template <class T>
     void set(const QString& id, const QString& name, const QString& statusTip,
              const T& defaultValue);
+
+    /** @{ */
+    /** Initializers for integral or float types */
 
     template <class T>
     void set(const QString& id, const QString& name, const QString& statusTip,
@@ -273,10 +322,23 @@ public:
              const T& defaultValue, const T& minimum, const T& maximum, const T& step);
     /** @} */
 
-    /** Initializer for selectable values, e.g. enum lists and such */
+
+    /** @{ */
+    /** NamedValues */
+
+    template <class T>
     void set(const QString& id, const QString& name, const QString& statusTip,
-             const QStringList& valueIds, const QVariantList& values,
-             const QStringList& valueStatusTips);
+             const NamedValues& names, const T& v);
+
+    /* Initializer for selectable values, e.g. enum lists and such */
+    /*void set(const QString& id, const QString& name, const QString& statusTip,
+             const QStringList& valueIds,
+             const QStringList& valueNames,
+             const QVariantList& values,
+             const QStringList& valueStatusTips = QStringList());*/
+
+    /** @} */
+
 
     /** Sets the given default value */
     void setDefault(const QString& id, const QVariant& v);
@@ -287,13 +349,28 @@ public:
     void setName(const QString& id, const QString& name);
     void setTip(const QString& id, const QString& statusTip);
     void setSubType(const QString& id, int t);
+    void setNamedValues(const QString& id, const NamedValues& names);
 
     /** Sets the given property if existing. */
     bool change(const QString& id, const QVariant& v);
-    /** Sets the given property if existing.
-        Helper to make sure, that user-extended QVariants get caught. */
+
+    /** @{ */
+    /** Helper to make sure, that user-extended QVariants get caught. */
+    template <class T>
+    void set(const QString& id, const T& v) { set(id, QVariant::fromValue(v)); }
     template <class T>
     bool change(const QString& id, const T& v) { return change(id, QVariant::fromValue(v)); }
+    template <class T>
+    void setDefault(const QString& id, const T& v) { setDefault(id, QVariant::fromValue(v)); }
+    template <class T>
+    void setMin(const QString& id, const T& v) { setMin(id, QVariant::fromValue(v)); }
+    template <class T>
+    void setMax(const QString& id, const T& v) { setMax(id, QVariant::fromValue(v)); }
+    template <class T>
+    void setRange(const QString& id, const T& mi, const T& ma) { setRange(id, QVariant::fromValue(mi), QVariant::fromValue(ma)); }
+    template <class T>
+    void setStep(const QString& id, const T& v) { setStep(id, QVariant::fromValue(v)); }
+    /** @} */
 
     /** Copy all values from @p other.
         This creates or overwrites values for each value contained in @p other. */
@@ -320,9 +397,7 @@ private:
 } // namespace MO
 
 
-// [add new NamedStates here]
-
-//Q_DECLARE_METATYPE(MO::Properties::Alignment)
+//Q_DECLARE_METATYPE(MO::Properties::NamedValues)
 
 
 // --------- templ impl. ------------------
@@ -357,8 +432,7 @@ void Properties::set(
     set(id, defaultValue);
     setName(id, name);
     setTip(id, statusTip);
-    setMin(id, minimum);
-    setMax(id, maximum);
+    setRange(id, minimum, maximum);
 }
 
 template <class T>
@@ -369,9 +443,19 @@ void Properties::set(
     set(id, defaultValue);
     setName(id, name);
     setTip(id, statusTip);
-    setMin(id, minimum);
-    setMax(id, maximum);
+    setRange(id, minimum, maximum);
     setStep(id, step);
+}
+
+template <class T>
+void Properties::set(
+        const QString& id, const QString& name, const QString& statusTip,
+        const NamedValues& names, const T& v)
+{
+    set(id, v);
+    setName(id, name);
+    setTip(id, statusTip);
+    setNamedValues(id, names);
 }
 
 } // namespace MO

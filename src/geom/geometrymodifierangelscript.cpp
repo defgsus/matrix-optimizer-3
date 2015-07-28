@@ -41,7 +41,7 @@ GeometryModifierAngelScript::GeometryModifierAngelScript()
         "script", QObject::tr("angelscript"),
         QObject::tr("A piece of code to freely create/modify the geometry"),
         script);
-    properties().setSubType("script", TT_ANGELSCRIPT);
+    properties().setSubType("script", Properties::ST_TEXT | TT_ANGELSCRIPT);
 }
 
 QString GeometryModifierAngelScript::statusTip() const

@@ -22,6 +22,33 @@ namespace GEOM {
 
 MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierCreate)
 
+Properties::NamedValues GeometryModifierCreate::namedTypes()
+{
+    Properties::NamedValues val;
+    val.set("file", QObject::tr("Wavefront Object (obj"), T_FILE_OBJ);
+#ifndef MO_DISABLE_SHP
+    val.set("shp", QObject::tr("Wavefront Object (obj"), T_FILE_OBJ);
+#endif
+    val.set("quad", QObject::tr("quad"), T_QUAD);
+    val.set("tetra", QObject::tr("tetrahedron"), T_TETRAHEDRON);
+    val.set("hexa", QObject::tr("hexahedron (cube)"), T_BOX);
+    val.set("hexauv", QObject::tr("hexahedron (cube) (full uv-map)"), T_BOX_UV);
+    val.set("octa", QObject::tr("octahedron"), T_OCTAHEDRON);
+    val.set("icosa", QObject::tr("icosahedron"), T_ICOSAHEDRON);
+    val.set("dodeca", QObject::tr("dodecahedron"), T_DODECAHEDRON);
+    val.set("cyl", QObject::tr("cylinder"), T_CYLINDER_CLOSED);
+    val.set("cylo", QObject::tr("cylinder (open)"), T_CYLINDER_OPEN);
+    val.set("cone", QObject::tr("cone"), T_CONE_CLOSED);
+    val.set("coneo", QObject::tr("cone (open)"), T_CONE_OPEN);
+    val.set("torus", QObject::tr("torus"), T_TORUS);
+    val.set("uvsphere", QObject::tr("uv-sphere"), T_UV_SPHERE);
+    val.set("gridxz", QObject::tr("coordinate system"), T_GRID_XZ);
+    val.set("pgrid", QObject::tr("point grid"), T_POINT_GRID);
+    val.set("lgrid", QObject::tr("line grid"), T_LINE_GRID);
+    val.set("qgrid", QObject::tr("quad grid"), T_QUAD_GRID);
+    return val;
+};
+
 const QStringList GeometryModifierCreate::typeIds =
 {
     "file",
@@ -31,11 +58,9 @@ const QStringList GeometryModifierCreate::typeIds =
     "quad",
     "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
     "cyl", "cylo", "cone", "coneo", "torus", "uvsphere",
-    "gridxz", "lgrid", "pgrid", "qgrid"
+    "gridxz", "pgrid", "lgrid", "qgrid"
 };
-
-const QStringList GeometryModifierCreate::typeNames =
-{
+/*
     QObject::tr("Wavefront Object (obj)"),
 #ifndef MO_DISABLE_SHP
     QObject::tr("Shapefile (shp)"),
@@ -58,6 +83,7 @@ const QStringList GeometryModifierCreate::typeNames =
     QObject::tr("point-grid"),
     QObject::tr("quad-grid")
 };
+*/
 
 GeometryModifierCreate::GeometryModifierCreate()
     : GeometryModifier  ("Create", QObject::tr("create")),
@@ -73,7 +99,40 @@ GeometryModifierCreate::GeometryModifierCreate()
       segmentsZ_        (1),
       smallRadius_      (0.3)
 {
+    properties().set("type", QObject::tr("type"),
+                     QObject::tr("The type of geometry, source or file"),
+                     namedTypes(), int(T_BOX_UV));
 
+    properties().set("filename-obj", QObject::tr("obj filename"),
+                     QObject::tr("The Wavefront object file to load"),
+                     QString());
+    properties().setSubType("filename-obj",
+                            Properties::ST_FILENAME | IO::FT_MODEL);
+
+    properties().set("filename-shp", QObject::tr("shp filename"),
+                     QObject::tr("The shapefile to load"),
+                     QString());
+    properties().setSubType("filename-shp",
+                            Properties::ST_FILENAME | IO::FT_SHAPEFILE);
+
+    properties().set("asTriangles", QObject::tr("create triangles"),
+                     QObject::tr("Selects lines or triangles"),
+                     true);
+    properties().set("shared", QObject::tr("shared vertices"),
+                     QObject::tr("Minimizes the amount of vertices by "
+                                 "reusing the same for adjacent primitives"),
+                     true);
+
+    properties().set("color", QObject::tr("ambient color"),
+                     QObject::tr("The base color of the geometry"),
+                     QVector<Float>() << .5f << .5f << .5f << 1.f,
+                     QVector<Float>() << 0.f << 0.f << 0.f << 0.f,
+                     QVector<Float>() << 1.f << 1.f << 1.f << 1.f,
+                     QVector<Float>() << .1f << .1f << .1f << .1f);
+
+    properties().set("segments", QObject::tr("number segments"),
+                     QObject::tr("Number of segments on x, y, z"),
+                     QVector<uint>() << 10 << 10 << 1);
 }
 
 QString GeometryModifierCreate::statusTip() const
