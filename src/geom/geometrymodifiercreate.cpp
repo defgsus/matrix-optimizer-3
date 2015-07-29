@@ -25,9 +25,9 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierCreate)
 Properties::NamedValues GeometryModifierCreate::namedTypes()
 {
     Properties::NamedValues val;
-    val.set("file", QObject::tr("Wavefront Object (obj"), T_FILE_OBJ);
+    val.set("file", QObject::tr("Wavefront Object (obj)"), T_FILE_OBJ);
 #ifndef MO_DISABLE_SHP
-    val.set("shp", QObject::tr("Wavefront Object (obj"), T_FILE_OBJ);
+    val.set("shp", QObject::tr("Shapefile (shp)"), T_FILE_OBJ);
 #endif
     val.set("quad", QObject::tr("quad"), T_QUAD);
     val.set("tetra", QObject::tr("tetrahedron"), T_TETRAHEDRON);
@@ -60,44 +60,9 @@ const QStringList GeometryModifierCreate::typeIds =
     "cyl", "cylo", "cone", "coneo", "torus", "uvsphere",
     "gridxz", "pgrid", "lgrid", "qgrid"
 };
-/*
-    QObject::tr("Wavefront Object (obj)"),
-#ifndef MO_DISABLE_SHP
-    QObject::tr("Shapefile (shp)"),
-#endif
-    QObject::tr("quad"),
-    QObject::tr("tetrahedron"),
-    QObject::tr("hexahedron (cube)"),
-    QObject::tr("hexahedron (cube) uv-mapped"),
-    QObject::tr("octahedron"),
-    QObject::tr("icosahedron"),
-    QObject::tr("dodecahedron"),
-    QObject::tr("cylinder (closed)"),
-    QObject::tr("cylinder (open)"),
-    QObject::tr("cone (closed)"),
-    QObject::tr("cone (open)"),
-    QObject::tr("torus"),
-    QObject::tr("uv-sphere"),
-    QObject::tr("coordinate system"),
-    QObject::tr("line-grid"),
-    QObject::tr("point-grid"),
-    QObject::tr("quad-grid")
-};
-*/
 
 GeometryModifierCreate::GeometryModifierCreate()
-    : GeometryModifier  ("Create", QObject::tr("create")),
-      type_             (T_BOX_UV),
-      asTriangles_      (true),
-      sharedVertices_   (true),
-      colorR_           (0.5),
-      colorG_           (0.5),
-      colorB_           (0.5),
-      colorA_           (1.0),
-      segmentsX_        (10),
-      segmentsY_        (10),
-      segmentsZ_        (1),
-      smallRadius_      (0.3)
+    : GeometryModifier  ("Create", QObject::tr("create"))
 {
     properties().set("type", QObject::tr("type"),
                      QObject::tr("The type of geometry, source or file"),
@@ -122,6 +87,13 @@ GeometryModifierCreate::GeometryModifierCreate()
                      QObject::tr("Minimizes the amount of vertices by "
                                  "reusing the same for adjacent primitives"),
                      true);
+    properties().set("radius", QObject::tr("radius"),
+                     QObject::tr("The radius of the object to create"),
+                     true);
+
+    properties().set("segments", QObject::tr("number segments"),
+                     QObject::tr("Number of segments on x, y, z"),
+                     QVector<uint>() << 10 << 10 << 1);
 
     properties().set("color", QObject::tr("ambient color"),
                      QObject::tr("The base color of the geometry"),
@@ -129,11 +101,22 @@ GeometryModifierCreate::GeometryModifierCreate()
                      QVector<Float>() << 0.f << 0.f << 0.f << 0.f,
                      QVector<Float>() << 1.f << 1.f << 1.f << 1.f,
                      QVector<Float>() << .1f << .1f << .1f << .1f);
-
-    properties().set("segments", QObject::tr("number segments"),
-                     QObject::tr("Number of segments on x, y, z"),
-                     QVector<uint>() << 10 << 10 << 1);
 }
+
+bool GeometryModifierCreate::isFile() const
+{
+    Type t = (Type)properties().get("type").toInt();
+    return t == T_FILE_OBJ || t == T_FILE_SHP;
+}
+
+QString GeometryModifierCreate::filename() const
+{
+    Type t = (Type)properties().get("type").toInt();
+    return t == T_FILE_SHP
+            ? properties().get("filename-shp").toString()
+            : properties().get("filename-obj").toString();
+}
+
 
 QString GeometryModifierCreate::statusTip() const
 {
@@ -144,13 +127,7 @@ void GeometryModifierCreate::serialize(IO::DataStream &io) const
 {
     GeometryModifier::serialize(io);
 
-    io.writeHeader("geocreate", 1);
-
-    io << typeIds[type_];
-    io << filename_ << asTriangles_ << sharedVertices_
-       << colorR_ << colorG_ << colorB_ << colorA_
-       << segmentsX_ << segmentsY_ << segmentsZ_
-       << smallRadius_;
+    io.writeHeader("geocreate", 2);
 }
 
 void GeometryModifierCreate::deserialize(IO::DataStream &io)
@@ -161,119 +138,148 @@ void GeometryModifierCreate::deserialize(IO::DataStream &io)
 
     if (ver < 2)
     {
-        io.readEnum(type_, T_BOX_UV, typeIds);
-        io >> filename_ >> asTriangles_ >> sharedVertices_
-           >> colorR_ >> colorG_ >> colorB_ >> colorA_
-           >> segmentsX_ >> segmentsY_ >> segmentsZ_
-           >> smallRadius_;
+        Type type;
+        QString filename;
+        bool asTriangles, sharedVertices;
+        Float colorR, colorG, colorB, colorA, smallRadius;
+        uint segmentsX, segmentsY, segmentsZ;
+
+        io.readEnum(type, T_BOX_UV, typeIds);
+        io >> filename >> asTriangles >> sharedVertices
+           >> colorR >> colorG >> colorB >> colorA
+           >> segmentsX >> segmentsY >> segmentsZ
+           >> smallRadius;
+
+        properties().set("type", int(type));
+        if (filename.endsWith("obj"))
+            properties().set("filename-obj", filename);
+        else
+            properties().set("filename-shp", filename);
+        properties().set("asTriangles", asTriangles);
+        properties().set("shared", sharedVertices);
+        properties().set("radius", smallRadius);
+        properties().set("color", QVector<Float>()
+                         << colorR << colorG << colorB << colorA);
+        properties().set("segments" , QVector<uint>()
+                         << segmentsX << segmentsY << segmentsZ);
     }
 }
 
 void GeometryModifierCreate::execute(Geometry * g)
 {
-    //Geometry * g = new Geometry();
-    //ScopedDeleter<Geometry> auto_remove(g);
+    const bool
+            sharedVertices = properties().get("shared").toBool(),
+            asTriangles = properties().get("asTriangles").toBool();
+    const QVector<Float>
+            color = properties().get("color").value<QVector<Float>>();
+    const QVector<uint>
+            segments = properties().get("segments").value<QVector<uint>>();
+    const Float
+            smallRadius = properties().get("radius").toFloat();
+    const Type
+            type = (Type)properties().get("type").toInt();
+
 
     // shared vertices?
-    g->setSharedVertices(sharedVertices_);
+    g->setSharedVertices(sharedVertices);
 
     // initial color
-    g->setColor(colorR_, colorG_, colorB_, colorA_);
+    g->setColor(color[0], color[1], color[2], color[3]);
 
     // create mesh
-    switch (type_)
+    switch (type)
     {
     case T_FILE_OBJ:
-        if (!filename_.isEmpty())
-            ObjLoader::getGeometry(IO::fileManager().localFilename(filename_), g);
+        if (!properties().get("filename-obj").toString().isEmpty())
+            ObjLoader::getGeometry(IO::fileManager().localFilename(
+                            properties().get("filename-obj").toString()), g);
     break;
 
 #ifndef MO_DISABLE_SHP
     case T_FILE_SHP:
-        if (!filename_.isEmpty())
-            ShpLoader::getGeometry(IO::fileManager().localFilename(filename_), g,
+        if (!properties().get("filename-shp").toString().isEmpty())
+            ShpLoader::getGeometry(IO::fileManager().localFilename(
+                    properties().get("filename-shp").toString()), g,
                                    [=](double p){ setProgress(p); });
     break;
 #endif
 
     case T_QUAD:
-        GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles_);
+        GeometryFactory::createQuad(g, 1.f, 1.f, asTriangles);
     break;
 
     case T_BOX:
-        GeometryFactory::createCube(g, 1.f, asTriangles_);
+        GeometryFactory::createCube(g, 1.f, asTriangles);
     break;
 
     case T_BOX_UV:
         GeometryFactory::createTexturedBox(g, 1.f, 1.f, 1.f);
-        if (!asTriangles())
+        if (!asTriangles)
             g->convertToLines();
     break;
 
     case T_GRID_XZ:
-        GeometryFactory::createGridXZ(g, segmentsX_, segmentsY_, true);
+        GeometryFactory::createGridXZ(g, segments[0], segments[1], true);
     break;
 
     case T_LINE_GRID:
-        GeometryFactory::createLineGrid(g, segmentsX_, segmentsY_, segmentsZ_);
+        GeometryFactory::createLineGrid(g, segments[0], segments[1], segments[2]);
     break;
 
     case T_POINT_GRID:
-        GeometryFactory::createPointGrid(g, segmentsX_, segmentsY_, segmentsZ_);
+        GeometryFactory::createPointGrid(g, segments[0], segments[1], segments[2]);
     break;
 
     case T_QUAD_GRID:
-        GeometryFactory::createQuadGrid(g, segmentsX_, segmentsY_, segmentsZ_);
+        GeometryFactory::createQuadGrid(g, segments[0], segments[1], segments[2]);
     break;
 
     case T_UV_SPHERE:
-        GeometryFactory::createUVSphere(g, 1.f, std::max((uint)3, segmentsX_),
-                               std::max((uint)2, segmentsY_), asTriangles_);
+        GeometryFactory::createUVSphere(g, 1.f, std::max((uint)3, segments[0]),
+                               std::max((uint)2, segments[1]), asTriangles);
     break;
 
     case T_TETRAHEDRON:
-        GeometryFactory::createTetrahedron(g, 1.f, asTriangles_);
+        GeometryFactory::createTetrahedron(g, 1.f, asTriangles);
     break;
 
     case T_OCTAHEDRON:
-        GeometryFactory::createOctahedron(g, 1.f, asTriangles_);
+        GeometryFactory::createOctahedron(g, 1.f, asTriangles);
     break;
 
     case T_ICOSAHEDRON:
-        GeometryFactory::createIcosahedron(g, 1.f, asTriangles_);
+        GeometryFactory::createIcosahedron(g, 1.f, asTriangles);
     break;
 
     case T_DODECAHEDRON:
-        GeometryFactory::createDodecahedron(g, 1.f, asTriangles_);
+        GeometryFactory::createDodecahedron(g, 1.f, asTriangles);
     break;
 
     case T_CYLINDER_CLOSED:
-        GeometryFactory::createCylinder(g, 1.f, 1.f, segmentsX_, segmentsY_, false, asTriangles_);
+        GeometryFactory::createCylinder(g, 1.f, 1.f, segments[0], segments[1], false, asTriangles);
     break;
 
     case T_CYLINDER_OPEN:
-        GeometryFactory::createCylinder(g, 1.f, 1.f, segmentsX_, segmentsY_, true, asTriangles_);
+        GeometryFactory::createCylinder(g, 1.f, 1.f, segments[0], segments[1], true, asTriangles);
     break;
 
     case T_CONE_CLOSED:
-        GeometryFactory::createCone(g, 1.f, 1.f, segmentsX_, false, asTriangles_);
+        GeometryFactory::createCone(g, 1.f, 1.f, segments[0], false, asTriangles);
     break;
 
     case T_CONE_OPEN:
-        GeometryFactory::createCone(g, 1.f, 1.f, segmentsX_, true, asTriangles_);
+        GeometryFactory::createCone(g, 1.f, 1.f, segments[0], true, asTriangles);
     break;
 
     case T_TORUS:
-        GeometryFactory::createTorus(g, 1.f, smallRadius_, segmentsX_, segmentsY_, asTriangles_);
+        GeometryFactory::createTorus(g, 1.f, smallRadius, segments[0], segments[1], asTriangles);
     break;
 
     }
 
     // unshared-vertices for non-files
-    if (!sharedVertices_ && type_ != T_FILE_OBJ)
+    if (!sharedVertices && type != T_FILE_OBJ && type != T_FILE_SHP)
         g->unGroupVertices();
-
-    //geometry->addGeometry(*g);
 }
 
 

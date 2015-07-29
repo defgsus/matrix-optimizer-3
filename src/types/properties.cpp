@@ -209,7 +209,7 @@ void Properties::clear(const QString &id)
 
 void Properties::serialize(IO::DataStream & io) const
 {
-    io.writeHeader("props", 2);
+    io.writeHeader("props", 1);
 
     // Note: Reimplementation of QDataStream << QMap<QString,QVariant>
     // because overloading operator << does not catch enums
@@ -218,43 +218,45 @@ void Properties::serialize(IO::DataStream & io) const
     {
         io << i.key();
 
+        // store id of named values
+        if (i.value().hasNamedValues())
+        {
+            auto nv = i.value().namedValues().getByValue(
+                        i.value().value());
+            io << qint8(1) << nv.id;
+        }
+
         // non-user types use the QVariant version
+        else
         if (QMetaType::Type(i.value().value().type()) < QMetaType::User)
             io << qint8(0) << i.value().value();
-#if 0
+
+        // handle special compound types
+        else
+#define MO__IO(type__, flag__) \
+        if (!strcmp(i.value().value().typeName(), #type__)) \
+        { \
+            io << qint8(flag__) \
+               << i.value().value().value<type__>(); \
+        }
+        MO__IO(QVector<float>, 24)
+        else
+        MO__IO(QVector<uint>, 25)
         else
         {
-            // NamedStates
-            if (auto ns = getNamedStates(i.value().value()))
-            {
-                io << qint8(1)
-                // store state group
-                   << ns->name()
-                // store value id string
-                   << ns->id(i.value().value());
-            }
-            else
-            {
-                io << qint8(-1);
-                MO_WARNING("Properties::serialize() unhandled QVariant '"
-                           << i.value().typeName() << "'");
-            }
+            io << qint8(-1);
+            MO_IO_WARNING(WRITE, "Properties::serialize() unhandled QVariant '"
+                       << i.value().value().typeName() << "'");
         }
-#endif
+#undef MO__IO
+
     }
 }
 
 void Properties::deserialize(IO::DataStream & io)
 {
-    const auto ver = io.readHeader("props", 2);
-
-    if (ver < 2) /* there was ever only one scene file really.. */
-    {
-        QMap<QString, QVariant> dummy;
-        io >> dummy;
-        MO_WARNING("Properties::deserialize() ignoring version 1 ");
-        return;
-    }
+    //const auto ver =
+            io.readHeader("props", 1);
 
     // reconstruct map
     Map temp;
@@ -268,34 +270,60 @@ void Properties::deserialize(IO::DataStream & io)
         io >> key >> type;
         if (type == -1)
         {
-            MO_WARNING("Properties::deserialize() can't restore "
+            MO_IO_WARNING(READ, "Properties::deserialize() can't restore "
                        "unhandled QVariant for '" << key << "'");
             continue;
         }
+
+#define MO__IO(type__, flag__) \
+        if (type == flag__) \
+        { \
+            type__ val__; \
+            io >> val__; \
+            v = QVariant::fromValue(val__); \
+        }
+
         // default QVariant
         if (type == 0)
             io >> v;
-#if 0
-        // NamedState
+
+        // named values
         else if (type == 1)
         {
-            QString name, state;
-            io >> name >> state;
-
-            auto ns = getNamedStates(name);
-            if (!ns)
+            QString id;
+            io >> id;
+            if (!has(key))
             {
-                MO_WARNING("Properties::deserialize() ignoring unknown NamedStates '"
-                           << name << "' (with state '" << state << "')");
+                MO_IO_WARNING(READ, "Properties::deserialize() '" << key
+                              << "' unknown named-value, ignored");
                 continue;
             }
-            v = ns->value(state);
+            auto p = getProperty(id);
+            if (!p.hasNamedValues())
+            {
+                MO_IO_WARNING(READ, "Properties::deserialize() '" << key
+                              << "' is expected to be a named value but is not, ignored");
+                continue;
+            }
+            if (!p.namedValues().has(id))
+            {
+                MO_IO_WARNING(READ, "Properties::deserialize() '" << key
+                              << "' unknown named-value id '" << id << "', ignored");
+                continue;
+            }
+            v = p.namedValues().get(id).v;
         }
-#endif
+
+        // user types
+        else
+        MO__IO(QVector<float>, 24)
+        else
+        MO__IO(QVector<uint>, 25)
+
         // unknown
         else
         {
-            MO_WARNING("Properties::deserialize() ignoring unknown usertype " << type
+            MO_IO_WARNING(READ, "Properties::deserialize() ignoring unknown usertype " << type
                        << " for item '" << key << "'");
             continue;
         }
@@ -306,7 +334,10 @@ void Properties::deserialize(IO::DataStream & io)
     }
 
     // finally assign
-    p_map_.swap(temp);
+    for (auto i = temp.begin(); i != temp.end(); ++i)
+    {
+        set(i.key(), i.value().value());
+    }
 }
 
 void Properties::serialize(IO::XmlStream & io) const
@@ -324,9 +355,9 @@ void Properties::serialize(IO::XmlStream & io) const
                 // non-user types use the default QVariant version
                 if (QMetaType::Type(i.value().value().type()) < QMetaType::User)
                     io.write("v", i.value().value());
-#if 0
                 else
                 {
+#if 0
                     // NamedStates
                     if (auto ns = getNamedStates(i.value()))
                     {
@@ -336,12 +367,12 @@ void Properties::serialize(IO::XmlStream & io) const
                         io.write("nv", ns->id(i.value()));
                     }
                     else
+#endif
                     {
-                        MO_WARNING("Properties::serialize() unhandled QVariant '"
-                                   << i.value().typeName() << "'");
+                        MO_IO_WARNING(WRITE, "Properties::serialize() unhandled QVariant '"
+                                   << i.value().value().typeName() << "'");
                     }
                 }
-#endif
             io.endSection();
         }
 
@@ -506,6 +537,7 @@ void Properties::set(const QString &id, const QVariant & v)
     { \
         p_map_.insert(id, Property()); \
         i = p_map_.find(id); \
+        i.value().p_idx_ = p_map_.size()-1; \
     } \
 
     MO__GETPROP

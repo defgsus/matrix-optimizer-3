@@ -308,18 +308,16 @@ void GeometryFactorySettings::deserialize(IO::DataStream & io)
         // convert above stuff
 
         auto geom = new GeometryModifierCreate();
-        geom->setType(pre11Type);
-        geom->setAsTriangles(asTriangles);
-        geom->setSharedVertices(sharedVertices);
-        geom->setSegmentsX(segmentsX);
-        geom->setSegmentsY(segmentsY);
-        geom->setSegmentsZ(segmentsZ);
-        geom->setSmallRadius(smallRadius);
-        geom->setRed(colorR);
-        geom->setGreen(colorG);
-        geom->setBlue(colorB);
-        geom->setAlpha(colorA);
-        geom->setFilename(filename);
+        geom->properties().set("type", int(pre11Type));
+        geom->properties().set("asTriangles", asTriangles);
+        geom->properties().set("shared", sharedVertices);
+        geom->properties().set("radius", smallRadius);
+        geom->properties().set("filename-obj", filename);
+        geom->properties().set("filename-shp", filename);
+        geom->properties().set("segments", QVector<uint>()
+                     << segmentsX << segmentsY << segmentsZ);
+        geom->properties().set("color", QVector<Float>()
+                    << colorR << colorG << colorB << colorA);
 
         modifierChain_->insertModifier(geom, 0);
 

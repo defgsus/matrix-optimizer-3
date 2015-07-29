@@ -71,7 +71,9 @@ public:
         void set(const QString& id, const QString& name,
                  const QString& statusTip, const QVariant& v);
 
+        /** Access to values, sorted by id */
         QMap<QString, Value>::const_iterator begin() const { return p_val_.cbegin(); }
+        /** Access to values, sorted by id */
         QMap<QString, Value>::const_iterator end() const { return p_val_.cend(); }
 
     private:
@@ -82,7 +84,7 @@ public:
 
     struct Property
     {
-        Property() : p_subType_(-1) { }
+        Property() : p_subType_(-1), p_idx_(0) { }
 
         bool isValid() const { return !p_val_.isNull(); }
 
@@ -101,6 +103,9 @@ public:
         /** Associated NamedValues class, if any */
         const NamedValues& namedValues() const { return p_nv_; }
 
+        /** The order of creation */
+        int index() const { return p_idx_; }
+
     private:
         friend class Properties;
         QVariant
@@ -112,7 +117,8 @@ public:
         QString
             p_name_,
             p_tip_;
-        int p_subType_;
+        int p_subType_,
+            p_idx_;
         NamedValues p_nv_;
     };
 

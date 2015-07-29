@@ -21,7 +21,7 @@ namespace GUI {
 PropertiesView::PropertiesView(QWidget *parent)
     : QWidget       (parent)
     , p_props_      (new Properties)
-    , p_lv_         (0)
+    , p_lg_         (0)
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
@@ -70,12 +70,12 @@ void PropertiesView::createWidgtes_()
     }
     p_widgets_.clear();
 
-    if (!p_lv_)
+    if (!p_lg_)
     {
         // layout for property widgets
-        p_lv_ = new QVBoxLayout(this);
-        p_lv_->setMargin(1);
-        p_lv_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+        p_lg_ = new QGridLayout(this);
+        p_lg_->setMargin(1);
+        p_lg_->setSizeConstraint(QLayout::SetMinAndMaxSize);
     }
 
     // create one for each property
@@ -88,7 +88,7 @@ void PropertiesView::createWidgtes_()
         p_widgets_.insert(i.key(), widget);
 
         // install in layout
-        p_lv_->addWidget(widget);
+        p_lg_->addWidget(widget, i.value().index(), 0, 1, 1);
 
         // connect signals
         QString key = i.key();

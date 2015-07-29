@@ -138,7 +138,7 @@ void GeometryModifierChain::getNeededFiles(IO::FileList &files) const
 {
     for (auto m : modifiers())
         if (auto mc = dynamic_cast<GeometryModifierCreate*>(m))
-            if (mc->type() == GeometryModifierCreate::T_FILE_OBJ)
+            if (mc->isFile())
                 files.append(IO::FileListEntry(mc->filename(), IO::FT_MODEL));
 }
 

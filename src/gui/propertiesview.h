@@ -14,7 +14,7 @@
 #include <QWidget>
 #include <QMap>
 
-class QVBoxLayout;
+class QGridLayout;
 class QScrollArea;
 
 namespace MO {
@@ -56,7 +56,7 @@ private:
 
     Properties * p_props_;
     QMap<QString, QVariantWidget*> p_widgets_;
-    QVBoxLayout * p_lv_;
+    QGridLayout * p_lg_;
 };
 
 } // namespace GUI
