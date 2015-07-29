@@ -13,7 +13,7 @@
 #include "propertiesview.h"
 #include "gui/widget/qvariantwidget.h"
 #include "types/properties.h"
-
+#include "io/log.h"
 namespace MO {
 namespace GUI {
 
@@ -96,11 +96,29 @@ void PropertiesView::createWidgtes_()
         {
             // copy to internal properties
             p_props_->set(key, widget->value());
+            // get change to visibilty
+            if (p_props_->callUpdateVisibility())
+                updateWidgetVis_();
             emit propertyChanged(key);
         });
     }
 
+    // initial visibility
+    p_props_->callUpdateVisibility();
+    updateWidgetVis_();
+
     setUpdatesEnabled(true);
+}
+
+void PropertiesView::updateWidgetVis_()
+{
+    MO_PRINT(p_props_->toString());
+    for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
+    {
+        auto j = p_widgets_.find(i.key());
+        if (j != p_widgets_.end())
+            j.value()->setVisible( i.value().isVisible() );
+    }
 }
 
 

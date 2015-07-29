@@ -53,6 +53,7 @@ public slots:
 private:
 
     void createWidgtes_();
+    void updateWidgetVis_();
 
     Properties * p_props_;
     QMap<QString, QVariantWidget*> p_widgets_;

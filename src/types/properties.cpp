@@ -181,6 +181,10 @@ bool Properties::Property::hasNamedValues() const
     return !p_nv_.p_val_.isEmpty();
 }
 
+
+
+
+
 // ---------------------------- Properties ------------------------------------
 
 const int Properties::subTypeMask = 0xfff;
@@ -195,11 +199,13 @@ void Properties::swap(Properties &other)
         return;
 
     p_map_.swap(other.p_map_);
+    std::swap(p_cb_vis_, other.p_cb_vis_);
 }
 
 void Properties::clear()
 {
     p_map_.clear();
+    p_cb_vis_ = 0;
 }
 
 void Properties::clear(const QString &id)
@@ -298,11 +304,12 @@ void Properties::deserialize(IO::DataStream & io)
                               << "' unknown named-value, ignored");
                 continue;
             }
-            auto p = getProperty(id);
+            auto p = getProperty(key);
             if (!p.hasNamedValues())
             {
                 MO_IO_WARNING(READ, "Properties::deserialize() '" << key
                               << "' is expected to be a named value but is not, ignored");
+                MO_PRINT(toString());
                 continue;
             }
             if (!p.namedValues().has(id))
@@ -616,6 +623,14 @@ void Properties::setNamedValues(const QString &id, const NamedValues &names)
     i.value().p_nv_ = names;
 }
 
+void Properties::setVisible(const QString &id, bool vis)
+{
+    MO_DEBUG_PROP("Properties::setVisible '" << id << "' " << vis);
+    auto i = p_map_.find(id);
+    if (i != p_map_.end())
+        i.value().p_vis_ = vis;
+}
+
 bool Properties::change(const QString &id, const QVariant & v)
 {
     MO_DEBUG_PROP("property '" << id << "': " << v << " type "<< v.typeName() << " (" << v.type() << ")");
@@ -630,11 +645,21 @@ void Properties::unify(const Properties &other)
 {
     for (auto i = other.p_map_.begin(); i != other.p_map_.end(); ++i)
     {
-        p_map_.insert(i.key(), i.value());
+        auto j = p_map_.find(i.key());
+        if (j == p_map_.end())
+            p_map_.insert(i.key(), i.value());
+        else
+            j.value().p_val_ = i.value().p_val_;
     }
 }
 
-
+bool Properties::isVisible(const QString &id) const
+{
+    auto i = p_map_.find(id);
+    if (i != p_map_.end())
+        return i.value().isVisible();
+    return false;
+}
 
 QString Properties::toString(const QString &indent) const
 {
@@ -644,11 +669,39 @@ QString Properties::toString(const QString &indent) const
         /** @todo print correct value for all types */
         r += indent + i.key() + ": " + i.value().value().toString()
                 + "; // " + QString::number(i.value().value().type())
-                + " " + i.value().value().typeName()
-                + "\n";
+                + " " + i.value().value().typeName();
+        if (i.value().hasNamedValues())
+            r += " (" + QString::number(i.value().namedValues().p_val_.size())
+                    + " NamedValues)";
+        if (!i.value().isVisible())
+            r += " (off)";
+        r += "\n";
     }
     return r;
 }
+
+
+bool Properties::callUpdateVisibility()
+{
+    if (!p_cb_vis_)
+        return false;
+
+    // store state
+    std::vector<bool> vis;
+    for (auto & p : *this)
+        vis.push_back(p.isVisible());
+
+    p_cb_vis_(*this);
+
+    // check difference
+    auto v = vis.begin();
+    for (auto & p : *this)
+        if (p.isVisible() != *v++)
+            return true;
+    return false;
+}
+
+
 
 #if 0
 QRectF Properties::align(const QRectF &rect, const QRectF &parent,

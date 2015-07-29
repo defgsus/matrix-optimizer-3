@@ -103,6 +103,8 @@ void PropertiesScrollView::createWidgtes_()
         {
             // copy to internal properties
             p_props_->set(key, widget->value());
+            // get change to visibilty
+            p_props_->callUpdateVisibility();
             emit propertyChanged(key);
         });
     }

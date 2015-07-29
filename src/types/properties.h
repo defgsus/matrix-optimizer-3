@@ -11,6 +11,8 @@
 #ifndef MOSRC_TYPES_PROPERTIES_H
 #define MOSRC_TYPES_PROPERTIES_H
 
+#include <functional>
+
 #include <QVariant>
 #include <QMap>
 #include <QRectF>
@@ -84,7 +86,7 @@ public:
 
     struct Property
     {
-        Property() : p_subType_(-1), p_idx_(0) { }
+        Property() : p_subType_(-1), p_idx_(0), p_vis_(true) { }
 
         bool isValid() const { return !p_val_.isNull(); }
 
@@ -103,8 +105,11 @@ public:
         /** Associated NamedValues class, if any */
         const NamedValues& namedValues() const { return p_nv_; }
 
+        // ---- gui stuff ----
+
         /** The order of creation */
         int index() const { return p_idx_; }
+        bool isVisible() const { return p_vis_; }
 
     private:
         friend class Properties;
@@ -119,6 +124,8 @@ public:
             p_tip_;
         int p_subType_,
             p_idx_;
+        bool
+            p_vis_;
         NamedValues p_nv_;
     };
 
@@ -280,6 +287,7 @@ public:
     bool hasName(const QString& id) const { return !getProperty(id).name().isNull(); }
     bool hasTip(const QString& id) const { return !getProperty(id).tip().isNull(); }
     bool hasSubType(const QString& id) const { return getProperty(id).subType() != -1; }
+    bool isVisible(const QString& id) const;
 
     /** Returns a css-style list of all properties */
     QString toString(const QString& indent = "") const;
@@ -356,6 +364,7 @@ public:
     void setTip(const QString& id, const QString& statusTip);
     void setSubType(const QString& id, int t);
     void setNamedValues(const QString& id, const NamedValues& names);
+    void setVisible(const QString& id, bool vis);
 
     /** Sets the given property if existing. */
     bool change(const QString& id, const QVariant& v);
@@ -386,6 +395,16 @@ public:
         while prefering other's values over own. */
     Properties unified(const Properties& other) const { Properties p(*this); p.unify(other); return p; }
 
+    // --------- callbacks -----------
+
+    /** Installs a callback that is called by the gui to update
+        the visibility of widgets after a value is changed.
+        Changes other than to Property::setVisible() will not be
+        reflected in the gui. */
+    void setUpdateVisibilityCallback(std::function<void(Properties&)> f) { p_cb_vis_ = f; }
+    /** Calls the user-callback and returns true if the visibility
+        of any widget has changed. */
+    bool callUpdateVisibility();
 
     // -------------- static helper --------------------
 #if 0
@@ -398,6 +417,7 @@ public:
 private:
 
     Map p_map_;
+    std::function<void(Properties&)> p_cb_vis_;
 };
 
 } // namespace MO

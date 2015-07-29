@@ -27,7 +27,7 @@ Properties::NamedValues GeometryModifierCreate::namedTypes()
     Properties::NamedValues val;
     val.set("file", QObject::tr("Wavefront Object (obj)"), T_FILE_OBJ);
 #ifndef MO_DISABLE_SHP
-    val.set("shp", QObject::tr("Shapefile (shp)"), T_FILE_OBJ);
+    val.set("shp", QObject::tr("Shapefile (shp)"), T_FILE_SHP);
 #endif
     val.set("quad", QObject::tr("quad"), T_QUAD);
     val.set("tetra", QObject::tr("tetrahedron"), T_TETRAHEDRON);
@@ -36,10 +36,8 @@ Properties::NamedValues GeometryModifierCreate::namedTypes()
     val.set("octa", QObject::tr("octahedron"), T_OCTAHEDRON);
     val.set("icosa", QObject::tr("icosahedron"), T_ICOSAHEDRON);
     val.set("dodeca", QObject::tr("dodecahedron"), T_DODECAHEDRON);
-    val.set("cyl", QObject::tr("cylinder"), T_CYLINDER_CLOSED);
-    val.set("cylo", QObject::tr("cylinder (open)"), T_CYLINDER_OPEN);
-    val.set("cone", QObject::tr("cone"), T_CONE_CLOSED);
-    val.set("coneo", QObject::tr("cone (open)"), T_CONE_OPEN);
+    val.set("cylo", QObject::tr("cylinder (open)"), T_CYLINDER);
+    val.set("coneo", QObject::tr("cone (open)"), T_CONE);
     val.set("torus", QObject::tr("torus"), T_TORUS);
     val.set("uvsphere", QObject::tr("uv-sphere"), T_UV_SPHERE);
     val.set("gridxz", QObject::tr("coordinate system"), T_GRID_XZ);
@@ -89,6 +87,9 @@ GeometryModifierCreate::GeometryModifierCreate()
                      true);
     properties().set("radius", QObject::tr("radius"),
                      QObject::tr("The radius of the object to create"),
+                     0.1f, 0.1f);
+    properties().set("closed", QObject::tr("closed"),
+                     QObject::tr("Enables closing the geometry with end caps"),
                      true);
 
     properties().set("segments", QObject::tr("number segments"),
@@ -101,6 +102,43 @@ GeometryModifierCreate::GeometryModifierCreate()
                      QVector<Float>() << 0.f << 0.f << 0.f << 0.f,
                      QVector<Float>() << 1.f << 1.f << 1.f << 1.f,
                      QVector<Float>() << .1f << .1f << .1f << .1f);
+
+    properties().setUpdateVisibilityCallback([=](Properties&prop)
+    {
+        const Type gtype = (Type)prop.get("type").toInt();
+        const bool
+                isFile = gtype == T_FILE_OBJ
+                            || gtype == T_FILE_SHP,
+                canOnlyTriangle = isFile || gtype == T_BOX_UV,
+                canTriangle = (gtype != T_GRID_XZ
+                                && gtype != T_LINE_GRID),
+        #if 0
+                has3Segments = (gtype == T_LINE_GRID
+                                || gtype == T_POINT_GRID),
+                has2Segments = has3Segments
+                                || (gtype == T_UV_SPHERE
+                                    || gtype == T_GRID_XZ
+                                    || gtype == T_LINE_GRID
+                                    || gtype == T_CYLINDER_CLOSED
+                                    || gtype == T_CYLINDER_OPEN
+                                    || gtype == T_TORUS),
+                has1Segment = has2Segments
+                                || (gtype == T_CONE_OPEN
+                                    || gtype == T_CONE_CLOSED),
+        #endif
+                hasSmallRadius = (gtype == T_TORUS),
+                hasClosed = gtype == T_CYLINDER
+                            || gtype == T_CONE;
+
+        prop.setVisible("filename-obj", gtype == T_FILE_OBJ);
+        prop.setVisible("filename-shp", gtype == T_FILE_SHP);
+
+        prop.setVisible("closed", hasClosed);
+        prop.setVisible("radius", hasSmallRadius);
+        prop.setVisible("asTriangles", canTriangle && !canOnlyTriangle);
+
+        std::cout << prop.toString() << std::endl;
+    });
 }
 
 bool GeometryModifierCreate::isFile() const
@@ -169,11 +207,12 @@ void GeometryModifierCreate::execute(Geometry * g)
 {
     const bool
             sharedVertices = properties().get("shared").toBool(),
-            asTriangles = properties().get("asTriangles").toBool();
+            asTriangles = properties().get("asTriangles").toBool(),
+            closed = properties().get("closed").toBool();
     const QVector<Float>
             color = properties().get("color").value<QVector<Float>>();
     const QVector<uint>
-            segments = properties().get("segments").value<QVector<uint>>();
+            segs = properties().get("segments").value<QVector<uint>>();
     const Float
             smallRadius = properties().get("radius").toFloat();
     const Type
@@ -219,24 +258,24 @@ void GeometryModifierCreate::execute(Geometry * g)
     break;
 
     case T_GRID_XZ:
-        GeometryFactory::createGridXZ(g, segments[0], segments[1], true);
+        GeometryFactory::createGridXZ(g, segs[0], segs[1], true);
     break;
 
     case T_LINE_GRID:
-        GeometryFactory::createLineGrid(g, segments[0], segments[1], segments[2]);
+        GeometryFactory::createLineGrid(g, segs[0], segs[1], segs[2]);
     break;
 
     case T_POINT_GRID:
-        GeometryFactory::createPointGrid(g, segments[0], segments[1], segments[2]);
+        GeometryFactory::createPointGrid(g, segs[0], segs[1], segs[2]);
     break;
 
     case T_QUAD_GRID:
-        GeometryFactory::createQuadGrid(g, segments[0], segments[1], segments[2]);
+        GeometryFactory::createQuadGrid(g, segs[0], segs[1], segs[2]);
     break;
 
     case T_UV_SPHERE:
-        GeometryFactory::createUVSphere(g, 1.f, std::max((uint)3, segments[0]),
-                               std::max((uint)2, segments[1]), asTriangles);
+        GeometryFactory::createUVSphere(g, 1.f, std::max((uint)3, segs[0]),
+                               std::max((uint)2, segs[1]), asTriangles);
     break;
 
     case T_TETRAHEDRON:
@@ -255,24 +294,19 @@ void GeometryModifierCreate::execute(Geometry * g)
         GeometryFactory::createDodecahedron(g, 1.f, asTriangles);
     break;
 
-    case T_CYLINDER_CLOSED:
-        GeometryFactory::createCylinder(g, 1.f, 1.f, segments[0], segments[1], false, asTriangles);
+    case T_CYLINDER:
+        GeometryFactory::createCylinder(
+            g, 1.f, 1.f, segs[0], segs[1], !closed, asTriangles);
     break;
 
-    case T_CYLINDER_OPEN:
-        GeometryFactory::createCylinder(g, 1.f, 1.f, segments[0], segments[1], true, asTriangles);
-    break;
-
-    case T_CONE_CLOSED:
-        GeometryFactory::createCone(g, 1.f, 1.f, segments[0], false, asTriangles);
-    break;
-
-    case T_CONE_OPEN:
-        GeometryFactory::createCone(g, 1.f, 1.f, segments[0], true, asTriangles);
+    case T_CONE:
+        GeometryFactory::createCone(
+            g, 1.f, 1.f, segs[0], !closed, asTriangles);
     break;
 
     case T_TORUS:
-        GeometryFactory::createTorus(g, 1.f, smallRadius, segments[0], segments[1], asTriangles);
+        GeometryFactory::createTorus(
+            g, 1.f, smallRadius, segs[0], segs[1], asTriangles);
     break;
 
     }
