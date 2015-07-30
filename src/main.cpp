@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
     MO::setCurrentThreadName("GUI");
 
     // tests without QApplication
+    //TestXmlStream t; return t.run();
     //MO::TestEquation t; return t.run();
     //MO::TestTesselator t; return t.run();
     //MO::TestDirectedGraph t; return t.run();

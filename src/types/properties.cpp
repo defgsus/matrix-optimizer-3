@@ -238,16 +238,23 @@ void Properties::serialize(IO::DataStream & io) const
             io << qint8(0) << i.value().value();
 
         // handle special compound types
-        else
 #define MO__IO(type__, flag__) \
         if (!strcmp(i.value().value().typeName(), #type__)) \
         { \
             io << qint8(flag__) \
                << i.value().value().value<type__>(); \
         }
+        else
         MO__IO(QVector<float>, 24)
         else
-        MO__IO(QVector<uint>, 25)
+        MO__IO(QVector<double>, 25)
+        else
+        MO__IO(QVector<int>, 26)
+        else
+        MO__IO(QVector<uint>, 27)
+        else
+        MO__IO(QVector<unsigned>, 28)
+
         else
         {
             io << qint8(-1);
@@ -325,7 +332,13 @@ void Properties::deserialize(IO::DataStream & io)
         else
         MO__IO(QVector<float>, 24)
         else
-        MO__IO(QVector<uint>, 25)
+        MO__IO(QVector<double>, 25)
+        else
+        MO__IO(QVector<int>, 26)
+        else
+        MO__IO(QVector<uint>, 27)
+        else
+        MO__IO(QVector<unsigned>, 28)
 
         // unknown
         else
@@ -359,27 +372,25 @@ void Properties::serialize(IO::XmlStream & io) const
 
                 io.write("id", i.key());
 
-                // non-user types use the default QVariant version
-                if (QMetaType::Type(i.value().value().type()) < QMetaType::User)
+                // named values are stored by id
+                if (i.value().hasNamedValues())
+                {
+                    auto nv = i.value().namedValues().getByValue(
+                                i.value().value());
+                    io.write("nv", nv.id);
+                }
+
+                // for everything else we count on XmlStream to handle the QVariant
+                else
+                //if (QMetaType::Type(i.value().value().type()) < QMetaType::User)
                     io.write("v", i.value().value());
+#if 0
                 else
                 {
-#if 0
-                    // NamedStates
-                    if (auto ns = getNamedStates(i.value()))
-                    {
-                        // store state group
-                        io.write("ns", ns->name());
-                        // store value id string
-                        io.write("nv", ns->id(i.value()));
-                    }
-                    else
-#endif
-                    {
-                        MO_IO_WARNING(WRITE, "Properties::serialize() unhandled QVariant '"
-                                   << i.value().value().typeName() << "'");
-                    }
+                    MO_IO_WARNING(WRITE, "Properties::serialize() unhandled QVariant '"
+                               << i.value().value().typeName() << "'");
                 }
+#endif
             io.endSection();
         }
 
@@ -425,25 +436,36 @@ void Properties::deserialize(IO::XmlStream& io)
                     //MO_DEBUG("read " << id << ", " << v);
                     tmp.set(id, v);
                 }
-#if 0
-                // NamedStates?
+
+                // named value
                 else if (io.hasAttribute("nv"))
                 {
-                    QString name = io.expectString("ns"),
-                            nv = io.expectString("nv");
-                    //MO_DEBUG("readns " << id << ", " << ns << ", " << nv);
-                    auto ns = getNamedStates(name);
-                    if (!ns)
+                    QString nv = io.expectString("nv");
+
+                    if (!has(id))
                     {
-                        MO_WARNING("Properties::deserialize() ignoring unknown NamedStates '"
-                                   << name << "' (with state '" << nv << "')");
+                        MO_IO_WARNING(READ, "Properties::deserialize() '" << id
+                                      << "' unknown named-value, ignored");
+                        io.leaveSection();
+                        continue;
                     }
-                    else
+                    auto p = getProperty(id);
+                    if (!p.hasNamedValues())
                     {
-                        tmp.set(id, ns->value(nv));
+                        MO_IO_WARNING(READ, "Properties::deserialize() '" << id
+                                      << "' is expected to be a named value but is not, ignored");
+                        io.leaveSection();
+                        continue;
                     }
+                    if (!p.namedValues().has(nv))
+                    {
+                        MO_IO_WARNING(READ, "Properties::deserialize() '" << id
+                                      << "' unknown named-value id '" << nv << "', ignored");
+                        io.leaveSection();
+                        continue;
+                    }
+                    tmp.set(id, p.namedValues().get(nv).v);
                 }
-#endif
             }
 
             io.leaveSection();

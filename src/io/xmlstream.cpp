@@ -341,7 +341,23 @@ void XmlStream::write(const QString& key, const QVariant& v)
         vs = QString("%1,%2").arg(val.x()).arg(val.y());
     }
     else
+#define MO__VEC(Type__) \
+    if (!strcmp(v.typeName(), #Type__)) \
+    { \
+        const auto vec = v.value<Type__>(); \
+        for (int i=0; i<vec.size(); ++i) \
+            vs += QString(i == 0 ? "%1" : ",%1").arg(vec[i]); \
+    }
+    MO__VEC(QVector<float>)
+    else
+    MO__VEC(QVector<double>)
+    else
+    MO__VEC(QVector<int>)
+    else
+    MO__VEC(QVector<uint>)
+    else
         vs = v.toString();
+#undef MO__VEC
 
     if (vs.isEmpty() && v.type() != QVariant::String)
         MO_IO_WARNING(LOGIC, "XmlStream::write(" << key
@@ -473,6 +489,25 @@ bool XmlStream::read(const QString& key, QVariant& v, const QVariant& def) const
         if (list.size() < 2) { v = def; return false; }
         v = QPoint(list[0].toInt(), list[1].toInt());
     }
+    else
+#define MO__VEC(Type__, conv__) \
+    if (typeName == #Type__) \
+    { \
+        auto list = value.split(","); \
+        Type__ vec; \
+        for (auto n : list) \
+            vec << n.conv__(); \
+        v = QVariant::fromValue(vec); \
+    }
+    MO__VEC(QVector<float>, toFloat)
+    else
+    MO__VEC(QVector<double>, toDouble)
+    else
+    MO__VEC(QVector<int>, toInt)
+    else
+    MO__VEC(QVector<uint>, toUInt)
+#undef MO__VEC
+
     else
     {
         QVariant var;

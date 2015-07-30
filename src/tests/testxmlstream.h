@@ -17,6 +17,9 @@ public:
     TestXmlStream();
 
     int run();
+
+    int test0();
+    int test1();
 };
 
 #endif // MOSRC_TESTS_TESTXMLSTREAM_H

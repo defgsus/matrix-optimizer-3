@@ -124,10 +124,10 @@ public:
     void write(const QString& key, unsigned int v);
     void write(const QString& key, long int v);
     void write(const QString& key, long unsigned int v);
-    void write(const QString& key, float);
-    void write(const QString& key, double);
+    void write(const QString& key, float v);
+    void write(const QString& key, double v);
     void write(const QString& key, const QDateTime& v);
-    void write(const QString& key, const QVariant&);
+    void write(const QString& key, const QVariant& v);
 
     template <class T>
     XmlStream& operator << (const PairStruct<T>& p) { write(p.key, p.value); return *this; }
