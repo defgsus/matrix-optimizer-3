@@ -19,6 +19,7 @@ namespace MO {
 namespace GUI {
 
 class AbstractScriptWidget;
+class AngelScriptWidget;
 
 class TextEditDialog : public QDialog
 {
@@ -47,6 +48,9 @@ public:
 
     /** Give a list of variables with their descriptions to the equation editor */
     void addVariableNames(const QStringList& names, const QStringList& descriptions);
+
+    /** Access to the angelscript widget (if text type was TT_ANGELSCRIPT in constructor) */
+    AngelScriptWidget * getWidgetAngelScript() const;
 
 signals:
 

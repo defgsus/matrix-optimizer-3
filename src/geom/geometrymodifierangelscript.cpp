@@ -13,8 +13,10 @@
 #include "geometrymodifierangelscript.h"
 #include "geometry.h"
 #include "geometryfactory.h"
-#include "script/angelscript_geometry.h"
 #include "object/object_fwd.h"
+#include "script/angelscript_geometry.h"
+#include "gui/widget/angelscriptwidget.h"
+#include "gui/texteditdialog.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
@@ -42,6 +44,14 @@ GeometryModifierAngelScript::GeometryModifierAngelScript()
         QObject::tr("A piece of code to freely create/modify the geometry"),
         script);
     properties().setSubType("script", Properties::ST_TEXT | TT_ANGELSCRIPT);
+    properties().setWidgetCallback("script", [](QWidget*w)
+    {
+        if (auto te = dynamic_cast<GUI::TextEditDialog*>(w))
+            if (auto as = te->getWidgetAngelScript())
+                as->setScriptEngine(
+                    GeometryEngineAS::createNullEngine(true) );
+    });
+
 }
 
 QString GeometryModifierAngelScript::statusTip() const

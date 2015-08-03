@@ -17,6 +17,8 @@
 #include <QMap>
 #include <QRectF>
 
+class QWidget;
+
 namespace MO {
 namespace IO { class DataStream; class XmlStream; }
 
@@ -111,6 +113,10 @@ public:
         int index() const { return p_idx_; }
         bool isVisible() const { return p_vis_; }
 
+        /** A user-callback for the created edit widget */
+        const std::function<void(QWidget*)>&
+            widgetCallback() const { return p_cb_widget_; }
+
     private:
         friend class Properties;
         QVariant
@@ -127,6 +133,7 @@ public:
         bool
             p_vis_;
         NamedValues p_nv_;
+        std::function<void(QWidget*)> p_cb_widget_;
     };
 
     /** The default key/value map used for all Properties */
@@ -405,6 +412,15 @@ public:
     /** Calls the user-callback and returns true if the visibility
         of any widget has changed. */
     bool callUpdateVisibility();
+
+
+    /** Sets a callback that is called for the particular widget that is created
+        for this property. The callback is called once after creation of the widget. */
+    void setWidgetCallback(
+            const QString& id, std::function<void(QWidget*)> f);
+
+    /** Applies the user-callback from setWidgetCallback() to the given widget, if any. */
+    void callWidgetCallback(const QString& id, QWidget * ) const;
 
     // -------------- static helper --------------------
 #if 0

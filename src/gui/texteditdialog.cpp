@@ -286,6 +286,11 @@ void TextEditDialog::Private::createWidgets()
 
 }
 
+AngelScriptWidget * TextEditDialog::getWidgetAngelScript() const
+{
+    return dynamic_cast<AngelScriptWidget*>(p_->scriptEdit);
+}
+
 void TextEditDialog::keyPressEvent(QKeyEvent * e)
 {
     if (e->key() == Qt::Key_F1)

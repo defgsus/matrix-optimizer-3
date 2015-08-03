@@ -13,9 +13,10 @@
 #include <QPolygon>
 
 #include "tesselator.h"
+#include "geom/geometry.h"
+#include "math/vector.h"
 #include "io/log.h"
 #include "io/error.h"
-#include "geom/geometry.h"
 
 // must be last to avoid conflict with glbinding
 #if defined(__APPLE__)
@@ -71,8 +72,15 @@ public:
     GLenum primitiveType;
 
     void clear();
+    /** Calls glut functions on data in @ref input */
     void tesselate(bool trianglesOnly);
+    /** Converts glut output to triangles in @ref final.
+        Callback to GLU_TESS_END */
     void convertBlock();
+    /** Fixes triangle winding in @ref final */
+    void fixWinding();
+
+    bool isWindingCorrect(const DVec2& a, const DVec2& b, const DVec2& c) const;
 };
 
 // -- Tesselator --
@@ -155,6 +163,8 @@ void TesselatorPrivate::tesselate(bool trianglesOnly)
 
     gluTessEndContour(ctx);
     gluTessEndPolygon(ctx);
+
+    fixWinding();
 }
 
 void TesselatorPrivate::clear()
@@ -270,6 +280,27 @@ void TesselatorPrivate::convertBlock()
         }
     }
 
+}
+
+bool TesselatorPrivate::isWindingCorrect(
+        const DVec2 &a, const DVec2 &b, const DVec2 &c) const
+{
+    // two edges
+    const auto x = b - a, y = c - a;
+    // z-part of cross product
+    const auto dz = x.x * y.y - y.x * x.y;
+    return dz > 0.;
+}
+
+void TesselatorPrivate::fixWinding()
+{
+    for (int i=0; i<final.count()/3; ++i)
+    {
+        if (!isWindingCorrect(final[i*3], final[i*3+1], final[i*3+2]))
+        {
+            std::swap(final[i*3+1], final[i*3+2]);
+        }
+    }
 }
 
 

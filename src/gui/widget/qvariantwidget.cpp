@@ -278,9 +278,12 @@ void QVariantWidget::Private::createWidgets()
                         connect(b, &QToolButton::clicked, [=]()
                         {
                             /** @todo script engines need to be passed to dialog */
-                            auto diag = new TextEditDialog(TextType(subtype & Properties::subTypeMask), widget);
+                            auto diag = new TextEditDialog(
+                                        TextType(subtype & Properties::subTypeMask), widget);
                             diag->setAttribute(Qt::WA_DeleteOnClose);
                             diag->setText(v.toString());
+                            if (props)
+                                props->callWidgetCallback(id, diag);
                             connect(diag, &TextEditDialog::textChanged, [=]()
                             {
                                 e->setText(diag->getText());
@@ -288,7 +291,9 @@ void QVariantWidget::Private::createWidgets()
                             });
                             diag->show();
                         });
-                        f_update_widget = [=](){ e->setText(v.toString()); /** @todo missing update of dialog */ };
+                        /** @todo missing update of dialog
+                            (would require a pointer to running dialogs) */
+                        f_update_widget = [=](){ e->setText(v.toString()); };
                         f_update_value = [=](){ v = e->text(); };
                     }
                     // filename with button (IO::File::getOpenFilename())

@@ -23,77 +23,8 @@
 #endif
 
 namespace MO {
+
 #if 0
-Properties::NamedStates::NamedStates(const QString& name, const QList<NamedStateHelper> &tuples)
-    : p_name_   (name)
-{
-    for (auto & s : tuples)
-        p_sv_.insert(s.id, s.v);
-}
-
-Properties::NamedStates::NamedStates(const QString& name, const QList<QString> &ids, const QList<QVariant> values)
-    : p_name_   (name)
-{
-    int n = std::min(ids.size(), values.size());
-    for (int i=0; i<n; ++i)
-        p_sv_.insert(ids[i], values[i]);
-}
-
-const QVariant& Properties::NamedStates::value(const QString& id) const
-{
-    auto i = p_sv_.find(id);
-    if (i != p_sv_.end())
-        return i.value();
-
-    static QVariant invalid;
-    return invalid;
-}
-
-const QString& Properties::NamedStates::id(const QVariant& value) const
-{
-    for (auto i = p_sv_.begin(); i != p_sv_.end(); ++i)
-        if (value == i.value())
-            return i.key();
-
-    static QString invalid;
-    return invalid;
-}
-
-
-bool Properties::isNamedStates(const QVariant & v)
-{
-    // [add new NamedStates here]
-    return isAlignment(v);
-}
-
-const Properties::NamedStates* Properties::getNamedStates(const QVariant & v)
-{
-    if (QMetaType::Type(v.type()) < QMetaType::User)
-        return 0;
-
-    // [add new NamedStates here]
-    if (isAlignment(v))
-        return &alignmentStates;
-
-    return 0;
-}
-
-const Properties::NamedStates* Properties::getNamedStates(const QString &name)
-{
-    // lazy-initialized list of all known states
-    static QMap<QString, const NamedStates*> map;
-    if (map.isEmpty())
-    {
-        // [add new NamedStates here]
-        map.insert(alignmentStates.name(), &alignmentStates);
-    }
-
-    auto i = map.find(name);
-    return i == map.end() ? 0 : i.value();
-}
-
-// [add new NamedStates here]
-
 bool Properties::isAlignment(const QVariant & v) { return !strcmp(v.typeName(), "MO::Properties::Alignment"); }
 const Properties::NamedStates Properties::alignmentStates = Properties::NamedStates("Alignment",
 {
@@ -111,9 +42,8 @@ const Properties::NamedStates Properties::alignmentStates = Properties::NamedSta
                 { "bottom-hcenter", QVariant::fromValue(Alignment(A_BOTTOM | A_HCENTER)) },
                 { "center",         QVariant::fromValue(Alignment(A_CENTER)) },
 });
-
-
 #endif
+
 
 // --------------------- Properties::NamedValues ------------------------------
 
@@ -653,6 +583,16 @@ void Properties::setVisible(const QString &id, bool vis)
         i.value().p_vis_ = vis;
 }
 
+void Properties::setWidgetCallback(
+        const QString &id, std::function<void (QWidget *)> f)
+{
+    MO_DEBUG_PROP("Properties::setWidgetCallback '" << id << "'");
+    auto i = p_map_.find(id);
+    if (i != p_map_.end())
+        i.value().p_cb_widget_ = f;
+}
+
+
 bool Properties::change(const QString &id, const QVariant & v)
 {
     MO_DEBUG_PROP("property '" << id << "': " << v << " type "<< v.typeName() << " (" << v.type() << ")");
@@ -723,7 +663,15 @@ bool Properties::callUpdateVisibility()
     return false;
 }
 
-
+void Properties::callWidgetCallback(const QString & id, QWidget * w) const
+{
+    if (w)
+    {
+        auto i = p_map_.find(id);
+        if (i != p_map_.end() && i.value().p_cb_widget_)
+            i.value().p_cb_widget_(w);
+    }
+}
 
 #if 0
 QRectF Properties::align(const QRectF &rect, const QRectF &parent,

@@ -55,7 +55,7 @@ const QStringList GeometryModifierCreate::typeIds =
 #endif
     "quad",
     "tetra", "hexa", "hexauv", "octa", "icosa", "dodeca",
-    "cyl", "cylo", "cone", "coneo", "torus", "uvsphere",
+    "cyl", "cone", "torus", "uvsphere",
     "gridxz", "pgrid", "lgrid", "qgrid"
 };
 
