@@ -246,7 +246,6 @@ void Properties::deserialize(IO::DataStream & io)
             {
                 MO_IO_WARNING(READ, "Properties::deserialize() '" << key
                               << "' is expected to be a named value but is not, ignored");
-                MO_PRINT(toString());
                 continue;
             }
             if (!p.namedValues().has(id))

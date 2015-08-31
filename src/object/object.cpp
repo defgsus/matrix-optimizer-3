@@ -1223,8 +1223,7 @@ void Object::setNumberMicrophones(uint num)
 {
     /* @todo update audio dsp path on soundSource/microphone change. */
     p_numberMicrophones_ = num;
-    auto e = editor();
-    if (e)
+    if (auto e = editor())
         emit e->audioConnectionsChanged();
 }
 

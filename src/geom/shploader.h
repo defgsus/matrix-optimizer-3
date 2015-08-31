@@ -27,8 +27,19 @@ class ShpLoader
     ShpLoader(const ShpLoader&);
     void operator=(const ShpLoader&);
 public:
+
+    enum TriangulationMesh
+    {
+        TM_NONE = 0,
+        TM_QUAD
+    };
+
     ShpLoader();
     ~ShpLoader();
+
+    /** Sets the basis mesh for triangulation, or none */
+    void setTriangulationMesh(TriangulationMesh m);
+    void setTriangulationMeshSpacing(float x, float y);
 
     /** Loads the file into internal data.
         @throws IoException on file or parsing errors. */
@@ -50,6 +61,10 @@ public:
         An ShpLoader class will be created for the file and kept.
         Throws IO::Exception on any errors. */
     static void getGeometry(const QString& filename, Geometry *,
+                            std::function<void(double)> progressFunc = 0);
+
+    static void getGeometry(const QString& filename, Geometry *,
+                            TriangulationMesh m, float triMeshX, float triMeshY,
                             std::function<void(double)> progressFunc = 0);
 
 private:

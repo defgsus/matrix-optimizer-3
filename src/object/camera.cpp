@@ -466,12 +466,15 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
     {
         // XXX Just for the moment...
 
-        Float inc = 1.f / 10.f;
+        Float inc = 1.f / 6.f;
         if (thread == MO_AUDIO_THREAD)
             inc = 6.f*sampleRateInv();
 
         cheat_[thread] += inc * (overrideMatrix_ - cheat_[thread]);
 
+        // normalize matrix components
+        // to avoid too much deformation
+        // XXX still hacky
         Vec3 v = glm::normalize(Vec3(cheat_[thread][0]));
         cheat_[thread][0].x = v.x;
         cheat_[thread][0].y = v.y;
@@ -484,10 +487,11 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
         cheat_[thread][2].x = v.x;
         cheat_[thread][2].y = v.y;
         cheat_[thread][2].z = v.z;
-
+#if 0
         if (thread == MO_GFX_THREAD)
             matrix = overrideMatrix_;
         else
+#endif
             matrix = cheat_[thread];
     }
     else
@@ -495,6 +499,8 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
         Object::calculateTransformation(matrix, time, thread);
         cheat_[thread] = matrix;
     }
+
+    //matrix = MATH::rotate(matrix, -90.f, Vec3(1,0,0));
 }
 
 
@@ -618,16 +624,35 @@ void Camera::drawFramebuffer(uint thread, Double time)
 namespace {
 
     void getRenderObjects2(Object * root, QList<ObjectGl*>& list,
-                          const QRegExp& rInc, const QRegExp& rIgn)
+                          const QList<QRegExp>& rInc, const QList<QRegExp>& rIgn)
     {
         for (Object* o : root->childObjects())
         {
-            if (rIgn.exactMatch(o->name()))
-                continue;
+            bool doinc = true;
 
-            if (o->isGl() && rInc.exactMatch(o->name()))
+            // ignore objects
+            for (const auto & regx : rIgn)
+            if (regx.exactMatch(o->name()))
             {
-                list << static_cast<ObjectGl*>(o);
+                doinc = false;
+                break;
+            }
+            if (!doinc)
+                break;
+
+            // check for type
+            if (auto ogl = dynamic_cast<ObjectGl*>(o))
+            {
+                // include objects
+                doinc = false;
+                for (const auto & regx : rInc)
+                if (regx.exactMatch(ogl->name()))
+                {
+                    doinc = true;
+                    break;
+                }
+                if (doinc)
+                    list << ogl;
             }
 
             getRenderObjects2(o, list, rInc, rIgn);
@@ -652,13 +677,26 @@ QList<ObjectGl*> Camera::getRenderObjects()
             inc = p_wcInclude_->baseValue(),
             ign = p_wcIgnore_->baseValue();
 
+    // shortcut for default strings
     if (inc == "*" && ign.isEmpty())
         return s->findChildObjects<ObjectGl>(QString(), true);
 
-    QRegExp eInc(inc, Qt::CaseSensitive, QRegExp::WildcardUnix),
-            eIgn(ign, Qt::CaseSensitive, QRegExp::WildcardUnix);
+    // split by commas
+    auto listInc = inc.split(QChar(','), QString::SkipEmptyParts, Qt::CaseInsensitive);
+    auto listIgn = ign.split(QChar(','), QString::SkipEmptyParts, Qt::CaseInsensitive);
+#if 0
+    MO_PRINT("---");
+    for (auto s : listInc)
+        MO_PRINT(s);
+#endif
+    // create regexps
+    QList<QRegExp> rlistInc, rlistIgn;
+    for (const auto & s : listInc)
+        rlistInc << QRegExp(s.simplified(), Qt::CaseSensitive, QRegExp::WildcardUnix);
+    for (const auto & s : listIgn)
+        rlistIgn << QRegExp(s.simplified(), Qt::CaseSensitive, QRegExp::WildcardUnix);
 
-    getRenderObjects2(s, list, eInc, eIgn);
+    getRenderObjects2(s, list, rlistInc, rlistIgn);
     return list;
 }
 

@@ -260,7 +260,7 @@ void QVariantWidget::Private::createWidgets()
                 int subtype = props && props->hasSubType(id)
                         ? props->getSubType(id)
                         : -1;
-                MO_PRINT("subtype " << subtype);
+
                 if (subtype > 0)
                 {
                     // string display with edit button (->TextEditDialog)
@@ -529,6 +529,8 @@ void QVariantWidget::Private::createWidgets()
     {
         MO_ASSERT(f_update_widget, "No widget update defined for type '" << v.typeName() << "'");
         MO_ASSERT(f_update_value, "No value update defined for type '" << v.typeName() << "'");
+        if (props)
+            props->callWidgetCallback(id, edit);
         updateWidget();
         layout->addWidget(edit);
     }

@@ -74,9 +74,9 @@ void GeometryModifierRotate::execute(Geometry *g)
     const Mat4 rot = MATH::rotate(Mat4(1.0),
                 properties().get("angle").toFloat(),
                         Vec3(
-                            properties().get("angle").toFloat(),
-                            properties().get("angle").toFloat(),
-                            properties().get("angle").toFloat()
+                            properties().get("x").toFloat(),
+                            properties().get("y").toFloat(),
+                            properties().get("z").toFloat()
                             )
                                   );
     g->applyMatrix(rot);

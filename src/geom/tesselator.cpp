@@ -64,7 +64,11 @@ public:
     /** output of one begin/end block */
         output,
     /** final triangles (3 verts each) */
-        final;
+        final,
+    /** Basis triangulation mesh */
+        basis;
+    QVector<QVector<DVec2>>
+        multiInput;
     /** temporary storage (for combine callback) */
     QVector<DVec2*> temp;
 
@@ -72,6 +76,9 @@ public:
     GLenum primitiveType;
 
     void clear();
+    /** Intersect every triangle in tris with @ref input and
+        store in @ref multiInput */
+    void intersectBasis();
     /** Calls glut functions on data in @ref input */
     void tesselate(bool trianglesOnly);
     /** Converts glut output to triangles in @ref final.
@@ -113,6 +120,63 @@ void Tesselator::clear()
     p_->clear();
 }
 
+void TesselatorPrivate::clear()
+{
+    input.clear();
+    multiInput.clear();
+    output.clear();
+    final.clear();
+
+    for (auto it : temp)
+        delete it;
+    temp.clear();
+
+    primitiveType = 0;
+}
+
+void Tesselator::setTriangulationMesh(const QVector<DVec2> &triangles)
+{
+    p_->basis = triangles;
+}
+
+void Tesselator::getExtend(
+        const QVector<DVec2> &polygon, DVec2 &minEx, DVec2 &maxEx)
+{
+    auto i = polygon.begin();
+    if (i == polygon.end())
+    {
+        minEx = DVec2(0.);
+        maxEx = DVec2(0.);
+        return;
+    }
+    minEx = maxEx = *i; ++i;
+    for (; i != polygon.end(); ++i)
+    {
+        minEx.x = std::min(minEx.x, i->x);
+        minEx.y = std::min(minEx.y, i->y);
+        maxEx.x = std::max(maxEx.x, i->x);
+        maxEx.y = std::max(maxEx.y, i->y);
+    }
+}
+
+void Tesselator::createTriangulationMesh(
+        const DVec2 &minExt, const DVec2 &maxExt, const DVec2 &st)
+{
+    QVector<DVec2> mesh;
+    for (double j=minExt.y; j<maxExt.y; j += st.x)
+    for (double i=minExt.x; i<maxExt.x; i += st.y)
+    {
+        mesh << DVec2(i,        j)
+             << DVec2(i+st.x,   j)
+             << DVec2(i,        j+st.y)
+             << DVec2(i+st.x,   j)
+             << DVec2(i+st.x,   j+st.y)
+             << DVec2(i,        j+st.y);
+    }
+
+    setTriangulationMesh(mesh);
+}
+
 void Tesselator::tesselate(const QVector<DVec2> & poly, bool trianglesOnly)
 {
     // copy points
@@ -144,6 +208,9 @@ void Tesselator::tesselate(const QVector<QPointF> & poly, bool trianglesOnly)
 
 void TesselatorPrivate::tesselate(bool trianglesOnly)
 {
+    if (!basis.isEmpty())
+        intersectBasis();
+
     if (trianglesOnly)
         gluTessCallback(ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
     else
@@ -151,33 +218,67 @@ void TesselatorPrivate::tesselate(bool trianglesOnly)
 
     gluTessNormal(ctx, 0,0,1);
 
-    gluTessBeginPolygon(ctx, (void*)this);
-    gluTessBeginContour(ctx);
-
-    for (const DVec2& p : input)
+    if (multiInput.isEmpty())
     {
-        GLdouble v[] = { p[0], p[1], 0.0 };
+        gluTessBeginPolygon(ctx, (void*)this);
+        gluTessBeginContour(ctx);
 
-        gluTessVertex(ctx, v, (void*)&p);
+        for (const DVec2& p : input)
+        {
+            GLdouble v[] = { p[0], p[1], 0.0 };
+
+            gluTessVertex(ctx, v, (void*)&p);
+        }
+
+        gluTessEndContour(ctx);
+        gluTessEndPolygon(ctx);
     }
+    else
+    {
+        for (const auto & poly : multiInput)
+        {
+            gluTessBeginPolygon(ctx, (void*)this);
+            gluTessBeginContour(ctx);
 
-    gluTessEndContour(ctx);
-    gluTessEndPolygon(ctx);
+            for (const DVec2& p : poly)
+            {
+                GLdouble v[] = { p[0], p[1], 0.0 };
+
+                gluTessVertex(ctx, v, (void*)&p);
+            }
+
+            gluTessEndContour(ctx);
+            gluTessEndPolygon(ctx);
+        }
+    }
 
     fixWinding();
 }
 
-void TesselatorPrivate::clear()
+void TesselatorPrivate::intersectBasis()
 {
-    input.clear();
-    output.clear();
-    final.clear();
+    QPolygonF shape;
+    for (const auto & v : input)
+        shape.append(QPointF(v.x, v.y));
 
-    for (auto it : temp)
-        delete it;
-    temp.clear();
+    for (int i = 0; i < basis.size()/3; ++i)
+    {
+        QPolygonF tri;
+        tri.append(QPointF(basis[i*3].x, basis[i*3].y));
+        tri.append(QPointF(basis[i*3+1].x, basis[i*3+1].y));
+        tri.append(QPointF(basis[i*3+2].x, basis[i*3+2].y));
 
-    primitiveType = 0;
+        tri = shape.intersected(tri);
+        if (tri.isEmpty())
+            continue;
+
+        multiInput.append(QVector<DVec2>());
+        auto & dst = multiInput.back();
+        for (const auto & p : tri)
+        {
+            dst << DVec2(p.x(), p.y());
+        }
+    }
 }
 
 

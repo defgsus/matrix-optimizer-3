@@ -137,8 +137,6 @@ void AssetBrowser::mouseDoubleClickEvent(QMouseEvent * e)
     auto lpos = p_->treeView->mapFrom(this, e->pos());
     auto idx = p_->treeView->indexAt(lpos);
 
-    MO_PRINT(idx);
-
     if (idx.isValid())
     {
         setDirectory(p_->curDirIndex, p_->fsmodel->filePath(idx));

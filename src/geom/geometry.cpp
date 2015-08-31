@@ -11,6 +11,7 @@
 #include <random>
 
 #include <QSet>
+#include <QTextStream>
 
 #include "geometry.h"
 #include "gl/shadersource.h"
@@ -2154,6 +2155,44 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
     vao->unbind();
 }
 
+
+
+QString Geometry::toJavaScriptArray(
+        const QString &baseName2, bool withNormals, bool withTexCoords) const
+{
+    QString script;
+    QTextStream s(&script);
+
+    QString baseName = baseName2;
+    if (!baseName.isEmpty())
+        baseName.append("_");
+
+    // verts
+    s << baseName << "vertices = [ ";
+
+    for (size_t i = 0; i<vertex_.size(); ++i)
+    {
+        if (i != 0)
+            s << ", ";
+        s << vertex_[i];
+    }
+
+    s << " ];\n";
+
+    // indices
+    s << baseName << "indices = [ ";
+
+    for (size_t i = 0; i<triIndex_.size(); ++i)
+    {
+        if (i != 0)
+            s << ", ";
+        s << triIndex_[i];
+    }
+
+    s << " ];\n";
+
+    return script;
+}
 
 
 

@@ -15,6 +15,7 @@
 #include <QPushButton>
 #include <QComboBox>
 #include <QMessageBox>
+#include <QFile>
 
 #include "geometryexportdialog.h"
 #include "io/error.h"
@@ -54,9 +55,10 @@ void GeometryExportDialog::createWidgets_()
 
         // --- format ---
 
-        auto comboFormat_ = new QComboBox(this);
+        comboFormat_ = new QComboBox(this);
         lv->addWidget(comboFormat_);
         comboFormat_->addItem(tr("Wavefront Object"));
+        comboFormat_->addItem(tr("JavaScript arrays"));
 
         // --- export flags ---
 
@@ -129,10 +131,18 @@ void GeometryExportDialog::exportNow()
     if (filename.isEmpty())
         return;
 
-    if (exportObj_(filename))
+    if (export_(filename))
         accept();
 }
 
+bool GeometryExportDialog::export_(const QString &filename)
+{
+    auto idx = comboFormat_->currentIndex();
+    if (idx < 1)
+        return exportObj_(filename);
+    if (idx < 2)
+        return exportJavaScript_(filename);
+}
 
 bool GeometryExportDialog::exportObj_(const QString &filename)
 {
@@ -148,13 +158,30 @@ bool GeometryExportDialog::exportObj_(const QString &filename)
     catch (const Exception & e)
     {
         QMessageBox::critical(this, tr("obj exporter"),
-                              tr("Failed to export\n%1"));
+                              tr("Failed to export\n%1").arg(filename));
         return false;
     }
 
     return true;
 }
 
+bool GeometryExportDialog::exportJavaScript_(const QString &filename)
+{
+    QString script = geometry_->toJavaScriptArray("",
+                                                  cbNormals_->isChecked(),
+                                                  cbTexCoords_->isChecked());
+    QFile f(filename);
+    if (!f.open(QFile::Text | QFile::WriteOnly))
+    {
+        QMessageBox::critical(this, tr("javascript exporter"),
+                              tr("Failed to open for writing:\n%1").arg(filename));
+        return false;
+    }
+
+    f.write(script.toUtf8());
+
+    return true;
+}
 
 
 

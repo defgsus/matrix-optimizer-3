@@ -35,6 +35,8 @@ public:
     SswProject();
     ~SswProject();
 
+    static Double sswTime2Sec(Double t);
+
     // ------------- io -------------
 
     /** Loads a uifm file.
@@ -56,6 +58,7 @@ public:
     const QList<SswSource*>& soundSources() const;
 
 private:
+    friend class SswSource;
     struct Private;
     Private * p_;
 };

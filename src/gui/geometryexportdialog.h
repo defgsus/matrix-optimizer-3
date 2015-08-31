@@ -15,6 +15,7 @@
 
 class QLabel;
 class QCheckBox;
+class QComboBox;
 
 namespace MO {
 namespace GEOM { class Geometry; }
@@ -41,12 +42,15 @@ public slots:
 private:
 
     void createWidgets_();
+    bool export_(const QString& filename);
     bool exportObj_(const QString& filename);
+    bool exportJavaScript_(const QString& filename);
 
     const GEOM::Geometry * geometry_;
 
     QLabel * infoLabel_;
     QCheckBox *cbNormals_, *cbTexCoords_;
+    QComboBox *comboFormat_;
 };
 
 } // namespace GUI

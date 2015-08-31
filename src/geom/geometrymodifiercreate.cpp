@@ -78,6 +78,22 @@ GeometryModifierCreate::GeometryModifierCreate()
     properties().setSubType("filename-shp",
                             Properties::ST_FILENAME | IO::FT_SHAPEFILE);
 
+    Properties::NamedValues nv;
+    nv.set("off", QObject::tr("none"),
+           QObject::tr("Tesselate along polygon outlines only"),
+           ShpLoader::TM_NONE);
+    nv.set("quad", QObject::tr("quadrilateral"),
+           QObject::tr("Quadrilateral grid as basis mesh"),
+           ShpLoader::TM_QUAD);
+    properties().set("trimesh", QObject::tr("triangulation mesh"),
+                     QObject::tr("A basis mesh to intersect with polygons before tesselation"),
+                     nv, (int)ShpLoader::TM_NONE);
+    properties().set("trimeshspace", QObject::tr("mesh spacing"),
+                     QObject::tr("A basis mesh to intersect with polygons before tesselation"),
+                     QVector<Float>() << 1. << 1.);
+    properties().setMin("trimeshspace",
+                     QVector<Float>() << 0.001f << 0.001f);
+
     properties().set("asTriangles", QObject::tr("create triangles"),
                      QObject::tr("Selects lines or triangles"),
                      true);
@@ -132,6 +148,8 @@ GeometryModifierCreate::GeometryModifierCreate()
 
         prop.setVisible("filename-obj", gtype == T_FILE_OBJ);
         prop.setVisible("filename-shp", gtype == T_FILE_SHP);
+        prop.setVisible("trimesh", gtype == T_FILE_SHP);
+        prop.setVisible("trimeshspace", gtype == T_FILE_SHP);
 
         prop.setVisible("closed", hasClosed);
         prop.setVisible("radius", hasSmallRadius);
@@ -210,14 +228,16 @@ void GeometryModifierCreate::execute(Geometry * g)
             asTriangles = properties().get("asTriangles").toBool(),
             closed = properties().get("closed").toBool();
     const QVector<Float>
-            color = properties().get("color").value<QVector<Float>>();
+            color = properties().get("color").value<QVector<Float>>(),
+            triMeshSpace = properties().get("trimeshspace").value<QVector<Float>>();
     const QVector<uint>
             segs = properties().get("segments").value<QVector<uint>>();
     const Float
             smallRadius = properties().get("radius").toFloat();
     const Type
             type = (Type)properties().get("type").toInt();
-
+    const ShpLoader::TriangulationMesh
+            triMesh = (ShpLoader::TriangulationMesh)properties().get("trimesh").toInt();
 
     // shared vertices?
     g->setSharedVertices(sharedVertices);
@@ -239,6 +259,7 @@ void GeometryModifierCreate::execute(Geometry * g)
         if (!properties().get("filename-shp").toString().isEmpty())
             ShpLoader::getGeometry(IO::fileManager().localFilename(
                     properties().get("filename-shp").toString()), g,
+                    triMesh, triMeshSpace[0], triMeshSpace[1],
                                    [=](double p){ setProgress(p); });
     break;
 #endif

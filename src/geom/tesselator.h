@@ -23,33 +23,48 @@ namespace GEOM {
 class TesselatorPrivate;
 class Geometry;
 
+/** Class for tesselating polygons.
+    Internally uses GLUT at the moment.
+    Default input is QVector<DVec2>, output is a GEOM::Geometry
+*/
 class Tesselator
 {
 public:
     Tesselator();
     ~Tesselator();
 
+    /** Forgets all previously passed data */
     void clear();
+
+    /** Set a basis mesh for triangulation. Only the area of the polygon,
+        intersecting with the given @p triangles is tesselated.
+        The resulting (tesselated) triangles will never be coarser than
+        the given mesh. This may help with cases where big or long and thin
+        triangles are created and you need a finer resolution for further
+        processing. */
+    void setTriangulationMesh(const QVector<DVec2>& triangles);
+
+    /** Sets a basis mesh for triangulation. A quad mesh is created from
+        @p minExt to @p maxExt with a stepsize of @p spacing.
+        @see setTriangulationMesh() */
+    void createTriangulationMesh(const DVec2& minExt,
+                                 const DVec2& maxExt, const DVec2& spacing);
+
+    /** Returns the min and max extends of the vectors in @p polygon. */
+    static void getExtend(const QVector<DVec2>& polygon,
+                          DVec2& minEx, DVec2& maxEx);
 
     // -------------- tesselation ------------------
 
+    /** @{ */
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.
         If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
         Any previous data is cleared. */
     void tesselate(const QVector<Vec2> & points, bool trianglesOnly = false);
-
-    /** Tesselates the polygon described by @p points.
-        The points must describe the contour of a polygon in anti-clockwise order.
-        If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
-        Any previous data is cleared. */
     void tesselate(const QVector<DVec2> & points, bool trianglesOnly = false);
-
-    /** Tesselates the polygon described by @p points.
-        The points must describe the contour of a polygon in anti-clockwise order.
-        If @p trianglesOnly is true, no GL_TRIANGLE_FAN or GL_TRIANGLE_STRIP will be created.
-        Any previous data is cleared. */
     void tesselate(const QVector<QPointF> & points, bool trianglesOnly = false);
+    /** @} */
 
     // -------------- getter -----------------------
 

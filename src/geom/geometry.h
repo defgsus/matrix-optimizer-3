@@ -25,8 +25,8 @@ class asIScriptEngine;
 namespace MO {
 namespace GEOM {
 
-/** XXX This is not very generic
-    - but let's get started and see later.. */
+/** A mesh container with lots of functionality.
+    This is not totally generic (e.g. types are fixed). */
 class Geometry : public RefCounted
 {
 public:
@@ -175,6 +175,10 @@ public:
         If @p pos is given, it will be set to the intersection position.
         @note Not terribly efficient */
     bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+
+    /** Creates some JavaScript code snippet defining some arrays. */
+    QString toJavaScriptArray(const QString& baseName,
+                              bool withNormals = true, bool withTexCoords = true) const;
 
     // ----------- user attributes -----------
 

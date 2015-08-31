@@ -30,6 +30,8 @@ struct ShpLoader::Private
         , handle    (0)
         , progress  (0)
         , geometry  (0)
+        , triMesh   (TM_NONE)
+        , meshSpace (10.)
     {
 
     }
@@ -61,6 +63,8 @@ struct ShpLoader::Private
 
     double progress;
     GEOM::Geometry * geometry;
+    TriangulationMesh triMesh;
+    DVec2 meshSpace;
 
     static QMutex mutex;
     static std::map<QString, ShpLoader*> instances;
@@ -82,6 +86,16 @@ ShpLoader::~ShpLoader()
 }
 
 double ShpLoader::progress() const { return p_->progress; }
+
+void ShpLoader::setTriangulationMesh(TriangulationMesh m)
+{
+    p_->triMesh = m;
+}
+
+void ShpLoader::setTriangulationMeshSpacing(float x, float y)
+{
+    p_->meshSpace = DVec2(x, y);
+}
 
 void ShpLoader::loadFile(const QString &filename, std::function<void(double)> progressFunc)
 {
@@ -178,40 +192,59 @@ void ShpLoader::Private::getShpObject(SHPObject * shp)
     }
 }
 
-void ShpLoader::Private::getPolyPart(SHPObject * shp, int start, int end, bool hasZ)
+void ShpLoader::Private::getPolyPart(SHPObject * shp, int start, int end, bool /*hasZ*/)
 {
-    QVector<Vec2> points;
+    QVector<DVec2> points;
     for (int j=start; j < end; ++j)
     {
-        points << Vec2(shp->padfX[j], shp->padfY[j]);
+        points << DVec2(shp->padfX[j], shp->padfY[j]);
 //                        hasZ ? shp->padfZ[j] : 0.f);
     }
 
     Tesselator tess;
+    if (triMesh > 0)
+    {
+        DVec2 minEx, maxEx;
+        Tesselator::getExtend(points, minEx, maxEx);
+        tess.createTriangulationMesh(minEx, maxEx, meshSpace);
+    }
     tess.tesselate(points);
     tess.getGeometry(*geometry);
 }
 
 void ShpLoader::getGeometry(const QString &filename, Geometry * g, std::function<void(double)> progressFunc)
 {
-    QMutexLocker lock(&Private::mutex);
+    getGeometry(filename, g, TM_NONE, 10., 10., progressFunc);
+}
 
-    auto i = Private::instances.find(filename);
-
-    // reuse
-    if (i != Private::instances.end())
+void ShpLoader::getGeometry(const QString &filename, Geometry * g,
+                            TriangulationMesh triMesh, float triMeshX, float triMeshY, std::function<void(double)> progressFunc)
+{
+    QString key = filename + QString("_%1_%2_%3")
+                             .arg(triMesh).arg(triMeshX).arg(triMeshY);
     {
-        i->second->getGeometry(g);
-        return;
+        QMutexLocker lock(&Private::mutex);
+
+        auto i = Private::instances.find(key);
+
+        // reuse
+        if (i != Private::instances.end())
+        {
+            i->second->getGeometry(g);
+            return;
+        }
     }
 
     // create and load
     ShpLoader * loader = new ShpLoader();
+    loader->setTriangulationMesh(triMesh);
+    loader->setTriangulationMeshSpacing(triMeshX, triMeshY);
     loader->loadFile(filename, progressFunc);
     loader->getGeometry(g, progressFunc);
 
     // store for later
-    Private::instances.insert(std::make_pair(filename, loader));
+    QMutexLocker lock(&Private::mutex);
+    Private::instances.insert(std::make_pair(key, loader));
 }
 
 
@@ -258,7 +291,8 @@ void ShpLoader::Private::close()
         SHPClose(handle);
 }
 
-void ShpLoader::Private::getGeometry(Geometry * geom, std::function<void(double)> progressFunc)
+void ShpLoader::Private::getGeometry(
+        Geometry * geom, std::function<void(double)> /*progressFunc*/)
 {
     if (!geometry)
         return;
