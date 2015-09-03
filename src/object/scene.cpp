@@ -221,8 +221,8 @@ void Scene::findObjects_()
     for (Object * c : allObjects_)
     if (c->type() & TG_MODULATOR_OBJECT)
     {
-        auto m = static_cast<ModulatorObject*>(c);
-        if (!m->isUiProxy())
+        auto m = dynamic_cast<ModulatorObject*>(c);
+        if (!m || !m->isUiProxy())
             continue;
 
         if (m->type() == T_MODULATOR_OBJECT_FLOAT)
