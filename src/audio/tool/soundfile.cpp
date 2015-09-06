@@ -16,6 +16,7 @@
 #include "soundfilemanager.h"
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/soundfileistream.h"
 #include "math/interpol.h"
 #include "math/functions.h"
 #include "io/error.h"
@@ -35,10 +36,16 @@ public:
           sr        (0),
           channels  (0),
           lenSam    (0),
-          lenSec    (0)
+          lenSec    (0),
+          stream    (0)
     { }
 
-    bool ok, writeable;
+    ~Private()
+    {
+        delete stream;
+    }
+
+    bool ok, writeable, isStream;
 
     QString filename;
 
@@ -47,6 +54,8 @@ public:
 
     /** 16 for uint16_t, 32 for float */
     uint bitSize;
+
+    SoundFileIStream * stream;
 
     std::vector<unsigned char> data;
 };
@@ -73,14 +82,19 @@ void SoundFile::release()
 
 // --------------- getter ------------------------
 
-bool SoundFile::ok() const
+bool SoundFile::isOk() const
 {
     return p_->ok;
 }
 
-bool SoundFile::writeable() const
+bool SoundFile::isWriteable() const
 {
     return p_->writeable;
+}
+
+bool SoundFile::isStream() const
+{
+    return p_->stream;
 }
 
 const QString& SoundFile::filename() const
@@ -110,7 +124,7 @@ uint SoundFile::lengthSamples() const
 
 std::vector<F32> SoundFile::getSamples(uint channel, uint len) const
 {
-    if (!ok() || numberChannels() == 0)
+    if (!isOk() || numberChannels() == 0)
         return std::vector<F32>();
 
     if (len == 0)
@@ -121,6 +135,14 @@ std::vector<F32> SoundFile::getSamples(uint channel, uint len) const
 
     std::vector<F32> ret(len);
     F32 * dst = &ret[0];
+
+    if (isStream())
+    {
+        /** @todo SoundFile::getSamples(channel, len): implement read from SoundFileIStream */
+        //p_->stream->readChannel()
+
+        return ret;
+    }
 
     if (p_->bitSize == 16)
         for (size_t i=0; i<len; ++i)
@@ -135,7 +157,7 @@ std::vector<F32> SoundFile::getSamples(uint channel, uint len) const
 
 std::vector<F32> SoundFile::getResampled(uint sr, uint channel, uint len) const
 {
-    if (!ok() || numberChannels() == 0)
+    if (!isOk() || numberChannels() == 0)
         return std::vector<F32>();
 
     if (len == 0)
@@ -153,17 +175,46 @@ std::vector<F32> SoundFile::getResampled(uint sr, uint channel, uint len) const
 
 void SoundFile::getResampled(const QList<AudioBuffer*> channels, SamplePos frame, uint sr, F32 amp)
 {
+    if (channels.isEmpty())
+        return;
+
+    const Double invSr = 1.0 / sr;
     size_t i, num = std::min((int)numberChannels(), channels.size());
+
+    // read from stream
+    if (isStream())
+    {
+        size_t bsize = channels.front()->blockSize();
+        F32 buf[bsize * numberChannels()];
+
+        //p_->stream->seek(frame);
+        p_->stream->read(buf, bsize);
+
+        for (i=0; i<num; ++i)
+        {
+            if (!channels[i])
+                continue;
+
+            // XXX no resampling
+            for (size_t j=0; j<bsize; ++j)
+            {
+                channels[i]->write(j, buf[j*numberChannels() + i] * amp);
+            }
+        }
+
+        return;
+    }
+
+    // read from memory
     for (i=0; i<num; ++i)
     {
         if (!channels[i])
             continue;
 
         // XXX poor eff.
-
         for (size_t j=0; j<channels[i]->blockSize(); ++j)
         {
-            Double time = Double(frame + j) / sr;
+            Double time = Double(frame + j) * invSr;
             channels[i]->write(j, value(time, i) * amp);
         }
     }
@@ -179,6 +230,16 @@ Double SoundFile::value(Double time, uint channel) const
     const long int frame = time * sampleRate();
     if (frame < 0 || frame >= (long int)p_->lenSam)
         return 0.0;
+
+    if (isStream())
+    {
+        /** @todo super hacky inefficient  */
+        F32 buf[numberChannels()];
+        p_->stream->seek(frame);
+        p_->stream->read(buf, 1);
+        return buf[channel];
+    }
+
 
     if (p_->bitSize == 16)
     {
@@ -211,7 +272,7 @@ Double SoundFile::value(Double time, uint channel) const
 
 Double SoundFile::value(size_t frame, uint channel) const
 {
-    if (!p_->ok)
+    if (!p_->ok || channel >= numberChannels())
         return 0.0;
 
     // 31bit gives around 13 hours of seekable samples (in mono!)
@@ -219,6 +280,17 @@ Double SoundFile::value(size_t frame, uint channel) const
     if (frame >= p_->lenSam)
         return 0.0;
 
+    // read from stream
+    if (isStream())
+    {
+        /** @todo super hacky inefficient  */
+        F32 buf[numberChannels()];
+        p_->stream->seek(frame);
+        p_->stream->read(buf, 1);
+        return buf[channel];
+    }
+
+    // read from memory
     if (p_->bitSize == 16)
     {
         const int16_t * ptr = (const int16_t*)
@@ -234,7 +306,7 @@ Double SoundFile::value(size_t frame, uint channel) const
 
 void SoundFile::appendDeviceData(const F32 *buf, size_t numSamples)
 {
-    if (!writeable())
+    if (!isWriteable())
         return;
 
     if (p_->bitSize == 16)
@@ -338,10 +410,29 @@ void SoundFile::p_loadFile_(const QString & fn)
     sf_close(f);
 }
 
+void SoundFile::p_openStream_(const QString& fn)
+{
+    p_->ok = false;
+    p_->filename = fn;
+
+    if (!p_->stream)
+        p_->stream = new SoundFileIStream();
+    p_->stream->open(fn);
+
+    p_->ok = true;
+    p_->channels = p_->stream->numChannels();
+    p_->sr = p_->stream->sampleRate();
+    p_->bitSize = 32;
+    p_->lenSam = p_->stream->lengthSamples();
+    p_->lenSec = p_->stream->lengthSeconds();
+}
 
 void SoundFile::saveFile(const QString &fn) const
 {
     MO_DEBUG_SND("SoundFile::saveFile('" << fn << "')");
+
+    if (p_->stream)
+        MO_IO_ERROR(WRITE, "Can't save audio stream file");
 
     SF_INFO info;
     info.channels = p_->channels;

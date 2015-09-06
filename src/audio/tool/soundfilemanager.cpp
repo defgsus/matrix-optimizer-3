@@ -62,18 +62,20 @@ SoundFileManager * SoundFileManager::p_getInstance_()
 }
 
 
-SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
+SoundFile * SoundFileManager::getSoundFile(const QString &filename_, bool loadToMemory)
 {
-    QString filename = IO::fileManager().localFilename(filename_);
+    QString filename = IO::fileManager().localFilename(filename_),
+            key = filename + (loadToMemory ? "_mem" : "_stream");
 
-    MO_DEBUG_SND("SoundFileManager::getSoundFile('" << filename_ << "'");
+    MO_DEBUG_SND("SoundFileManager::getSoundFile('"
+                 << filename_ << "', " << loadToMemory);
 
     auto sfm = p_getInstance_();
 
     {
         QReadLocker lock(&sfm->p_->lock);
 
-        auto i = sfm->p_->soundFiles_.find(filename);
+        auto i = sfm->p_->soundFiles_.find(key);
         // already loaded
         if (i != sfm->p_->soundFiles_.end())
         {
@@ -89,12 +91,15 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
     Private::File file;
     file.sf = sf;
     file.count = 1;
-    sfm->p_->soundFiles_.insert(filename, file);
+    sfm->p_->soundFiles_.insert(key, file);
 
     // try to load
     try
     {
-        sf->p_loadFile_(filename);
+        if (loadToMemory)
+            sf->p_loadFile_(filename);
+        else
+            sf->p_openStream_(filename);
     }
     catch (Exception & e)
     {
@@ -102,7 +107,7 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_)
         MO_IO_WARNING(READ, "loading soundfile failed: \n"
                       << e.what());
 
-        // SoundFile::ok() will be false
+        // SoundFile::isOk() will be false
     }
 
     return sf;
@@ -120,7 +125,7 @@ SoundFile * SoundFileManager::createSoundFile(uint channels, uint samplerate)
     Private::File file;
     file.sf = sf;
     file.count = 1;
-    sfm->p_->soundFiles_.insert("audio_" + QString::number(ulong(sf), 16), file);
+    sfm->p_->soundFiles_.insert("audio_" + QString::number(ulong(sf), 16) + "_mem", file);
 
     return sf;
 }
@@ -129,11 +134,13 @@ void SoundFileManager::releaseSoundFile(SoundFile * sf)
 {
     MO_DEBUG_SND("SoundFileManager::releaseSoundFile(" << sf << ")");
 
+    QString key = sf->filename() + (sf->isStream() ? "_stream" : "_mem");
+
     auto sfm = p_getInstance_();
 
     QWriteLocker lock(&sfm->p_->lock);
 
-    auto i = sfm->p_->soundFiles_.find(sf->filename());
+    auto i = sfm->p_->soundFiles_.find(key);
 
     // check for existence
     // (unlikely this would fail)

@@ -321,7 +321,8 @@ HEADERS += \
     src/object/texture/generate3dto.h \
     $$PWD/io/sswproject.h \
     $$PWD/model/jsontreemodel.h \
-    $$PWD/geom/shploader.h
+    $$PWD/geom/shploader.h \
+    $$PWD/audio/tool/soundfileistream.h
 
 
 SOURCES += \
@@ -599,7 +600,8 @@ SOURCES += \
     src/object/texture/generate3dto.cpp \
     $$PWD/io/sswproject.cpp \
     $$PWD/model/jsontreemodel.cpp \
-    $$PWD/geom/shploader.cpp
+    $$PWD/geom/shploader.cpp \
+    $$PWD/audio/tool/soundfileistream.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

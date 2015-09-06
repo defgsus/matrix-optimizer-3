@@ -37,10 +37,14 @@ public:
     // ---------- getter -------------
 
     /** Returns true if file was loaded / data can be read */
-    bool ok() const;
+    bool isOk() const;
 
     /** Returns true for writeable data */
-    bool writeable() const;
+    bool isWriteable() const;
+
+    /** Returns true if this is an open filestream instead
+        of a file-in-memory. */
+    bool isStream() const;
 
     /** Returns the filename of the sound file */
     const QString& filename() const;
@@ -88,6 +92,7 @@ private:
     /** Loads file into memory.
         @throws IoException on errors */
     void p_loadFile_(const QString&);
+    void p_openStream_(const QString&);
     void p_create_(uint channels, uint sr, int bitSize);
 
     class Private;

@@ -29,9 +29,9 @@ public:
     /** Returns the soundfile for the given filename.
         When finished with it, call releaseSoundFile()!
         This function always returns a SoundFile class.
-        If loading has failed, SoundFile::ok() will be false.
+        If loading has failed, SoundFile::isOk() will be false.
         The error string is *currently* just printed to the console. */
-    static SoundFile * getSoundFile(const QString& filename);
+    static SoundFile * getSoundFile(const QString& filename, bool loadToMemory = true);
 
     /** Creates a new instance for memory-based recording */
     static SoundFile * createSoundFile(uint channels, uint samplerate);
