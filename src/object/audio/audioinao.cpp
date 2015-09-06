@@ -23,6 +23,7 @@ AudioInAO::AudioInAO(QObject *parent)
     : AudioObject   (parent)
 {
     setName("AudioIn");
+    setNumberAudioOutputs(2);
 }
 
 void AudioInAO::serialize(IO::DataStream & io) const

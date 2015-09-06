@@ -750,6 +750,9 @@ void AbstractObjectItem::updateColors()
     update();
 }
 
+/** @todo AudioIn module hides outputs if no system-audio-ins are defined.
+    Generally, there needs to be an abstraction between system-ins/outs and
+    the modules. */
 void AbstractObjectItem::PrivateOI::createConnectors()
 {
     // visible parameters / modulator inputs
