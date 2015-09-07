@@ -41,6 +41,9 @@ public:
 
     Private(SoundFileIStream*parent)
         : parent        (parent)
+        , sfFile        (0)
+        , filePos       (0)
+        , readPos       (0)
         , lookAhead     (1<<16)
     { }
 
@@ -191,7 +194,24 @@ size_t SoundFileIStream::Private::read(F32 *buffer, size_t numSamples)
     MO_DEBUG_SFIS("SoundFileIStream::Private::read("
                   << buffer << ", " << numSamples << ") "
                   "readPos=" << readPos);
+#if 1
+    // quick hack
 
+    const size_t len = sf_readf_float(sfFile, buffer, numSamples);
+    readPos += len;
+    filePos += len;
+    // zero rest
+    if (len < numSamples)
+    {
+        const size_t
+                s = (numSamples - len) * parent->numChannels(),
+                e = numSamples * parent->numChannels();
+        for (size_t i = s; i < e; ++i)
+            buffer[i] = F32(0);
+    }
+    return len;
+
+#else
     Buffer * b = 0;
     // create buffer if needed
     if (buffers.empty())
@@ -225,6 +245,7 @@ size_t SoundFileIStream::Private::read(F32 *buffer, size_t numSamples)
     readPos += len;
 
     return len;
+#endif
 }
 
 

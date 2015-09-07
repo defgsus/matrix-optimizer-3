@@ -179,13 +179,20 @@ void SswProject::Private::createSources()
     }
 
     // find leftmost animation time
-    leftTime = 0.;
+    leftTime = -1.;
     if (!sources.isEmpty())
     {
-        leftTime = sources[0]->startTime();
         for (auto s : sources)
-            leftTime = std::min(leftTime, s->startTime());
+        if (!s->automations().isEmpty())
+        {
+            if (leftTime < 0.)
+                leftTime = s->startTime();
+            else
+                leftTime = std::min(leftTime, s->startTime());
+        }
     }
+    if (leftTime < 0.)
+        leftTime = 0.;
 
     // sort by index
     qSort(sources.begin(), sources.end(), [=](SswSource*l, SswSource*r)
@@ -463,7 +470,7 @@ void SswSource::createSequences(Object *group)
         if (a->x)
         {
             auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("x%1").arg(a->recordId));
+            seq->setName(QString("%1 x%2").arg(label()).arg(a->recordId));
             seq->setTimeline(*a->x);
             seq->setStart(a->start - p_project_->p_->leftTime);
             seq->setEnd(a->end);
@@ -476,7 +483,7 @@ void SswSource::createSequences(Object *group)
         if (a->y)
         {
             auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("x%1").arg(a->recordId));
+            seq->setName(QString("%1 y%2").arg(label()).arg(a->recordId));
             seq->setTimeline(*a->y);
             seq->setStart(a->start - p_project_->p_->leftTime);
             seq->setEnd(a->end);
@@ -486,6 +493,18 @@ void SswSource::createSequences(Object *group)
             ObjectPrivate::addObject(track, seq);
         }
 
+        if (a->z)
+        {
+            auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
+            seq->setName(QString("%1 z%2").arg(label()).arg(a->recordId));
+            seq->setTimeline(*a->z);
+            seq->setStart(a->start - p_project_->p_->leftTime);
+            seq->setEnd(a->end);
+
+            auto track = group->findObjectByNamePath("Pos Z");
+            MO_ASSERT(track, "Could not find track in ssw template");
+            ObjectPrivate::addObject(track, seq);
+        }
     }
 }
 

@@ -187,7 +187,7 @@ void SoundFile::getResampled(const QList<AudioBuffer*> channels, SamplePos frame
         size_t bsize = channels.front()->blockSize();
         F32 buf[bsize * numberChannels()];
 
-        //p_->stream->seek(frame);
+        p_->stream->seek(frame);
         p_->stream->read(buf, bsize);
 
         for (i=0; i<num; ++i)

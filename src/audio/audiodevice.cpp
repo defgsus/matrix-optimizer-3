@@ -294,7 +294,7 @@ void AudioDevice::init(int inDeviceIndex,
     if (ipainf)
     {
         p_->inputParam.device = inDeviceIndex >= 0 ? inDeviceIndex : outDeviceIndex;
-        p_->inputParam.channelCount = numOutputChannels;
+        p_->inputParam.channelCount = numInputChannels;
         p_->inputParam.sampleFormat = paFloat32;
         p_->inputParam.suggestedLatency = ipainf->defaultLowInputLatency;
         p_->inputParam.hostApiSpecificStreamInfo = 0;
@@ -345,7 +345,7 @@ void AudioDevice::init(int inDeviceIndex,
                   mo_pa_callback,
                   static_cast<void*>(this)
                   ),
-        "could not init audiodevice '" << ipainf->name << "'' or '" << opainf->name << "'");
+        "could not init audiodevice '" << ipainf->name << "'/'" << opainf->name << "'");
 
     // store parameters
 

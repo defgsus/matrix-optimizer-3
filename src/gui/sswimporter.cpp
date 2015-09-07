@@ -143,12 +143,15 @@ void SswImporter::Private::createObjects()
     if (!ssw || !rootObject)
         return;
 
+    int k = 0;
     QList<Object*> objs;
     for (auto src : ssw->soundSources())
     {
         auto o = src->createObject();
-        //ObjectPrivate::addObject(rootObject, o);
+        o->setAttachedData(QPoint(ssw->soundSources().size() - k, k),
+                           Object::DT_GRAPH_POS);
         objs << o;
+        ++k;
     }
 
     if (rootObject->editor())
