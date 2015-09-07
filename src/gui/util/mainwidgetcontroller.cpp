@@ -148,7 +148,9 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sysInfoLabel_     (0),
       recentFiles_      (0),
       sceneNotSaved_    (false),
-      statusMessageTimeout_(7 * 1000)
+      statusMessageTimeout_(7 * 1000),
+      timeStep1_        (1.0),
+      timeStep2_        (10.0)
 {
     aResolutionOutput_ = 0;
     setObjectName("_MainWidgetController");
@@ -212,7 +214,12 @@ void MainWidgetController::createObjects_()
 
     // transport widget
     transportWidget_ = new TransportWidget(window_);
-
+    connect(transportWidget_, &TransportWidget::transportBack2, [=](){ moveTime(-timeStep2_); });
+    connect(transportWidget_, &TransportWidget::transportBack1, [=](){ moveTime(-timeStep1_); });
+    connect(transportWidget_, &TransportWidget::transportPlay, [=](){ start(); });
+    connect(transportWidget_, &TransportWidget::transportStop, [=](){ stop(); });
+    connect(transportWidget_, &TransportWidget::transportForward1, [=](){ moveTime(timeStep1_); });
+    connect(transportWidget_, &TransportWidget::transportForward2, [=](){ moveTime(timeStep2_); });
 
     // object graph view
     objectGraphView_ = new ObjectGraphView(window_);
@@ -413,19 +420,41 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
     m = new QMenu(tr("Engine"), menuBar);
     menuBar->addMenu(m);
 
-        QActionGroup * ag = new QActionGroup(menuBar);
-        m->addAction(a = new QAction(tr("Start"), menuBar));
-        ag->addAction(a);
-        a->setShortcut(Qt::Key_F7);
-        a->setCheckable(true);
-        connect(a, SIGNAL(triggered()), this, SLOT(start()));
+        // ------ transport sub-menu -------
 
-        m->addAction(a = new QAction(tr("Stop"), menuBar));
-        ag->addAction(a);
-        a->setShortcut(Qt::Key_F8);
-        a->setCheckable(true);
-        a->setChecked(true);
-        connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+        QMenu* sub;
+        sub = new QMenu(tr("Transport"), menuBar);
+        m->addMenu(sub);
+
+            QActionGroup * ag = new QActionGroup(menuBar);
+            sub->addAction(a = new QAction(tr("Start"), menuBar));
+            ag->addAction(a);
+            a->setShortcut(Qt::Key_F7);
+            a->setCheckable(true);
+            connect(a, SIGNAL(triggered()), this, SLOT(start()));
+
+            sub->addAction(a = new QAction(tr("Stop"), menuBar));
+            ag->addAction(a);
+            a->setShortcut(Qt::Key_F8);
+            a->setCheckable(true);
+            a->setChecked(true);
+            connect(a, SIGNAL(triggered()), this, SLOT(stop()));
+
+            sub->addAction(a = new QAction(tr("Back %1 sec").arg(timeStep1_), menuBar));
+            a->setShortcut(Qt::SHIFT + Qt::Key_Left);
+            connect(a, &QAction::triggered, [=](){ moveTime(-timeStep1_); });
+
+            sub->addAction(a = new QAction(tr("Back %1 sec").arg(timeStep2_), menuBar));
+            a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Left);
+            connect(a, &QAction::triggered, [=](){ moveTime(-timeStep2_); });
+
+            sub->addAction(a = new QAction(tr("Forward %1 sec").arg(timeStep1_), menuBar));
+            a->setShortcut(Qt::SHIFT + Qt::Key_Right);
+            connect(a, &QAction::triggered, [=](){ moveTime(timeStep1_); });
+
+            sub->addAction(a = new QAction(tr("Forward %1 sec").arg(timeStep2_), menuBar));
+            a->setShortcut(Qt::CTRL + Qt::SHIFT + Qt::Key_Right);
+            connect(a, &QAction::triggered, [=](){ moveTime(timeStep2_); });
 
         m->addAction(a = new QAction(tr("Run scripts"), menuBar));
         a->setShortcut(Qt::Key_F9);
@@ -434,7 +463,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         m->addSeparator();
 
         // ##### RESOLUTION SUBMENU #####
-        QMenu* sub;
+
 #ifndef MO_DISABLE_EXP
         sub = new QMenu(tr("Resolution"), menuBar);
         m->addMenu(sub);
@@ -971,10 +1000,14 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
 
 
-
-
 void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
 {
+#if 0
+    // XXX How to pass the event to the window???
+    // This does not trigger the actions
+    QCoreApplication::postEvent(window_, new QKeyEvent(*e));
+
+#else
     if (e->key() == Qt::Key_F7 && !isPlayback())
     {
         e->accept();
@@ -1000,11 +1033,20 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
     }
 
+    if (e->modifiers() & Qt::SHIFT
+            && (e->key() == Qt::Key_Left || e->key() == Qt::Key_Right))
+    {
+        Double ti = timeStep1_;
+        if (e->modifiers() & Qt::CTRL)
+            ti = timeStep2_;
+        if (e->key() == Qt::Key_Left)
+            ti = -ti;
+        moveTime(ti);
+    }
+
 //    if (!e->isAccepted())
 //        scene_->keyDown(e->key());
-
-    //if (!e->isAccepted())
-    //    window_->keyPressEvent(e);
+#endif
 }
 
 
@@ -1679,6 +1721,7 @@ void MainWidgetController::start()
 #endif
     }
 
+    transportWidget_->setPlayback(true);
 }
 
 void MainWidgetController::stop()
@@ -1710,12 +1753,24 @@ void MainWidgetController::stop()
     if (serverEngine().isRunning())
         serverEngine().setScenePlaying(false);
 #endif
+
+    transportWidget_->setPlayback(false);
 }
 
 void MainWidgetController::closeAudio()
 {
     if (audioEngine_)
         audioEngine_->closeAudioDevice();
+}
+
+
+void MainWidgetController::moveTime(Double sec)
+{
+    Double time = std::max(Double(0),
+                    sec + (isPlayback()
+                            ? (audioEngine_ ? audioEngine_->second() : 0.0)
+                            : (scene_ ? scene_->sceneTime() : 0.0)) );
+    setSceneTime(time);
 }
 
 void MainWidgetController::setSceneTime(Double time)

@@ -447,12 +447,31 @@ QString SswSource::typeName() const
 }
 
 
-
-
 Object * SswSource::createObject()
 {
-    Object * group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
-    group->setName(QString("src%1_%2").arg(index()).arg(label()));
+    bool c;
+    return createObject(0, c);
+}
+
+Object * SswSource::createObject(Object * root, bool& created)
+{
+    const QString name = QString("src%1_%2").arg(index()).arg(label());
+    Object * group = 0;
+
+    // reuse
+    if (root)
+        if (auto o = root->findObjectByNamePath(name))
+            group = o;
+
+    // create
+    if (!group)
+    {
+        group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
+        group->setName(name);
+        created = true;
+    }
+    else
+        created = false;
 
     Object * src = group->findObjectByNamePath("/Soundsource");
     if (src)
@@ -465,6 +484,16 @@ Object * SswSource::createObject()
 
 void SswSource::createSequences(Object *group)
 {
+    auto track = group->findObjectByNamePath("Pos X");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+    track = group->findObjectByNamePath("Pos Y");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+    track = group->findObjectByNamePath("Pos Z");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+
     for (Automation * a : automations())
     {
         if (a->x)

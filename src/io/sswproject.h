@@ -134,8 +134,11 @@ public:
 
     // ------ object creation -----------
 
-    /** Creates a Group with a SoundSource and Tracks for automation */
+    /** Creates a Group with a SoundSource and Tracks for automation. */
     Object * createObject();
+    /** Creates a Group with a SoundSource and Tracks for automation.
+        If @p root contains the object it will be reused instead of created. */
+    Object * createObject(Object * root, bool& created);
     /** Call this, once the object from createObject() is installed in the Scene
         (and ObjectEditor) */
     void createSequences(Object * group);

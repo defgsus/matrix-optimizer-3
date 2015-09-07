@@ -42,9 +42,21 @@ void ObjectPrivate::setObjectId(Object * o, const QString& id)
     o->p_idName_ = id;
 }
 
-void ObjectPrivate::addObject(Object *parent, Object *newChild, int index)
+void ObjectPrivate::addObject(Object* parent, Object* newChild, int index)
 {
     parent->addObject_(newChild, index);
+}
+
+void ObjectPrivate::deleteObject(Object* o)
+{
+    if (o->parentObject())
+        o->parentObject()->deleteObject_(o, true);
+}
+
+void ObjectPrivate::deleteChildren(Object* o)
+{
+    for (auto c : o->childObjects())
+        o->deleteObject_(c, true);
 }
 
 

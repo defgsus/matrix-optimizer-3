@@ -106,6 +106,7 @@ public slots:
 
     void start();
     void stop();
+    void moveTime(Double sec);
     void closeAudio();
     /** Sets CurrentTime and audio engine's time at once */
     void setSceneTime(Double time);
@@ -192,6 +193,7 @@ private slots:
     // -- network --
 
     void sendSceneToClients_();
+
 private:
 
     void createObjects_();
@@ -267,7 +269,7 @@ private:
     // ----- config -------
 
     int statusMessageTimeout_;
-
+    Double timeStep1_, timeStep2_;
 };
 
 

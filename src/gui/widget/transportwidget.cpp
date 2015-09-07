@@ -10,6 +10,7 @@
 
 #include <QLayout>
 #include <QLabel>
+#include <QToolButton>
 
 #include "transportwidget.h"
 #include "envelopewidget.h"
@@ -27,14 +28,49 @@ TransportWidget::TransportWidget(QWidget *parent) :
     auto lh = new QHBoxLayout(this);
     lh->setMargin(1);
 
+
         labelTime_ = new QLabel(this);
         auto font = labelTime_->font();
         font.setPointSize(20);
         labelTime_->setFont(font);
         labelTime_->setText(time_to_string(0.0, true));
-        // XXX label size seems not to account for font size automatically
         labelTime_->setMinimumWidth(QFontMetrics(font).width(
                             time_to_string(60*60*1000, true)));
+        lh->addWidget(labelTime_);
+
+        lh->addStretch(1);
+
+        QToolButton * but;
+        butBack2 = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_back2.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportBack2()));
+
+        butBack1 = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_back1.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportBack1()));
+
+        butPlay = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_play.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportPlay()));
+
+        butStop = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_stop.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportStop()));
+
+        butFwd1 = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_fwd1.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportForward1()));
+
+        butFwd2 = but = new QToolButton(this);
+        but->setIcon(QIcon(":/icon/trans_fwd2.png"));
+        lh->addWidget(but);
+        connect(but, SIGNAL(clicked(bool)), this, SIGNAL(transportForward2()));
+
 
         lh->addStretch(1);
 
@@ -42,6 +78,9 @@ TransportWidget::TransportWidget(QWidget *parent) :
         lh->addWidget(envWidget_);
         envWidget_->setFixedSize(256, 48);
         envWidget_->setStatusTip(tr("Display of the microphone amplitudes"));
+
+
+    setPlayback(false);
 }
 
 void TransportWidget::setSceneTime(Double time)
@@ -53,6 +92,11 @@ void TransportWidget::setSceneTime(Double time)
                         .arg(long(time * 30)));
 }
 
+void TransportWidget::setPlayback(bool p)
+{
+    butPlay->setDown(p);
+    butStop->setDown(!p);
+}
 
 } // namespace GUI
 } // namespace MO

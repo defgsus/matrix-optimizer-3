@@ -16,6 +16,7 @@
 #include "types/float.h"
 
 class QLabel;
+class QToolButton;
 
 namespace MO {
 namespace GUI {
@@ -32,14 +33,29 @@ public:
 
 signals:
 
+    void transportBack2();
+    void transportBack1();
+    void transportPlay();
+    void transportStop();
+    void transportForward1();
+    void transportForward2();
+
 public slots:
 
     void setSceneTime(Double time);
+    void setPlayback(bool);
 
 private:
 
     EnvelopeWidget * envWidget_;
     QLabel * labelTime_;
+    QToolButton
+        * butPlay,
+        * butStop,
+        * butBack1,
+        * butBack2,
+        * butFwd1,
+        * butFwd2;
 };
 
 } // namespace GUI

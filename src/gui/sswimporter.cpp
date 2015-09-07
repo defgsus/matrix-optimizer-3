@@ -99,7 +99,17 @@ void SswImporter::Private::createWidgets()
             connect(but, &QToolButton::clicked, [=]()
             {
                 if (rootObject)
-                    createObjects();
+                {
+                    try
+                    {
+                        createObjects();
+                    }
+                    catch (const Exception& e)
+                    {
+                        QMessageBox::critical(widget, tr("ssw object creation"),
+                                              tr("Error!\n%1").arg(e.what()));
+                    }
+                }
             });
 
         tree = new QTreeView(widget);
@@ -147,19 +157,24 @@ void SswImporter::Private::createObjects()
     QList<Object*> objs;
     for (auto src : ssw->soundSources())
     {
-        auto o = src->createObject();
+        bool created;
+        auto o = src->createObject(rootObject, created);
         o->setAttachedData(QPoint(ssw->soundSources().size() - k, k),
                            Object::DT_GRAPH_POS);
-        objs << o;
+        if (created)
+            objs << o;
         ++k;
     }
 
-    if (rootObject->editor())
-        rootObject->editor()->addObjects(rootObject, objs);
-    else if (rootObject->sceneObject())
-        rootObject->sceneObject()->addObjects(rootObject, objs);
-    else
-        MO_ERROR("Can't add objects");
+    if (!objs.isEmpty())
+    {
+        if (rootObject->editor())
+            rootObject->editor()->addObjects(rootObject, objs);
+        else if (rootObject->sceneObject())
+            rootObject->sceneObject()->addObjects(rootObject, objs);
+        else
+            MO_ERROR("Can't add objects");
+    }
 }
 
 
