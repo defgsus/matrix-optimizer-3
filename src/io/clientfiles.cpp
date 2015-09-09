@@ -26,6 +26,8 @@
 #include "io/application.h"
 #include "io/log.h"
 
+#undef ERROR // windows..
+
 namespace MO {
 namespace IO {
 

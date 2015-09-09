@@ -21,6 +21,8 @@
 #include "io/datastream.h"
 #include "io/log.h"
 
+#undef CF_MAX // windows..
+
 using namespace gl;
 
 namespace MO {
@@ -193,7 +195,7 @@ void MixTO::Private::initGl()
         src.pasteDefaultIncludes();
         src.addDefine(QString("#define NUM_TEX %1").arg(to->numberTextureInputs()));
 
-        // pase mod functions
+        // phase mod functions
         QString source =  getModSyntax( (ModFunc)p_mod1->baseValue() ),
                 source2 = getModSyntax( (ModFunc)p_mod2->baseValue() );;
         source.replace("X", "a");

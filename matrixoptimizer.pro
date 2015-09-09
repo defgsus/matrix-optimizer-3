@@ -46,7 +46,14 @@ mac { DEFINES += \
                 MO_DISABLE_SHP
 }
 
-# for optirun bug
+windows { DEFINES += \
+                MO_DISABLE_LADSPA \
+                MO_DISABLE_DUMB \
+                MO_DISABLE_NIFTI \
+                MO_DISABLE_SHP
+}
+
+# for optirun bug (XXX old and obsolete by now)
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
@@ -64,7 +71,8 @@ LIBS += -L/opt/local/lib/ \
         -lglib-2.0        \
         -langelscript
 }
-else: unix: {
+
+unix {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
@@ -74,10 +82,13 @@ LIBS += -lglbinding \
         -ldl    # dynamic linking
 #        -lCGAL \
 }
-else: win32 {
+
+win32 {
 LIBS += -lkernel32 -lpsapi \
-        -lportaudio -lsndfile-1 \
-        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
+        -lopengl32 -lglu32 -lglbinding \
+        -lportaudio -lPortMidi -lsndfile-1 \
+        -langelscript
+        #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 
 ###################### files ##########################

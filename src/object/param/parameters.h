@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_UTIL_PARAMETERS_H
 #define MOSRC_OBJECT_UTIL_PARAMETERS_H
 
+#include <functional>
+
 #include <QList>
 #include <QMap>
 #include <QSet>
@@ -23,6 +25,7 @@
 namespace MO {
 namespace MATH { class Timeline1d; }
 
+/** Container for all Parameters (modulatable or not) of an MO::Object */
 class Parameters
 {
 public:

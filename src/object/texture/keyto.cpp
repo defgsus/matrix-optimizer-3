@@ -22,6 +22,9 @@
 #include "io/datastream.h"
 #include "io/log.h"
 
+#undef near
+#undef far // windows..
+
 using namespace gl;
 
 namespace MO {

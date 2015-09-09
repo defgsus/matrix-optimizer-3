@@ -32,6 +32,9 @@
 #include "projection/projectorblender.h"
 #include "geom/geometry.h"
 
+#undef near
+#undef far  // windows..
+
 using namespace gl;
 
 namespace MO {

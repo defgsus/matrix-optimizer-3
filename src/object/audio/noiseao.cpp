@@ -15,6 +15,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "audio/tool/audiobuffer.h"
+#include "io/applicationtime.h"
 #include "io/datastream.h"
 
 #include <cmath>
@@ -34,7 +35,7 @@ class NoiseAO::Private
 
     Private(NoiseAO *ao)
         : ao(ao)
-        , seed(time(NULL))
+        , seed(applicationTime() * 7654321)
     {}
 
     Mode mode() const { return (Mode)paramMode->baseValue(); }

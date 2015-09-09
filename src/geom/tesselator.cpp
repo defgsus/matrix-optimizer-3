@@ -20,9 +20,9 @@
 
 // must be last to avoid conflict with glbinding
 #if defined(__APPLE__)
- #include <OpenGL/glu.h>
+#   include <OpenGL/glu.h>
 #else
- #include <GL/glu.h>
+#   include <GL/glu.h>
 #endif
 
 #if (0) && !defined(NDEBUG)
@@ -31,6 +31,10 @@
 #else
 #   define MO_DEBUG_TESS(unused__)
 #endif
+
+
+// hack for now
+#define MO_DISABLE_GLU
 
 
 namespace MO {
@@ -96,7 +100,7 @@ Tesselator::Tesselator()
     : p_    (new TesselatorPrivate())
 {
     p_->clear();
-
+#ifndef MO_DISABLE_GLU
     // create tesselation object
     p_->ctx = gluNewTess();
 
@@ -106,11 +110,14 @@ Tesselator::Tesselator()
     gluTessCallback(p_->ctx, GLU_TESS_VERTEX_DATA, (void (CALLBACK *)())moTesselatorVertex);
     gluTessCallback(p_->ctx, GLU_TESS_COMBINE_DATA, (void (CALLBACK *)())moTesselatorCombine);
     //gluTessCallback(p_->ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
+#endif
 }
 
 Tesselator::~Tesselator()
 {
+#ifndef MO_DISABLE_GLU
     gluDeleteTess(p_->ctx);
+#endif
     p_->clear();
     delete p_;
 }
@@ -211,6 +218,7 @@ void TesselatorPrivate::tesselate(bool trianglesOnly)
     if (!basis.isEmpty())
         intersectBasis();
 
+#ifndef MO_DISABLE_GLU
     if (trianglesOnly)
         gluTessCallback(ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
     else
@@ -251,7 +259,7 @@ void TesselatorPrivate::tesselate(bool trianglesOnly)
             gluTessEndPolygon(ctx);
         }
     }
-
+#endif
     fixWinding();
 }
 

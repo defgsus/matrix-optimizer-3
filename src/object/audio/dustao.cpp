@@ -15,6 +15,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "audio/tool/audiobuffer.h"
+#include "io/applicationtime.h"
 #include "io/datastream.h"
 
 #include <cmath>
@@ -58,7 +59,7 @@ DustAO::DustAO(QObject * parent)
     setName("Dust");
     setNumberAudioInputs(2);
     setNumberAudioOutputs(1);
-    srand(time(NULL));
+    srand(applicationTime() * 7654321);
 }
 
 DustAO::~DustAO()

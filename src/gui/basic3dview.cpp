@@ -13,8 +13,12 @@
 #include "basic3dview.h"
 #include "math/vector.h"
 
+//#include "gl/opengl_undef.h"
+//#include "gl/opengl.h"
+
 namespace MO {
 namespace GUI {
+
 
 Basic3DView::Basic3DView(QWidget *parent) :
     QGLWidget(parent)
@@ -78,27 +82,30 @@ void Basic3DView::resizeGL(int w, int h)
     // is this necessary here?
     int pixelsize = devicePixelRatio(); // Retina support
     std::cerr << "Basic3DView::resizeGL(int w, int h)" << std::endl;
-    glViewport(0,0,w*pixelsize,h*pixelsize);
+    /*glViewport(0,0,w*pixelsize,h*pixelsize);
 
     glMatrixMode(GL_PROJECTION);
     glLoadMatrixf(&projectionMatrix_[0][0]);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    */
 }
 
 
 void Basic3DView::paintGL()
 {
+    /*
     glLoadMatrixf(&transformationMatrix()[0][0]);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+    */
 //    drawCoords_(10);
 }
 
 
 void Basic3DView::drawCoords_(int len)
 {
+    /*
     const GLfloat s = 0.1;
     glBegin(GL_LINES);
 
@@ -128,6 +135,7 @@ void Basic3DView::drawCoords_(int len)
         }
 
     glEnd();
+    */
 }
 
 } // namespace GUI

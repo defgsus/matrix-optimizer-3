@@ -78,6 +78,7 @@ GeometryModifierCreate::GeometryModifierCreate()
     properties().setSubType("filename-shp",
                             Properties::ST_FILENAME | IO::FT_SHAPEFILE);
 
+#ifndef MO_DISABLE_SHP
     Properties::NamedValues nv;
     nv.set("off", QObject::tr("none"),
            QObject::tr("Tesselate along polygon outlines only"),
@@ -88,6 +89,7 @@ GeometryModifierCreate::GeometryModifierCreate()
     properties().set("trimesh", QObject::tr("triangulation mesh"),
                      QObject::tr("A basis mesh to intersect with polygons before tesselation"),
                      nv, (int)ShpLoader::TM_NONE);
+#endif
     properties().set("trimeshspace", QObject::tr("mesh spacing"),
                      QObject::tr("A basis mesh to intersect with polygons before tesselation"),
                      QVector<Float>() << 1. << 1.);
@@ -124,9 +126,11 @@ GeometryModifierCreate::GeometryModifierCreate()
         const Type gtype = (Type)prop.get("type").toInt();
         const bool
                 isFile = gtype == T_FILE_OBJ
-                            || gtype == T_FILE_SHP,
-                canOnlyTriangle = isFile || gtype == T_BOX_UV,
-                canTriangle = (gtype != T_GRID_XZ
+        #ifndef MO_DISABLE_SHP
+                            || gtype == T_FILE_SHP
+        #endif
+                , canOnlyTriangle = isFile || gtype == T_BOX_UV
+                , canTriangle = (gtype != T_GRID_XZ
                                 && gtype != T_LINE_GRID),
         #if 0
                 has3Segments = (gtype == T_LINE_GRID
@@ -147,10 +151,11 @@ GeometryModifierCreate::GeometryModifierCreate()
                             || gtype == T_CONE;
 
         prop.setVisible("filename-obj", gtype == T_FILE_OBJ);
+#ifndef MO_DISABLE_SHP
         prop.setVisible("filename-shp", gtype == T_FILE_SHP);
         prop.setVisible("trimesh", gtype == T_FILE_SHP);
         prop.setVisible("trimeshspace", gtype == T_FILE_SHP);
-
+#endif
         prop.setVisible("closed", hasClosed);
         prop.setVisible("radius", hasSmallRadius);
         prop.setVisible("asTriangles", canTriangle && !canOnlyTriangle);
@@ -162,15 +167,23 @@ GeometryModifierCreate::GeometryModifierCreate()
 bool GeometryModifierCreate::isFile() const
 {
     Type t = (Type)properties().get("type").toInt();
-    return t == T_FILE_OBJ || t == T_FILE_SHP;
+    return t == T_FILE_OBJ
+        #ifndef MO_DISABLE_SHP
+            || t == T_FILE_SHP
+        #endif
+            ;
 }
 
 QString GeometryModifierCreate::filename() const
 {
     Type t = (Type)properties().get("type").toInt();
-    return t == T_FILE_SHP
+    return
+        #ifndef MO_DISABLE_SHP
+            t == T_FILE_SHP
             ? properties().get("filename-shp").toString()
-            : properties().get("filename-obj").toString();
+            :
+        #endif
+              properties().get("filename-obj").toString();
 }
 
 
@@ -236,8 +249,10 @@ void GeometryModifierCreate::execute(Geometry * g)
             smallRadius = properties().get("radius").toFloat();
     const Type
             type = (Type)properties().get("type").toInt();
+#ifndef MO_DISABLE_SHP
     const ShpLoader::TriangulationMesh
             triMesh = (ShpLoader::TriangulationMesh)properties().get("trimesh").toInt();
+#endif
 
     // shared vertices?
     g->setSharedVertices(sharedVertices);
@@ -333,7 +348,11 @@ void GeometryModifierCreate::execute(Geometry * g)
     }
 
     // unshared-vertices for non-files
-    if (!sharedVertices && type != T_FILE_OBJ && type != T_FILE_SHP)
+    if (!sharedVertices && type != T_FILE_OBJ
+        #ifndef MO_DISABLE_SHP
+            && type != T_FILE_SHP
+        #endif
+            )
         g->unGroupVertices();
 }
 

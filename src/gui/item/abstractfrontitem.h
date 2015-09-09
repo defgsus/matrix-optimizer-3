@@ -284,8 +284,8 @@ private:
 
     void p_update_from_properties_();
 
-    static QMap<QString, AbstractFrontItem*> p_reg_items_;
-    static QMap<int, AbstractFrontItem*> p_reg_items_t_;
+    static QMap<QString, AbstractFrontItem*> * p_reg_items_;
+    static QMap<int, AbstractFrontItem*> * p_reg_items_t_;
     static int p_id_count_;
 
     QString p_id_;

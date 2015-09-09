@@ -686,7 +686,7 @@ void DiskRenderer::Private::normalizeAndSplitAudio()
         for (size_t i=0; i<(size_t)ininfo.frames; i += bsize)
         {
             // read a chunk - interlaced
-            size_t left = std::min(bsize, ininfo.frames - i);
+            size_t left = std::min(bsize, size_t(ininfo.frames) - i);
             size_t r = sf_readf_float(infile, &data[0], left);
             if (r != left)
                 MO_IO_ERROR(READ, tr("Could not read from audio file\n'%1'\n%2")

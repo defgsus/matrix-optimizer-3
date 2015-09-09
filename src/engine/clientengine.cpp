@@ -38,6 +38,8 @@
 #include "io/error.h"
 #include "io/log.h"
 
+#undef ERROR // windows..
+
 namespace MO {
 
 ClientEngine & clientEngine()

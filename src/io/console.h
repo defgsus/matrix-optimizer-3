@@ -14,11 +14,11 @@
 #include <iostream>
 #include <qglobal.h> // for Q_OS_.. flags
 
-namespace MO {
-
 // --------------- colored console output ----------
 
 #ifdef Q_OS_UNIX
+
+    namespace MO {
 
     /** Defines a color for console output.
         @code
@@ -44,12 +44,16 @@ namespace MO {
 
     std::ostream& operator<<(std::ostream& os, const streamColor& cs);
 
+    } // namespace MO
+
 #endif // Q_OS_UNIX
 
 
 #ifdef Q_OS_WIN
 
     #include <windows.h>
+
+    namespace MO {
 
     /** Defines a color for console output.
         @code
@@ -77,11 +81,11 @@ namespace MO {
 
     std::ostream& operator<<(std::ostream& os, const streamColor& cs);
 
+    } // namespace MO
+
 #endif // Q_OS_WIN
 
 
 
-} // namespace MO
 
-
-#endif // CONSOLE_H
+#endif // MOSRC_IO_CONSOLE_H
