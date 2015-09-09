@@ -179,13 +179,20 @@ void SswProject::Private::createSources()
     }
 
     // find leftmost animation time
-    leftTime = 0.;
+    leftTime = -1.;
     if (!sources.isEmpty())
     {
-        leftTime = sources[0]->startTime();
         for (auto s : sources)
-            leftTime = std::min(leftTime, s->startTime());
+        if (!s->automations().isEmpty())
+        {
+            if (leftTime < 0.)
+                leftTime = s->startTime();
+            else
+                leftTime = std::min(leftTime, s->startTime());
+        }
     }
+    if (leftTime < 0.)
+        leftTime = 0.;
 
     // sort by index
     qSort(sources.begin(), sources.end(), [=](SswSource*l, SswSource*r)
@@ -440,12 +447,31 @@ QString SswSource::typeName() const
 }
 
 
-
-
 Object * SswSource::createObject()
 {
-    Object * group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
-    group->setName(QString("src%1_%2").arg(index()).arg(label()));
+    bool c;
+    return createObject(0, c);
+}
+
+Object * SswSource::createObject(Object * root, bool& created)
+{
+    const QString name = QString("src%1_%2").arg(index()).arg(label());
+    Object * group = 0;
+
+    // reuse
+    if (root)
+        if (auto o = root->findObjectByNamePath(name))
+            group = o;
+
+    // create
+    if (!group)
+    {
+        group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
+        group->setName(name);
+        created = true;
+    }
+    else
+        created = false;
 
     Object * src = group->findObjectByNamePath("/Soundsource");
     if (src)
@@ -458,12 +484,22 @@ Object * SswSource::createObject()
 
 void SswSource::createSequences(Object *group)
 {
+    auto track = group->findObjectByNamePath("Pos X");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+    track = group->findObjectByNamePath("Pos Y");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+    track = group->findObjectByNamePath("Pos Z");
+    MO_ASSERT(track, "Could not find track in ssw template");
+    ObjectPrivate::deleteChildren(track);
+
     for (Automation * a : automations())
     {
         if (a->x)
         {
             auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("x%1").arg(a->recordId));
+            seq->setName(QString("%1 x%2").arg(label()).arg(a->recordId));
             seq->setTimeline(*a->x);
             seq->setStart(a->start - p_project_->p_->leftTime);
             seq->setEnd(a->end);
@@ -476,7 +512,7 @@ void SswSource::createSequences(Object *group)
         if (a->y)
         {
             auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("x%1").arg(a->recordId));
+            seq->setName(QString("%1 y%2").arg(label()).arg(a->recordId));
             seq->setTimeline(*a->y);
             seq->setStart(a->start - p_project_->p_->leftTime);
             seq->setEnd(a->end);
@@ -486,6 +522,18 @@ void SswSource::createSequences(Object *group)
             ObjectPrivate::addObject(track, seq);
         }
 
+        if (a->z)
+        {
+            auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
+            seq->setName(QString("%1 z%2").arg(label()).arg(a->recordId));
+            seq->setTimeline(*a->z);
+            seq->setStart(a->start - p_project_->p_->leftTime);
+            seq->setEnd(a->end);
+
+            auto track = group->findObjectByNamePath("Pos Z");
+            MO_ASSERT(track, "Could not find track in ssw template");
+            ObjectPrivate::addObject(track, seq);
+        }
     }
 }
 

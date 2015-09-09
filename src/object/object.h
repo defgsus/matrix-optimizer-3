@@ -54,6 +54,9 @@ public:
     static void setObjectId(Object * o, const QString& id);
     /** Call to Object::addObject_() */
     static void addObject(Object * parent, Object * newChild, int index = -1);
+    /** Call to parent's Object::deleteObject_() */
+    static void deleteObject(Object * o);
+    static void deleteChildren(Object * parent);
 };
 
 #define MO_REGISTER_OBJECT(class__) \
@@ -171,11 +174,11 @@ public:
     /** ORDER MUST NOT CHANGE! */
     enum DataType
     {
-        /** Position in ObjectGraphView */
+        /** Position in ObjectGraphView (QPoint) */
         DT_GRAPH_POS,
-        /** Expanded-flag in ObjectGraphView */
+        /** Expanded-flag in ObjectGraphView (bool) */
         DT_GRAPH_EXPANDED,
-        /** Object hue */
+        /** Object hue (int) */
         DT_HUE,
         DT_CLIP_COLUMN,
         DT_CLIP_ROW,

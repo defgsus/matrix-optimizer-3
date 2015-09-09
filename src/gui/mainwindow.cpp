@@ -34,6 +34,7 @@
 #include "gui/widget/spacer.h"
 #include "object/scene.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace GUI {
@@ -224,6 +225,13 @@ void MainWindow::createMenus_()
     viewMenu_ = new QMenu("View", menuBar());
     menuBar()->addMenu(viewMenu_);
 }
+
+/*
+bool MainWindow::event(QEvent* e)
+{
+    MO_PRINT("MainWindow::event(" << e << ")");
+    return QMainWindow::event(e);
+}*/
 
 void MainWindow::showEvent(QShowEvent * e)
 {

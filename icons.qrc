@@ -62,5 +62,11 @@
         <file alias="obj_trans_mirror.png">assets/icon/obj_trans_mirror.png</file>
         <file alias="obj_text.png">assets/icon/obj_text.png</file>
         <file alias="obj_microphone_group.png">assets/icon/obj_microphone_group.png</file>
+        <file alias="trans_back1.png">assets/icon/trans_back1.png</file>
+        <file alias="trans_back2.png">assets/icon/trans_back2.png</file>
+        <file alias="trans_fwd1.png">assets/icon/trans_fwd1.png</file>
+        <file alias="trans_fwd2.png">assets/icon/trans_fwd2.png</file>
+        <file alias="trans_play.png">assets/icon/trans_play.png</file>
+        <file alias="trans_stop.png">assets/icon/trans_stop.png</file>
     </qresource>
 </RCC>

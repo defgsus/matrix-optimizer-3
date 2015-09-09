@@ -678,12 +678,12 @@ void DiskRenderer::Private::normalizeAndSplitAudio()
             files.push_back(file);
         }
 
-        size_t bsize = 1024 * 16;
+        sf_count_t bsize = 1024 * 16;
         std::vector<F32> data(bsize * ininfo.channels),
                          dataout(bsize);
 
         // split data
-        for (size_t i=0; i<(size_t)ininfo.frames; i += bsize)
+        for (sf_count_t i=0; i<ininfo.frames; i += bsize)
         {
             // read a chunk - interlaced
             size_t left = std::min(bsize, size_t(ininfo.frames) - i);

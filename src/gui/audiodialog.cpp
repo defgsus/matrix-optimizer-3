@@ -354,7 +354,7 @@ void AudioDialog::fillOutDeviceBox_()
                             .arg(inf->name), QVariant(i));
 
         if (inf->name == dev)
-            outDeviceBox_->setCurrentIndex(i + 1);
+            outDeviceBox_->setCurrentIndex(outDeviceBox_->count()-1);
     }
 }
 
@@ -489,10 +489,10 @@ void AudioDialog::storeConfig_()
     int outidx = apiBox_->currentIndex();
 //    settings()->setValue("Audio/api", inidx < 1? "None" : devices_->getApiInfo(inidx-1)->name );
     settings()->setValue("Audio/api", outidx < 1? "None" : devices_->getApiInfo(outidx-1)->name );
-    inidx  = inDeviceBox_->currentIndex();
-    outidx = outDeviceBox_->currentIndex();
-    settings()->setValue("Audio/indevice", inidx < 1? "None" : devices_->getDeviceInfo(inidx-1)->name );
-    settings()->setValue("Audio/outdevice", outidx < 1? "None" : devices_->getDeviceInfo(outidx-1)->name );
+    inidx  = selectedInDeviceIndex();
+    outidx = selectedOutDeviceIndex();
+    settings()->setValue("Audio/indevice", inidx < 0? "None" : devices_->getDeviceInfo(inidx)->name );
+    settings()->setValue("Audio/outdevice", outidx < 0? "None" : devices_->getDeviceInfo(outidx)->name );
     settings()->setValue("Audio/samplerate", sampleRate_->value());
     settings()->setValue("Audio/buffersize", bufferSize_->value());
     settings()->setValue("Audio/channelsIn", numInputs_->value());

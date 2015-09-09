@@ -61,6 +61,7 @@ class WavePlayerAO::Private
         * paramLoopStart,
         * paramLoopLength;
     ParameterSelect
+        * paramLoadMem,
         * paramMode,
         * paramLoop;
 
@@ -122,6 +123,15 @@ void WavePlayerAO::createParameters()
         p_->paramFilename = params()->createFilenameParameter("fn", tr("filename"),
                                                           tr("Select a file to play"),
                                                           IO::FT_SOUND);
+
+        p_->paramLoadMem = params()->createBooleanParameter("load_memory",
+                                                           tr("load to memory"),
+                tr("When selected, the whole file will be loaded into memory, "
+                   "otherwise it gets streamed from disk"),
+                tr("The file is streamed from disk"),
+                tr("The file is completely loaded into memory"),
+                true,
+                true, false);
 
         p_->paramMode = params()->createSelectParameter("time_mode", tr("time mode"),
                                             tr("Selects the kind of timing to use"),
@@ -187,7 +197,7 @@ void WavePlayerAO::onParameterChanged(Parameter * p)
 {
     AudioObject::onParameterChanged(p);
 
-    if (p == p_->paramFilename)
+    if (p == p_->paramFilename || p == p_->paramLoadMem)
         p_->updateFile();
 }
 
@@ -342,12 +352,13 @@ void WavePlayerAO::Private::updateFile()
         return;
     }
 
-    if (!wave || wave->filename() != fn)
+    if (!wave || wave->filename() != fn
+        || wave->isStream() != !paramLoadMem->baseValue())
     {
         curTime = curTimeAll = 0.;
 
-        auto wav = AUDIO::SoundFileManager::getSoundFile(fn);
-        if (!wav->ok())
+        auto wav = AUDIO::SoundFileManager::getSoundFile(fn, paramLoadMem->baseValue());
+        if (!wav->isOk())
             close();
         else
         {

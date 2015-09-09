@@ -52,6 +52,7 @@ private slots:
 
 protected:
 
+    //bool event(QEvent *event) Q_DECL_OVERRIDE; /* debug */
     void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
 
 private:

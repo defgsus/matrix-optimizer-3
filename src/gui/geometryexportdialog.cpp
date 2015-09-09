@@ -142,6 +142,7 @@ bool GeometryExportDialog::export_(const QString &filename)
         return exportObj_(filename);
     if (idx < 2)
         return exportJavaScript_(filename);
+    return false;
 }
 
 bool GeometryExportDialog::exportObj_(const QString &filename)

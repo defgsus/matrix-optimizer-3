@@ -39,9 +39,7 @@ class FloatGate
             if (last_value_ <= thresh_)
             {
                 // set gate on
-                last_value_ = gate;
-                // return gate on
-                return last_value_;
+                return last_value_ = gate;
             }
         }
         else
