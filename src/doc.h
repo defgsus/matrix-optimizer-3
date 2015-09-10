@@ -11,6 +11,23 @@
 #ifndef MOSRC_DOC_H
 #define MOSRC_DOC_H
 
+/** @todo VIOSO Port
+  *
+  * - "Close" instead of "Cancel" in unchanged scene description popup
+  * - populate edit mainmenu with actions from ObjectSceneGraph
+  * - performance of widget creation in ParameterView
+  *
+  * minor issues:
+  * - lighting does not work (when using integrated Intel graphics)
+  * - shader error in scene debug renderer (when using integrated Intel graphics)
+  *
+  *
+  * workload:
+  * 10h compiled for windows (missing libDUMB, libSHP & libGLU)
+  *
+  **/
+
+
 /** @todo Hamburg impressions:
   *
   * - fullscreen issue (wtf???) and is the stretching hack a solution??
@@ -22,8 +39,6 @@
   * - update comes one to late in ProjectorSetupDialog
   *
   */
-
-
 
 
 /** @page random_ideas

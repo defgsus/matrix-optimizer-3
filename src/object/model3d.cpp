@@ -588,15 +588,16 @@ void Model3d::initGl(uint /*thread*/)
     // lazy-creation of resources?
     const bool lazy = sceneObject() ? sceneObject()->lazyFlag() : false;
 
-    // create resources
-    if (lazy)
+    // -- create resources --
+
+    if (lazy) // instantly
     {
         nextGeometry_ = new GEOM::Geometry;
         geomSettings_->setObject(this);
         geomSettings_->modifierChain()->execute(nextGeometry_, this);
     }
     else
-    if (!nextGeometry_)
+    if (!nextGeometry_) // or in background
     {
         resetCreator_();
         creator_ = new GEOM::GeometryCreator(this);

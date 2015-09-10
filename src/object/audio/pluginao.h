@@ -8,7 +8,7 @@
     <p>created 06.05.2015</p>
 */
 
-#ifndef MO_DISABLE_LADSPA
+//#ifndef MO_DISABLE_LADSPA
 
 #ifndef MOSRC_OBJECT_AUDIO_PLUGINAO_H
 #define MOSRC_OBJECT_AUDIO_PLUGINAO_H
@@ -58,4 +58,4 @@ private:
 
 #endif // MOSRC_OBJECT_AUDIO_PLUGINAO_H
 
-#endif // #ifndef MO_DISABLE_LADSPA
+//#endif // #ifndef MO_DISABLE_LADSPA
