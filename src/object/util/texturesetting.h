@@ -20,6 +20,7 @@
 
 namespace MO {
 
+/** A wrapper for texture parameters and load/generation functions */
 class TextureSetting : public QObject
 {
     Q_OBJECT
@@ -96,6 +97,9 @@ public:
         Generally just use bind()/unbind() */
     const GL::Texture * texture() const { return constTexture_; }
 
+    /** Returns a string with a description of the error, empty string otherwise */
+    const QString& errorString() const { return errorStr_; }
+
     // ------------ opengl ---------------
 
     /** Creates or queries the texture, depending on the texture type.
@@ -134,6 +138,8 @@ private:
     //ParameterText * paramAngelScript_;
     ParameterInt * paramCamera_;
     ParameterTexture * paramTex_;
+
+    QString errorStr_;
 };
 
 } // namespace MO

@@ -135,10 +135,10 @@ void Scene::deserialize(IO::DataStream & io)
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
 
-#ifdef MO_DISABLE_EXP
+/*#ifdef MO_DISABLE_EXP
     doMatchOutputResolution_ = true;
     //fbSizeRequest_ = QSize(0, 0);
-#endif
+#endif*/
 
     if (ver >= 3)
         io >> sceneDesc_ >> showSceneDesc_;

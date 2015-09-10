@@ -61,6 +61,9 @@ PluginAO::PluginAO(QObject * parent)
 {
     setName("Plugin");
     setNumberAudioInputsOutputs(0, 0, false);
+#ifdef MO_DISABLE_LADSPA
+    setError(tr("Audio Plugin object only supports LADSPA(Linux) at the moment"));
+#endif
 }
 
 PluginAO::~PluginAO()
@@ -183,6 +186,8 @@ void PluginAO::Private::updateParameters(bool setDefaults)
 
     if (ao->editor())
         emit ao->editor()->parametersChanged();
+#else
+    Q_UNUSED(setDefaults);
 #endif
 }
 
@@ -326,6 +331,7 @@ void PluginAO::processAudio(uint bsize, SamplePos pos, uint thread)
         p_->usedPlugin->process(audioInputs(thread), audioOutputs(thread));
     }
 #else
+    Q_UNUSED(bsize);
     writeNullBlock(pos, thread);
 #endif
 }

@@ -504,5 +504,16 @@ void Shader::dumpUniforms(std::ostream &out) const
     }
 }
 
+QString Shader::compileMessagesString() const
+{
+    QString s;
+
+    // XXX make this nicer
+    for (auto m : msg_)
+        s += m.text + "\n";
+
+    return s;
+}
+
 } // namespace GL
 } // namespace MO

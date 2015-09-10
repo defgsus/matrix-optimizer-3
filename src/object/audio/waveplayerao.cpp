@@ -132,6 +132,9 @@ void WavePlayerAO::createParameters()
                 tr("The file is completely loaded into memory"),
                 true,
                 true, false);
+#ifdef MO_DISABLE_EXP
+        p_->paramLoadMem->setZombie(true);
+#endif
 
         p_->paramMode = params()->createSelectParameter("time_mode", tr("time mode"),
                                             tr("Selects the kind of timing to use"),
@@ -343,6 +346,8 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
 
 void WavePlayerAO::Private::updateFile()
 {
+    ao->clearError();
+
     // get local filename
     QString fn = IO::fileManager().localFilename( paramFilename->value() );
 
@@ -359,7 +364,10 @@ void WavePlayerAO::Private::updateFile()
 
         auto wav = AUDIO::SoundFileManager::getSoundFile(fn, paramLoadMem->baseValue());
         if (!wav->isOk())
+        {
+            ao->setError(wav->errorString());
             close();
+        }
         else
         {
             ao->setNumberAudioOutputs(wav->numberChannels());

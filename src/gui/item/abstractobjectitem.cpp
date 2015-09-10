@@ -1108,7 +1108,12 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     else
         p->setBrush(p_oi_->brushBack);
 
-    p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
+    const bool isError = object() && object()->hasError();
+
+    if (!isError)
+        p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
+    else
+        p->setPen(ObjectGraphSettings::penOutlineError(isSelected()));
 
     const auto r = rect();
     const qreal cornerRadius = (p_oi_->dragHover ? 0.25 : 0.1) *

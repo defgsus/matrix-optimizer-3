@@ -162,6 +162,8 @@ public:
 
     /** Returns the errors from the last compilation */
     const QList<CompileMessage>& compileMessages() const { return msg_; }
+    /** Returns the errors from the last compilation as one multi-line string */
+    QString compileMessagesString() const;
 
     /** Has the source changed and shader needs recompilation? */
     bool sourceChanged() const { return sourceChanged_; }

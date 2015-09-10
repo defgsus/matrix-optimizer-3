@@ -551,7 +551,7 @@ public:
         Always call the ancestor implementation in your derived function! */
     virtual void setThreadStorage(int threads, int blockSize);
 #endif
-    // ---------- only callable by scene -----------------
+    // ---------- only callable by scene or ObjectPrivate -----------------
 private:
 
     /** Adds the object to the list of childs.
@@ -772,6 +772,15 @@ public:
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }
 
+    // ----------------- errors ----------------------
+
+    bool hasError() const { return !p_errorStr_.isEmpty(); }
+    const QString& errorString() const { return p_errorStr_; }
+    void clearError() { p_errorStr_.clear(); }
+    /** Call this during initialization to signal an error to the gui/user.
+        Passing an empty string does nothing. Otherise, error strings are
+        accumulated (with newline). */
+    void setError(const QString& errorString);
 
     // ------------------ files ----------------------
 
@@ -871,7 +880,10 @@ private:
     /** @deprecated */
     Mat4 p_transformation_;
 
-    QString ioLoadErrorStr_;
+    /** Used for deserialization errors */
+    QString p_ioLoadErrorStr_,
+    /** Used during object creation/initialization */
+            p_errorStr_;
 };
 
 

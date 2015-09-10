@@ -464,7 +464,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         // ##### RESOLUTION SUBMENU #####
 
-#ifndef MO_DISABLE_EXP
         sub = new QMenu(tr("Resolution"), menuBar);
         m->addMenu(sub);
 
@@ -489,10 +488,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
                         this, SLOT(onResolutionPredefined_(QAction*)));
 
         m->addSeparator();
-#endif
 
         // ##### DEBUG VISIBILITY SUBMENU #####
-#ifndef MO_DISABLE_EXP
+
         sub = new QMenu(tr("Visibility"), menuBar);
         m->addMenu(sub);
 
@@ -517,7 +515,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
         m->addSeparator();
-#endif
+
 
         // ##### PROJECTOR INDEX SUBMENU #####
         sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
@@ -532,11 +530,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addSeparator();
 
-#ifndef MO_DISABLE_EXP
         m->addAction(a = new QAction(tr("Render to disk"), menuBar));
         ag->addAction(a);
         connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
-#endif
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar);
@@ -1655,14 +1651,13 @@ void MainWidgetController::updateDebugRender_()
 {
     if (!scene_)
         return;
-#ifndef MO_DISABLE_EXP
+
     scene_->setDebugRenderOptions(
           (Scene::DD_AUDIO_SOURCES * aDrawAudioSources_->isChecked())
         | (Scene::DD_CAMERAS * aDrawCameras_->isChecked())
         | (Scene::DD_LIGHT_SOURCES * aDrawLightSources_->isChecked())
         | (Scene::DD_MICROPHONES * aDrawMicrophones_->isChecked())
                 );
-#endif
 }
 
 bool MainWidgetController::isPlayback() const
@@ -2249,7 +2244,6 @@ void MainWidgetController::updateResolutionActions_()
     if (!scene_)
         return;
 
-#ifndef MO_DISABLE_EXP
     // update from output window resolution
     aResolutionOutput_->setText(tr("Same as output window %1x%2")
                                 .arg(outputSize_.width())
@@ -2289,7 +2283,6 @@ void MainWidgetController::updateResolutionActions_()
                                         .arg(scene_->requestedFrameBufferSize().height()));
         }
     }
-#endif
 }
 
 void MainWidgetController::onProjectionSettingsChanged_()

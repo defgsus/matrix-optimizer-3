@@ -580,9 +580,13 @@ void Model3d::initGl(uint /*thread*/)
 {
     MO_DEBUG_MODEL("Model3d::initGl()");
 
+    // load/create/querry textures
     texture_->initGl();
+    setError(texture_->errorString());
     textureBump_->initGl();
+    setError(textureBump_->errorString());
 
+    // create geometry
     draw_ = new GL::Drawable(idName());
 
     // lazy-creation of resources?
@@ -667,6 +671,9 @@ void Model3d::geometryFailed_()
 {
     MO_DEBUG_MODEL("Model3d::geometryFailed()");
 
+    /// @todo Get error string from GeometryCreator
+    setError(tr("Failed to create geometry"));
+
     creator_->deleteLater();
     creator_ = 0;
 }
@@ -696,6 +703,8 @@ GL::ShaderSource Model3d::shaderSource() const
 void Model3d::setupDrawable_()
 {
     MO_DEBUG_MODEL("Model3d::setupDrawable()");
+
+    // -------- construct the GLSL source ----------
 
     GL::ShaderSource * src = new GL::ShaderSource();
 
@@ -783,6 +792,9 @@ void Model3d::setupDrawable_()
                 glslNormal_->addErrorMessage(msg.line, msg.text);
             }
         }
+        setError(tr("Failed to initialized model (%1)").arg(e.what()));
+        // XXX Should deinitialize or otherwise flag the object
+        return;
     }
 
     // get uniforms

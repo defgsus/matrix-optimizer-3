@@ -116,13 +116,11 @@ void ImageTO::initGl(uint thread)
     {
         QString fn = IO::fileManager().localFilename(pFilename_->baseValue());
         tex_ = GL::Texture::createFromImage(fn, gl::GL_RGBA);
-        //Image img(567, 433, Image::F_RGBA_32);
-        //img.pixel()
     }
-    catch (Exception& )
+    catch (const Exception& e)
     {
-        // XXX signal gui
         tex_ = 0;
+        setError(e.what());
     }
 }
 

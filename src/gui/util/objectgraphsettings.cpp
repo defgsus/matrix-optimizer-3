@@ -112,6 +112,13 @@ QPen ObjectGraphSettings::penOutline(const Object * o, bool sel)
     return pen;
 }
 
+QPen ObjectGraphSettings::penOutlineError(bool /*sel*/)
+{
+    QPen pen(Qt::red);
+    pen.setWidth(penOutlineWidth()*2);
+    return pen;
+}
+
 int ObjectGraphSettings::penOutlineWidth()
 {
     return 3;

@@ -47,7 +47,7 @@ public:
 
     bool ok, writeable, isStream;
 
-    QString filename;
+    QString filename, errorStr;
 
     uint sr, channels, lenSam;
     Double lenSec;
@@ -81,6 +81,11 @@ void SoundFile::release()
 }
 
 // --------------- getter ------------------------
+
+const QString& SoundFile::errorString() const
+{
+    return p_->errorStr;
+}
 
 bool SoundFile::isOk() const
 {
@@ -338,6 +343,10 @@ void SoundFile::appendDeviceData(const F32 *buf, size_t numSamples)
 }
 
 
+void SoundFile::p_setError_(const QString &e)
+{
+    p_->errorStr = e;
+}
 
 
 void SoundFile::p_create_(uint channels, uint sr, int bitSize)

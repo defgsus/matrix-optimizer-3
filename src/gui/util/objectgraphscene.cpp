@@ -1404,6 +1404,14 @@ void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
 
     QAction * a;
 
+    // display error
+    if (obj->hasError())
+    {
+        a = actions.addAction(tr("Error: %1").arg(obj->errorString()), scene);
+        // XXX make it visible as error!
+        // a->setIcon();
+    }
+
     // set color
     a = actions.addAction(tr("Change color"), scene);
     auto sub = ObjectMenu::createHueMenu();

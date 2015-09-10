@@ -25,6 +25,7 @@ namespace GUI {
 class AbstractObjectItem;
 class ObjectGraphConnectItem;
 
+/** Visual settings for objects in the graph */
 class ObjectGraphSettings
 {
 public:
@@ -47,6 +48,8 @@ public:
     static int penOutlineWidth();
     // stupid name but brushBackground() is already taken
     static QBrush brushOutline(const Object * o, bool selected = false);
+
+    static QPen penOutlineError(bool selected = false);
 
     // ------- connector ---------
 

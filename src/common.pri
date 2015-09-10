@@ -322,7 +322,8 @@ HEADERS += \
     $$PWD/io/sswproject.h \
     $$PWD/model/jsontreemodel.h \
     $$PWD/geom/shploader.h \
-    $$PWD/audio/tool/soundfileistream.h
+    $$PWD/audio/tool/soundfileistream.h \
+    $$PWD/io/imagereader.h
 
 
 SOURCES += \
@@ -601,7 +602,8 @@ SOURCES += \
     $$PWD/io/sswproject.cpp \
     $$PWD/model/jsontreemodel.cpp \
     $$PWD/geom/shploader.cpp \
-    $$PWD/audio/tool/soundfileistream.cpp
+    $$PWD/audio/tool/soundfileistream.cpp \
+    $$PWD/io/imagereader.cpp
 
 OTHER_FILES += \
     assets/shader/to/derivative.frag

@@ -103,9 +103,10 @@ SoundFile * SoundFileManager::getSoundFile(const QString &filename_, bool loadTo
     }
     catch (Exception & e)
     {
-        // XXX how to signal the error?
         MO_IO_WARNING(READ, "loading soundfile failed: \n"
                       << e.what());
+
+        sf->p_setError_( QObject::tr("Failed to load soundfile, %1").arg(e.what()) );
 
         // SoundFile::isOk() will be false
     }

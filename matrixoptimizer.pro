@@ -22,6 +22,9 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
+#disable experimental features
+DEFINES += MO_DISABLE_EXP
+
 #disable for production until it works ...
 DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
 
@@ -87,6 +90,7 @@ win32 {
 LIBS += -lkernel32 -lpsapi \
         -lopengl32 -lglu32 -lglbinding \
         -lportaudio -lPortMidi -lsndfile-1 \
+        -ljpeg \
         -langelscript
         #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }

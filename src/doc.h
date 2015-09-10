@@ -17,6 +17,10 @@
   * - OK fix AngelScript array (backward compat.)
   * - populate edit mainmenu with actions from ObjectSceneGraph
   * - performance of widget creation in ParameterView
+  * - image loading seems broken for some files
+  * - fix smoothed camera movement (disable for non-playing)
+  * - fix line number parser for errors in GLSL
+  * - attach initialization errors to objects (signal and access in gui)
   *
   * minor issues:
   * - lighting does not work (when using integrated Intel graphics)
