@@ -1,6 +1,8 @@
 /** Orginal code from AngelScript add-ons
  *
- *  def.gsus- added print support
+ *  stefan berke:
+ *      - added print support
+ *      - added size() and push_back() for backward compat.
  */
 #ifndef MO_DISABLE_ANGELSCRIPT
 

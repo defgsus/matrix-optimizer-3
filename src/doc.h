@@ -13,7 +13,8 @@
 
 /** @todo VIOSO Port
   *
-  * - "Close" instead of "Cancel" in unchanged scene description popup
+  * - OK "Close" instead of "Cancel" in unchanged scene description popup
+  * - OK fix AngelScript array (backward compat.)
   * - populate edit mainmenu with actions from ObjectSceneGraph
   * - performance of widget creation in ParameterView
   *

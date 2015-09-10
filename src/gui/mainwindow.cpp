@@ -233,14 +233,12 @@ bool MainWindow::event(QEvent* e)
     return QMainWindow::event(e);
 }*/
 
+/*
 void MainWindow::showEvent(QShowEvent * e)
 {
     QMainWindow::showEvent(e);
-
-    /** @todo scene description window comes to early, e.g. before actual window.. */
-    //if (controller_->scene() && controller_->scene()->showSceneDesc())
-    //    controller_->showSceneDesc();
 }
+*/
 
 void MainWindow::saveAllGeometry_()
 {

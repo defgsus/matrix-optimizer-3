@@ -4,8 +4,10 @@
 #include <assert.h>
 #include <stdio.h> // sprintf
 #include <string>
+#include <sstream>
 
 #include "scriptarray.h"
+#include "types/vector.h"
 
 using namespace std;
 
@@ -289,12 +291,15 @@ static void RegisterScriptArray_Native(asIScriptEngine *engine)
     r = engine->RegisterObjectMethod("array<T>", "array<T> &opAssign(const array<T>&in)", asMETHOD(CScriptArray, operator=), asCALL_THISCALL); assert( r >= 0 );
 
     // Other methods
+    r = engine->RegisterObjectMethod("array<T>", "string toString() const", asMETHOD(CScriptArray, toStdString), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void insertAt(uint, const T&in)", asMETHOD(CScriptArray, InsertAt), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void removeAt(uint)", asMETHOD(CScriptArray, RemoveAt), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void insertLast(const T&in)", asMETHOD(CScriptArray, InsertLast), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("array<T>", "void push_back(const T&in)", asMETHOD(CScriptArray, InsertLast), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void removeLast()", asMETHOD(CScriptArray, RemoveLast), asCALL_THISCALL); assert( r >= 0 );
     // TODO: Should length() and resize() be deprecated as the property accessors do the same thing?
     r = engine->RegisterObjectMethod("array<T>", "uint length() const", asMETHOD(CScriptArray, GetSize), asCALL_THISCALL); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("array<T>", "uint size() const", asMETHOD(CScriptArray, GetSize), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void reserve(uint)", asMETHOD(CScriptArray, Reserve), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void resize(uint)", asMETHODPR(CScriptArray, Resize, (asUINT), void), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void sortAsc()", asMETHODPR(CScriptArray, SortAsc, (), void), asCALL_THISCALL); assert( r >= 0 );
@@ -334,6 +339,122 @@ static void RegisterScriptArray_Native(asIScriptEngine *engine)
     // Same as removeAt
     r = engine->RegisterObjectMethod("array<T>", "void erase(uint)", asMETHOD(CScriptArray, RemoveAt), asCALL_THISCALL); assert( r >= 0 );
 #endif
+}
+
+std::string CScriptArray::toStdString() const
+{
+    if (IsEmpty())
+        return "{ }";
+
+    std::stringstream s;
+    s << "{ ";
+
+#define MO__PRINT(typeid__, type__)                     \
+    case typeid__:                                      \
+        for (asUINT i=0; i<GetSize(); ++i)              \
+        {                                               \
+            s << *static_cast<const type__*>(At(i));    \
+            if (i < GetSize()-1) s << ", ";             \
+        }                                               \
+    break;
+#define MO__PRINT_(typeid__, type__, convtype__)        \
+    case typeid__:                                      \
+        for (asUINT i=0; i<GetSize(); ++i)              \
+        {                                               \
+            s << (convtype__)(*static_cast<const type__*>(At(i))); \
+            if (i < GetSize()-1) s << ", ";             \
+        }                                               \
+    break;
+
+    std::string subt;
+    if (objType->GetSubType())
+        subt = objType->GetSubType()->GetName();
+
+    if (subt == "string")
+        for (asUINT i=0; i<GetSize(); ++i)
+        {
+            s << "\"" << *static_cast<const std::string*>(At(i)) << "\"";
+            if (i < GetSize()-1) s << ", ";
+        }
+    else if (subt == "array")
+        for (asUINT i=0; i<GetSize(); ++i)
+        {
+            s << static_cast<const CScriptArray*>(At(i))->toStdString();
+            if (i < GetSize()-1) s << ", ";
+        }
+    else if (subt == "vec2")
+        for (asUINT i=0; i<GetSize(); ++i)
+        {
+            using namespace MO;
+            s << *static_cast<const Vec2*>(At(i));
+            if (i < GetSize()-1) s << ", ";
+        }
+    else if (subt == "vec3")
+        for (asUINT i=0; i<GetSize(); ++i)
+        {
+            using namespace MO;
+            s << *static_cast<const Vec3*>(At(i));
+            if (i < GetSize()-1) s << ", ";
+        }
+    else if (subt == "vec4")
+        for (asUINT i=0; i<GetSize(); ++i)
+        {
+            using namespace MO;
+            s << *static_cast<const Vec4*>(At(i));
+            if (i < GetSize()-1) s << ", ";
+        }
+    else
+    switch (GetElementTypeId())
+    {
+        MO__PRINT_(asTYPEID_BOOL, bool, int16_t)
+        MO__PRINT_(asTYPEID_INT8, int8_t, int16_t)
+        MO__PRINT(asTYPEID_INT16, int16_t)
+        MO__PRINT(asTYPEID_INT32, int32_t)
+        MO__PRINT(asTYPEID_INT64, int64_t)
+        MO__PRINT_(asTYPEID_UINT8, int8_t, int16_t)
+        MO__PRINT(asTYPEID_UINT16, int16_t)
+        MO__PRINT(asTYPEID_UINT32, int32_t)
+        MO__PRINT(asTYPEID_UINT64, int64_t)
+
+        MO__PRINT(asTYPEID_FLOAT, float)
+        MO__PRINT(asTYPEID_DOUBLE, double)
+
+        default:
+            for (asUINT i=0; i<GetSize(); ++i)
+            {
+                s << objType->GetSubType()->GetName() << "(" << At(i) << ")";
+                if (i < GetSize()-1) s << ", ";
+            }
+        break;
+    }
+
+#undef MO__PRINT
+#undef MO__PRINT_
+
+    s << " }";
+    return s.str();
+
+    /*
+    asTYPEID_VOID           = 0,
+    asTYPEID_BOOL           = 1,
+    asTYPEID_INT8           = 2,
+    asTYPEID_INT16          = 3,
+    asTYPEID_INT32          = 4,
+    asTYPEID_INT64          = 5,
+    asTYPEID_UINT8          = 6,
+    asTYPEID_UINT16         = 7,
+    asTYPEID_UINT32         = 8,
+    asTYPEID_UINT64         = 9,
+    asTYPEID_FLOAT          = 10,
+    asTYPEID_DOUBLE         = 11,
+    asTYPEID_OBJHANDLE      = 0x40000000,
+    asTYPEID_HANDLETOCONST  = 0x20000000,
+    asTYPEID_MASK_OBJECT    = 0x1C000000,
+    asTYPEID_APPOBJECT      = 0x04000000,
+    asTYPEID_SCRIPTOBJECT   = 0x08000000,
+    asTYPEID_TEMPLATE       = 0x10000000,
+    asTYPEID_MASK_SEQNBR    = 0x03FFFFFF
+    */
 }
 
 CScriptArray &CScriptArray::operator=(const CScriptArray &other)
@@ -1917,8 +2038,10 @@ static void RegisterScriptArray_Generic(asIScriptEngine *engine)
     r = engine->RegisterObjectMethod("array<T>", "void insertAt(uint, const T&in)", asFUNCTION(ScriptArrayInsertAt_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void removeAt(uint)", asFUNCTION(ScriptArrayRemoveAt_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void insertLast(const T&in)", asFUNCTION(ScriptArrayInsertLast_Generic), asCALL_GENERIC); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("array<T>", "void push_back(const T&in)", asFUNCTION(ScriptArrayInsertLast_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void removeLast()", asFUNCTION(ScriptArrayRemoveLast_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "uint length() const", asFUNCTION(ScriptArrayLength_Generic), asCALL_GENERIC); assert( r >= 0 );
+    r = engine->RegisterObjectMethod("array<T>", "uint size() const", asFUNCTION(ScriptArrayLength_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void reserve(uint)", asFUNCTION(ScriptArrayReserve_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void resize(uint)", asFUNCTION(ScriptArrayResize_Generic), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectMethod("array<T>", "void sortAsc()", asFUNCTION(ScriptArraySortAsc_Generic), asCALL_GENERIC); assert( r >= 0 );

@@ -52,6 +52,7 @@ class RecentFiles;
 class ObjectOutputView;
 class AssetBrowser;
 
+/** Top-Level widget container and gui logic. */
 class MainWidgetController : public QObject
 {
     Q_OBJECT
@@ -104,23 +105,35 @@ public slots:
 
     void quit();
 
+    // --- transport ---
     void start();
     void stop();
     void moveTime(Double sec);
-    void closeAudio();
     /** Sets CurrentTime and audio engine's time at once */
     void setSceneTime(Double time);
+    /** Closes the audio device */
+    void closeAudio();
 
     /** Loads last or creates new */
     void initScene();
 
+    /** @{ */ /** These functions all appropriately call isOkayToChangeScene() */
+    /** Saves current scene, overwrites or asks for name if not given */
     bool saveScene();
+    /** Saves current scene as new file */
     void saveSceneAs();
+    /** Loads a new scene via file dialog */
     void loadScene();
+    /** Loads the given scene filename */
     void loadScene(const QString& fn);
+    /** Creates a new, empty scene */
     void newScene();
-    void runScripts();
+    /** Shows the scene description dialog */
     void showSceneDesc();
+    /** @} */
+
+    /** Executes all scripts in the scene */
+    void runScripts();
 
     void newInterface();
     void loadInterface();

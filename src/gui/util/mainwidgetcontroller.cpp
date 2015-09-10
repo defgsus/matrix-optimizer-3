@@ -1568,19 +1568,23 @@ void MainWidgetController::showSceneDesc()
     if (!scene_)
         return;
 
-    SceneDescDialog diag;
-    diag.setText(scene_->sceneDesc());
-    diag.setShowOnStart(scene_->showSceneDesc());
-
-    if (diag.exec() == QDialog::Accepted)
+    auto diag = new SceneDescDialog(window_);
+    diag->setAttribute(Qt::WA_DeleteOnClose, true);
+    diag->setAttribute(Qt::WA_AlwaysStackOnTop, true);
+    diag->setText(scene_->sceneDesc());
+    diag->setShowOnStart(scene_->showSceneDesc());
+    connect(diag, &SceneDescDialog::accepted, [=]()
     {
-        if (scene_->sceneDesc() != diag.text()
-            || scene_->showSceneDesc() != diag.showOnStart())
+        if (scene_->sceneDesc() != diag->text()
+            || scene_->showSceneDesc() != diag->showOnStart())
         {
-            scene_->setSceneDesc(diag.text(), diag.showOnStart());
+            scene_->setSceneDesc(diag->text(), diag->showOnStart());
             onSceneChanged_();
         }
-    }
+    });
+
+    diag->show();
+    diag->raise();
 }
 
 void MainWidgetController::dumpIdNames_()
@@ -1871,6 +1875,9 @@ void MainWidgetController::initScene()
             loadScene_(fn);
             // and set back
             IO::Files::setFilename(IO::FT_SCENE, fn);
+            // show scene description
+            if (scene_ && scene_->showSceneDesc())
+                showSceneDesc();
         }
     }
     catch (IoException& e)
