@@ -242,10 +242,10 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
         compiled = true;
     }
 
-    // print compiler log
+    // get compiler log
     GLint blen = 0;
     GLsizei slen = 0;
-    MO_CHECK_GL_COND(rep_, glGetShaderiv(shadername, GL_INFO_LOG_LENGTH , &blen) );
+    MO_CHECK_GL_COND(rep_, glGetShaderiv(shadername, GL_INFO_LOG_LENGTH, &blen) );
     if (blen > 1)
     {
         std::vector<GLchar> compiler_log(blen+1);
@@ -253,6 +253,7 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
         QString log = QString(&compiler_log[0]);
         parseLog_(log, pt);
         log_ += "compiler log:\n" + log + "\n";
+        MO_DEBUG(log_);
     }
 
     // attach to programObject

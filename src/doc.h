@@ -13,14 +13,16 @@
 
 /** @todo VIOSO Port
   *
+  * - fix segfault on delete-object (some views don't realize)
+  * - fix multi-track-view edit actions
   * - OK "Close" instead of "Cancel" in unchanged scene description popup
   * - OK fix AngelScript array (backward compat.)
   * - fix drop-into-scene-background problem!!
-  * - populate edit mainmenu with actions from ObjectSceneGraph
+  * - OK populate edit mainmenu with actions from ObjectSceneGraph
   * - performance of widget creation in ParameterView
   * - OK image loading seems broken for some files
   * - OK fix smoothed camera movement (disable for non-playing)
-  * - fix line number parser for errors in GLSL
+  * - OK fix line number parser for errors in GLSL
   * - OK attach initialization errors to objects (signal and access in gui)
   *     - better display in gui
   * - OK double-click on scene files in browser should load them

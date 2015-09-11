@@ -37,6 +37,8 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
             this, SLOT(onShitView_(QPointF)));
     connect(gscene_, SIGNAL(objectSelected(MO::Object*)),
             this, SIGNAL(objectSelected(MO::Object*)));
+    connect(gscene_, SIGNAL(editActionsChanged(ActionList)),
+            this, SIGNAL(editActionsChanged(ActionList)));
 }
 
 void ObjectGraphView::createWidgets_()

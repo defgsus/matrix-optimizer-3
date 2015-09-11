@@ -67,6 +67,7 @@
 #include "gui/util/frontscene.h"
 #include "gui/util/frontpreset.h"
 #include "gui/util/recentfiles.h"
+#include "tool/actionlist.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -225,6 +226,10 @@ void MainWidgetController::createObjects_()
     objectGraphView_ = new ObjectGraphView(window_);
     connect(objectGraphView_, SIGNAL(objectSelected(MO::Object*)),
             this, SLOT(onObjectSelectedGraphView_(MO::Object*)));
+    connect(objectGraphView_, &ObjectGraphView::editActionsChanged, [=](const ActionList& a)
+    {
+        setEditActions_(objectGraphView_, a);
+    });
 
     // object (parameter) View
     objectView_ = new ObjectView(window_);
@@ -240,7 +245,8 @@ void MainWidgetController::createObjects_()
     connect(frontScene_, SIGNAL(editModeChanged(bool)), this, SLOT(onUiEditModeChanged_(bool)));
     connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
     {
-        setEditActions_(frontScene_, a);
+        /** @todo fix setEditActions_ from FrontScene */
+        //setEditActions_(frontScene_, a);
     });
     // front-end view
     frontView_ = new FrontView(window_);
@@ -1432,7 +1438,7 @@ void MainWidgetController::onSceneTimeChanged_(Double time)
     transportWidget_->setSceneTime(time);
 }
 
-void MainWidgetController::setEditActions_(const QObject *, QList<QAction *> actions)
+void MainWidgetController::setEditActions_(const QObject *, const ActionList &actions)
 {
 #ifndef __APPLE__
     menuEdit_->clear();

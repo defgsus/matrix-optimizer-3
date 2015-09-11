@@ -18,6 +18,7 @@
 class QGraphicsView;
 
 namespace MO {
+class ActionList;
 namespace GUI {
 
 class ObjectGraphScene;
@@ -33,6 +34,9 @@ signals:
 
     /** An object has been clicked */
     void objectSelected(MO::Object *);
+
+    /** Actions for edit-mainmenu have been populated. */
+    void editActionsChanged(const ActionList&);
 
 public slots:
 

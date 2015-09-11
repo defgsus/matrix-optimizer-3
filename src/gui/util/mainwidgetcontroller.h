@@ -30,6 +30,7 @@ namespace MO {
 class LiveAudioEngine;
 class RenderEngine;
 class ValueFloatInterface;
+class ActionList;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -150,7 +151,7 @@ public slots:
 
 private slots:
 
-    void setEditActions_(const QObject * sender, QList<QAction*> actions);
+    void setEditActions_(const QObject * sender, const ActionList& actions);
     void testSceneTransform_(bool newVersion);
     void updateSystemInfo_();
     void updateDebugRender_();

@@ -108,11 +108,11 @@ public:
 
     void clearActions();
     void showPopup(); ///< Runs popup after actions have been created
-    void createNewObjectMenu(Object * o);
-    void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
+    void createNewObjectMenu(ActionList& actions, Object * o);
+    void createClipboardMenu(ActionList& actions, Object * parent, const QList<AbstractObjectItem*>& items);
+    void createObjectEditMenu(ActionList& actions, Object * o);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts,
                               bool childObjects = true, int groups = Object::TG_ALL);
-    void createObjectEditMenu(Object * o);
 
     void snapToEndConnect(const QPointF& scenePos);
     void endConnection();
@@ -995,7 +995,10 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     // process items
     QGraphicsScene::mousePressEvent(event);
     if (event->isAccepted())
+    {
+        createEditMenu();
         return;
+    }
 
     if (event->button() == Qt::RightButton)
     {
@@ -1010,6 +1013,8 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         p_->lastMousePos = event->scenePos();
         setSelectionArea(QPainterPath());
     }
+
+    createEditMenu();
 }
 
 void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -1054,7 +1059,10 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     QGraphicsScene::mouseReleaseEvent(event);
     if (event->isAccepted())
+    {
+        createEditMenu();
         return;
+    }
 
     if (p_->action == Private::A_RECT_SELECT)
     {
@@ -1063,6 +1071,7 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     p_->action = Private::A_NONE;
+    createEditMenu();
 }
 
 
@@ -1133,6 +1142,39 @@ void ObjectGraphScene::Private::clearActions()
     actions.clear();
 }
 
+void ObjectGraphScene::createEditMenu()
+{
+    auto items = selectedObjectItems();
+
+    Object * obj = items.isEmpty() ? p_->root : items.first()->object();
+
+    if (!obj)
+        return;
+
+    ActionList actions;
+
+    // title
+    QString title(items.size() < 2
+                  ? obj->name()
+                  : tr("%1 objects").arg(items.size()));
+    actions.addTitle(title, this);
+
+    // edit object
+    if (items.size() == 1)
+        p_->createObjectEditMenu(actions, obj);
+
+    if (items.size() < 2)
+    {
+        // new object
+        p_->createNewObjectMenu(actions, obj);
+    }
+
+    // clipboard
+    p_->createClipboardMenu(actions, obj, items);
+
+    emit editActionsChanged(actions);
+}
+
 void ObjectGraphScene::popup(const QPoint& gridPos)
 {
     p_->clearActions();
@@ -1154,16 +1196,16 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
 
     // edit object
     if (items.size() == 1)
-        p_->createObjectEditMenu(obj);
+        p_->createObjectEditMenu(p_->actions, obj);
 
     if (items.size() < 2)
     {
         // new object
-        p_->createNewObjectMenu(obj);
+        p_->createNewObjectMenu(p_->actions, obj);
     }
 
     // clipboard
-    p_->createClipboardMenu(obj, items);
+    p_->createClipboardMenu(p_->actions, obj, items);
 
     p_->showPopup();
 }
@@ -1283,7 +1325,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
 
 
 
-void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
+void ObjectGraphScene::Private::createNewObjectMenu(ActionList &actions, Object * obj)
 {
     actions.addSeparator(scene);
 
@@ -1342,7 +1384,8 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
 }
 
-void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const QList<AbstractObjectItem*>& items)
+void ObjectGraphScene::Private::createClipboardMenu(
+        ActionList& actions, Object * /*parent*/, const QList<AbstractObjectItem*>& items)
 {
     actions.addSeparator(scene);
 
@@ -1389,7 +1432,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
             // paste
             a = actions.addAction(tr("Paste into %1").arg(pname), scene);
-            a->setShortcut(Qt::CTRL + Qt::Key_P);
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
             connect(a, &QAction::triggered, [=]()
             {
                 scene->dropMimeData(application()->clipboard()->mimeData(), popupGridPos);
@@ -1398,7 +1441,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
     }
 }
 
-void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
+void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object * obj)
 {
     actions.addSeparator(scene);
 

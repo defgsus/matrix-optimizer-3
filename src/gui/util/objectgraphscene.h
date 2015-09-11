@@ -21,6 +21,7 @@ class AudioObject;
 class Parameter;
 class Modulator;
 class AudioObjectConnection;
+class ActionList;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -79,6 +80,9 @@ signals:
     /** An object has been selected */
     void objectSelected(MO::Object *);
 
+    /** Actions for edit-mainmenu have been populated. */
+    void editActionsChanged(const ActionList&);
+
 public slots:
 
     /** Sets the root object and completely
@@ -90,6 +94,9 @@ public slots:
 
     /** Bring the item and all it's cables to front */
     void toFront(QGraphicsItem *);
+
+    /** Creates edit actions for current selection and sends it to MainWidgetController */
+    void createEditMenu();
 
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
