@@ -280,6 +280,10 @@ public slots:
 
     // ------------- runtime -------------------
 
+    /** Sets the playing-flag, nothing else. */
+    void setPlaying(bool playing) { isPlayback_ = playing; }
+    bool isPlaying() const { return isPlayback_; }
+
     /** Call before deleting the scene.
         OpenGL resources will be released a short while later from their particular thead.
         */

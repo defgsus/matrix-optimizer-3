@@ -66,6 +66,7 @@ void DiskRenderSettings::p_setDefault_()
             { p_audio_format_idx_ = f.index; }
 }
 
+/** @todo serialize/deserialize DiskRenderSettings */
 void DiskRenderSettings::serialize(IO::XmlStream& io) const
 {
     io.newSection("disk-render-settings");

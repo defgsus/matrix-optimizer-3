@@ -16,7 +16,7 @@
 namespace MO {
 namespace GUI {
 
-/** List-browser for templates, assets, ... */
+/** Tree-browser for templates, assets, ... */
 class AssetBrowser : public QWidget
 {
     Q_OBJECT
@@ -24,16 +24,29 @@ public:
     explicit AssetBrowser(QWidget *parent = 0);
     ~AssetBrowser();
 
+    /** Returns the directory which is currently selected */
+    QString currentDirectory() const;
+
 signals:
+
+    /** Double-click on scene file, should load a scene */
+    void sceneSelected(QString filename);
 
 public slots:
 
     /** Selects one of the short-cut directories */
     void selectDirectory(uint index);
+    /** Sets the directory of one of the short-cut buttons */
     void setDirectory(uint index, const QString& dir);
-protected:
 
-    void mouseDoubleClickEvent(QMouseEvent*) Q_DECL_OVERRIDE;
+    /** Sets a filter to apply to the displayed files */
+    void setFilter(const QString&);
+
+    /** Go up one directory and set as new default */
+    void goUp();
+
+    /** Select/double-click action on an item in the browser */
+    void doubleClick(const QModelIndex&);
 
 private:
 

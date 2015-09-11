@@ -288,6 +288,7 @@ void MainWidgetController::createObjects_()
 
     // asset browser
     assetBrowser_ = new AssetBrowser(window_);
+    connect(assetBrowser_, &AssetBrowser::sceneSelected, [=](QString fn){ loadScene(fn); });
 
     // server/client view
     serverView_ = 0;
@@ -1699,7 +1700,6 @@ void MainWidgetController::start()
     // also tell the envelope display
     updateNumberOutputEnvelopes_(audioEngine_->config().numChannelsOut());
 
-
     // start engine
     if (audioEngine_->start())
     {
@@ -1720,6 +1720,7 @@ void MainWidgetController::start()
 #endif
     }
 
+    scene_->setPlaying(true);
     transportWidget_->setPlayback(true);
 }
 
@@ -1728,6 +1729,7 @@ void MainWidgetController::stop()
     glManager_->stopAnimate();
     frontScene_->stopAnimate();
     updateTimer_->stop();
+    scene_->setPlaying(false);
 
     if (audioEngine_)
     {

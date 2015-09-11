@@ -31,7 +31,7 @@ ImageTO::ImageTO(QObject *parent)
     , tex_              (0)
 {
     setName("Image");
-    initMaximumTextureInputs(1);
+    initMaximumTextureInputs(0);
 }
 
 ImageTO::~ImageTO()

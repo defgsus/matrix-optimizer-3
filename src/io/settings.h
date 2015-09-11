@@ -38,9 +38,15 @@ public:
     QString infoString() const;
 
     /** Returns the value for key.
+        Also checks default values.
         If key is unknown, warning is printed
         and empty QVariant() returned. */
     QVariant getValue(const QString& key) const;
+
+    /** Returns the value for key.
+        Also checks default values.
+        If key is unknown, @p default_ is returned. */
+    QVariant getValue(const QString& key, const QVariant& default_) const;
 
 #if (0)
     /** Stores the geometry provided the QWidget::objectName() is set */
@@ -58,6 +64,9 @@ public:
     void storeGeometry(QWidget *);
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
+
+    /** The path to data, generally ./data */
+    QString dataPath() const;
 
     /** Returns address of the server */
     QString serverAddress() const;

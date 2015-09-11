@@ -15,20 +15,26 @@
   *
   * - OK "Close" instead of "Cancel" in unchanged scene description popup
   * - OK fix AngelScript array (backward compat.)
+  * - fix drop-into-scene-background problem!!
   * - populate edit mainmenu with actions from ObjectSceneGraph
   * - performance of widget creation in ParameterView
-  * - image loading seems broken for some files
-  * - fix smoothed camera movement (disable for non-playing)
+  * - OK image loading seems broken for some files
+  * - OK fix smoothed camera movement (disable for non-playing)
   * - fix line number parser for errors in GLSL
-  * - attach initialization errors to objects (signal and access in gui)
+  * - OK attach initialization errors to objects (signal and access in gui)
+  *     - better display in gui
+  * - OK double-click on scene files in browser should load them
   *
   * minor issues:
-  * - lighting does not work (when using integrated Intel graphics)
-  * - shader error in scene debug renderer (when using integrated Intel graphics)
+  * - when using integrated intel graphics
+  *     - lighting does not work
+  *     - shader compile error in scene debug renderer
   *
   *
   * workload:
   * 10h compiled for windows (missing libDUMB, libSHP & libGLU)
+  * 7h fixed various (gui) things + libjpeg integration
+  * 1h nicer asset browser
   *
   **/
 
