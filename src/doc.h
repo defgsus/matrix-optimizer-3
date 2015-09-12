@@ -17,7 +17,8 @@
   * - fix multi-track-view edit actions
   * - OK "Close" instead of "Cancel" in unchanged scene description popup
   * - OK fix AngelScript array (backward compat.)
-  * - fix drop-into-scene-background problem!!
+  * - OK fix drop-into-scene-background problem!!
+  *     - fix drop-into-scene-background position (always 0,0)
   * - OK populate edit mainmenu with actions from ObjectSceneGraph
   * - performance of widget creation in ParameterView
   * - OK image loading seems broken for some files
@@ -36,7 +37,9 @@
   * workload:
   * 10h compiled for windows (missing libDUMB, libSHP & libGLU)
   * 7h fixed various (gui) things + libjpeg integration
-  * 1h nicer asset browser
+  * 2h nicer asset browser
+  * 4h more gui things, and more disappointment with libGLU
+  * 3h scene-background-drop (phew...)
   *
   **/
 

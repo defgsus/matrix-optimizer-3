@@ -17,6 +17,8 @@
 #include <QAction>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QFileInfo>
+#include <QUrl>
 
 #include "objectgraphscene.h"
 #include "gui/item/abstractobjectitem.h"
@@ -116,6 +118,8 @@ public:
 
     void snapToEndConnect(const QPointF& scenePos);
     void endConnection();
+
+    void acceptDrag(QGraphicsSceneDragDropEvent*);
 
     ObjectGraphScene * scene;
     Scene * root;
@@ -233,7 +237,6 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
     p_->createModulatorItems(root);
-
 
     //for (auto & p : p_->itemMap)
     //    MO_DEBUG(p.first->name() << " :: " << p.second);
@@ -890,17 +893,23 @@ void ObjectGraphScene::Private::endConnection()
 
 // ----------------------------- drag/drop --------------------------------------
 
-/** @todo drag-drop for ObjectGraphScene */
-#if 0
-void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+void ObjectGraphScene::Private::acceptDrag(QGraphicsSceneDragDropEvent * e)
 {
-    e->ignore();
+//    qInfo() << "accept?" << e->mimeData()->formats();
 
-    /// @todo drop of real object
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    if (!root)
+        return;
+
+    // filename(s)
+    if (e->mimeData()->hasUrls())
     {
-        //e->accept();
-        e->ignore();
+        e->accept();
+        return;
+    }
+
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        e->accept();
         return;
     }
 
@@ -911,61 +920,144 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
         int typ = ObjectFactory::typeForClass(classn);
         // check if dropable
-        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+        if (typ < 0 || !root->canHaveChildren(Object::Type(typ)))
             return;
-        /// @todo whatever we do here, the event will not be accepted by the framework
-        MO_DEBUG("yes");
-        e->setAccepted(true);
-        e->setDropAction(Qt::CopyAction);
-        //e->acceptProposedAction();
-        return;
-    }
-
-    QGraphicsScene::dragEnterEvent(e);
-}
-
-
-void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
-{
-    // !! this event comes before the items, pew...
-    e->ignore();
-    QGraphicsScene::dropEvent(e);
-    MO_DEBUG("after org: accepted == " << e->isAccepted());
-    //if (e->isAccepted())
-        return;
-
-    /// @todo drop of real object
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-    {
-        //e->accept();
-        return;
-    }
-
-    // drop of object from toolbar
-    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
-    {
-        MO_DEBUG("drop");
-
-        // get object type
-        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
-        int typ = ObjectFactory::typeForClass(classn);
-        // check if dropable
-        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
-            return;
-
-        addObject(p_->root,
-                  ObjectFactory::createObject(classn),
-                  mapToGrid(e->scenePos()));
 
         e->accept();
         return;
     }
 }
-#endif
+
+void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // check items
+    QGraphicsScene::dragEnterEvent(e);
+    e->setDropAction(e->proposedAction());
+
+    // check self
+    if (!e->isAccepted())
+        p_->acceptDrag(e);
+}
+
+// For some reason, QGraphicsScene must accept the event in dragMOVE as well,
+// otherwise it's rejected..
+void ObjectGraphScene::dragMoveEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // check items
+    QGraphicsScene::dragMoveEvent(e);
+    // restore action from Qt::IgnoreAction
+    e->setDropAction(e->proposedAction());
+
+    // check self
+    if (!e->isAccepted())
+        p_->acceptDrag(e);
+}
+
+
+void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // pass drop event to items first
+    e->ignore();
+    QGraphicsScene::dropEvent(e);
+    //qInfo() << "after org: accepted ==" << e->isAccepted();
+
+    // otherwise drop into root (scene)
+    if (!e->isAccepted())
+        dropAction(e);
+}
 
 
 
+void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * parent)
+{
+    if (!parent)
+        parent = p_->root;
+    if (!parent)
+        return;
 
+    // filename(s)
+    if (e->mimeData()->hasUrls())
+    {
+        e->accept();
+        const auto list = e->mimeData()->urls();
+        QList<Object*> objs;
+        QList<QString> notworking;
+        for (const QUrl& url : list)
+        {
+            QString shortfn = QFileInfo(url.toString()).fileName();
+            try
+            {
+                if (auto o = ObjectFactory::createObjectFromUrl(url))
+                    objs << o;
+                else
+                    notworking << QObject::tr("%1: format not supported")
+                                  .arg(shortfn);
+            }
+            catch (const Exception& e)
+            {
+                notworking << QObject::tr("%1: %2")
+                              .arg(shortfn)
+                              .arg(e.what());
+            }
+        }
+        // add them all at once
+        if (!objs.isEmpty())
+            addObjects(parent, objs, mapToGrid(e->pos()));
+        // print errors
+        if (!notworking.isEmpty())
+        {
+            QString msg = QObject::tr("The following urls could not be wrapped into an object.");
+            for (const auto & text : notworking)
+            {
+                msg.append("\n" + text);
+            }
+            QMessageBox::information(0, QObject::tr("File drop"), msg);
+        }
+    }
+
+    // drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
+
+        // analyze further
+        if (!desc.isSameApplicationInstance())
+        {
+            QMessageBox::information(0,
+                                     QMessageBox::tr("drop object"),
+                                     QMessageBox::tr("Can't drop an object from another application instance."));
+            return;
+        }
+
+        if (desc.pointer())
+            popupObjectDrag(desc.pointer(), parent, e->scenePos());
+
+        e->accept();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !parent->canHaveChildren(Object::Type(typ)))
+            return;
+
+        addObject(parent,
+                  ObjectFactory::createObject(classn),
+                  mapToGrid(e->pos())
+                  //mapToGrid(e->scenePos()) - gridPos()
+                  );
+
+        e->accept();
+        return;
+    }
+}
 
 
 
@@ -1885,6 +1977,8 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     addObjects(root, copies, gridPos - objPos);
 
 }
+
+
 
 
 

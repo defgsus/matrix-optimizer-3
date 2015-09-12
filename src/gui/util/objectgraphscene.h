@@ -125,6 +125,9 @@ public slots:
         @p gridPos is global and will be retranslated to parent's local coords if necessary. */
     void dropMimeData(const QMimeData*, const QPoint& gridPos);
 
+    /** Drop from mouse. Implementation used by AbstractObjectItem */
+    void dropAction(QGraphicsSceneDragDropEvent*e, Object * parent = 0);
+
     // ------------------- editing --------------------
 
     /** Adds an object to object-tree and item-tree.
@@ -169,10 +172,12 @@ private slots:
     void onParameterVisibilityChanged_(MO::Parameter*);
 
 protected:
-#if 0
+
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
     virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
-#endif
+
+
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;

@@ -52,7 +52,13 @@ public slots:
 
 private slots:
 
-    void onShitView_(const QPointF&);
+    void onShiftView_(const QPointF&);
+
+protected:
+
+    //void dragEnterEvent(QDragEnterEvent *) Q_DECL_OVERRIDE;
+
+
 private:
 
     void createWidgets_();

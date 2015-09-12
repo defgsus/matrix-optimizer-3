@@ -11,6 +11,8 @@
 #include <QDebug>
 #include <QGraphicsView>
 #include <QLayout>
+#include <QDragEnterEvent>
+#include <QMimeData>
 
 #include "objectgraphview.h"
 #include "gui/widget/iconbar.h"
@@ -30,11 +32,13 @@ ObjectGraphView::ObjectGraphView(QWidget *parent)
 {
     setObjectName("_ObjectGraphView");
 
+    setAcceptDrops(true);
+
     createWidgets_();
 
     gview_->setScene(gscene_);
     connect(gscene_, SIGNAL(shiftView(QPointF)),
-            this, SLOT(onShitView_(QPointF)));
+            this, SLOT(onShiftView_(QPointF)));
     connect(gscene_, SIGNAL(objectSelected(MO::Object*)),
             this, SIGNAL(objectSelected(MO::Object*)));
     connect(gscene_, SIGNAL(editActionsChanged(ActionList)),
@@ -75,7 +79,7 @@ void ObjectGraphView::setRootObject(Object *root)
     gscene_->setRootObject(root_);
 }
 
-void ObjectGraphView::onShitView_(const QPointF & )
+void ObjectGraphView::onShiftView_(const QPointF & )
 {
     // XXX Nothing does work
     // rotate() even crashes, wtf..
@@ -95,6 +99,13 @@ void ObjectGraphView::setFocusObject(Object * o)
         gview_->centerOn(i);
 }
 
+#if 0
+void ObjectGraphView::dragEnterEvent(QDragEnterEvent*e)
+{
+    qInfo() << "graphview" << e->mimeData()->formats();
+    e->accept();
+}
+#endif
 
 } // namespace GUI
 } // namespace MO
