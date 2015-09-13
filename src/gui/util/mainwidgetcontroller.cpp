@@ -134,9 +134,11 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sequencer_        (0),
       clipView_         (0),
       seqView_          (0),
+#ifndef MO_DISABLE_FRONT
       frontScene_       (0),
       frontView_        (0),
       frontItemEditor_  (0),
+#endif
       objectOutputView_ (0),
       assetBrowser_     (0),
       transportWidget_  (0),
@@ -238,6 +240,7 @@ void MainWidgetController::createObjects_()
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
 
+#ifndef MO_DISABLE_FRONT
     // front-end scene
     frontScene_ = new FrontScene(window_);
     frontScene_->setObjectEditor(objectEditor_);
@@ -267,6 +270,7 @@ void MainWidgetController::createObjects_()
         if (objectEditor_->scene())
             objectEditor_->removeUiModulators(ids);
     });
+#endif
 
     // sequencer
     sequencer_ = new Sequencer(window_);
@@ -382,7 +386,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setShortcut(Qt::ALT + Qt::Key_F4);
         connect(a, SIGNAL(triggered()), this, SLOT(quit()));
 
-
+#ifndef MO_DISABLE_FRONT
     // ######### INTERFACE MENU #########
     m = new QMenu(tr("Interface"), menuBar);
     menuBar->addMenu(m);
@@ -416,6 +420,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setChecked(frontScene_->isEditMode());
         a->setShortcut(Qt::ALT + Qt::Key_E);
         connect(a, SIGNAL(triggered(bool)), frontScene_, SLOT(setEditMode(bool)));
+#endif
 
     // ######### EDIT MENU #########
     m = menuEdit_ = new QMenu(tr("Edit"), menuBar);
@@ -890,6 +895,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     objectGraphView_->setGuiSettings(sceneSettings_);
 
+#ifndef MO_DISABLE_FRONT
     // --- get the interface ---
     QString xml = scene_->frontSceneXml();
     if (xml.isEmpty())
@@ -911,6 +917,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             frontScene_->clear();
         }
     }
+#endif
 
     // check for local filenames
 
@@ -978,10 +985,12 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     sequencer_->setCurrentObject(scene_);
     clipView_->setScene(scene_);
 
+#ifndef MO_DISABLE_FRONT
     frontItemEditor_->setItem(0);
     frontScene_->setRootObject(scene_);
     frontScene_->assignObjects();
     frontScene_->loadPreset("default");
+#endif
 
     glWindow_->renderLater();
 
@@ -1395,10 +1404,12 @@ void MainWidgetController::onSequenceClicked_()
 
 void MainWidgetController::onParamVisChanged_()
 {
+#ifndef MO_DISABLE_FRONT
     // rebuild interface items
     frontItemEditor_->setItem(0);
     if (scene_)
         frontScene_->setRootObject(scene_);
+#endif
 }
 
 void MainWidgetController::onParamChanged_()
@@ -1713,8 +1724,9 @@ void MainWidgetController::start()
         updateTimer_->start();
 
         glManager_->startAnimate();
+#ifndef MO_DISABLE_FRONT
         frontScene_->startAnimate();
-
+#endif
         // XXX especially update CurrentTime (for clients)
         // Scene::sceneTime() is not really used
         scene_->setSceneTime(audioEngine_->second());
@@ -1733,7 +1745,9 @@ void MainWidgetController::start()
 void MainWidgetController::stop()
 {
     glManager_->stopAnimate();
+#ifndef MO_DISABLE_FRONT
     frontScene_->stopAnimate();
+#endif
     updateTimer_->stop();
     scene_->setPlaying(false);
 
@@ -2044,9 +2058,11 @@ bool MainWidgetController::saveScene_(const QString &fn)
     {
         try
         {
+#ifndef MO_DISABLE_FRONT
             // always store default preset
             frontScene_->storePreset("default");
             scene_->setFrontScene(frontScene_);
+#endif
             // actually save the scene
             ObjectFactory::saveScene(fn, scene_);
             recentFiles_->addFilename(fn);
@@ -2071,6 +2087,7 @@ bool MainWidgetController::saveScene_(const QString &fn)
     return false;
 }
 
+#ifndef MO_DISABLE_FRONT
 void MainWidgetController::saveInterfaceAs()
 {
     QString fn = IO::Files::getSaveFileName(IO::FT_INTERFACE_XML, window_);
@@ -2147,6 +2164,7 @@ void MainWidgetController::loadInterfacePresets()
 
     frontScene_->importPresets(fn);
 }
+#endif
 
 
 void MainWidgetController::renderToDisk()

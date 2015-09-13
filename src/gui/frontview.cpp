@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QLayout>
 #include <QGraphicsView>
 
@@ -100,3 +102,5 @@ void FrontView::onEditModeChange_(bool e)
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

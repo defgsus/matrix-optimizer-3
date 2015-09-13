@@ -8,6 +8,8 @@
     <p>created 10.03.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QGraphicsSceneDragDropEvent>
 
 #include "abstractfrontdisplayitem.h"
@@ -136,3 +138,5 @@ void AbstractFrontDisplayItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

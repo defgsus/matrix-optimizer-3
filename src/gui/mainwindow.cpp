@@ -150,9 +150,11 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Scene"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+#ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend"), controller_->frontView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
     removeDockWidget(dock);
+#endif
 
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
@@ -174,9 +176,11 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+#ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
     removeDockWidget(dock);
+#endif
 
 #ifndef MO_DISABLE_SERVER
     if (isServer())

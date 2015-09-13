@@ -8,6 +8,8 @@
     <p>created 26.02.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #ifndef MOSRC_GUI_ITEM_FRONTFLOATITEM_H
 #define MOSRC_GUI_ITEM_FRONTFLOATITEM_H
 
@@ -86,3 +88,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_GUI_ITEM_FRONTFLOATITEM_H
+
+#endif // MO_DISABLE_FRONT

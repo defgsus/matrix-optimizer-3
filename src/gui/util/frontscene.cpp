@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QAction>
 #include <QMenu>
 #include <QCursor>
@@ -1136,3 +1138,5 @@ void FrontScene::drawForeground(QPainter *p, const QRectF &)
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

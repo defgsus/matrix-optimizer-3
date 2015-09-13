@@ -47,7 +47,7 @@ Window::Window()
     MO_DEBUG_GL("Window::Window()");
 
     setObjectName("_GlWindow");
-    setTitle(tr("OpenGL"));
+    setTitle(tr("Output (Matrix Optimizer)"));
 
     setWidth(512);
     setHeight(512);
@@ -60,7 +60,7 @@ Window::Window()
     updateTimer_->setInterval(1);
     connect(updateTimer_, &QTimer::timeout, [=]()
     {
-        //MO_DEBUG("helo");
+        //MO_DEBUG("hello");
         QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::HighEventPriority);
     });
     */

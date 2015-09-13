@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #ifndef MOSRC_GUI_UTIL_FRONTSCENE_H
 #define MOSRC_GUI_UTIL_FRONTSCENE_H
 
@@ -270,3 +272,5 @@ private:
 
 
 #endif // MOSRC_GUI_UTIL_FRONTSCENE_H
+
+#endif // MO_DISABLE_FRONT

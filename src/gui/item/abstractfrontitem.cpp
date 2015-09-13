@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <memory>
 
 #include <QPainter>
@@ -665,3 +667,5 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

@@ -24,6 +24,8 @@ DEFINES += GLM_FORCE_RADIANS
 
 #disable experimental features
 DEFINES += MO_DISABLE_EXP
+#disable control interface for now (it's currently broken)
+DEFINES += MO_DISABLE_FRONT
 
 #disable for production until it works ...
 DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS

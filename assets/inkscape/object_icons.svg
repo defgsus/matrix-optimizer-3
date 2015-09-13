@@ -14,7 +14,7 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="object_icons.svg">
   <defs
      id="defs4">
@@ -171,16 +171,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8"
-     inkscape:cx="412.01692"
-     inkscape:cy="294.95426"
+     inkscape:zoom="1.979899"
+     inkscape:cx="333.22502"
+     inkscape:cy="211.39957"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1440"
-     inkscape:window-height="851"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
+     inkscape:window-width="1600"
+     inkscape:window-height="835"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4"
      inkscape:window-maximized="1"
      inkscape:snap-global="false"
      borderlayer="true">
@@ -203,7 +203,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -911,7 +911,7 @@
        inkscape:export-ydpi="164.57001"
        style="stroke-width:1.836575;stroke-miterlimit:4;stroke-dasharray:none">
       <path
-         d="m 236.78572,242.18361 c 0,4.63525 -7.51523,8.39286 -16.78572,8.39286 -9.27049,0 -16.78572,-3.75761 -16.78572,-8.39286 0,-4.63525 7.51523,-8.39286 16.78572,-8.39286 9.27049,0 16.78572,3.75761 16.78572,8.39286 z"
+         d="M 236.78572,242.18361 A 16.785715,8.3928576 0 0 1 220,250.57647 16.785715,8.3928576 0 0 1 203.21428,242.18361 16.785715,8.3928576 0 0 1 220,233.79075 a 16.785715,8.3928576 0 0 1 16.78572,8.39286 z"
          sodipodi:ry="8.3928576"
          sodipodi:rx="16.785715"
          sodipodi:cy="242.18361"
@@ -1148,7 +1148,7 @@
          sodipodi:cy="242.18361"
          sodipodi:rx="16.785715"
          sodipodi:ry="8.3928576"
-         d="m 236.78572,242.18361 c 0,4.63525 -7.51523,8.39286 -16.78572,8.39286 -9.27049,0 -16.78572,-3.75761 -16.78572,-8.39286 0,-4.63525 7.51523,-8.39286 16.78572,-8.39286 9.27049,0 16.78572,3.75761 16.78572,8.39286 z" />
+         d="M 236.78572,242.18361 A 16.785715,8.3928576 0 0 1 220,250.57647 16.785715,8.3928576 0 0 1 203.21428,242.18361 16.785715,8.3928576 0 0 1 220,233.79075 a 16.785715,8.3928576 0 0 1 16.78572,8.39286 z" />
       <path
          style="fill:none;stroke:#000000;stroke-width:1.83657503;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
          d="m 220.17857,236.28125 c -3.5504,0 -6.4375,2.74059 -6.4375,6.09375 0,3.35316 2.8871,6.0625 6.4375,6.0625 3.5504,0 6.4375,-2.70934 6.4375,-6.0625 0,-3.35316 -2.8871,-6.09375 -6.4375,-6.09375 z"
@@ -1378,7 +1378,7 @@
          inkscape:export-xdpi="164.57001"
          inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_none.png"
          transform="matrix(4.0120481,0,0,4.0120481,319.858,-609.97211)"
-         d="m 61.071429,165.39789 c 0,2.6628 -2.158627,4.82143 -4.821429,4.82143 -2.662802,0 -4.821429,-2.15863 -4.821429,-4.82143 0,-2.6628 2.158627,-4.82143 4.821429,-4.82143 2.662802,0 4.821429,2.15863 4.821429,4.82143 z"
+         d="M 61.071429,165.39789 A 4.8214288,4.8214288 0 0 1 56.25,170.21932 4.8214288,4.8214288 0 0 1 51.428571,165.39789 4.8214288,4.8214288 0 0 1 56.25,160.57646 a 4.8214288,4.8214288 0 0 1 4.821429,4.82143 z"
          sodipodi:ry="4.8214288"
          sodipodi:rx="4.8214288"
          sodipodi:cy="165.39789"
@@ -2356,7 +2356,7 @@
          sodipodi:cy="242.18361"
          sodipodi:rx="16.785715"
          sodipodi:ry="8.3928576"
-         d="m 236.78572,242.18361 c 0,4.63525 -7.51523,8.39286 -16.78572,8.39286 -9.27049,0 -16.78572,-3.75761 -16.78572,-8.39286 0,-4.63525 7.51523,-8.39286 16.78572,-8.39286 9.27049,0 16.78572,3.75761 16.78572,8.39286 z" />
+         d="M 236.78572,242.18361 A 16.785715,8.3928576 0 0 1 220,250.57647 16.785715,8.3928576 0 0 1 203.21428,242.18361 16.785715,8.3928576 0 0 1 220,233.79075 a 16.785715,8.3928576 0 0 1 16.78572,8.39286 z" />
       <path
          style="fill:none;stroke:#000000;stroke-width:1.83657503;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
          d="m 220.17857,236.28125 c -3.5504,0 -6.4375,2.74059 -6.4375,6.09375 0,3.35316 2.8871,6.0625 6.4375,6.0625 3.5504,0 6.4375,-2.70934 6.4375,-6.0625 0,-3.35316 -2.8871,-6.09375 -6.4375,-6.09375 z"
@@ -2932,7 +2932,7 @@
          sodipodi:cy="64.685532"
          sodipodi:rx="11.237947"
          sodipodi:ry="11.237947"
-         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         d="M 352.03815,64.685532 A 11.237947,11.237947 0 0 1 340.8002,75.923479 11.237947,11.237947 0 0 1 329.56225,64.685532 11.237947,11.237947 0 0 1 340.8002,53.447584 11.237947,11.237947 0 0 1 352.03815,64.685532 Z"
          transform="translate(-48.232233,667.02031)"
          inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
          inkscape:export-xdpi="164.57001"
@@ -2958,7 +2958,7 @@
          inkscape:export-xdpi="164.57001"
          inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
          transform="translate(-48.232233,667.02031)"
-         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         d="M 352.03815,64.685532 A 11.237947,11.237947 0 0 1 340.8002,75.923479 11.237947,11.237947 0 0 1 329.56225,64.685532 11.237947,11.237947 0 0 1 340.8002,53.447584 11.237947,11.237947 0 0 1 352.03815,64.685532 Z"
          sodipodi:ry="11.237947"
          sodipodi:rx="11.237947"
          sodipodi:cy="64.685532"
@@ -2990,7 +2990,7 @@
          sodipodi:cy="64.685532"
          sodipodi:rx="11.237947"
          sodipodi:ry="11.237947"
-         d="m 352.03815,64.685532 c 0,6.206547 -5.0314,11.237947 -11.23795,11.237947 -6.20655,0 -11.23795,-5.0314 -11.23795,-11.237947 0,-6.206547 5.0314,-11.237948 11.23795,-11.237948 6.20655,0 11.23795,5.031401 11.23795,11.237948 z"
+         d="M 352.03815,64.685532 A 11.237947,11.237947 0 0 1 340.8002,75.923479 11.237947,11.237947 0 0 1 329.56225,64.685532 11.237947,11.237947 0 0 1 340.8002,53.447584 11.237947,11.237947 0 0 1 352.03815,64.685532 Z"
          transform="translate(-48.232233,667.02031)"
          inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_microphone.png"
          inkscape:export-xdpi="164.57001"
@@ -3169,5 +3169,97 @@
        id="path4566"
        d="m 381.52895,804.33317 -13.20075,0 -17.14286,18.38616 17.14286,17.67173 13.20075,0 -17.14286,-18.02887 z"
        style="opacity:0.98000004;fill:#ffffff;fill-opacity:1;stroke:#000000;stroke-width:3.65639544;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dashoffset:0" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="C:\_\prog\mo\matrixoptimizer3\assets\icon\dir_up.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-581.44574"
+       x="792.82306"
+       height="68.188736"
+       width="68.188736"
+       id="rect4533"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0" />
+    <g
+       id="g4541"
+       transform="matrix(0.00231859,-1.6916981,-1.6916981,-0.00231859,1955.4862,1778.4459)"
+       style="fill:none;fill-opacity:1;stroke:#dddddd;stroke-width:6.80000019;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       inkscape:export-filename="C:\_\prog\mo\matrixoptimizer3\assets\icon\dir_up.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164">
+      <path
+         style="fill:none;fill-opacity:1;stroke:#dddddd;stroke-width:6.80000019;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 573.08137,839.53524 -22.71595,-0.11776"
+         id="path4535"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001"
+         inkscape:transform-center-x="-11.956535"
+         inkscape:transform-center-y="0.075273" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#dddddd;stroke-width:6.80000019;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 565.15354,830.5507 8.70097,8.79314 -9.50915,9.05461"
+         id="path4537"
+         inkscape:connector-curvature="0"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001"
+         inkscape:transform-center-y="0.073493"
+         inkscape:transform-center-x="-19.780305"
+         sodipodi:nodetypes="ccc" />
+      <path
+         inkscape:transform-center-y="-11.956592"
+         inkscape:transform-center-x="0.06606"
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path4539"
+         d="m 549.78895,818.70825 0.7715,20.92511"
+         style="fill:none;fill-opacity:1;stroke:#dddddd;stroke-width:6.80000019;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+    </g>
+    <g
+       style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.0999999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       transform="matrix(0.00231859,-1.6916981,-1.6916981,-0.00231859,1955.4862,1778.4459)"
+       id="g5142"
+       inkscape:export-filename="C:\_\prog\mo\matrixoptimizer3\assets\icon\dir_up.png"
+       inkscape:export-xdpi="164"
+       inkscape:export-ydpi="164">
+      <path
+         inkscape:transform-center-y="0.075273"
+         inkscape:transform-center-x="-11.956535"
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path5144"
+         d="m 573.08137,839.53524 -24.50732,-0.12022"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.0999999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         inkscape:transform-center-x="-19.780305"
+         inkscape:transform-center-y="0.073493"
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         inkscape:connector-curvature="0"
+         id="path5146"
+         d="m 564.25908,829.65379 9.59543,9.69005 -10.40606,9.94907"
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.0999999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:3.0999999;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1"
+         d="m 549.79017,817.81256 0.17111,23.31279"
+         id="path5148"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cc"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/child.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001"
+         inkscape:transform-center-x="0.06606"
+         inkscape:transform-center-y="-11.956592" />
+    </g>
   </g>
 </svg>

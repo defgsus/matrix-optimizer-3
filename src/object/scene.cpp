@@ -153,7 +153,11 @@ bool Scene::serializeAfterChilds(IO::DataStream & io) const
     audioCon_->serialize(io);
 
     // v2
+#ifndef MO_DISABLE_FRONT
     io << (frontScene_ ? frontScene_->toXml() : QString());
+#else
+    io << QString();
+#endif
 
     return true;
 }

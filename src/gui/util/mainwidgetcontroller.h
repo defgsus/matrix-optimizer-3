@@ -46,9 +46,11 @@ class TransportWidget;
 class ServerView;
 class ClipView;
 class ObjectGraphView;
+#ifndef MO_DISABLE_FRONT
 class FrontScene;
 class FrontView;
 class FrontItemEditor;
+#endif
 class RecentFiles;
 class ObjectOutputView;
 class AssetBrowser;
@@ -76,8 +78,10 @@ public:
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
+#ifndef MO_DISABLE_FRONT
     FrontView * frontView() const { return frontView_; }
     FrontItemEditor * frontItemEditor() const { return frontItemEditor_; }
+#endif
     SequenceView * sequenceView() const { return seqView_; }
     ObjectOutputView * objectOutputView() const { return objectOutputView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
@@ -136,12 +140,14 @@ public slots:
     /** Executes all scripts in the scene */
     void runScripts();
 
+#ifndef MO_DISABLE_FRONT
     void newInterface();
     void loadInterface();
     void insertInterface();
     void saveInterfaceAs();
     void loadInterfacePresets();
     void saveInterfacePresetsAs();
+#endif
 
     void renderToDisk();
 
@@ -245,9 +251,11 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+#ifndef MO_DISABLE_FRONT
     FrontScene * frontScene_;
     FrontView * frontView_;
     FrontItemEditor * frontItemEditor_;
+#endif
     ObjectOutputView * objectOutputView_;
     AssetBrowser * assetBrowser_;
     TransportWidget * transportWidget_;

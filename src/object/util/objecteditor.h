@@ -18,7 +18,9 @@
 #include "types/float.h"
 
 namespace MO {
+#ifndef MO_DISABLE_FRONT
 namespace GUI { class AbstractFrontItem; }
+#endif
 
 class ObjectEditor : public QObject
 {
@@ -195,7 +197,7 @@ public slots:
     bool removeAllModulators(MO::Parameter *);
 
     // ---------- ui modulators ----------------
-
+#ifndef MO_DISABLE_FRONT
     /** Creates a connection between an ui-item and a parameter,
         if types do match. */
     bool addUiModulator(MO::Parameter *, MO::GUI::AbstractFrontItem *);
@@ -208,7 +210,7 @@ public slots:
 
     /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
     bool setUiValue(const QString& uiId, Double timeStamp, Float value);
-
+#endif
 
     // ------------ modulator objects ----------
 

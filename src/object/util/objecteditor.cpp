@@ -601,7 +601,7 @@ bool ObjectEditor::removeAllModulators(Parameter *p)
 
 
 // ---------------------------------- ui modulators ----------------------------------------
-
+#ifndef MO_DISABLE_FRONT
 bool ObjectEditor::addUiModulator(Parameter *p, GUI::AbstractFrontItem * item)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addUiModulator(" << p << ", " << item << ")");
@@ -669,7 +669,7 @@ bool ObjectEditor::setUiValue(const QString& uiId, Double timeStamp, Float value
     return true;
 }
 
-
+#endif
 
 // ---------------------------------- audio cons -------------------------------------------
 
