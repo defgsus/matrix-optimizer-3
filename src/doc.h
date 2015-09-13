@@ -15,12 +15,12 @@
   *
   * - fix segfault on delete-object (some views don't realize)
   * - fix multi-track-view edit actions
+  * - performance of widget creation in ParameterView
   * - OK "Close" instead of "Cancel" in unchanged scene description popup
   * - OK fix AngelScript array (backward compat.)
   * - OK fix drop-into-scene-background problem!!
-  *     - fix drop-into-scene-background position (always 0,0)
+  *     - OK fix drop-into-scene-background position (always 0,0)
   * - OK populate edit mainmenu with actions from ObjectSceneGraph
-  * - performance of widget creation in ParameterView
   * - OK image loading seems broken for some files
   * - OK fix smoothed camera movement (disable for non-playing)
   * - OK fix line number parser for errors in GLSL

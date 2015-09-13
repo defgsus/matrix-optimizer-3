@@ -970,8 +970,12 @@ void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
 
 void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * parent)
 {
+    QPointF ePos = e->pos();
     if (!parent)
+    {
         parent = p_->root;
+        ePos = e->scenePos();
+    }
     if (!parent)
         return;
 
@@ -1002,7 +1006,7 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
         }
         // add them all at once
         if (!objs.isEmpty())
-            addObjects(parent, objs, mapToGrid(e->pos()));
+            addObjects(parent, objs, mapToGrid(ePos));
         // print errors
         if (!notworking.isEmpty())
         {
@@ -1050,8 +1054,7 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
 
         addObject(parent,
                   ObjectFactory::createObject(classn),
-                  mapToGrid(e->pos())
-                  //mapToGrid(e->scenePos()) - gridPos()
+                  mapToGrid(ePos)
                   );
 
         e->accept();
@@ -1378,10 +1381,10 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
         {
             // set destination grid position
             auto item = itemForObject(goal);
-            if (item)
-                source->setAttachedData(
-                            mapToGrid(item->mapFromScene(dropPointF)),
-                            Object::DT_GRAPH_POS);
+            QPoint gPos = item
+                    ? mapToGrid(item->mapFromScene(dropPointF))
+                    : mapToGrid(dropPointF);
+            source->setAttachedData(gPos, Object::DT_GRAPH_POS);
 
             p_->editor->moveObject(source, goal);
         });

@@ -307,7 +307,7 @@ void AbstractObjectItem::PrivateOI::setDragGoalPos(const QPointF& p)
 
 void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
-    qInfo() << "objectitem" << object()->name() << e->mimeData()->formats();
+    //qInfo() << "objectitem" << object()->name() << e->mimeData()->formats();
     //e->ignore();
 
 
