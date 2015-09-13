@@ -32,7 +32,7 @@
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */
 #define MO_VERSION_COMBINE(maj__, min__, tiny__, micro__) \
-                 ( ((maj__)  < 32)     \
+                 ( ((maj__)  < 24)     \
                  + ((min__)  < 16)     \
                  + ((tiny__) < 8)      \
                  +  (micro__)          )

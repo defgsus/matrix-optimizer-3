@@ -113,7 +113,7 @@ void SceneDescDialog::keyPressEvent(QKeyEvent * e)
         close();
     }
     else
-        SceneDescDialog::keyPressEvent(e);
+        QDialog::keyPressEvent(e);
 }
 
 void SceneDescDialog::closeEvent(QCloseEvent * e)
