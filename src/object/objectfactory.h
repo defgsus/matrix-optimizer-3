@@ -45,8 +45,9 @@ public:
     static Object * createObject(const QString& className, bool createParametersAndObjects = true);
 
     /** Creates the appropriate object from an url (filename),
-        or returns NULL the filename does not fit.
-        E.g. creates a ImageTO from an image file */
+        or returns NULL if the filename does not fit.
+        E.g. creates an ImageTO from an image file.
+        @throws Exception on io or reading errors. */
     static Object * createObjectFromUrl(const QUrl& url);
 
     /** Returns a new Scene object */

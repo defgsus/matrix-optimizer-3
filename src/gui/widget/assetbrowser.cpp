@@ -76,7 +76,7 @@ AssetBrowser::AssetBrowser(QWidget *parent)
     p_->createWidgets();
     p_->updateModel();
 
-    selectDirectory(0);
+    selectDirectory(settings()->getValue("AssetBrowser/curDirIndex", 0).toUInt());
 }
 
 AssetBrowser::~AssetBrowser()
@@ -126,7 +126,7 @@ void AssetBrowser::Private::createWidgets()
             lh->addWidget(new QLabel(tr("filter"), widget));
 
             filterEdit = new QLineEdit(widget);
-            filterEdit->setStatusTip(tr("Enter words to filter the displayed files; "
+            filterEdit->setStatusTip(tr("Enter any letters/numbers to filter the displayed files; "
                                         "separate different filters by comma; "
                                         "use wildcard symbols '*' and '?'"));
             lh->addWidget(filterEdit);
@@ -134,7 +134,7 @@ void AssetBrowser::Private::createWidgets()
 
             // directory-up button
             auto but = new QToolButton(widget);
-            but->setText("up");
+            but->setIcon(QIcon(":/icon/dir_up.png"));
             but->setToolTip(tr("Go up one directory"));
             connect(but, SIGNAL(clicked(bool)), widget, SLOT(goUp()));
             lh->addWidget(but);
@@ -165,6 +165,7 @@ void AssetBrowser::Private::updateModel()
     treeView->setModel(fsmodel);
     treeView->setExpandsOnDoubleClick(false);
     treeView->setHeaderHidden(true);
+    // hide the file-info columns
     for (int i=1; i < 5; ++i)
         treeView->setColumnHidden(i, true);
 
@@ -180,8 +181,14 @@ void AssetBrowser::selectDirectory(uint index)
 
     p_->treeView->setRootIndex(p_->fsmodel->index(p_->directories[index]));
 
+    // store current index in settings
+    settings()->setValue("AssetBrowser/curDirIndex", p_->curDirIndex);
+
+    // pull filter from settings
     const QString key = QString("AssetBrowser/Filter/%1").arg(index);
     setFilter(settings()->getValue(key, "").toString());
+
+    /** @todo AssetBrowser: store/restore expanded-state of directories */
 }
 
 void AssetBrowser::setDirectory(uint index, const QString &dir)

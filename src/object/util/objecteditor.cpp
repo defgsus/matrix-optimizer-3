@@ -243,7 +243,8 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 
 bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects("
+                        << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
 
     QSet<Object*> saveAdd;
