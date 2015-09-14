@@ -61,6 +61,7 @@ public:
             bool isValid() const { return v.isValid(); }
             QString id, name, tip;
             QVariant v;
+            size_t index;
         };
 
         bool has(const QString &id) const { return p_val_.contains(id); }
@@ -83,6 +84,7 @@ public:
     private:
         friend Properties;
         QMap<QString, Value> p_val_;
+        size_t p_curIndex_;
     };
 
 
@@ -106,6 +108,8 @@ public:
         bool hasNamedValues() const;
         /** Associated NamedValues class, if any */
         const NamedValues& namedValues() const { return p_nv_; }
+        /** Associated NamedValues class, if any, sorted by creation index */
+        QList<NamedValues::Value> namedValuesByIndex() const;
 
         // ---- gui stuff ----
 
@@ -138,92 +142,6 @@ public:
 
     /** The default key/value map used for all Properties */
     typedef QMap<QString, Property> Map;
-
-
-#if 0
-    /** Helper for value lists,
-        e.g. enums and such.
-        Adding instances of this class to the Properties framework
-        only requires updating code in properties.h/cpp.
-        (search for "// [add new NamedStates here]") */
-    struct NamedStates
-    {
-        /** Helper struct to feed in static values to NamedStates constructor */
-        struct NamedStateHelper
-        {
-            QString id;
-            QVariant v;
-            NamedStateHelper(const QString& id, const QVariant& v) : id(id), v(v) { }
-        };
-
-        /** Construct a set by supplying tuples, e.g.:
-            @code
-            const NamedStates states("the-states",
-            {
-                { "state-1", 1 },
-                { "state-2", QColor(Qt::red) }
-            });
-            @endcode
-            Both @p persistent_name and the IDs in @p tuples
-            must not change for file persistence. */
-        NamedStates(const QString& persitent_name, const QList<NamedStateHelper>& tuples);
-        /** Construct a set by supplying two separate lists for keys and values.
-            Both @p persistent_name and the @p ids
-            must not change for file persistence.*/
-        NamedStates(const QString& persistent_name, const QList<QString>& ids, const QList<QVariant> values);
-
-        // ----------- getter ----------
-
-        /** Returns the name of the state set */
-        const QString& name() const { return p_name_; }
-
-        /** Returns value for id, or invalid QVariant */
-        const QVariant& value(const QString& id) const;
-        /** Returns id for value, or null QString */
-        const QString& id(const QVariant& value) const;
-
-        /** Number of different values */
-        uint size() const { return p_sv_.size(); }
-
-        /** Const iterator through all possible values */
-        Map::const_iterator begin() const { return p_sv_.constBegin(); }
-        /** Const iterator through all possible values */
-        Map::const_iterator end() const { return p_sv_.constEnd(); }
-
-        private:
-        Map p_sv_;
-        QString p_name_;
-    };
-
-    /** Returns true when the variant wraps a value belonging to a
-        NamedStates set. */
-    static bool isNamedStates(const QVariant&);
-    /** Returns a pointer to the static instance of NamedStated which
-        belongs to the value wrapped in the QVariant,
-        or NULL if the value does not belong to such a class. */
-    static const NamedStates * getNamedStates(const QVariant&);
-
-    /** Returns a pointer to the static instance of NamedStated
-        with the given @p name, or NULL if that name doesn't exists. */
-    static const NamedStates * getNamedStates(const QString& name);
-
-    // ------------------- enums ------------------
-
-    // [add new NamedStates here]
-
-    enum Alignment
-    {
-        A_LEFT = 1,
-        A_RIGHT = 1<<1,
-        A_TOP = 1<<2,
-        A_BOTTOM = 1<<3,
-        A_HCENTER = A_LEFT | A_RIGHT,
-        A_VCENTER = A_TOP | A_BOTTOM,
-        A_CENTER = A_HCENTER | A_VCENTER
-    };
-    static const NamedStates alignmentStates;
-    static bool isAlignment(const QVariant&);
-#endif
 
     // -------------- ctor ----------------------
 

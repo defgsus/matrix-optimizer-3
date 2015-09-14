@@ -89,6 +89,7 @@ public:
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
+    QMenu * viewMenu() const { return viewMenu_; }
 
     void createMainMenu(QMenuBar * menuBar);
 
@@ -161,6 +162,8 @@ private slots:
     void testSceneTransform_(bool newVersion);
     void updateSystemInfo_();
     void updateDebugRender_();
+
+    void onGlWindowVisibleChanged_(bool);
 
     void onObjectSelectedTree_(MO::Object*);
     void onObjectSelectedGraphView_(MO::Object*);
@@ -275,7 +278,8 @@ private:
     RecentFiles * recentFiles_;
 
     QMenu * menuEdit_, * menuResolutions_,
-          * menuProjectorIndex_;
+          * menuProjectorIndex_,
+          * viewMenu_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,
@@ -284,7 +288,8 @@ private:
             * aDrawMicrophones_,
             * aResolutionOutput_,
             * aResolutionCustom_,
-            * aResolutionPredefined_;
+            * aResolutionPredefined_,
+            * aGlWindowVisible_;
 
     bool sceneNotSaved_;
 

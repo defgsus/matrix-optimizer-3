@@ -8,6 +8,10 @@
         <p>The help itself is a big construction site. General info about handling the user interface of MO is not finished. However, each object parameter and most of the widgets have short descriptions, which are displayed in the bottom of the mainwindow. Its best to load some examples and play around with them.</p>
     </li>
 
+    <li><b>User Interface</b>
+        <p>A few features in the UI are created only recently and do not work as expected. For example, the CTRL+C, CTRL+V sequence in the scene editor pastes into the wrong container. Also creating connections between objects is not as convenient in all regards as it could be. A more general topic is, how to handle the size of larger scenes. There is no real sub-patch or container yet. Dragging connections between distant parts gets tedious...</p>
+    </li>
+
     <li><b>Multi-Track view</b>
         <p>The sequencer or multi-track editor is in an early stage. It's basically useable but only with patience. The context menu for each track is not working correctly. To create or remove sequences, use the scene editor. The multi-track view will update the changes when you select a track object or one of it's parents. Moving sequences around works okay.</p>
     </li>
@@ -41,8 +45,17 @@
         <p>One more relevant issue is to separate geometries (meshes) and materials. Right now, those are tied together in <a href="_object_Model3d.html">Model3d</a>. It would be nice to place a bunch of geometries together and define the way they are drawn in a separate object.</p>
     </li>
 
+    <li><b>Connection types</b>
+        <p>Currently, the longest existing and, therefore, tested connection type is "float value" (the green cables). Text, transformation and texture connections just came recently and are not perfectly integrated yet. For example, there is no generalized concept, how to distinguish 1d, 2d or 3d textures and texture cubemaps. If a connection type does not fit to the connected input, it's silently ignored and 'some' (the last bound) texture is used instead.</p>
+        <p>A signal type that is long overdue, is the event connection. It's needed for things like OSC and MIDI input and for efficiently (de)activating objects. Instead of the float value connection, which is always evaluated backwards along the whole connection chain, an event would be propagated forward and stored with it's time, for efficient look-up.</p>
+    </li>
+
+    <li><b>Naming</b>
+        <p>It's just when writing the documentation that the lack of consistent names for things and gui elements got apparent. This needs some thinking..</p>
+    </li>
+
     <li><b>Segfaults</b>
-        <p>Any good software crashes once in a while. All crashes i encountered happended during editing not during playback, if that's any help...</p>
+        <p>Any good software crashes once in a while. All crashes i encountered happended during editing not during playback, if that's any help... The sources of crashes is somewhat clear but it will need some digging to remove them.</p>
     </li>
 
 </ul>

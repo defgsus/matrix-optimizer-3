@@ -31,13 +31,13 @@ Properties::NamedValues GeometryModifierCreate::namedTypes()
 #endif
     val.set("quad", QObject::tr("quad"), T_QUAD);
     val.set("tetra", QObject::tr("tetrahedron"), T_TETRAHEDRON);
-    val.set("hexa", QObject::tr("hexahedron (cube)"), T_BOX);
-    val.set("hexauv", QObject::tr("hexahedron (cube) (full uv-map)"), T_BOX_UV);
+    val.set("hexa", QObject::tr("cube"), T_BOX);
+    val.set("hexauv", QObject::tr("cube (full uv-map)"), T_BOX_UV);
     val.set("octa", QObject::tr("octahedron"), T_OCTAHEDRON);
     val.set("icosa", QObject::tr("icosahedron"), T_ICOSAHEDRON);
     val.set("dodeca", QObject::tr("dodecahedron"), T_DODECAHEDRON);
-    val.set("cylo", QObject::tr("cylinder (open)"), T_CYLINDER);
-    val.set("coneo", QObject::tr("cone (open)"), T_CONE);
+    val.set("cylo", QObject::tr("cylinder"), T_CYLINDER);
+    val.set("coneo", QObject::tr("cone"), T_CONE);
     val.set("torus", QObject::tr("torus"), T_TORUS);
     val.set("uvsphere", QObject::tr("uv-sphere"), T_UV_SPHERE);
     val.set("gridxz", QObject::tr("coordinate system"), T_GRID_XZ);
@@ -71,14 +71,13 @@ GeometryModifierCreate::GeometryModifierCreate()
                      QString());
     properties().setSubType("filename-obj",
                             Properties::ST_FILENAME | IO::FT_MODEL);
-
+#ifndef MO_DISABLE_SHP
     properties().set("filename-shp", QObject::tr("shp filename"),
                      QObject::tr("The shapefile to load"),
                      QString());
     properties().setSubType("filename-shp",
                             Properties::ST_FILENAME | IO::FT_SHAPEFILE);
 
-#ifndef MO_DISABLE_SHP
     Properties::NamedValues nv;
     nv.set("off", QObject::tr("none"),
            QObject::tr("Tesselate along polygon outlines only"),
@@ -89,12 +88,12 @@ GeometryModifierCreate::GeometryModifierCreate()
     properties().set("trimesh", QObject::tr("triangulation mesh"),
                      QObject::tr("A basis mesh to intersect with polygons before tesselation"),
                      nv, (int)ShpLoader::TM_NONE);
-#endif
     properties().set("trimeshspace", QObject::tr("mesh spacing"),
                      QObject::tr("A basis mesh to intersect with polygons before tesselation"),
                      QVector<Float>() << 1. << 1.);
     properties().setMin("trimeshspace",
                      QVector<Float>() << 0.001f << 0.001f);
+#endif
 
     properties().set("asTriangles", QObject::tr("create triangles"),
                      QObject::tr("Selects lines or triangles"),
@@ -177,6 +176,7 @@ bool GeometryModifierCreate::isFile() const
 QString GeometryModifierCreate::filename() const
 {
     Type t = (Type)properties().get("type").toInt();
+    Q_UNUSED(t);
     return
         #ifndef MO_DISABLE_SHP
             t == T_FILE_SHP

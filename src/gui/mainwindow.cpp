@@ -226,8 +226,7 @@ void MainWindow::createMenus_()
     connect(controller_, SIGNAL(windowTitle(QString)),
             this, SLOT(setWindowTitle(QString)));
 
-    viewMenu_ = new QMenu("View", menuBar());
-    menuBar()->addMenu(viewMenu_);
+    viewMenu_ = controller_->viewMenu();
 }
 
 /*

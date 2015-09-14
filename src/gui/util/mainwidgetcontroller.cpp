@@ -150,6 +150,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       statusBar_        (0),
       sysInfoLabel_     (0),
       recentFiles_      (0),
+      aGlWindowVisible_ (0),
       sceneNotSaved_    (false),
       statusMessageTimeout_(7 * 1000),
       timeStep1_        (1.0),
@@ -318,7 +319,8 @@ void MainWidgetController::createObjects_()
     glManager_->setTimeCallback([this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
 
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
-
+    connect(glWindow_, SIGNAL(visibleChanged(bool)),
+            this, SLOT(onGlWindowVisibleChanged_(bool)));
     connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
             this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
 
@@ -810,11 +812,24 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 #endif
 #endif
 
+    // ######### VIEW MENU #########
+    viewMenu_ = m = new QMenu("View", menuBar);
+    menuBar->addMenu(viewMenu_);
+
+        a = aGlWindowVisible_ = new QAction(tr("Output window"), m);
+        a->setCheckable(true);
+        a->setChecked(glWindow_->isVisible());
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=](bool check)
+        {
+            glWindow_->setVisible(check);
+        });
+
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);
     menuBar->addMenu(m);
 
-        a = new QAction(tr("Help"), m);
+        a = new QAction(tr("Help index"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -1686,6 +1701,12 @@ bool MainWidgetController::isPlayback() const
 void MainWidgetController::quit()
 {
     window_->close();
+}
+
+void MainWidgetController::onGlWindowVisibleChanged_(bool v)
+{
+    if (aGlWindowVisible_)
+        aGlWindowVisible_->setChecked(v);
 }
 
 void MainWidgetController::start()

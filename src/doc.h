@@ -16,6 +16,9 @@
   * - fix segfault on delete-object (some views don't realize)
   * - fix multi-track-view edit actions
   * - performance of widget creation in ParameterView
+  * - OK reopen output window when closed
+  *     - not on top on windows 10 surface..
+  * - OK visibility in geometry: create: obj
   * - OK "Close" instead of "Cancel" in unchanged scene description popup
   * - OK fix AngelScript array (backward compat.)
   * - OK fix drop-into-scene-background problem!!
@@ -40,6 +43,8 @@
   * 2h nicer asset browser
   * 4h more gui things, and more disappointment with libGLU
   * 3h scene-background-drop (phew...)
+  * 4h demo scenes
+  * 2h update to documentation
   *
   **/
 
