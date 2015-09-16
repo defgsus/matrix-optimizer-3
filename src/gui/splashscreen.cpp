@@ -21,7 +21,7 @@ namespace GUI {
 
 
 SplashScreen::SplashScreen() :
-    QSplashScreen(QPixmap(":/img/banner.png"), Qt::WindowStaysOnTopHint)
+    QSplashScreen(QPixmap(":/img/splashscreen_vioso.png"), Qt::WindowStaysOnTopHint)
 {
     timer_ = new QTimer(this);
     timer_->setSingleShot(true);

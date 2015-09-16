@@ -62,10 +62,12 @@ void SynthSetting::createParameters(const QString &id_suffix)
                                        tr("A positive value starts a new note with the value as amplitude "
                                           "- all parameters below take affect then"),
                                        0.0);
+    p_gate_->setVisibleGraph(true);
 
     p_note_ = params->createIntParameter("note" + id_suffix, tr("note"),
                                  tr("The note that is triggered on a positive input to gate"),
                                  48, true, true);
+    p_note_->setVisibleGraph(true);
 
     p_numUnison_ = params->createIntParameter("num_unison" + id_suffix, tr("number unisono voices"),
                                        tr("The number of unisono voices that will be played for one note"),

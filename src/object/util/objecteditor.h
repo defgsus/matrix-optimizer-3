@@ -22,6 +22,9 @@ namespace MO {
 namespace GUI { class AbstractFrontItem; }
 #endif
 
+/** An edit-function-wrapper for creating and modifying Object trees.
+    It issues signals for all edit actions.
+    It contains some nice wrapper functions to create modulations and such. */
 class ObjectEditor : public QObject
 {
     Q_OBJECT

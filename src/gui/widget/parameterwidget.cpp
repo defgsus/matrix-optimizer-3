@@ -539,9 +539,15 @@ void ParameterWidget::updateButtons()
     }
 
     if (param_->isVisibleInGraph() || param_->isVisibleInterface())
+    {
+        bvis_->setChecked(true);
         bvis_->setIcon(iconVisibilityOn);
+    }
     else
+    {
+        bvis_->setChecked(false);
         bvis_->setIcon(iconVisibility);
+    }
 }
 
 void ParameterWidget::openModulationPopup()

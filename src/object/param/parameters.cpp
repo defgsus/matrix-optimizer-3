@@ -106,7 +106,7 @@ QList<Parameter*> Parameters::getVisibleGraphParameters() const
 {
     QList<Parameter*> list;
     for (auto p : parameters_)
-        if (p->isVisibleInGraph())
+        if (p->isVisible() && p->isVisibleInGraph())
             list << p;
     return list;
 }

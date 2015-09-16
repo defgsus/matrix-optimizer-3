@@ -178,7 +178,11 @@ void SceneRenderer::render(bool renderToScreen)
 
     context_->qcontext()->swapBuffers(surface_);
 
-    renderSpeed_ = tm.time();
+    Double fps = tm.time();
+    if (fps > 0.)
+        fps = 1. / fps;
+    renderSpeed_ += 1./10. * (fps - renderSpeed_);
+
 }
 
 

@@ -28,15 +28,24 @@ TransportWidget::TransportWidget(QWidget *parent) :
     auto lh = new QHBoxLayout(this);
     lh->setMargin(1);
 
+        auto lv = new QVBoxLayout();
+        lv->setMargin(0);
+        lh->addLayout(lv);
 
-        labelTime_ = new QLabel(this);
-        auto font = labelTime_->font();
-        font.setPointSize(20);
-        labelTime_->setFont(font);
-        labelTime_->setText(time_to_string(0.0, true));
-        labelTime_->setMinimumWidth(QFontMetrics(font).width(
-                            time_to_string(60*60*1000, true)));
-        lh->addWidget(labelTime_);
+            labelTime_ = new QLabel(this);
+            auto font = labelTime_->font();
+            font.setPointSize(20);
+            labelTime_->setFont(font);
+            labelTime_->setMinimumWidth(QFontMetrics(font).width(
+                                time_to_string(60*60*1000, true)));
+            lv->addWidget(labelTime_);
+
+            labelTime2_ = new QLabel(this);
+            font.setPointSize(14);
+            labelTime2_->setFont(font);
+            lv->addWidget(labelTime2_);
+
+            lv->addStretch();
 
         lh->addStretch(1);
 
@@ -80,16 +89,19 @@ TransportWidget::TransportWidget(QWidget *parent) :
         envWidget_->setStatusTip(tr("Display of the microphone amplitudes"));
 
 
+    setSceneTime(0., 0.);
     setPlayback(false);
 }
 
-void TransportWidget::setSceneTime(Double time)
+void TransportWidget::setSceneTime(Double time, Double fps)
 {
     /** @todo use correct fps here */
-    labelTime_->setText(tr("%1\n%2s %3f")
-                        .arg(time_to_string(time, true))
+    labelTime_->setText(time_to_string(time, true));
+    labelTime2_->setText(tr("%2s %3f (%4fps)")
                         .arg(long(time))
-                        .arg(long(time * 30)));
+                        .arg(long(time * 30))
+                        .arg(int(fps))
+                        );
 }
 
 void TransportWidget::setPlayback(bool p)

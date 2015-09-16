@@ -13,9 +13,11 @@
 
 /** @todo VIOSO Port
   *
+  * - make gfx-time independent of dsp-block-time
   * - fix segfault on delete-object (some views don't realize)
   * - fix multi-track-view edit actions
   * - performance of widget creation in ParameterView
+  * - OK fps measure for output window
   * - OK reopen output window when closed
   *     - not on top on windows 10 surface..
   * - OK visibility in geometry: create: obj

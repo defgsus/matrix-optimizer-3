@@ -258,6 +258,8 @@ void TextureObjectBase::PrivateTO::createParameters()
                                                 ? inpNames[i]
                                                 : tr("input %1").arg(i+1),
                                             tr("A texture input")) );
+
+            p_textures.back()->setVisibleGraph(true);
         }
 
     to->params()->endParameterGroup();

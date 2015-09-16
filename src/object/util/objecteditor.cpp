@@ -541,6 +541,7 @@ bool ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
 
     /** @todo test sanity of connection! */
 
+    bool visChanged = false;
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
@@ -548,9 +549,13 @@ bool ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
+        if (!p->isVisibleInGraph())
+            p->setVisibleGraph(visChanged = true);
     }
     emit modulatorAdded(m);
     emit parameterChanged(p);
+    if (visChanged)
+        emit parameterVisibilityChanged(p);
     emit sceneChanged(scene_);
     scene_->render();
     return true;

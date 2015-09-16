@@ -95,6 +95,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
     paramTex_ = params->createTextureParameter("_img_tex" + id_suffix,
                                                tr("texture input"),
                                                tr("Connects to a texture from somewhere else"));
+    paramTex_->setVisibleGraph(true);
 
     paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),

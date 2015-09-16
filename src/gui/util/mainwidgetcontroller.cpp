@@ -94,6 +94,7 @@
 #include "gl/window.h"
 #include "gl/texture.h"
 #include "gl/scenerenderer.h" // deprecated
+#include "gl/compatibility.h"
 #include "audio/configuration.h"
 #include "engine/renderer.h" // should be (audio) disk renderer
 #include "engine/renderengine.h"
@@ -602,6 +603,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(diag, SIGNAL(projectionSettingsChanged()),
                     this, SLOT(onProjectionSettingsChanged_()));
             diag->show();
+        });
+
+        a = new QAction(tr("OpenGL info"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            QMessageBox::information(window_, tr("OpenGL info"),
+                                     GL::Properties::staticInstance().toString());
         });
 
 
@@ -1461,7 +1470,11 @@ void MainWidgetController::onSceneTimeChanged_(Double time)
     if (sequencer_->isVisible())
         sequencer_->setSceneTime(time);
 
-    transportWidget_->setSceneTime(time);
+    /*
+    Double fps = glManager_->renderer() ?
+                glManager_->renderer()->renderSpeed() : 0;*/
+    Double fps = glWindow_->messuredFps();
+    transportWidget_->setSceneTime(time, fps);
 }
 
 void MainWidgetController::setEditActions_(const QObject *, const ActionList &actions)
