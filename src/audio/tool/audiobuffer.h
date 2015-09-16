@@ -11,7 +11,10 @@
 #ifndef MOSRC_AUDIO_TOOL_AUDIOBUFFER_H
 #define MOSRC_AUDIO_TOOL_AUDIOBUFFER_H
 
+#include <functional>
+
 #include <QString>
+
 #include "types/float.h"
 
 

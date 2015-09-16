@@ -113,6 +113,7 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
         }
     }
 
+#ifndef MO_DISABLE_FRONT
     if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
     {
         if (   !param_->isModulateable()
@@ -125,6 +126,7 @@ void ParameterWidget::dragEnterEvent(QDragEnterEvent * e)
         e->accept();
         return;
     }
+#endif
 }
 
 void ParameterWidget::dropEvent(QDropEvent * e)
@@ -150,6 +152,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         return;
     }
 
+#ifndef MO_DISABLE_FRONT
     // drop of a ui-item
     if (auto idata = FrontItemMimeData::frontItemMimeData(e->mimeData()))
     {
@@ -169,6 +172,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
         e->accept();
         //MO_DEBUG("ui-item " << idata->getItemId() << " -> param " << param_->name());
     }
+#endif
 }
 
 void ParameterWidget::createWidgets_()
@@ -535,9 +539,15 @@ void ParameterWidget::updateButtons()
     }
 
     if (param_->isVisibleInGraph() || param_->isVisibleInterface())
+    {
+        bvis_->setChecked(true);
         bvis_->setIcon(iconVisibilityOn);
+    }
     else
+    {
+        bvis_->setChecked(false);
         bvis_->setIcon(iconVisibility);
+    }
 }
 
 void ParameterWidget::openModulationPopup()

@@ -39,7 +39,7 @@ Drawable::Drawable(const QString &name)
       vao_              (0),
       drawTypeSet_      (false),
       drawType_         (GL_LINES),
-      uniColor_         (0)
+      uniformColor_     (0)
 {
     MO_DEBUG_GL("Drawable(" << name_ << ")::Drawable()");
 }
@@ -222,60 +222,20 @@ void Drawable::compileShader_()
     if (lightAmt)
         lightAmt->setFloats(1., 1., .3, 10.);
 
-    uniColor_ = shader_->getUniform(shaderSource_->uniformNameColor());
-    if (uniColor_)
-        uniColor_->setFloats(1,1,1,1);
+    uniformColor_ = shader_->getUniform(shaderSource_->uniformNameColor());
+    if (uniformColor_)
+        uniformColor_->setFloats(1,1,1,1);
 
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameProjection()))
-        uniformProj_ = u->location();
-    else
-        uniformProj_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameCubeViewTransformation()))
-        uniformCVT_ = u->location();
-    else
-        uniformCVT_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameViewTransformation()))
-        uniformVT_ = u->location();
-    else
-        uniformVT_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameTransformation()))
-        uniformT_ = u->location();
-    else
-        uniformT_ = invalidGl;
-
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightPos()))
-        uniformLightPos_ = u->location();
-    else
-        uniformLightPos_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightColor()))
-        uniformLightColor_ = u->location();
-    else
-        uniformLightColor_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDiffuseExponent()))
-        uniformLightDiffuseExp_ = u->location();
-    else
-        uniformLightDiffuseExp_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirection()))
-        uniformLightDirection_ = u->location();
-    else
-        uniformLightDirection_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameLightDirectionParam()))
-        uniformLightDirectionParam_ = u->location();
-    else
-        uniformLightDirectionParam_ = invalidGl;
-
-    if (auto u = shader_->getUniform(shaderSource_->uniformNameSceneTime()))
-        uniformSceneTime_ = u->location();
-    else
-        uniformSceneTime_ = invalidGl;
+    uniformProj_ = shader_->getUniform(shaderSource_->uniformNameProjection());
+    uniformCVT_ = shader_->getUniform(shaderSource_->uniformNameCubeViewTransformation());
+    uniformVT_ = shader_->getUniform(shaderSource_->uniformNameViewTransformation());
+    uniformT_ = shader_->getUniform(shaderSource_->uniformNameTransformation());
+    uniformLightPos_ = shader_->getUniform(shaderSource_->uniformNameLightPos());
+    uniformLightColor_ = shader_->getUniform(shaderSource_->uniformNameLightColor());
+    uniformLightDiffuseExp_ = shader_->getUniform(shaderSource_->uniformNameLightDiffuseExponent());
+    uniformLightDirection_ = shader_->getUniform(shaderSource_->uniformNameLightDirection());
+    uniformLightDirectionParam_ = shader_->getUniform(shaderSource_->uniformNameLightDirectionParam());
+    uniformSceneTime_ = shader_->getUniform(shaderSource_->uniformNameSceneTime());
 }
 
 void Drawable::createVAO_()
@@ -300,7 +260,7 @@ void Drawable::releaseOpenGl()
     if (shader_)
         shader_->releaseGL();
 
-    uniColor_ = 0;
+    uniformColor_ = 0;
 
     if (vao_)
     {
@@ -313,8 +273,8 @@ void Drawable::releaseOpenGl()
 
 void Drawable::setAmbientColor(Float r, Float g, Float b, Float a)
 {
-    if (uniColor_)
-        uniColor_->setFloats(r, g, b, a);
+    if (uniformColor_)
+        uniformColor_->setFloats(r, g, b, a);
 }
 
 void Drawable::render()
@@ -345,31 +305,31 @@ void Drawable::renderShader(const Mat4 &proj,
 
     shader_->sendUniforms();
 
-    if (uniformProj_ != invalidGl)
-        MO_CHECK_GL( glUniformMatrix4fv(uniformProj_, 1, GL_FALSE, &proj[0][0]) );
+    if (uniformProj_)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformProj_->location(), 1, GL_FALSE, &proj[0][0]) );
 
-    if (uniformCVT_ != invalidGl)
-        MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_, 1, GL_FALSE, &cubeViewTrans[0][0]) );
-    MO_CHECK_GL( glUniformMatrix4fv(uniformVT_, 1, GL_FALSE, &viewTrans[0][0]) );
-    MO_CHECK_GL( glUniformMatrix4fv(uniformT_, 1, GL_FALSE, &trans[0][0]) );
+    if (uniformCVT_)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_->location(), 1, GL_FALSE, &cubeViewTrans[0][0]) );
+    if (uniformVT_)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformVT_->location(), 1, GL_FALSE, &viewTrans[0][0]) );
+    if (uniformT_)
+        MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE, &trans[0][0]) );
 
-    if (uniformSceneTime_ != invalidGl && time >= 0.)
-    {
-        MO_CHECK_GL( glUniform1f(uniformSceneTime_, time) );
-    }
+    if (uniformSceneTime_ && time >= 0.)
+        MO_CHECK_GL( glUniform1f(uniformSceneTime_->location(), time) );
 
     if (lights && lights->count())
     {
-        if (uniformLightPos_ != invalidGl)
-            MO_CHECK_GL( glUniform3fv(uniformLightPos_, lights->count(), lights->positions()) );
-        if (uniformLightColor_ != invalidGl)
-            MO_CHECK_GL( glUniform4fv(uniformLightColor_, lights->count(), lights->colors()) );
-        if (uniformLightDirection_ != invalidGl)
-            MO_CHECK_GL( glUniform3fv(uniformLightDirection_, lights->count(), lights->directions()) );
-        if (uniformLightDirectionParam_ != invalidGl)
-            MO_CHECK_GL( glUniform3fv(uniformLightDirectionParam_, lights->count(), lights->directionParam()) );
-        if (uniformLightDiffuseExp_ != invalidGl)
-            MO_CHECK_GL( glUniform1fv(uniformLightDiffuseExp_, lights->count(), lights->diffuseExponents()) );
+        if (uniformLightPos_)
+            MO_CHECK_GL( glUniform3fv(uniformLightPos_->location(), lights->count(), lights->positions()) );
+        if (uniformLightColor_)
+            MO_CHECK_GL( glUniform4fv(uniformLightColor_->location(), lights->count(), lights->colors()) );
+        if (uniformLightDirection_)
+            MO_CHECK_GL( glUniform3fv(uniformLightDirection_->location(), lights->count(), lights->directions()) );
+        if (uniformLightDirectionParam_)
+            MO_CHECK_GL( glUniform3fv(uniformLightDirectionParam_->location(), lights->count(), lights->directionParam()) );
+        if (uniformLightDiffuseExp_)
+            MO_CHECK_GL( glUniform1fv(uniformLightDiffuseExp_->location(), lights->count(), lights->diffuseExponents()) );
 
     }
 

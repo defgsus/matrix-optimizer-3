@@ -8,6 +8,8 @@
     <p>created 26.02.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QPainter>
 
 #include "frontfloatitem.h"
@@ -217,3 +219,5 @@ void FrontFloatItem::paint(QPainter *p, const QStyleOptionGraphicsItem * style, 
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

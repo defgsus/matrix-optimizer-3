@@ -11,6 +11,46 @@
 #ifndef MOSRC_DOC_H
 #define MOSRC_DOC_H
 
+/** @todo VIOSO Port
+  *
+  * - make gfx-time independent of dsp-block-time
+  * - fix segfault on delete-object (some views don't realize)
+  * - fix multi-track-view edit actions
+  * - performance of widget creation in ParameterView
+  * - OK fps measure for output window
+  * - OK reopen output window when closed
+  *     - not on top on windows 10 surface..
+  * - OK visibility in geometry: create: obj
+  * - OK "Close" instead of "Cancel" in unchanged scene description popup
+  * - OK fix AngelScript array (backward compat.)
+  * - OK fix drop-into-scene-background problem!!
+  *     - OK fix drop-into-scene-background position (always 0,0)
+  * - OK populate edit mainmenu with actions from ObjectSceneGraph
+  * - OK image loading seems broken for some files
+  * - OK fix smoothed camera movement (disable for non-playing)
+  * - OK fix line number parser for errors in GLSL
+  * - OK attach initialization errors to objects (signal and access in gui)
+  *     - better display in gui
+  * - OK double-click on scene files in browser should load them
+  *
+  * minor issues:
+  * - when using integrated intel graphics
+  *     - lighting does not work
+  *     - shader compile error in scene debug renderer
+  *
+  *
+  * workload:
+  * 10h compiled for windows (missing libDUMB, libSHP & libGLU)
+  * 7h fixed various (gui) things + libjpeg integration
+  * 2h nicer asset browser
+  * 4h more gui things, and more disappointment with libGLU
+  * 3h scene-background-drop (phew...)
+  * 4h demo scenes
+  * 2h update to documentation
+  *
+  **/
+
+
 /** @todo Hamburg impressions:
   *
   * - fullscreen issue (wtf???) and is the stretching hack a solution??
@@ -22,8 +62,6 @@
   * - update comes one to late in ProjectorSetupDialog
   *
   */
-
-
 
 
 /** @page random_ideas

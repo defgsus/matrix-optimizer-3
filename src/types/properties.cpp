@@ -45,6 +45,21 @@ const Properties::NamedStates Properties::alignmentStates = Properties::NamedSta
 #endif
 
 
+QList<Properties::NamedValues::Value> Properties::Property::namedValuesByIndex() const
+{
+    QList<NamedValues::Value> vals;
+    for (const auto & i : p_nv_)
+        vals << i;
+
+    qSort(vals.begin(), vals.end(), [](const NamedValues::Value& l, const NamedValues::Value& r)
+    {
+        return l.index < r.index;
+    });
+
+    return vals;
+}
+
+
 // --------------------- Properties::NamedValues ------------------------------
 
 bool Properties::NamedValues::hasValue(const QVariant &v) const
@@ -80,6 +95,7 @@ void Properties::NamedValues::set(
         const QVariant &v)
 {
     auto i = p_val_.find(id);
+    // overwrite
     if (i != p_val_.end())
     {
         i.value().id = id;
@@ -87,6 +103,7 @@ void Properties::NamedValues::set(
         i.value().tip = statusTip;
         i.value().v = v;
     }
+    // create
     else
     {
         Value val;
@@ -94,6 +111,7 @@ void Properties::NamedValues::set(
         val.name = name;
         val.tip = statusTip;
         val.v = v;
+        val.index = p_curIndex_++;
         p_val_.insert(id, val);
     }
 }

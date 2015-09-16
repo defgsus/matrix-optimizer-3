@@ -113,6 +113,10 @@ void Settings::createDefaultValues_()
                                 = mopath + "/data/scene";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_OBJECT_TEMPLATE]]
                                 = mopath + "/data/object_templates";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_TEXTURE]]
+                                = mopath + "/data/graphic";
+    defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_NORMAL_MAP]]
+                                = mopath + "/data/graphic";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_SOUND]]
                                 = mopath + "/data/audio";
     defaultValues_["Directory/" + IO::fileTypeIds[IO::FT_EQUATION_PRESET]]
@@ -128,6 +132,15 @@ void Settings::createDefaultValues_()
 
     defaultValues_["Directory/filecache"] = mopath + "/data/cache";
     defaultValues_["File/filecache"] = mopath + "/data/cache/filecache.xml";
+
+    // --- asset browser default directories ---
+
+    defaultValues_["AssetBrowser/Directory/0"] = mopath + "/data/scene";
+    defaultValues_["AssetBrowser/Filter/0"] = "*.mo3";
+    defaultValues_["AssetBrowser/Directory/1"] = mopath + "/data/object_templates";
+    defaultValues_["AssetBrowser/Directory/2"] = mopath + "/data/geometry_presets";
+    defaultValues_["AssetBrowser/Directory/3"] = mopath + "/data/graphic";
+    defaultValues_["AssetBrowser/Directory/4"] = mopath + "/data/audio";
 
     // --- hardware settings ---
 
@@ -193,6 +206,24 @@ QVariant Settings::getValue(const QString &key) const
 
     return QVariant();
 }
+
+QVariant Settings::getValue(const QString &key, const QVariant& def) const
+{
+    // return from settings
+    if (contains(key))
+    {
+        return value(key);
+    }
+
+    // return from default settings
+    auto i = defaultValues_.find(key);
+    if (i != defaultValues_.end())
+        return i.value();
+
+    // not found
+    return def;
+}
+
 /*
 void Settings::saveGeometry(QMainWindow * win)
 {
@@ -353,6 +384,12 @@ bool Settings::restoreGeometry(QWidget * win)
 
     return found;
 }
+
+QString Settings::dataPath() const
+{
+    return "./data";
+}
+
 
 QString Settings::serverAddress() const
 {

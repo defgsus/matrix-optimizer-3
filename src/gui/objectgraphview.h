@@ -18,6 +18,7 @@
 class QGraphicsView;
 
 namespace MO {
+class ActionList;
 namespace GUI {
 
 class ObjectGraphScene;
@@ -34,6 +35,9 @@ signals:
     /** An object has been clicked */
     void objectSelected(MO::Object *);
 
+    /** Actions for edit-mainmenu have been populated. */
+    void editActionsChanged(const ActionList&);
+
 public slots:
 
     /** Call this before setting the root object */
@@ -48,7 +52,13 @@ public slots:
 
 private slots:
 
-    void onShitView_(const QPointF&);
+    void onShiftView_(const QPointF&);
+
+protected:
+
+    //void dragEnterEvent(QDragEnterEvent *) Q_DECL_OVERRIDE;
+
+
 private:
 
     void createWidgets_();

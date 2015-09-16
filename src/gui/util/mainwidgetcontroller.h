@@ -30,6 +30,7 @@ namespace MO {
 class LiveAudioEngine;
 class RenderEngine;
 class ValueFloatInterface;
+class ActionList;
 namespace GL { class Window; class Context; class Manager; }
 namespace GUI {
 
@@ -45,13 +46,16 @@ class TransportWidget;
 class ServerView;
 class ClipView;
 class ObjectGraphView;
+#ifndef MO_DISABLE_FRONT
 class FrontScene;
 class FrontView;
 class FrontItemEditor;
+#endif
 class RecentFiles;
 class ObjectOutputView;
 class AssetBrowser;
 
+/** Top-Level widget container and gui logic. */
 class MainWidgetController : public QObject
 {
     Q_OBJECT
@@ -74,8 +78,10 @@ public:
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
     Sequencer * sequencer() const { return sequencer_; }
     ClipView * clipView() const { return clipView_; }
+#ifndef MO_DISABLE_FRONT
     FrontView * frontView() const { return frontView_; }
     FrontItemEditor * frontItemEditor() const { return frontItemEditor_; }
+#endif
     SequenceView * sequenceView() const { return seqView_; }
     ObjectOutputView * objectOutputView() const { return objectOutputView_; }
     TransportWidget * transportWidget() const { return transportWidget_; }
@@ -83,6 +89,7 @@ public:
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerView * serverView() const { return serverView_; }
     QStatusBar * statusBar() const { return statusBar_; }
+    QMenu * viewMenu() const { return viewMenu_; }
 
     void createMainMenu(QMenuBar * menuBar);
 
@@ -104,30 +111,44 @@ public slots:
 
     void quit();
 
+    // --- transport ---
     void start();
     void stop();
     void moveTime(Double sec);
-    void closeAudio();
     /** Sets CurrentTime and audio engine's time at once */
     void setSceneTime(Double time);
+    /** Closes the audio device */
+    void closeAudio();
 
     /** Loads last or creates new */
     void initScene();
 
+    /** @{ */ /** These functions all appropriately call isOkayToChangeScene() */
+    /** Saves current scene, overwrites or asks for name if not given */
     bool saveScene();
+    /** Saves current scene as new file */
     void saveSceneAs();
+    /** Loads a new scene via file dialog */
     void loadScene();
+    /** Loads the given scene filename */
     void loadScene(const QString& fn);
+    /** Creates a new, empty scene */
     void newScene();
-    void runScripts();
+    /** Shows the scene description dialog */
     void showSceneDesc();
+    /** @} */
 
+    /** Executes all scripts in the scene */
+    void runScripts();
+
+#ifndef MO_DISABLE_FRONT
     void newInterface();
     void loadInterface();
     void insertInterface();
     void saveInterfaceAs();
     void loadInterfacePresets();
     void saveInterfacePresetsAs();
+#endif
 
     void renderToDisk();
 
@@ -137,10 +158,12 @@ public slots:
 
 private slots:
 
-    void setEditActions_(const QObject * sender, QList<QAction*> actions);
+    void setEditActions_(const QObject * sender, const ActionList& actions);
     void testSceneTransform_(bool newVersion);
     void updateSystemInfo_();
     void updateDebugRender_();
+
+    void onGlWindowVisibleChanged_(bool);
 
     void onObjectSelectedTree_(MO::Object*);
     void onObjectSelectedGraphView_(MO::Object*);
@@ -231,9 +254,11 @@ private:
     Sequencer * sequencer_;
     ClipView * clipView_;
     SequenceView * seqView_;
+#ifndef MO_DISABLE_FRONT
     FrontScene * frontScene_;
     FrontView * frontView_;
     FrontItemEditor * frontItemEditor_;
+#endif
     ObjectOutputView * objectOutputView_;
     AssetBrowser * assetBrowser_;
     TransportWidget * transportWidget_;
@@ -253,7 +278,8 @@ private:
     RecentFiles * recentFiles_;
 
     QMenu * menuEdit_, * menuResolutions_,
-          * menuProjectorIndex_;
+          * menuProjectorIndex_,
+          * viewMenu_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,
@@ -262,7 +288,8 @@ private:
             * aDrawMicrophones_,
             * aResolutionOutput_,
             * aResolutionCustom_,
-            * aResolutionPredefined_;
+            * aResolutionPredefined_,
+            * aGlWindowVisible_;
 
     bool sceneNotSaved_;
 

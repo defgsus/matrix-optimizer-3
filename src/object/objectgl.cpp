@@ -221,6 +221,8 @@ void ObjectGl::p_initGl_(uint thread)
     MO_DEBUG_GL("ObjectGl('" << idName() << "')::initGl_(" << thread << ") "
                 "p_glContext_.size() == " << p_glContext_.size());
 
+    clearError();
+
     if (!p_glContext_[thread])
         MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
     if (!p_glContext_[thread]->isValid())
@@ -232,7 +234,7 @@ void ObjectGl::p_initGl_(uint thread)
 
     MO_EXTEND_EXCEPTION(
         initGl(thread),
-                "in ObjectGl '" << idName() << "', thread=" << thread
+                "in ObjectGl '" << name() << "/" << idName() << "', thread=" << thread
                 );
 
     p_needsInitGl_[thread] = false;

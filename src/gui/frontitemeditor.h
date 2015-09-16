@@ -8,6 +8,8 @@
     <p>created 24.02.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #ifndef FRONTITEMEDITOR_H
 #define FRONTITEMEDITOR_H
 
@@ -70,3 +72,5 @@ private:
 
 
 #endif // FRONTITEMEDITOR_H
+
+#endif // MO_DISABLE_FRONT

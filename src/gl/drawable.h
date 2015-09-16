@@ -115,19 +115,18 @@ private:
 
     bool drawTypeSet_;
     gl::GLenum drawType_;
-    gl::GLuint
-        uniformProj_,
-        uniformCVT_,
-        uniformVT_,
-        uniformT_,
-        uniformLightPos_,
-        uniformLightColor_,
-        uniformLightDirection_,
-        uniformLightDirectionParam_,
-        uniformLightDiffuseExp_,
-        uniformSceneTime_;
-
-    Uniform * uniColor_;
+    GL::Uniform
+        * uniformProj_,
+        * uniformCVT_,
+        * uniformVT_,
+        * uniformT_,
+        * uniformLightPos_,
+        * uniformLightColor_,
+        * uniformLightDirection_,
+        * uniformLightDirectionParam_,
+        * uniformLightDiffuseExp_,
+        * uniformSceneTime_,
+        * uniformColor_;
 
 };
 

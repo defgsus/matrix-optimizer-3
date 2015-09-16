@@ -385,16 +385,19 @@ void AudioDialog::deviceSelected_()
         if (haveOutputIns)
             inidx = outidx;
 
-        // MH: Do something about samplerates of input and output...
-        // maybe match them or allow only matching samplerates...
-        if (!settings()->contains("Audio/samplerate"))
-            sampleRate_->setValue(devices_->getDeviceInfo(outidx)->defaultSampleRate);
-        if (!settings()->contains("Audio/buffersize"))
-            bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
-        if (!settings()->contains("Audio/channelsIn"))
+        if (devices_->getDeviceInfo(outidx))
+        {
+            // MH: Do something about samplerates of input and output...
+            // maybe match them or allow only matching samplerates...
+            if (!settings()->contains("Audio/samplerate"))
+                sampleRate_->setValue(devices_->getDeviceInfo(outidx)->defaultSampleRate);
+            if (!settings()->contains("Audio/buffersize"))
+                bufferSize_->setValue(devices_->getDeviceInfo(outidx)->defaultBufferLength);
+            if (!settings()->contains("Audio/channelsOut"))
+                numOutputs_->setValue(std::min(2u, devices_->getDeviceInfo(outidx)->numOutputChannels));
+        }
+        if (!settings()->contains("Audio/channelsIn") && devices_->getDeviceInfo(inidx))
             numInputs_->setValue(std::min(2u, devices_->getDeviceInfo(inidx)->numInputChannels));
-        if (!settings()->contains("Audio/channelsOut"))
-            numOutputs_->setValue(std::min(2u, devices_->getDeviceInfo(outidx)->numOutputChannels));
     }
 
     // update widgets

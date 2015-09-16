@@ -164,10 +164,11 @@ void QVariantWidget::Private::createWidgets()
     if (props && props->getProperty(id).hasNamedValues())
     {
         auto nv = props->getProperty(id).namedValues();
+        auto nvi = props->getProperty(id).namedValuesByIndex();
 
         auto cb = new QComboBox(widget);
         edit = cb;
-        for (const Properties::NamedValues::Value & i : nv)
+        for (const Properties::NamedValues::Value & i : nvi)
         {
             cb->addItem(i.name, i.id);
 

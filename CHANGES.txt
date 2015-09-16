@@ -1,3 +1,8 @@
+3.0.3
+ - windows (7) port
+ - asset browser
+ - more gui fixes
+
 3.0.2.46
 
  - texture connections

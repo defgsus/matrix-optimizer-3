@@ -8,7 +8,7 @@
     <p>created 06.05.2015</p>
 */
 
-#ifndef MO_DISABLE_LADSPA
+//#ifndef MO_DISABLE_LADSPA
 
 #include "pluginao.h"
 #include "object/param/parameters.h"
@@ -61,14 +61,19 @@ PluginAO::PluginAO(QObject * parent)
 {
     setName("Plugin");
     setNumberAudioInputsOutputs(0, 0, false);
+#ifdef MO_DISABLE_LADSPA
+    setError(tr("Audio Plugin object only supports LADSPA(Linux) at the moment"));
+#endif
 }
 
 PluginAO::~PluginAO()
 {
+#ifndef MO_DISABLE_LADSPA
     if (p_->plugin)
         p_->plugin->releaseRef();
     if (p_->usedPlugin)
         p_->usedPlugin->releaseRef();
+#endif
     delete p_;
 }
 
@@ -131,7 +136,9 @@ void PluginAO::updateParameterVisibility()
 
 void PluginAO::Private::updateParameters(bool setDefaults)
 {
+#ifndef MO_DISABLE_LADSPA
     size_t count = 0;
+
     if (plugin)
         count = plugin->numControlInputs();
 
@@ -179,12 +186,16 @@ void PluginAO::Private::updateParameters(bool setDefaults)
 
     if (ao->editor())
         emit ao->editor()->parametersChanged();
+#else
+    Q_UNUSED(setDefaults);
+#endif
 }
 
 void PluginAO::Private::updateChannels()
 {
     size_t numIn = 0, numOut = 0;
 
+#ifndef MO_DISABLE_LADSPA
     if (plugin)
     {
         numIn = plugin->numInputs();
@@ -194,6 +205,7 @@ void PluginAO::Private::updateChannels()
         audioOutNames = plugin->outputNames();
     }
     else
+#endif
     {
         audioInNames.clear();
         audioOutNames.clear();
@@ -233,14 +245,18 @@ void PluginAO::setPlugin(AUDIO::LadspaPlugin * p)
     if (p_->plugin)
     {
         firstTime = false;
+#ifndef MO_DISABLE_LADSPA
         p_->plugin->releaseRef();
+#endif
     }
     p_->plugin = p;
 
     if (p_->plugin)
     {
+#ifndef MO_DISABLE_LADSPA
         p_->plugin->addRef();
         p_->plugin->initialize(256, sampleRate());
+#endif
         //MO_DEBUG("PluginAO: plugin '" << p_->plugin->name() << "' initialized");
     }
 
@@ -265,15 +281,18 @@ void PluginAO::Private::loadPlugin()
         return;
     }
 
+#ifndef MO_DISABLE_LADSPA
     auto plug = IO::LadspaLoader::loadPlugin(IO::fileManager().localFilename(fn), label);
 
     ao->setPlugin(plug);
     if (plug)
         plug->releaseRef();
+#endif
 }
 
 void PluginAO::processAudio(uint bsize, SamplePos pos, uint thread)
 {
+#ifndef MO_DISABLE_LADSPA
     // lazy exchange new plugin
     if (p_->hasNewPlugin)
     {
@@ -311,9 +330,13 @@ void PluginAO::processAudio(uint bsize, SamplePos pos, uint thread)
         // process dsp
         p_->usedPlugin->process(audioInputs(thread), audioOutputs(thread));
     }
+#else
+    Q_UNUSED(bsize);
+    writeNullBlock(pos, thread);
+#endif
 }
 
 
 } // namespace MO
 
-#endif // #ifndef MO_DISABLE_LADSPA
+//#endif // #ifndef MO_DISABLE_LADSPA

@@ -24,6 +24,7 @@ namespace GUI {
 
 class MainWidgetController;
 
+/** The main gui window using MainWidgetController */
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -31,12 +32,6 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
-
-protected:
-    void closeEvent(QCloseEvent *);
-    //void resizeEvent(QResizeEvent *);
-
-    void keyPressEvent(QKeyEvent *);
 
 public slots:
 
@@ -52,8 +47,11 @@ private slots:
 
 protected:
 
+    void closeEvent(QCloseEvent *) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    //void resizeEvent(QResizeEvent *);
+    //void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
     //bool event(QEvent *event) Q_DECL_OVERRIDE; /* debug */
-    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
 
 private:
 

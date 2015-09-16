@@ -11,6 +11,8 @@
 #if 0 // c++14 version (not tested)
 
     #include <chrono>
+    #include "time.h"
+
 
     namespace MO {
 
@@ -28,8 +30,13 @@
     #include <Qt>
     #include "time.h"
 
-    #ifndef Q_OS_WIN
+    #ifdef Q_OS_UNIX
     #   include <ctime>
+    #endif
+
+    #ifdef Q_OS_WIN
+    #   include <windows.h>
+    #   include <winbase.h>
     #endif
 
     #ifdef Q_OS_OSX

@@ -42,13 +42,13 @@ signals:
 
 public slots:
 
-    void setSceneTime(Double time);
+    void setSceneTime(Double time, Double fps);
     void setPlayback(bool);
 
 private:
 
     EnvelopeWidget * envWidget_;
-    QLabel * labelTime_;
+    QLabel * labelTime_, * labelTime2_;
     QToolButton
         * butPlay,
         * butStop,

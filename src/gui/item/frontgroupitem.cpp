@@ -8,6 +8,8 @@
     <p>created 28.02.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include "frontgroupitem.h"
 #include "gui/util/frontpreset.h"
 #include "types/properties.h"
@@ -67,3 +69,5 @@ void FrontGroupItem::onEditModeChanged()
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

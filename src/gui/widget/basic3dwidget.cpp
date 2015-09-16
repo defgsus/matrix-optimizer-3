@@ -453,7 +453,7 @@ void Basic3DWidget::updateProjection_()
                 MATH::perspective(angle, (float)width()/height(), 0.01f, 1000.0f);
 
     int pixelsize = 1; //devicePixelRatio(); //Retina support
-    MO_CHECK_GL( glViewport(0,0,pixelsize*width(),pixelsize*height()) );
+    MO_CHECK_GL( gl::glViewport(0,0,pixelsize*width(),pixelsize*height()) );
 }
 
 void Basic3DWidget::paintGL()
@@ -521,7 +521,7 @@ void Basic3DWidget::paintGL()
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         // ARB_seamless_cube_map
-        MO_CHECK_GL( glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS) );
+        MO_CHECK_GL( gl::glEnable(gl::GL_TEXTURE_CUBE_MAP_SEAMLESS) );
 
         fbo_->bind();
         fbo_->setViewport();

@@ -32,6 +32,7 @@
 // usefull to catch the backtrace of exceptions in debugger
 #define MO_APP_EXCEPTIONS_ABORT //abort();
 
+#undef ERROR // windows..
 #define MO_APP_PRINT(text__)            \
 {                                       \
     std::cout << text__ << std::endl;   \

@@ -55,9 +55,9 @@ void GeometryModifierTranslate::deserialize(IO::DataStream &io)
     {
         Float x, y, z;
         io >> x >> y >> z;
-        properties().set("x", x);
-        properties().set("y", y);
-        properties().set("z", z);
+        properties().set("tx", x);
+        properties().set("ty", y);
+        properties().set("tz", z);
     }
 }
 
@@ -65,9 +65,9 @@ void GeometryModifierTranslate::deserialize(IO::DataStream &io)
 void GeometryModifierTranslate::execute(Geometry *g)
 {
     g->translate(
-            properties().get("x").toFloat(),
-            properties().get("y").toFloat(),
-            properties().get("z").toFloat());
+            properties().get("tx").toFloat(),
+            properties().get("ty").toFloat(),
+            properties().get("tz").toFloat());
 }
 
 } // namespace GEOM

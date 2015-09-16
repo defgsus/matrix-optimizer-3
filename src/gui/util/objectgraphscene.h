@@ -21,6 +21,7 @@ class AudioObject;
 class Parameter;
 class Modulator;
 class AudioObjectConnection;
+class ActionList;
 namespace GUI {
 
 class AbstractObjectItem;
@@ -79,6 +80,9 @@ signals:
     /** An object has been selected */
     void objectSelected(MO::Object *);
 
+    /** Actions for edit-mainmenu have been populated. */
+    void editActionsChanged(const ActionList&);
+
 public slots:
 
     /** Sets the root object and completely
@@ -90,6 +94,9 @@ public slots:
 
     /** Bring the item and all it's cables to front */
     void toFront(QGraphicsItem *);
+
+    /** Creates edit actions for current selection and sends it to MainWidgetController */
+    void createEditMenu();
 
     /** Creates the edit menu, for scene or for selected items */
     void popup(const QPoint &gridPos);
@@ -117,6 +124,10 @@ public slots:
     /** Put clipboard data into scene.
         @p gridPos is global and will be retranslated to parent's local coords if necessary. */
     void dropMimeData(const QMimeData*, const QPoint& gridPos);
+
+    /** Drop from mouse. Implementation used by AbstractObjectItem
+        and the GraphicsScene. If @p parent == 0, root will be used. */
+    void dropAction(QGraphicsSceneDragDropEvent*e, Object * parent = 0);
 
     // ------------------- editing --------------------
 
@@ -162,10 +173,12 @@ private slots:
     void onParameterVisibilityChanged_(MO::Parameter*);
 
 protected:
-#if 0
+
     virtual void dragEnterEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
+    virtual void dragMoveEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
     virtual void dropEvent(QGraphicsSceneDragDropEvent*) Q_DECL_OVERRIDE;
-#endif
+
+
     virtual void mousePressEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseMoveEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;
     virtual void mouseReleaseEvent(QGraphicsSceneMouseEvent *event) Q_DECL_OVERRIDE;

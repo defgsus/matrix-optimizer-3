@@ -307,10 +307,9 @@ void AbstractObjectItem::PrivateOI::setDragGoalPos(const QPointF& p)
 
 void AbstractObjectItem::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
-    e->ignore();
+    //qInfo() << "objectitem" << object()->name() << e->mimeData()->formats();
+    //e->ignore();
 
-//    for (const auto & i : e->mimeData()->formats())
-//        MO_PRINT(i);
 
     // filename(s)
     if (e->mimeData()->hasUrls())
@@ -373,92 +372,11 @@ void AbstractObjectItem::dragMoveEvent(QGraphicsSceneDragDropEvent * e)
 
 void AbstractObjectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
 {
-    e->ignore();
+    //e->ignore();
     p_oi_->dragHover = false;
     update(); // remove drag indicators
 
-    // filename(s)
-    if (e->mimeData()->hasUrls())
-    {
-        const auto list = e->mimeData()->urls();
-        QList<Object*> objs;
-        QList<QString> notworking;
-        for (const QUrl& url : list)
-        {
-            QString shortfn = QFileInfo(url.toString()).fileName();
-            try
-            {
-                if (auto o = ObjectFactory::createObjectFromUrl(url))
-                    objs << o;
-                else
-                    notworking << QObject::tr("%1: format not supported")
-                                  .arg(shortfn);
-            }
-            catch (const Exception& e)
-            {
-                notworking << QObject::tr("%1: %2")
-                              .arg(shortfn)
-                              .arg(e.what());
-            }
-        }
-        // add them all at once
-        if (!objs.isEmpty())
-            objectScene()->addObjects(object(), objs, mapToGrid(e->pos()));
-        // print errors
-        if (!notworking.isEmpty())
-        {
-            QString msg = QObject::tr("The following urls could not be wrapped into an object.");
-            for (const auto & text : notworking)
-            {
-                msg.append("\n" + text);
-            }
-            QMessageBox::information(0, QObject::tr("File drop"), msg);
-        }
-    }
-
-    // drop of real object
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-    {
-
-        // construct a wrapper
-        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
-        auto desc = data->getDescription();
-
-        // analyze further
-        if (!desc.isSameApplicationInstance())
-        {
-            QMessageBox::information(0,
-                                     QMessageBox::tr("drop object"),
-                                     QMessageBox::tr("Can't drop an object from another application instance."));
-            return;
-        }
-
-        if (desc.pointer() && objectScene())
-            objectScene()->popupObjectDrag(desc.pointer(), object(), e->scenePos());
-
-        e->accept();
-        return;
-    }
-
-    // drop of object from toolbar
-    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
-    {
-        // get object type
-        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
-        int typ = ObjectFactory::typeForClass(classn);
-        // check if dropable
-        if (typ < 0 || !object()->canHaveChildren(Object::Type(typ)))
-            return;
-
-        objectScene()->addObject(object(),
-                                 ObjectFactory::createObject(classn),
-                                 mapToGrid(e->pos())
-                                 //mapToGrid(e->scenePos()) - gridPos()
-                                 );
-
-        e->accept();
-        return;
-    }
+    objectScene()->dropAction(e, object());
 }
 
 void AbstractObjectItem::hoverEnterEvent(QGraphicsSceneHoverEvent *)
@@ -1108,7 +1026,12 @@ void AbstractObjectItem::paint(QPainter * p, const QStyleOptionGraphicsItem *, Q
     else
         p->setBrush(p_oi_->brushBack);
 
-    p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
+    const bool isError = object() && object()->hasError();
+
+    if (!isError)
+        p->setPen(ObjectGraphSettings::penOutline(object(), isSelected()));
+    else
+        p->setPen(ObjectGraphSettings::penOutlineError(isSelected()));
 
     const auto r = rect();
     const qreal cornerRadius = (p_oi_->dragHover ? 0.25 : 0.1) *

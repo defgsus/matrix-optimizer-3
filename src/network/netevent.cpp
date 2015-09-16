@@ -23,6 +23,8 @@
 #include "tool/stringmanip.h"
 #include "io/log.h"
 
+#undef ERROR // windows..
+
 namespace MO {
 
 QMap<QString, AbstractNetEvent*> AbstractNetEvent::registeredEvents_;

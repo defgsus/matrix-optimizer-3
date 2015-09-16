@@ -583,6 +583,8 @@ void SequenceFloat::setTimeline(const MATH::Timeline1d & tl)
 
 void SequenceFloat::updateValueObjects_()
 {
+    clearError();
+
     // update wavetable
     if (sequenceType() == ST_ADD_WT
      || sequenceType() == ST_EQUATION_WT
@@ -634,8 +636,9 @@ void SequenceFloat::updateValueObjects_()
             AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
         // get new
         soundFile_ = AUDIO::SoundFileManager::getSoundFile(p_soundFile_->value());
+        setError(soundFile_->errorString());
         // update loop-length default value
-        if (soundFile_)
+        if (soundFile_->isOk())
             setDefaultLoopLength(soundFile_->lengthSeconds());
     }
     else
@@ -662,14 +665,18 @@ void SequenceFloat::setEquationText(const QString & t)
 {
     p_equationText_->setValue(t);
 
+    clearError();
     const std::string text = t.toStdString();
     for (auto e : equation_)
     {
         MO_ASSERT(e, "setEquationText without equation "
                      "in SequenceFloat " << idNamePath() << " (text = '" << t << "')");
         if (!e->equation->parse(text))
+        {
             MO_WARNING("parsing failed for equation in SequenceFloat '" << idName() << "'"
                        " (text = '" << t << "')");
+            setError(tr("Failed to parse equation"));
+        }
     }
 }
 
@@ -936,28 +943,6 @@ void SequenceFloat::updateWavetable_()
         gen.setMode(AUDIO::BandlimitWavetableGenerator::M_EQUATION);
         gen.setEquation(p_wtEquationText_->baseValue());
         gen.createWavetable(*wavetable_);
-        /*
-        PPP_NAMESPACE::Parser p;
-        PPP_NAMESPACE::Float x, r;
-        p.variables().add("x", &x, tr("time").toStdString());
-        p.variables().add("xr", &r, tr("radians of time").toStdString());
-
-        if (!p.parse(p_wtEquationText_->baseValue().toStdString()))
-        {
-            MO_WARNING("Parsing of wavetable equation failed");
-            wavetable_->clear();
-            return;
-        }
-
-        wavetable_->setSize(p_wtSize_->baseValue());
-
-        for (uint i=0; i<wavetable_->size(); ++i)
-        {
-            x = (PPP_NAMESPACE::Float)i / wavetable_->size();
-            r = x * TWO_PI;
-            wavetable_->data()[i] = p.eval();
-        }
-        */
     }
 
 }

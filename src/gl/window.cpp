@@ -29,7 +29,7 @@
 #include "geom/freecamera.h"
 #include "gl/scenerenderer.h"
 #include "io/application.h"
-
+#include "io/version.h"
 namespace MO {
 namespace GL {
 
@@ -47,7 +47,7 @@ Window::Window()
     MO_DEBUG_GL("Window::Window()");
 
     setObjectName("_GlWindow");
-    setTitle(tr("OpenGL"));
+    setTitle(tr("Output (%1)").arg(applicationName()));
 
     setWidth(512);
     setHeight(512);
@@ -60,7 +60,7 @@ Window::Window()
     updateTimer_->setInterval(1);
     connect(updateTimer_, &QTimer::timeout, [=]()
     {
-        //MO_DEBUG("helo");
+        //MO_DEBUG("hello");
         QCoreApplication::postEvent(this, new QEvent(QEvent::UpdateRequest), Qt::HighEventPriority);
     });
     */

@@ -22,6 +22,7 @@
 
 namespace MO {
 
+/** @todo fix wrapper for newest glm (9.7+) or replace glm at all!! */
 #if GLM_VERSION >= 95
 
     // -------- basic vector and matrix types -------

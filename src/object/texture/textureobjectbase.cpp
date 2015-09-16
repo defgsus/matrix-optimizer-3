@@ -258,6 +258,8 @@ void TextureObjectBase::PrivateTO::createParameters()
                                                 ? inpNames[i]
                                                 : tr("input %1").arg(i+1),
                                             tr("A texture input")) );
+
+            p_textures.back()->setVisibleGraph(true);
         }
 
     to->params()->endParameterGroup();
@@ -535,9 +537,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     }
     catch (Exception& )
     {
-        // XXX Should send errors to gui/module somehow
-
-        /// @todo Send compile messages from TextureObjectBase::compileShaderQuad() to caller
+        to->setError(quad.quad->shader()->compileMessagesString());
+        // @todo Send compile messages from TextureObjectBase::compileShaderQuad() to caller
 
         // clean-up
         delete quad.quad;

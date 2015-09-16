@@ -17,6 +17,8 @@
 #include <QAction>
 #include <QClipboard>
 #include <QMessageBox>
+#include <QFileInfo>
+#include <QUrl>
 
 #include "objectgraphscene.h"
 #include "gui/item/abstractobjectitem.h"
@@ -108,14 +110,16 @@ public:
 
     void clearActions();
     void showPopup(); ///< Runs popup after actions have been created
-    void createNewObjectMenu(Object * o);
-    void createClipboardMenu(Object * parent, const QList<AbstractObjectItem*>& items);
+    void createNewObjectMenu(ActionList& actions, Object * o);
+    void createClipboardMenu(ActionList& actions, Object * parent, const QList<AbstractObjectItem*>& items);
+    void createObjectEditMenu(ActionList& actions, Object * o);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts,
                               bool childObjects = true, int groups = Object::TG_ALL);
-    void createObjectEditMenu(Object * o);
 
     void snapToEndConnect(const QPointF& scenePos);
     void endConnection();
+
+    void acceptDrag(QGraphicsSceneDragDropEvent*);
 
     ObjectGraphScene * scene;
     Scene * root;
@@ -233,7 +237,6 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->createObjectChildItems(root, 0);
     p_->resolveLayout();
     p_->createModulatorItems(root);
-
 
     //for (auto & p : p_->itemMap)
     //    MO_DEBUG(p.first->name() << " :: " << p.second);
@@ -890,17 +893,23 @@ void ObjectGraphScene::Private::endConnection()
 
 // ----------------------------- drag/drop --------------------------------------
 
-/** @todo drag-drop for ObjectGraphScene */
-#if 0
-void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+void ObjectGraphScene::Private::acceptDrag(QGraphicsSceneDragDropEvent * e)
 {
-    e->ignore();
+//    qInfo() << "accept?" << e->mimeData()->formats();
 
-    /// @todo drop of real object
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    if (!root)
+        return;
+
+    // filename(s)
+    if (e->mimeData()->hasUrls())
     {
-        //e->accept();
-        e->ignore();
+        e->accept();
+        return;
+    }
+
+    if (e->mimeData()->hasFormat(ObjectMimeData::mimeTypeString))
+    {
+        e->accept();
         return;
     }
 
@@ -911,61 +920,147 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
         auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
         int typ = ObjectFactory::typeForClass(classn);
         // check if dropable
-        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
+        if (typ < 0 || !root->canHaveChildren(Object::Type(typ)))
             return;
-        /// @todo whatever we do here, the event will not be accepted by the framework
-        MO_DEBUG("yes");
-        e->setAccepted(true);
-        e->setDropAction(Qt::CopyAction);
-        //e->acceptProposedAction();
-        return;
-    }
-
-    QGraphicsScene::dragEnterEvent(e);
-}
-
-
-void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
-{
-    // !! this event comes before the items, pew...
-    e->ignore();
-    QGraphicsScene::dropEvent(e);
-    MO_DEBUG("after org: accepted == " << e->isAccepted());
-    //if (e->isAccepted())
-        return;
-
-    /// @todo drop of real object
-    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
-    {
-        //e->accept();
-        return;
-    }
-
-    // drop of object from toolbar
-    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
-    {
-        MO_DEBUG("drop");
-
-        // get object type
-        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
-        int typ = ObjectFactory::typeForClass(classn);
-        // check if dropable
-        if (typ < 0 || !p_->root->canHaveChildren(Object::Type(typ)))
-            return;
-
-        addObject(p_->root,
-                  ObjectFactory::createObject(classn),
-                  mapToGrid(e->scenePos()));
 
         e->accept();
         return;
     }
 }
-#endif
+
+void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // check items
+    QGraphicsScene::dragEnterEvent(e);
+    e->setDropAction(e->proposedAction());
+
+    // check self
+    if (!e->isAccepted())
+        p_->acceptDrag(e);
+}
+
+// For some reason, QGraphicsScene must accept the event in dragMOVE as well,
+// otherwise it's rejected..
+void ObjectGraphScene::dragMoveEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // check items
+    QGraphicsScene::dragMoveEvent(e);
+    // restore action from Qt::IgnoreAction
+    e->setDropAction(e->proposedAction());
+
+    // check self
+    if (!e->isAccepted())
+        p_->acceptDrag(e);
+}
+
+
+void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
+{
+    // pass drop event to items first
+    e->ignore();
+    QGraphicsScene::dropEvent(e);
+    //qInfo() << "after org: accepted ==" << e->isAccepted();
+
+    // otherwise drop into root (scene)
+    if (!e->isAccepted())
+        dropAction(e);
+}
 
 
 
+void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * parent)
+{
+    QPointF ePos = e->pos();
+    if (!parent)
+    {
+        parent = p_->root;
+        ePos = e->scenePos();
+    }
+    if (!parent)
+        return;
 
+    // filename(s)
+    if (e->mimeData()->hasUrls())
+    {
+        e->accept();
+        const auto list = e->mimeData()->urls();
+        QList<Object*> objs;
+        QList<QString> notworking;
+        for (const QUrl& url : list)
+        {
+            QString shortfn = QFileInfo(url.toString()).fileName();
+            try
+            {
+                if (auto o = ObjectFactory::createObjectFromUrl(url))
+                    objs << o;
+                else
+                    notworking << QObject::tr("%1: format not supported")
+                                  .arg(shortfn);
+            }
+            catch (const Exception& e)
+            {
+                notworking << QObject::tr("%1: %2")
+                              .arg(shortfn)
+                              .arg(e.what());
+            }
+        }
+        // add them all at once
+        if (!objs.isEmpty())
+            addObjects(parent, objs, mapToGrid(ePos));
+        // print errors
+        if (!notworking.isEmpty())
+        {
+            QString msg = QObject::tr("The following urls could not be wrapped into an object.");
+            for (const auto & text : notworking)
+            {
+                msg.append("\n" + text);
+            }
+            QMessageBox::information(0, QObject::tr("File drop"), msg);
+        }
+    }
+
+    // drop of real object
+    if (e->mimeData()->formats().contains(ObjectMimeData::mimeTypeString))
+    {
+        // construct a wrapper
+        auto data = static_cast<const ObjectMimeData*>(e->mimeData());
+        auto desc = data->getDescription();
+
+        // analyze further
+        if (!desc.isSameApplicationInstance())
+        {
+            QMessageBox::information(0,
+                                     QMessageBox::tr("drop object"),
+                                     QMessageBox::tr("Can't drop an object from another application instance."));
+            return;
+        }
+
+        if (desc.pointer())
+            popupObjectDrag(desc.pointer(), parent, e->scenePos());
+
+        e->accept();
+        return;
+    }
+
+    // drop of object from toolbar
+    if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !parent->canHaveChildren(Object::Type(typ)))
+            return;
+
+        addObject(parent,
+                  ObjectFactory::createObject(classn),
+                  mapToGrid(ePos)
+                  );
+
+        e->accept();
+        return;
+    }
+}
 
 
 
@@ -995,7 +1090,10 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
     // process items
     QGraphicsScene::mousePressEvent(event);
     if (event->isAccepted())
+    {
+        createEditMenu();
         return;
+    }
 
     if (event->button() == Qt::RightButton)
     {
@@ -1010,6 +1108,8 @@ void ObjectGraphScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         p_->lastMousePos = event->scenePos();
         setSelectionArea(QPainterPath());
     }
+
+    createEditMenu();
 }
 
 void ObjectGraphScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
@@ -1054,7 +1154,10 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
     QGraphicsScene::mouseReleaseEvent(event);
     if (event->isAccepted())
+    {
+        createEditMenu();
         return;
+    }
 
     if (p_->action == Private::A_RECT_SELECT)
     {
@@ -1063,6 +1166,7 @@ void ObjectGraphScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
     }
 
     p_->action = Private::A_NONE;
+    createEditMenu();
 }
 
 
@@ -1133,6 +1237,39 @@ void ObjectGraphScene::Private::clearActions()
     actions.clear();
 }
 
+void ObjectGraphScene::createEditMenu()
+{
+    auto items = selectedObjectItems();
+
+    Object * obj = items.isEmpty() ? p_->root : items.first()->object();
+
+    if (!obj)
+        return;
+
+    ActionList actions;
+
+    // title
+    QString title(items.size() < 2
+                  ? obj->name()
+                  : tr("%1 objects").arg(items.size()));
+    actions.addTitle(title, this);
+
+    // edit object
+    if (items.size() == 1)
+        p_->createObjectEditMenu(actions, obj);
+
+    if (items.size() < 2)
+    {
+        // new object
+        p_->createNewObjectMenu(actions, obj);
+    }
+
+    // clipboard
+    p_->createClipboardMenu(actions, obj, items);
+
+    emit editActionsChanged(actions);
+}
+
 void ObjectGraphScene::popup(const QPoint& gridPos)
 {
     p_->clearActions();
@@ -1154,16 +1291,16 @@ void ObjectGraphScene::popup(const QPoint& gridPos)
 
     // edit object
     if (items.size() == 1)
-        p_->createObjectEditMenu(obj);
+        p_->createObjectEditMenu(p_->actions, obj);
 
     if (items.size() < 2)
     {
         // new object
-        p_->createNewObjectMenu(obj);
+        p_->createNewObjectMenu(p_->actions, obj);
     }
 
     // clipboard
-    p_->createClipboardMenu(obj, items);
+    p_->createClipboardMenu(p_->actions, obj, items);
 
     p_->showPopup();
 }
@@ -1244,10 +1381,10 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
         {
             // set destination grid position
             auto item = itemForObject(goal);
-            if (item)
-                source->setAttachedData(
-                            mapToGrid(item->mapFromScene(dropPointF)),
-                            Object::DT_GRAPH_POS);
+            QPoint gPos = item
+                    ? mapToGrid(item->mapFromScene(dropPointF))
+                    : mapToGrid(dropPointF);
+            source->setAttachedData(gPos, Object::DT_GRAPH_POS);
 
             p_->editor->moveObject(source, goal);
         });
@@ -1283,7 +1420,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
 
 
 
-void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
+void ObjectGraphScene::Private::createNewObjectMenu(ActionList &actions, Object * obj)
 {
     actions.addSeparator(scene);
 
@@ -1342,7 +1479,8 @@ void ObjectGraphScene::Private::createNewObjectMenu(Object * obj)
 
 }
 
-void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const QList<AbstractObjectItem*>& items)
+void ObjectGraphScene::Private::createClipboardMenu(
+        ActionList& actions, Object * /*parent*/, const QList<AbstractObjectItem*>& items)
 {
     actions.addSeparator(scene);
 
@@ -1389,7 +1527,7 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
 
             // paste
             a = actions.addAction(tr("Paste into %1").arg(pname), scene);
-            a->setShortcut(Qt::CTRL + Qt::Key_P);
+            a->setShortcut(Qt::CTRL + Qt::Key_V);
             connect(a, &QAction::triggered, [=]()
             {
                 scene->dropMimeData(application()->clipboard()->mimeData(), popupGridPos);
@@ -1398,11 +1536,19 @@ void ObjectGraphScene::Private::createClipboardMenu(Object * /*parent*/, const Q
     }
 }
 
-void ObjectGraphScene::Private::createObjectEditMenu(Object * obj)
+void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object * obj)
 {
     actions.addSeparator(scene);
 
     QAction * a;
+
+    // display error
+    if (obj->hasError())
+    {
+        a = actions.addAction(tr("Error: %1").arg(obj->errorString()), scene);
+        // XXX make it visible as error!
+        // a->setIcon();
+    }
 
     // set color
     a = actions.addAction(tr("Change color"), scene);
@@ -1834,6 +1980,8 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     addObjects(root, copies, gridPos - objPos);
 
 }
+
+
 
 
 

@@ -135,10 +135,10 @@ void Scene::deserialize(IO::DataStream & io)
     if (ver >= 2)
         io >> fbSizeRequest_ >> doMatchOutputResolution_;
 
-#ifdef MO_DISABLE_EXP
+/*#ifdef MO_DISABLE_EXP
     doMatchOutputResolution_ = true;
     //fbSizeRequest_ = QSize(0, 0);
-#endif
+#endif*/
 
     if (ver >= 3)
         io >> sceneDesc_ >> showSceneDesc_;
@@ -153,7 +153,11 @@ bool Scene::serializeAfterChilds(IO::DataStream & io) const
     audioCon_->serialize(io);
 
     // v2
+#ifndef MO_DISABLE_FRONT
     io << (frontScene_ ? frontScene_->toXml() : QString());
+#else
+    io << QString();
+#endif
 
     return true;
 }

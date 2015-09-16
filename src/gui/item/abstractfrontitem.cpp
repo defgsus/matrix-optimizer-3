@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <memory>
 
 #include <QPainter>
@@ -29,6 +31,7 @@
 
 namespace MO {
 namespace GUI {
+
 
 // ---------------------------- FrontItemMimeData ------------------------------
 
@@ -97,9 +100,9 @@ bool FrontItemMimeData::isSameApplicationInstance() const
 
 // -------------------------------- AbstractFrontItem --------------------------
 
+QMap<QString, AbstractFrontItem*> * AbstractFrontItem::p_reg_items_ = 0;
+QMap<int, AbstractFrontItem*> * AbstractFrontItem::p_reg_items_t_ = 0;
 
-QMap<QString, AbstractFrontItem*> AbstractFrontItem::p_reg_items_;
-QMap<int, AbstractFrontItem*> AbstractFrontItem::p_reg_items_t_;
 int AbstractFrontItem::p_id_count_ = 0;
 
 AbstractFrontItem::AbstractFrontItem(QGraphicsItem* parent)
@@ -156,8 +159,13 @@ AbstractFrontItem::~AbstractFrontItem()
 
 bool AbstractFrontItem::registerFrontItem(AbstractFrontItem * i)
 {
-    if (p_reg_items_.contains(i->className())
-     || p_reg_items_t_.contains(i->type()))
+    if (!p_reg_items_)
+        p_reg_items_ = new QMap<QString, AbstractFrontItem*>();
+    if (!p_reg_items_t_)
+        p_reg_items_t_ = new QMap<int, AbstractFrontItem*>();
+
+    if (p_reg_items_->contains(i->className())
+     || p_reg_items_t_->contains(i->type()))
     {
         MO_WARNING("AbstractFrontItem::registerFrontItem('"
                    << i->className() << "'/" << i->type() << "): duplicate call!");
@@ -165,16 +173,19 @@ bool AbstractFrontItem::registerFrontItem(AbstractFrontItem * i)
         return false;
     }
 
-    p_reg_items_.insert(i->className(), i);
-    p_reg_items_t_.insert(i->type(), i);
+    p_reg_items_->insert(i->className(), i);
+    p_reg_items_t_->insert(i->type(), i);
 
     return true;
 }
 
 AbstractFrontItem * AbstractFrontItem::factory(const QString &className)
 {
-    auto i = p_reg_items_.find(className);
-    if (i == p_reg_items_.end())
+    if (!p_reg_items_)
+        p_reg_items_ = new QMap<QString, AbstractFrontItem*>();
+
+    auto i = p_reg_items_->find(className);
+    if (i == p_reg_items_->end())
     {
         MO_WARNING("Request for unknown FrontItem class '" << className << "'");
         return 0;
@@ -185,8 +196,11 @@ AbstractFrontItem * AbstractFrontItem::factory(const QString &className)
 
 AbstractFrontItem * AbstractFrontItem::factory(FrontItemType itype)
 {
-    auto i = p_reg_items_t_.find(itype);
-    if (i == p_reg_items_t_.end())
+    if (!p_reg_items_t_)
+        p_reg_items_t_ = new QMap<int, AbstractFrontItem*>();
+
+    auto i = p_reg_items_t_->find(itype);
+    if (i == p_reg_items_t_->end())
     {
         MO_WARNING("Request for unknown FrontItem type " << itype);
         return 0;
@@ -653,3 +667,5 @@ void AbstractFrontItem::paint(QPainter * p, const QStyleOptionGraphicsItem * , Q
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

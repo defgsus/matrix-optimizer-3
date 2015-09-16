@@ -13,7 +13,7 @@
  * The opengl defines break glbinding code..
  */
 
-
+#undef __gl_h_
 
 /* Boolean values */
 #undef GL_FALSE
@@ -667,6 +667,7 @@
 #undef GL_TEXTURE_CUBE_MAP_NEGATIVE_Y
 #undef GL_TEXTURE_CUBE_MAP_POSITIVE_Z
 #undef GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+#undef GL_TEXTURE_CUBE_MAP_SEAMLESS
 #undef GL_PROXY_TEXTURE_CUBE_MAP
 #undef GL_MAX_CUBE_MAP_TEXTURE_SIZE
 /* texture_compression */

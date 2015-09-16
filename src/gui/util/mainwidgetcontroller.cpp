@@ -67,6 +67,7 @@
 #include "gui/util/frontscene.h"
 #include "gui/util/frontpreset.h"
 #include "gui/util/recentfiles.h"
+#include "tool/actionlist.h"
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
@@ -93,6 +94,7 @@
 #include "gl/window.h"
 #include "gl/texture.h"
 #include "gl/scenerenderer.h" // deprecated
+#include "gl/compatibility.h"
 #include "audio/configuration.h"
 #include "engine/renderer.h" // should be (audio) disk renderer
 #include "engine/renderengine.h"
@@ -133,9 +135,11 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       sequencer_        (0),
       clipView_         (0),
       seqView_          (0),
+#ifndef MO_DISABLE_FRONT
       frontScene_       (0),
       frontView_        (0),
       frontItemEditor_  (0),
+#endif
       objectOutputView_ (0),
       assetBrowser_     (0),
       transportWidget_  (0),
@@ -147,6 +151,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       statusBar_        (0),
       sysInfoLabel_     (0),
       recentFiles_      (0),
+      aGlWindowVisible_ (0),
       sceneNotSaved_    (false),
       statusMessageTimeout_(7 * 1000),
       timeStep1_        (1.0),
@@ -225,6 +230,10 @@ void MainWidgetController::createObjects_()
     objectGraphView_ = new ObjectGraphView(window_);
     connect(objectGraphView_, SIGNAL(objectSelected(MO::Object*)),
             this, SLOT(onObjectSelectedGraphView_(MO::Object*)));
+    connect(objectGraphView_, &ObjectGraphView::editActionsChanged, [=](const ActionList& a)
+    {
+        setEditActions_(objectGraphView_, a);
+    });
 
     // object (parameter) View
     objectView_ = new ObjectView(window_);
@@ -233,6 +242,7 @@ void MainWidgetController::createObjects_()
     connect(objectView_, SIGNAL(statusTipChanged(QString)),
             statusBar_, SLOT(showMessage(QString)));
 
+#ifndef MO_DISABLE_FRONT
     // front-end scene
     frontScene_ = new FrontScene(window_);
     frontScene_->setObjectEditor(objectEditor_);
@@ -240,7 +250,8 @@ void MainWidgetController::createObjects_()
     connect(frontScene_, SIGNAL(editModeChanged(bool)), this, SLOT(onUiEditModeChanged_(bool)));
     connect(frontScene_, &FrontScene::actionsChanged, [=](const QList<QAction*>& a)
     {
-        setEditActions_(frontScene_, a);
+        /** @todo fix setEditActions_ from FrontScene */
+        //setEditActions_(frontScene_, a);
     });
     // front-end view
     frontView_ = new FrontView(window_);
@@ -261,6 +272,7 @@ void MainWidgetController::createObjects_()
         if (objectEditor_->scene())
             objectEditor_->removeUiModulators(ids);
     });
+#endif
 
     // sequencer
     sequencer_ = new Sequencer(window_);
@@ -288,6 +300,7 @@ void MainWidgetController::createObjects_()
 
     // asset browser
     assetBrowser_ = new AssetBrowser(window_);
+    connect(assetBrowser_, &AssetBrowser::sceneSelected, [=](QString fn){ loadScene(fn); });
 
     // server/client view
     serverView_ = 0;
@@ -307,7 +320,8 @@ void MainWidgetController::createObjects_()
     glManager_->setTimeCallback([this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
 
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
-
+    connect(glWindow_, SIGNAL(visibleChanged(bool)),
+            this, SLOT(onGlWindowVisibleChanged_(bool)));
     connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
             this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
 
@@ -375,7 +389,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setShortcut(Qt::ALT + Qt::Key_F4);
         connect(a, SIGNAL(triggered()), this, SLOT(quit()));
 
-
+#ifndef MO_DISABLE_FRONT
     // ######### INTERFACE MENU #########
     m = new QMenu(tr("Interface"), menuBar);
     menuBar->addMenu(m);
@@ -409,6 +423,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         a->setChecked(frontScene_->isEditMode());
         a->setShortcut(Qt::ALT + Qt::Key_E);
         connect(a, SIGNAL(triggered(bool)), frontScene_, SLOT(setEditMode(bool)));
+#endif
 
     // ######### EDIT MENU #########
     m = menuEdit_ = new QMenu(tr("Edit"), menuBar);
@@ -464,7 +479,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         // ##### RESOLUTION SUBMENU #####
 
-#ifndef MO_DISABLE_EXP
         sub = new QMenu(tr("Resolution"), menuBar);
         m->addMenu(sub);
 
@@ -489,10 +503,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
                         this, SLOT(onResolutionPredefined_(QAction*)));
 
         m->addSeparator();
-#endif
 
         // ##### DEBUG VISIBILITY SUBMENU #####
-#ifndef MO_DISABLE_EXP
+
         sub = new QMenu(tr("Visibility"), menuBar);
         m->addMenu(sub);
 
@@ -517,7 +530,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(a, SIGNAL(triggered()), this, SLOT(updateDebugRender_()));
 
         m->addSeparator();
-#endif
+
 
         // ##### PROJECTOR INDEX SUBMENU #####
         sub = menuProjectorIndex_ = new QMenu(tr("Projector index"), menuBar);
@@ -532,11 +545,9 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addSeparator();
 
-#ifndef MO_DISABLE_EXP
         m->addAction(a = new QAction(tr("Render to disk"), menuBar));
         ag->addAction(a);
         connect(a, SIGNAL(triggered()), this, SLOT(renderToDisk()));
-#endif
 
     // ######### OPTIONS MENU #########
     m = new QMenu(tr("Options"), menuBar);
@@ -592,6 +603,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             connect(diag, SIGNAL(projectionSettingsChanged()),
                     this, SLOT(onProjectionSettingsChanged_()));
             diag->show();
+        });
+
+        a = new QAction(tr("OpenGL info"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            QMessageBox::information(window_, tr("OpenGL info"),
+                                     GL::Properties::staticInstance().toString());
         });
 
 
@@ -802,11 +821,24 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 #endif
 #endif
 
+    // ######### VIEW MENU #########
+    viewMenu_ = m = new QMenu("View", menuBar);
+    menuBar->addMenu(viewMenu_);
+
+        a = aGlWindowVisible_ = new QAction(tr("Output window"), m);
+        a->setCheckable(true);
+        a->setChecked(glWindow_->isVisible());
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=](bool check)
+        {
+            glWindow_->setVisible(check);
+        });
+
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);
     menuBar->addMenu(m);
 
-        a = new QAction(tr("Help"), m);
+        a = new QAction(tr("Help index"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -887,6 +919,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     objectGraphView_->setGuiSettings(sceneSettings_);
 
+#ifndef MO_DISABLE_FRONT
     // --- get the interface ---
     QString xml = scene_->frontSceneXml();
     if (xml.isEmpty())
@@ -908,6 +941,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             frontScene_->clear();
         }
     }
+#endif
 
     // check for local filenames
 
@@ -975,10 +1009,12 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     sequencer_->setCurrentObject(scene_);
     clipView_->setScene(scene_);
 
+#ifndef MO_DISABLE_FRONT
     frontItemEditor_->setItem(0);
     frontScene_->setRootObject(scene_);
     frontScene_->assignObjects();
     frontScene_->loadPreset("default");
+#endif
 
     glWindow_->renderLater();
 
@@ -1392,10 +1428,12 @@ void MainWidgetController::onSequenceClicked_()
 
 void MainWidgetController::onParamVisChanged_()
 {
+#ifndef MO_DISABLE_FRONT
     // rebuild interface items
     frontItemEditor_->setItem(0);
     if (scene_)
         frontScene_->setRootObject(scene_);
+#endif
 }
 
 void MainWidgetController::onParamChanged_()
@@ -1432,10 +1470,14 @@ void MainWidgetController::onSceneTimeChanged_(Double time)
     if (sequencer_->isVisible())
         sequencer_->setSceneTime(time);
 
-    transportWidget_->setSceneTime(time);
+    /*
+    Double fps = glManager_->renderer() ?
+                glManager_->renderer()->renderSpeed() : 0;*/
+    Double fps = glWindow_->messuredFps();
+    transportWidget_->setSceneTime(time, fps);
 }
 
-void MainWidgetController::setEditActions_(const QObject *, QList<QAction *> actions)
+void MainWidgetController::setEditActions_(const QObject *, const ActionList &actions)
 {
 #ifndef __APPLE__
     menuEdit_->clear();
@@ -1568,19 +1610,23 @@ void MainWidgetController::showSceneDesc()
     if (!scene_)
         return;
 
-    SceneDescDialog diag;
-    diag.setText(scene_->sceneDesc());
-    diag.setShowOnStart(scene_->showSceneDesc());
-
-    if (diag.exec() == QDialog::Accepted)
+    auto diag = new SceneDescDialog(window_);
+    diag->setAttribute(Qt::WA_DeleteOnClose, true);
+    diag->setAttribute(Qt::WA_AlwaysStackOnTop, true);
+    diag->setText(scene_->sceneDesc());
+    diag->setShowOnStart(scene_->showSceneDesc());
+    connect(diag, &SceneDescDialog::accepted, [=]()
     {
-        if (scene_->sceneDesc() != diag.text()
-            || scene_->showSceneDesc() != diag.showOnStart())
+        if (scene_->sceneDesc() != diag->text()
+            || scene_->showSceneDesc() != diag->showOnStart())
         {
-            scene_->setSceneDesc(diag.text(), diag.showOnStart());
+            scene_->setSceneDesc(diag->text(), diag->showOnStart());
             onSceneChanged_();
         }
-    }
+    });
+
+    diag->show();
+    diag->raise();
 }
 
 void MainWidgetController::dumpIdNames_()
@@ -1651,14 +1697,13 @@ void MainWidgetController::updateDebugRender_()
 {
     if (!scene_)
         return;
-#ifndef MO_DISABLE_EXP
+
     scene_->setDebugRenderOptions(
           (Scene::DD_AUDIO_SOURCES * aDrawAudioSources_->isChecked())
         | (Scene::DD_CAMERAS * aDrawCameras_->isChecked())
         | (Scene::DD_LIGHT_SOURCES * aDrawLightSources_->isChecked())
         | (Scene::DD_MICROPHONES * aDrawMicrophones_->isChecked())
                 );
-#endif
 }
 
 bool MainWidgetController::isPlayback() const
@@ -1669,6 +1714,12 @@ bool MainWidgetController::isPlayback() const
 void MainWidgetController::quit()
 {
     window_->close();
+}
+
+void MainWidgetController::onGlWindowVisibleChanged_(bool v)
+{
+    if (aGlWindowVisible_)
+        aGlWindowVisible_->setChecked(v);
 }
 
 void MainWidgetController::start()
@@ -1700,7 +1751,6 @@ void MainWidgetController::start()
     // also tell the envelope display
     updateNumberOutputEnvelopes_(audioEngine_->config().numChannelsOut());
 
-
     // start engine
     if (audioEngine_->start())
     {
@@ -1708,8 +1758,9 @@ void MainWidgetController::start()
         updateTimer_->start();
 
         glManager_->startAnimate();
+#ifndef MO_DISABLE_FRONT
         frontScene_->startAnimate();
-
+#endif
         // XXX especially update CurrentTime (for clients)
         // Scene::sceneTime() is not really used
         scene_->setSceneTime(audioEngine_->second());
@@ -1721,14 +1772,18 @@ void MainWidgetController::start()
 #endif
     }
 
+    scene_->setPlaying(true);
     transportWidget_->setPlayback(true);
 }
 
 void MainWidgetController::stop()
 {
     glManager_->stopAnimate();
+#ifndef MO_DISABLE_FRONT
     frontScene_->stopAnimate();
+#endif
     updateTimer_->stop();
+    scene_->setPlaying(false);
 
     if (audioEngine_)
     {
@@ -1871,6 +1926,9 @@ void MainWidgetController::initScene()
             loadScene_(fn);
             // and set back
             IO::Files::setFilename(IO::FT_SCENE, fn);
+            // show scene description
+            if (scene_ && scene_->showSceneDesc())
+                showSceneDesc();
         }
     }
     catch (IoException& e)
@@ -2034,9 +2092,11 @@ bool MainWidgetController::saveScene_(const QString &fn)
     {
         try
         {
+#ifndef MO_DISABLE_FRONT
             // always store default preset
             frontScene_->storePreset("default");
             scene_->setFrontScene(frontScene_);
+#endif
             // actually save the scene
             ObjectFactory::saveScene(fn, scene_);
             recentFiles_->addFilename(fn);
@@ -2061,6 +2121,7 @@ bool MainWidgetController::saveScene_(const QString &fn)
     return false;
 }
 
+#ifndef MO_DISABLE_FRONT
 void MainWidgetController::saveInterfaceAs()
 {
     QString fn = IO::Files::getSaveFileName(IO::FT_INTERFACE_XML, window_);
@@ -2137,6 +2198,7 @@ void MainWidgetController::loadInterfacePresets()
 
     frontScene_->importPresets(fn);
 }
+#endif
 
 
 void MainWidgetController::renderToDisk()
@@ -2242,7 +2304,6 @@ void MainWidgetController::updateResolutionActions_()
     if (!scene_)
         return;
 
-#ifndef MO_DISABLE_EXP
     // update from output window resolution
     aResolutionOutput_->setText(tr("Same as output window %1x%2")
                                 .arg(outputSize_.width())
@@ -2282,7 +2343,6 @@ void MainWidgetController::updateResolutionActions_()
                                         .arg(scene_->requestedFrameBufferSize().height()));
         }
     }
-#endif
 }
 
 void MainWidgetController::onProjectionSettingsChanged_()

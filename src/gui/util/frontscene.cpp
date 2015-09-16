@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QAction>
 #include <QMenu>
 #include <QCursor>
@@ -1100,7 +1102,7 @@ QList<AbstractFrontItem*> FrontScene::getItemsFromClipboard() const
 }
 
 
-namespace { const qreal FAR = 10000000.; }
+namespace { const qreal FAR_ = 10000000.; }
 
 void FrontScene::mousePressEvent(QGraphicsSceneMouseEvent * e)
 {
@@ -1129,10 +1131,12 @@ void FrontScene::drawForeground(QPainter *p, const QRectF &)
 
         // draw cross-hair
         p->setPen(QPen(QColor(255,255,255,100)));
-        p->drawLine(-FAR, cpos.y(), FAR, cpos.y());
-        p->drawLine(cpos.x(), -FAR, cpos.x(), FAR);
+        p->drawLine(-FAR_, cpos.y(), FAR_, cpos.y());
+        p->drawLine(cpos.x(), -FAR_, cpos.x(), FAR_);
     }
 }
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

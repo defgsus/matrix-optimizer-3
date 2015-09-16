@@ -278,7 +278,7 @@ struct vecfunc
     static Vec3 duckball3(const Vec3& pos, const Vec3& param = Vec3(-.5f, -.4f, -1.578f), uint iter = 32)
     {
         Vec3 p = pos;
-        for (int i = 0; i < iter; ++i)
+        for (uint i = 0; i < iter; ++i)
         {
             Float mag = glm::dot(p, p);
             p = glm::abs(p);

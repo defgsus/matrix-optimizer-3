@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/img">
         <file alias="banner.png">assets/img/banner.png</file>
+        <file alias="splashscreen_vioso.png">assets/img/splashscreen_vioso.png</file>
     </qresource>
     <qresource prefix="/normalmap">
         <file alias="01.png">assets/img/normalmap01.png</file>

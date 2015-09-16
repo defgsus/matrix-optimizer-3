@@ -71,7 +71,7 @@ public:
     void processAudioBase(uint bufferSize, SamplePos pos, uint thread);
 
 #ifndef MO_DISABLE_CLIENT
-    /** Should be could when an udp packet has been received for the object */
+    /** Should be called when an udp packet has been received for the object */
     void clientFakeAudio(uint bufferSize, SamplePos pos, uint thread);
 #endif
 

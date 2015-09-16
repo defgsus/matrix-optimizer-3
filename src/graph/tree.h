@@ -801,7 +801,7 @@ inline TreeNode<T> * TreeNode<T>::insert(int index, TreeNode * node)
 {
     MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::insert() duplicate node " << node);
 
-    if (index < 0 || index >= p_child_.size())
+    if (index < 0 || index >= (int)p_child_.size())
         p_child_.push_back(node);
     else
         p_child_.insert(

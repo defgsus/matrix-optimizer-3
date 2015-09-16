@@ -38,7 +38,9 @@
 #include "object/control/modulatorobjectfloat.h"
 #include "object/synthesizer.h"
 #include "object/textobject.h"
+#include "object/model3d.h"
 #include "object/texture/imageto.h"
+#include "geom/geometryfactorysettings.h"
 #include "util/audioobjectconnections.h"
 #include "audio/filterao.h"
 #include "io/files.h"
@@ -362,10 +364,18 @@ Object * ObjectFactory::createObjectFromUrl(const QUrl& url)
 {
     if (!url.isLocalFile())
         return 0;
+
     // get filename
-    const QString fn = url.toString(QUrl::PreferLocalFile);
+    QString fn = url.toString(QUrl::PreferLocalFile | QUrl::NormalizePathSegments);
     if (fn.isEmpty())
         return 0;
+
+#ifdef Q_OS_WIN
+    // Well..., sometimes above yields something like /C:/bla/blub
+    while (fn.startsWith("/"))
+        fn.remove(0, 1);
+#endif
+    // filename only
     const QString shortfn = QFileInfo(fn).fileName();
 
     // get file type
@@ -397,7 +407,8 @@ Object * ObjectFactory::createObjectFromUrl(const QUrl& url)
             MO_IO_ERROR(READ, tr("Could not open text file '%1' for reading\n%2")
                         .arg(shortfn)
                         .arg(f.errorString()));
-        /// @todo Support encoding options for reading general text files
+        /** @todo Support encoding options for reading general text files.
+            Not necessarily here but in general. */
         o->setText(QString::fromUtf8(f.readAll()), TT_PLAIN_TEXT);
         return o;
     }
@@ -409,12 +420,22 @@ Object * ObjectFactory::createObjectFromUrl(const QUrl& url)
         return o;
     }
 
+    // geometry-presets
+    if (ft == IO::FT_GEOMETRY_SETTINGS)
+    {
+        GEOM::GeometryFactorySettings set(0);
+        set.loadFile(fn);
+        auto o = create_object<Model3d>(shortfn);
+        o->setGeometrySettings(set);
+        return o;
+    }
+
     return 0;
 }
 
 Scene * ObjectFactory::createSceneObject()
 {
-    Scene * s = qobject_cast<Scene*>(createObject("Scene"));
+    Scene * s = create_object<Scene>("Scene");
     MO_ASSERT(s, "could not create Scene object");
     return s;
 }

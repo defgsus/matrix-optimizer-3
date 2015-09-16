@@ -8,6 +8,8 @@
     <p>created 31.01.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #ifndef MOSRC_GUI_ITEM_ABSTRACTFRONTITEM_H
 #define MOSRC_GUI_ITEM_ABSTRACTFRONTITEM_H
 
@@ -284,8 +286,8 @@ private:
 
     void p_update_from_properties_();
 
-    static QMap<QString, AbstractFrontItem*> p_reg_items_;
-    static QMap<int, AbstractFrontItem*> p_reg_items_t_;
+    static QMap<QString, AbstractFrontItem*> * p_reg_items_;
+    static QMap<int, AbstractFrontItem*> * p_reg_items_t_;
     static int p_id_count_;
 
     QString p_id_;
@@ -304,3 +306,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_GUI_ITEM_ABSTRACTFRONTITEM_H
+
+#endif // MO_DISABLE_FRONT

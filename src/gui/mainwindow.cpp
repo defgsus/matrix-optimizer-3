@@ -150,9 +150,11 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Scene"), controller_->objectGraphView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+#ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend"), controller_->frontView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
     removeDockWidget(dock);
+#endif
 
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
@@ -174,9 +176,11 @@ void MainWindow::createDockWidgets_()
     dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
+#ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
     removeDockWidget(dock);
+#endif
 
 #ifndef MO_DISABLE_SERVER
     if (isServer())
@@ -222,8 +226,7 @@ void MainWindow::createMenus_()
     connect(controller_, SIGNAL(windowTitle(QString)),
             this, SLOT(setWindowTitle(QString)));
 
-    viewMenu_ = new QMenu("View", menuBar());
-    menuBar()->addMenu(viewMenu_);
+    viewMenu_ = controller_->viewMenu();
 }
 
 /*
@@ -233,14 +236,12 @@ bool MainWindow::event(QEvent* e)
     return QMainWindow::event(e);
 }*/
 
+/*
 void MainWindow::showEvent(QShowEvent * e)
 {
     QMainWindow::showEvent(e);
-
-    /** @todo scene description window comes to early, e.g. before actual window.. */
-    //if (controller_->scene() && controller_->scene()->showSceneDesc())
-    //    controller_->showSceneDesc();
 }
+*/
 
 void MainWindow::saveAllGeometry_()
 {

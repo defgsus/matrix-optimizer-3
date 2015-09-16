@@ -23,6 +23,7 @@
 #include "script/angelscript_image.h"
 #include "io/filemanager.h"
 #include "io/datastream.h"
+#include "io/imagereader.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -94,6 +95,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
     paramTex_ = params->createTextureParameter("_img_tex" + id_suffix,
                                                tr("texture input"),
                                                tr("Connects to a texture from somewhere else"));
+    paramTex_->setVisibleGraph(true);
 
     paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
@@ -195,13 +197,15 @@ uint TextureSetting::height() const
 
 bool TextureSetting::initGl()
 {
+    errorStr_.clear();
+
     if (paramType_->baseValue() == TEX_NONE)
         return true;
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
         constTexture_ = 0;
-        // param wiil be in realtime
+        // param will be modulated in realtime
         return true;
     }
 
@@ -335,7 +339,10 @@ bool TextureSetting::updateSceneFbo_()
         {
             constTexture_ = fbo->depthTexture();
             if (constTexture_ == 0)
+            {
                 MO_GL_WARNING("no depth texture in TT_MASTER_FRAME_DEPTH");
+                errorStr_ = tr("no depth texture in TT_MASTER_FRAME_DEPTH");
+            }
         }
         else
             constTexture_ = fbo->colorTexture();
@@ -352,11 +359,22 @@ bool TextureSetting::setTextureFromImage_(const QString& fn)
     texture_ = 0;
     constTexture_ = 0;
 
-    QImage img;
-    if (!img.load(fn) &&
-        !img.load(":/texture/error.png"))
-        return false;
+    ImageReader reader;
+    reader.setFilename(fn);
+    QImage img = reader.read();
 
+    if (img.isNull())
+    {
+        errorStr_ = tr("Loading image '%1' failed with '%2'\n")
+                .arg(fn).arg(reader.errorString());
+        MO_DEBUG("loading image '" << fn << "' failed with '"
+                 << reader.errorString() << "'");
+        // assign generic error texture
+        if (!img.load(":/texture/error.png"))
+            return false;
+    }
+
+    // upload to GPU
     texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
 
     if (!texture_)
@@ -396,6 +414,8 @@ bool TextureSetting::setTextureFromAS_(const QString& script)
     }
     catch (Exception& e)
     {
+        errorStr_ = tr("AngelScript image failed with '%1'").arg(e.what());
+
         if (rep_ == GL::ER_THROW)
         {
             e << "\nin TextureFromAS of " << object_->name();

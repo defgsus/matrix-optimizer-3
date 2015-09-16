@@ -11,6 +11,8 @@
 #ifndef MOSRC_GUI_UTIL_OBJECTMENU_H
 #define MOSRC_GUI_UTIL_OBJECTMENU_H
 
+#include <functional>
+
 #include <QStringList>
 
 #include "object/object_fwd.h"

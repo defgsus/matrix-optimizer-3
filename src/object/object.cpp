@@ -197,7 +197,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
 
 QString Object::getIoLoadErrors() const
 {
-    QString e = ioLoadErrorStr_;
+    QString e = p_ioLoadErrorStr_;
     for (auto c : childObjects())
     {
         auto ce = c->getIoLoadErrors().trimmed();
@@ -272,7 +272,7 @@ Object * Object::p_deserializeTree_(IO::DataStream & io)
         o = ObjectFactory::createDummy();
         name = name + " *missing*";
 
-        o->ioLoadErrorStr_ += tr("unknown object of type '%1'\n")
+        o->p_ioLoadErrorStr_ += tr("unknown object of type '%1'\n")
                                 .arg(className);
     }
 
@@ -1426,6 +1426,18 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
 
     if (emitSignal && editor()) // XXX Need a signal for that
         editor()->emitAudioChannelsChanged(this);
+}
+
+
+void Object::setError(const QString &errorString)
+{
+    if (errorString.isEmpty())
+        return;
+
+    if (!p_errorStr_.isEmpty())
+        p_errorStr_.append("\n");
+
+    p_errorStr_.append(errorString);
 }
 
 

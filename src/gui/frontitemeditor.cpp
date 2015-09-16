@@ -8,6 +8,8 @@
     <p>created 24.02.2015</p>
 */
 
+#ifndef MO_DISABLE_FRONT
+
 #include <QLayout>
 #include <QLabel>
 
@@ -111,3 +113,5 @@ void FrontItemEditor::onPropertyChanged_(const QString &id)
 
 } // namespace GUI
 } // namespace MO
+
+#endif // MO_DISABLE_FRONT

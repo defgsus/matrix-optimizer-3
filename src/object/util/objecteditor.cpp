@@ -243,7 +243,8 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 
 bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects(" << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects("
+                        << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
     MO__CHECK_SCENE
 
     QSet<Object*> saveAdd;
@@ -540,6 +541,7 @@ bool ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
 
     /** @todo test sanity of connection! */
 
+    bool visChanged = false;
     Modulator * m;
     {
         ScopedSceneLockWrite lock(scene_);
@@ -547,9 +549,13 @@ bool ObjectEditor::addModulator(Parameter *p, const QString &idName, const QStri
         p->collectModulators();
         p->object()->onParameterChanged(p);
         p->object()->updateParameterVisibility();
+        if (!p->isVisibleInGraph())
+            p->setVisibleGraph(visChanged = true);
     }
     emit modulatorAdded(m);
     emit parameterChanged(p);
+    if (visChanged)
+        emit parameterVisibilityChanged(p);
     emit sceneChanged(scene_);
     scene_->render();
     return true;
@@ -600,7 +606,7 @@ bool ObjectEditor::removeAllModulators(Parameter *p)
 
 
 // ---------------------------------- ui modulators ----------------------------------------
-
+#ifndef MO_DISABLE_FRONT
 bool ObjectEditor::addUiModulator(Parameter *p, GUI::AbstractFrontItem * item)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addUiModulator(" << p << ", " << item << ")");
@@ -668,7 +674,7 @@ bool ObjectEditor::setUiValue(const QString& uiId, Double timeStamp, Float value
     return true;
 }
 
-
+#endif
 
 // ---------------------------------- audio cons -------------------------------------------
 

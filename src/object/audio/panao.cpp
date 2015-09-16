@@ -15,6 +15,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "audio/tool/audiobuffer.h"
+#include "math/constants.h"
 #include "io/datastream.h"
 
 namespace MO {
@@ -155,7 +156,7 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
             switch(p_->mode()) {
             case Private::M_EQUAL:
             {
-                Double angle = M_PI * 0.5 * pan;
+                Double angle = PI * 0.5 * pan;
                 if(left)  left->write(i, cos(angle)*in->read(i));
                 if(right) right->write(i, sin(angle)*in->read(i));
             }
@@ -166,7 +167,7 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
                 break;
             case Private::M_ADVANCED:
             {
-                Double angle = M_PI * 0.5 *(2.0*pan-1.0);
+                Double angle = PI * 0.5 *(2.0*pan-1.0);
                 Double  cc = cos(angle),
                         ss = sin(angle),
                         l  = SQRT2 * (cc + ss) * 0.5,

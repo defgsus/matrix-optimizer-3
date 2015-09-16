@@ -50,6 +50,7 @@ void DerivativeObjectFloat::createParameters()
         p_value_ = params()->createFloatParameter("val", tr("value"),
                                        tr("Input float value from which the derivative is calculated"),
                                        0.0, 1.0);
+        p_value_->setVisibleGraph(true);
 
         p_order_ = params()->createIntParameter("order", tr("order"),
                                         tr("Selects the order of differentiation"),
@@ -62,7 +63,7 @@ void DerivativeObjectFloat::createParameters()
                                         { tr("finite difference approximation"),
                                           tr("five-point stencil") },
                                         { tr("Simplest form of finite differentiation"),
-                                          tr("Differentiation method using 5 taps"),
+                                          tr("More exact differentiation method using 5 taps"),
                                         },
                                         { DM_APPROX, DM_FIVE },
                                         DM_APPROX,

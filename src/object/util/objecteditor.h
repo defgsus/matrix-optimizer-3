@@ -18,8 +18,13 @@
 #include "types/float.h"
 
 namespace MO {
+#ifndef MO_DISABLE_FRONT
 namespace GUI { class AbstractFrontItem; }
+#endif
 
+/** An edit-function-wrapper for creating and modifying Object trees.
+    It issues signals for all edit actions.
+    It contains some nice wrapper functions to create modulations and such. */
 class ObjectEditor : public QObject
 {
     Q_OBJECT
@@ -195,7 +200,7 @@ public slots:
     bool removeAllModulators(MO::Parameter *);
 
     // ---------- ui modulators ----------------
-
+#ifndef MO_DISABLE_FRONT
     /** Creates a connection between an ui-item and a parameter,
         if types do match. */
     bool addUiModulator(MO::Parameter *, MO::GUI::AbstractFrontItem *);
@@ -208,7 +213,7 @@ public slots:
 
     /** Propagates a value from an ui-item to the appropriate ModulatorObjectFloat */
     bool setUiValue(const QString& uiId, Double timeStamp, Float value);
-
+#endif
 
     // ------------ modulator objects ----------
 

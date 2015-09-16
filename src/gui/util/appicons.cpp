@@ -204,8 +204,10 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_DERIVATIVE;
 
 #ifndef MO_DISABLE_SPATIAL
+#ifndef MO_DISABLE_EXP
     if (qobject_cast<const MicrophoneGroup*>(o))
         return I_MICROPHONE_GROUP;
+#endif
     if (qobject_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
 #endif

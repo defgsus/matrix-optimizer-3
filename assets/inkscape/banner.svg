@@ -2,24 +2,68 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
+   xmlns:osb="http://www.openswatchbook.org/uri/2009/osb"
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
    xmlns:svg="http://www.w3.org/2000/svg"
    xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="1024"
    height="256"
    id="svg4320"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
+   inkscape:version="0.91 r13725"
    sodipodi:docname="banner.svg"
-   inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/img/banner.png"
-   inkscape:export-xdpi="84.379997"
-   inkscape:export-ydpi="84.379997">
+   inkscape:export-filename="C:\_\prog\mo\matrixoptimizer3\assets\img\banner.png"
+   inkscape:export-xdpi="84.375"
+   inkscape:export-ydpi="84.375">
   <defs
      id="defs4322">
+    <linearGradient
+       id="linearGradient5164">
+      <stop
+         id="stop5172"
+         offset="0"
+         style="stop-color:#000000;stop-opacity:1;" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5174">
+      <stop
+         style="stop-color:#0a0a0a;stop-opacity:1"
+         offset="0"
+         id="stop5166" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5158"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop5160" />
+    </linearGradient>
+    <linearGradient
+       id="linearGradient5152"
+       osb:paint="solid">
+      <stop
+         style="stop-color:#797979;stop-opacity:1;"
+         offset="0"
+         id="stop5154" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="gray_topbot">
+      <stop
+         style="stop-color:#797979;stop-opacity:1"
+         offset="0"
+         id="stop4181" />
+      <stop
+         style="stop-color:#ffffff;stop-opacity:1"
+         offset="1"
+         id="stop4183" />
+    </linearGradient>
     <filter
        id="filter4989"
        inkscape:collect="always">
@@ -54,37 +98,35 @@
          stdDeviation="6.795743"
          inkscape:collect="always" />
     </filter>
-    <filter
+    <linearGradient
        inkscape:collect="always"
-       id="filter5732"
-       x="-0.013523212"
-       width="1.0270464"
-       y="-0.10653705"
-       height="1.2130741">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="4.9248531"
-         id="feGaussianBlur5734" />
-    </filter>
+       xlink:href="#gray_topbot"
+       id="linearGradient4185"
+       x1="554.57257"
+       y1="975.02802"
+       x2="554.0036"
+       y2="893.59949"
+       gradientUnits="userSpaceOnUse" />
   </defs>
   <sodipodi:namedview
      id="base"
-     pagecolor="#848484"
+     pagecolor="#191919"
      bordercolor="#666666"
      borderopacity="1.0"
      inkscape:pageopacity="1"
      inkscape:pageshadow="2"
      inkscape:zoom="0.7"
-     inkscape:cx="384.93046"
+     inkscape:cx="356.14504"
      inkscape:cy="190.0777"
      inkscape:document-units="px"
-     inkscape:current-layer="layer4"
+     inkscape:current-layer="layer1"
      showgrid="false"
      inkscape:window-width="1600"
-     inkscape:window-height="851"
-     inkscape:window-x="0"
-     inkscape:window-y="25"
-     inkscape:window-maximized="1" />
+     inkscape:window-height="835"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4"
+     inkscape:window-maximized="1"
+     borderlayer="true" />
   <metadata
      id="metadata4325">
     <rdf:RDF>
@@ -154,94 +196,24 @@
   <g
      inkscape:groupmode="layer"
      id="layer4"
-     inkscape:label="fontglow">
-    <g
-       id="g5008-4"
-       transform="translate(2.1015513,-791.99156)"
-       style="stroke:#6bf8ff;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none;filter:url(#filter5732);opacity:0.53982301">
-      <text
-         sodipodi:linespacing="125%"
-         id="text4328-3"
-         y="955.40814"
-         x="115.18121"
-         style="font-size:99.95207976999999744px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;stroke:#6bf8ff;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
-           y="955.40814"
-           x="115.18121"
-           id="tspan4330-8"
-           sodipodi:role="line">Matrix Optimizer III</tspan></text>
-      <text
-         transform="matrix(0,1,-1,0,0,0)"
-         sodipodi:linespacing="125%"
-         id="text4993-3"
-         y="-910.55713"
-         x="860.20172"
-         style="font-size:106.51174927000000991px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
-         xml:space="preserve"><tspan
-           y="-910.55713"
-           x="860.20172"
-           id="tspan4995-2"
-           sodipodi:role="line">I</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-size:106.51174927000000991px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#6bf8ff;font-family:Sans;stroke-opacity:1;stroke-width:7.70000000000000018;stroke-miterlimit:4;stroke-dasharray:none"
-         x="949.09521"
-         y="-910.55713"
-         id="text4997-2"
-         sodipodi:linespacing="125%"
-         transform="matrix(0,1,-1,0,0,0)"><tspan
-           sodipodi:role="line"
-           id="tspan4999-1"
-           x="949.09521"
-           y="-910.55713">I</tspan></text>
-    </g>
-  </g>
+     inkscape:label="fontglow" />
   <g
      inkscape:label="font"
      inkscape:groupmode="layer"
      id="layer1"
      transform="translate(0,-796.36218)">
-    <g
-       id="g5008"
-       transform="translate(1.0101525,4.0406102)">
-      <text
-         sodipodi:linespacing="125%"
-         id="text4328"
-         y="955.40814"
-         x="115.18121"
-         style="font-size:99.95207977px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-         xml:space="preserve"><tspan
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu"
-           y="955.40814"
-           x="115.18121"
-           id="tspan4330"
-           sodipodi:role="line">Matrix Optimizer III</tspan></text>
-      <text
-         transform="matrix(0,1,-1,0,0,0)"
-         sodipodi:linespacing="125%"
-         id="text4993"
-         y="-910.55713"
-         x="860.20172"
-         style="font-size:106.51174927px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-         xml:space="preserve"><tspan
-           y="-910.55713"
-           x="860.20172"
-           id="tspan4995"
-           sodipodi:role="line">I</tspan></text>
-      <text
-         xml:space="preserve"
-         style="font-size:106.51174927px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
-         x="949.09521"
-         y="-910.55713"
-         id="text4997"
-         sodipodi:linespacing="125%"
-         transform="matrix(0,1,-1,0,0,0)"><tspan
-           sodipodi:role="line"
-           id="tspan4999"
-           x="949.09521"
-           y="-910.55713">I</tspan></text>
-    </g>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:90.48187256px;line-height:125%;font-family:Sans;letter-spacing:0px;word-spacing:0px;fill:url(#linearGradient4185);fill-opacity:1;stroke:none"
+       x="117.12082"
+       y="961.41864"
+       id="text4328"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan4330"
+         x="117.12082"
+         y="961.41864"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;fill:url(#linearGradient4185);fill-opacity:1">Matrix Optimizer III</tspan></text>
     <g
        transform="matrix(0.20333938,0.05184014,0.05184014,-0.20333938,-57.705089,1002.1281)"
        id="g5046">
@@ -289,5 +261,12 @@
            style="fill:none;stroke:#000000;stroke-width:13.06808853;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
       </g>
     </g>
+    <rect
+       style="opacity:0.526;fill:none;fill-opacity:1;stroke:#000000;stroke-width:5.0999999;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect5150"
+       width="1026.4286"
+       height="256.42859"
+       x="-0.71428573"
+       y="796.64789" />
   </g>
 </svg>

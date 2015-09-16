@@ -32,6 +32,9 @@
 #include "projection/projectorblender.h"
 #include "geom/geometry.h"
 
+#undef near
+#undef far  // windows..
+
 using namespace gl;
 
 namespace MO {
@@ -487,11 +490,15 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
         cheat_[thread][2].x = v.x;
         cheat_[thread][2].y = v.y;
         cheat_[thread][2].z = v.z;
-#if 0
-        if (thread == MO_GFX_THREAD)
+
+        bool playing = false;
+        if (auto s = sceneObject())
+            playing = s->isPlaying();
+
+        // don't smooth matrix for graphics in non-playback
+        if (thread != MO_AUDIO_THREAD && !playing)
             matrix = overrideMatrix_;
         else
-#endif
             matrix = cheat_[thread];
     }
     else

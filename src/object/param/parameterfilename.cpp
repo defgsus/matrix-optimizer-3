@@ -75,6 +75,7 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
             fn = IO::Files::getOpenFileName(fileType_, parent);
         break;
 
+#ifndef MO_DISABLE_LADSPA
         case IO::FT_LADSPA:
         {
             auto plug = GUI::AudioPluginDialog::selectPlugin(parent);
@@ -84,6 +85,8 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
                 plug->releaseRef();
             }
         }
+        break;
+#endif
     }
 
     if (fn.isEmpty())

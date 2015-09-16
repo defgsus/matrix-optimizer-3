@@ -14,6 +14,7 @@
 #include <QImage>
 
 #include "texture.h"
+#include "io/imagereader.h"
 #include "io/streamoperators_glbinding.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -948,10 +949,14 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
 
 Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format, ErrorReporting rep)
 {
-    QImage img(filename);
+    ImageReader reader;
+    reader.setFilename(filename);
+
+    QImage img = reader.read();
     if (img.isNull())
     {
-        MO_GL_ERROR_COND(rep, "Could not load image file\n'" << filename << "'");
+        MO_GL_ERROR_COND(rep, "Could not load image file\n'"
+                         << filename << "'\n'" << reader.errorString() << "'");
         return 0;
     }
 

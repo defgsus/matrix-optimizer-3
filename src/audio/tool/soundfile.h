@@ -36,6 +36,9 @@ public:
 
     // ---------- getter -------------
 
+    /** Returns an error description, empty string if no error */
+    const QString& errorString() const;
+
     /** Returns true if file was loaded / data can be read */
     bool isOk() const;
 
@@ -94,6 +97,7 @@ private:
     void p_loadFile_(const QString&);
     void p_openStream_(const QString&);
     void p_create_(uint channels, uint sr, int bitSize);
+    void p_setError_(const QString&);
 
     class Private;
     Private * p_;
