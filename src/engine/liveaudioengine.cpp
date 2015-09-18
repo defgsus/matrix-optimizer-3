@@ -9,6 +9,7 @@
 */
 
 #include <tuple>
+#include <atomic>
 
 #include <QThread>
 #include <QMessageBox>
@@ -25,6 +26,7 @@
 #include "audio/configuration.h"
 #include "audio/tool/audiobuffer.h"
 #include "engine/audioengine.h"
+#include "io/time.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -47,6 +49,7 @@ public:
         : parent        (e),
           engine        (new AudioEngine()),
           engineChanged (false),
+          curSample     (0),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
@@ -60,14 +63,22 @@ public:
 
     /** Recreates the AudioEngine dsp path */
     void updateScene();
-    void audioCallback(const F32 *, F32 *);
+    void audioCallback(const F32 *, F32 *, const AUDIO::AudioDevice::StreamTime&);
+
+    struct BufferTime
+    {
+        BufferTime() noexcept : sample(0), time(0.) { }
+        BufferTime(SamplePos s, Double t) noexcept : sample(s), time(t) { }
+        SamplePos sample;
+        Double time;
+    };
+    std::atomic<BufferTime> lastBuffer;
 
     LiveAudioEngine * parent;
     AudioEngine * engine;
     bool engineChanged;
-    Double
-        lastBufferTime,
-        lastBufferTimeStamp;
+    SamplePos curSample;
+    //Double lastBufferTime;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
@@ -304,16 +315,13 @@ Double LiveAudioEngine::second() const
     if (!isPlayback())
         return p_->engine->second();
 
-#if 0
-    // buffer time and timestamp need to be atomic in one somehow..
-    // very unstable otherwise
-    Double t = applicationTime() - p_->lastBufferTimeStamp;
-    return p_->lastBufferTime + t;
-#else
     /** @todo find concept for gfx time,
         this returns only the time at the beginning of the dsp buffer */
-    return p_->engine->second();
-#endif
+    const Private::BufferTime bt = p_->lastBuffer;
+    return //p_->engine->secondSmooth();
+            bt.sample * config().sampleRateInv()
+            + applicationTime() - bt.time
+            ;
 }
 
 const F32 * LiveAudioEngine::outputEnvelope() const
@@ -325,11 +333,14 @@ const F32 * LiveAudioEngine::outputEnvelope() const
 void LiveAudioEngine::seek(SamplePos pos)
 {
     p_->engine->seek(pos);
+    p_->curSample = pos;
 }
 
 void LiveAudioEngine::seek(Double time)
 {
-    p_->engine->seek(time * p_->engine->config().sampleRate());
+    const auto pos = time * p_->engine->config().sampleRate();
+    p_->engine->seek(pos);
+    p_->curSample = pos;
 }
 
 void LiveAudioEngine::setScene(Scene * s, uint thread)
@@ -447,7 +458,7 @@ bool LiveAudioEngine::initAudioDevice()
     // install callback
     using namespace std::placeholders;
     p_->audioDevice->setCallback(std::bind(
-        &LiveAudioEngine::Private::audioCallback, p_, _1, _2));
+        &LiveAudioEngine::Private::audioCallback, p_, _1, _2, _3));
 
     //isFirstAudioCallback_ = true;
     return true;
@@ -475,6 +486,11 @@ bool LiveAudioEngine::start()
     // init communication stuff
     p_->audioOutQueue.reset();
 
+    Private::BufferTime bt;
+    bt.sample = pos();
+    bt.time = systemTime();
+    p_->lastBuffer = bt;
+
     // init threads
     /*
     p_->audioInThread = new AudioEngineInThread(this, this);
@@ -496,7 +512,7 @@ bool LiveAudioEngine::start()
         p_->audioOutThread->stop();
 
         QMessageBox::critical(0, tr("Audio device"),
-                              tr("Could initialized but not start audio playback.\n%1")
+                              tr("Could initialize but not start audio playback.\n%1")
                               .arg(e.what()));
         return false;
     }
@@ -518,21 +534,26 @@ void LiveAudioEngine::stop()
     p_->audioDevice->stop();
 }
 
-void LiveAudioEngine::Private::audioCallback(const F32 * in, F32 * out)
+void LiveAudioEngine::Private::audioCallback(
+        const F32 * in, F32 * out, const AUDIO::AudioDevice::StreamTime &st)
 {
-    audioInQueue.produce(in);
+    lastBuffer = BufferTime(curSample, applicationTime() + st.outputTime);
+    curSample += engine->config().bufferSize();
+    //MO_PRINT("store " << st.inputTime << " " << st.currentTime << " " << st.outputTime);
 
-    lastBufferTime = engine->second();
-    lastBufferTimeStamp = applicationTime();
+    // get input
+    audioInQueue.produce(in);
 
     // ---- process output ----
 
     // get output from AudioOutThread
     const F32 * buf;
     if (audioOutQueue.consume(buf))
+    {
         memcpy(out, buf, engine->config().bufferSize()
                             * engine->config().numChannelsOut()
                             * sizeof(F32));
+    }
     else
     {
         memset(out, 0, engine->config().bufferSize()

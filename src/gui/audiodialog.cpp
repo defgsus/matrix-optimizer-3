@@ -553,7 +553,8 @@ void AudioDialog::startTone_()
 
     env_ = 0.f;
 
-    device_->setCallback([this, conf](const F32 * in, F32* out)
+    device_->setCallback(
+                [this, conf](const F32 * in, F32* out, const AUDIO::AudioDevice::StreamTime&)
     {
         // update input envelopes
         for (uint i=0; i<conf.numChannelsIn(); ++i)

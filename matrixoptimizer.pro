@@ -81,8 +81,8 @@ unix {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
-        -langelscript \
-        -lshp \
+        -ljpeg -langelscript \
+        -lshp -latomic \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking
 #        -lCGAL \

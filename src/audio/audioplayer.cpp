@@ -103,7 +103,7 @@ bool AudioPlayerPrivate::open()
         return false;
     }
 
-    device.setCallback([this](const F32 * , F32 * out)
+    device.setCallback([this](const F32 * , F32 * out, const AudioDevice::StreamTime&)
     {
         // get output from AudioPlayerThread
         const F32 * buf;

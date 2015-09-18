@@ -77,16 +77,27 @@ namespace AUDIO {
 */
 class AudioDevice
 {
-    // access from the callback to this class
-    friend int mo_audio_callback_(AudioDevice*, const void*, void*);
-
 public:
 
     // ------------ types ----------------
 
+    struct StreamTime
+    {
+        StreamTime() : inputTime(0.), currentTime(0.), outputTime(0.) { }
+        StreamTime(Double i, Double c, Double o)
+            : inputTime(i), currentTime(c), outputTime(o) { }
+        Double
+        /** Time in seconds of first sample in input buffer */
+            inputTime,
+        /** Time in seconds of callback */
+            currentTime,
+        /** Time in seconds of first sample in output buffer */
+            outputTime;
+    };
+
     /** The type of function issued by this class for
-        audio callback. */
-    typedef std::function<void(const F32*, F32*)> Callback;
+        the audio callback. */
+    typedef std::function<void(const F32*, F32*, const StreamTime&)> Callback;
 
     // --------------- ctor --------------
 
@@ -118,6 +129,11 @@ public:
     uint sampleRate() const { return conf_.sampleRate(); }
     /** length of buffer in samples. */
     uint bufferSize() const { return conf_.bufferSize(); }
+
+    /** Returns seconds since audio stream start.
+        @warning might return always zero for ALSA
+            (http://music.columbia.edu/pipermail/portaudio/2011-June/012453.html) */
+    Double streamTime() const;
 
     // --------- initialisation ----------
 
@@ -196,7 +212,10 @@ public:
 
 private:
 
-    int callback_(const void * in, void * out);
+    // access from the callback to this class
+    friend int mo_audio_callback_(AudioDevice*, const StreamTime&, const void*, void*);
+
+    int callback_(const StreamTime&, const void * in, void * out);
 
     uint inDeviceId_, outDeviceId_;
     Configuration conf_;

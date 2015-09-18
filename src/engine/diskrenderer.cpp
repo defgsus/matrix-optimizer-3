@@ -678,7 +678,7 @@ void DiskRenderer::Private::normalizeAndSplitAudio()
             files.push_back(file);
         }
 
-        sf_count_t bsize = 1024 * 16;
+        size_t bsize = 1024 * 16;
         std::vector<F32> data(bsize * ininfo.channels),
                          dataout(bsize);
 

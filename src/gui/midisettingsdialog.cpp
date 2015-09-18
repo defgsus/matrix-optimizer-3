@@ -366,7 +366,8 @@ void MidiSettingsDialog::startAudio_(bool start)
     {
         p_ = new Private();
 
-        p_->device->setCallback([this](const F32 *, F32 * out)
+        p_->device->setCallback(
+            [this](const F32 *, F32 * out, const AUDIO::AudioDevice::StreamTime&)
         {
             AUDIO::MidiEvent event;
             while (p_->queue.consume(event))

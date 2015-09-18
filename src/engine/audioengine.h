@@ -42,8 +42,11 @@ public:
     /** Returns current sample position */
     SamplePos pos() const;
 
-    /** Returns current second */
+    /** Returns current second (at beginning of dsp-block) */
     Double second() const;
+
+    /** Returns current second (also during dsp-block) */
+    Double secondSmooth() const;
 
     /** Read access to the envelope values for each output */
     const F32 * outputEnvelope() const;

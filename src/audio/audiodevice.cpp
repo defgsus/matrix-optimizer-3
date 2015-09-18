@@ -43,7 +43,7 @@ public:
 
     ~FakeAudioThread() { if (isRunning()) stop(); }
 
-    void setCallback(std::function<void(const float *, float *)> cb)
+    void setCallback(AudioDevice::Callback cb)
     {
         callback_ = cb;
     }
@@ -65,11 +65,12 @@ public:
 
     void run() Q_DECL_OVERRIDE
     {
+        AudioDevice::StreamTime dummy;
         doStop_ = false;
         while (!doStop_)
         {
             if (callback_)
-                callback_(&in_[0], &out_[0]);
+                callback_(&in_[0], &out_[0], dummy);
 
             std::this_thread::sleep_for(period_);
         }
@@ -78,7 +79,7 @@ public:
 private:
 
     std::chrono::high_resolution_clock clock_;
-    std::function<void(const float *, float *)> callback_;
+    AudioDevice::Callback callback_;
     Configuration config_;
     std::chrono::duration<double> period_;
     std::vector<float> in_, out_;
@@ -113,9 +114,11 @@ public:
 // access to AudioDevice.
 // We could register the Pa callback as a friend
 // but that would require <portaudio.h> in the header file
-inline int mo_audio_callback_(AudioDevice * dev, const void * in, void * out)
+inline int mo_audio_callback_(AudioDevice * dev,
+                              const AudioDevice::StreamTime& st,
+                              const void * in, void * out)
 {
-    return dev->callback_(in, out);
+    return dev->callback_(st, in, out);
 }
 
 // cannonical portaudio callback
@@ -123,7 +126,7 @@ static int mo_pa_callback(
         const void    * inputBuffer,
         void          * outputBuffer,
         unsigned long framesPerBuffer,
-        const PaStreamCallbackTimeInfo* /*timeInfo*/,
+        const PaStreamCallbackTimeInfo* timeInfo,
         PaStreamCallbackFlags /*statusFlags*/,
         void * userData )
 {
@@ -133,15 +136,24 @@ static int mo_pa_callback(
     MO_ASSERT(framesPerBuffer == dev->bufferSize(), "buffer size mismatch from audio-callback");
     Q_UNUSED(framesPerBuffer);
 
-    return mo_audio_callback_(dev, inputBuffer, outputBuffer);
+    Double st = dev->streamTime();
+
+    return mo_audio_callback_(
+              dev,
+              AudioDevice::StreamTime(timeInfo->inputBufferAdcTime - st,
+                                      timeInfo->currentTime - st,
+                                      timeInfo->outputBufferDacTime - st),
+              inputBuffer, outputBuffer);
 }
 
 
-int AudioDevice::callback_(const void * in, void * out)
+int AudioDevice::callback_(const StreamTime& st, const void * in, void * out)
 {
     // call user callback
     if (func_)
-        func_(static_cast<const float*>(in), static_cast<float*>(out));
+        func_(static_cast<const float*>(in),
+              static_cast<float*>(out),
+              st);
 
     return paContinue;
 }
@@ -174,6 +186,10 @@ AudioDevice::~AudioDevice()
 
 // ---------- info -------------------
 
+Double AudioDevice::streamTime() const
+{
+    return Pa_GetStreamTime(p_->stream);
+}
 
 // --------- initialisation ----------
 
@@ -203,10 +219,11 @@ void AudioDevice::initFake(uint numInputChannels,
     if (!p_->fakeThread)
     {
         p_->fakeThread = new FakeAudioThread();
-        p_->fakeThread->setCallback([this](const float * inp, float * outp)
+        p_->fakeThread->setCallback(
+                    [this](const float * inp, float * outp, const StreamTime& st)
         {
             if (func_)
-                func_(inp, outp);
+                func_(inp, outp, st);
         });
     }
 

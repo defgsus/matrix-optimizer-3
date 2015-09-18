@@ -8,7 +8,7 @@
     <p>created 20.02.2015</p>
 */
 
-#if 0 // c++14 version (not tested)
+#if 1 // c++14 version (not tested)
 
     #include <chrono>
     #include "time.h"
@@ -18,8 +18,10 @@
 
         Double systemTime()
         {
-            std::chrono::duration_cast<std::chrono::microseconds>(
-                std::chrono::high_resolution_clock::now().duration).count() * Double(0.000000001);
+            auto tp = std::chrono::high_resolution_clock::now();
+            return
+              std::chrono::duration_cast<std::chrono::nanoseconds>
+                    (tp.time_since_epoch()).count() * Double(0.000000001);
         }
 
     }
