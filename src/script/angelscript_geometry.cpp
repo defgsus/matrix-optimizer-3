@@ -204,6 +204,10 @@ public:
     void setAttribute2(const StringAS& name, const Vec2& v) { g->setAttribute(MO::toString(name), v.x, v.y); }
     void setAttribute3(const StringAS& name, const Vec3& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z); }
     void setAttribute4(const StringAS& name, const Vec4& v) { g->setAttribute(MO::toString(name), v.x, v.y, v.z, v.w); }
+    void setAttributeI4f(const StringAS& name, uint idx, float x, float y, float z, float w) { g->setAttribute(MO::toString(name), idx, x, y, z, w); }
+    void setAttributeI2(const StringAS& name, uint idx, const Vec2& v) { g->setAttribute(MO::toString(name), idx, v.x, v.y); }
+    void setAttributeI3(const StringAS& name, uint idx, const Vec3& v) { g->setAttribute(MO::toString(name), idx, v.x, v.y, v.z); }
+    void setAttributeI4(const StringAS& name, uint idx, const Vec4& v) { g->setAttribute(MO::toString(name), idx, v.x, v.y, v.z, v.w); }
 
     void createBox1(float sl, const Vec3& pos) { GEOM::GeometryFactory::createTexturedBox(g, sl, sl, sl, pos); }
     void createBox3(float x, float y, float z, const Vec3& pos) { GEOM::GeometryFactory::createTexturedBox(g, x, y, z, pos); }
@@ -749,6 +753,10 @@ static void register_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void setAttribute(const string &in name, const vec2 &in)", setAttribute2);
     MO__REG_METHOD("void setAttribute(const string &in name, const vec3 &in)", setAttribute3);
     MO__REG_METHOD("void setAttribute(const string &in name, const vec4 &in)", setAttribute4);
+    MO__REG_METHOD("void setAttribute(const string &in name, uint index, float x, float y = 0, float z = 0, float w = 0)", setAttributeI4f);
+    MO__REG_METHOD("void setAttribute(const string &in name, uint index, const vec2 &in)", setAttributeI2);
+    MO__REG_METHOD("void setAttribute(const string &in name, uint index, const vec3 &in)", setAttributeI3);
+    MO__REG_METHOD("void setAttribute(const string &in name, uint index, const vec4 &in)", setAttributeI4);
 
 
     MO__REG_METHOD("void createBox(float sidelength = 1, const vec3 &in pos = vec3(0))", createBox1);

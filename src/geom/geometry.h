@@ -58,6 +58,8 @@ public:
         QString typeName() const;
         /** Returns the glsl declaration */
         QString declaration() const;
+        /** Returns the @p componentIndex'th value in the vector for vertex @p index */
+        AttributeType value(const IndexType index, const IndexType componentIndex) const;
 
         QString attributeName;
         unsigned int numComponents;
@@ -287,6 +289,11 @@ public:
                   ColorType r, ColorType g, ColorType b, ColorType a,
                   TextureCoordType u, TextureCoordType v);
 
+    /** For unshared vertices, this duplicates the given vertex and
+        returns the index of the duplicate. For shared vertices this simply
+        returns t. */
+    IndexType duplicateVertex(IndexType t);
+
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
     void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
@@ -302,13 +309,16 @@ public:
     void addPoint(IndexType idx);
 
     /** Changes the vertex point */
-    void setVertex(uint i, const Vec3& v) { auto p = &vertices()[i * numVertexComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    void setVertex(IndexType i, const Vec3& v) { auto p = &vertices()[i * numVertexComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
     /** Changes the texcoord point */
-    void setTexCoord(uint i, const Vec2& v) { auto p = &texcoord_[i * numTextureCoordComponents()]; *p++ = v.x; *p = v.y; }
+    void setTexCoord(IndexType i, const Vec2& v) { auto p = &texcoord_[i * numTextureCoordComponents()]; *p++ = v.x; *p = v.y; }
     /** Changes the normal */
-    void setNormal(uint i, const Vec3& v) { auto p = &normal_[i * numNormalComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
+    void setNormal(IndexType i, const Vec3& v) { auto p = &normal_[i * numNormalComponents()]; *p++ = v.x; *p++ = v.y; *p = v.z; }
     /** Changes the color */
-    void setColor(uint i, const Vec4& v) { auto p = &color_[i * numColorComponents()]; *p++ = v.x; *p++ = v.y; *p++ = v.z; *p = v.w; }
+    void setColor(IndexType i, const Vec4& v) { auto p = &color_[i * numColorComponents()]; *p++ = v.x; *p++ = v.y; *p++ = v.z; *p = v.w; }
+    /** Changes the attribute for vertex @p i */
+    void setAttribute(const QString& name, IndexType i,
+                      AttributeType x, AttributeType y = 0.f, AttributeType z = 0.f, AttributeType w = 0.f);
 
     // ------- shared vertices -------------
 

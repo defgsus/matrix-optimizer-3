@@ -704,6 +704,8 @@ void Model3d::setupDrawable_()
 {
     MO_DEBUG_MODEL("Model3d::setupDrawable()");
 
+    clearError();
+
     // -------- construct the GLSL source ----------
 
     GL::ShaderSource * src = new GL::ShaderSource();

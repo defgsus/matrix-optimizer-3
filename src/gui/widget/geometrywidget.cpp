@@ -141,7 +141,7 @@ void GeometryWidget::drawGL(const Mat4& projection,
         if (!texNorm_)
         {
             QImage img, norm;
-            img.load(":/texture/default_texture.png");
+            img.load(":/img/normalmap01.png");
             /** @todo nice normalmap in geometrywidget */
             //ImageGenerator::createNormalmap(&norm, &img);
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0 + 1));

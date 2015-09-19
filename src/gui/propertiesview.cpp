@@ -112,7 +112,7 @@ void PropertiesView::createWidgtes_()
 
 void PropertiesView::updateWidgetVis_()
 {
-    MO_PRINT(p_props_->toString());
+//    MO_PRINT(p_props_->toString());
     for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
     {
         auto j = p_widgets_.find(i.key());
