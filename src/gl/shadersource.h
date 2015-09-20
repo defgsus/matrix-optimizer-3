@@ -95,7 +95,7 @@ public:
         are resolved properly. */
     void replaceIncludes(std::function<QString(const QString&, bool)> func);
 
-    /** Replacess all #include <...> statements for which a files is in the app resources */
+    /** Replacess all #include <...> statements for which a file is in the app resources */
     void pasteDefaultIncludes();
 
     /** To be called before compilation.

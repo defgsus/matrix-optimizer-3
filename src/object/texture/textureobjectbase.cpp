@@ -617,7 +617,8 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     if (quad.u_time)
         quad.u_time->floats[0] = time;
     if (quad.u_resolution)
-        quad.u_resolution->setFloats(res.width(), res.height());
+        quad.u_resolution->setFloats(res.width(), res.height(),
+                                     1.f / res.width(), 1.f / res.height());
     if (hasColorRange)
     {
         if (quad.u_color_range_min)

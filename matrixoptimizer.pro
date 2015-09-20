@@ -24,6 +24,7 @@ DEFINES += GLM_FORCE_RADIANS
 
 #disable experimental features
 DEFINES += MO_DISABLE_EXP
+
 #disable control interface for now (it's currently broken)
 DEFINES += MO_DISABLE_FRONT
 
@@ -41,7 +42,7 @@ mac { DEFINES += \
 #require audio input and output devices to be separate devices
                 MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
-                # tracker-model player library
+                # tracker player library
                 MO_DISABLE_DUMB \
                 # linux audio plugins
                 MO_DISABLE_LADSPA \

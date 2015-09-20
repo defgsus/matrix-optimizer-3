@@ -68,5 +68,10 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/inc/raytrace.glsl \
     assets/shader/to/random.frag \
     assets/shader/to/lens.frag \
-    assets/shader/to/gen3d.frag
+    assets/shader/to/gen3d.frag \
+    assets/shader/to/distancemap.frag \
+    assets/shader/to/derivative.frag
     assets/help/en/object/model3d.html
+
+DISTFILES += \
+    $$PWD/assets/shader/to/threshold.frag

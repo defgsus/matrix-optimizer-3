@@ -323,7 +323,8 @@ HEADERS += \
     $$PWD/model/jsontreemodel.h \
     $$PWD/geom/shploader.h \
     $$PWD/audio/tool/soundfileistream.h \
-    $$PWD/io/imagereader.h
+    $$PWD/io/imagereader.h \
+    $$PWD/object/texture/distancemapto.h
 
 
 SOURCES += \
@@ -603,8 +604,5 @@ SOURCES += \
     $$PWD/model/jsontreemodel.cpp \
     $$PWD/geom/shploader.cpp \
     $$PWD/audio/tool/soundfileistream.cpp \
-    $$PWD/io/imagereader.cpp
-
-OTHER_FILES += \
-    assets/shader/to/derivative.frag
-
+    $$PWD/io/imagereader.cpp \
+    $$PWD/object/texture/distancemapto.cpp
