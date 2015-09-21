@@ -12,7 +12,6 @@
 #include <vector>
 
 #include "dfdownsampler.h"
-#include "io/log.h"
 
 
 namespace MO {
@@ -24,6 +23,7 @@ struct DFDownsampler::Private
         : thread        (thread)
         , doStop        (false)
         , progress      (0.f)
+        , threshold     (128)
     {
 
     }
@@ -36,6 +36,7 @@ struct DFDownsampler::Private
     volatile int progress;
     QImage inImage, outImage;
     QSize outRes, scanRange;
+    uchar threshold;
 };
 
 
@@ -64,6 +65,11 @@ void DFDownsampler::setOutputResolution(const QSize & s)
 void DFDownsampler::setSamplingRange(const QSize & s)
 {
     p_->scanRange = s;
+}
+
+void DFDownsampler::setThreshold(uchar t)
+{
+    p_->threshold = t;
 }
 
 const QImage& DFDownsampler::getOutputImage() const
@@ -98,8 +104,8 @@ void DFDownsampler::Private::downsample()
     outImage = QImage(outRes, QImage::Format_Grayscale8);
 
     // maximum possible distance for given scanRange
-    float maxDist = std::sqrt(float(scanRange.width() * scanRange.width()
-                                    + scanRange.height() * scanRange.height()));
+    float maxDist = .5f * std::sqrt(float(scanRange.width() * scanRange.width()
+                                  + scanRange.height() * scanRange.height()));
     // prepare float buffer
     std::vector<float> buf(outRes.width() * outRes.height());
     for (auto & f : buf)
@@ -123,14 +129,15 @@ void DFDownsampler::Private::downsample()
             const int ix = ox * inImage.width() / outImage.width();
 
             // starting inside or outside of graphic?
-            const bool isInside = qRed(inImage.pixel(ix, iy)) > 0;
+            const bool isInside = qRed(inImage.pixel(ix, iy)) >= threshold;
 
-            // scan for min distance
+            // scan for min distance to all edges
             float minD = maxDist;
             for (int sy = 0; sy < scanRange.height(); ++sy)
             {
                 if (doStop)
                     return;
+
                 const int Y = iy + sy - scanRange.height() / 2;
                 if (Y < 0 || Y >= inImage.height())
                     continue;
@@ -141,8 +148,8 @@ void DFDownsampler::Private::downsample()
                     if (X < 0 || X >= inImage.width())
                         continue;
 
-                    // is pixel on?
-                    const bool isPix = qRed(inImage.pixel(X, Y)) > 0;
+                    // is this pixel inside or outside?
+                    const bool isPix = qRed(inImage.pixel(X, Y)) >= threshold;
 
                     // crossed edge?
                     if (isPix != isInside)
@@ -151,13 +158,12 @@ void DFDownsampler::Private::downsample()
                         float d = std::sqrt(float((X-ix)*(X-ix) + (Y-iy)*(Y-iy)));
 
                         minD = std::min(minD, d);
-                        //MO_PRINT(ix << " " << iy << " " << minD);
                     }
 
                 } // sx
             } // sy
 
-            // negativ distance when started inside
+            // negative distance when started inside
             if (isInside)
                 minD = -minD;
 
@@ -173,7 +179,9 @@ void DFDownsampler::Private::downsample()
     for (int ox = 0; ox < outImage.width(); ++ox)
     {
         float f = buf[oy * outImage.width() + ox];
-        outImage.scanLine(oy)[ox] = uchar( f / maxDist * 127 + 128 );
+        outImage.scanLine(oy)[ox]
+        // normalize
+                = uchar( f / maxDist * 127 + 128 );
     }
 }
 

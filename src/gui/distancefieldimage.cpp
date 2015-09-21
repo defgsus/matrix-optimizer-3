@@ -15,6 +15,8 @@
 #include <QMenuBar>
 #include <QMessageBox>
 #include <QProgressBar>
+#include <QImageWriter>
+#include <QCloseEvent>
 
 #include "distancefieldimage.h"
 #include "gui/propertiesview.h"
@@ -32,14 +34,18 @@ struct DistanceFieldImage::Private
     Private(DistanceFieldImage * d)
         : win       (d)
         , thread    (0)
+        , isChanged (false)
     { }
 
     void createProperties();
     void createWidgets();
     void createMenu();
     void loadImage(const QString& fn);
+    void saveImage(const QString& fn);
     void render();
     void getImage();
+
+    bool isSaveToChange();
 
     DistanceFieldImage * win;
 
@@ -50,6 +56,7 @@ struct DistanceFieldImage::Private
     PropertiesView * propView;
     QProgressBar * progBar;
     QLabel * lImageIn, * lImageOut;
+    bool isChanged;
 };
 
 
@@ -77,13 +84,24 @@ DistanceFieldImage::~DistanceFieldImage()
     delete p_;
 }
 
+void DistanceFieldImage::closeEvent(QCloseEvent * e)
+{
+    if (!p_->isSaveToChange())
+        e->ignore();
+    else
+        e->accept();
+}
+
 void DistanceFieldImage::Private::createProperties()
 {
     props.set("res", tr("resolution"), tr("The downsampled resolution"),
-              QSize(128, 128));
+              QSize(64, 64));
     props.set("range", tr("scan range"),
               tr("The maximum range in pixels to scan for distances"),
               QSize(256, 256));
+    props.set("threshold", tr("threshold"),
+              tr("A pixel is considered inside if it is >= this value [0,255]"),
+              128, 0, 255);
 }
 
 void DistanceFieldImage::Private::createWidgets()
@@ -102,8 +120,6 @@ void DistanceFieldImage::Private::createWidgets()
             lh->addWidget(scroll);
 
             lImageIn = new QLabel(win);
-            //lImageIn->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Ignored);
-            //lImageIn->setScaledContents(true);
             scroll->setWidget(lImageIn);
 
             // output image
@@ -132,6 +148,10 @@ void DistanceFieldImage::Private::createMenu()
         a->setShortcut(Qt::CTRL + Qt::Key_L);
         connect(a, SIGNAL(triggered(bool)), win, SLOT(loadSourceImage()));
 
+        a = m->addAction(tr("Save output image"));
+        a->setShortcut(Qt::CTRL + Qt::Key_S);
+        connect(a, SIGNAL(triggered(bool)), win, SLOT(saveOutputImage()));
+
     win->menuBar()->addMenu( m = new QMenu(tr("Render"), win) );
 
         a = m->addAction(tr("Start"));
@@ -156,6 +176,28 @@ void DistanceFieldImage::stop()
         p_->thread->stop();
 }
 
+bool DistanceFieldImage::isChanged() const
+{
+    return p_->isChanged;
+}
+
+bool DistanceFieldImage::Private::isSaveToChange()
+{
+    if (!isChanged)
+        return true;
+
+    int a = QMessageBox::question(win, tr("Save image?"),
+                                  tr("The current output is not saved.\nSave it now?"),
+                                  tr("Yes"), tr("No"), tr("Cancel"));
+    if (a == 2)
+        return false;
+
+    if (a == 0)
+        win->saveOutputImage();
+
+    return true;
+}
+
 void DistanceFieldImage::loadSourceImage()
 {
     QString fn = IO::Files::getOpenFileName(IO::FT_TEXTURE, this);
@@ -163,6 +205,15 @@ void DistanceFieldImage::loadSourceImage()
         return;
 
     p_->loadImage(fn);
+}
+
+void DistanceFieldImage::saveOutputImage()
+{
+    QString fn = IO::Files::getSaveFileName(IO::FT_TEXTURE, this);
+    if (fn.isEmpty())
+        return;
+
+    p_->saveImage(fn);
 }
 
 void DistanceFieldImage::threadFinsihed_()
@@ -192,6 +243,18 @@ void DistanceFieldImage::Private::loadImage(const QString &fn)
     lImageIn->adjustSize();
 }
 
+void DistanceFieldImage::Private::saveImage(const QString &fn)
+{
+    QImageWriter write(fn);
+    if (!write.write(outImage))
+    {
+        QMessageBox::critical(win, tr("save output image"),
+                              tr("Error: %1").arg(write.errorString()));
+    }
+    else
+        isChanged = false;
+}
+
 void DistanceFieldImage::Private::render()
 {
     if (!thread)
@@ -208,6 +271,7 @@ void DistanceFieldImage::Private::render()
     thread->setInputImage(inImage);
     thread->setOutputResolution(props.get("res").toSize());
     thread->setSamplingRange(props.get("range").toSize());
+    thread->setThreshold(props.get("threshold").toUInt());
 
     thread->start();
 }
@@ -220,6 +284,8 @@ void DistanceFieldImage::Private::getImage()
     outImage = thread->getOutputImage();
     lImageOut->setPixmap(QPixmap::fromImage(outImage));
     lImageOut->adjustSize();
+
+    isChanged = true;
 }
 
 

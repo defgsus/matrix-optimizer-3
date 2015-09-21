@@ -32,6 +32,7 @@ public:
     void setInputImage(const QImage&);
     void setOutputResolution(const QSize&);
     void setSamplingRange(const QSize&);
+    void setThreshold(uchar);
 
     /** Stop processing as soon as possible.
         This will block until the thread has indeed ended. */

@@ -25,9 +25,12 @@ public:
     DistanceFieldImage(QWidget * parent, Qt::WindowFlags f = 0);
     ~DistanceFieldImage();
 
+    bool isChanged() const;
+
 public slots:
 
     void loadSourceImage();
+    void saveOutputImage();
     void start();
     void stop();
 
@@ -35,6 +38,10 @@ private slots:
 
     void threadFinsihed_();
     void setProgress_(float);
+
+protected:
+
+    void closeEvent(QCloseEvent*);
 
 private:
 
