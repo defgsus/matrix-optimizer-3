@@ -8,10 +8,6 @@
     <p>created 02.12.2014</p>
 */
 
-#include <QReadWriteLock>
-#include <QReadLocker>
-#include <QWriteLocker>
-
 #include "audioengine.h"
 #include "object/scene.h"
 //#include "object/scenelock_p.h"
@@ -37,8 +33,6 @@ public:
           scene         (0),
           threadIdx     (0),
           curSample     (0),
-          lastDspSample (0),
-          lastDspTime   (0),
           isPathPrepared(false)
     { }
 
@@ -49,14 +43,12 @@ public:
     AUDIO::Configuration conf;
     ObjectDspPath path;
     uint threadIdx;
-    SamplePos curSample, lastDspSample;
-    Double lastDspTime;
+    SamplePos curSample;
+
     std::vector<AUDIO::EnvelopeFollower> envs;
     std::vector<F32> envValues;
 
     bool isPathPrepared;
-
-    QReadWriteLock timeLock;
 };
 
 
@@ -103,13 +95,6 @@ Double AudioEngine::second() const
     return p_->conf.sampleRateInv() * p_->curSample;
 }
 
-Double AudioEngine::secondSmooth() const
-{
-    QReadLocker lock(&p_->timeLock);
-    return p_->conf.sampleRateInv() * p_->lastDspSample
-            + std::max(0., systemTime() - p_->lastDspTime);
-}
-
 const F32 * AudioEngine::outputEnvelope() const
 {
     return &p_->envValues[0];
@@ -117,9 +102,7 @@ const F32 * AudioEngine::outputEnvelope() const
 
 void AudioEngine::seek(SamplePos pos)
 {
-    p_->curSample =
-    p_->lastDspSample = pos;
-    p_->lastDspTime = p_->curSample * p_->conf.sampleRateInv();
+    p_->curSample = pos;
 }
 
 void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf, uint thread)
@@ -242,15 +225,6 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
 
     // advance scene time
     p_->curSample += p_->conf.bufferSize();
-
-    // store last dsp-block time
-    {
-        QWriteLocker lock(&p_->timeLock);
-        p_->lastDspSample = p_->curSample;
-        p_->lastDspTime = systemTime();
-        //MO_PRINT("store " << p_->lastDspSample << " " << p_->lastDspTime);
-    }
-
 }
 
 

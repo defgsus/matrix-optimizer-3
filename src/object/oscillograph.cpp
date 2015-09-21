@@ -203,6 +203,8 @@ void Oscillograph::createParameters()
                                         tr("The 3rd input value for the oscillograph/scope"),
                                         0.0,
                                         0.01, true, true);
+        for (int i=0; i<3; ++i)
+            p_->paramValue[i]->setVisibleGraph(true);
 
         p_->paramAmp = params()->createFloatParameter("oscamp", tr("amplitude"),
                                         tr("The amplitude of the oscillograph/scope"),
@@ -348,6 +350,8 @@ void Oscillograph::onParameterChanged(Parameter *p)
 void Oscillograph::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
+
+    p_->textureSet->updateParameterVisibility();
 
     auto mode = Private::OsciMode(p_->paramMode->baseValue());
     p_->paramWidth->setVisible(mode == Private::O_1D);

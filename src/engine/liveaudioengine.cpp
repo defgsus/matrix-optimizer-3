@@ -8,8 +8,13 @@
     <p>created 02.12.2014</p>
 */
 
+/* define MO_BUFFER_TRICK
+    // to switch to non-working gfx-time-between-audio-blocks solution test */
+
 #include <tuple>
-#include <atomic>
+#ifdef MO_BUFFER_TRICK
+#   include <atomic>
+#endif
 
 #include <QThread>
 #include <QMessageBox>
@@ -47,9 +52,11 @@ public:
 
     Private(LiveAudioEngine * e)
         : parent        (e),
+#ifdef MO_BUFFER_TRICK
+          curSample     (0),
+#endif
           engine        (new AudioEngine()),
           engineChanged (false),
-          curSample     (0),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
@@ -65,6 +72,7 @@ public:
     void updateScene();
     void audioCallback(const F32 *, F32 *, const AUDIO::AudioDevice::StreamTime&);
 
+#ifdef MO_BUFFER_TRICK
     struct BufferTime
     {
         BufferTime() noexcept : sample(0), time(0.) { }
@@ -73,12 +81,14 @@ public:
         Double time;
     };
     std::atomic<BufferTime> lastBuffer;
+    SamplePos curSample;
+#endif
 
     LiveAudioEngine * parent;
     AudioEngine * engine;
     bool engineChanged;
-    SamplePos curSample;
     //Double lastBufferTime;
+    Double startTime, timeOffset;
 
     AUDIO::AudioDevice * audioDevice;
     AUDIO::Configuration defaultConf;
@@ -94,77 +104,6 @@ public:
 
 
 
-
-
-
-#if 0
-// ################################ audio in worker thread #########################################
-
-class AudioEngineInThread : public QThread
-{
-public:
-    AudioEngineInThread(LiveAudioEngine * engine, QObject * parent)
-        : QThread   (parent),
-          engine_   (engine),
-          stop_     (false)
-    {
-
-    }
-
-    /** Blocking stop */
-    void stop() { stop_ = true; wait(); }
-
-    void run()
-    {
-        setCurrentThreadName("AUDIO_IN");
-        MO_DEBUG_AUDIO("AudioInThread::run()");
-#if (0)
-        /*
-        const uint
-                bufferLength = scene_->bufferSize(MO_AUDIO_THREAD),
-                numChannelsIn = scene_->numberChannelsIn(),
-                bufferSize = bufferLength * numChannelsIn,
-                numAhead = scene_->numInputBuffers_;*/
-
-        scene_->audioInQueue_->reset();
-
-        const F32* buf;
-
-        // length of a buffer in microseconds
-        const unsigned long bufferTimeU =
-            1000000 * scene_->bufferSize(MO_AUDIO_THREAD) / scene_->sampleRate();
-
-        while (!stop_)
-        {
-            // XXX sometimes crash on load-new-scene
-            if (scene_->audioInQueue_->consume(buf))
-            {
-                // process audio input
-                if (!scene_->topLevelAudioUnits_.empty())
-                {
-                    // transform api [bufferSize][channels] to [channels][bufferSize]
-                    scene_->transformAudioInput_(buf, MO_AUDIO_THREAD);
-
-                    {
-                        ScopedSceneLockRead lock(scene_);
-                        // process with AudioUnits
-                        scene_->processAudioInput_(MO_AUDIO_THREAD);
-                    }
-                }
-            }
-            else usleep(bufferTimeU);
-        }
-#endif
-        MO_DEBUG_AUDIO("AudioInThread::run() finished");
-    }
-
-private:
-
-    LiveAudioEngine * engine_;
-
-    volatile bool stop_;
-};
-#endif
 
 
 
@@ -315,13 +254,30 @@ Double LiveAudioEngine::second() const
     if (!isPlayback())
         return p_->engine->second();
 
-    /** @todo find concept for gfx time,
-        this returns only the time at the beginning of the dsp buffer */
+    /** @todo find best solution for gfx time between audo dsp-blocks.
+        Naive approach was to store the systemtime when the buffer is send
+        to the audiodevice and use the buffertime + time-since for graphics.
+        Unfortunately it hops back and forth that way. No clue why!
+        Now we use the time since stream start and *slightly* adjust
+        an offset to follow the actual audio time. Since the audio time
+        is hopping (because of irregular buffer-request-times) we only follow
+        *slightly*. That way the times will theoretically stay in sync for hours
+        and days and weeks.. */
+
+#ifdef MO_BUFFER_TRICK
     const Private::BufferTime bt = p_->lastBuffer;
-    return //p_->engine->secondSmooth();
-            bt.sample * config().sampleRateInv()
-            + applicationTime() - bt.time
-            ;
+
+    return bt.sample * config().sampleRateInv()
+           + applicationTime() - bt.time;
+#else
+
+    Double audioTime = p_->engine->second(),
+           time = applicationTime() - p_->startTime;
+    // slowly adjust to audio time
+    p_->timeOffset += 0.0001 * (audioTime - (time + p_->timeOffset));
+
+    return time + p_->timeOffset;
+#endif
 }
 
 const F32 * LiveAudioEngine::outputEnvelope() const
@@ -333,14 +289,17 @@ const F32 * LiveAudioEngine::outputEnvelope() const
 void LiveAudioEngine::seek(SamplePos pos)
 {
     p_->engine->seek(pos);
+#ifdef MO_BUFFER_TRICK
     p_->curSample = pos;
+#else
+    if (isPlayback())
+        p_->startTime = applicationTime() - p_->engine->second();
+#endif
 }
 
 void LiveAudioEngine::seek(Double time)
 {
-    const auto pos = time * p_->engine->config().sampleRate();
-    p_->engine->seek(pos);
-    p_->curSample = pos;
+    seek( SamplePos(time * p_->engine->config().sampleRate()) );
 }
 
 void LiveAudioEngine::setScene(Scene * s, uint thread)
@@ -486,10 +445,12 @@ bool LiveAudioEngine::start()
     // init communication stuff
     p_->audioOutQueue.reset();
 
+#ifdef MO_BUFFER_TRICK
     Private::BufferTime bt;
     bt.sample = pos();
     bt.time = systemTime();
     p_->lastBuffer = bt;
+#endif
 
     // init threads
     /*
@@ -505,7 +466,9 @@ bool LiveAudioEngine::start()
     // start device
     try
     {
+        p_->timeOffset = p_->engine->second();
         p_->audioDevice->start();
+        p_->startTime = applicationTime();
     }
     catch (const Exception& e)
     {
@@ -535,11 +498,17 @@ void LiveAudioEngine::stop()
 }
 
 void LiveAudioEngine::Private::audioCallback(
-        const F32 * in, F32 * out, const AUDIO::AudioDevice::StreamTime &st)
+        const F32 * in, F32 * out, const AUDIO::AudioDevice::StreamTime &
+#ifdef MO_BUFFER_TRICK
+        st
+#endif
+        )
 {
+#ifdef MO_BUFFER_TRICK
     lastBuffer = BufferTime(curSample, applicationTime() + st.outputTime);
     curSample += engine->config().bufferSize();
-    //MO_PRINT("store " << st.inputTime << " " << st.currentTime << " " << st.outputTime);
+    //MO_PRINT("audio callback " << st.inputTime << " " << st.currentTime << " " << st.outputTime);
+#endif
 
     // get input
     audioInQueue.produce(in);
