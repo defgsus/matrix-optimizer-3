@@ -116,7 +116,8 @@ HEADERS += \
     src/gui/widget/assetbrowser.h \
     $$PWD/sswimporter.h \
     $$PWD/propertiesscrollview.h \
-    $$PWD/propertiesview.h
+    $$PWD/propertiesview.h \
+    $$PWD/distancefieldimage.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -232,4 +233,5 @@ SOURCES += \
     src/gui/widget/assetbrowser.cpp \
     $$PWD/sswimporter.cpp \
     $$PWD/propertiesscrollview.cpp \
-    $$PWD/propertiesview.cpp
+    $$PWD/propertiesview.cpp \
+    $$PWD/distancefieldimage.cpp

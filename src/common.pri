@@ -325,7 +325,8 @@ HEADERS += \
     $$PWD/audio/tool/soundfileistream.h \
     $$PWD/io/imagereader.h \
     $$PWD/object/texture/distancemapto.h \
-    $$PWD/object/texture/thresholdto.h
+    $$PWD/object/texture/thresholdto.h \
+    $$PWD/tool/dfdownsampler.h
 
 
 SOURCES += \
@@ -607,4 +608,5 @@ SOURCES += \
     $$PWD/audio/tool/soundfileistream.cpp \
     $$PWD/io/imagereader.cpp \
     $$PWD/object/texture/distancemapto.cpp \
-    $$PWD/object/texture/thresholdto.cpp
+    $$PWD/object/texture/thresholdto.cpp \
+    $$PWD/tool/dfdownsampler.cpp

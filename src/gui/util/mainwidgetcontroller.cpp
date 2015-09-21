@@ -54,6 +54,7 @@
 #include "gui/timelineeditdialog.h"
 #include "gui/audiofilterdialog.h"
 #include "gui/scenedescdialog.h"
+#include "gui/distancefieldimage.h"
 #include "gui/widget/assetbrowser.h"
 #include "gui/widget/objectoutputview.h"
 #ifndef MO_DISABLE_SERVER
@@ -687,6 +688,15 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             BulkRenameDialog diag;
             diag.exec();
+        });
+
+        a = new QAction(tr("Distance field image"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto win = new DistanceFieldImage(window_);
+            win->setAttribute(Qt::WA_DeleteOnClose, true);
+            win->show();
         });
 
         a = new QAction(tr("StyleSheet editor"), m);
