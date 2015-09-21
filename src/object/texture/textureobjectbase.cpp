@@ -237,6 +237,8 @@ void TextureObjectBase::PrivateTO::createParameters()
         p_split = to->params()->createIntParameter("to_split", tr("segments"),
                                     tr("Split rendering of the output into separate regions for better gui response"),
                                     1, 1, 4096, 1, true, false);
+        /** @todo fix split/segmentation in TextureObjectBase */
+        p_split->setZombie(true);
 
         p_texFormat = to->params()->createTextureFormatParameter("to_format", tr("texture format"),
                                                     tr("The channel format of the output texture"));
@@ -362,7 +364,8 @@ const GL::Texture * TextureObjectBase::valueTexture(uint , Double , uint ) const
 
 void TextureObjectBase::initGl(uint ) { p_to_->initGl(); }
 void TextureObjectBase::releaseGl(uint ) { p_to_->releaseGl(); }
-GL::ScreenQuad * TextureObjectBase::createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames)
+GL::ScreenQuad * TextureObjectBase::createShaderQuad(
+        const GL::ShaderSource& src, const QList<QString>& texNames)
 {
     p_to_->createShaderQuad(src, texNames);
     return p_to_->shaderQuads.back().quad;

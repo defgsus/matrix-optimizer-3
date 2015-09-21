@@ -117,9 +117,9 @@ void DistanceMapTO::Private::createParameters()
 
         p_invert = to->params()->createBooleanParameter("invert", tr("invert"),
                                 tr("Invert the selection"),
-                                tr("Off"),
-                                tr("On"),
-                                false, true, true);
+                                tr("No inversion"),
+                                tr("Invert selection"),
+                                false, true, false);
 
         p_distance = to->params()->createIntParameter(
                     "distance", tr("max. distance"),
@@ -220,17 +220,18 @@ void DistanceMapTO::Private::renderGl(const GL::RenderSettings& , uint thread, D
 {
     // update uniforms
 
+    const Float
+            r = p_r->value(time, thread),
+            g = p_g->value(time, thread),
+            b = p_b->value(time, thread),
+            a = p_a->value(time, thread);
+
     if (u_color)
-    {
-        u_color->setFloats( p_r->value(time, thread),
-                            p_g->value(time, thread),
-                            p_b->value(time, thread),
-                            p_a->value(time, thread));
-    }
+        u_color->setFloats( r, g, b, a );
 
     if (u_settings)
         u_settings->setFloats(
-                            p_thresh->value(time, thread) * 4.
+                            p_thresh->value(time, thread) * (r + g + b + a)
                             );
 
     uint texSlot = 0;

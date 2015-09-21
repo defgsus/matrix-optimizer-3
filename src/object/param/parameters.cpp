@@ -763,17 +763,16 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
 int Parameters::getTexFormat(int format, int type)
 {
     // 8-bit float is default on openGL (i presume)
-    if (type == gl::GL_RGBA && format != gl::GL_R)
+    if (type == gl::GL_RGBA && format != gl::GL_RED)
         return format;
 
     switch (gl::GLenum(format))
     {
-        case gl::GL_R:
-            /** @ŧodo work out single channel texture formats/types */
+        case gl::GL_RED:
             switch (gl::GLenum(type))
             {
-                case gl::GL_RGBA: return (int)gl::GL_INTENSITY8;
-                case gl::GL_RGBA16F: return (int)gl::GL_INTENSITY8;
+                case gl::GL_RGBA: return (int)gl::GL_R8;
+                case gl::GL_RGBA16F: return (int)gl::GL_R16F;
                 case gl::GL_RGBA32F: return (int)gl::GL_R32F;
                 default: break;
             }
@@ -820,19 +819,24 @@ ParameterSelect * Parameters::createTextureFormatParameter(
     QList<int> values;
     if (minChan <= 1 && 1 <= maxChan)
     {
-        values << (int)gl::GL_R; ids << "R"; names << "R"; tips << "";
+        values << (int)gl::GL_RED; ids << "R";
+        names << QObject::tr("R");
+        tips << QObject::tr("Red channel");
     }
     if (minChan <= 2 && 2 <= maxChan)
     {
-        values << (int)gl::GL_RG; ids << "RG"; names << "RG"; tips << "";
+        values << (int)gl::GL_RG; ids << "RG"; names << "RG";
+        tips << QObject::tr("Red and green channels");
     }
     if (minChan <= 3 && 3 <= maxChan)
     {
-        values << (int)gl::GL_RGB; ids << "RGB"; names << "RGB"; tips << "";
+        values << (int)gl::GL_RGB; ids << "RGB"; names << "RGB";
+        tips << QObject::tr("Full red-green-blue channels");
     }
     if (minChan <= 4 && 4 <= maxChan)
     {
-        values << (int)gl::GL_RGBA; ids << "RGBA"; names << "RGBA"; tips << "";
+        values << (int)gl::GL_RGBA; ids << "RGBA"; names << "RGBA";
+        tips << QObject::tr("Full red-green-blue channels + alpha");
     }
     MO_ASSERT(values.size(), "wrong channel limit in Object("
               << object()->idName() << ")::createTextureFormatParameter()");

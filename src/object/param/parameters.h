@@ -198,7 +198,7 @@ public:
 
     ParameterSelect * createTextureFormatParameter(
                 const QString& id, const QString& name, const QString& statusTip,
-                int minChan = 2, int maxChan = 4);
+                int minChan = 1, int maxChan = 4);
     ParameterSelect * createTextureTypeParameter(
                 const QString& id, const QString& name, const QString& statusTip);
     /** Combines the two values from texture format and type parameters and
