@@ -20,6 +20,42 @@
 #include "io/error.h"
 
 
+/** Executes the command and calls glGetError() and
+    throws GlException on error. */
+#define MO_CHECK_GL_THROW(command__)            \
+{                                               \
+    command__;                                  \
+    ::gl::GLenum err__(::gl::glGetError());     \
+    if (err__ != ::gl::GL_NO_ERROR)             \
+    {                                           \
+        MO_GL_ERROR("opengl error "             \
+            << ::MO::GL::errorName(err__)       \
+            << " for command "                  \
+            << #command__                       \
+            << " in " << __FILE__               \
+            << ": " << __LINE__);               \
+    }                                           \
+}
+
+/** Executes the command and calls glGetError() and
+    throws GlException on error, adds text__ (stream arguments) */
+#define MO_CHECK_GL_THROW_TEXT(command__, text__)\
+{                                               \
+    command__;                                  \
+    ::gl::GLenum err__(::gl::glGetError());     \
+    if (err__ != ::gl::GL_NO_ERROR)             \
+    {                                           \
+        MO_GL_ERROR("opengl error "             \
+            << ::MO::GL::errorName(err__)       \
+            << " for command "                  \
+            << #command__                       \
+            << " in " << __FILE__               \
+            << ": " << __LINE__ << "\n"         \
+            << text__);                         \
+    }                                           \
+}
+
+
 #ifndef NDEBUG
 /** Executes the command and calls glGetError() and
     prints the error, if any. */
@@ -44,100 +80,7 @@
 
 
 
-#ifndef NDEBUG
-/** Executes the command and calls glGetError().
-    On an error, report__ (of type MO::GL::ErrorReporting)
-    will define what happens. */
-#define MO_CHECK_GL_COND(report__, command__)   \
-{                                               \
-    command__;                                  \
-    ::gl::GLenum err__ = ::gl::glGetError();    \
-    if (err__ != ::gl::GL_NO_ERROR)             \
-    {                                           \
-        std::stringstream s__;                  \
-        s__ << "OPENGL ERROR "                  \
-            << ::MO::GL::errorName(err__)       \
-            << " for command "                  \
-            << #command__                       \
-            << " in " << __FILE__               \
-            << ": " << __LINE__;                \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__.str()              \
-                      << std::endl; else        \
-        if (report__ == ::MO::GL::ER_THROW)     \
-            MO_GL_ERROR(s__.str());             \
-    }                                           \
-}
-#else
-#define MO_CHECK_GL_COND(report__, command__)   \
-{                                               \
-    command__;                                  \
-    ::gl::GLenum err__ = ::gl::glGetError();    \
-    if (err__ != ::gl::GL_NO_ERROR)             \
-    {                                           \
-        std::stringstream s__;                  \
-        s__ << "OPENGL ERROR "                  \
-            << ::MO::GL::errorName(err__)       \
-            << " for command "                  \
-            << #command__;                      \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__.str()              \
-                      << std::endl; else        \
-        if (report__ == ::MO::GL::ER_THROW)     \
-            MO_GL_ERROR(s__.str());             \
-    }                                           \
-}
-#endif
 
-#ifndef NDEBUG
-/** Executes the command, calls glGetError() and returns
-    the error in ret__.
-    On an error, report__ (of type MO::GL::ErrorReporting)
-    will define what happens. */
-#define MO_CHECK_GL_RET_COND(report__, command__, ret__) \
-{                                               \
-    command__;                                  \
-    ret__ = ::gl::glGetError();                 \
-    if (ret__ != ::gl::GL_NO_ERROR)             \
-    {                                           \
-        std::stringstream s__;                  \
-        s__ << "opengl error "                  \
-            << ::MO::GL::errorName(ret__)       \
-            << " for command "                  \
-            << #command__                       \
-            << " in " << __FILE__               \
-            << ": " << __LINE__;                \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__.str()              \
-                      << std::endl; else        \
-        if (report__ == ::MO::GL::ER_THROW)     \
-            MO_GL_ERROR(s__.str());             \
-    }                                           \
-}
-#else
-/** Executes the command, calls glGetError() and returns
-    the error in ret__.
-    On an error, report__ (of type MO::GL::ErrorReporting)
-    will define what happens. */
-#define MO_CHECK_GL_RET_COND(report__, command__, ret__) \
-{                                               \
-    command__;                                  \
-    ret__ = ::gl::glGetError();                 \
-    if (ret__ != ::gl::GL_NO_ERROR)             \
-    {                                           \
-        std::stringstream s__;                  \
-        s__ << "opengl error "                  \
-            << ::MO::GL::errorName(ret__)       \
-            << " for command "                  \
-            << #command__;                      \
-        if (report__ == ::MO::GL::ER_IGNORE)    \
-            std::cerr << s__.str()              \
-                      << std::endl; else        \
-        if (report__ == ::MO::GL::ER_THROW)     \
-            MO_GL_ERROR(s__.str());             \
-    }                                           \
-}
-#endif
 
 
 #ifndef NDEBUG

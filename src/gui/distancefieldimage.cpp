@@ -216,7 +216,7 @@ void DistanceFieldImage::saveOutputImage()
     p_->saveImage(fn);
 }
 
-void DistanceFieldImage::threadFinsihed_()
+void DistanceFieldImage::threadFinished_()
 {
     p_->getImage();
 }
@@ -260,7 +260,7 @@ void DistanceFieldImage::Private::render()
     if (!thread)
     {
         thread = new DFDownsampler(win);
-        connect(thread, SIGNAL(finished()), win, SLOT(threadFinsihed_()), Qt::QueuedConnection);
+        connect(thread, SIGNAL(finished()), win, SLOT(threadFinished_()), Qt::QueuedConnection);
         connect(thread, SIGNAL(progressChanged(float)),
                 win, SLOT(setProgress_(float)), Qt::QueuedConnection);
     }

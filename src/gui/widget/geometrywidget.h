@@ -31,6 +31,7 @@ public:
     bool isShowTexture() const { return showTexture_; }
     bool isShowNormalMap() const { return showNormalMap_; }
     bool isShowLights() const { return showLights_; }
+    bool isShowWireframe() const { return showWireframe_; }
     int pointsize() const { return pointsize_; }
 
     // access to light settings
@@ -46,6 +47,7 @@ public slots:
     void setShowTexture(bool enable) { showTexture_ = enable; update(); }
     void setShowNormalMap(bool enable) { showNormalMap_ = enable; update(); }
     void setShowLights(bool enable) { showLights_ = enable; update(); }
+    void setShowWireframe(bool enable) { showWireframe_ = enable; update(); }
     void setPointsize(int size) { pointsize_ = size; update(); }
 
 protected:
@@ -65,7 +67,8 @@ protected:
     GL::Drawable * drawable_;
     GL::Texture * tex_, * texNorm_;
     GL::LightSettings * lights_;
-    bool showGrid_, showTexture_, showNormalMap_, showLights_;
+    bool showGrid_, showTexture_, showNormalMap_, showLights_,
+         showWireframe_;
     int pointsize_;
 };
 

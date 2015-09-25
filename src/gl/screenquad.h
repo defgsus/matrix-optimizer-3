@@ -27,7 +27,7 @@ namespace GL {
 class ScreenQuad
 {
 public:
-    ScreenQuad(const QString& name, ErrorReporting reporting = ER_THROW);
+    ScreenQuad(const QString& name);
     ~ScreenQuad();
 
     /** Returns true when opengl resources are allocated. */
@@ -37,7 +37,8 @@ public:
         @note Must be called before create() and works only with default shader. */
     void setAntialiasing(uint samples);
 
-    bool create(const QString& defines = QString())
+    /** @throws GlException */
+    void create(const QString& defines = QString())
         { return create(":/shader/framebufferdraw.vert", ":/shader/framebufferdraw.frag",
                         defines); }
 
@@ -45,8 +46,8 @@ public:
         If @p geom != 0, it will be used as the quad geometry and is
         expected to be in the range of [-1,1], orthogonal to the z-plane.
         Ownership is taken.
-        If @p text*/
-    bool create(const QString& vertexFile,
+        @throws GlException */
+    void create(const QString& vertexFile,
                 const QString& fragmentFile,
                 const QString& defines = QString(),
                 GEOM::Geometry * geom = 0);
@@ -54,24 +55,28 @@ public:
     /** Creates the opengl resources.
         If @p geom != 0, it will be used as the quad geometry and is
         expected to be in the range of [-1,1], orthogonal to the z-plane.
-        Ownership of @p src and @p geom is taken */
-    bool create(ShaderSource * src,
+        Ownership of @p src and @p geom is taken.
+        @throws GlException */
+    void create(ShaderSource * src,
                 GEOM::Geometry * geom = 0);
 
     void release();
 
     /** Draws a quad across the whole view area [-1,1].
-        The width and height of view need to be given for antialiasing */
-    bool draw(uint w, uint h, uint splits = 1);
+        The width and height of view need to be given for antialiasing.
+        @throws GlException */
+    void draw(uint w, uint h, uint splits = 1);
 
     /** Draws a quadratic quad into the view area given by @p w and @p h.
-        The quad will be centered correctly, if @p w != @p h */
-    bool drawCentered(uint w, uint h);
+        The quad will be centered correctly, if @p w != @p h.
+        @throws GlException */
+    void drawCentered(uint w, uint h);
 
     /** Draws a quad scaled to the size 1.0 x @p aspect into the
         view area given by @p w and @p h.
-        The quad will be centered correctly, if @p w != @p h */
-    bool drawCentered(uint screen_w, uint screen_h, Float aspect);
+        The quad will be centered correctly, if @p w != @p h.
+        @throws GlException */
+    void drawCentered(uint screen_w, uint screen_h, Float aspect);
 
     // ----------- getter -----------
 
@@ -82,7 +87,6 @@ public:
 
 private:
     QString name_;
-    ErrorReporting rep_;
     Drawable * quad_;
     uint antialias_;
     Uniform * u_resolution_;

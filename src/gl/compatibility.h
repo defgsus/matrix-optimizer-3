@@ -43,6 +43,7 @@ public:
 
     /** Is smoothed lines possible */
     bool canLineSmooth,
+         canPolygonSmooth,
     /** Is line-width possible at all (tested) */
          canLineWidth,
     /** Is this a mesa driver? */
@@ -76,6 +77,9 @@ public:
 
     /** Enables or disables GL_LINE_SMOOTH */
     void setLineSmooth(bool enable);
+
+    /** Enables or disables GL_POLYGON_SMOOTH */
+    void setPolygonSmooth(bool enable);
 
     /** Sets the line-width */
     void setLineWidth(gl::GLfloat width);

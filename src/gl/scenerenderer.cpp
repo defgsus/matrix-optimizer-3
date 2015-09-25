@@ -49,11 +49,10 @@ QSurfaceFormat SceneRenderer::defaultFormat()
 
     format.setVersion(3, 3);
 
-#ifdef __APPLE__
+#ifdef MO_USE_OPENGL_CORE
     format.setProfile(QSurfaceFormat::CoreProfile);
 #else
-    //format.setProfile(QSurfaceFormat::CompatibilityProfile);
-    format.setProfile(QSurfaceFormat::CoreProfile);
+    format.setProfile(QSurfaceFormat::CompatibilityProfile);
 #endif
 
     return format;

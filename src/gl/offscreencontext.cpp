@@ -84,25 +84,19 @@ bool OffscreenContext::createGl()
     return true;
 }
 
-bool OffscreenContext::destroyGl()
+void OffscreenContext::destroyGl()
 {
     if (!p_os_surface_)
-        return false;
+        return;
 
     p_os_surface_->destroy();
-
-    return true;
 }
 
-bool OffscreenContext::finish()
+void OffscreenContext::finish()
 {
-    gl::GLenum err;
-
-    MO_CHECK_GL_RET_COND(ER_IGNORE, gl::glFlush(), err);
-    MO_CHECK_GL_RET_COND(ER_IGNORE, gl::glFinish(), err);
+    MO_CHECK_GL( gl::glFlush() );
+    MO_CHECK_GL( gl::glFinish() );
     qcontext()->swapBuffers(qsurface());
-
-    return err == gl::GL_NO_ERROR;
 }
 
 } // namespace GL

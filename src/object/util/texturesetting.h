@@ -45,7 +45,7 @@ public:
     };
 
     /** Creates a texture setting for the given Object */
-    explicit TextureSetting(Object *parent, GL::ErrorReporting = GL::ER_THROW);
+    explicit TextureSetting(Object *parent);
     ~TextureSetting();
 
     // -------------- io ---------------
@@ -105,29 +105,30 @@ public:
     /** Creates or queries the texture, depending on the texture type.
         Does nothing if type is TT_NONE.
         @warning Calling initGl() and releaseGl() out of logical order
-        leads to undefined behaviour. */
-    bool initGl();
+        leads to undefined behaviour.
+        @throws GlException */
+    void initGl();
+
     /** Releases the texture.
         @warning Calling initGl() and releaseGl() out of logical order
         leads to undefined behaviour. */
     void releaseGl();
 
     /** Binds the texture to the given slot.
-        Does nothing if type is TT_NONE */
-    bool bind(uint slot = 0);
+        Does nothing if type is TT_NONE.
+        @throws GlException */
+    void bind(uint slot = 0);
 
 protected slots:
 
-    bool setTextureFromImage_(const QString& fn);
-    bool setTextureFromAS_(const QString& script);
-    bool updateCameraFbo_();
-    bool updateSceneFbo_();
+    void setTextureFromImage_(const QString& fn);
+    void setTextureFromAS_(const QString& script);
+    void updateCameraFbo_();
+    void updateSceneFbo_();
 
 private:
 
     Object * object_;
-
-    GL::ErrorReporting rep_;
 
     GL::Texture * texture_;
     const GL::Texture * constTexture_;

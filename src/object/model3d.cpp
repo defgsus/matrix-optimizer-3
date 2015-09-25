@@ -127,6 +127,14 @@ void Model3d::createParameters()
                                      tr("The model will always be centered around the camera position, like a skybox"),
                                      false, true, false);
 
+        paramPolySmooth_ = params()->createBooleanParameter(
+                    "polysmooth", tr("antialiased polygons"),
+                    tr("Should polygons be drawn with smoothed edges"),
+                    tr("The polygons are drawn edgy"),
+                    tr("The polygons are drawn smoothly"),
+                    false,
+                    true, false);
+
         paramLineSmooth_ = params()->createBooleanParameter(
                     "linesmooth", tr("antialiased lines"),
                     tr("Should lines be drawn with smoothed edges"),
@@ -834,6 +842,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
     MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
 
+    /** @todo glPolygonMode(GL_FRONT, GL_LINE); */
+
     Mat4 trans = transformation();
     Mat4 cubeViewTrans, viewTrans;
     if (fixPosition_->baseValue() == 0)
@@ -927,6 +937,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         // draw state
 
         GL::Properties::staticInstance().setLineSmooth(paramLineSmooth_->value(time, thread) != 0);
+        GL::Properties::staticInstance().setPolygonSmooth(paramPolySmooth_->value(time, thread) != 0);
         GL::Properties::staticInstance().setLineWidth(paramLineWidth_->value(time, thread));
         GL::Properties::staticInstance().setPointSize(paramPointSize_->value(time, thread));
 
@@ -945,6 +956,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         else
             MO_CHECK_GL( gl::glDisable(gl::GL_PROGRAM_POINT_SIZE) );
 
+        //MO_CHECK_GL( glPolygonMode(gl::GL_FRONT, gl::GL_LINE) );
+
         // render the thing
 
         draw_->renderShader(rs.cameraSpace().projectionMatrix(),
@@ -953,6 +966,14 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                             trans,
                             &rs.lightSettings(),
                             time, numDup);
+
+        //MO_CHECK_GL( glPolygonMode(gl::GL_FRONT, gl::GL_FILL) );
+
+        // XXX disable here so we don't change any other painter's state
+        if (paramLineSmooth_->baseValue())
+            GL::Properties::staticInstance().setLineSmooth(false);
+        if (paramPolySmooth_->baseValue())
+            GL::Properties::staticInstance().setPolygonSmooth(false);
     }
     else
         MO_DEBUG_MODEL("Model3d::renderGl: drawable not ready");

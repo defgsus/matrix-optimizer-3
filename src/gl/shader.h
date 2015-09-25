@@ -152,7 +152,7 @@ public:
     // ---------------- ctor -----------------
 
     /** @p name is a user defined name, mainly for help with debugging */
-    Shader(const QString& name, ErrorReporting report = ER_THROW);
+    Shader(const QString& name);
     ~Shader();
 
     // ----------- query ---------------------
@@ -230,25 +230,30 @@ public:
 
     /** Tries to compile the shader.
         Any previous program will be destroyed but the values of uniforms are kept.
-        @returns true on success, also sets ready() to true. */
-    bool compile();
+        @returns true on success, also sets ready() to true.
+        @throws GlException */
+    void compile();
 
     // ------------ usage --------------------
 
     /** Activates the shader. Subsequent OpenGL calls will
-        be affected by the shader's workings. */
+        be affected by the shader's workings.
+        @throws GlException */
     void activate();
 
-    /** Turns the shader off. */
+    /** Turns the shader off.
+        @throws GlException */
     void deactivate();
 
     /** Sets the GPU-value of the uniform to the contents provided by
         the @p uniform parameter.
-        @note The shader must be activated. */
+        @note The shader must be activated.
+        @throws GlException */
     void sendUniform(const Uniform * uniform);
 
     /** Sends all uniform values to the GPU.
-        @note The shader must be activated. */
+        @note The shader must be activated.
+        @throws GlException */
     void sendUniforms();
 
     /** Releases GPU resources. */
@@ -270,15 +275,13 @@ private:
     void getAttributes_();
 
     /** Compiles one of the vertex/fragment shaders and attaches to current programObject */
-    bool compileShader_(gl::GLenum type, ProgramType pt, const QString& typeName, const QString& source);
+    void compileShader_(gl::GLenum type, ProgramType pt, const QString& typeName, const QString& source);
 
     /** Appends @p msg to log_ and msg_ */
     void addMessage_(ProgramType pt, const QString& msg);
 
     /** Appends messages to msg_ */
     void parseLog_(const QString& log, ProgramType pt);
-
-    ErrorReporting rep_;
 
     ShaderSource * source_;
 

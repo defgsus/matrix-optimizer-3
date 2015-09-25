@@ -28,9 +28,8 @@ long int Texture::memory_used_ = 0;
 
 namespace { static std::atomic_uint_fast64_t tex_count_(0); }
 
-Texture::Texture(ErrorReporting report)
-    :   rep_            (report),
-        ptr_			(0),
+Texture::Texture()
+    :   ptr_			(0),
         ptr_px_         (0),
         ptr_nx_         (0),
         ptr_py_         (0),
@@ -57,9 +56,8 @@ Texture::Texture(ErrorReporting report)
 Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                  gl::GLenum format, gl::GLenum input_format,
                  gl::GLenum type, void *ptr_to_data,
-                 ErrorReporting report)
-    : rep_          (report),
-      ptr_			(ptr_to_data),
+                 bool multiSampling)
+    : ptr_			(ptr_to_data),
       ptr_px_         (0),
       ptr_nx_         (0),
       ptr_py_         (0),
@@ -72,7 +70,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       depth_          (0),
       memory_ 		(0),
       handle_		(invalidGl),
-      target_		(GL_TEXTURE_2D),
+      target_		(multiSampling ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D),
       format_		(format),
       input_format_	(input_format),
       type_			(type),
@@ -86,10 +84,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
 
 Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                  gl::GLenum format, gl::GLenum input_format,
-                 gl::GLenum type, void *ptr_to_data,
-                 ErrorReporting report)
-    : rep_          (report),
-      ptr_			(ptr_to_data),
+                 gl::GLenum type, void *ptr_to_data)
+    : ptr_			(ptr_to_data),
       ptr_px_         (0),
       ptr_nx_         (0),
       ptr_py_         (0),
@@ -119,10 +115,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                  gl::GLenum type,
                  void * ptr_px, void * ptr_nx,
                  void * ptr_py, void * ptr_ny,
-                 void * ptr_pz, void * ptr_nz,
-                 ErrorReporting report)
-    : rep_          (report),
-      ptr_			(0),
+                 void * ptr_pz, void * ptr_nz)
+    : ptr_			(0),
       ptr_px_       (ptr_px),
       ptr_nx_       (ptr_nx),
       ptr_py_       (ptr_py),
@@ -161,15 +155,15 @@ Texture * Texture::constructFrom(const Texture * t)
     if (t->isCube())
         c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
-                           t->type(), 0,0,0,0,0,0, t->rep_);
+                           t->type(), 0,0,0,0,0,0);
     else if (t->is3d())
         c = new Texture(t->width(), t->height(), t->depth(),
                            t->format(), t->input_format_,
-                           t->type(), 0, t->rep_);
+                           t->type(), 0);
     else
         c = new Texture(t->width(), t->height(),
                            t->format(), t->input_format_,
-                           t->type(), 0, t->rep_);
+                           t->type(), 0, t->isMultiSample());
 
     c->name_ += t->name() + "(copy)";
     return c;
@@ -186,7 +180,12 @@ bool Texture::is3d() const
     return target_ == gl::GL_TEXTURE_3D;
 }
 
-bool Texture::create(gl::GLsizei width,
+bool Texture::isMultiSample() const
+{
+    return target_ == gl::GL_TEXTURE_2D_MULTISAMPLE;
+}
+
+void Texture::create(gl::GLsizei width,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data)
@@ -213,17 +212,13 @@ bool Texture::create(gl::GLsizei width,
     ptr_pz_ =
     ptr_nz_ = 0;
 
-    if (!bind())
-    {
-        MO_GL_WARNING("Could not bind 1D-texture for creation");
-        return false;
-    }
+    MO_EXTEND_EXCEPTION(bind(), "Could not bind 1D-texture for creation");
 
-    return upload_(ptr_, 0);
+    upload_(ptr_, 0);
 }
 
 
-bool Texture::create(gl::GLsizei width, gl::GLsizei height,
+void Texture::create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data)
@@ -251,16 +246,12 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height,
     ptr_pz_ =
     ptr_nz_ = 0;
 
-    if (!bind())
-    {
-        MO_GL_WARNING("Could not bind 2D-texture for creation");
-        return false;
-    }
+    MO_EXTEND_EXCEPTION(bind(), "Could not bind 2D-texture for creation");
 
-    return upload_(ptr_, 0);
+    upload_(ptr_, 0);
 }
 
-bool Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
+void Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data)
@@ -288,17 +279,13 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
     ptr_pz_ =
     ptr_nz_ = 0;
 
-    if (!bind())
-    {
-        MO_GL_WARNING("Could not bind 3D-texture for creation");
-        return false;
-    }
+    MO_EXTEND_EXCEPTION(bind(), "Could not bind 3D-texture for creation");
 
-    return upload_(ptr_, 0);
+    upload_(ptr_, 0);
 }
 
 
-bool Texture::create(gl::GLsizei width, gl::GLsizei height,
+void Texture::create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void * ptr_px, void * ptr_nx,
@@ -329,10 +316,9 @@ bool Texture::create(gl::GLsizei width, gl::GLsizei height,
     ptr_ny_ = ptr_ny;
     ptr_nz_ = ptr_nz;
 
-    if (!bind())
-        return false;
+    MO_EXTEND_EXCEPTION(bind(), "Could not bind texture for creation");
 
-    return upload_(ptr_, 0);
+    upload_(ptr_, 0);
 }
 
 
@@ -343,10 +329,9 @@ GLuint Texture::genTexture_() const
 
     GLuint tex;
 
-    GLenum err;
-    MO_CHECK_GL_RET_COND( rep_, glGenTextures(1, &tex), err );
+    MO_CHECK_GL_THROW( glGenTextures(1, &tex) );
 
-    return err == GL_NO_ERROR ? tex : invalidGl;
+    return tex;
 }
 
 void Texture::releaseTexture_()
@@ -355,7 +340,7 @@ void Texture::releaseTexture_()
 
     if (!isHandle()) return;
 
-    MO_CHECK_GL_COND( rep_, glDeleteTextures(1, &handle_) );
+    MO_CHECK_GL_THROW( glDeleteTextures(1, &handle_) );
 
     handle_ = invalidGl;
 
@@ -369,16 +354,11 @@ void Texture::releaseTexture_()
 
 // ---------------------- public interface ------------------------
 
-bool Texture::bind() const
+void Texture::bind() const
 {
     //MO_DEBUG_IMG("Texture::bind(" << target_ << ", " << handle_ << ")");
 
-    GLenum err;
-    MO_CHECK_GL_RET_COND( rep_, glBindTexture(target_, handle_), err );
-    if (err != GL_NO_ERROR)
-        return false;
-
-    return err == GL_NO_ERROR;
+    MO_CHECK_GL_THROW( glBindTexture(target_, handle_) );
 }
 
 
@@ -389,10 +369,13 @@ void Texture::release()
 
 void Texture::setTexParameter(GLenum param, GLint value) const
 {
-    MO_CHECK_GL_COND( rep_, glTexParameteri(target_, param, value) );
+    MO_CHECK_GL_THROW_TEXT( glTexParameteri(target_, param, value),
+                            "target_=" << target_
+                            << ", param=" << param
+                            << ", value=" << value);
 }
 
-bool Texture::create()
+void Texture::create()
 {
     MO_DEBUG_IMG("Texture::create()");
 
@@ -401,83 +384,69 @@ bool Texture::create()
         releaseTexture_();
 
     handle_ = genTexture_();
-    if (handle_ == invalidGl)
-    {
-        MO_GL_WARNING("genTexture_() failed");
-        return false;
-    }
-
-    if (!bind())
-    {
-        MO_GL_WARNING("bind of texture before creation failed");
-        return false;
-    }
+    bind();
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
-        return upload_(ptr_, 0);
+        upload_(ptr_, 0);
     else
     {
-        if (!upload_(ptr_px_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) return false;
-        if (!upload_(ptr_nx_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) return false;
-        if (!upload_(ptr_py_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) return false;
-        if (!upload_(ptr_ny_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) return false;
-        if (!upload_(ptr_pz_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) return false;
-        return upload_(ptr_nz_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        upload_(ptr_px_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        upload_(ptr_nx_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+        upload_(ptr_py_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+        upload_(ptr_ny_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        upload_(ptr_pz_, 0, GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+        upload_(ptr_nz_, 0, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
     }
 }
 
 
-bool Texture::upload(gl::GLint mipmap_level)
+void Texture::upload(gl::GLint mipmap_level)
 {
     MO_DEBUG_IMG("Texture::upload(mipmap=" << mipmap_level << ")");
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
-        return upload_(ptr_, mipmap_level);
+        upload_(ptr_, mipmap_level);
     else
     {
-        if (!upload_(ptr_px_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) return false;
-        if (!upload_(ptr_nx_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) return false;
-        if (!upload_(ptr_py_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) return false;
-        if (!upload_(ptr_ny_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) return false;
-        if (!upload_(ptr_pz_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) return false;
-        return upload_(ptr_nz_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        upload_(ptr_px_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        upload_(ptr_nx_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+        upload_(ptr_py_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+        upload_(ptr_ny_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        upload_(ptr_pz_, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+        upload_(ptr_nz_, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
     }
 }
 
-bool Texture::upload(void * ptr, gl::GLint mipmap_level)
+void Texture::upload(void * ptr, gl::GLint mipmap_level)
 {
     MO_DEBUG_IMG("Texture::upload(" << ptr << ", mipmap=" << mipmap_level << ")");
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
-        return upload_(ptr, mipmap_level);
+        upload_(ptr, mipmap_level);
     else
     {
-        if (!upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_X)) return false;
-        if (!upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_X)) return false;
-        if (!upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Y)) return false;
-        if (!upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y)) return false;
-        if (!upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Z)) return false;
-        return upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_X);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Y);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_POSITIVE_Z);
+        upload_(ptr, mipmap_level, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z);
     };
 }
 
-bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
+void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 {
     MO_DEBUG_IMG("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level
                 << ", cubetgt=" << cube_target << ")");
 
     if (!isHandle())
-    {
-        if (rep_ == ER_THROW)
-            MO_GL_ERROR("Texture::upload() on uninitialized Texture");
-        return false;
-    }
+        MO_GL_ERROR("Texture::upload() on uninitialized Texture");
 
-    GLenum err;
     switch (target_)
     {
         case GL_TEXTURE_1D:
-            MO_CHECK_GL_RET_COND( rep_,
+
+            MO_CHECK_GL_THROW(
             gl::glTexImage1D(
                 target_,
                 // mipmap level
@@ -493,9 +462,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // data type
                 type_,
                 // pixel data
-                ptr)
-            , err);
-            if (err != GL_NO_ERROR) return false;
+                ptr));
 
             // count memory
             if (!uploaded_)
@@ -509,7 +476,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
         case GL_TEXTURE_2D:
 
-            MO_CHECK_GL_RET_COND( rep_,
+            MO_CHECK_GL_THROW(
             gl::glTexImage2D(
                 target_,
                 // mipmap level
@@ -525,14 +492,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // data type
                 type_,
                 // ptr
-                ptr)
-            , err);
-
-            if (err != GL_NO_ERROR)
-            {
-                MO_GL_WARNING("Texture::upload_() failed");
-                return false;
-            }
+                ptr));
 
             if (!uploaded_)
             {
@@ -543,9 +503,33 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
         break;
 
+        case GL_TEXTURE_2D_MULTISAMPLE:
+
+            MO_CHECK_GL_THROW(
+            gl::glTexImage2DMultisample(
+                target_,
+                // samples
+                4,
+                // color components
+                format_,
+                // size
+                width_, height_,
+                // fixed-samples?
+                GL_TRUE));
+
+            if (!uploaded_)
+            {
+                uploaded_ = true;
+                memory_ = width_ * height_ * GL::channelSize(format_) * GL::typeSize(type_)
+                                * 4 * 4;
+                memory_used_ += memory_;
+            }
+
+        break;
+
         case GL_TEXTURE_3D:
 
-            MO_CHECK_GL_RET_COND( rep_,
+            MO_CHECK_GL_THROW(
             gl::glTexImage3D(
                 target_,
                 // mipmap level
@@ -561,14 +545,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // data type
                 type_,
                 // ptr
-                ptr)
-            , err);
-
-            if (err != GL_NO_ERROR)
-            {
-                MO_GL_WARNING("Texture::upload_() failed");
-                return false;
-            }
+                ptr));
 
             if (!uploaded_)
             {
@@ -582,7 +559,7 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
         case GL_TEXTURE_CUBE_MAP:
 
-            MO_CHECK_GL_RET_COND( rep_,
+            MO_CHECK_GL_THROW(
             gl::glTexImage2D(
                 cube_target,
                 // mipmap level
@@ -598,11 +575,9 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // data type
                 type_,
                 // ptr
-                ptr);
-            , err)
-            if (err != GL_NO_ERROR) return false;
+                ptr));
 
-            // XXX fix memory count for cubemap
+            /** @todo fix memory count for cubemap */
             if (!uploaded_)
             {
                 uploaded_ = true;
@@ -612,26 +587,29 @@ bool Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         break;
 
         default:
-            MO_GL_WARNING("Unhandled texture target " << (int)target_ << " in Texture::create_()");
+            MO_GL_ERROR("Unhandled texture target " << (int)target_ << " in Texture::create_()");
         break;
     }
 
-    setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
-    setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+    if (!isMultiSample())
+    {
+        setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
+        setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
 
-    // XXX needs to be true for TEXTURE_CUBE_MAP
-    bool repeat = true;
-    setTexParameter(GL_TEXTURE_WRAP_S, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
-    setTexParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+        // XXX needs to be true for TEXTURE_CUBE_MAP
+        bool repeat = true;
+        setTexParameter(GL_TEXTURE_WRAP_S, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+        setTexParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
+    }
 
     MO_DEBUG_IMG("Texture::upload_() finished");
 
     // bind again to check for errors
-    return bind();
+    bind();
 }
 
 
-bool Texture::download(void * ptr, GLuint mipmap) const
+void Texture::download(void * ptr, GLuint mipmap) const
 {
     MO_DEBUG_IMG("Texture::download(" << ptr << ")");
 
@@ -641,26 +619,25 @@ bool Texture::download(void * ptr, GLuint mipmap) const
     if (target_ != GL_TEXTURE_CUBE_MAP)
     {
         if (ptr) ptr = ptr_;
-        return download_(ptr, mipmap, target_, type_);
+        download_(ptr, mipmap, target_, type_);
     }
 
-    if (!download_(ptr_px_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_X, type_)) return false;
-    if (!download_(ptr_nx_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, type_)) return false;
-    if (!download_(ptr_py_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, type_)) return false;
-    if (!download_(ptr_ny_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, type_)) return false;
-    if (!download_(ptr_pz_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, type_)) return false;
-    return download_(ptr_nz_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, type_);
+    download_(ptr_px_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_X, type_);
+    download_(ptr_nx_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_X, type_);
+    download_(ptr_py_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Y, type_);
+    download_(ptr_ny_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y, type_);
+    download_(ptr_pz_, mipmap, GL_TEXTURE_CUBE_MAP_POSITIVE_Z, type_);
+    download_(ptr_nz_, mipmap, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z, type_);
 }
 
-bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const
+void Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const
 {
     MO_DEBUG_IMG("Texture::download_(" << ptr << ", " << mipmap
                  << ", " << target << ", " << type << ")");
 
     MO_ASSERT(ptr, "download from texture to NULL");
 
-    GLenum err;
-    MO_CHECK_GL_RET_COND( rep_,
+    MO_CHECK_GL_THROW(
         glGetTexImage(
             target,
             // mipmap level
@@ -671,12 +648,10 @@ bool Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) c
             type,
             // data
             ptr)
-        , err);
-
-    return (err != GL_NO_ERROR);
+        );
 }
 
-bool Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) const
+void Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) const
 {
     MO_DEBUG_IMG("Texture::download(" << ptr << ", " << format
                  << ", " << type << ", " << mipmap << ")");
@@ -684,8 +659,7 @@ bool Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) co
     MO_ASSERT(ptr, "download from texture to NULL");
     MO_ASSERT(target_ != GL_TEXTURE_CUBE_MAP, "download of cubemap to single goal undefined");
 
-    GLenum err;
-    MO_CHECK_GL_RET_COND( rep_,
+    MO_CHECK_GL_THROW(
         glGetTexImage(
             target_,
             // mipmap level
@@ -696,9 +670,7 @@ bool Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) co
             type,
             // data
             ptr)
-        , err);
-
-    return (err != GL_NO_ERROR);
+    );
 }
 
 
@@ -725,7 +697,7 @@ QImage Texture::toQImage() const
     //float * buffer = (float*) aligned_alloc(32, width() * height() * 4);
 
     GLenum err;
-    MO_CHECK_GL_RET_COND( rep_,
+    MO_CHECK_GL_THROW(
         glGetTexImage(
             target_,
             // mipmap level
@@ -736,10 +708,7 @@ QImage Texture::toQImage() const
             GL_FLOAT,
             // data
             &buffer[0])
-        , err);
-
-    if (err != GL_NO_ERROR)
-        return QImage();
+        );
 
     QImage img(width(), height(), QImage::Format_RGB32);
 
@@ -753,8 +722,6 @@ QImage Texture::toQImage() const
                          255 * std::max(0.f, std::min(1.f, pix[2] ))
                          ));
     }
-
-    //free(buffer);
 
     return img;
 }
@@ -836,20 +803,18 @@ Texture * Texture::createFromImage(const QImage & input_img, gl::GLenum gpu_form
 }
 #endif
 
-Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, ErrorReporting rep)
+Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format)
 {
     MO_DEBUG_IMG("Texture::createFromQImage(" << &img << ", " << gpu_format << ")");
 
     if (img.isNull())
     {
-        MO_GL_ERROR_COND(rep, "createFromImage() with NULL qimage");
-        return 0;
+        MO_GL_ERROR("createFromImage() with NULL qimage");
     }
 
     if (img.width() == 0 || img.height() == 0 )
     {
-        MO_GL_ERROR_COND(rep, "createFromImage() with empty qimage");
-        return 0;
+        MO_GL_ERROR("createFromImage() with empty qimage");
     }
 
     // determine texture format from image format
@@ -863,13 +828,12 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
     // create and bind
     Texture * tex = new Texture(
                 img.width(), img.height(),
-                gpu_format, iformat, itype, 0, rep);
+                gpu_format, iformat, itype, 0);
     tex->name_ += "_from_img";
 
     std::unique_ptr<Texture> texDel(tex);
 
-    if (!tex->create())
-        return 0;
+    tex->create();
 
     // upload image data
 
@@ -890,8 +854,7 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
         }
 
         // create empty texture
-        GLenum err;
-        MO_CHECK_GL_RET_COND( rep,
+        MO_CHECK_GL_THROW(
         gl::glTexImage2D(
             tex->target_,
             // mipmap level
@@ -908,46 +871,34 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, Er
             itype,
             // ptr
             0)
-        , err);
-        if (err != GL_NO_ERROR)
-            return 0;
-
+        );
+        
         // upload line-by-line
         // 'cause Qt stores it's images upside-down
         for (int i=0; i<img.height(); ++i)
         {
-            MO_CHECK_GL_RET_COND( rep,
+            MO_CHECK_GL_THROW(
                 gl::glTexSubImage2D(tex->target_, 0,
-                                    0, i, img.width(), 1,
-                                    iformat, itype,
-                                    pimg->constScanLine(img.height()-1-i))
-                                  , err);
-            if (err != GL_NO_ERROR)
-            {
-                tex->release();
-                return 0;
-            }
+                                0, i, img.width(), 1,
+                                iformat, itype,
+                                pimg->constScanLine(img.height()-1-i))
+                        );
         }
 
     }
     catch (Exception & e)
     {
-        if (rep == ER_THROW)
-        {
-            e << "\non creating texture from image " << img.width() << "x" << img.height();
-            if (tex->isHandle())
-                tex->release();
-            throw;
-        }
-        else
-            return 0;
+        if (tex->isHandle())
+            tex->release();
+        e << "\non creating texture from image " << img.width() << "x" << img.height();
+        throw;
     }
 
     return texDel.release();
 }
 
 
-Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format, ErrorReporting rep)
+Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format)
 {
     ImageReader reader;
     reader.setFilename(filename);
@@ -955,12 +906,11 @@ Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_forma
     QImage img = reader.read();
     if (img.isNull())
     {
-        MO_GL_ERROR_COND(rep, "Could not load image file\n'"
+        MO_GL_ERROR("Could not load image file\n'"
                          << filename << "'\n'" << reader.errorString() << "'");
-        return 0;
     }
 
-    return createFromImage(img, gpu_format, rep);
+    return createFromImage(img, gpu_format);
 }
 
 } // namespace GL

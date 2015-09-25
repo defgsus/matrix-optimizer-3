@@ -31,35 +31,30 @@ public:
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            bool cubemap = false,
-            ErrorReporting reporting = ER_THROW);
+            bool cubemap = false, bool multiSample = false);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
-            bool cubemap = false,
-            ErrorReporting reporting = ER_THROW);
+            bool cubemap = false, bool multiSample = false);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false,
-            ErrorReporting reporting = ER_THROW);
+            bool cubemap = false, bool multiSample = false);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false,
-            ErrorReporting reporting = ER_THROW);
+            bool cubemap = false, bool multiSample = false);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false,
-            ErrorReporting reporting = ER_THROW);
+            bool cubemap = false, bool multiSample = false);
 
     ~FrameBufferObject();
 
@@ -72,7 +67,7 @@ public:
     bool isCreated() const { return fbo_ != invalidGl; }
 
     /** If true, the color-texture is a texture cube */
-    bool isCubemap() const { return cubemap_; }
+    bool isCubemap() const { return isCubemap_; }
 
     uint width() const;
     uint height() const;
@@ -102,14 +97,17 @@ public:
 
     // ------------ opengl interface -------------
 
-    bool bind();
+    /** @throws GlException */
+    void bind();
+    /** @throws GlException */
     void unbind();
 
     /** Creates the framebuffer, renderbuffer and color-texture
-        as previously defined. */
-    bool create();
+        as previously defined.
+        @throws GlException */
+    void create();
 
-    /** Releases the opengl resources */
+    /** Releases the opengl resources. */
     void release();
 
     /** Replaces the current color texture with @p t and returns the unused texture.
@@ -120,15 +118,18 @@ public:
     /** Attach one of the cubemap textures to the colorbuffer.
         @p target is of type GL_TEXTURE_CUBE_MAP_[POSITIVE|NEGATIVE]_[X|Y|Z].
         Prior, create() must have been successfully called and
-        the framebuffer object must be in cubemap mode. */
-    bool attachCubeTexture(gl::GLenum target, uint index = 0);
+        the framebuffer object must be in cubemap mode.
+        @throws GlException */
+    void attachCubeTexture(gl::GLenum target, uint index = 0);
 
     /** Downloads the color texture from the device.
-        NOT available for cubemap textures. */
-    bool downloadColorTexture(void * ptr, uint index = 0);
-    bool downloadDepthTexture(void * ptr);
+        NOT available for cubemap textures.
+        @throws GlException*/
+    void downloadColorTexture(void * ptr, uint index = 0);
+    void downloadDepthTexture(void * ptr);
 
-    /** Convenience function sets opengl viewport to (0,0, width, height) */
+    /** Convenience function sets opengl viewport to (0,0, width, height).
+        @throws GlException */
     void setViewport() const;
 
 private:
@@ -136,15 +137,13 @@ private:
     /** Releases the fbo, rbo and texture */
     void release_();
 
-    ErrorReporting rep_;
-
     std::vector<Texture*> colorTex_;
     Texture * depthTex_;
 
     gl::GLuint fbo_, rbo_;
 
     int attachments_;
-    bool cubemap_;
+    bool isCubemap_, isMultiSample_;
 
     QString name_;
 };

@@ -105,18 +105,25 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
         // create resampler
         if (!texRender_)
         {
-            texRender_ = new GL::TextureRenderer(imgSize_.width(), imgSize_.height(), GL::ER_IGNORE);
+            texRender_ = new GL::TextureRenderer(imgSize_.width(), imgSize_.height() );
         }
 
-        // gl-resize
-        if (texRender_->render(tex, true))
-        // download image
-        if (auto stex = texRender_->texture())
-        if (stex->bind())
+        try
         {
-            QImage img = stex->toQImage();
-            label->setPixmap(QPixmap::fromImage(img));
-            return;
+            // gl-resize
+            texRender_->render(tex, true);
+            // download image
+            if (auto stex = texRender_->texture())
+            {
+                stex->bind();
+                QImage img = stex->toQImage();
+                label->setPixmap(QPixmap::fromImage(img));
+                return;
+            }
+        }
+        catch (const Exception& e)
+        {
+            MO_WARNING("In ObjectOutputView: " << e.what());
         }
 
         // set black

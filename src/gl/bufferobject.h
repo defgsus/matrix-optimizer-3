@@ -19,10 +19,11 @@ namespace MO {
 namespace GL {
 
 
+/** Wrapper around an OpenGL Buffer Object */
 class BufferObject
 {
 public:
-    BufferObject(const QString& name, ErrorReporting rep);
+    BufferObject(const QString& name);
     ~BufferObject();
 
     // ---------------- getter ------------------
@@ -37,25 +38,32 @@ public:
 
     // ------------ opengl ----------------------
 
-    /** @p target is one of GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, etc.. */
-    bool create(gl::GLenum target, gl::GLenum storageType);
+    /** @p target is one of GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER, etc..
+        @throws GlException */
+    void create(gl::GLenum target, gl::GLenum storageType);
 
-    bool release();
+    void release();
 
-    bool bind();
-    bool unbind();
+    /** @throws GlException */
+    void bind();
+    /** @throws GlException */
+    void unbind();
 
-    /** Uploads the buffer data.
-        Buffer must be bound. */
-    bool upload(const void * ptr, gl::GLsizeiptr sizeInBytes);
+    /** Uploads the given buffer data.
+        Stores the pointer and size.
+        Buffer must be bound.
+        @throws GlException */
+    void upload(const void * ptr, gl::GLsizeiptr sizeInBytes);
 
-    /** Uploads to previously defined size.
-        Buffer must be bound. */
-    bool upload(const void* ptr);
+    /** Uploads to previously defined size with new pointer.
+        Buffer must be bound.
+        @throws GlException */
+    void upload(const void* ptr);
 
-    /** Uploads to previously defined size and resets storage.
-        Buffer must be bound. */
-    bool upload(const void* ptr, gl::GLenum storage);
+    /** Uploads to previously defined size with new pointer and storage type.
+        Buffer must be bound.
+        @throws GlException */
+    void upload(const void* ptr, gl::GLenum storageType);
 
 private:
 
@@ -63,7 +71,6 @@ private:
     gl::GLsizeiptr p_size_;
     gl::GLenum p_target_, p_storage_;
     QString p_name_;
-    ErrorReporting p_rep_;
 };
 
 

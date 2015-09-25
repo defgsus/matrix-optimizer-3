@@ -272,6 +272,16 @@ void GeometryDialog::createMainWidgets_()
                 lh2 = new QHBoxLayout();
                 lv->addLayout(lh2);
 
+                    cb = new QCheckBox(tr("wireframe"), this);
+                    lh2->addWidget(cb);
+                    cb->setChecked(geoWidget_->isShowWireframe());
+                    connect(cb, &QCheckBox::stateChanged, [this](int state)
+                    {
+                        geoWidget_->setShowWireframe(state == Qt::Checked);
+                    });
+
+                    lh2->addStretch();
+
                     auto label = new QLabel(tr("pointsize"), this);
                     lh2->addWidget(label);
 

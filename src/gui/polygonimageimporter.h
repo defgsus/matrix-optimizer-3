@@ -5,43 +5,42 @@
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 9/21/2015</p>
+    <p>created 9/22/2015</p>
 */
 
-#ifndef MOSRC_GUI_DISTANCEFIELDIMAGE_H
-#define MOSRC_GUI_DISTANCEFIELDIMAGE_H
+#ifndef MOSRC_GUI_POLYGONIMAGEIMPORTER_H
+#define MOSRC_GUI_POLYGONIMAGEIMPORTER_H
 
-#include <QMainWindow>
+#include <QDialog>
 
 namespace MO {
 namespace GUI {
 
 /** Dialog to downsample high-resoluton monochrome graphics
     via distance-field technique */
-class DistanceFieldImage : public QMainWindow
+class PolygonImageImporter : public QDialog
 {
     Q_OBJECT
 public:
-    DistanceFieldImage(QWidget * parent, Qt::WindowFlags f = 0);
-    ~DistanceFieldImage();
+    PolygonImageImporter(QWidget * parent, Qt::WindowFlags f = 0);
+    ~PolygonImageImporter();
 
     bool isChanged() const;
 
+
 public slots:
 
-    void loadSourceImage();
+    void loadSHP();
+    void render();
     void saveOutputImage();
-    void start();
-    void stop();
-
-private slots:
-
-    void threadFinished_();
-    void setProgress_(float);
 
 protected:
 
     void closeEvent(QCloseEvent*);
+
+private slots:
+
+    void setProgress_(int);
 
 private:
 
@@ -53,5 +52,4 @@ private:
 } // namespace GUI
 } // namespace MO
 
-
-#endif // MOSRC_GUI_DISTANCEFIELDIMAGE_H
+#endif // MOSRC_GUI_POLYGONIMAGEIMPORTER_H

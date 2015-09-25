@@ -65,7 +65,7 @@ gl::GLuint typeSize(gl::GLenum t)
         case GL_2_BYTES: return 2*sizeof(GLbyte);
         case GL_3_BYTES: return 3*sizeof(GLbyte);
         case GL_4_BYTES: return 4*sizeof(GLbyte);
-        default: return 0;
+        default: return 1;
     }
 }
 
@@ -104,7 +104,7 @@ gl::GLuint channelSize(gl::GLenum channel_format)
         case GL_RGBA32F:	return 4;
 
         default:
-            return 0;
+            return 1;
     }
 }
 

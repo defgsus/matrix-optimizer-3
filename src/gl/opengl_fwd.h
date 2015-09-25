@@ -18,12 +18,6 @@ namespace MO {
 
 namespace GL {
 
-    enum ErrorReporting
-    {
-        ER_IGNORE,
-        ER_THROW
-    };
-
     // some forwards
     class BufferObject;
     class Context;

@@ -16,6 +16,9 @@
 #include <functional>
 
 #include <QString>
+#include <QRectF>
+
+class QPolygonF;
 
 namespace MO {
 namespace GEOM {
@@ -50,6 +53,11 @@ public:
         Previous contents will be kept. */
     void getGeometry(Geometry *,
                      std::function<void(double)> progressFunc = 0) const;
+
+    /** Returns the polygon data loaded from the SHP file. */
+    void getPolygons(QVector<QPolygonF>& poly);
+
+    QRectF getBoundingRect() const;
 
     /** [0,100] */
     double progress() const;

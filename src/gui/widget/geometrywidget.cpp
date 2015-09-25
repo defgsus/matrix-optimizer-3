@@ -36,6 +36,7 @@ GeometryWidget::GeometryWidget(RenderMode mode, QWidget *parent) :
     showTexture_    (settings()->value("GeometryWidget/showTexture", false).toBool()),
     showNormalMap_  (settings()->value("GeometryWidget/showNormalMap", false).toBool()),
     showLights_     (settings()->value("GeometryWidget/showLights", false).toBool()),
+    showWireframe_  (settings()->value("GeometryWidget/showWireframe", false).toBool()),
     pointsize_      (settings()->value("GeometryWidget/pointsize", 4).toInt())
 {
     setMinimumSize(128, 128);
@@ -66,6 +67,7 @@ GeometryWidget::~GeometryWidget()
     settings()->setValue("GeometryWidget/showTexture", showTexture_);
     settings()->setValue("GeometryWidget/showNormalMap", showNormalMap_);
     settings()->setValue("GeometryWidget/showLights", showLights_);
+    settings()->setValue("GeometryWidget/showWireframe", showWireframe_);
     settings()->setValue("GeometryWidget/pointsize", pointsize_);
 
     delete drawable_;
@@ -122,7 +124,7 @@ void GeometryWidget::drawGL(const Mat4& projection,
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0));
             tex_ = GL::Texture::createFromImage(
                     QImage(":/texture/default_texture.png"),
-                    GL_RGB, GL::ER_IGNORE);
+                    GL_RGB);
             recompile = true;
         }
     }
@@ -145,8 +147,7 @@ void GeometryWidget::drawGL(const Mat4& projection,
             /** @todo nice normalmap in geometrywidget */
             //ImageGenerator::createNormalmap(&norm, &img);
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0 + 1));
-            texNorm_ = GL::Texture::createFromImage(
-                        norm, GL_RGB, GL::ER_IGNORE);
+            texNorm_ = GL::Texture::createFromImage(norm, GL_RGB);
             MO_CHECK_GL(glActiveTexture(GL_TEXTURE0));
             recompile = true;
         }
@@ -201,7 +202,16 @@ void GeometryWidget::drawGL(const Mat4& projection,
     if (drawable_->isReady())
     {
         setLights_(showLights_ ? 0.8f : 0.f, glm::inverse(viewTrans));
+
+        if (showWireframe_)
+            MO_CHECK_GL( glPolygonMode(gl::GL_FRONT_AND_BACK, gl::GL_LINE) );
+
         drawable_->renderShader(projection, cubeViewTrans, viewTrans, trans, lights_);
+
+        // set state back
+        if (showWireframe_)
+            MO_CHECK_GL( glPolygonMode(gl::GL_FRONT_AND_BACK, gl::GL_FILL) );
+
     }
 }
 

@@ -37,9 +37,9 @@ public slots:
         Returns false when something went wrong. */
     bool createGl();
 
-    bool destroyGl();
+    void destroyGl();
 
-    bool finish();
+    void finish();
 
 signals:
 

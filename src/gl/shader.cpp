@@ -62,9 +62,8 @@ Attribute::Attribute()
 { }
 
 
-Shader::Shader(const QString &name, ErrorReporting report)
-    : rep_                (report),
-      source_             (new ShaderSource()),
+Shader::Shader(const QString &name)
+    : source_             (new ShaderSource()),
       name_               (name.isEmpty()? "unnamed" : name),
       prog_               (-1),
       sourceChanged_      (false),
@@ -79,13 +78,13 @@ Shader::~Shader()
     MO_DEBUG_GL("Shader(" << name_ << ")::~Shader()");
 
     if (ready())
-        MO_WARNING("delete of shader object with bound resources!");
+        MO_WARNING("delete of shader object with bound resources - OpenGL resource leak");
 }
 
 void Shader::setSource(const ShaderSource * s)
 {
     if (s->isEmpty())
-        MO_GL_ERROR_COND(rep_, "Shader(" << name_ << ")::setSource() with empty source");
+        MO_GL_ERROR( "Shader(" << name_ << ")::setSource() with empty source" );
 
     *source_ = *s;
     sourceChanged_ = true;
@@ -104,7 +103,7 @@ Uniform * Shader::getUniform(const QString &name, bool expect)
             return u;
 
     if (expect)
-        MO_GL_ERROR_COND(rep_,
+        MO_GL_ERROR(
             "Uniform '" << name << "' expected but not found in Shader(" << name_ << ")");
 
     return 0;
@@ -124,7 +123,7 @@ const Attribute * Shader::getAttribute(const QString &name) const
     return 0;
 }
 
-bool Shader::compile()
+void Shader::compile()
 {
     // init state
     ready_ = false;
@@ -137,31 +136,29 @@ bool Shader::compile()
     attributeList_.clear();
 
     // delete previous shader object
-    MO_CHECK_GL_COND(rep_, if (glIsProgram(prog_)==GL_TRUE) glDeleteProgram(prog_) );
+    MO_CHECK_GL_THROW( if (glIsProgram(prog_)==GL_TRUE) glDeleteProgram(prog_) );
 
     // create shader object
-    MO_CHECK_GL_COND(rep_, prog_ = glCreateProgram() );
+    MO_CHECK_GL_THROW( prog_ = glCreateProgram() );
 
     // test if working
     if (glIsProgram(prog_) == GL_FALSE)
     {
         log_ += "could not create ProgramObject\n";
-        return false;
+        MO_GL_ERROR("Could not create ProgramObject");
     }
 
     // compile the vertex shader
-    if (!compileShader_(GL_VERTEX_SHADER, P_VERTEX, "vertex shader", source_->vertexSource()))
-        return false;
+    compileShader_(GL_VERTEX_SHADER, P_VERTEX, "vertex shader", source_->vertexSource());
 
     // compile the fragment shader
-    if (!compileShader_(GL_FRAGMENT_SHADER, P_FRAGMENT, "fragment shader", source_->fragmentSource()))
-        return false;
+    compileShader_(GL_FRAGMENT_SHADER, P_FRAGMENT, "fragment shader", source_->fragmentSource());
 
     // link program object
-    MO_CHECK_GL_COND(rep_, glLinkProgram(prog_) );
+    MO_CHECK_GL_THROW( glLinkProgram(prog_) );
 
     GLint linked;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_LINK_STATUS, &linked) );
+    MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_LINK_STATUS, &linked) );
     if (!linked)
     {
         addMessage_(P_LINKER, "shader programm link error");
@@ -174,11 +171,11 @@ bool Shader::compile()
     {
         GLint blen = 0;
         GLsizei slen = 0;
-        MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_INFO_LOG_LENGTH , &blen) );
+        MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_INFO_LOG_LENGTH , &blen) );
         if (blen > 1)
         {
             std::vector<GLchar> compiler_log(blen+1);
-            MO_CHECK_GL_COND(rep_, glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
+            MO_CHECK_GL_THROW( glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
             log_ += "linker log:\n" + QString(&compiler_log[0]) + "\n";
         }
     }
@@ -186,7 +183,7 @@ bool Shader::compile()
     if (!linked)
     {
         //MO_DEBUG(source_->vertexSource() << "\n\n" << source_->fragmentSource() << "\n\n");
-        return false;
+        return;
     }
 
     getUniforms_();
@@ -195,27 +192,27 @@ bool Shader::compile()
     // keep copy of previous uniforms
     oldUniforms_ = uniforms_;
 
-    return ready_ = true;
+    ready_ = true;
 }
 
 
-bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName, const QString &source)
+void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName, const QString &source)
 {
     if (source.isEmpty())
-        return false;
+        return;
 
     int shadername;
-    MO_CHECK_GL_COND(rep_, shadername = glCreateShader(type) );
+    MO_CHECK_GL_THROW( shadername = glCreateShader(type) );
     if (glIsShader(shadername) == GL_FALSE)
     {
         addMessage_(pt, "error creating " + typeName + " ShaderObject");
-        return false;
+        MO_GL_ERROR("Error creating " + typeName + " ShaderObject");
     }
 
     // get the latin1 char source
     // NOTE: QString::toStdString() is a temporary, we can't just
     // take the pointer to it because the pointed-at memory might
-    // have been deallocated already.
+    // get deallocated before use.
     // This is the totally safe way.
     // (unless the driver tries a buffer overflow attack :)
     std::vector<GLchar> src(source.size()+1);
@@ -224,14 +221,14 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     psrc[0] = &src[0];
 
     // attach source
-    MO_CHECK_GL_COND(rep_, glShaderSource(shadername, 1, psrc, 0) );
+    MO_CHECK_GL_THROW( glShaderSource(shadername, 1, psrc, 0) );
     // compile
-    MO_CHECK_GL_COND(rep_, glCompileShader(shadername) );
+    MO_CHECK_GL_THROW( glCompileShader(shadername) );
 
     // check compile status
-    bool compiled = false;
+    //bool compiled = false;
     GLint cc;
-    MO_CHECK_GL_COND(rep_, glGetShaderiv(shadername, GL_COMPILE_STATUS, &cc); )
+    MO_CHECK_GL_THROW( glGetShaderiv(shadername, GL_COMPILE_STATUS, &cc); )
     if (!cc)
     {
         log_ += typeName + " compile ERROR\n";
@@ -239,17 +236,17 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     else
     {
         log_ += typeName + " compiled..\n";
-        compiled = true;
+        //compiled = true;
     }
 
     // get compiler log
     GLint blen = 0;
     GLsizei slen = 0;
-    MO_CHECK_GL_COND(rep_, glGetShaderiv(shadername, GL_INFO_LOG_LENGTH, &blen) );
+    MO_CHECK_GL_THROW( glGetShaderiv(shadername, GL_INFO_LOG_LENGTH, &blen) );
     if (blen > 1)
     {
         std::vector<GLchar> compiler_log(blen+1);
-        MO_CHECK_GL_COND(rep_, glGetShaderInfoLog(shadername, blen, &slen, &compiler_log[0]) );
+        MO_CHECK_GL_THROW( glGetShaderInfoLog(shadername, blen, &slen, &compiler_log[0]) );
         QString log = QString(&compiler_log[0]);
         parseLog_(log, pt);
         log_ += "compiler log:\n" + log + "\n";
@@ -257,9 +254,7 @@ bool Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     }
 
     // attach to programObject
-    MO_CHECK_GL_COND(rep_, glAttachShader(prog_, shadername) );
-
-    return compiled;
+    MO_CHECK_GL_THROW( glAttachShader(prog_, shadername) );
 }
 
 void Shader::addMessage_(ProgramType pt, const QString &msg)
@@ -302,7 +297,7 @@ void Shader::activate()
     if (!ready())
         return;
 
-    MO_CHECK_GL_COND(rep_, glUseProgram(prog_) );
+    MO_CHECK_GL_THROW( glUseProgram(prog_) );
     activated_ = true;
 }
 
@@ -311,7 +306,7 @@ void Shader::deactivate()
     // TODO:
     // On OSX this gives GL_INVALID_OPERATION
     // although the spec says that's the way to do it
-    MO_CHECK_GL_COND(rep_, glUseProgram(0) );
+    MO_CHECK_GL_THROW( glUseProgram(0) );
     activated_ = false;
 }
 
@@ -320,11 +315,11 @@ void Shader::getUniforms_()
 {
     // get number of used uniforms
     GLint numu;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_UNIFORMS, &numu) );
+    MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_ACTIVE_UNIFORMS, &numu) );
 
     // get max length of variable names
     GLint labelLength;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &labelLength) );
+    MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &labelLength) );
 
     // don't expose these to user
     QStringList specialUniforms;// XXX = appsettings()->getShaderUniforms();
@@ -337,7 +332,7 @@ void Shader::getUniforms_()
         // plain old char* strings always need a bit of extra code ..
         GLsizei length;
         std::vector<GLchar> name(labelLength);
-        MO_CHECK_GL_COND(rep_,
+        MO_CHECK_GL_THROW(
             glGetActiveUniform(prog_, i, name.size(), &length, &u->size_, &u->type_, &name[0])
             );
         name.resize(length);
@@ -356,9 +351,9 @@ void Shader::getUniforms_()
             u->autoSend_ = false;
 
         // get location of uniform
-        MO_CHECK_GL_COND(rep_, u->location_ = glGetUniformLocation(prog_, &name[0]) );
+        MO_CHECK_GL_THROW( u->location_ = glGetUniformLocation(prog_, &name[0]) );
 
-        //MO_CHECK_GL_COND(rep_, glGetUniformBlockIndex())
+        //MO_CHECK_GL_THROW( glGetUniformBlockIndex())
 
         // keep in list
         uniforms_.push_back(std::shared_ptr<Uniform>(u, privateUniformDeleter));
@@ -384,11 +379,11 @@ void Shader::getAttributes_()
 {
     // get number of used uniforms
     GLint num;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTES, &num) );
+    MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTES, &num) );
 
     // get max length of variable names
     GLint labelLength;
-    MO_CHECK_GL_COND(rep_, glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &labelLength) );
+    MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_ACTIVE_ATTRIBUTE_MAX_LENGTH, &labelLength) );
 
     // get each attributes
     for (int i=0; i<num; ++i)
@@ -398,14 +393,14 @@ void Shader::getAttributes_()
         // plain old char* strings always need a bit of extra code ..
         GLsizei length;
         std::vector<GLchar> name(labelLength);
-        MO_CHECK_GL_COND(rep_,
+        MO_CHECK_GL_THROW(
             glGetActiveAttrib(prog_, i, name.size(), &length, &a->size_, &a->type_, &name[0])
             );
         name.resize(length);
         a->name_ = QString(&name[0]);
 
         // find location of attribute
-        MO_CHECK_GL_COND(rep_, a->location_ = glGetAttribLocation(prog_, &name[0]) );
+        MO_CHECK_GL_THROW( a->location_ = glGetAttribLocation(prog_, &name[0]) );
 
         // keep in list
         attribs_.push_back(std::shared_ptr<Attribute>(a, privateAttributeDeleter));
@@ -429,45 +424,45 @@ void Shader::sendUniform(const Uniform * u)
     {
     case GL_SAMPLER_2D:
     case GL_INT:
-        MO_CHECK_GL_COND(rep_, glUniform1i(u->location_, u->ints[0]) );
+        MO_CHECK_GL_THROW( glUniform1i(u->location_, u->ints[0]) );
     break;
 
     case GL_INT_VEC2:
-        MO_CHECK_GL_COND(rep_, glUniform2i(u->location_, u->ints[0], u->ints[1]) );
+        MO_CHECK_GL_THROW( glUniform2i(u->location_, u->ints[0], u->ints[1]) );
     break;
     case GL_INT_VEC3:
-        MO_CHECK_GL_COND(rep_, glUniform3i(u->location_, u->ints[0], u->ints[1], u->ints[2]) );
+        MO_CHECK_GL_THROW( glUniform3i(u->location_, u->ints[0], u->ints[1], u->ints[2]) );
     break;
     case GL_INT_VEC4:
-        MO_CHECK_GL_COND(rep_, glUniform4i(u->location_, u->ints[0], u->ints[1], u->ints[2], u->ints[3]) );
+        MO_CHECK_GL_THROW( glUniform4i(u->location_, u->ints[0], u->ints[1], u->ints[2], u->ints[3]) );
     break;
 
     case GL_FLOAT:
-        MO_CHECK_GL_COND(rep_, glUniform1f(u->location_, u->floats[0]) );
+        MO_CHECK_GL_THROW( glUniform1f(u->location_, u->floats[0]) );
     break;
     case GL_FLOAT_VEC2:
-        MO_CHECK_GL_COND(rep_, glUniform2f(u->location_, u->floats[0], u->floats[1]) );
+        MO_CHECK_GL_THROW( glUniform2f(u->location_, u->floats[0], u->floats[1]) );
     break;
     case GL_FLOAT_VEC3:
-        MO_CHECK_GL_COND(rep_, glUniform3f(u->location_, u->floats[0], u->floats[1], u->floats[2]) );
+        MO_CHECK_GL_THROW( glUniform3f(u->location_, u->floats[0], u->floats[1], u->floats[2]) );
     break;
     case GL_FLOAT_VEC4:
         //MO_DEBUG_GL(activated_ << "," << u->location_ << "," << u->floats[0] << ","
         //                << u->floats[1] << "," << u->floats[2] << "," << u->floats[3]);
-        MO_CHECK_GL_COND(rep_, glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
+        MO_CHECK_GL_THROW( glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
     break;
 
     case GL_FLOAT_MAT2:
-        MO_CHECK_GL_COND(rep_, glUniformMatrix2fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        MO_CHECK_GL_THROW( glUniformMatrix2fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
     break;
 
     case GL_FLOAT_MAT3:
-        MO_CHECK_GL_COND(rep_, glUniformMatrix3fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        MO_CHECK_GL_THROW( glUniformMatrix3fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
     break;
 
     case GL_FLOAT_MAT4:
         //for (int i=0; i<16; ++i) MO_DEBUG(u->floats[i]);
-        MO_CHECK_GL_COND(rep_, glUniformMatrix4fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        MO_CHECK_GL_THROW( glUniformMatrix4fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
     break;
 
     default:
@@ -488,7 +483,7 @@ void Shader::sendUniforms()
 
 void Shader::releaseGL()
 {
-    MO_CHECK_GL_COND(rep_, glDeleteProgram(prog_) );
+    MO_CHECK_GL( glDeleteProgram(prog_) );
     ready_ = activated_ = false;
 }
 

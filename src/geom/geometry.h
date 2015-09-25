@@ -39,6 +39,9 @@ public:
     typedef gl::GLfloat TextureCoordType;
     typedef gl::GLuint  IndexType;
     typedef gl::GLfloat AttributeType;
+#ifndef MO_DISABLE_EDGEFLAG
+    typedef gl::GLboolean EdgeFlagType;
+#endif
 
     static const IndexType invalidIndex = (IndexType)-1;
 
@@ -128,10 +131,14 @@ public:
     const TextureCoordType * textureCoords() const { return &texcoord_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     const IndexType * triangleIndices() const { return &triIndex_[0]; }
-    /** Returns a pointer to numTriangles() * 3 indices */
+    /** Returns a pointer to numLines() * 2 indices */
     const IndexType * lineIndices() const { return &lineIndex_[0]; }
-    /** Returns a pointer to numTriangles() * 3 indices */
+    /** Returns a pointer to numPoints() indices */
     const IndexType * pointIndices() const { return &pointIndex_[0]; }
+#ifndef MO_DISABLE_EDGEFLAG
+    /** Returns a pointer to numTriangles() * 3 flags */
+    const EdgeFlagType * edgeFlags() const { return &edgeFlags_[0]; }
+#endif
 
     int numVertexBytes() const { return vertex_.size() * sizeof(VertexType); }
     int numNormalBytes() const { return normal_.size() * sizeof(NormalType); }
@@ -140,6 +147,9 @@ public:
     int numTriangleIndexBytes() const { return triIndex_.size() * sizeof(IndexType); }
     int numLineIndexBytes() const { return lineIndex_.size() * sizeof(IndexType); }
     int numPointIndexBytes() const { return pointIndex_.size() * sizeof(IndexType); }
+#ifndef MO_DISABLE_EDGEFLAG
+    int numEdgeFlagBytes() const { return edgeFlags_.size() * sizeof(EdgeFlagType); }
+#endif
 
     IndexType triangleIndex(uint triangleIndex, uint cornerIndex) const
         { return triIndex_[triangleIndex * numTriangleIndexComponents() + cornerIndex]; }
@@ -206,8 +216,14 @@ public:
     TextureCoordType * textureCoords() { return &texcoord_[0]; }
     /** Returns a pointer to numTriangles() * 3 indices */
     IndexType * triangleIndices() { return &triIndex_[0]; }
-    /** Returns a pointer to numTriangles() * 3 indices */
+    /** Returns a pointer to numLines() * 2 indices */
     IndexType * lineIndices() { return &lineIndex_[0]; }
+    /** Returns a pointer to numPoints() indices */
+    IndexType * pointIndices() { return &pointIndex_[0]; }
+#ifndef MO_DISABLE_EDGEFLAG
+    /** Returns a pointer to numTriangles() * 3 flags */
+    EdgeFlagType * edgeFlags() { return &edgeFlags_[0]; }
+#endif
 
     /** Adds a float attribute with @p numComponents per vertex. */
     UserAttribute * addAttribute(const QString& name, unsigned int numComponents);
@@ -236,6 +252,14 @@ public:
         addVertex() will use this coords. */
     void setTexCoord(TextureCoordType u, TextureCoordType v)
         { curU_ = u; curV_ = v; }
+
+#ifndef MO_DISABLE_EDGEFLAG
+    /** Sets the current edge flag.
+        Any subsequent call to the easy form of
+        addTriangle() will use this coords. */
+    void setEdgeFlag(EdgeFlagType e) { curEdge_ = e; }
+    void setEdgeFlag(bool e) { curEdge_ = e ? gl::GL_TRUE : gl::GL_FALSE; }
+#endif
 
     /** Sets the current attribute. Any subsequent call to addVertex() will use this attribute. */
     void setAttribute(const QString& name, AttributeType x);
@@ -296,11 +320,19 @@ public:
 
     /** Connects three previously created indices to form a triangle. */
     void addTriangle(IndexType p1, IndexType p2, IndexType p3);
-    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
-
     /** Connects three previously created indices to form a triangle.
         Uses checkTriangle() to discard degenerate triangles. */
     void addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
+    /** Creates three vertices and connects them with a triangle. */
+    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
+
+#ifndef MO_DISABLE_EDGEFLAG
+    /** Connects three previously created indices to form a triangle. */
+    void addTriangle(IndexType p1, IndexType p2, IndexType p3,
+                     bool edge1, bool edge2, bool edge3);
+    void addTriangle(IndexType p1, IndexType p2, IndexType p3,
+                     EdgeFlagType edge1, EdgeFlagType edge2, EdgeFlagType edge3);
+#endif
 
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
@@ -458,6 +490,9 @@ private:
     std::vector<ColorType>        color_;
     std::vector<TextureCoordType> texcoord_;
     std::vector<IndexType>        triIndex_, lineIndex_, pointIndex_;
+#ifndef MO_DISABLE_EDGEFLAG
+    std::vector<EdgeFlagType>     edgeFlags_;
+#endif
     std::map<QString, UserAttribute*> attributes_;
 
     ColorType
@@ -466,6 +501,10 @@ private:
         curNx_, curNy_, curNz_;
     TextureCoordType
         curU_, curV_;
+#ifndef MO_DISABLE_EDGEFLAG
+    EdgeFlagType
+        curEdge_;
+#endif
 
     volatile int progress_;
 

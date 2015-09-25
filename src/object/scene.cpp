@@ -904,13 +904,13 @@ void Scene::createSceneGl_(uint thread)
                 gl::GLenum(fbFormat_),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
-                false, GL::ER_THROW);
+                false, false);
     fboFinal_[thread]->setName("scene_final");
     fboFinal_[thread]->create();
     fboFinal_[thread]->unbind();
 
     // create screen quad
-    screenQuad_[thread] = new GL::ScreenQuad("scene_quad", GL::ER_THROW);
+    screenQuad_[thread] = new GL::ScreenQuad("scene_quad");
     screenQuad_[thread]->setAntialiasing(3);
     screenQuad_[thread]->create();
 
@@ -972,8 +972,7 @@ void Scene::resizeFbo_(uint thread)
                 gl::GLenum(fbFormat_),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
-                false,
-                GL::ER_THROW);
+                false, false);
     fboFinal_[thread]->setName("scene_final");
     fboFinal_[thread]->create();
 

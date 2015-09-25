@@ -96,7 +96,7 @@ private:
         *vertexExtrude_, *paramLineWidth_,
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
     ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
-                    * usePointCoord_, *pointSizeAuto_;
+                    * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_;
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_,
                 *glslNormal_, *glslLight_;
     ParameterInt * numDup_;

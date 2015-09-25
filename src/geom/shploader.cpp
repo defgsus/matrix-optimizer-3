@@ -14,6 +14,7 @@
 
 #include <QMutex>
 #include <QMutexLocker>
+#include <QPolygonF>
 
 #include "shploader.h"
 #include "geometry.h"
@@ -66,6 +67,8 @@ struct ShpLoader::Private
     TriangulationMesh triMesh;
     DVec2 meshSpace;
 
+    QVector<QPolygonF> polygons;
+
     static QMutex mutex;
     static std::map<QString, ShpLoader*> instances;
 };
@@ -107,10 +110,24 @@ void ShpLoader::getGeometry(Geometry * g, std::function<void(double)> progressFu
     p_->getGeometry(g, progressFunc);
 }
 
+void ShpLoader::getPolygons(QVector<QPolygonF> & poly)
+{
+    poly = p_->polygons;
+}
+
+QRectF ShpLoader::getBoundingRect() const
+{
+    QRectF rect;
+    for (const QPolygonF & polygon : p_->polygons)
+    {
+        rect = rect.united( polygon.boundingRect() );
+    }
+
+    return rect;
+}
+
 void ShpLoader::Private::getShpObject(SHPObject * shp)
 {
-    Tesselator tess;
-
     bool hasZ = false;
     switch (shp->nSHPType)
     {
@@ -195,11 +212,14 @@ void ShpLoader::Private::getShpObject(SHPObject * shp)
 void ShpLoader::Private::getPolyPart(SHPObject * shp, int start, int end, bool /*hasZ*/)
 {
     QVector<DVec2> points;
+    QPolygonF polygon;
     for (int j=start; j < end; ++j)
     {
         points << DVec2(shp->padfX[j], shp->padfY[j]);
 //                        hasZ ? shp->padfZ[j] : 0.f);
+        polygon << QPointF(shp->padfX[j], shp->padfY[j]);
     }
+    polygons << polygon;
 
     Tesselator tess;
     if (triMesh > 0)
@@ -262,6 +282,8 @@ void ShpLoader::Private::loadFile(const QString &filename, std::function<void(do
     int numEntities;
     SHPGetInfo(handle, &numEntities, 0, 0, 0);
 
+    polygons.clear();
+
     if (!geometry)
         geometry = new GEOM::Geometry();
     geometry->clear();
@@ -289,6 +311,7 @@ void ShpLoader::Private::close()
 {
     if (handle)
         SHPClose(handle);
+    handle = 0;
 }
 
 void ShpLoader::Private::getGeometry(

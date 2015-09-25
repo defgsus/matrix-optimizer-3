@@ -34,7 +34,11 @@ namespace
     QGLFormat createFormat() {
         QGLFormat format;
         format.setVersion(3, 3);
+#ifdef MO_USE_OPENGL_CORE
         format.setProfile(QGLFormat::CoreProfile);
+#else
+        format.setProfile(QGLFormat::CompatibilityProfile);
+#endif
         return format;
     }
 }
@@ -372,7 +376,7 @@ void Basic3DWidget::createGLStuff_()
         || renderMode_ == RM_FRAMEBUFFER
         || renderMode_ == RM_FRAMEBUFFER_ORTHO)
     {
-        screenQuad_ = new GL::ScreenQuad("basic3dwidget", GL::ER_THROW);
+        screenQuad_ = new GL::ScreenQuad("basic3dwidget");
         screenQuad_->setAntialiasing(3);
         screenQuad_->create(
                     renderMode_ == RM_FULLDOME_CUBE ?
@@ -380,8 +384,7 @@ void Basic3DWidget::createGLStuff_()
 
         fbo_ = new GL::FrameBufferObject(fboSize_.width(), fboSize_.height(),
                                          gl::GL_RGBA, gl::GL_FLOAT,
-                                         (renderMode_ == RM_FULLDOME_CUBE),
-                                         GL::ER_THROW);
+                                         (renderMode_ == RM_FULLDOME_CUBE));
         fbo_->setName("widget");
         fbo_->create();
         fbo_->unbind();

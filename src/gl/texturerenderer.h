@@ -21,7 +21,7 @@ namespace GL {
 class TextureRenderer
 {
 public:
-    TextureRenderer(uint w = 256, uint h = 256, ErrorReporting rep = ER_THROW);
+    TextureRenderer(uint w = 256, uint h = 256);
     ~TextureRenderer();
 
     /** Requests a new size.
@@ -35,11 +35,13 @@ public:
     /** Renders the texture onto the fbo.
         The texture will be bound only if @p bindTexture is true.
         The internal fbo will be created or resized as needed.
-        Opengl context must match the context of the texture. */
-    bool render(const Texture * , bool bindTexture = false);
+        Opengl context must match the context of the texture.
+        @throws GlException */
+    void render(const Texture * , bool bindTexture = false);
 
-    /** Explicitely create/resize the fbo */
-    bool createGl();
+    /** Explicitely create/resize the fbo.
+        @throws GlException */
+    void createGl();
     /** Wipe out all opengl resources */
     void releaseGl();
 
@@ -50,7 +52,6 @@ private:
 
     FrameBufferObject * fbo_;
     ScreenQuad * quad_, * fquad_;
-    ErrorReporting rep_;
     uint w_, h_;
 };
 

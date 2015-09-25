@@ -19,11 +19,10 @@ namespace GL {
 
 
 
-TextureRenderer::TextureRenderer(uint w, uint h, ErrorReporting rep)
+TextureRenderer::TextureRenderer(uint w, uint h)
     : fbo_      (0),
       quad_     (0),
       fquad_    (0),
-      rep_      (rep),
       w_        (w),
       h_        (h)
 {
@@ -52,12 +51,12 @@ const Texture * TextureRenderer::texture() const
     return fbo_ ? fbo_->colorTexture() : 0;
 }
 
-bool TextureRenderer::createGl()
+void TextureRenderer::createGl()
 {
     // create instance
     if (!fbo_)
     {
-        fbo_ = new FrameBufferObject(w_, h_, gl::GL_RGBA, gl::GL_FLOAT, false, rep_);
+        fbo_ = new FrameBufferObject(w_, h_, gl::GL_RGBA, gl::GL_FLOAT, false);
     }
 
     // update size
@@ -67,39 +66,46 @@ bool TextureRenderer::createGl()
     // create opengl object
     if (!fbo_->isCreated())
     {
-        if (!fbo_->create())
-            return false;
+        fbo_->create();
     }
 
     // create quad instance
     if (!quad_)
-        quad_ = new ScreenQuad("texrender", rep_);
+        quad_ = new ScreenQuad("texrender");
 
     // create opengl object
     if (!quad_->isCreated())
     {
-        if (!quad_->create("#define MO_ANTIALIAS 4"))
+        try
         {
+            quad_->create("#define MO_ANTIALIAS 4");
+        }
+        catch (Exception& e)
+        {
+            e << "\nin creating quad for TextureRenderer";
             releaseGl();
-            return false;
+            throw;
         }
     }
 
     // create quad instance
     if (!fquad_)
-        fquad_ = new ScreenQuad("ftexrender", rep_);
+        fquad_ = new ScreenQuad("ftexrender");
 
     // create opengl object
     if (!fquad_->isCreated())
     {
-        if (!fquad_->create("#define MO_ANTIALIAS 4\n#define MO_FULLDOME_CUBE"))
+        try
         {
+            fquad_->create("#define MO_ANTIALIAS 4\n#define MO_FULLDOME_CUBE");
+        }
+        catch (Exception& e)
+        {
+            e << "\nin creating quad for TextureRenderer";
             releaseGl();
-            return false;
+            throw;
         }
     }
-
-    return true;
 }
 
 void TextureRenderer::releaseGl()
@@ -120,39 +126,30 @@ void TextureRenderer::releaseGl()
     fbo_ = 0;
 }
 
-bool TextureRenderer::render(const Texture * tex, bool bindTexture)
+void TextureRenderer::render(const Texture * tex, bool bindTexture)
 {
     using namespace gl;
-
-    GLenum err;
 
     // update fbo
     if (!fbo_ || !fbo_->isCreated() || fbo_->width() != w_ || fbo_->height() != h_)
     {
-        if (!createGl())
-            return false;
-        if (!fbo_)
-            return false;
+        createGl();
     }
 
-    if (!fbo_->bind())
-        return false;
+    fbo_->bind();
 
     // prepare fbo
     fbo_->setViewport();
-    MO_CHECK_GL( glClearColor(0, 0, 0, 1) );
-    MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
-    MO_CHECK_GL( glEnable(GL_BLEND) );
-    MO_CHECK_GL( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
+    MO_CHECK_GL_THROW( glClearColor(0, 0, 0, 1) );
+    MO_CHECK_GL_THROW( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
+    MO_CHECK_GL_THROW( glEnable(GL_BLEND) );
+    MO_CHECK_GL_THROW( glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) );
 
     // bind texture
     if (bindTexture)
     {
-        MO_CHECK_GL_RET_COND(rep_, glActiveTexture(GL_TEXTURE0) , err);
-        if (err != GL_NO_ERROR)
-            return false;
-        if (!tex->bind())
-            return false;
+        MO_CHECK_GL_THROW( glActiveTexture(GL_TEXTURE0) );
+        tex->bind();
     }
 
     // set interpolation mode
@@ -164,14 +161,12 @@ bool TextureRenderer::render(const Texture * tex, bool bindTexture)
     tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
     // render quad
-    bool r;
     if (tex->isCube())
-        r = fquad_->draw(w_, h_);
+        fquad_->draw(w_, h_);
     else
-        r = quad_->draw(w_, h_);
+        quad_->draw(w_, h_);
 
     fbo_->unbind();
-    return r;
 }
 
 } // namespace GL

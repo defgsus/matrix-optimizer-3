@@ -242,6 +242,19 @@ public:
                 v3 = g->addVertex(c.x, c.y, c.z);
         g->addTriangle(v1, v2, v3);
     }
+#ifndef MO_DISABLE_EDGEFLAG
+    void addTriangleEF(const Vec3& a, const Vec3& b, const Vec3& c,
+                     bool edge1, bool edge2, bool edge3)
+    {
+        // check degenerate triangles before creating the vertices
+        if (!GEOM::Geometry::checkTriangle(a, b, c))
+            return;
+        auto    v1 = g->addVertex(a.x, a.y, a.z),
+                v2 = g->addVertex(b.x, b.y, b.z),
+                v3 = g->addVertex(c.x, c.y, c.z);
+        g->addTriangle(v1, v2, v3, edge1, edge2, edge3);
+    }
+#endif
 
     void addQuadI(uint bl, uint br, uint tr, uint tl)
     {
@@ -730,6 +743,9 @@ static void register_geometry(asIScriptEngine *engine)
     MO__REG_METHOD("void addLine(const vec3 &in, const vec3 &in)", addLine);
     MO__REG_METHOD("void addLine(uint, uint)", addLineI);
     MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in)", addTriangle);
+#ifndef MO_DISABLE_EDGEFLAG
+    MO__REG_METHOD("void addTriangle(const vec3 &in, const vec3 &in, const vec3 &in, bool edge1, bool edge2, bool edge3)", addTriangleEF);
+#endif
     MO__REG_METHOD("void addTriangle(uint, uint, uint)", addTriangleI);
     MO__REG_METHOD("void addQuad(const vec3 &in, const vec3 &in, const vec3 &in, const vec3 &in)", addQuad);
     MO__REG_METHOD("void addQuad(uint bl, uint br, uint tr, uint tl)", addQuadI);

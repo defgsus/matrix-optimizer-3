@@ -12,10 +12,8 @@
 
 #include "camera.h"
 #include "gl/context.h"
-#include "io/datastream.h"
 #include "gl/cameraspace.h"
 #include "gl/framebufferobject.h"
-#include "io/log.h"
 #include "gl/texture.h"
 #include "gl/screenquad.h"
 #include "gl/shader.h"
@@ -31,6 +29,9 @@
 #include "projection/projectormapper.h"
 #include "projection/projectorblender.h"
 #include "geom/geometry.h"
+#include "io/datastream.h"
+#include "io/log.h"
+#include "io/error.h"
 
 #undef near
 #undef far  // windows..
@@ -131,6 +132,12 @@ void Camera::createParameters()
         p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("resolution of cube map"), tr("Width and height of the rendered frame per cube face"),
                                       1024, 16, 4096*4, 16, true, false);
 
+        p_multiSample_ = params()->createBooleanParameter("fbo_ms",
+                                                          tr("multi-sampling"),
+                                                          tr("Use multi-sampling in framebuffer to avoid aliasing"),
+                                                          tr("None"), tr("Activated"),
+                                                          false,
+                                                          true, false);
     params()->endParameterGroup();
 
     params()->beginParameterGroup("camobjects", tr("rendered objects"));
@@ -198,7 +205,8 @@ void Camera::onParameterChanged(Parameter * p)
         requestReinitGl();
     }
 
-    if (p == p_width_ || p == p_height_ || p == p_cubeRes_)
+    if (p == p_width_ || p == p_height_ || p == p_cubeRes_
+        || p == p_multiSample_)
         requestReinitGl();
 
     if (p == p_wcIgnore_ || p == p_wcInclude_)
@@ -296,25 +304,35 @@ void Camera::initGl(uint )
     if (sliced)
         defines += "\n#define MO_BLEND_TEXTURE";
 
-    screenQuad_ = new GL::ScreenQuad(idName() + "_quad", GL::ER_THROW);
-    screenQuad_->create(
-                ":/shader/framebuffercamera.vert",
-                ":/shader/framebuffercamera.frag",
-                defines,
-                warped_quad);
-
-    // uniforms
-
-    uColor_ = screenQuad_->shader()->getUniform("u_color", true);
-    uColor_->setFloats(1,1,1,1);
-    if (cubeMapped)
-        uAngle_ = screenQuad_->shader()->getUniform("u_angle", true);
-
-    // set edgeblend-texture slot
-    if (sliced)
+    screenQuad_ = new GL::ScreenQuad(idName() + "_quad");
+    try
     {
-        auto btex = screenQuad_->shader()->getUniform("tex_blend", true);
-        btex->ints[0] = 1;
+        screenQuad_->create(
+                    ":/shader/framebuffercamera.vert",
+                    ":/shader/framebuffercamera.frag",
+                    defines,
+                    warped_quad);
+
+        // uniforms
+
+        uColor_ = screenQuad_->shader()->getUniform("u_color", true);
+        uColor_->setFloats(1,1,1,1);
+        if (cubeMapped)
+            uAngle_ = screenQuad_->shader()->getUniform("u_angle", true);
+
+        // set edgeblend-texture slot
+        if (sliced)
+        {
+            auto btex = screenQuad_->shader()->getUniform("tex_blend", true);
+            btex->ints[0] = 1;
+        }
+    }
+    catch (Exception & e)
+    {
+        screenQuad_->release();
+        delete screenQuad_;
+        screenQuad_ = 0;
+        throw;
     }
 
     // create framebuffer
@@ -326,11 +344,25 @@ void Camera::initGl(uint )
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 cubeMapped,
-                GL::ER_THROW);
+                p_multiSample_->baseValue());
     fbo_->setName(name());
 
-    fbo_->create();
-    fbo_->unbind();
+    try
+    {
+        fbo_->create();
+        fbo_->unbind();
+    }
+    catch (Exception& e)
+    {
+        e << "\nin creating camera's framebuffer";
+        fbo_->release();
+        delete fbo_;
+        fbo_ = 0;
+        screenQuad_->release();
+        delete screenQuad_;
+        screenQuad_ = 0;
+        throw;
+    }
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
@@ -618,6 +650,8 @@ void Camera::drawFramebuffer(uint thread, Double time)
         blendTexture_->bind();
         MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     }
+
+    MO_CHECK_GL( gl::glDisable(gl::GL_POLYGON_SMOOTH));
 
     /** @todo hack to stretch into projector slice -
         for some very unknown reason the size was off on Hamburg clients... */

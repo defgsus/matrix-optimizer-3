@@ -13,9 +13,16 @@
 
 /** @todo VIOSO Port
   *
-  * - make gfx-time independent of dsp-block-time
+  * - anti-aliasing!
+  * - steuerung von aussen!
+  * - demo: image slideshow / gallery
+  * - demo: klassisch/nicht abstrakt, firmenbedürfnisse
+  * - sequencing/tracks!
+  * - scene queing (live/sequenced)!
+  * - video input
   * - fix segfault on delete-object (some views don't realize)
   * - fix multi-track-view edit actions
+  * - OK make gfx-time independent of dsp-block-time
   * - performance of widget creation in ParameterView
   * - OK fps measure for output window
   * - OK reopen output window when closed

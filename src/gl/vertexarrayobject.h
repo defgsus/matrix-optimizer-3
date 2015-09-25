@@ -35,7 +35,7 @@ public:
     };
 
     /** @p name is for debugging purposes */
-    explicit VertexArrayObject(const QString& name, ErrorReporting = ER_THROW);
+    explicit VertexArrayObject(const QString& name);
     ~VertexArrayObject();
 
     // --------- getter -----------
@@ -54,23 +54,29 @@ public:
         If @p index is out of range, 0 will be returned. */
     gl::GLuint numVertices(uint index = 0) const;
 
+
     // --------- opengl -----------
 
-    /** Creates a vertex array object */
-    bool create();
+    /** Creates a vertex array object.
+        @throws GlException */
+    void create();
     /** Releases the vertex array object and all buffers */
     void release();
+    /** Clears and releases the associated buffers */
     void clear();
 
-    /** Binds the vertex array object (not needed for the draw methods) */
-    bool bind();
-    /** Unbinds the vertex array object (not needed for the draw methods) */
+    /** Binds the vertex array object (not needed for the draw methods).
+        @throws GlException */
+    void bind();
+    /** Unbinds the vertex array object (not needed for the draw methods).
+        @throws GlException */
     void unbind();
 
     /** Creates a vertex attribute array buffer.
         Returns the BufferObject, or NULL on failure.
         The vertex array object needs to be bound.
-        @p attributeType is one of the Attribute enums or A_USER + N */
+        @p attributeType is one of the Attribute enums or A_USER + N.
+        @throws GlException */
     BufferObject * createAttribBuffer(
             int attributeType,
             gl::GLuint attributeLocation, gl::GLenum valueType, gl::GLint numberCoordinates,
@@ -81,22 +87,36 @@ public:
     /** Creates an element array buffer.
         You can create multiple element buffers with multiple calls.
         Returns the BufferObject, or NULL on failure.
-        The vertex array object needs to be bound. */
+        The vertex array object needs to be bound.
+        @throws GlException */
     BufferObject * createIndexBuffer(
             gl::GLenum primitiveType,
             gl::GLenum valueType,
             gl::GLuint numberVertices, const void * ptr,
             gl::GLenum storageType = gl::GL_STATIC_DRAW);
 
+#ifndef MO_USE_OPENGL_CORE
+    /** Creates an edge flag buffer.
+        Returns the BufferObject, or NULL on failure.
+        The vertex array object needs to be bound.
+        @throws GlException */
+    BufferObject * createEdgeFlagBuffer(
+            gl::GLuint sizeInBytes, const void * ptr,
+            gl::GLenum storageType = gl::GL_STATIC_DRAW,
+            gl::GLint stride = 0);
+#endif
+
     /** Consecutively draws all element arrays added with createIndexBuffer().
         If @p instanceCount > 1, a couple of instances will be drawn and
-        the built-in variable gl_InstanceID will reflect the instance number. */
-    bool drawElements(int instanceCount = 1) const;
+        the built-in variable gl_InstanceID will reflect the instance number.
+        @throws GlException */
+    void drawElements(int instanceCount = 1) const;
 
     /** Draws the vertex array object and overrides the settings from createIndexBuffer().
         If @p numberVertices <= 0, the number from createIndexBuffer() is used.
-        Objects are unbound on return. */
-    bool drawElements(uint elementBufferIndex,
+        Objects are unbound on return.
+        @throws GlException */
+    void drawElements(uint elementBufferIndex,
                       gl::GLenum primitiveType, gl::GLuint numberVertices = 0,
                       gl::GLuint offset = 0) const;
 
@@ -104,13 +124,13 @@ private:
 
     QString name_;
 
-    ErrorReporting rep_;
     gl::GLuint vao_;
 
     struct Buffer_;
     std::map<int, Buffer_> buffers_;
     /** Buffer for each index type (e.g. triangles or lines) */
     std::vector<Buffer_> elementBuffers_;
+    std::vector<Buffer_> edgeFlagBuffers_;
 };
 
 } // namespace GL

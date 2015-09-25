@@ -221,18 +221,25 @@ void ObjectView::updateImage()
             // create resampler
             if (!texRender_)
             {
-                texRender_ = new GL::TextureRenderer(imgs.width(), imgs.height(), GL::ER_IGNORE);
+                texRender_ = new GL::TextureRenderer(imgs.width(), imgs.height());
             }
 
-            // gl-resize
-            if (texRender_->render(tex, true))
-            // download image
-            if (auto stex = texRender_->texture())
-            if (stex->bind())
+            try
             {
-                QImage img = stex->toQImage();
-                labelImg_->setPixmap(QPixmap::fromImage(img));
-                return;
+                // gl-resize
+                texRender_->render(tex, true);
+                // download image
+                if (auto stex = texRender_->texture())
+                {
+                    stex->bind();
+                    QImage img = stex->toQImage();
+                    labelImg_->setPixmap(QPixmap::fromImage(img));
+                    return;
+                }
+            }
+            catch (const Exception& e)
+            {
+                MO_WARNING("in ObjectView: " << e.what());
             }
         }
 

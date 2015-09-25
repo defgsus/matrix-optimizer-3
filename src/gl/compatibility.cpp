@@ -85,6 +85,7 @@ void Properties::getProperties()
 
     // sorry mesa guys, but it looks terrible...
     canLineSmooth = !isMesa;
+    canPolygonSmooth = !isMesa;
 
     MO_CHECK_GL( glGetIntegerv(GL_MAJOR_VERSION, &versionMajor) );
     MO_CHECK_GL( glGetIntegerv(GL_MINOR_VERSION, &versionMinor) );
@@ -152,6 +153,17 @@ void Properties::setLineSmooth(bool enable)
         MO_CHECK_GL( glEnable(GL_LINE_SMOOTH) )
     else
         MO_CHECK_GL( glDisable(GL_LINE_SMOOTH) );
+}
+
+void Properties::setPolygonSmooth(bool enable)
+{
+    if (!canPolygonSmooth)
+        return;
+
+    if (enable)
+        MO_CHECK_GL( glEnable(GL_POLYGON_SMOOTH) )
+    else
+        MO_CHECK_GL( glDisable(GL_POLYGON_SMOOTH) );
 }
 
 void Properties::setLineWidth(GLfloat width)

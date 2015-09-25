@@ -19,11 +19,17 @@ QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
 
 #DEFINES += MO_DISABLE_AUDIO
 
+#disable compatibility mode
+DEFINES += MO_USE_OPENGL_CORE
+
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
 
 #disable experimental features
 DEFINES += MO_DISABLE_EXP
+
+#deprecated OpenGL stuff (nice to have though...)
+DEFINES += MO_DISABLE_EDGEFLAG
 
 #disable control interface for now (it's currently broken)
 DEFINES += MO_DISABLE_FRONT

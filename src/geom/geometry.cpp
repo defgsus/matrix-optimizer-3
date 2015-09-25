@@ -90,6 +90,9 @@ Geometry::Geometry()
         curNz_  (1.f),
         curU_   (0.f),
         curV_   (0.f),
+#ifndef MO_DISABLE_EDGEFLAG
+        curEdge_(gl::GL_TRUE),
+#endif
         sharedVertices_ (false),
         threshold_      (minimumThreshold)
 {
@@ -119,6 +122,9 @@ void Geometry::clear()
     curNx_ = curNy_ = 0.;
     curNz_ = 1.;
     curU_ = curV_ = 0.;
+#ifndef MO_DISABLE_EDGEFLAG
+    curEdge_ = gl::GL_TRUE;
+#endif
     sharedVertices_ = false;
     threshold_ = minimumThreshold;
     indexMap_.clear();
@@ -137,6 +143,9 @@ void Geometry::copyFrom(const Geometry &o)
     curNz_ = o.curNz_;
     curU_ = o.curU_;
     curV_ = o.curV_;
+#ifndef MO_DISABLE_EDGEFLAG
+    curEdge_ = o.curEdge_;
+#endif
 
     sharedVertices_ = o.sharedVertices_;
     threshold_ = o.threshold_;
@@ -591,6 +600,31 @@ void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
     }
 }
 
+#ifndef MO_DISABLE_EDGEFLAG
+void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3,
+                           bool edge1, bool edge2, bool edge3)
+{
+    addTriangle(p1, p2, p3,
+                edge1 ? gl::GL_TRUE : gl::GL_FALSE,
+                edge2 ? gl::GL_TRUE : gl::GL_FALSE,
+                edge3 ? gl::GL_TRUE : gl::GL_FALSE);
+}
+
+void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3,
+                           EdgeFlagType edge1, EdgeFlagType edge2, EdgeFlagType edge3)
+{
+    MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
+    MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
+    MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
+    triIndex_.push_back(p1);
+    triIndex_.push_back(p2);
+    triIndex_.push_back(p3);
+    edgeFlags_.push_back(edge1);
+    edgeFlags_.push_back(edge2);
+    edgeFlags_.push_back(edge3);
+}
+#endif
+
 void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 {
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
@@ -599,6 +633,11 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
+#ifndef MO_DISABLE_EDGEFLAG
+        edgeFlags_.push_back(curEdge_);
+        edgeFlags_.push_back(curEdge_);
+        edgeFlags_.push_back(curEdge_);
+#endif
 }
 
 void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
@@ -615,6 +654,11 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
         triIndex_.push_back(p1);
         triIndex_.push_back(p2);
         triIndex_.push_back(p3);
+#ifndef MO_DISABLE_EDGEFLAG
+        edgeFlags_.push_back(curEdge_);
+        edgeFlags_.push_back(curEdge_);
+        edgeFlags_.push_back(curEdge_);
+#endif
     }
 }
 
@@ -671,7 +715,7 @@ const Geometry::VertexType * Geometry::line(
 
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
-    // XXX Doesn't copy attributes!
+    /** @todo Geometry::addGeometry() doesn't copy attributes! */
 
     // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
@@ -721,7 +765,13 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
                     other.texcoord_[ot3 * other.numTextureCoordComponents()],
                     other.texcoord_[ot3 * other.numTextureCoordComponents() + 1]);
 
-        addTriangle(t1, t2, t3);
+        addTriangle(t1, t2, t3
+#ifndef MO_DISABLE_EDGEFLAG
+                    , other.edgeFlags_[i*3]
+                    , other.edgeFlags_[i*3+1]
+                    , other.edgeFlags_[i*3+2]
+#endif
+                );
     }
     // copy lines
     for (uint i=0; i<other.numLines(); ++i)
@@ -909,12 +959,18 @@ void Geometry::unGroupVertices()
     auto normal = normal_;
     auto color = color_;
     auto texcoord = texcoord_;
+#ifndef MO_DISABLE_EDGEFLAG
+    auto edgeFlags = edgeFlags_;
+#endif
 
     vertex_.clear();
     normal_.clear();
     color_.clear();
     texcoord_.clear();
     indexMap_.clear();
+#ifndef MO_DISABLE_EDGEFLAG
+    edgeFlags_.clear();
+#endif
     sharedVertices_ = false;
 
     if (numTriangles())
@@ -944,7 +1000,13 @@ void Geometry::unGroupVertices()
                                texcoord[i3*2], texcoord[i3*2+1]);
 
             // .. create a new unique triangle
-            addTriangle(t1, t2, t3);
+            addTriangle(t1, t2, t3
+#ifndef MO_DISABLE_EDGEFLAG
+                        , edgeFlags[i*3]
+                        , edgeFlags[i*3+1]
+                        , edgeFlags[i*3+2]
+#endif
+                    );
         }
     }
 
@@ -1594,6 +1656,7 @@ bool Geometry::transformPrimitivesWithEquation(
 
 
 
+/** @todo take care of edge flags */
 void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType factor, VertexType eshift,
                                 bool createNewFaces, bool recognizeEdges) const
 {
@@ -1831,6 +1894,7 @@ void Geometry::tesselateLines(uint level)
     *this = tess;
 }
 
+/** @todo take care of edge flags */
 void Geometry::tesselateTriangles(uint level)
 {
     if (!numTriangles())
@@ -1911,6 +1975,7 @@ void Geometry::tesselateTriangles(uint level)
     }
 }
 
+/** @todo take care of edge flags */
 void Geometry::tesselateTriangles(VertexType minArea, VertexType minLength, uint level)
 {
     if (!numTriangles())
@@ -2235,6 +2300,7 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
     }
 
     // --- indices ---
+
     if (numTriangles())
     {
         MO_ASSERT(numVertices(), "");
@@ -2261,6 +2327,16 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
                                numPoints(),
                                pointIndices());
     }
+
+#ifndef MO_DISABLE_EDGEFLAG
+    // --- edgeflags ---
+    if (numTriangles())
+    {
+        MO_ASSERT(edgeFlags_.size(), "");
+        vao->createEdgeFlagBuffer(numEdgeFlagBytes(),
+                                  edgeFlags());
+    }
+#endif
 
     vao->unbind();
 }

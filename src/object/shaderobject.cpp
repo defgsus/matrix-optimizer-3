@@ -205,10 +205,26 @@ void ShaderObject::initGl(uint )
     });
 
     // create quad and compile shader
-    shaderQuad_ = new GL::ScreenQuad(idName() + "_shaderquad", GL::ER_THROW);
+    shaderQuad_ = new GL::ScreenQuad(idName() + "_shaderquad");
     try
     {
         shaderQuad_->create(src, 0);
+
+        // shader-quad uniforms
+        u_resolution_ = shaderQuad_->shader()->getUniform("u_resolution", false);
+        u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
+        u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
+        u_fb_tex_ = shaderQuad_->shader()->getUniform("u_feedback", false);
+        u_pass_ = shaderQuad_->shader()->getUniform("u_pass", false);
+
+        if (u_resolution_)
+            u_resolution_->setFloats(width, height,
+                                 1.f / std::max(1, width),
+                                 1.f / std::max(1, height));
+        if (u_transformation_)
+            u_transformation_->setAutoSend(true);
+
+        userUniforms_->tieToShader(shaderQuad_->shader());
     }
     catch (Exception& e)
     {
@@ -221,25 +237,10 @@ void ShaderObject::initGl(uint )
                 p_fragment_->addErrorMessage(msg.line, msg.text);
             }
         }
+
+        cleanUpGl_();
         throw;
     }
-
-    // shader-quad uniforms
-    u_resolution_ = shaderQuad_->shader()->getUniform("u_resolution", false);
-    u_time_ = shaderQuad_->shader()->getUniform("u_time", false);
-    u_transformation_ = shaderQuad_->shader()->getUniform("u_transformation", false);
-    u_fb_tex_ = shaderQuad_->shader()->getUniform("u_feedback", false);
-    u_pass_ = shaderQuad_->shader()->getUniform("u_pass", false);
-
-    if (u_resolution_)
-        u_resolution_->setFloats(width, height,
-                             1.f / std::max(1, width),
-                             1.f / std::max(1, height));
-    if (u_transformation_)
-        u_transformation_->setAutoSend(true);
-
-    userUniforms_->tieToShader(shaderQuad_->shader());
-
 
     // screen-quad
 
@@ -251,22 +252,30 @@ void ShaderObject::initGl(uint )
     if (doAa)
         defines += QString("\n#define MO_ANTIALIAS (%1)").arg(aa);
 
-    screenQuad_ = new GL::ScreenQuad(idName() + "_outquad", GL::ER_THROW);
-    screenQuad_->create(
-                ":/shader/framebufferdraw.vert",
-                ":/shader/framebufferdraw.frag",
-                defines);
-
-    // uniforms
-
-    u_out_color_ = screenQuad_->shader()->getUniform("u_color", true);
-    u_out_color_->setFloats(1,1,1,1);
-    if (doAa)
+    screenQuad_ = new GL::ScreenQuad(idName() + "_outquad");
+    try
     {
-        u_out_resolution_ = screenQuad_->shader()->getUniform("u_resolution", true);
+        screenQuad_->create(
+                    ":/shader/framebufferdraw.vert",
+                    ":/shader/framebufferdraw.frag",
+                    defines);
+
+        // uniforms
+
+        u_out_color_ = screenQuad_->shader()->getUniform("u_color", true);
+        u_out_color_->setFloats(1,1,1,1);
+        if (doAa)
+        {
+            u_out_resolution_ = screenQuad_->shader()->getUniform("u_resolution", true);
+        }
+        else
+            u_out_resolution_ = 0;
     }
-    else
-        u_out_resolution_ = 0;
+    catch (Exception & e)
+    {
+        cleanUpGl_();
+        throw;
+    }
 
     // create framebuffer
 
@@ -279,36 +288,59 @@ void ShaderObject::initGl(uint )
                 gl::GLenum(format),
                 gl::GL_FLOAT,
                 0,//GL::FrameBufferObject::A_DEPTH,
-                false,
-                GL::ER_THROW);
+                false, false);
     fbo_->setName(name());
 
-    fbo_->create();
-    fbo_->unbind();
+    try
+    {
+        fbo_->create();
+        fbo_->unbind();
+    }
+    catch (Exception & e)
+    {
+        cleanUpGl_();
+        throw;
+    }
 
     /// @todo maybe input projector slice somehow to ShaderObject?
 }
 
-void ShaderObject::releaseGl(uint )
+void ShaderObject::releaseGl(uint)
+{
+    cleanUpGl_();
+}
+
+void ShaderObject::cleanUpGl_()
 {
     userUniforms_->releaseGl();
 
-    screenQuad_->release();
-    delete screenQuad_;
-    screenQuad_ = 0;
+    if (screenQuad_)
+    {
+        screenQuad_->release();
+        delete screenQuad_;
+        screenQuad_ = 0;
+    }
 
-    shaderQuad_->release();
-    delete shaderQuad_;
-    shaderQuad_ = 0;
+    if (shaderQuad_)
+    {
+        shaderQuad_->release();
+        delete shaderQuad_;
+        shaderQuad_ = 0;
+    }
 
     if (swapTex_)
+    {
         swapTex_->release();
-    delete swapTex_;
-    swapTex_ = 0;
+        delete swapTex_;
+        swapTex_ = 0;
+    }
 
-    fbo_->release();
-    delete fbo_;
-    fbo_ = 0;
+    if (fbo_)
+    {
+        fbo_->release();
+        delete fbo_;
+        fbo_ = 0;
+    }
 }
 
 void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double time)

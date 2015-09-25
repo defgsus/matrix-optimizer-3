@@ -44,8 +44,13 @@ void GeometryFactory::createQuad(Geometry * g, Float sx, Float sy, bool asTriang
 
     if (asTriangles)
     {
+#ifndef MO_DISABLE_EDGEFLAG
+        g->addTriangle(tr, tl, bl, true, true, false);
+        g->addTriangle(tr, bl, br, false, true, true);
+#else
         g->addTriangle(tr, tl, bl);
         g->addTriangle(tr, bl, br);
+#endif
     }
     else
     {

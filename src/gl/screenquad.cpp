@@ -18,9 +18,8 @@ namespace MO {
 namespace GL {
 
 
-ScreenQuad::ScreenQuad(const QString &name, ErrorReporting reporting)
+ScreenQuad::ScreenQuad(const QString &name)
     : name_         (name.isEmpty()? "quad" : name)
-    , rep_          (reporting)
     , quad_         (0)
     , antialias_    (1)
     , u_resolution_ (0)
@@ -49,13 +48,13 @@ Shader * ScreenQuad::shader() const
     return quad_ ? quad_->shader() : 0;
 }
 
-bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
+void ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
                         const QString& defines,
                         GEOM::Geometry * geom)
 {
-    /// @todo add error reporting to Drawable and Shader
-
     MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
+    if (quad_)
+        return;
 
     // prepare geometry
 
@@ -82,13 +81,13 @@ bool ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
 
     if (antialias_ > 1)
         u_resolution_ = quad_->shader()->getUniform("u_resolution", true);
-
-    return true;
 }
 
-bool ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
+void ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
 {
     MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
+    if (quad_)
+        return;
 
     // prepare geometry
 
@@ -100,14 +99,14 @@ bool ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
 
     quad_->setShaderSource(src);
     quad_->createOpenGl();
-
-    return true;
 }
 
 
 void ScreenQuad::release()
 {
     MO_ASSERT(quad_, "ScreenQuad::release() on uninitialized object");
+    if (!quad_)
+        return;
 
     if (quad_->isCreated())
         quad_->releaseOpenGl();
@@ -117,7 +116,7 @@ void ScreenQuad::release()
 }
 
 
-bool ScreenQuad::draw(uint w, uint h, uint splits)
+void ScreenQuad::draw(uint w, uint h, uint splits)
 {
     if (u_resolution_)
         u_resolution_->setFloats(w, h, (Float)1 / w, (Float)1 / h);
@@ -140,11 +139,9 @@ bool ScreenQuad::draw(uint w, uint h, uint splits)
         quad_->renderShader(trans, trans, trans, trans);
         gl::glFlush();
     }
-
-    return true;
 }
 
-bool ScreenQuad::drawCentered(uint w, uint h)
+void ScreenQuad::drawCentered(uint w, uint h)
 {
     if (u_resolution_)
         u_resolution_->setFloats(w, h, (Float)1 / w, (Float)1 / h);
@@ -153,12 +150,10 @@ bool ScreenQuad::drawCentered(uint w, uint h)
     Mat4 trans = h<w? glm::scale(Mat4(1.0), Vec3((Float)h/w, 1, 1))
                     : glm::scale(Mat4(1.0), Vec3(1, (Float)w/h, 1));
     quad_->renderShader(Mat4(1.0), trans, trans, trans);
-
-    return true;
 }
 
 
-bool ScreenQuad::drawCentered(uint iw, uint ih, Float aspect)
+void ScreenQuad::drawCentered(uint iw, uint ih, Float aspect)
 {
     Float w = iw, h = ih * aspect;
 
@@ -169,8 +164,6 @@ bool ScreenQuad::drawCentered(uint iw, uint ih, Float aspect)
     Mat4 trans = h<w? glm::scale(Mat4(1.0), Vec3((Float)h/w, 1,          1))
                     : glm::scale(Mat4(1.0), Vec3(         1, (Float)w/h, 1));
     quad_->renderShader(Mat4(1.0), trans, trans, trans);
-
-    return true;
 }
 
 } // namespace GL

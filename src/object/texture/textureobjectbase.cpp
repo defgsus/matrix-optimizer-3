@@ -401,7 +401,7 @@ void TextureObjectBase::PrivateTO::initGl()
     if (doAa)
         defines += QString("\n#define MO_ANTIALIAS (%1)").arg(aa);
 
-    screenQuad = new GL::ScreenQuad(to->name() + "_outquad", GL::ER_THROW);
+    screenQuad = new GL::ScreenQuad(to->name() + "_outquad");
     try
     {
         screenQuad->create(
@@ -472,8 +472,7 @@ void TextureObjectBase::PrivateTO::createFbo(const QSize &s, uint depth)
                 gl::GLenum(format),
                 gl::GL_FLOAT,
                 0,//GL::FrameBufferObject::A_DEPTH,
-                false,
-                GL::ER_THROW);
+                false);
         fbo->setName(to->name());
 
         try
@@ -508,7 +507,7 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
 
     ShaderQuad quad;
     const QString qname = to->name() + QString("_shaderquad%1").arg(shaderQuads.size());
-    quad.quad = new GL::ScreenQuad(qname, GL::ER_THROW);
+    quad.quad = new GL::ScreenQuad(qname);
 
     auto src = new GL::ShaderSource(csrc);
 

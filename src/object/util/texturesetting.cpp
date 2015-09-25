@@ -36,10 +36,9 @@ const QStringList TextureSetting::textureTypeNames =
   tr("camera frame"), tr("camera frame depth") };
 
 
-TextureSetting::TextureSetting(Object *parent, GL::ErrorReporting rep)
+TextureSetting::TextureSetting(Object *parent)
     : QObject       (parent),
       object_       (parent),
-      rep_          (rep),
       texture_      (0),
       constTexture_ (0),
       paramType_    (0)
@@ -52,7 +51,8 @@ TextureSetting::~TextureSetting()
     if (texture_)
     {
         if (texture_->isHandle())
-            MO_GL_WARNING("destruction of TextureSetting with allocated texture");
+            MO_GL_WARNING("destruction of TextureSetting with allocated texture "
+                          "- OpenGL resource leak");
 
         delete texture_;
     }
@@ -195,32 +195,32 @@ uint TextureSetting::height() const
 
 // ------------- opengl ---------------------
 
-bool TextureSetting::initGl()
+void TextureSetting::initGl()
 {
     errorStr_.clear();
 
     if (paramType_->baseValue() == TEX_NONE)
-        return true;
+        return;
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
         constTexture_ = 0;
         // param will be modulated in realtime
-        return true;
+        return;
     }
 
     if (paramType_->baseValue() == TEX_FILE)
     {
         const QString fn = IO::fileManager().localFilename(paramFilename_->value());
 
-        if (setTextureFromImage_(fn))
-            return true;
+        setTextureFromImage_(fn);
+        return;
     }
 /*
     if (paramType_->baseValue() == TEX_ANGELSCRIPT)
     {
         if (setTextureFromAS_(paramAngelScript_->baseValue()))
-            return true;
+            return;
     }
 */
     if (paramType_->baseValue() == TEX_MASTER_FRAME
@@ -228,16 +228,13 @@ bool TextureSetting::initGl()
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
-        {
-            MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_MASTER_FRAME");
-            return 0;
-        }
+            MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
 
         connect(scene, SIGNAL(sceneFboChanged()),
                 this, SLOT(updateSceneFbo_()));
 
-        if (updateSceneFbo_())
-            return true;
+        updateSceneFbo_();
+        return;
     }
 
 
@@ -246,22 +243,17 @@ bool TextureSetting::initGl()
     {
         Scene * scene = object_->sceneObject();
         if (!scene)
-        {
-            MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_CAMERA_FRAME");
-            return 0;
-        }
+            MO_GL_ERROR("No Scene object for TextureSetting with type TT_CAMERA_FRAME");
 
         connect(scene, SIGNAL(CameraFboChanged(Camera*)),
                 this, SLOT(updateCameraFbo_()));
 
-        if (updateCameraFbo_())
-            return true;
+        updateCameraFbo_();
+        return;
     }
 
     if (!constTexture_)
-        MO_GL_ERROR_COND(rep_, "no texture assigned in TextureSetting::initGl()");
-
-    return constTexture_ != 0;
+        MO_GL_ERROR("No texture assigned in TextureSetting::initGl()");
 }
 
 void TextureSetting::releaseGl()
@@ -285,16 +277,13 @@ void TextureSetting::releaseGl()
     constTexture_ = 0;
 }
 
-bool TextureSetting::updateCameraFbo_()
+void TextureSetting::updateCameraFbo_()
 {
     MO_DEBUG_GL("TextureSetting::updateCameraFbo_");
 
     Scene * scene = object_->sceneObject();
     if (!scene)
-    {
-        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_CAMERA_FRAME");
-        return 0;
-    }
+        MO_GL_ERROR("No Scene object for TextureSetting with type TT_CAMERA_FRAME");
 
     GL::FrameBufferObject * fbo = scene->fboCamera(MO_GFX_THREAD, paramCamera_->baseValue());
 
@@ -303,34 +292,30 @@ bool TextureSetting::updateCameraFbo_()
     // but load an error image
     if (!fbo)
     {
-        MO_WARNING("no camera fbo received from scene");
+        MO_GL_WARNING("No camera fbo received from scene");
 
-        return setTextureFromImage_(":/texture/error.png");
+        setTextureFromImage_(":/texture/error.png");
+        return;
     }
 
     if (paramType_->baseValue() == TEX_CAMERA_FRAME_DEPTH )
     {
         constTexture_ = fbo->depthTexture();
         if (constTexture_ == 0)
-            MO_GL_WARNING("no depth texture in TT_CAMERA_FRAME_DEPTH");
+            MO_GL_WARNING("No depth texture in TT_CAMERA_FRAME_DEPTH");
     }
     else
         constTexture_ = fbo->colorTexture();
 
-
-    return constTexture_ != 0;
 }
 
-bool TextureSetting::updateSceneFbo_()
+void TextureSetting::updateSceneFbo_()
 {
     MO_DEBUG_GL("TextureSetting::updateSceneFbo_");
 
     Scene * scene = object_->sceneObject();
     if (!scene)
-    {
-        MO_GL_ERROR_COND(rep_, "no Scene object for TextureSetting with type TT_MASTER_FRAME");
-        return 0;
-    }
+        MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
 
     GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
     if (fbo)
@@ -340,18 +325,16 @@ bool TextureSetting::updateSceneFbo_()
             constTexture_ = fbo->depthTexture();
             if (constTexture_ == 0)
             {
-                MO_GL_WARNING("no depth texture in TT_MASTER_FRAME_DEPTH");
-                errorStr_ = tr("no depth texture in TT_MASTER_FRAME_DEPTH");
+                MO_GL_WARNING("No depth texture in TT_MASTER_FRAME_DEPTH");
+                errorStr_ = tr("No depth texture in TT_MASTER_FRAME_DEPTH");
             }
         }
         else
             constTexture_ = fbo->colorTexture();
     }
-
-    return constTexture_ != 0;
 }
 
-bool TextureSetting::setTextureFromImage_(const QString& fn)
+void TextureSetting::setTextureFromImage_(const QString& fn)
 {
     if (texture_ && texture_->isAllocated())
         texture_->release();
@@ -371,26 +354,18 @@ bool TextureSetting::setTextureFromImage_(const QString& fn)
                  << reader.errorString() << "'");
         // assign generic error texture
         if (!img.load(":/texture/error.png"))
-            return false;
+            return;
     }
 
     // upload to GPU
-    texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
-
-    if (!texture_)
-        return false;
-
+    texture_ = GL::Texture::createFromImage(img, GL_RGBA);
     constTexture_ = texture_;
-    return true;
-
 }
 
-bool TextureSetting::setTextureFromAS_(const QString& script)
+void TextureSetting::setTextureFromAS_(const QString& script)
 {
 #ifdef MO_DISABLE_ANGELSCRIPT
     Q_UNUSED(script);
-    return false;
-
 #else
 
     if (texture_ && texture_->isAllocated())
@@ -405,62 +380,45 @@ bool TextureSetting::setTextureFromAS_(const QString& script)
     {
         engine.execute(script);
 
-        texture_ = GL::Texture::createFromImage(img, GL_RGBA, rep_);
-
-        if (!texture_)
-            return false;
-
+        texture_ = GL::Texture::createFromImage(img, GL_RGBA);
         constTexture_ = texture_;
     }
     catch (Exception& e)
     {
         errorStr_ = tr("AngelScript image failed with '%1'").arg(e.what());
 
-        if (rep_ == GL::ER_THROW)
-        {
-            e << "\nin TextureFromAS of " << object_->name();
-            throw;
-        }
-        else
-        {
-            MO_WARNING(e.what() << "\nin TextureFromAS of " << object_->name());
-            return false;
-        }
+        e << "\nin TextureFromAS of " << object_->name();
+        throw;
     }
-
-    return true;
 #endif
 }
 
-bool TextureSetting::bind(uint slot)
+void TextureSetting::bind(uint slot)
 {
     if (paramType_->baseValue() == TEX_NONE)
-        return true;
+        return;
 
     auto tex = constTexture_;
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
-                               // XXX
+                               // XXX no time given!
         tex = paramTex_->value(0, MO_GFX_THREAD);
         if (!tex)
-            return true;
+            return;
     }
 
     if (!tex)
-    {
-        MO_GL_ERROR_COND(rep_, "no texture defined for TextureSetting::bind()");
-        return false;
-    }
+        MO_GL_ERROR("No texture defined for TextureSetting::bind()");
 
     // set active slot
     slot += (uint)GL_TEXTURE0;
     GLint act;
-    MO_CHECK_GL( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
+    MO_CHECK_GL_THROW( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
     if ((GLint)slot != act)
-        MO_CHECK_GL( glActiveTexture(GLenum(slot)) );
+        MO_CHECK_GL_THROW( glActiveTexture(GLenum(slot)) );
 
-    bool r = tex->bind();
+    tex->bind();
 
     // set interpolation mode
     if (paramInterpol_->baseValue())
@@ -485,9 +443,7 @@ bool TextureSetting::bind(uint slot)
 
     // set back
     if ((GLint)slot != act)
-        MO_CHECK_GL( glActiveTexture(GLenum(act)) );
-
-    return r;
+        MO_CHECK_GL_THROW( glActiveTexture(GLenum(act)) );
 }
 
 
