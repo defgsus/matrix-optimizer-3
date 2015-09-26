@@ -932,6 +932,7 @@ void ObjectGraphScene::dragEnterEvent(QGraphicsSceneDragDropEvent * e)
 {
     // check items
     QGraphicsScene::dragEnterEvent(e);
+    // restore action from Qt::IgnoreAction
     e->setDropAction(e->proposedAction());
 
     // check self

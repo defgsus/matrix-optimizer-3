@@ -118,7 +118,10 @@ HEADERS += \
     $$PWD/propertiesscrollview.h \
     $$PWD/propertiesview.h \
     $$PWD/distancefieldimage.h \
-    $$PWD/polygonimageimporter.h
+    $$PWD/polygonimageimporter.h \
+    $$PWD/widget/imagelistwidget.h \
+    $$PWD/imagelistdialog.h \
+    $$PWD/widget/imagelist.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -236,4 +239,7 @@ SOURCES += \
     $$PWD/propertiesscrollview.cpp \
     $$PWD/propertiesview.cpp \
     $$PWD/distancefieldimage.cpp \
-    $$PWD/polygonimageimporter.cpp
+    $$PWD/polygonimageimporter.cpp \
+    $$PWD/widget/imagelistwidget.cpp \
+    $$PWD/imagelistdialog.cpp \
+    $$PWD/widget/imagelist.cpp

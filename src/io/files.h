@@ -39,6 +39,9 @@ public:
     /** Gets a filename from an open-file-dialog */
     static QString getOpenFileName(FileType ft, QWidget * parent = 0,
                         bool updateDirectory = true, bool updateFile = true);
+    /** Gets a filename from an open-file-dialog */
+    static QStringList getOpenFileNames(FileType ft, QWidget * parent = 0,
+                        bool updateDirectory = true, bool updateFile = true);
 
     /** Gets a filename from an save-file-dialog */
     static QString getSaveFileName(FileType ft, QWidget * parent = 0,

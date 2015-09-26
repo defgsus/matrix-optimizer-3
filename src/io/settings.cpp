@@ -294,9 +294,10 @@ bool Settings::restoreGeometry(QWindow * win)
     {
         // center on screen
         QRect r = application()->desktop()->screenGeometry(win->position());
-        win->setGeometry((r.width() - win->width())/2,
-                         (r.height() - win->height())/2,
-                         win->width(), win->height());
+        int w = r.width() / 3, h = r.height() / 3;
+        win->setGeometry((r.width() - w)/2,
+                         (r.height() - h)/2,
+                         w, h);
     }
     else
         MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());
@@ -364,9 +365,10 @@ bool Settings::restoreGeometry(QWidget * win)
     {
         // center on screen
         QRect r = application()->desktop()->screenGeometry(win->pos());
-        win->setGeometry((r.width() - win->width())/2,
-                         (r.height() - win->height())/2,
-                         win->width(), win->height());
+        int w = r.width() / 3, h = r.height() / 3;
+        win->setGeometry((r.width() - w)/2,
+                         (r.height() - h)/2,
+                         w, h);
     }
     else
         MO_DEBUG_GUI("Settings::restoreGeometry(" << win << ", " << win->geometry());

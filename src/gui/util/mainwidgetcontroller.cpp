@@ -58,6 +58,7 @@
 #include "gui/polygonimageimporter.h"
 #include "gui/widget/assetbrowser.h"
 #include "gui/widget/objectoutputview.h"
+#include "gui/imagelistdialog.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
 #   include "engine/serverengine.h"
@@ -746,6 +747,15 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             auto o = new QObjectInspector(application(), window_);
             o->setAttribute(Qt::WA_DeleteOnClose);
             o->show();
+        });
+
+        a = new QAction(tr("Image list"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new ImageListDialog(window_);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            diag->show();
         });
 
         m->addAction(a = new QAction(tr("Dump id names"), m));
