@@ -19,6 +19,40 @@
 #include "opengl_fwd.h"
 #include "io/error.h"
 
+#ifdef NDEBUG
+
+/** Executes the command and calls glGetError() and
+    throws GlException on error. */
+#define MO_CHECK_GL_THROW(command__)            \
+{                                               \
+    command__;                                  \
+    ::gl::GLenum err__(::gl::glGetError());     \
+    if (err__ != ::gl::GL_NO_ERROR)             \
+    {                                           \
+        MO_GL_ERROR("opengl error "             \
+            << ::MO::GL::errorName(err__)       \
+            << " for command "                  \
+            << #command__);                     \
+    }                                           \
+}
+
+/** Executes the command and calls glGetError() and
+    throws GlException on error, adds text__ (stream arguments) */
+#define MO_CHECK_GL_THROW_TEXT(command__, text__)\
+{                                               \
+    command__;                                  \
+    ::gl::GLenum err__(::gl::glGetError());     \
+    if (err__ != ::gl::GL_NO_ERROR)             \
+    {                                           \
+        MO_GL_ERROR("opengl error "             \
+            << ::MO::GL::errorName(err__)       \
+            << " for command "                  \
+            << #command__ << "\n"               \
+            << text__);                         \
+    }                                           \
+}
+
+#else
 
 /** Executes the command and calls glGetError() and
     throws GlException on error. */
@@ -54,6 +88,9 @@
             << text__);                         \
     }                                           \
 }
+
+#endif
+
 
 
 #ifndef NDEBUG

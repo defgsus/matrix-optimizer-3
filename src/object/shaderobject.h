@@ -62,8 +62,6 @@ public slots:
 
 private:
 
-    void cleanUpGl_();
-
     GL::FrameBufferObject *fbo_;
     GL::ScreenQuad *shaderQuad_, *screenQuad_;
     GL::Texture * swapTex_;

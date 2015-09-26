@@ -30,9 +30,9 @@ public:
                 gl::GLenum format, gl::GLenum input_format,
                 gl::GLenum type,
                 void* ptr_to_data,
-                bool multiSampling = false);
+                gl::GLsizei multiSamples = 0);
 
-    /** target GL_TEXTURE_2D, explicit format, input_format, type */
+    /** target GL_TEXTURE_3D, explicit format, input_format, type */
     explicit Texture(
                 gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                 gl::GLenum format, gl::GLenum input_format,
@@ -85,6 +85,8 @@ public:
 
     /** Returns true when texture target equals GL_TEXTURE_2D_MULTISAMPLE */
     bool isMultiSample() const;
+
+    gl::GLsizei numMultiSamples() const;
 
     /** Returns a number which can be used to check if the texture has changed.
         Used by texture-in objects.
@@ -240,6 +242,7 @@ private:
         width_,
         height_,
         depth_,
+        multiSamples_,
     /** calculated memory of texture in bytes */
         memory_;
     gl::GLuint

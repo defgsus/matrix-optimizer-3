@@ -31,30 +31,30 @@ public:
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            bool cubemap = false, bool multiSample = false);
+            bool cubemap = false, gl::GLsizei multiSample = 0);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
-            bool cubemap = false, bool multiSample = false);
+            bool cubemap = false, gl::GLsizei multiSample = 0);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false, bool multiSample = false);
+            bool cubemap = false, gl::GLsizei multiSample = 0);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false, bool multiSample = false);
+            bool cubemap = false, gl::GLsizei multiSample = 0);
 
     explicit FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
             int attachmentMask,
-            bool cubemap = false, bool multiSample = false);
+            bool cubemap = false, gl::GLsizei multiSample = 0);
 
     ~FrameBufferObject();
 
@@ -74,6 +74,8 @@ public:
     /** Depth of texture3d, 1 if texture2d. */
     uint depth() const;
     uint numColorTextures() const { return colorTex_.size(); }
+
+    gl::GLint handle() const { return fbo_; }
 
     /** Returns the associated color texture */
     const Texture * colorTexture(uint index = 0) const { return colorTex_[index]; }
@@ -143,7 +145,8 @@ private:
     gl::GLuint fbo_, rbo_;
 
     int attachments_;
-    bool isCubemap_, isMultiSample_;
+    bool isCubemap_;
+    gl::GLsizei multiSamples_;
 
     QString name_;
 };

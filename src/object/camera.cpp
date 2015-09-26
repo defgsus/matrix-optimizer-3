@@ -45,6 +45,7 @@ MO_REGISTER_OBJECT(Camera)
 Camera::Camera(QObject *parent)
     : ObjectGl              (parent)
     , fbo_                  (0)
+    , msFbo_                (0)
     , screenQuad_           (0)
     , renderMode_           (RM_FULLDOME_CUBE)
     , alphaBlend_           (this)
@@ -132,12 +133,11 @@ void Camera::createParameters()
         p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("resolution of cube map"), tr("Width and height of the rendered frame per cube face"),
                                       1024, 16, 4096*4, 16, true, false);
 
-        p_multiSample_ = params()->createBooleanParameter("fbo_ms",
-                                                          tr("multi-sampling"),
-                                                          tr("Use multi-sampling in framebuffer to avoid aliasing"),
-                                                          tr("None"), tr("Activated"),
-                                                          false,
-                                                          true, false);
+        p_multiSample_ = params()->createIntParameter("fbo_msaa",
+                                  tr("ms anti-aliasing"),
+                                  tr("Number of multi-samples in framebuffer to avoid aliasing"),
+                                  0, 0, 16, 1,
+                                  true, false);
     params()->endParameterGroup();
 
     params()->beginParameterGroup("camobjects", tr("rendered objects"));
@@ -240,6 +240,7 @@ void Camera::updateParameterVisibility()
     p_cameraMix_->setVisible( alphaBlend_.hasAlpha() );
     p_near_->setVisible( !isslice );
     p_far_->setVisible( !isslice );
+    p_multiSample_->setVisible( !iscube );
 }
 
 void Camera::setNumberThreads(uint num)
@@ -249,7 +250,13 @@ void Camera::setNumberThreads(uint num)
     cheat_.resize(num);
 }
 
-void Camera::initGl(uint )
+bool Camera::isMultiSampling() const
+{
+    return p_multiSample_->baseValue() > 0
+          && (renderMode() != RM_FULLDOME_CUBE);
+}
+
+void Camera::initGl(uint thread)
 {
     const Scene * scene = sceneObject();
     MO_ASSERT(scene, "Camera::initGl() without scene object");
@@ -329,9 +336,7 @@ void Camera::initGl(uint )
     }
     catch (Exception & e)
     {
-        screenQuad_->release();
-        delete screenQuad_;
-        screenQuad_ = 0;
+        releaseGl(thread);
         throw;
     }
 
@@ -343,8 +348,7 @@ void Camera::initGl(uint )
                 gl::GLenum(scene->frameBufferFormat()),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
-                cubeMapped,
-                p_multiSample_->baseValue());
+                cubeMapped);
     fbo_->setName(name());
 
     try
@@ -355,14 +359,37 @@ void Camera::initGl(uint )
     catch (Exception& e)
     {
         e << "\nin creating camera's framebuffer";
-        fbo_->release();
-        delete fbo_;
-        fbo_ = 0;
-        screenQuad_->release();
-        delete screenQuad_;
-        screenQuad_ = 0;
+        releaseGl(thread);
         throw;
     }
+
+    // multi-sampling framebuffer
+    if (isMultiSampling())
+    {
+        msFbo_ = new GL::FrameBufferObject(
+                    width,
+                    height,
+                    gl::GLenum(scene->frameBufferFormat()),
+                    gl::GL_FLOAT,
+                    GL::FrameBufferObject::A_DEPTH,
+                    cubeMapped,
+                    p_multiSample_->baseValue());
+        msFbo_->setName(name() + "_ms");
+
+        try
+        {
+            msFbo_->create();
+            msFbo_->unbind();
+        }
+        catch (Exception& e)
+        {
+            e << "\nin creating camera's ms-framebuffer";
+            releaseGl(thread);
+            throw;
+        }
+    }
+    else
+        msFbo_ = 0;
 
     if (renderMode_ == RM_PROJECTOR_SLICE)
     {
@@ -382,18 +409,29 @@ void Camera::initGl(uint )
 void Camera::releaseGl(uint )
 {
     if (blendTexture_)
+    {
         blendTexture_->release();
-    blendTexture_ = 0;
-
+        delete blendTexture_;
+        blendTexture_ = 0;
+    }
     if (screenQuad_)
+    {
         screenQuad_->release();
-    delete screenQuad_;
-    screenQuad_ = 0;
-
+        delete screenQuad_;
+        screenQuad_ = 0;
+    }
     if (fbo_)
+    {
         fbo_->release();
-    delete fbo_;
-    fbo_ = 0;
+        delete fbo_;
+        fbo_ = 0;
+    }
+    if (msFbo_)
+    {
+        msFbo_->release();
+        delete msFbo_;
+        msFbo_ = 0;
+    }
 }
 
 void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
@@ -545,23 +583,25 @@ void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) con
 
 void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 {
-    fbo_->bind();
+    GL::FrameBufferObject * fbo = msFbo_ ? msFbo_ : fbo_;
+
+    fbo->bind();
 
     // attach each cubemap texture
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
         switch (cubeMapIndex)
         {
-            case 0:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
-            case 1:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
-            case 2:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
-            case 3:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
-            case 4:  fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
-            default: fbo_->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
+            case 0:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_X); break;
+            case 1:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_X); break;
+            case 2:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Y); break;
+            case 3:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Y); break;
+            case 4:  fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_NEGATIVE_Z); break;
+            default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
         }
     }
 
-    MO_CHECK_GL( glViewport(0, 0, fbo_->width(), fbo_->height()) );
+    fbo->setViewport();
 
     // --- set default render state ---
 
@@ -576,12 +616,25 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
                               p_backA_->value(time, thread)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
-    fbo_->setChanged();
-
+    fbo->setChanged();
 }
 
 void Camera::finishGlFrame(uint , Double)
 {
+    if (msFbo_)
+    {
+        // copy multi-sample fbo to fbo
+        // (automatically applies anti-aliasing)
+        MO_CHECK_GL( gl::glBindFramebuffer(gl::GL_DRAW_FRAMEBUFFER, fbo_->handle()) );
+        MO_CHECK_GL( gl::glBindFramebuffer(gl::GL_READ_FRAMEBUFFER, msFbo_->handle()) );
+        MO_CHECK_GL( gl::glBlitFramebuffer(0, 0, fbo_->width(), fbo_->height(),
+                                           0, 0, fbo_->width(), fbo_->height(),
+                                             gl::GL_COLOR_BUFFER_BIT
+                                           | gl::GL_DEPTH_BUFFER_BIT
+                                           , gl::GL_NEAREST) );
+        msFbo_->unbind();
+    }
+
     fbo_->unbind();
 }
 
@@ -651,15 +704,12 @@ void Camera::drawFramebuffer(uint thread, Double time)
         MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
     }
 
-    MO_CHECK_GL( gl::glDisable(gl::GL_POLYGON_SMOOTH));
-
     /** @todo hack to stretch into projector slice -
         for some very unknown reason the size was off on Hamburg clients... */
     if (isClient() && renderMode() == RM_PROJECTOR_SLICE)
         screenQuad_->draw(scenefbo->width(), scenefbo->height());
     else
         screenQuad_->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
-
 }
 
 namespace {

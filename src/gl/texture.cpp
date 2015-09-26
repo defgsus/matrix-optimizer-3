@@ -40,6 +40,7 @@ Texture::Texture()
         width_			(0),
         height_			(0),
         depth_          (0),
+        multiSamples_   (0),
         memory_ 		(0),
         handle_			(invalidGl),
         target_			(GL_NONE),
@@ -56,7 +57,7 @@ Texture::Texture()
 Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                  gl::GLenum format, gl::GLenum input_format,
                  gl::GLenum type, void *ptr_to_data,
-                 bool multiSampling)
+                 gl::GLsizei multiSamples)
     : ptr_			(ptr_to_data),
       ptr_px_         (0),
       ptr_nx_         (0),
@@ -68,9 +69,10 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       width_		(width),
       height_         (height),
       depth_          (0),
+      multiSamples_ (multiSamples),
       memory_ 		(0),
       handle_		(invalidGl),
-      target_		(multiSampling ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D),
+      target_		(multiSamples ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D),
       format_		(format),
       input_format_	(input_format),
       type_			(type),
@@ -96,6 +98,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
       width_		(width),
       height_		(height),
       depth_        (depth),
+      multiSamples_ (0),
       memory_ 		(0),
       handle_		(invalidGl),
       target_		(GL_TEXTURE_3D),
@@ -126,6 +129,8 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       uploaded_		(false),
       width_		(width),
       height_		(height),
+      depth_        (0),
+      multiSamples_ (0),
       memory_ 		(0),
       handle_		(invalidGl),
       target_		(GL_TEXTURE_CUBE_MAP),
@@ -199,6 +204,7 @@ void Texture::create(gl::GLsizei width,
     target_ = GL_TEXTURE_1D;
     width_ = width;
     height_ = 0;
+    depth_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -509,7 +515,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
             gl::glTexImage2DMultisample(
                 target_,
                 // samples
-                4,
+                multiSamples_,
                 // color components
                 format_,
                 // size
@@ -591,6 +597,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         break;
     }
 
+    // those parameters are not applicable to multisample textures
     if (!isMultiSample())
     {
         setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR));
@@ -696,7 +703,6 @@ QImage Texture::toQImage() const
     std::vector<GLfloat> buffer(width() * height() * 4);
     //float * buffer = (float*) aligned_alloc(32, width() * height() * 4);
 
-    GLenum err;
     MO_CHECK_GL_THROW(
         glGetTexImage(
             target_,
@@ -730,78 +736,6 @@ QImage Texture::toQImage() const
 
 // ------------------------ static ----------------------------
 
-#if 0
-Texture * Texture::createFromImage(const Image & img, gl::GLenum gpu_format, ErrorReporting rep)
-{
-    MO_DEBUG_IMG("Texture::createFromImage(" << img << ", " << gpu_format << ")");
-
-    if (img.isEmpty())
-    {
-        MO_GL_ERROR_COND(rep, "createFromImage() with NULL image");
-        return 0;
-    }
-
-    if (img.width() == 0 || img.height() == 0 )
-    {
-        MO_GL_ERROR_COND(rep, "createFromImage() with empty image");
-        return 0;
-    }
-
-    // determine texture format from image format
-
-    GLenum format = img.glEnumForFormat();
-
-    // create and bind
-
-    Texture * tex = new Texture(
-                img.width(), img.height(),
-                gpu_format, format, img.glEnumForType(), 0, rep);
-
-    tex->name_ += "_from_img";
-
-    if (!tex->create())
-    {
-        delete tex;
-        return 0;
-    }
-
-    // upload image data
-
-    try
-    {
-        tex->upload_(img.data(), 0);
-    }
-    catch (Exception & e)
-    {
-        delete tex;
-
-        if (rep == ER_THROW)
-        {
-            e << "\non creating texture from image " << img;
-            throw;
-        }
-        else
-            return 0;
-    }
-
-    return tex;
-}
-
-
-Texture * Texture::createFromImage(const QImage & input_img, gl::GLenum gpu_format, ErrorReporting rep)
-{
-    MO_DEBUG_IMG("Texture::createFromImage(QImage&, " << gpu_format << ")");
-
-    Image img;
-    if (!img.createFrom(input_img))
-    {
-        MO_GL_ERROR_COND(rep, "could not convert QImage to Image");
-        return 0;
-    }
-
-    return createFromImage(img, gpu_format, rep);
-}
-#endif
 
 Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format)
 {

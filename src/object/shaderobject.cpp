@@ -181,7 +181,7 @@ const GL::Texture * ShaderObject::valueTexture(uint , Double , uint ) const
 }
 
 
-void ShaderObject::initGl(uint )
+void ShaderObject::initGl(uint thread)
 {
     // size of ShaderObject frame
 
@@ -238,7 +238,7 @@ void ShaderObject::initGl(uint )
             }
         }
 
-        cleanUpGl_();
+        releaseGl(thread);
         throw;
     }
 
@@ -273,7 +273,7 @@ void ShaderObject::initGl(uint )
     }
     catch (Exception & e)
     {
-        cleanUpGl_();
+        releaseGl(thread);
         throw;
     }
 
@@ -298,7 +298,7 @@ void ShaderObject::initGl(uint )
     }
     catch (Exception & e)
     {
-        cleanUpGl_();
+        releaseGl(thread);
         throw;
     }
 
@@ -306,11 +306,6 @@ void ShaderObject::initGl(uint )
 }
 
 void ShaderObject::releaseGl(uint)
-{
-    cleanUpGl_();
-}
-
-void ShaderObject::cleanUpGl_()
 {
     userUniforms_->releaseGl();
 

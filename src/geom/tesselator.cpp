@@ -218,7 +218,9 @@ void TesselatorPrivate::tesselate(bool trianglesOnly)
     if (!basis.isEmpty())
         intersectBasis();
 
-#ifndef MO_DISABLE_GLU
+#ifdef MO_DISABLE_GLU
+    Q_UNUSED(trianglesOnly);
+#else
     if (trianglesOnly)
         gluTessCallback(ctx, GLU_TESS_EDGE_FLAG_DATA, (void (CALLBACK *)())moTesselatorEdgeFlag);
     else

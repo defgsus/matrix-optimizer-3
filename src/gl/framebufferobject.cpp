@@ -27,7 +27,7 @@ namespace { static std::atomic_uint_fast64_t fbo_count_(0); }
 
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            bool cubemap, bool multiSample)
+            bool cubemap, GLsizei multiSample)
     : FrameBufferObject(width, height, 1, format, format, type, 0, cubemap, multiSample)
 {
 
@@ -35,7 +35,7 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
 
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum in_format, gl::GLenum type,
-            bool cubemap, bool multiSample)
+            bool cubemap, GLsizei multiSample)
     : FrameBufferObject(width, height, 1, format, in_format, type, 0, cubemap, multiSample)
 {
 
@@ -43,7 +43,7 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
 
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
-            int attachmentMask, bool cubemap, bool multiSample)
+            int attachmentMask, bool cubemap, GLsizei multiSample)
     : FrameBufferObject(width, height, 1, format, format, type, attachmentMask, cubemap, multiSample)
 {
 
@@ -52,7 +52,7 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
 FrameBufferObject::FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
-            int attachmentMask, bool cubemap, bool multiSample)
+            int attachmentMask, bool cubemap, GLsizei multiSample)
     : FrameBufferObject(width, height, 1, format, input_format, type, attachmentMask,
                         cubemap, multiSample)
 {
@@ -62,14 +62,14 @@ FrameBufferObject::FrameBufferObject(
 FrameBufferObject::FrameBufferObject(
             gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
             gl::GLenum format, gl::GLenum input_format, gl::GLenum type,
-            int attachmentMask, bool cubemap, bool multiSample)
+            int attachmentMask, bool cubemap, GLsizei multiSample)
     : colorTex_         (0)
     , depthTex_         (0)
     , fbo_              (invalidGl)
     , rbo_              (invalidGl)
     , attachments_      (attachmentMask)
     , isCubemap_        (cubemap)
-    , isMultiSample_    (multiSample)
+    , multiSamples_      (multiSample)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
                 << width << "x" << height << "x" << depth
@@ -81,7 +81,7 @@ FrameBufferObject::FrameBufferObject(
     {
         // 2d and 2d-multisample
         if (depth < 2)
-            colorTex_[0] = new Texture(width, height, format, input_format, type, 0, isMultiSample_);
+            colorTex_[0] = new Texture(width, height, format, input_format, type, 0, multiSamples_);
         else
         // 3d
             colorTex_[0] = new Texture(width, height, depth, format, input_format, type, 0);
@@ -96,10 +96,12 @@ FrameBufferObject::FrameBufferObject(
     if (attachments_ & A_DEPTH)
     {
         if (!isCubemap_)
-            depthTex_ = new Texture(width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+            depthTex_ = new Texture(
+                width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, multiSamples_);
         else
         {
-            depthTex_ = new Texture(width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, 0, 0, 0, 0, 0);
+            depthTex_ = new Texture(
+                width, height, GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT, 0, 0, 0, 0, 0, 0);
         }
     }
 
@@ -222,6 +224,7 @@ void FrameBufferObject::create()
         MO_GL_ERROR("No size given for frame buffer object creation");
     }
 
+    // create color textures
     for (auto t : colorTex_)
     if (!t->isHandle())
     {
@@ -229,6 +232,7 @@ void FrameBufferObject::create()
                              , "could not create colorbuffer for framebuffer" );
     }
 
+    // create depth texture
     if (depthTex_ && !depthTex_->isHandle())
     {
         MO_EXTEND_EXCEPTION( depthTex_->create()
@@ -239,7 +243,11 @@ void FrameBufferObject::create()
     MO_CHECK_GL_THROW( glBindFramebuffer(GL_FRAMEBUFFER, fbo_) );
 
     // 2d texture or cubemap
-    GLenum target = isCubemap_? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z : GL_TEXTURE_2D;
+    GLenum target = isCubemap_
+                        ? GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
+                        : multiSamples_ > 0
+                          ? GL_TEXTURE_2D_MULTISAMPLE
+                          : GL_TEXTURE_2D;
 
     // attach color textures
     int k=0;
@@ -270,8 +278,13 @@ void FrameBufferObject::create()
     {
         // attach internal storage for depth
         // XXX Should not do it automatically
-        MO_CHECK_GL_THROW( glRenderbufferStorage(
-                GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width(), height()) );
+        if (!multiSamples_)
+            MO_CHECK_GL_THROW( glRenderbufferStorage(
+                GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width(), height()) )
+        else
+            MO_CHECK_GL_THROW( glRenderbufferStorageMultisample(
+                GL_RENDERBUFFER, multiSamples_, GL_DEPTH_COMPONENT24, width(), height()) );
+
         MO_CHECK_GL_THROW( glFramebufferRenderbuffer(
                 GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo_) );
     }

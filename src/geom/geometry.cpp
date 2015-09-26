@@ -2344,7 +2344,7 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
 
 
 QString Geometry::toJavaScriptArray(
-        const QString &baseName2, bool withNormals, bool withTexCoords) const
+        const QString &baseName2, bool, bool /*bool withNormals, bool withTexCoords*/) const
 {
     QString script;
     QTextStream s(&script);

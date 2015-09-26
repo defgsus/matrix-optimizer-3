@@ -51,6 +51,9 @@ public:
     /** Returns the mode of rendering */
     RenderMode renderMode() const { return renderMode_; }
 
+    /** Returns true if MSAA is activated */
+    bool isMultiSampling() const;
+
     /** Returns the list of objects that should be rendered according
         to wildcard parameters. */
     QList<ObjectGl*> getRenderObjects();
@@ -103,7 +106,7 @@ private:
 
     void updateFboSize_();
 
-    GL::FrameBufferObject* fbo_;
+    GL::FrameBufferObject* fbo_, *msFbo_;
 
     GL::ScreenQuad* screenQuad_;
 
@@ -112,10 +115,9 @@ private:
         *p_cameraOrthoScale_, *p_cameraOrthoMix_,
         *p_backR_, *p_backG_, *p_backB_, *p_backA_,
         *p_near_, *p_far_;
-    ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_,
-                    * p_multiSample_;
+    ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_;
     ParameterInt * p_width_, * p_height_,
-                 * p_cubeRes_;
+                 * p_cubeRes_, * p_multiSample_;
     ParameterText * p_wcInclude_,
                   * p_wcIgnore_;
     GL::Uniform * uColor_, * uAngle_;
