@@ -27,12 +27,14 @@ public:
     /** The list of image filenames as arranged in the list */
     QStringList imageList() const;
 
-signals:
-
 public slots:
 
     void clearList();
     void addImages();
+
+    /** Sets the filenames to load into the list.
+        Replaces previous contents. */
+    void setImageList(const QStringList&);
 
 private:
 

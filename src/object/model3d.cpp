@@ -912,8 +912,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         uniformSetting_->updateUniforms(time, thread, texSlot);
 
         // bind the model3d specific textures
-        if (u_tex_0_) { texture_->bind(texSlot); u_tex_0_->ints[0] = texSlot++; }
-        if (u_texn_0_) { textureBump_->bind(texSlot); u_texn_0_->ints[0] = texSlot++; }
+        if (u_tex_0_) { texture_->bind(time, thread, texSlot); u_tex_0_->ints[0] = texSlot++; }
+        if (u_texn_0_) { textureBump_->bind(time, thread, texSlot); u_texn_0_->ints[0] = texSlot++; }
 
         if (texture_->isEnabled())
         {

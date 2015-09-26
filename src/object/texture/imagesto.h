@@ -1,28 +1,28 @@
-/** @file imageto.h
+/** @file
 
     @brief
 
     <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 08.05.2015</p>
+    <p>created 9/27/2015</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_IMAGETO_H
-#define MOSRC_OBJECT_TEXTURE_IMAGETO_H
+#ifndef MOSRC_OBJECT_TEXTURE_IMAGESTO_H
+#define MOSRC_OBJECT_TEXTURE_IMAGESTO_H
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
-/** An image to texture loader */
-class ImageTO : public TextureObjectBase
+/** An multiple images to texture loader */
+class ImagesTO : public TextureObjectBase
 {
     Q_OBJECT
 public:
 
-    MO_OBJECT_CONSTRUCTOR(ImageTO);
-    ~ImageTO();
+    MO_OBJECT_CONSTRUCTOR(ImagesTO);
+    ~ImagesTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -40,7 +40,7 @@ public:
 
     // ---------- specific stuff -----------
 
-    void setImageFilename(const QString& fn);
+    void setImageFilenames(const QStringList& fn);
 
 signals:
 
@@ -48,11 +48,12 @@ public slots:
 
 private:
 
-    QString initFilename_;
-    ParameterFilename * pFilename_;
-    GL::Texture * tex_;
+    QStringList filenames_, initFilenames_;
+    ParameterImageList * pFilenames_;
+    ParameterInt * pIndex_;
+    QList<GL::Texture*> tex_;
 };
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_IMAGETO_H
+#endif // MOSRC_OBJECT_TEXTURE_IMAGESTO_H

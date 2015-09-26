@@ -99,6 +99,12 @@ QStringList ImageListWidget::imageList() const
     return p_->list->filenames();
 }
 
+void ImageListWidget::setImageList(const QStringList& l)
+{
+    clearList();
+    p_->addFiles(l);
+}
+
 void ImageListWidget::clearList()
 {
     p_->list->clear();

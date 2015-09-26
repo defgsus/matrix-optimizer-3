@@ -73,6 +73,7 @@ namespace MO {
     class Parameter;
     class Parameters;
     class ParameterCallback;
+    class ParameterImageList;
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;

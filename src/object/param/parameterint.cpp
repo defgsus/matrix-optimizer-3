@@ -88,12 +88,12 @@ int ParameterInt::getModulatorTypes() const
 
 Int ParameterInt::getModulationValue(Double time, uint thread) const
 {
-    Int mod = 0;
+    Float mod = 0;
 
     for (auto m : modulators())
         mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
 
-    return mod;
+    return (Int)mod;
 }
 
 

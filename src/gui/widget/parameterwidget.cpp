@@ -33,6 +33,7 @@
 #include "object/util/objecteditor.h"
 #include "object/param/parametercallback.h"
 #include "object/param/parameterint.h"
+#include "object/param/parameterimagelist.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterselect.h"
@@ -411,6 +412,40 @@ void ParameterWidget::createWidgets_()
     }
     else
 
+    // --- imagelist parameter ---
+    if (ParameterImageList * pil = dynamic_cast<ParameterImageList*>(param_))
+    {
+        defaultValueName = pil->defaultValueText();
+
+        QLineEdit * edit = lineEdit_ = new QLineEdit(this);
+        l->addWidget(edit);
+
+        edit->setReadOnly(true);
+        edit->setStatusTip(pil->statusTip());
+        edit->setText(pil->valueText());
+
+        setFocusProxy(edit);
+
+        // load button
+        QToolButton * butload = new QToolButton(this);
+        l->addWidget(butload);
+        butload->setText("...");
+        butload->setStatusTip(tr("Click to select image files"));
+
+        // load button click
+        connect(butload, &QToolButton::clicked, [=]()
+        {
+            pil->openFileDialog(this);
+        });
+
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            editor_->setParameterValue(pil, pil->defaultValue());
+        });
+    }
+    else
+
     // --- text parameter ---
     if (ParameterText * ptxt = dynamic_cast<ParameterText*>(param_))
     {
@@ -585,38 +620,7 @@ void ParameterWidget::openModulationPopup()
     else
     if (ParameterInt * pi = dynamic_cast<ParameterInt*>(param_))
     {
-        // create modulation
-        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float track"), menu) );
-        connect(a, &QAction::triggered, [=]()
-        {
-            if (Object * o = editor_->createFloatTrack(pi))
-            {
-                emitObjectSelected_(o);
-            }
-        });
-        // create modulation in clip
-        menu->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("Create new float sequence"), menu) );
-        QMenu * sub = new QMenu(menu);
-        a->setMenu(sub);
-        sub->addAction( a = new QAction(QIcon(":/icon/new.png"), tr("in new clip"), sub) );
-        auto list = Clip::getAssociatedClips(param_, true);
-        for (Clip * clip : list)
-        {
-            sub->addAction( a = new QAction(tr("clip %1").arg(clip->name()), sub) );
-            a->setData(QVariant::fromValue(clip));
-        }
-        connect(sub, &QMenu::triggered, [=](QAction * a)
-        {
-            Clip * parent = a->data().value<Clip*>();
-            if (Object * o = editor_->createInClip(pi, "SequenceFloat", parent))
-            {
-                // modulate
-                editor_->addModulator(param_, o->idName(), "");
-                o->setName(ObjectEditor::modulatorName(param_));
-
-                emitObjectSelected_(o);
-            }
-        });
+        addCreateModMenuFloat_(menu, param_);
 
         // link to existing modulator
         addLinkModMenu_(menu, param_,

@@ -74,6 +74,11 @@ QStringList ImageListDialog::imageList() const
     return list->imageList();
 }
 
+void ImageListDialog::setImageList(const QStringList& l)
+{
+    list->setImageList(l);
+}
+
 
 } // namespace GUI
 } // namespace MO

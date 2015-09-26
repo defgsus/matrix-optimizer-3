@@ -27,6 +27,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterimagelist.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
@@ -462,12 +463,12 @@ namespace
     template <class P, typename V>
     void setParameterVal(ObjectEditor * edit, P p, V v)
     {
+        // only apply if different
+        if (p->baseValue() == v)
+            return;
+
         {
             ScopedSceneLockWrite lock(edit->scene());
-
-            // only apply if different
-            if (p->baseValue() == v)
-                return;
 
             p->setValue(v);
             p->object()->onParameterChanged(p);
@@ -512,6 +513,11 @@ void ObjectEditor::setParameterValue(ParameterText *p, const QString& v)
 }
 
 void ObjectEditor::setParameterValue(ParameterTimeline1D *p, const MATH::Timeline1d& v)
+{
+    setParameterVal(this, p, v);
+}
+
+void ObjectEditor::setParameterValue(ParameterImageList *p, const QStringList& v)
 {
     setParameterVal(this, p, v);
 }

@@ -762,7 +762,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
 
             // -- render the thing --
 
-            p_->textureSet->bind();
+            p_->textureSet->bind(time, thread);
 
             switch (Private::DrawMode(p_->paramDrawMode->baseValue()))
             {

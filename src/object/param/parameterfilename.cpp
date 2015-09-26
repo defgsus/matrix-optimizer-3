@@ -21,10 +21,6 @@
 #include "io/log.h"
 
 
-// make ParameterFilename useable in QMetaObject::invokeMethod
-Q_DECLARE_METATYPE(MO::ParameterFilename*);
-namespace { static int register_param = qMetaTypeId<MO::ParameterFilename*>(); }
-
 
 namespace MO {
 

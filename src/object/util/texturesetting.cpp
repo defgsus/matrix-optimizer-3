@@ -393,7 +393,7 @@ void TextureSetting::setTextureFromAS_(const QString& script)
 #endif
 }
 
-void TextureSetting::bind(uint slot)
+void TextureSetting::bind(Double time, uint thread, uint slot)
 {
     if (paramType_->baseValue() == TEX_NONE)
         return;
@@ -402,8 +402,7 @@ void TextureSetting::bind(uint slot)
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
-                               // XXX no time given!
-        tex = paramTex_->value(0, MO_GFX_THREAD);
+        tex = paramTex_->value(time, thread);
         if (!tex)
             return;
     }
@@ -420,26 +419,29 @@ void TextureSetting::bind(uint slot)
 
     tex->bind();
 
-    // set interpolation mode
-    if (paramInterpol_->baseValue())
-        tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
-    else
-        tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+    if (!tex->isMultiSample())
+    {
+        // set interpolation mode
+        if (paramInterpol_->baseValue())
+            tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
+        else
+            tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
 
-    // wrapmode
-    if (paramWrapX_->baseValue() == WM_CLAMP)
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)) )
-    else if (paramWrapX_->baseValue() == WM_MIRROR)
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)) )
-    else
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)) );
+        // wrapmode
+        if (paramWrapX_->baseValue() == WM_CLAMP)
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)) )
+        else if (paramWrapX_->baseValue() == WM_MIRROR)
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)) )
+        else
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)) );
 
-    if (paramWrapY_->baseValue() == WM_CLAMP)
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)) )
-    else if (paramWrapY_->baseValue() == WM_MIRROR)
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_MIRRORED_REPEAT)) )
-    else
-        MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)) );
+        if (paramWrapY_->baseValue() == WM_CLAMP)
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)) )
+        else if (paramWrapY_->baseValue() == WM_MIRROR)
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_MIRRORED_REPEAT)) )
+        else
+            MO_CHECK_GL( tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)) );
+    }
 
     // set back
     if ((GLint)slot != act)

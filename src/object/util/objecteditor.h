@@ -175,6 +175,7 @@ public slots:
     void setParameterValue(MO::ParameterFilename *, const QString& value);
     void setParameterValue(MO::ParameterText *, const QString& value);
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1d& value);
+    void setParameterValue(MO::ParameterImageList *, const QStringList& value);
 
     void setParameterVisibleInGraph(MO::Parameter *, bool enbale);
     void setParameterVisibleInterface(MO::Parameter *, bool enbale);

@@ -33,6 +33,12 @@ signals:
     /** Emitted when update button was clicked. */
     void listChanged();
 
+public slots:
+
+    /** Sets the filenames to load into the list.
+        Replaces previous contents. */
+    void setImageList(const QStringList&);
+
 private:
     ImageListWidget * list;
 };

@@ -169,6 +169,10 @@ public:
                 IO::FileType fileType,
                 const QString& defaultValue = QString(), bool editable = true);
 
+    ParameterImageList * createImageListParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const QStringList& defaultValue = QStringList(), bool editable = true);
+
     ParameterCallback * createCallbackParameter(
                 const QString& id, const QString& name, const QString& statusTip,
                 std::function<void()> callback);

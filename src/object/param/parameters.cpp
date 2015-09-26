@@ -13,6 +13,7 @@
 #include "parameters.h"
 #include "parametercallback.h"
 #include "parameterint.h"
+#include "parameterimagelist.h"
 #include "parameterfloat.h"
 #include "parameterfilename.h"
 #include "parameterselect.h"
@@ -594,6 +595,51 @@ ParameterFilename * Parameters::createFilenameParameter(
 
     return param;
 }
+
+
+ParameterImageList* Parameters::createImageListParameter(
+            const QString& id, const QString& name, const QString& statusTip,
+            const QStringList& defaultValue, bool editable)
+{
+    ParameterImageList * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterImageList*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested filename "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterImageList(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(false);
+    param->setEditable(editable);
+    param->setDefaultValue(defaultValue);
+    param->setStatusTip(statusTip);
+
+    param->setGroup(curGroupId_, curGroupName_);
+    return param;
+}
+
 
 ParameterCallback * Parameters::createCallbackParameter(
             const QString& id, const QString& name, const QString& statusTip,

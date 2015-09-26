@@ -326,7 +326,9 @@ HEADERS += \
     $$PWD/io/imagereader.h \
     $$PWD/object/texture/distancemapto.h \
     $$PWD/object/texture/thresholdto.h \
-    $$PWD/tool/dfdownsampler.h
+    $$PWD/tool/dfdownsampler.h \
+    $$PWD/object/param/parameterimagelist.h \
+    $$PWD/object/texture/imagesto.h
 
 
 SOURCES += \
@@ -609,4 +611,6 @@ SOURCES += \
     $$PWD/io/imagereader.cpp \
     $$PWD/object/texture/distancemapto.cpp \
     $$PWD/object/texture/thresholdto.cpp \
-    $$PWD/tool/dfdownsampler.cpp
+    $$PWD/tool/dfdownsampler.cpp \
+    $$PWD/object/param/parameterimagelist.cpp \
+    $$PWD/object/texture/imagesto.cpp

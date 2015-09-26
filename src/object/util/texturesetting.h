@@ -16,6 +16,7 @@
 
 #include "object/objectfactory.h"
 #include "gl/opengl_fwd.h"
+#include "types/float.h"
 #include "io/filetypes.h"
 
 namespace MO {
@@ -117,7 +118,7 @@ public:
     /** Binds the texture to the given slot.
         Does nothing if type is TT_NONE.
         @throws GlException */
-    void bind(uint slot = 0);
+    void bind(Double time, uint thread, uint slot = 0);
 
 protected slots:
 
