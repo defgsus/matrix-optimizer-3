@@ -33,7 +33,7 @@
 #include "object/audio/filterao.h"
 #include "object/texture/blurto.h"
 #include "object/ascriptobject.h"
-#include "object/oscillograph.h"
+#include "object/visual/oscillograph.h"
 #include "object/textobject.h"
 #ifndef MO_DISABLE_SPATIAL
 #   include "object/synthesizer.h"
@@ -49,6 +49,7 @@ struct AppIcons::Private
     {
         I_NONE,
         I_3D,
+        I_GEOMETRY,
         I_PARAMETER,
         I_SOUNDSOURCE,
         I_MICROPHONE,
@@ -124,6 +125,7 @@ void AppIcons::Private::init()
 {
     nameMap_.insert(I_NONE, ":/icon/obj_none.png");
     nameMap_.insert(I_3D, ":/icon/obj_3d.png");
+    nameMap_.insert(I_GEOMETRY, ":/icon/obj_geometry.png");
     nameMap_.insert(I_PARAMETER, ":/icon/obj_parameter.png");
     nameMap_.insert(I_SOUNDSOURCE, ":/icon/obj_soundsource.png");
     nameMap_.insert(I_MICROPHONE, ":/icon/obj_microphone.png");
@@ -218,6 +220,7 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (qobject_cast<const TextObject*>(o))
         return I_TEXT;
 
+    if (o->isGeometry()) return I_GEOMETRY;
     if (o->isClip()) return I_CLIP;
     if (o->isShader()) return I_GLSL;
     if (o->isTexture()) return I_TEX;
@@ -241,6 +244,7 @@ AppIcons::Private::IconId AppIcons::Private::idForType(int type) const
     switch (type)
     {
         case Object::T_OBJECT: return I_3D;
+        case Object::T_GEOMETRY: return I_GEOMETRY;
         case Object::T_TRANSFORMATION: return I_TRANSLATION;
         case Object::T_MICROPHONE: return I_MICROPHONE;
         case Object::T_CAMERA: return I_CAMERA;

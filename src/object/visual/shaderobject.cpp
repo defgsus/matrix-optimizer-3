@@ -9,12 +9,12 @@
 */
 
 #include "shaderobject.h"
-#include "param/parameters.h"
-#include "param/parameterfloat.h"
-#include "param/parameterint.h"
-#include "param/parameterselect.h"
-#include "param/parametertext.h"
-#include "util/useruniformsetting.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
+#include "object/param/parameterint.h"
+#include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
+#include "object/util/useruniformsetting.h"
 #include "gl/context.h"
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"

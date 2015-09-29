@@ -10,13 +10,15 @@
 
 #ifndef MO_DISABLE_EXP
 
-#ifndef MOSRC_OBJECT_TEXTUREOVERLAY_H
-#define MOSRC_OBJECT_TEXTUREOVERLAY_H
+#ifndef MOSRC_OBJECT_VISUAL_TEXTUREOVERLAY_H
+#define MOSRC_OBJECT_VISUAL_TEXTUREOVERLAY_H
 
 #include "objectgl.h"
 
 namespace MO {
 
+/** An overlay over full screen with position in space.
+    experimental and deprecated.. */
 class TextureOverlay : public ObjectGl
 {
     Q_OBJECT
@@ -69,6 +71,6 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTUREOVERLAY_H
+#endif // MOSRC_OBJECT_VISUAL_TEXTUREOVERLAY_H
 
 #endif // #ifndef MO_DISABLE_EXP

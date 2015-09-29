@@ -13,7 +13,8 @@
 #include "propertiesview.h"
 #include "gui/widget/qvariantwidget.h"
 #include "types/properties.h"
-#include "io/log.h"
+//#include "io/log.h"
+
 namespace MO {
 namespace GUI {
 

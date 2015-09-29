@@ -8,14 +8,15 @@
     <p>created 13.12.2014</p>
 */
 
-#ifndef MOSRC_OBJECT_OSCILLOGRAPH_H
-#define MOSRC_OBJECT_OSCILLOGRAPH_H
+#ifndef MOSRC_OBJECT_VISUAL_OSCILLOGRAPH_H
+#define MOSRC_OBJECT_VISUAL_OSCILLOGRAPH_H
 
 
 #include "objectgl.h"
 
 namespace MO {
 
+/** An oscillograph render object. */
 class Oscillograph : public ObjectGl
 {
     Q_OBJECT
@@ -50,4 +51,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_OSCILLOGRAPH_H
+#endif // MOSRC_OBJECT_VISUAL_OSCILLOGRAPH_H

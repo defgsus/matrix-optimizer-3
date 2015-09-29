@@ -8,8 +8,8 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_MODEL3D_H
-#define MOSRC_OBJECT_MODEL3D_H
+#ifndef MOSRC_OBJECT_VISUAL_MODEL3D_H
+#define MOSRC_OBJECT_VISUAL_MODEL3D_H
 
 
 #include "objectgl.h"
@@ -111,4 +111,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_MODEL3D_H
+#endif // MOSRC_OBJECT_VISUAL_MODEL3D_H

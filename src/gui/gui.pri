@@ -5,7 +5,6 @@ RESOURCES += \
 HEADERS += \
     src/gui/mainwindow.h \
     src/gui/timeline1drulerview.h \
-    src/gui/basic3dview.h \
     src/gui/timeline1dview.h \
     src/gui/painter/grid.h \
     src/gui/util/viewspace.h \
@@ -127,7 +126,6 @@ SOURCES += \
     src/gui/objectview.cpp \
     src/gui/qobjectinspector.cpp \
     src/gui/mainwindow.cpp \
-    src/gui/basic3dview.cpp \
     src/gui/timeline1dview.cpp \
     src/gui/painter/grid.cpp \
     src/gui/ruler.cpp \

@@ -10,14 +10,15 @@
 
 #ifndef MO_DISABLE_EXP
 
-#ifndef MOSRC_OBJECT_SPRITE_H
-#define MOSRC_OBJECT_SPRITE_H
+#ifndef MOSRC_OBJECT_VISUAL_SPRITE_H
+#define MOSRC_OBJECT_VISUAL_SPRITE_H
 
 
 #include "objectgl.h"
 
 namespace MO {
 
+/** A billboard object */
 class Sprite : public ObjectGl
 {
     Q_OBJECT
@@ -48,6 +49,6 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_SPRITE_H
+#endif // MOSRC_OBJECT_VISUAL_SPRITE_H
 
 #endif // #ifndef MO_DISABLE_EXP

@@ -8,10 +8,10 @@
     <p>created 8/6/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_LIGHTSOURCE_H
-#define MOSRC_OBJECT_LIGHTSOURCE_H
+#ifndef MOSRC_OBJECT_VISUAL_LIGHTSOURCE_H
+#define MOSRC_OBJECT_VISUAL_LIGHTSOURCE_H
 
-#include "object.h"
+#include "object/object.h"
 
 namespace MO {
 
@@ -49,4 +49,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_LIGHTSOURCE_H
+#endif // MOSRC_OBJECT_VISUAL_LIGHTSOURCE_H

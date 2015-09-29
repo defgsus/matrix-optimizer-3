@@ -17,20 +17,15 @@
 #include <QLineEdit>
 
 #include "geometrymodifierwidget.h"
-#include "io/error.h"
-#include "io/files.h"
 #include "doublespinbox.h"
 #include "spinbox.h"
 #include "groupwidget.h"
-#include "equationeditor.h"
 #include "gui/propertiesview.h"
 #include "types/properties.h"
 #include "geom/geometry.h"
-#ifndef MO_DISABLE_ANGELSCRIPT
-#include "geom/geometrymodifierangelscript.h"
-#include "script/angelscript_geometry.h"
-#include "angelscriptwidget.h"
-#endif
+#include "geom/geometrymodifier.h"
+#include "io/error.h"
+#include "io/files.h"
 
 namespace MO {
 namespace GUI {
@@ -129,31 +124,6 @@ void GeometryModifierWidget::createWidgets_(bool expanded)
     {
         propView_->setProperties( modifier_->properties() );
     };
-
-
-#if 0
-#ifndef MO_DISABLE_ANGELSCRIPT
-    if (auto script = dynamic_cast<GEOM::GeometryModifierAngelScript*>(modifier_))
-    {
-        auto edit = new AngelScriptWidget(this);
-        //edit->setMinimumHeight(500);
-        edit->setUpdateOptional();
-        group_->addWidget(edit);
-        edit->setScriptEngine( GeometryEngineAS::createNullEngine(true) );
-        connect(edit, SIGNAL(scriptTextChanged()), this, SLOT(updateFromWidgets_()));
-
-        funcUpdateFromWidgets_ = [=]()
-        {
-            script->setScript(edit->scriptText());
-        };
-
-        funcUpdateWidgets_ = [=]()
-        {
-            edit->setScriptText(script->script());
-        };
-    }
-#endif
-#endif
 }
 
 

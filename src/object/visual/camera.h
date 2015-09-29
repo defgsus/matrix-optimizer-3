@@ -8,8 +8,8 @@
     <p>created 6/28/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_CAMERA_H
-#define MOSRC_OBJECT_CAMERA_H
+#ifndef MOSRC_OBJECT_VISUAL_CAMERA_H
+#define MOSRC_OBJECT_VISUAL_CAMERA_H
 
 #include "objectgl.h"
 #include "object/interface/valuetextureinterface.h"
@@ -136,4 +136,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_CAMERA_H
+#endif // MOSRC_OBJECT_VISUAL_CAMERA_H

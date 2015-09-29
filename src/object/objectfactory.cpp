@@ -38,7 +38,7 @@
 #include "object/control/modulatorobjectfloat.h"
 #include "object/synthesizer.h"
 #include "object/textobject.h"
-#include "object/model3d.h"
+#include "object/visual/model3d.h"
 #include "object/texture/imageto.h"
 #include "geom/geometryfactorysettings.h"
 #include "util/audioobjectconnections.h"
@@ -80,7 +80,7 @@ int ObjectFactory::objectPriority(const Object *o)
         return 5;
     if (o->isTexture())
         return 3;
-    if (o->isGl() || o->isLightSource())
+    if (o->isGl() || o->isLightSource() || o->isGeometry())
         return 4;
     // 2 = meta
     if (o->type() & Object::TG_MODULATOR)

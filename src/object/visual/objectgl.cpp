@@ -17,10 +17,10 @@
 #include "io/log.h"
 #include "gl/context.h"
 #include "io/datastream.h"
-#include "scene.h"
-#include "textobject.h"
-#include "param/parameters.h"
-#include "param/parameterselect.h"
+#include "object/scene.h"
+#include "object/textobject.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterselect.h"
 
 namespace MO {
 

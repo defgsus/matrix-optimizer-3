@@ -23,7 +23,7 @@
 #include "object/objectfactory.h"
 #include "object/control/modulatorobject.h"
 #include "object/texture/textureobjectbase.h"
-#include "object/shaderobject.h"
+#include "object/visual/shaderobject.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"

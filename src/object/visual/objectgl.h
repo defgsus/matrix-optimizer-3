@@ -8,16 +8,17 @@
     <p>created 6/29/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_OBJECTGL_H
-#define MOSRC_OBJECT_OBJECTGL_H
+#ifndef MOSRC_OBJECT_VISUAL_OBJECTGL_H
+#define MOSRC_OBJECT_VISUAL_OBJECTGL_H
 
-#include "object.h"
+#include "object/object.h"
 #include "gl/opengl.h"
-#include "util/alphablendsetting.h"
+#include "object/util/alphablendsetting.h"
 
 namespace MO {
 namespace GL { class Context; class Drawable; }
 
+/** Base of all OpenGL objects. */
 class ObjectGl : public Object
 {
     Q_OBJECT
@@ -192,4 +193,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_OBJECTGL_H
+#endif // MOSRC_OBJECT_VISUAL_OBJECTGL_H

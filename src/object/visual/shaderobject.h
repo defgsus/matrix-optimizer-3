@@ -8,8 +8,8 @@
     <p>created 30.03.2015</p>
 */
 
-#ifndef MOSRC_OBJECT_SHADEROBJECT_H
-#define MOSRC_OBJECT_SHADEROBJECT_H
+#ifndef MOSRC_OBJECT_VISUAL_SHADEROBJECT_H
+#define MOSRC_OBJECT_VISUAL_SHADEROBJECT_H
 
 #include "objectgl.h"
 #include "object/interface/valuetextureinterface.h"
@@ -18,6 +18,7 @@ namespace MO {
 
 class UserUniformSetting;
 
+/** A free editable GLSL shader object with position in space. */
 class ShaderObject : public ObjectGl, public ValueTextureInterface
 {
     Q_OBJECT
@@ -87,4 +88,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_SHADEROBJECT_H
+#endif // MOSRC_OBJECT_VISUAL_SHADEROBJECT_H

@@ -33,8 +33,9 @@
 #include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/scene.h"
-#include "object/model3d.h"
 #include "object/audioobject.h"
+#include "object/visual/model3d.h"
+#include "object/visual/geometryobject.h"
 #include "object/objectfactory.h"
 #include "object/control/sequencefloat.h"
 #include "object/param/parameters.h"
@@ -1565,7 +1566,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     if (Model3d * model = qobject_cast<Model3d*>(obj))
     {
         // edit geometry
-        a = actions.addAction(QIcon(":/icon/obj_3d.png"), tr("Edit model geometry"), scene);
+        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit model geometry"), scene);
         a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
         connect(a, &QAction::triggered, [=]()
         {
@@ -1600,6 +1601,25 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
             auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
             diag->setAttribute(Qt::WA_DeleteOnClose, true);
             diag->show();
+        });
+    }
+
+    // GeometryObject specific
+    if (GeometryObject * geom = qobject_cast<GeometryObject*>(obj))
+    {
+        // edit geometry
+        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit geometry"), scene);
+        a->setStatusTip(tr("Opens a dialog for editing the geometry"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog diag(&geom->geometrySettings());
+
+            if (diag.exec() == QDialog::Accepted)
+            {
+                ScopedObjectChange lock(root, geom);
+                geom->setGeometrySettings(diag.getGeometrySettings());
+                editor->emitObjectChanged(geom);
+            }
         });
     }
 

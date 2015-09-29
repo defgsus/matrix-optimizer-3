@@ -27,16 +27,13 @@ HEADERS += \
     src/io/application.h \
     src/object/soundsource.h \
     src/object/microphone.h \
-    src/object/camera.h \
     src/object/dummy.h \
     src/model/objecttreemimedata.h \
     src/gl/window.h \
     src/gl/context.h \
     src/object/scene.h \
-    src/object/objectgl.h \
     src/gl/manager.h \
     src/io/init.h \
-    src/object/model3d.h \
     src/io/applicationtime.h \
     src/math/random.h \
     src/math/noiseperlin.h \
@@ -88,7 +85,6 @@ HEADERS += \
     src/object/param/modulator.h \
     src/object/param/modulatorfloat.h \
     src/io/currentthread.h \
-    src/object/lightsource.h \
     src/gl/lightsettings.h \
     src/audio/audio_fwd.h \
     src/object/scenelock_p.h \
@@ -101,7 +97,6 @@ HEADERS += \
     src/io/lockedoutput.h \
     src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
-    src/object/textureoverlay.h \
     src/gl/rendersettings.h \
     src/object/param/parameterfilename.h \
     src/io/filetypes.h \
@@ -121,7 +116,6 @@ HEADERS += \
     src/geom/geometrymodifierprimitiveequation.h \
     src/geom/geometrymodifierextrude.h \
     src/geom/geometryfactorysettings.h \
-    src/object/sprite.h \
     src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
     src/geom/objexporter.h \
@@ -224,7 +218,6 @@ HEADERS += \
     src/object/param/modulatoroutput.h \
     src/object/audio/envelopefollowerao.h \
     src/gl/bufferobject.h \
-    src/object/oscillograph.h \
     src/object/audio/delayao.h \
     src/object/audio/soundsourceao.h \
     src/object/audio/parameterao.h \
@@ -265,7 +258,6 @@ HEADERS += \
     src/gl/offscreencontext.h \
     src/io/diskrendersettings.h \
     src/engine/diskrenderer.h \
-    src/object/shaderobject.h \
     src/tool/threadpool.h \
     src/object/interface/valuefloatinterface.h \
     src/object/control/sequencefloat.h \
@@ -328,7 +320,16 @@ HEADERS += \
     $$PWD/object/texture/thresholdto.h \
     $$PWD/tool/dfdownsampler.h \
     $$PWD/object/param/parameterimagelist.h \
-    $$PWD/object/texture/imagesto.h
+    $$PWD/object/texture/imagesto.h \
+    $$PWD/object/visual/camera.h \
+    $$PWD/object/visual/geometryobject.h \
+    $$PWD/object/visual/lightsource.h \
+    $$PWD/object/visual/model3d.h \
+    $$PWD/object/visual/objectgl.h \
+    $$PWD/object/visual/shaderobject.h \
+    $$PWD/object/visual/sprite.h \
+    $$PWD/object/visual/textureoverlay.h \
+    $$PWD/object/visual/oscillograph.h
 
 
 SOURCES += \
@@ -344,16 +345,13 @@ SOURCES += \
     src/io/application.cpp \
     src/object/soundsource.cpp \
     src/object/microphone.cpp \
-    src/object/camera.cpp \
     src/object/dummy.cpp \
     src/model/objecttreemimedata.cpp \
     src/gl/window.cpp \
     src/gl/context.cpp \
     src/object/scene.cpp \
-    src/object/objectgl.cpp \
     src/gl/manager.cpp \
     src/io/init.cpp \
-    src/object/model3d.cpp \
     src/types/float.cpp \
     src/io/applicationtime.cpp \
     src/math/noiseperlin.cpp \
@@ -396,7 +394,6 @@ SOURCES += \
     src/object/param/modulator.cpp \
     src/object/param/modulatorfloat.cpp \
     src/io/currentthread.cpp \
-    src/object/lightsource.cpp \
     src/gl/lightsettings.cpp \
     src/audio/tool/envelopefollower.cpp \
     src/audio/tool/multifilter.cpp \
@@ -405,7 +402,6 @@ SOURCES += \
     src/io/lockedoutput.cpp \
     src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
-    src/object/textureoverlay.cpp \
     src/gl/rendersettings.cpp \
     src/object/param/parameterfilename.cpp \
     src/io/filetypes.cpp \
@@ -425,7 +421,6 @@ SOURCES += \
     src/geom/geometrymodifierprimitiveequation.cpp \
     src/geom/geometrymodifierextrude.cpp \
     src/geom/geometryfactorysettings.cpp \
-    src/object/sprite.cpp \
     src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
     src/geom/objexporter.cpp \
@@ -514,7 +509,6 @@ SOURCES += \
     src/object/param/modulatoroutput.cpp \
     src/object/audio/envelopefollowerao.cpp \
     src/gl/bufferobject.cpp \
-    src/object/oscillograph.cpp \
     src/object/audio/delayao.cpp \
     src/object/audio/soundsourceao.cpp \
     src/object/audio/parameterao.cpp \
@@ -555,7 +549,6 @@ SOURCES += \
     src/gl/offscreencontext.cpp \
     src/io/diskrendersettings.cpp \
     src/engine/diskrenderer.cpp \
-    src/object/shaderobject.cpp \
     src/tool/threadpool.cpp \
     src/object/control/sequencefloat.cpp \
     src/object/control/sequence.cpp \
@@ -613,4 +606,13 @@ SOURCES += \
     $$PWD/object/texture/thresholdto.cpp \
     $$PWD/tool/dfdownsampler.cpp \
     $$PWD/object/param/parameterimagelist.cpp \
-    $$PWD/object/texture/imagesto.cpp
+    $$PWD/object/texture/imagesto.cpp \
+    $$PWD/object/visual/camera.cpp \
+    $$PWD/object/visual/geometryobject.cpp \
+    $$PWD/object/visual/lightsource.cpp \
+    $$PWD/object/visual/model3d.cpp \
+    $$PWD/object/visual/objectgl.cpp \
+    $$PWD/object/visual/oscillograph.cpp \
+    $$PWD/object/visual/shaderobject.cpp \
+    $$PWD/object/visual/sprite.cpp \
+    $$PWD/object/visual/textureoverlay.cpp

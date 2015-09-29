@@ -9,8 +9,8 @@
 */
 
 #include "lightsource.h"
-#include "param/parameters.h"
-#include "param/parameterfloat.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
 #include "gl/lightsettings.h"
 #include "math/vector.h"
 #include "io/datastream.h"

@@ -158,8 +158,6 @@ GeometryModifierCreate::GeometryModifierCreate()
         prop.setVisible("closed", hasClosed);
         prop.setVisible("radius", hasSmallRadius);
         prop.setVisible("asTriangles", canTriangle && !canOnlyTriangle);
-
-        std::cout << prop.toString() << std::endl;
     });
 }
 

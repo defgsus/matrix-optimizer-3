@@ -14,8 +14,8 @@
 
 #include "objectglpath.h"
 #include "object/scene.h"
-#include "object/camera.h"
-#include "object/textureoverlay.h"
+#include "object/visual/camera.h"
+#include "object/visual/textureoverlay.h"
 #include "object/param/modulator.h"
 #include "object/util/objecttree.h"
 #include "object/util/objectmodulatorgraph.h"

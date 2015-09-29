@@ -13,7 +13,7 @@
 
 #include <QStringList>
 
-#include "object/objectgl.h"
+#include "object/visual/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
 
 namespace MO {

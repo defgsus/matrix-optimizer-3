@@ -121,7 +121,7 @@ public:
         T_TRACK_FLOAT       = 1<<10,
         T_DUMMY             = 1<<11,
         T_LIGHTSOURCE       = 1<<12,
-                                // 13
+        T_GEOMETRY          = 1<<13,
         T_MODULATOR_OBJECT_FLOAT = 1<<14,
         T_MICROPHONE_GROUP  = 1<<15,
         T_CLIP              = 1<<16,
@@ -139,7 +139,7 @@ public:
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
                                 | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP
-                                | T_SOUND_OBJECT | T_SHADER,
+                                | T_SOUND_OBJECT | T_SHADER | T_GEOMETRY,
 
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
@@ -180,11 +180,14 @@ public:
         DT_GRAPH_EXPANDED,
         /** Object hue (int) */
         DT_HUE,
+        /** @deprecated */
         DT_CLIP_COLUMN,
+        /** @deprecated */
         DT_CLIP_ROW,
+        /** Parameter-group-id expanded (bool) */
         DT_PARAM_GROUP_EXPANDED,
         DT_SELECTED_PARAM,
-        /** Height of a track in TrackView */
+        /** Height of a track in TrackView (int) */
         DT_TRACK_HEIGHT
     };
 
@@ -284,6 +287,7 @@ public:
     virtual Type type() const { return T_NONE; }
     virtual bool isScene() const { return false; }
     virtual bool isGl() const { return false; }
+    virtual bool isGeometry() const { return false; }
     virtual bool isTransformation() const { return false; }
     virtual bool isSoundSource() const { return false; }
     virtual bool isMicrophone() const { return false; }

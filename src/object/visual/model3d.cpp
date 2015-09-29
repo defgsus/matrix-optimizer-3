@@ -9,7 +9,7 @@
 */
 
 #include "model3d.h"
-#include "scene.h"
+#include "object/scene.h"
 #include "io/datastream.h"
 #include "gl/drawable.h"
 #include "geom/geometryfactorysettings.h"
@@ -21,15 +21,15 @@
 #include "geom/geometry.h"
 #include "geom/geometrycreator.h"
 #include "geom/geometrymodifierchain.h"
-#include "param/parameters.h"
-#include "param/parameterfloat.h"
-#include "param/parameterselect.h"
-#include "param/parametertext.h"
-#include "param/parameterint.h"
-#include "util/texturesetting.h"
-#include "util/colorpostprocessingsetting.h"
-#include "util/texturemorphsetting.h"
-#include "util/useruniformsetting.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
+#include "object/param/parameterint.h"
+#include "object/util/texturesetting.h"
+#include "object/util/colorpostprocessingsetting.h"
+#include "object/util/texturemorphsetting.h"
+#include "object/util/useruniformsetting.h"
 #include "io/log.h"
 
 #if 0

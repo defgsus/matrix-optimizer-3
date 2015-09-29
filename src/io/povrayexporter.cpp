@@ -15,9 +15,9 @@
 #include "povrayexporter.h"
 #include "io/error.h"
 #include "object/scene.h"
-#include "object/lightsource.h"
-#include "object/model3d.h"
-#include "object/camera.h"
+#include "object/visual/lightsource.h"
+#include "object/visual/model3d.h"
+#include "object/visual/camera.h"
 #include "geom/geometry.h"
 
 namespace MO {

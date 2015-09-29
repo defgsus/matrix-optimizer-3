@@ -69,5 +69,6 @@
         <file alias="trans_play.png">assets/icon/trans_play.png</file>
         <file alias="trans_stop.png">assets/icon/trans_stop.png</file>
         <file alias="dir_up.png">assets/icon/dir_up.png</file>
+        <file alias="obj_geometry.png">assets/icon/obj_geometry.png</file>
     </qresource>
 </RCC>
