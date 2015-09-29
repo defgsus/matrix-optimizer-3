@@ -488,6 +488,15 @@ void TextureObjectBase::PrivateTO::createFbo(const QSize &s, uint depth)
     }
 }
 
+bool TextureObjectBase::hasInputTextureChanged(Double time, uint thread) const
+{
+    for (const ParameterTexture * t : p_to_->p_textures)
+    {
+        if (t->hasChanged(time, thread))
+            return true;
+    }
+    return false;
+}
 
 GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
 {
@@ -539,7 +548,7 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     }
     catch (Exception& )
     {
-        to->setError(quad.quad->shader()->compileMessagesString());
+        to->setErrorMessage(quad.quad->shader()->compileMessagesString());
         // @todo Send compile messages from TextureObjectBase::compileShaderQuad() to caller
 
         // clean-up

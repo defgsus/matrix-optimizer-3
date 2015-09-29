@@ -124,7 +124,7 @@ void ImagesTO::initGl(uint thread)
         }
         catch (const Exception& e)
         {
-            setError(e.what());
+            setErrorMessage(e.what());
         }
     }
 }

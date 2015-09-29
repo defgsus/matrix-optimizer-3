@@ -197,9 +197,9 @@ void NormalMapTO::Private::initGl()
         src.addDefine(QString("#define SIGNED %1").arg(m_signed->baseValue()));
         src.addDefine(QString("#define MUL_ALPHA %1").arg(m_mul_alpha->baseValue()));
     }
-    catch (Exception& )
+    catch (Exception& e)
     {
-        // XXX Signal to gui
+        to->setErrorMessage(e.what());
         throw;
     }
 

@@ -780,7 +780,7 @@ public:
     /** Call this during initialization to signal an error to the gui/user.
         Passing an empty string does nothing. Otherise, error strings are
         accumulated (with newline). */
-    void setError(const QString& errorString);
+    void setErrorMessage(const QString& errorString);
 
     // ------------------ files ----------------------
 

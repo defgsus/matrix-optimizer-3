@@ -120,7 +120,7 @@ void ImageTO::initGl(uint thread)
     catch (const Exception& e)
     {
         tex_ = 0;
-        setError(e.what());
+        setErrorMessage(e.what());
     }
 }
 

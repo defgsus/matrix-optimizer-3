@@ -161,7 +161,7 @@ void ThresholdTO::Private::initGl()
     }
     catch (const Exception& e)
     {
-        to->setError(e.what());
+        to->setErrorMessage(e.what());
         throw;
     }
 

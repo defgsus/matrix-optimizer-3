@@ -592,7 +592,6 @@ void ParameterWidget::openModulationPopup()
 
     QMenu * menu = new QMenu(this);
     menu->setAttribute(Qt::WA_DeleteOnClose);
-    QAction * a;
 
     menu->addSection(tr("modulation for %1").arg(param_->name()));
 

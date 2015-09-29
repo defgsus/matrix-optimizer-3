@@ -241,9 +241,9 @@ void KeyTO::Private::initGl()
         if (p_hsvComp->baseValue())
             src.addDefine("#define HSV_COMPARE");
     }
-    catch (Exception& )
+    catch (Exception& e)
     {
-        // XXX Signal to gui
+        to->setErrorMessage(e.what());
         throw;
     }
 

@@ -1429,7 +1429,7 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
 }
 
 
-void Object::setError(const QString &errorString)
+void Object::setErrorMessage(const QString &errorString)
 {
     if (errorString.isEmpty())
         return;

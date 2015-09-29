@@ -51,6 +51,14 @@ public:
         UM_ON_CHANGE
     };
 
+    enum CullingMode
+    {
+        CM_PARENT,
+        CM_NONE,
+        CM_FRONT,
+        CM_BACK
+    };
+
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ObjectGl)
 
@@ -139,6 +147,7 @@ public:
     DepthTestMode depthTestMode() const { return p_curDepthTestMode_; }
     DepthWriteMode depthWriteMode() const { return p_curDepthWriteMode_; }
     AlphaBlendSetting::Mode alphaBlendMode() const { return p_curAlphaBlendMode_; }
+    CullingMode cullingMode() const { return p_curCullingMode_; }
 
     virtual void propagateRenderMode(ObjectGl * parent) Q_DECL_OVERRIDE;
 
@@ -169,6 +178,7 @@ private:
     DepthWriteMode p_defaultDepthWriteMode_, p_curDepthWriteMode_;
     AlphaBlendSetting::Mode p_defaultAlphaBlendMode_, p_curAlphaBlendMode_;
     UpdateMode p_defaultUpdateMode_;
+    CullingMode p_curCullingMode_;
 
     bool p_enableCreateRenderSettings_,
          p_updateModeVisible_,
@@ -176,7 +186,8 @@ private:
     ParameterSelect
         *p_paramDepthTest_,
         *p_paramDepthWrite_,
-        *p_paramUpdateMode_;
+        *p_paramUpdateMode_,
+        *p_paramCullMode_;
 };
 
 } // namespace MO

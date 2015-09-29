@@ -68,7 +68,7 @@ signals:
 private slots:
 
     void geometryCreated_();
-    void geometryFailed_();
+    void geometryFailed_(const QString & e);
 
     void setupDrawable_();
     /** Discards the current thread, if any, and sets creator_=0. */
@@ -99,7 +99,7 @@ private:
                     * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_;
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_,
                 *glslNormal_, *glslLight_;
-    ParameterInt * numDup_;
+    ParameterInt * paramNumInstance_;
 
     GL::Uniform * u_cam_pos_, * u_light_amt_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_, * u_instance_count_,

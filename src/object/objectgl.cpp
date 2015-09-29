@@ -47,7 +47,8 @@ ObjectGl::ObjectGl(QObject *parent)
       p_updateRequest_          (true),
       p_paramDepthTest_         (0),
       p_paramDepthWrite_        (0),
-      p_paramUpdateMode_        (0)
+      p_paramUpdateMode_        (0),
+      p_paramCullMode_          (0)
 {
 }
 
@@ -116,6 +117,18 @@ void ObjectGl::createParameters()
 
             p_alphaBlend_.createParameters(AlphaBlendSetting::M_PARENT, true, "_", "_OGl_");
 
+            p_paramCullMode_ = params()->createSelectParameter("rendset_cull", tr("face culling"),
+                tr("Selects the faces (front or back) that should not be drawn"),
+                { "parent", "off", "front", "back" },
+                { tr("parent"), tr("none"), tr("front"), tr("back") },
+                { tr("Uses the same setting as the parent object"),
+                  tr("No culling"),
+                  tr("Polygons facing towards the camera are not drawn"),
+                  tr("Polygons facing away from the camera are not drawn") },
+                { CM_PARENT, CM_NONE, CM_FRONT, CM_BACK },
+                CM_PARENT,
+                true, false);
+
         params()->endParameterGroup();
     }
 }
@@ -128,7 +141,9 @@ void ObjectGl::onParameterChanged(Parameter *p)
 
     if (   p == p_paramDepthTest_
         || p == p_paramDepthWrite_
-        || p_alphaBlend_.hasParameter(p))
+        || p == p_paramCullMode_
+        || p_alphaBlend_.hasParameter(p)
+        )
     {
         rootObject()->propagateRenderMode(0);
     }
@@ -266,7 +281,7 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double tim
     if (!p_glContext_[thread]->isValid())
         MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
 
-    // ---- set render modes -----
+    // ---- set render modes/state -----
 
     if (depthTestMode() == DTM_OFF)
         MO_CHECK_GL( glDisable(GL_DEPTH_TEST) )
@@ -279,6 +294,17 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double tim
         MO_CHECK_GL( glDepthMask(GL_TRUE) );
 
     p_alphaBlend_.apply(alphaBlendMode());
+
+    if (cullingMode() == CM_NONE)
+        MO_CHECK_GL( glDisable(GL_CULL_FACE) )
+    else
+    {
+        MO_CHECK_GL( glEnable(GL_CULL_FACE) );
+        if (cullingMode() == CM_FRONT)
+            MO_CHECK_GL( glCullFace(GL_FRONT) )
+        else
+            MO_CHECK_GL( glCullFace(GL_BACK) );
+    }
 
     MO_EXTEND_EXCEPTION(
 
@@ -369,6 +395,16 @@ void ObjectGl::propagateRenderMode(ObjectGl *parent)
             p_curDepthWriteMode_ = parent ? parent->depthWriteMode() : DWM_ON;
         else
             p_curDepthWriteMode_ = (DepthWriteMode)p_paramDepthWrite_->baseValue();
+    }
+
+    if (!p_paramCullMode_)
+        p_curCullingMode_ = CM_NONE;
+    else
+    {
+        if (p_paramCullMode_->baseValue() == CM_PARENT)
+            p_curCullingMode_ = parent ? parent->cullingMode() : CM_NONE;
+        else
+            p_curCullingMode_ = (CullingMode)p_paramCullMode_->baseValue();
     }
 
     if (!p_alphaBlend_.parametersCreated())

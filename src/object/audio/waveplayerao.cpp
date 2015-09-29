@@ -365,7 +365,7 @@ void WavePlayerAO::Private::updateFile()
         auto wav = AUDIO::SoundFileManager::getSoundFile(fn, paramLoadMem->baseValue());
         if (!wav->isOk())
         {
-            ao->setError(wav->errorString());
+            ao->setErrorMessage(wav->errorString());
             close();
         }
         else

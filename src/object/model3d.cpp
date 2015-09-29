@@ -129,7 +129,7 @@ void Model3d::createParameters()
 
         paramPolySmooth_ = params()->createBooleanParameter(
                     "polysmooth", tr("antialiased polygons"),
-                    tr("Should polygons be drawn with smoothed edges"),
+                    tr("*deprecated* Should polygons be drawn with smoothed edges"),
                     tr("The polygons are drawn edgy"),
                     tr("The polygons are drawn smoothly"),
                     false,
@@ -144,7 +144,7 @@ void Model3d::createParameters()
                     true, false);
 
         paramLineWidth_ = params()->createFloatParameter("linewidth", tr("line width"),
-                                            tr("The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
+                                            tr("*deprecated* The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
                                                             // XXX Not initialized before first gl context
                                                             .arg(GL::Properties::staticInstance().lineWidth[0])
                                                             .arg(GL::Properties::staticInstance().lineWidth[1]),
@@ -173,11 +173,11 @@ void Model3d::createParameters()
                                          tr("The point size is between size and max size depending on distance to camera"),
                                          false, true, false);
 
-        numDup_ = params()->createIntParameter("num_instances", tr("gl instances"),
+        paramNumInstance_ = params()->createIntParameter("num_instances", tr("gl instances"),
                                                tr("Draws the model multiple times while changing the "
                                                   "gl_InstanceID variable in the shader"),
                                                1, true, true);
-        numDup_->setMinValue(1);
+        paramNumInstance_->setMinValue(1);
         /*
         dupRange_ = params()->createFloatParameter("dup_range", tr("duplicate time range"),
                                                    tr("The range of time over which duplicates are drawn"),
@@ -590,9 +590,9 @@ void Model3d::initGl(uint /*thread*/)
 
     // load/create/querry textures
     texture_->initGl();
-    setError(texture_->errorString());
+    setErrorMessage(texture_->errorString());
     textureBump_->initGl();
-    setError(textureBump_->errorString());
+    setErrorMessage(textureBump_->errorString());
 
     // create geometry
     draw_ = new GL::Drawable(idName());
@@ -616,11 +616,10 @@ void Model3d::initGl(uint /*thread*/)
         /** @todo find out if Qt's signal/slot mechanism doesn't work when
             not connected to main thread. In this case, when started via DiskRenderer,
             no signals are received from the GEOM::GeometryCreator.
-            It's currently solved via the Scene::lazyFlag() but would be cool
-            to file a bugreport if this generally doesn't work or to, at least,
-            find out if this is the desired behaviour. */
+            It's currently solved via the Scene::lazyFlag() but would be good
+            to find out if this is the desired behaviour. */
         connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
-        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_()));
+        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_(QString)));
 
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
@@ -675,12 +674,11 @@ void Model3d::geometryCreated_()
     requestRender();
 }
 
-void Model3d::geometryFailed_()
+void Model3d::geometryFailed_(const QString& e)
 {
     MO_DEBUG_MODEL("Model3d::geometryFailed()");
 
-    /// @todo Get error string from GeometryCreator
-    setError(tr("Failed to create geometry"));
+    setErrorMessage(tr("Failed to create geometry:\n%1").arg(e));
 
     creator_->deleteLater();
     creator_ = 0;
@@ -791,18 +789,21 @@ void Model3d::setupDrawable_()
             if (msg.program == GL::Shader::P_VERTEX
                 || msg.program == GL::Shader::P_LINKER)
             {
+                // XXX It's not clear which editor is responsible...
                 glslVertex_->addErrorMessage(msg.line, msg.text);
-                glslVertexOut_->addErrorMessage(msg.line, msg.text);
                 glslTransform_->addErrorMessage(msg.line, msg.text);
+                glslVertexOut_->addErrorMessage(msg.line, msg.text);
             }
             if (msg.program == GL::Shader::P_FRAGMENT
                 || msg.program == GL::Shader::P_LINKER)
             {
+                glslNormal_->addErrorMessage(msg.line, msg.text);
+                glslLight_->addErrorMessage(msg.line, msg.text);
                 glslFragmentOut_->addErrorMessage(msg.line, msg.text);
                 glslNormal_->addErrorMessage(msg.line, msg.text);
             }
         }
-        setError(tr("Failed to initialized model (%1)").arg(e.what()));
+        setErrorMessage(tr("Failed to initialized model (%1)").arg(e.what()));
         // XXX Should deinitialize or otherwise flag the object
         return;
     }
@@ -842,7 +843,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
     MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
 
-    /** @todo glPolygonMode(GL_FRONT, GL_LINE); */
+    /** @todo wireframe-mode for Model3d, eg. glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
 
     Mat4 trans = transformation();
     Mat4 cubeViewTrans, viewTrans;
@@ -885,7 +886,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
     {
         MO_DEBUG_MODEL("Model3d::renderGl: drawing");
 
-        const int numDup = numDup_->value(time, thread);
+        const int numDup = paramNumInstance_->value(time, thread);
 
         // update uniforms
         const auto bright = cbright_->value(time, thread);

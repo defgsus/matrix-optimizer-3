@@ -79,6 +79,8 @@ protected:
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams();
 
+    bool hasInputTextureChanged(Double time, uint thread) const;
+
     // ---------- opengl stuff -----------
 public:
 

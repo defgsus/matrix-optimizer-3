@@ -636,7 +636,7 @@ void SequenceFloat::updateValueObjects_()
             AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
         // get new
         soundFile_ = AUDIO::SoundFileManager::getSoundFile(p_soundFile_->value());
-        setError(soundFile_->errorString());
+        setErrorMessage(soundFile_->errorString());
         // update loop-length default value
         if (soundFile_->isOk())
             setDefaultLoopLength(soundFile_->lengthSeconds());
@@ -675,7 +675,7 @@ void SequenceFloat::setEquationText(const QString & t)
         {
             MO_WARNING("parsing failed for equation in SequenceFloat '" << idName() << "'"
                        " (text = '" << t << "')");
-            setError(tr("Failed to parse equation"));
+            setErrorMessage(tr("Failed to parse equation"));
         }
     }
 }
