@@ -30,7 +30,9 @@ public:
     {
         TEX_NONE,
         TEX_PARAM,
-        TEX_FILE
+        TEX_FILE,
+        TEX_MASTER_FRAME,
+        TEX_MASTER_FRAME_DEPTH
     };
     static const QStringList textureTypeNames;
 
@@ -127,6 +129,7 @@ protected slots:
     void setTextureFromImage_(const QString& fn);
     void setTextureFromAS_(const QString& script);
     void setNoneTexture_();
+    void updateSceneFbo_();
 
 private:
 

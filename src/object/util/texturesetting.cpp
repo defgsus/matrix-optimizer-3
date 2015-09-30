@@ -32,7 +32,7 @@ using namespace gl;
 namespace MO {
 
 const QStringList TextureSetting::textureTypeNames =
-{ tr("none"), tr("input"), tr("file") };
+{ tr("none"), tr("input"), tr("file"), tr("master frame"), tr("master frame depth") };
 
 
 TextureSetting::TextureSetting(Object *parent)
@@ -76,12 +76,15 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
 
     paramType_ = params->createSelectParameter(
             "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
-            { "none", "param", "file" },
+            { "none", "param", "file", "master", "masterd" },
             textureTypeNames,
             { tr("No texture will be used"),
               tr("The texture input is used"),
-              tr("An image will be loaded from a file") },
-            { TEX_NONE, TEX_PARAM, TEX_FILE },
+              tr("An image will be loaded from a file"),
+              tr("The previous master frame is the source of the image"),
+              tr("The depth information in the previous master frame is the source of the image") },
+            { TEX_NONE, TEX_PARAM, TEX_FILE,
+              TEX_MASTER_FRAME, TEX_MASTER_FRAME_DEPTH },
             defaultType, true, false);
     if (!enableNone)
         paramType_->removeByValue(TEX_NONE);
@@ -101,7 +104,6 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
                 TT_ANGELSCRIPT,
                 "\nvoid main()\n{\n\timage.fill(1,0,0);\n}\n");
 */
-
     paramInterpol_ = params->createBooleanParameter(
                 "_imginterpol" + id_suffix, tr("interpolation"),
                 tr("The interpolation mode for pixel magnification"),
@@ -146,6 +148,7 @@ void TextureSetting::updateParameterVisibility()
 {
     paramTex_->setVisible( paramType_->baseValue() == TEX_PARAM );
     paramFilename_->setVisible( paramType_->baseValue() == TEX_FILE );
+
     //paramAngelScript_->setVisible(paramType_->baseValue() == TEX_ANGELSCRIPT);
 }
 
@@ -217,6 +220,21 @@ void TextureSetting::initGl()
             return;
     }
 */
+    if (paramType_->baseValue() == TEX_MASTER_FRAME
+     || paramType_->baseValue() == TEX_MASTER_FRAME_DEPTH)
+    {
+        Scene * scene = object_->sceneObject();
+        if (!scene)
+            MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
+
+        connect(scene, SIGNAL(sceneFboChanged()),
+                this, SLOT(updateSceneFbo_()));
+
+        updateSceneFbo_();
+        return;
+    }
+
+
     if (!constTexture_)
         MO_GL_ERROR("No texture assigned in TextureSetting::initGl()");
 }
@@ -228,8 +246,6 @@ void TextureSetting::releaseGl()
     {
         connect(scene, SIGNAL(sceneFboChanged()),
                 this, SLOT(updateSceneFbo_()));
-        disconnect(scene, SIGNAL(CameraFboChanged(Camera*)),
-                   this, SLOT(updateCameraFbo_()));
     }
 
     if (texture_)
@@ -242,6 +258,34 @@ void TextureSetting::releaseGl()
     constTexture_ = 0;
 }
 
+void TextureSetting::updateSceneFbo_()
+{
+    MO_DEBUG_GL("TextureSetting::updateSceneFbo_");
+
+    if (!(paramType_->baseValue() == TEX_MASTER_FRAME
+          || paramType_->baseValue() == TEX_MASTER_FRAME_DEPTH))
+        return;
+
+    Scene * scene = object_->sceneObject();
+    if (!scene)
+        MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
+
+    GL::FrameBufferObject * fbo = scene->fboMaster(MO_GFX_THREAD);
+    if (fbo)
+    {
+        if (paramType_->baseValue() == TEX_MASTER_FRAME_DEPTH )
+        {
+            constTexture_ = fbo->depthTexture();
+            if (constTexture_ == 0)
+            {
+                MO_GL_WARNING("No depth texture in TT_MASTER_FRAME_DEPTH");
+                errorStr_ = tr("No depth texture in TT_MASTER_FRAME_DEPTH");
+            }
+        }
+        else
+            constTexture_ = fbo->colorTexture();
+    }
+}
 
 void TextureSetting::setTextureFromImage_(const QString& fn)
 {
@@ -338,7 +382,6 @@ void TextureSetting::bind(Double time, uint thread, uint slot)
     if ((GLint)slot != act)
         MO_CHECK_GL_THROW( glActiveTexture(GLenum(slot)) );
 
-    MO_PRINT(this << " bind " << tex->name() << " " << tex << " " << constTexture_);
     tex->bind();
 
     if (!tex->isMultiSample())
