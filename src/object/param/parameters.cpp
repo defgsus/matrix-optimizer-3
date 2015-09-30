@@ -16,6 +16,7 @@
 #include "parameterimagelist.h"
 #include "parameterfloat.h"
 #include "parameterfilename.h"
+#include "parametergeometry.h"
 #include "parameterselect.h"
 #include "parametertimeline1d.h"
 #include "parametertext.h"
@@ -708,6 +709,46 @@ ParameterTexture * Parameters::createTextureParameter(
     if (!param)
     {
         param = new ParameterTexture(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        // ... none
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setModulateable(true);
+    param->setEditable(false);
+    param->setStatusTip(statusTip);
+
+    param->setGroup(curGroupId_, curGroupName_);
+    return param;
+}
+
+ParameterGeometry * Parameters::createGeometryParameter(
+            const QString& id, const QString& name, const QString& statusTip)
+{
+    ParameterGeometry * param = 0;
+
+    // see if already there
+    if (auto p = findParameter(id))
+    {
+        if (auto ps = dynamic_cast<ParameterGeometry*>(p))
+        {
+            param = ps;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested texture "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterGeometry(object_, id, name);
         parameters_.append(param);
 
         // first time init

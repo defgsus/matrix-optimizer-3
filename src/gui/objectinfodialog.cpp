@@ -32,6 +32,8 @@
 #include "object/param/parameters.h"
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
+#include "object/interface/valuefloatinterface.h"
+#include "object/interface/valuegeometryinterface.h"
 #include "geom/geometry.h"
 
 namespace MO {
@@ -83,15 +85,25 @@ void ObjectInfoDialog::setObject(Object * o)
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
 
-    // ---- value -----
+    // ---- float value -----
 
-    if (auto seq = qobject_cast<SequenceFloat*>(o))
+    if (auto fi = dynamic_cast<ValueFloatInterface*>(o))
     {
-        s << "<p>value at " << curTime << " sec: " << seq->value(curTime, MO_GUI_THREAD) << "</p>\n";
+        s << "<p>float value at " << curTime << " sec: "
+          << fi->value(curTime, MO_GUI_THREAD) << "</p>\n";
     }
-    if (auto mod = qobject_cast<ModulatorObjectFloat*>(o))
+
+    // ---- geometry value -----
+
+    if (auto gi = dynamic_cast<ValueGeometryInterface*>(o))
     {
-        s << "<p>value at " << curTime << " sec: " << mod->value(curTime, MO_GUI_THREAD) << "</p>\n";
+        auto geom = gi->valueGeometry(0, curTime, MO_GUI_THREAD);
+        s << "<p>geometry value at " << curTime << " sec: ";
+        if (!geom)
+            s << "null";
+        else
+            s << geom->infoString();
+        s << "</p>\n";
     }
 
     // ----- modulators -----

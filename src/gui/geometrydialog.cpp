@@ -599,13 +599,7 @@ void GeometryDialog::creationFinished_()
     geoWidget_->setGeometry(g);
 
     progressBar_->setVisible(false);
-    labelInfo_->setText(tr("%1 vertices (%5), %2 triangles, %3 lines, memory: %4")
-                        .arg(g->numVertices())
-                        .arg(g->numTriangles())
-                        .arg(g->numLines())
-                        .arg(byte_to_string(g->memory()))
-                        .arg(g->sharedVertices() ? "shared" : "unshared")
-                        );
+    labelInfo_->setText(g->infoString());
 
     creator_->deleteLater();
     creator_ = 0;

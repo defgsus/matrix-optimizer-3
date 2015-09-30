@@ -12,6 +12,8 @@
 #define MOSRC_OBJECT_VISUAL_GEOMETRYOBJECT_H
 
 #include "object/object.h"
+#include "object/interface/valuegeometryinterface.h"
+
 
 namespace MO {
 namespace GEOM
@@ -22,7 +24,7 @@ namespace GEOM
 }
 
 /** A simple container for Geometry */
-class GeometryObject : public Object
+class GeometryObject : public Object, public ValueGeometryInterface
 {
     Q_OBJECT
 public:
@@ -44,6 +46,10 @@ public:
 
     /** Returns the created Geometry, if any. */
     const GEOM::Geometry * geometry() const;
+
+    /** Geometry interface */
+    const GEOM::Geometry * valueGeometry(
+            uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
 protected:
 

@@ -35,6 +35,7 @@ GeometryObject::GeometryObject(QObject * parent)
       geometry_     (0)
 {
     setName("Geometry");
+    setNumberOutputs(ST_GEOMETRY, 1);
 }
 
 GeometryObject::~GeometryObject()
@@ -75,7 +76,7 @@ void GeometryObject::createParameters()
 
 void GeometryObject::onParametersLoaded()
 {
-
+    createGeometry_();
 }
 
 void GeometryObject::onParameterChanged(Parameter *p)
@@ -190,6 +191,16 @@ void GeometryObject::setGeometry(const GEOM::Geometry & g)
     emit geometryChanged();
 }
 
+const GEOM::Geometry * GeometryObject::valueGeometry(uint channel, Double time, uint thread) const
+{
+    Q_UNUSED(channel);
+    Q_UNUSED(time);
+    Q_UNUSED(thread);
+    // XXX Can't do it, this function is const
+    //if (!geometry())
+    //    createGeometry();
+    return geometry();
+}
 
 
 } // namespace MO

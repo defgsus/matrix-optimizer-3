@@ -24,6 +24,7 @@
 #include "math/functions.h"
 #include "math/vector.h"
 #include "math/intersection.h"
+#include "tool/stringmanip.h"
 
 using namespace gl;
 
@@ -103,6 +104,22 @@ Geometry::~Geometry()
     clear();
 }
 
+QString Geometry::infoString() const
+{
+    QString s = QObject::tr("%1 vertices (%2)")
+            .arg(numVertices()).arg(sharedVertices() ? "shared" : "unshared");
+    if (numTriangles())
+        s += QObject::tr(", %1 triangles").arg(numTriangles());
+    if (numLines())
+        s += QObject::tr(", %1 lines").arg(numLines());
+    if (numPoints())
+        s += QObject::tr(", %1 points").arg(numPoints());
+
+    s += QObject::tr(", memory: %1").arg(byte_to_string(memory()));
+
+    return s;
+}
+
 void Geometry::clear()
 {
     vertex_.clear();
@@ -164,6 +181,22 @@ void Geometry::copyFrom(const Geometry &o)
         attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
 }
 
+Geometry * Geometry::createFrom(const QList<const Geometry*>& list)
+{
+    auto g = new Geometry();
+
+    if (list.isEmpty())
+        return g;
+
+    // copy the first
+    g->copyFrom(*list.front());
+
+    // add the others
+    for (int i = 1; i < list.size(); ++i)
+        g->addGeometry(*list[i]);
+
+    return g;
+}
 
 // ---------------- attributes --------------
 
@@ -835,6 +868,7 @@ void Geometry::translate(VertexType x, VertexType y, VertexType z)
 
 void Geometry::applyMatrix(const Mat4 &transformation)
 {
+    // transform vertices
     for (uint i=0; i<numVertices(); ++i)
     {
         Vec4 v(
@@ -845,6 +879,18 @@ void Geometry::applyMatrix(const Mat4 &transformation)
         vertex_[i*numVertexComponents()] = v[0];
         vertex_[i*numVertexComponents()+1] = v[1];
         vertex_[i*numVertexComponents()+2] = v[2];
+    }
+    // transform normals
+    for (uint i=0; i<numVertices(); ++i)
+    {
+        Vec4 v(
+            normal_[i*numVertexComponents()],
+            normal_[i*numVertexComponents()+1],
+            normal_[i*numVertexComponents()+2], 0.f);
+        Vec3 v3 = glm::normalize(Vec3(transformation * v));
+        normal_[i*numVertexComponents()] = v3[0];
+        normal_[i*numVertexComponents()+1] = v3[1];
+        normal_[i*numVertexComponents()+2] = v3[2];
     }
 }
 
@@ -2224,16 +2270,18 @@ void Geometry::groupVertices(Geometry &dst, VertexType range) const
 
 
 
-void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
+void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s) const
 {
+    if (!s->getAttribute(s->source()->attribNamePosition()))
+        MO_GL_ERROR("No position attribute in shader");
+    if (vertex_.empty())
+        MO_GL_ERROR("Can't create a vertex array object from empty geometry");
+
     if (vao->isCreated())
         vao->release();
 
     vao->create();
     vao->bind();
-
-    if (!s->getAttribute(s->source()->attribNamePosition()))
-        MO_GL_ERROR("No position attribute in shader");
 
     // --- position ---
     if (auto a = s->getAttribute(s->source()->attribNamePosition()))

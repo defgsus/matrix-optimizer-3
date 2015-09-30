@@ -62,6 +62,7 @@ Model3d::Model3d(QObject * parent)
 {
     setName("Model3D");
     initDefaultUpdateMode(UM_ALWAYS, false);
+    setNumberOutputs(ST_GEOMETRY, 1);
 }
 
 Model3d::~Model3d()
@@ -535,7 +536,10 @@ void Model3d::updateParameterVisibility()
     textureBumpMorph_->updateParameterVisibility();
     uniformSetting_->updateParameterVisibility();
 
+    diffAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
+    specAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
+    specExp_->setVisible( lightMode_->baseValue() != LM_NONE );
 
     bool vertfx = vertexFx_->baseValue();
     vertexExtrude_->setVisible(vertfx);
@@ -854,6 +858,8 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
     }
     else
     {
+        // skybox (clear position from matrices)
+
         trans[3] = Vec4(0., 0., 0., 1.);
         Mat4 vm = rs.cameraSpace().cubeViewMatrix();
         vm[3] = Vec4(0., 0., 0, 1.);

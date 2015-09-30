@@ -131,6 +131,9 @@ int ObjectFactory::hueForObject(int type)
     if (type == Object::T_LIGHTSOURCE)
         return 60;
     else
+    if (type == Object::T_GEOMETRY)
+        return 80;
+    else
     if (type == Object::T_SHADER || type == Object::T_TEXTURE)
         return 45;
     else

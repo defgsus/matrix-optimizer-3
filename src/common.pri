@@ -329,7 +329,11 @@ HEADERS += \
     $$PWD/object/visual/shaderobject.h \
     $$PWD/object/visual/sprite.h \
     $$PWD/object/visual/textureoverlay.h \
-    $$PWD/object/visual/oscillograph.h
+    $$PWD/object/visual/oscillograph.h \
+    $$PWD/object/visual/imagegallery.h \
+    $$PWD/object/param/parametergeometry.h \
+    $$PWD/object/param/modulatorgeometry.h \
+    $$PWD/object/interface/valuegeometryinterface.h
 
 
 SOURCES += \
@@ -615,4 +619,7 @@ SOURCES += \
     $$PWD/object/visual/oscillograph.cpp \
     $$PWD/object/visual/shaderobject.cpp \
     $$PWD/object/visual/sprite.cpp \
-    $$PWD/object/visual/textureoverlay.cpp
+    $$PWD/object/visual/textureoverlay.cpp \
+    $$PWD/object/visual/imagegallery.cpp \
+    $$PWD/object/param/parametergeometry.cpp \
+    $$PWD/object/param/modulatorgeometry.cpp

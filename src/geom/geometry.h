@@ -94,10 +94,16 @@ public:
 
     void copyFrom(const Geometry& other);
 
+    /** Constructs a single Geometry from a list of Geometries */
+    static Geometry * createFrom(const QList<const Geometry*>&);
+
     // ------- query ---------
 
     /** Returns the progress during certain intense functions [0,100] */
     int progress() const { return progress_; }
+
+    /** Some informative one-liner */
+    QString infoString() const;
 
     unsigned int numVertexComponents() const { return 3; }
     unsigned int numNormalComponents() const { return 3; }
@@ -481,7 +487,7 @@ public:
         The shader provides the locations of the vertex attributes.
         The Shader must be compiled.
         The VAO will be released if it was created previously. */
-    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *);
+    void getVertexArrayObject(GL::VertexArrayObject *, GL::Shader *) const;
 
 private:
 

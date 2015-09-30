@@ -36,7 +36,8 @@ namespace MO {
         ST_TEXTURE,
         ST_TIMELINE1D,
         ST_AUDIO,
-        ST_CALLBACK
+        ST_CALLBACK,
+        ST_GEOMETRY
     };
 
     namespace IO { class DataStream; }
@@ -66,6 +67,7 @@ namespace MO {
     class TrackFloat;
 
     class ValueFloatInterface;
+    class ValueGeometryInterface;
     class ValueTextInterface;
     class ValueTextureInterface;
     class ValueTransformationInterface;
@@ -77,6 +79,7 @@ namespace MO {
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;
+    class ParameterGeometry;
     class ParameterSelect;
     class ParameterTimeline1D;
     class ParameterText;

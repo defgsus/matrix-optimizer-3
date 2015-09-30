@@ -13,6 +13,7 @@
 
 
 #include "objectgl.h"
+#include "object/interface/valuegeometryinterface.h"
 #include "gl/shadersource.h"
 
 namespace MO {
@@ -20,7 +21,7 @@ namespace MO {
 class TextureMorphSetting;
 class UserUniformSetting;
 
-class Model3d : public ObjectGl
+class Model3d : public ObjectGl, public ValueGeometryInterface
 {
     Q_OBJECT
 public:
@@ -48,6 +49,11 @@ public:
     Vec4 modelColor(Double time, uint thread) const;
     /** Returns a copy of the shader code after replacements, includes, etc.. */
     GL::ShaderSource shaderSource() const;
+
+    /** Geometry interface */
+    const GEOM::Geometry * valueGeometry(
+            uint channel, Double time, uint thread) const Q_DECL_OVERRIDE
+    { Q_UNUSED(channel); Q_UNUSED(time); Q_UNUSED(thread); return geometry(); }
 
 protected:
 

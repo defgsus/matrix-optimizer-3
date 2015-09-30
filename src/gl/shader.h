@@ -169,7 +169,7 @@ public:
     bool sourceChanged() const { return sourceChanged_; }
 
     /** Is the shader ready to use? */
-    bool ready() const { return ready_; }
+    bool isReady() const { return ready_; }
 
     /** Returns if the shader has been activated.
         @note If, after activation, activate() or deactivate() is called on a

@@ -77,7 +77,7 @@ Shader::~Shader()
 {
     MO_DEBUG_GL("Shader(" << name_ << ")::~Shader()");
 
-    if (ready())
+    if (isReady())
         MO_WARNING("delete of shader object with bound resources - OpenGL resource leak");
 }
 
@@ -294,7 +294,7 @@ void Shader::parseLog_(const QString &log, ProgramType pt)
 
 void Shader::activate()
 {
-    if (!ready())
+    if (!isReady())
         return;
 
     MO_CHECK_GL_THROW( glUseProgram(prog_) );

@@ -156,6 +156,8 @@ QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
             break;
         case ST_AUDIO: hue = 0;
             break;
+        case ST_GEOMETRY: hue = ObjectFactory::hueForObject(Object::T_GEOMETRY);
+            break;
     }
 
     int sat = hue == -1 ? 0 : 100;

@@ -180,6 +180,9 @@ public:
     ParameterTexture * createTextureParameter(
                 const QString& id, const QString& name, const QString& statusTip);
 
+    ParameterGeometry * createGeometryParameter(
+                const QString& id, const QString& name, const QString& statusTip);
+
     /** Creates a timeline parameter.
         Ownership of @p defaultValue stays with caller.
         The @p defaultValue timeline is copied, if specified and can be deleted

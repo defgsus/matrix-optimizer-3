@@ -1404,6 +1404,7 @@ QString Object::getSignalName(SignalType t)
         case ST_TIMELINE1D: return tr("timeline1d");
         case ST_AUDIO: return tr("audio");
         case ST_CALLBACK: return tr("callback");
+        case ST_GEOMETRY: return tr("geometry");
     }
     return QString();
 }
@@ -1424,7 +1425,8 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
 
     p_outputMap_.insert(t, num);
 
-    if (emitSignal && editor()) // XXX Need a signal for that
+    /** @todo Need a signal for changing outputs */
+    if (emitSignal && editor())
         editor()->emitAudioChannelsChanged(this);
 }
 

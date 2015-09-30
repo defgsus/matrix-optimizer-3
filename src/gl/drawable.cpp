@@ -88,13 +88,13 @@ VertexArrayObject * Drawable::vao()
 
 bool Drawable::isReady() const
 {
-    return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->ready();
+    return geometry_ && vao_ && vao_->isCreated() && shader_ && shader_->isReady();
 }
 
 bool Drawable::isCreated() const
 {
     return (vao_ && vao_->isCreated())
-            || (shader_ && shader_->ready());
+            || (shader_ && shader_->isReady());
 }
 
 void Drawable::setGeometry(GEOM::Geometry * g)
