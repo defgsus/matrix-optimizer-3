@@ -49,6 +49,12 @@ public:
     explicit TextureSetting(Object *parent);
     ~TextureSetting();
 
+    /** If enableNone is true in createParameters() and
+        this settings is true, a dummy texture will be created
+        for the None setting.
+        Default is false. */
+    void setNoneTextureProxy(bool enable) { createNoneTex_ = enable; }
+
     // -------------- io ---------------
 
     void serialize(IO::DataStream& io) const;
@@ -124,6 +130,7 @@ protected slots:
 
     void setTextureFromImage_(const QString& fn);
     void setTextureFromAS_(const QString& script);
+    void setNoneTexture_();
     void updateCameraFbo_();
     void updateSceneFbo_();
 
@@ -142,6 +149,7 @@ private:
     ParameterTexture * paramTex_;
 
     QString errorStr_;
+    bool createNoneTex_;
 };
 
 } // namespace MO

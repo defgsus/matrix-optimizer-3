@@ -608,8 +608,7 @@ void Scene::updateTree_()
     // tell everyone how much lights we have
     //if (numlights != lightSources_.size())
     // XXX ^the check is okay, but we need to tell
-    // new objects the light sources and that does
-    // not happen currently...
+    // new objects the light sources and that would not happen
         updateNumberLights_();
 
     // tell all objects how much thread data they need

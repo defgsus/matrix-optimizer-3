@@ -25,12 +25,12 @@
 #include "object/param/parameterimagelist.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametergeometry.h"
-#include "object/util/useruniformsetting.h"
+#include "object/util/texturesetting.h"
 #include "io/filemanager.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
-#if 1
+#if 0
 #   define MO_DEBUG_IG(arg__) MO_PRINT("ImageGallery("<<name()<<":"<<arg__)
 #else
 #   define MO_DEBUG_IG(unused__) { }
@@ -41,28 +41,33 @@ namespace MO {
 MO_REGISTER_OBJECT(ImageGallery)
 
 
-struct ImageGallery::VAO_
+struct ImageGallery::Entity_
 {
-    VAO_() : vao(0), tex(0), index(0), indexT(0.f), aspect(1.f) { }
-    ~VAO_()
+    Entity_() : tex(0), index(0), indexT(0.f), aspect(1.f) { }
+    ~Entity_()
     {
-        delete vao;
         delete tex;
     }
 
-    GL::VertexArrayObject * vao;
     GL::Texture * tex;
     int index;
     Float indexT, aspect;
+    Mat4 transformFrame,
+         transformImage,
+         transformCurrent;
 };
 
 
 ImageGallery::ImageGallery(QObject * parent)
     : ObjectGl      (parent),
       shader_       (0),
+      vaoImage_     (0),
+      vaoFrame_     (0),
+      frameTexSet_  (new TextureSetting(this)),
       u_light_amt_  (0),
       doRecompile_  (true),
-      doCreateVaos_  (true)
+      doCalcBaseTransform_(true),
+      doCreateVaos_ (true)
 {
     setName("ImageGallery");
     initDefaultUpdateMode(UM_ALWAYS, false);
@@ -71,8 +76,11 @@ ImageGallery::ImageGallery(QObject * parent)
 ImageGallery::~ImageGallery()
 {
     delete shader_;
-    for (auto v : vaos_)
+    delete vaoImage_;
+    delete vaoFrame_;
+    for (auto v : entities_)
         delete v;
+    delete frameTexSet_;
 }
 
 void ImageGallery::serialize(IO::DataStream & io) const
@@ -103,6 +111,12 @@ void ImageGallery::createParameters()
         paramImageGeom_ = params()->createGeometryParameter(
                     "geometry_image", tr("image geometry"),
                     tr("The geometry that is used to display each image"));
+        paramImageGeom_->setVisibleGraph(true);
+
+        paramFrameGeom_ = params()->createGeometryParameter(
+                    "geometry_frame", tr("frame geometry"),
+                    tr("A geometry that is used to display a frame for each image"));
+        paramFrameGeom_->setVisibleGraph(true);
 
         keepImageAspect_ = params()->createBooleanParameter(
                     "keep_image_aspect", tr("keep image aspect"),
@@ -112,7 +126,24 @@ void ImageGallery::createParameters()
                     true,
                     true, false);
 
+        keepFrameAspect_ = params()->createBooleanParameter(
+                    "keep_frame_aspect", tr("keep frame aspect"),
+                    tr("If selected, the frame geometry is scaled to the image aspect ratio"),
+                    tr("Geometry is unchanged"),
+                    tr("Geometry is scale according to the aspect ratio of each image"),
+                    true,
+                    true, false);
+
     params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("frametex", "frame texture");
+
+        frameTexSet_->setNoneTextureProxy(true);
+        frameTexSet_->createParameters("_frametex", TextureSetting::TEX_NONE, true);
+
+    params()->endParameterGroup();
+
 
     params()->beginParameterGroup("light", "lighting");
 
@@ -129,23 +160,41 @@ void ImageGallery::createParameters()
             LM_PER_FRAGMENT,
             true, false);
 
-        diffAmt_ = params()->createFloatParameter("diffuseamt", tr("diffuse"),
-                                   tr("Amount of diffuse lighting"),
-                                   .3, 0.1);
+        diffAmt_ = params()->createFloatParameter("diffuseamt", tr("image diffuse"),
+                                   tr("Amount of diffuse lighting for the image"),
+                                   .1, 0.1);
 
-        diffExp_ = params()->createFloatParameter("diffuseexp", tr("diffuse exponent"),
+        diffExp_ = params()->createFloatParameter("diffuseexp", tr("image diffuse exponent"),
                                    tr("Exponent for the diffuse lighting - the higher, the narrower"),
-                                   4.0, 0.1);
+                                   2.0, 0.1);
         diffExp_->setMinValue(0.001);
 
-        specAmt_ = params()->createFloatParameter("specularamt", tr("specular"),
-                                   tr("Amount of specular light reflection"),
-                                   .2, 0.1);
+        specAmt_ = params()->createFloatParameter("specularamt", tr("image specular"),
+                                   tr("Amount of specular light reflection for the image"),
+                                   .05, 0.05);
 
-        specExp_ = params()->createFloatParameter("specexp", tr("specular exponent"),
-                                   tr("Exponent for the diffuse lighting - the higher, the narrower"),
+        specExp_ = params()->createFloatParameter("specexp", tr("image specular exponent"),
+                                   tr("Exponent for the specular lighting - the higher, the narrower"),
                                    10.0, 0.1);
         specExp_->setMinValue(0.001);
+
+        diffAmtF_ = params()->createFloatParameter("diffuseamt_f", tr("frame diffuse"),
+                                   tr("Amount of diffuse lighting for the frame"),
+                                   .3, 0.1);
+
+        diffExpF_ = params()->createFloatParameter("diffuseexp_f", tr("frame diffuse exponent"),
+                                   tr("Exponent for the diffuse lighting - the higher, the narrower"),
+                                   4.0, 0.1);
+        diffExpF_->setMinValue(0.001);
+
+        specAmtF_ = params()->createFloatParameter("specularamt_f", tr("frame specular"),
+                                   tr("Amount of specular light reflection for the frame"),
+                                   .2, 0.1);
+
+        specExpF_ = params()->createFloatParameter("specexp_f", tr("frame specular exponent"),
+                                   tr("Exponent for the specular lighting - the higher, the narrower"),
+                                   10.0, 0.1);
+        specExpF_->setMinValue(0.001);
 
     params()->endParameterGroup();
 
@@ -188,19 +237,30 @@ void ImageGallery::onParameterChanged(Parameter *p)
         requestRender();
     }
 
-    if (p == imageList_)
+    if (p == imageList_
+      || frameTexSet_->needsReinit(p))
         requestReinitGl();
+
+    if (p == keepFrameAspect_
+        || p == keepImageAspect_)
+        doCalcBaseTransform_ = true;
 }
 
 void ImageGallery::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
-    diffAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
-    diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
-    specAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
-    specExp_->setVisible( lightMode_->baseValue() != LM_NONE );
+    bool isLight = lightMode_->baseValue() != LM_NONE;
+    diffAmt_->setVisible( isLight );
+    diffExp_->setVisible( isLight );
+    specAmt_->setVisible( isLight );
+    specExp_->setVisible( isLight );
+    diffAmtF_->setVisible( isLight );
+    diffExpF_->setVisible( isLight );
+    specAmtF_->setVisible( isLight );
+    specExpF_->setVisible( isLight );
 
+    frameTexSet_->updateParameterVisibility();
 }
 
 void ImageGallery::getNeededFiles(IO::FileList &files)
@@ -238,7 +298,18 @@ void ImageGallery::initGl(uint /*thread*/)
 
     releaseAll_();
 
-    // load textures
+    // get frame texture
+
+    try
+    {
+        frameTexSet_->initGl();
+    }
+    catch (const Exception& e)
+    {
+        setErrorMessage(e.what());
+    }
+
+    // load image textures
 
     int k = 0;
     for (const QString& fn : imageList_->baseValue())
@@ -251,11 +322,11 @@ void ImageGallery::initGl(uint /*thread*/)
             auto tex = GL::Texture::createFromImage(fnl, gl::GL_RGBA);
 
             // add an entry in vao entity list
-            auto v = new VAO_();
+            auto v = new Entity_();
             v->tex = tex;
             v->index = k++;
-            v->aspect = Float(v->tex->width()) / v->tex->height();
-            vaos_ << v;
+            v->aspect = std::max(0.0001f, float(v->tex->width()) / v->tex->height());
+            entities_ << v;
         }
         catch (const Exception& e)
         {
@@ -263,12 +334,11 @@ void ImageGallery::initGl(uint /*thread*/)
         }
     }
 
-    // set indexT field
-    for (auto v : vaos_)
-        v->indexT = Float(v->index) / vaos_.size();
+    // set indexT field [0,1)
+    for (auto v : entities_)
+        v->indexT = Float(v->index) / entities_.size();
 
-    // need to create new vaos
-    doRecompile_ = doCreateVaos_ = true;
+    doCalcBaseTransform_ = doRecompile_ = doCreateVaos_ = true;
 }
 
 void ImageGallery::releaseGl(uint /*thread*/)
@@ -296,6 +366,24 @@ GL::ShaderSource ImageGallery::shaderSource() const
     if (!shader_)
         return GL::ShaderSource();
     return *shader_->source();
+}
+
+void ImageGallery::calcBaseTransform_()
+{
+    for (auto v : entities_)
+    {
+        if (keepFrameAspect_->baseValue())
+            v->transformFrame = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
+        else
+            v->transformFrame = Mat4(1.);
+
+        if (keepImageAspect_->baseValue())
+            v->transformImage = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
+        else
+            v->transformImage = Mat4(1.);
+    }
+
+    doCalcBaseTransform_ = false;
 }
 
 void ImageGallery::setupShader_()
@@ -370,52 +458,65 @@ void ImageGallery::setupVaos_()
     if (!shader_ || !shader_->isReady())
         return;
 
-    // get the input geometries
-    auto geoms = paramImageGeom_->getGeometries(0, MO_GFX_THREAD);
-
-    // construct a single Geometry from it
-    auto srcGeom = GEOM::Geometry::createFrom(geoms);
-
-    if (!srcGeom->numVertices())
-        return;
-
-    // create VAO for each texture
-    for (auto v : vaos_)
     {
-        GEOM::Geometry * geom;
-        if (!keepImageAspect_->baseValue())
-        {
-            geom = srcGeom;
-            geom->addRef();
-        }
-        else
-        {
-            // make a copy from original
-            geom = new GEOM::Geometry(*srcGeom);
+        // get the input geometries
+        auto geoms = paramImageGeom_->getGeometries(0, MO_GFX_THREAD);
 
-            // apply transformation (aspect)
-            geom->scale(1.f, 1.f / std::max(0.001f, v->aspect), 1.f);
-        }
+        // construct a single Geometry from it
+        auto geom = GEOM::Geometry::createFrom(geoms);
 
-        try
+        if (geom->numVertices())
         {
-            // get the VAO resource
-            auto vao = new GL::VertexArrayObject(QString("%1.%2")
-                                                 .arg(name()).arg(v->index));
-            geom->getVertexArrayObject(vao, shader_);
-            // install
-            v->vao = vao;
-        }
-        catch (const Exception& e)
-        {
-            setErrorMessage(tr("Failed to create VertexArrayObject from geometry\n%1")
-                            .arg(e.what()));
+            // create VAO
+            try
+            {
+                // get the VAO resource
+                vaoImage_ = new GL::VertexArrayObject(QString("%1_image")
+                                                     .arg(name()));
+                geom->getVertexArrayObject(vaoImage_, shader_);
+            }
+            catch (const Exception& e)
+            {
+                setErrorMessage(tr("Failed to create VertexArrayObject from image geometry\n%1")
+                                .arg(e.what()));
+                releaseVaos_();
+            }
         }
 
         geom->releaseRef();
     }
 
-    srcGeom->releaseRef();
+    {
+        // get the input geometries
+        auto geoms = paramFrameGeom_->getGeometries(0, MO_GFX_THREAD);
+
+        // construct a single Geometry from it
+        auto geom = GEOM::Geometry::createFrom(geoms);
+
+        if (geom->numVertices())
+        {
+
+            // create VAO
+            try
+            {
+                // get the VAO resource
+                vaoFrame_ = new GL::VertexArrayObject(QString("%1_image")
+                                                     .arg(name()));
+                geom->getVertexArrayObject(vaoFrame_, shader_);
+            }
+            catch (const Exception& e)
+            {
+                setErrorMessage(tr("Failed to create VertexArrayObject from frame geometry\n%1")
+                                .arg(e.what()));
+                if (vaoFrame_->isCreated())
+                    vaoFrame_->release();
+                delete vaoFrame_;
+                vaoFrame_ = 0;
+            }
+        }
+
+        geom->releaseRef();
+    }
 
     doCreateVaos_ = false;
 }
@@ -424,36 +525,52 @@ void ImageGallery::releaseVaos_()
 {
     MO_DEBUG_IG("releaseVaos_()");
 
-    // only remove the VAO_::vao field
-    for (auto v : vaos_)
-    {
-        if (v->vao && v->vao->isCreated())
-            v->vao->release();
+    if (vaoImage_ && vaoImage_->isCreated())
+        vaoImage_->release();
 
-        delete v->vao;
-        v->vao = 0;
-    }
+    delete vaoImage_;
+    vaoImage_ = 0;
+
+    if (vaoFrame_ && vaoFrame_->isCreated())
+        vaoFrame_->release();
+
+    delete vaoFrame_;
+    vaoFrame_ = 0;
 }
 
 void ImageGallery::releaseAll_()
 {
     MO_DEBUG_IG("releaseAll_()");
 
-    for (auto v : vaos_)
+    for (auto v : entities_)
     {
-        if (v->vao && v->vao->isCreated())
-            v->vao->release();
-        delete v->vao;
         if (v->tex && v->tex->isAllocated())
             v->tex->release();
         delete v->tex;
     }
-    vaos_.clear();
+    entities_.clear();
+
+    frameTexSet_->releaseGl();
+
+    if (vaoImage_ && vaoImage_->isCreated())
+        vaoImage_->release();
+
+    delete vaoImage_;
+    vaoImage_ = 0;
+
+    if (vaoFrame_ && vaoFrame_->isCreated())
+        vaoFrame_->release();
+
+    delete vaoFrame_;
+    vaoFrame_ = 0;
 }
 
 void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
-    if (paramImageGeom_->hasChanged(time, thread))
+    // -- lazy initializer --
+
+    if (paramImageGeom_->hasChanged(time, thread)
+      || paramFrameGeom_->hasChanged(time, thread))
     {
         doCreateVaos_ = true;
     }
@@ -468,26 +585,40 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
         setupVaos_();
     }
 
-    if (!shader_)
+    if (doCalcBaseTransform_)
+    {
+        calcBaseTransform_();
+    }
+
+    if (!shader_ || !vaoImage_ || !vaoImage_->isCreated())
         return;
 
-    // ---- update shader uniforms -----
+    // --- get common parameter values ---
+
+    Vec4 frameCol, imageCol,
+         frameLightAmt, imageLightAmt;
 
     if (uniformColor_)
     {
-        const auto bright = mbright_->value(time, thread);
-        uniformColor_->setFloats(
-                mr_->value(time, thread) * bright,
-                mg_->value(time, thread) * bright,
-                mb_->value(time, thread) * bright,
-                ma_->value(time, thread));
+        frameCol = frameColor(time, thread);
+        imageCol = imageColor(time, thread);
     }
+
     if (u_light_amt_)
-        u_light_amt_->setFloats(
+    {
+        imageLightAmt = Vec4(
                     diffAmt_->value(time, thread),
                     diffExp_->value(time, thread),
                     specAmt_->value(time, thread),
                     specExp_->value(time, thread));
+        frameLightAmt = Vec4(
+                    diffAmtF_->value(time, thread),
+                    diffExpF_->value(time, thread),
+                    specAmtF_->value(time, thread),
+                    specExpF_->value(time, thread));
+    }
+
+    // ---- update shader uniforms -----
 
     if (u_cam_pos_)
     {
@@ -530,31 +661,89 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
                                       rs.lightSettings().count(), rs.lightSettings().diffuseExponents()) );
     }
 
-    for (auto v : vaos_)
-    if (v->vao && v->vao->isCreated())
+    // --- calc individual transformation ---
+    for (auto v : entities_)
     {
-        // get individual transformation
-        Mat4 trans = transformation();
-
-        trans = MATH::rotate(trans, v->indexT * 360.f, Vec3(0,1,0));
+        Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
         trans = glm::translate(trans, Vec3(0,0,-5));
 
+        v->transformCurrent = trans;
+    }
+
+    // render each entity
+    for (auto v : entities_)
+    {
+        // get base transformation
+
         const Mat4
+                trans = transformation() * v->transformCurrent,
                 cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans,
                 viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
-        if (uniformCVT_)
-            MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_->location(), 1, GL_FALSE, &cubeViewTrans[0][0]) );
-        if (uniformVT_)
-            MO_CHECK_GL( glUniformMatrix4fv(uniformVT_->location(), 1, GL_FALSE, &viewTrans[0][0]) );
-        if (uniformT_)
-            MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE, &trans[0][0]) );
+        // -- render frame --
 
-        // bind the texture
+        if (vaoFrame_ && vaoFrame_->isCreated())
+        {
+            if (uniformColor_)
+            {
+                uniformColor_->set(frameCol);
+                uniformColor_->send();
+            }
+
+            if (u_light_amt_)
+            {
+                u_light_amt_->set(frameLightAmt);
+                u_light_amt_->send();
+            }
+
+            if (uniformCVT_)
+                MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_->location(), 1, GL_FALSE,
+                                                &(cubeViewTrans * v->transformFrame)[0][0]) );
+            if (uniformVT_)
+                MO_CHECK_GL( glUniformMatrix4fv(uniformVT_->location(), 1, GL_FALSE,
+                                                &(viewTrans * v->transformFrame)[0][0]) );
+            if (uniformT_)
+                MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE,
+                                                &(trans * v->transformFrame)[0][0]) );
+            // bind frame texture
+            if (frameTexSet_->isEnabled())
+                frameTexSet_->bind(time, thread);
+
+            // render frame
+            vaoFrame_->drawElements();
+        }
+
+
+        // -- render image --
+
+        if (uniformColor_)
+        {
+            uniformColor_->set(imageCol);
+            uniformColor_->send();
+        }
+
+        if (u_light_amt_)
+        {
+            u_light_amt_->set(imageLightAmt);
+            u_light_amt_->send();
+        }
+
+        if (uniformCVT_)
+            MO_CHECK_GL( glUniformMatrix4fv(uniformCVT_->location(), 1, GL_FALSE,
+                                            &(cubeViewTrans * v->transformImage)[0][0]) );
+        if (uniformVT_)
+            MO_CHECK_GL( glUniformMatrix4fv(uniformVT_->location(), 1, GL_FALSE,
+                                            &(viewTrans * v->transformImage)[0][0]) );
+        if (uniformT_)
+            MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE,
+                                            &(trans * v->transformImage)[0][0]) );
+
+        // bind the image texture
         v->tex->bind();
 
-        // render
-        v->vao->drawElements();
+        // render image
+        vaoImage_->drawElements();
+
     }
 
     shader_->deactivate();

@@ -216,7 +216,7 @@ void Model3d::createParameters()
                                    .2, 0.1);
 
         specExp_ = params()->createFloatParameter("specexp", tr("specular exponent"),
-                                   tr("Exponent for the diffuse lighting - the higher, the narrower"),
+                                   tr("Exponent for the specular lighting - the higher, the narrower"),
                                    10.0, 0.1);
         specExp_->setMinValue(0.001);
 

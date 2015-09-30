@@ -132,7 +132,7 @@ int ObjectFactory::hueForObject(int type)
         return 60;
     else
     if (type == Object::T_GEOMETRY)
-        return 80;
+        return 200;
     else
     if (type == Object::T_SHADER || type == Object::T_TEXTURE)
         return 45;

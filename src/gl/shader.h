@@ -71,6 +71,9 @@ public:
 
     void setAutoSend(bool e) { autoSend_ = e; }
 
+    /** Sends the single uniform to shader, e.g. Shader::sendUniform() */
+    void send();
+
     // ----------- private area -----------
 private:
 

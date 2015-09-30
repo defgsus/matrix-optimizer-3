@@ -56,24 +56,29 @@ private slots:
 
     void setupShader_();
     void setupVaos_();
+    void calcBaseTransform_();
     void releaseVaos_();
     void releaseAll_();
 
 private:
 
-    struct VAO_;
+    struct Entity_;
 
     GL::Shader * shader_;
-    QList<VAO_*> vaos_;
+    QList<Entity_*> entities_;
+    GL::VertexArrayObject * vaoImage_, * vaoFrame_;
 
     ParameterFloat
         *mr_, *mg_, *mb_, *ma_, *mbright_,
         *fr_, *fg_, *fb_, *fa_, *fbright_,
-        *diffAmt_, *diffExp_, *specAmt_, *specExp_;
+        *diffAmt_, *diffExp_, *specAmt_, *specExp_,
+        *diffAmtF_, *diffExpF_, *specAmtF_, *specExpF_;
     ParameterSelect *arrangement_, *lightMode_,
-        * keepImageAspect_;
+        * keepImageAspect_, * keepFrameAspect_;
     ParameterImageList *imageList_;
-    ParameterGeometry *paramImageGeom_;
+    ParameterGeometry *paramImageGeom_,
+                        *paramFrameGeom_;
+    TextureSetting * frameTexSet_;
 
     GL::Uniform * u_cam_pos_, * u_light_amt_, * u_tex_,
             * uniformProj_,
@@ -89,6 +94,7 @@ private:
             * uniformColor_;
 
     bool doRecompile_,
+         doCalcBaseTransform_,
          doCreateVaos_;
 };
 

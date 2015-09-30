@@ -54,6 +54,11 @@ void Uniform::copyValuesFrom_(Uniform * u)
     ints[3] = u->ints[3];
 }
 
+void Uniform::send()
+{
+    shader_->sendUniform(this);
+}
+
 
 Attribute::Attribute()
     :   type_    (GLenum(0)),

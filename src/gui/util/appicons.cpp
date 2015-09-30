@@ -34,6 +34,7 @@
 #include "object/texture/blurto.h"
 #include "object/ascriptobject.h"
 #include "object/visual/oscillograph.h"
+#include "object/visual/imagegallery.h"
 #include "object/textobject.h"
 #ifndef MO_DISABLE_SPATIAL
 #   include "object/synthesizer.h"
@@ -82,7 +83,8 @@ struct AppIcons::Private
         I_TEX,
         I_TO_BLUR,
         I_TEXT,
-        I_MICROPHONE_GROUP
+        I_MICROPHONE_GROUP,
+        I_GALLERY
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -159,6 +161,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_TO_BLUR, ":/icon/obj_to_blur.png");
     nameMap_.insert(I_TEXT, ":/icon/obj_text.png");
     nameMap_.insert(I_MICROPHONE_GROUP, ":/icon/obj_microphone_group.png");
+    nameMap_.insert(I_GALLERY, ":/icon/obj_gallery.png");
 }
 
 
@@ -201,6 +204,9 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 
     if (qobject_cast<const Oscillograph*>(o))
         return I_OSCILLOGRAPH;
+
+    if (qobject_cast<const ImageGallery*>(o))
+        return I_GALLERY;
 
     if (qobject_cast<const DerivativeObjectFloat*>(o))
         return I_DERIVATIVE;

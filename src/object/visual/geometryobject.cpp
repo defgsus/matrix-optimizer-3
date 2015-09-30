@@ -125,7 +125,9 @@ void GeometryObject::createGeometry_()
     else // or in background
     {
         resetCreator_();
-        creator_ = new GEOM::GeometryCreator(this);
+        /** @todo crash when GeometryCreator is attached as child and
+            object is moved!! */
+        creator_ = new GEOM::GeometryCreator(/*this*/);
         connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
         connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_(QString)));
 
@@ -145,7 +147,8 @@ void GeometryObject::resetCreator_()
             creator_->discard();
         }
         else
-            creator_->deleteLater();
+            // XXX Should be deleteLater(), see above
+            delete creator_;
     }
     creator_ = 0;
 }

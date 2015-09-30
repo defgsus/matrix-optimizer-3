@@ -172,8 +172,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="508.9812"
-     inkscape:cy="309.23997"
+     inkscape:cx="508.94893"
+     inkscape:cy="357.91806"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -3314,5 +3314,54 @@
          d="M 410.71429,100.21932 425.53571,87.005039"
          style="fill:none;stroke:#000000;stroke-width:2.3070913;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:6.92127391,6.92127391;stroke-dashoffset:0" />
     </g>
+    <g
+       id="g4203"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_gallery.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"
+       transform="translate(-4.6428571,-4.2857142)"
+       style="stroke:#000000;stroke-opacity:1;fill:none">
+      <rect
+         style="fill:none;fill-opacity:0.13242008000000000;stroke:#000000;stroke-width:1.39999998000000003;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         id="rect4197"
+         width="20.092194"
+         height="14.077972"
+         x="518.74109"
+         y="746.12677"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_gallery.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+      <rect
+         inkscape:export-ydpi="164.57001"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_gallery.png"
+         y="746.12677"
+         x="541.24109"
+         height="14.077972"
+         width="20.092194"
+         id="rect4199"
+         style="fill:none;fill-opacity:0.13242008000000000;stroke:#000000;stroke-width:1.39999998000000003;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+      <rect
+         style="fill:none;fill-opacity:0.13242008000000000;stroke:#000000;stroke-width:1.39999998000000003;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         id="rect4201"
+         width="25.682169"
+         height="13.953663"
+         x="527.01752"
+         y="729.76031"
+         inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_gallery.png"
+         inkscape:export-xdpi="164.57001"
+         inkscape:export-ydpi="164.57001" />
+    </g>
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_gallery.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-569.09442"
+       x="708.41083"
+       height="68.188736"
+       width="68.188736"
+       id="rect3130-6-7"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
   </g>
 </svg>

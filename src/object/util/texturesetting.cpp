@@ -43,6 +43,7 @@ TextureSetting::TextureSetting(Object *parent)
       constTexture_ (0),
       paramType_    (0)
     , paramTex_     (0)
+    , createNoneTex_(false)
 {
 }
 
@@ -175,7 +176,13 @@ void TextureSetting::getNeededFiles(IO::FileList &files, IO::FileType ft)
 
 bool TextureSetting::isEnabled() const
 {
-    return paramType_? paramType_->baseValue() != TEX_NONE : false;
+    if (!paramType_)
+        return false;
+
+    if (paramType_->baseValue() != TEX_NONE)
+        return true;
+
+    return createNoneTex_;
 }
 
 bool TextureSetting::isCube() const
@@ -200,7 +207,11 @@ void TextureSetting::initGl()
     errorStr_.clear();
 
     if (paramType_->baseValue() == TEX_NONE)
+    {
+        if (createNoneTex_)
+            setNoneTexture_();
         return;
+    }
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
@@ -362,6 +373,15 @@ void TextureSetting::setTextureFromImage_(const QString& fn)
     constTexture_ = texture_;
 }
 
+void TextureSetting::setNoneTexture_()
+{
+    QImage img(4,4,QImage::Format_RGBA8888);
+    img.fill(Qt::white);
+
+    texture_ = GL::Texture::createFromImage(img, GL_RGBA);
+    constTexture_ = texture_;
+}
+
 void TextureSetting::setTextureFromAS_(const QString& script)
 {
 #ifdef MO_DISABLE_ANGELSCRIPT
@@ -395,10 +415,13 @@ void TextureSetting::setTextureFromAS_(const QString& script)
 
 void TextureSetting::bind(Double time, uint thread, uint slot)
 {
-    if (paramType_->baseValue() == TEX_NONE)
-        return;
-
     auto tex = constTexture_;
+
+    if (paramType_->baseValue() == TEX_NONE)
+    {
+        if (!createNoneTex_)
+            return;
+    }
 
     if (paramType_->baseValue() == TEX_PARAM)
     {

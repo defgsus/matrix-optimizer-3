@@ -139,7 +139,7 @@ public:
         /** Objects that have a definite position */
         TG_REAL_OBJECT      = T_OBJECT | T_GROUP | T_MICROPHONE | T_SOUNDSOURCE
                                 | T_CAMERA | T_LIGHTSOURCE | T_MICROPHONE_GROUP
-                                | T_SOUND_OBJECT | T_SHADER | T_GEOMETRY,
+                                | T_SOUND_OBJECT | T_SHADER,
 
         TG_TRACK            = T_TRACK_FLOAT,
         TG_SEQUENCE         = T_SEQUENCE_FLOAT,
