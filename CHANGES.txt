@@ -1,5 +1,21 @@
+3.0.3.2
+
+ - multi-sample anti-aliasing (MSAA) for non-cube camera modes
+ - smoother graphics time between audio dsp blocks!
+   (display time is not bound to beginning of dsp blocks anymore)
+ - support for image-lists (in "Images" texture object and "ImageGallery")
+ - face-culling selection in render-objects
+ - Geometry object and connection type
+
+3.0.3.1
+
+ - default visibility for input parameters
+ - fps counter
+ - gui fixes
+
 3.0.3
- - windows (7) port
+
+ - windows (XP/7) port
  - asset browser
  - more gui fixes
 

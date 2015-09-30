@@ -27,6 +27,14 @@ public:
         LM_PER_FRAGMENT
     };
 
+    enum Arrangement
+    {
+        A_ROW,
+        A_COLUMN,
+        A_CIRCLE,
+        A_CYLINDER
+    };
+
     MO_OBJECT_CONSTRUCTOR(ImageGallery);
     ~ImageGallery();
 
@@ -67,12 +75,14 @@ private:
     GL::Shader * shader_;
     QList<Entity_*> entities_;
     GL::VertexArrayObject * vaoImage_, * vaoFrame_;
+    Vec3 extentMin_, extentMax_, extent_;
 
     ParameterFloat
         *mr_, *mg_, *mb_, *ma_, *mbright_,
         *fr_, *fg_, *fb_, *fa_, *fbright_,
         *diffAmt_, *diffExp_, *specAmt_, *specExp_,
-        *diffAmtF_, *diffExpF_, *specAmtF_, *specExpF_;
+        *diffAmtF_, *diffExpF_, *specAmtF_, *specExpF_,
+        *spacing_, *radius_;
     ParameterSelect *arrangement_, *lightMode_,
         * keepImageAspect_, * keepFrameAspect_;
     ParameterImageList *imageList_;

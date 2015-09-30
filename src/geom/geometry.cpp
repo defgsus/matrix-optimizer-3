@@ -9,6 +9,7 @@
 */
 
 #include <random>
+#include <atomic>
 
 #include <QSet>
 #include <QTextStream>
@@ -43,6 +44,13 @@ const GLenum Geometry::attributeEnum    = GL_FLOAT;
 
 namespace
 {
+    /** Helper to keep Geometry::hash() unique */
+    static std::atomic_int geom_hash_;
+
+
+    // Some halbausgerorener stuff to build
+    // a std::map from vertex positions
+
     struct Hash2
     {
         Float x,y;
@@ -95,13 +103,19 @@ Geometry::Geometry()
         curEdge_(gl::GL_TRUE),
 #endif
         sharedVertices_ (false),
-        threshold_      (minimumThreshold)
+        threshold_      (minimumThreshold),
+        p_hash_   (geom_hash_++)
 {
 }
 
 Geometry::~Geometry()
 {
     clear();
+}
+
+void Geometry::setChanged()
+{
+    p_hash_ = geom_hash_++;
 }
 
 QString Geometry::infoString() const
@@ -122,6 +136,8 @@ QString Geometry::infoString() const
 
 void Geometry::clear()
 {
+    setChanged();
+
     vertex_.clear();
     normal_.clear();
     color_.clear();
@@ -255,6 +271,8 @@ QStringList Geometry::getAttributeNames() const
 
 Geometry::UserAttribute * Geometry::addAttribute(const QString &name, unsigned int numComponents)
 {
+    setChanged();
+
     auto a = getAttribute(name);
     if (!a)
     {
@@ -276,6 +294,8 @@ Geometry::UserAttribute * Geometry::addAttribute(const QString &name, unsigned i
 
 void Geometry::setAttribute(const QString &name, AttributeType x)
 {
+    setChanged();
+
     auto a = getAttribute(name);
     if (!a)
         a = addAttribute(name, 1);
@@ -285,6 +305,8 @@ void Geometry::setAttribute(const QString &name, AttributeType x)
 
 void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y)
 {
+    setChanged();
+
     auto a = getAttribute(name);
     if (!a)
         a = addAttribute(name, 2);
@@ -296,6 +318,8 @@ void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType 
 
 void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z)
 {
+    setChanged();
+
     auto a = getAttribute(name);
     if (!a)
         a = addAttribute(name, 3);
@@ -309,6 +333,8 @@ void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType 
 
 void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType y, AttributeType z, AttributeType w)
 {
+    setChanged();
+
     auto a = getAttribute(name);
     if (!a)
         a = addAttribute(name, 4);
@@ -324,6 +350,8 @@ void Geometry::setAttribute(const QString &name, AttributeType x, AttributeType 
 
 Geometry::UserAttribute * Geometry::addEnumerationAttribute(const QString &name)
 {
+    setChanged();
+
     auto a = addAttribute(name, 4);
 
     for (size_t i=0; i<numVertices(); ++i)
@@ -386,8 +414,8 @@ void Geometry::getExtent(Vec3 * minimum, Vec3 * maximum) const
 {
     if (numVertices() < 1)
     {
-        *minimum = Vec3(0,0,0);
-        *maximum = Vec3(0,0,0);
+        *minimum = *maximum = Vec3(0,0,0);
+        return;
     }
 
     *minimum = *maximum = getVertex(0);
@@ -453,6 +481,8 @@ bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec
 
 void Geometry::setSharedVertices(bool enable, VertexType threshold)
 {
+    setChanged();
+
     sharedVertices_ = enable;
     threshold_ = std::max(minimumThreshold, threshold);
     if (!enable)
@@ -477,11 +507,13 @@ Geometry::IndexType Geometry::addVertex(
                 NormalType nx, NormalType ny, NormalType nz,
                 ColorType r, ColorType g, ColorType b, ColorType a,
                 TextureCoordType u, TextureCoordType v)
-{
+{    
     if (!sharedVertices_)
     {
         return addVertexAlways(x,y,z,nx,ny,nz,r,g,b,a,u,v);
     }
+
+    setChanged();
 
 #define MO__MAKE_KEY(x__, y__, z__)  \
     (  (Key_((x__)/threshold_) & ((1<<23) - 1)) \
@@ -549,6 +581,8 @@ Geometry::IndexType Geometry::addVertexAlways(
                 ColorType r, ColorType g, ColorType b, ColorType a,
                 TextureCoordType u, TextureCoordType v)
 {
+    setChanged();
+
     vertex_.push_back(x);
     vertex_.push_back(y);
     vertex_.push_back(z);
@@ -580,6 +614,8 @@ Geometry::IndexType Geometry::duplicateVertex(IndexType t)
     if (sharedVertices())
         return t;
 
+    setChanged();
+
     const Vec3 v = getVertex(t),
                n = getNormal(t);
     const Vec4 c = getColor(t);
@@ -605,6 +641,8 @@ Geometry::IndexType Geometry::duplicateVertex(IndexType t)
 void Geometry::setAttribute(const QString &name, IndexType idx,
                             AttributeType x, AttributeType y, AttributeType z, AttributeType w)
 {
+    setChanged();
+
     auto i = attributes_.find(name);
     if (i == attributes_.end())
         return;
@@ -625,7 +663,7 @@ void Geometry::setAttribute(const QString &name, IndexType idx,
 void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
 {
     if (checkTriangle(p1, p2, p3))
-    {
+    {        
         auto i1 = addVertex(p1.x, p1.y, p1.z),
              i2 = addVertex(p2.x, p2.y, p2.z),
              i3 = addVertex(p3.x, p3.y, p3.z);
@@ -649,6 +687,7 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3,
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
+    setChanged();
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
@@ -663,6 +702,7 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
+    setChanged();
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
     triIndex_.push_back(p3);
@@ -684,6 +724,7 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
             pos3 = getVertex(p3);
     if (checkTriangle(pos1, pos2, pos3))
     {
+        setChanged();
         triIndex_.push_back(p1);
         triIndex_.push_back(p2);
         triIndex_.push_back(p3);
@@ -699,6 +740,7 @@ void Geometry::addLine(IndexType p1, IndexType p2)
 {
     MO_ASSERT(p1 < numVertices(), "line index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "line index #2 out of range " << p2 << "/" << numVertices());
+    setChanged();
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
 }
@@ -706,6 +748,7 @@ void Geometry::addLine(IndexType p1, IndexType p2)
 void Geometry::addPoint(IndexType p1)
 {
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());
+    setChanged();
     pointIndex_.push_back(p1);
 }
 
@@ -749,6 +792,7 @@ const Geometry::VertexType * Geometry::line(
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
     /** @todo Geometry::addGeometry() doesn't copy attributes! */
+    setChanged();
 
     // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
@@ -848,6 +892,7 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 
 void Geometry::scale(VertexType x, VertexType y, VertexType z)
 {
+    setChanged();
     for (uint i=0; i<numVertices(); ++i)
     {
         vertex_[i*numVertexComponents()] *= x;
@@ -858,6 +903,7 @@ void Geometry::scale(VertexType x, VertexType y, VertexType z)
 
 void Geometry::translate(VertexType x, VertexType y, VertexType z)
 {
+    setChanged();
     for (uint i=0; i<numVertices(); ++i)
     {
         vertex_[i*numVertexComponents()] += x;
@@ -868,6 +914,7 @@ void Geometry::translate(VertexType x, VertexType y, VertexType z)
 
 void Geometry::applyMatrix(const Mat4 &transformation)
 {
+    setChanged();
     // transform vertices
     for (uint i=0; i<numVertices(); ++i)
     {
@@ -897,6 +944,7 @@ void Geometry::applyMatrix(const Mat4 &transformation)
 
 void Geometry::calculateTriangleNormals()
 {
+    setChanged();
     // first clear the normal array
     normal_.resize(vertex_.size());
     for (size_t i=0; i<normal_.size(); ++i)
@@ -951,6 +999,7 @@ void Geometry::calculateTriangleNormals()
 
 void Geometry::invertNormals()
 {
+    setChanged();
     for (uint i=0; i<normal_.size(); ++i)
     {
         normal_[i] = -normal_[i];
@@ -960,6 +1009,7 @@ void Geometry::invertNormals()
 void Geometry::invertTextureCoords(bool invX, bool invY)
 {
     MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
+    setChanged();
 
     const uint si = texcoord_.size()/2;
     if (invX)
@@ -978,6 +1028,7 @@ void Geometry::invertTextureCoords(bool invX, bool invY)
 
 void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType offsetY)
 {
+    setChanged();
     MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
@@ -989,6 +1040,7 @@ void Geometry::shiftTextureCoords(TextureCoordType offsetX, TextureCoordType off
 
 void Geometry::scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scaleY)
 {
+    setChanged();
     MO_ASSERT(numTextureCoordComponents() == 2, "code not up-to-date");
 
     for (uint i=0; i<texcoord_.size(); i+=2)
@@ -1000,6 +1052,8 @@ void Geometry::scaleTextureCoords(TextureCoordType scaleX, TextureCoordType scal
 
 void Geometry::unGroupVertices()
 {
+    setChanged();
+
     // backup data
     auto vertex = vertex_;
     auto normal = normal_;
@@ -1109,6 +1163,8 @@ void Geometry::convertToLines()
     if (!numTriangles())
         return;
 
+    setChanged();
+
     //lineIndex_.clear();
 
     // test for already-connected
@@ -1155,6 +1211,8 @@ void Geometry::convertToLines()
 
 void Geometry::normalizeSphere(VertexType scale, VertexType normalization)
 {
+    setChanged();
+
     for (uint i=0; i<numVertices(); ++i)
     {
         const VertexType
@@ -1184,6 +1242,8 @@ bool Geometry::transformWithEquation(const QString& equationX,
                                      const QStringList &constantNames,
                                      const QList<Double> &constantValues)
 {
+    setChanged();
+
     Double vx, vy, vz, vindex;
 
     std::vector<PPP_NAMESPACE::Parser> equ(3);
@@ -1233,6 +1293,8 @@ bool Geometry::transformWithEquation(const QString& equation,
                                      const QStringList &constantNames,
                                      const QList<Double> &constantValues)
 {
+    setChanged();
+
     Double vx, vy, vz, vindex, vs, vt,
             red,green,blue,alpha,bright;
 
@@ -1301,6 +1363,8 @@ bool Geometry::transformPrimitivesWithEquation(
                     const QStringList& constantNames,
                     const QList<Double>& constantValues)
 {
+    setChanged();
+
     Double vx, vy, vz, vnx, vny, vnz, vs, vt,
            vpx[3], vpy[3], vpz[3],
            vpnx[3], vpny[3], vpnz[3],
@@ -1474,6 +1538,8 @@ bool Geometry::transformPrimitivesWithEquation(
                     const QStringList& constantNames,
                     const QList<Double>& constantValues)
 {
+    setChanged();
+
     Double vx, vy, vz, vnx, vny, vnz, vs, vt,
            red,green,blue,alpha,bright,
            vpx[3], vpy[3], vpz[3],
@@ -2196,6 +2262,8 @@ void Geometry::tesselateTriangles(VertexType minArea, VertexType minLength, uint
 
 void Geometry::removePrimitivesRandomly(float probability, int seed)
 {
+    setChanged();
+
     std::mt19937 rnd(seed);
 
     if (numTriangles())
@@ -2237,6 +2305,8 @@ void Geometry::transformWithNoise(
         VertexType scaleX, VertexType scaleY, VertexType scaleZ,
         int seedX, int seedY, int seedZ)
 {
+    setChanged();
+
     MATH::NoisePerlin nx(seedX), ny(seedY), nz(seedZ);
 
     for (uint i=0; i<vertex_.size(); i+=numVertexComponents())

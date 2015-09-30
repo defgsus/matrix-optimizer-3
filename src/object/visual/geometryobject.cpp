@@ -183,6 +183,8 @@ void GeometryObject::setGeometrySettings(const GEOM::GeometryFactorySettings & s
 {
     *geomSettings_ = s;
     geomSettings_->setObject(this);
+
+    createGeometry_();
 }
 
 void GeometryObject::setGeometry(const GEOM::Geometry & g)

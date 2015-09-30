@@ -62,7 +62,7 @@ PluginAO::PluginAO(QObject * parent)
     setName("Plugin");
     setNumberAudioInputsOutputs(0, 0, false);
 #ifdef MO_DISABLE_LADSPA
-    setError(tr("Audio Plugin object only supports LADSPA(Linux) at the moment"));
+    setErrorMessage(tr("Audio Plugin object only supports LADSPA(Linux) at the moment"));
 #endif
 }
 

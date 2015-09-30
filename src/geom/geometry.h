@@ -99,6 +99,11 @@ public:
 
     // ------- query ---------
 
+    /** Some value reflecting changes to the geometry.
+        This value is unique for all Geometries and all changes
+        made to it (unique per application runtime). */
+    int hash() const { return p_hash_; }
+
     /** Returns the progress during certain intense functions [0,100] */
     int progress() const { return progress_; }
 
@@ -211,6 +216,11 @@ public:
     QStringList getAttributeNames() const;
 
     // -------------- setter -----------------
+
+    /** Changes the hash value to a new unique value.
+        This is automatically called by all functions that
+        change the Geometry. */
+    void setChanged();
 
     /** Returns a pointer to numVertices() * 3 coordinates */
     VertexType * vertices() { return &vertex_[0]; }
@@ -529,6 +539,8 @@ private:
 
     bool sharedVertices_;
     VertexType threshold_;
+
+    int p_hash_;
 };
 
 } // namespace GEOM

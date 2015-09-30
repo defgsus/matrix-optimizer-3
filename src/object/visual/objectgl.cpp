@@ -22,6 +22,8 @@
 #include "object/param/parameters.h"
 #include "object/param/parameterselect.h"
 
+#undef CM_NONE // windows..
+
 namespace MO {
 
 const QStringList ObjectGl::depthTestModeNames =
@@ -30,8 +32,6 @@ const QStringList ObjectGl::depthTestModeNames =
 const QStringList ObjectGl::depthWriteModeNames =
 { tr("parent"), tr("on"), tr("off") };
 
-//const QStringList ObjectGl::alphaBlendModeNames =
-//{ tr("parent"), tr("off"), tr("cross-fade"), tr("add") };
 
 ObjectGl::ObjectGl(QObject *parent)
     : Object                    (parent),

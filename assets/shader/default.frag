@@ -78,6 +78,15 @@ uniform mat4 u_transform;                   // transformation only
     #endif
 #endif
 
+#ifdef MO_ENABLE_ENV_MAP
+    #ifndef MO_ENV_MAP_IS_CUBE
+        uniform sampler2D tex_env_0;
+    #else
+        uniform samplerCube tex_env_0;
+    #endif
+    uniform vec3 u_env_map_amt; // x=overall amt, y=direct amt, z=indirect amt
+#endif
+
 #ifdef MO_ENABLE_TEXTURE_POST_PROCESS
     uniform vec3 u_post_transform; // grayscale, invert, +/-shift
     uniform vec3 u_post_bright; // brightness, contrast, threshold
@@ -242,6 +251,28 @@ vec4 mo_ambient_color()
             ;
 }
 
+#ifdef MO_ENABLE_ENV_MAP
+vec3 mo_env_map_color()
+{
+    // hit direction
+    vec3 dir = normalize(v_pos_world - u_cam_pos);
+    // reflected direction
+    vec3 refl = reflect(dir, mo_normal);
+    // amount multiplier
+    float f = max(0., dot(dir, -mo_normal));
+    f = mix(u_env_map_amt.z, u_env_map_amt.y, f) * u_env_map_amt.x;
+
+#ifdef MO_ENV_MAP_IS_CUBE
+    // read from cube-map
+    return texture(tex_env_0, refl).xyz;
+#else
+    // direction -> equirect
+    vec2 equi = vec2(atan(refl.x, -refl.z) / PI,
+                   1. - 2. * acos(refl.y) / PI);
+    return f * texture(tex_env_0, .5+.5*equi).xyz;
+#endif
+}
+#endif
 
 
 //%mo_override_light%
@@ -367,6 +398,10 @@ void main()
     mo_light_color = mo_calc_light_color();
     // add light to the base color
     vec4 col = ambcol + mo_light_color;
+#ifdef MO_ENABLE_ENV_MAP
+    // environment map
+    col.xyz += mo_env_map_color();
+#endif
     //vec4 col = vec4(v_cam_dir, 1.0);
     //vec4 col = vec4(v_pos * 0.5 + 0.5, 1.0);
     //col *= mo_toon_color();

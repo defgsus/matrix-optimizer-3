@@ -30,11 +30,7 @@ public:
     {
         TEX_NONE,
         TEX_PARAM,
-        TEX_FILE,
-        TEX_MASTER_FRAME,
-        TEX_MASTER_FRAME_DEPTH,
-        TEX_CAMERA_FRAME,
-        TEX_CAMERA_FRAME_DEPTH
+        TEX_FILE
     };
     static const QStringList textureTypeNames;
 
@@ -131,8 +127,6 @@ protected slots:
     void setTextureFromImage_(const QString& fn);
     void setTextureFromAS_(const QString& script);
     void setNoneTexture_();
-    void updateCameraFbo_();
-    void updateSceneFbo_();
 
 private:
 
@@ -145,7 +139,6 @@ private:
                     *paramWrapX_, *paramWrapY_;
     ParameterFilename * paramFilename_;
     //ParameterText * paramAngelScript_;
-    ParameterInt * paramCamera_;
     ParameterTexture * paramTex_;
 
     QString errorStr_;

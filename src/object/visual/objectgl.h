@@ -15,6 +15,8 @@
 #include "gl/opengl.h"
 #include "object/util/alphablendsetting.h"
 
+#undef CM_NONE // windows..
+
 namespace MO {
 namespace GL { class Context; class Drawable; }
 

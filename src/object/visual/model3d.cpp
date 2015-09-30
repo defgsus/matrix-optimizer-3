@@ -18,6 +18,7 @@
 #include "gl/cameraspace.h"
 #include "gl/shader.h"
 #include "gl/compatibility.h"
+#include "gl/texture.h"
 #include "geom/geometry.h"
 #include "geom/geometrycreator.h"
 #include "geom/geometrymodifierchain.h"
@@ -50,6 +51,7 @@ Model3d::Model3d(QObject * parent)
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
+      textureEnv_  (new TextureSetting(this)),
       texturePostProc_(new ColorPostProcessingSetting(this)),
       textureMorph_ (new TextureMorphSetting(this)),
       textureBumpMorph_(new TextureMorphSetting(this)),
@@ -219,6 +221,9 @@ void Model3d::createParameters()
                                    tr("Exponent for the specular lighting - the higher, the narrower"),
                                    10.0, 0.1);
         specExp_->setMinValue(0.001);
+
+    params()->endParameterGroup();
+
 
     params()->beginParameterGroup("glsl", "glsl");
 
@@ -437,10 +442,10 @@ void Model3d::createParameters()
         texture_->createParameters("col", TextureSetting::TEX_NONE, true);
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
-                                         tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
-                                         tr("The texture coordinates are used as defined by the vertices in the geometry"),
-                                         tr("Calculated texture coordinates will be used for point sprites."),
-                                         false, true, false);
+                     tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
+                     tr("The texture coordinates are used as defined by the vertices in the geometry"),
+                     tr("Calculated texture coordinates will be used for point sprites."),
+                     false, true, false);
 
     params()->endParameterGroup();
 
@@ -468,6 +473,39 @@ void Model3d::createParameters()
     params()->beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
 
         textureBumpMorph_->createParameters("bump");
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("env_map", "environment map");
+
+        doEnvMap_ = params()->createBooleanParameter("do_env_map", tr("enable environment map"),
+                        tr("Enables environment mapping with a specific texture"),
+                                                     tr("No environment mapping"),
+                                                     tr("Environment mapping enabled"),
+                                                     false,
+                                                     true, false);
+
+        /*envMapType_ = params()->createSelectParameter("env_map_type", tr("input map type"),
+                                    tr("Selects the type of texture to use"),
+                                                      )
+        */
+
+        envMapAmt_ = params()->createFloatParameter("env_map_amt", tr("amount"),
+                                                    tr("The overall amount of the environment mapping"),
+                                                    0.5f, 0.05f, true, true);
+
+        envMapAmt2_ = params()->createFloatParameter("env_map_amt2", tr("amount direct"),
+                    tr("The amount of the environment mapping when the angle of incident "
+                       "is close to the emergent angle."),
+                    1.f, 0.05f, true, true);
+
+        envMapAmt3_ = params()->createFloatParameter("env_map_amt3", tr("amount far"),
+                    tr("The amount of the environment mapping when the angle of incident "
+                       "is opposite to the emergent angle."),
+                    1.f, 0.05f, true, true);
+
+        textureEnv_->createParameters("_env", TextureSetting::TEX_NONE, true);
 
     params()->endParameterGroup();
 
@@ -521,6 +559,7 @@ void Model3d::onParameterChanged(Parameter *p)
     }
 
     if (texture_->needsReinit(p) || textureBump_->needsReinit(p)
+        || textureEnv_->needsReinit(p)
         || uniformSetting_->needsReinit(p))
         requestReinitGl();
 }
@@ -535,6 +574,7 @@ void Model3d::updateParameterVisibility()
     textureMorph_->updateParameterVisibility();
     textureBumpMorph_->updateParameterVisibility();
     uniformSetting_->updateParameterVisibility();
+    textureEnv_->updateParameterVisibility();
 
     diffAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
@@ -563,6 +603,7 @@ void Model3d::getNeededFiles(IO::FileList &files)
 
     texture_->getNeededFiles(files, IO::FT_TEXTURE);
     textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
+    textureEnv_->getNeededFiles(files, IO::FT_TEXTURE);
 
     geomSettings_->getNeededFiles(files);
 }
@@ -597,6 +638,8 @@ void Model3d::initGl(uint /*thread*/)
     setErrorMessage(texture_->errorString());
     textureBump_->initGl();
     setErrorMessage(textureBump_->errorString());
+    textureEnv_->initGl();
+    setErrorMessage(textureEnv_->errorString());
 
     // create geometry
     draw_ = new GL::Drawable(idName());
@@ -636,6 +679,7 @@ void Model3d::releaseGl(uint /*thread*/)
 {
     texture_->releaseGl();
     textureBump_->releaseGl();
+    textureEnv_->releaseGl();
     uniformSetting_->releaseGl();
 
     if (draw_->isReady())
@@ -737,6 +781,13 @@ void Model3d::setupDrawable_()
         src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
     if (textureBump_->isEnabled())
         src->addDefine("#define MO_ENABLE_NORMALMAP");
+    if (textureEnv_->isEnabled())
+    {
+        src->addDefine("#define MO_ENABLE_ENV_MAP");
+        if (textureEnv_->isCube())
+            src->addDefine("#define MO_ENV_MAP_IS_CUBE");
+        envTexCompiledCube_ = textureEnv_->isCube();
+    }
     if (textureMorph_->isTransformEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE_TRANSFORMATION");
     if (textureMorph_->isSineMorphEnabled())
@@ -816,14 +867,16 @@ void Model3d::setupDrawable_()
     u_light_amt_ = draw_->shader()->getUniform(src->uniformNameLightAmt());
     u_cam_pos_ = draw_->shader()->getUniform("u_cam_pos");
     u_instance_count_ = draw_->shader()->getUniform("u_instance_count");
+    u_env_map_amt_ = draw_->shader()->getUniform("u_env_map_amt");
 
     const bool isvertfx = vertexFx_->baseValue();
     u_vertex_extrude_ = draw_->shader()->getUniform("u_vertex_extrude", isvertfx);
 
-    u_pointsize_ = draw_->shader()->getUniform("u_pointsize_dist", false);
+    u_pointsize_ = draw_->shader()->getUniform("u_pointsize_dist");
 
     u_tex_0_ = draw_->shader()->getUniform("tex_0");
     u_texn_0_ = draw_->shader()->getUniform("tex_norm_0");
+    u_tex_env_0_ = draw_->shader()->getUniform("tex_env_0");
     if (texture_->isEnabled())
     {
         if (texturePostProc_->isEnabled())
@@ -849,6 +902,32 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
     /** @todo wireframe-mode for Model3d, eg. glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
 
+    // recompile if 2d/cubemap change in environement texture
+    // XXX Possibly for equirect/fisheye change too, once this is implemented
+    if (textureEnv_->isEnabled()
+        && textureEnv_->texture()
+        && textureEnv_->texture()->isCube() != envTexCompiledCube_)
+        doRecompile_ = true;
+
+    if (nextGeometry_)
+    {
+        MO_DEBUG_MODEL("Model3d::renderGl: assigning next geometry");
+
+        auto g = nextGeometry_;
+        nextGeometry_ = 0;
+        draw_->setGeometry(g);
+        setupDrawable_();
+    }
+
+    if (doRecompile_)
+    {
+        MO_DEBUG_MODEL("Model3d::renderGl: recompiling shader");
+
+        doRecompile_ = false;
+        setupDrawable_();
+    }
+
+
     Mat4 trans = transformation();
     Mat4 cubeViewTrans, viewTrans;
     if (fixPosition_->baseValue() == 0)
@@ -868,24 +947,6 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         vm = rs.cameraSpace().viewMatrix();
         vm[3] = Vec4(0., 0., 0, 1.);
         viewTrans = vm * trans;
-    }
-
-    if (nextGeometry_)
-    {
-        MO_DEBUG_MODEL("Model3d::renderGl: assigning next geometry");
-
-        auto g = nextGeometry_;
-        nextGeometry_ = 0;
-        draw_->setGeometry(g);
-        setupDrawable_();
-    }
-
-    if (doRecompile_)
-    {
-        MO_DEBUG_MODEL("Model3d::renderGl: recompiling shader");
-
-        doRecompile_ = false;
-        setupDrawable_();
     }
 
     if (draw_->isReady())
@@ -914,6 +975,12 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
             u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
         if (u_vertex_extrude_)
             u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
+        if (u_env_map_amt_)
+            u_env_map_amt_->setFloats(
+                        envMapAmt_->value(time, thread),
+                        envMapAmt2_->value(time, thread),
+                        envMapAmt3_->value(time, thread));
+
 
         uint texSlot = 0;
         uniformSetting_->updateUniforms(time, thread, texSlot);
@@ -921,6 +988,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
         // bind the model3d specific textures
         if (u_tex_0_) { texture_->bind(time, thread, texSlot); u_tex_0_->ints[0] = texSlot++; }
         if (u_texn_0_) { textureBump_->bind(time, thread, texSlot); u_texn_0_->ints[0] = texSlot++; }
+        if (u_tex_env_0_) { textureEnv_->bind(time, thread, texSlot); u_tex_env_0_->ints[0] = texSlot++; }
 
         if (texture_->isEnabled())
         {

@@ -52,7 +52,7 @@ public:
 private:
 
     mutable QVector<QList<const GEOM::Geometry*>> lastGeoms_;
-
+    mutable QVector<QVector<int>> lastHashes_;
 };
 
 } // namespace MO

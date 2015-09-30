@@ -11,6 +11,7 @@
 #include "parametergeometry.h"
 #include "modulatorgeometry.h"
 #include "object/scene.h"
+#include "geom/geometry.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -65,8 +66,14 @@ QList<const GEOM::Geometry*> ParameterGeometry::getGeometries(Double time, uint 
             list << g;
 
     if ((int)thread >= lastGeoms_.size())
+    {
         lastGeoms_.resize(thread+1);
+        lastHashes_.resize(thread+1);
+    }
     lastGeoms_[thread] = list;
+    lastHashes_[thread].resize(list.size());
+    for (int i=0; i<list.size(); ++i)
+        lastHashes_[thread][i] = list[i]->hash();
 
     return list;
 }
@@ -84,7 +91,9 @@ bool ParameterGeometry::hasChanged(Double time, uint thread) const
     if (list != lastGeoms_[thread])
         return true;
 
-    /** @todo check for geometry change */
+    for (int i=0; i<list.size(); ++i)
+        if (list[i]->hash() != lastGeoms_[thread][i]->hash())
+            return true;
 
     return false;
 }

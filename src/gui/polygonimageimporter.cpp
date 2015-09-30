@@ -202,6 +202,9 @@ void PolygonImageImporter::Private::saveImage(const QString &fn)
 
 void PolygonImageImporter::Private::loadSHP(const QString &fn)
 {
+#ifdef MO_DISABLE_SHP
+    Q_UNUSED(fn);
+#else
     GEOM::ShpLoader loader;
     loader.loadFile(fn, [=](double pr)
     {
@@ -223,6 +226,7 @@ void PolygonImageImporter::Private::loadSHP(const QString &fn)
                    .arg(boundingRect.height())
                    .arg(polygons.size())
                    );
+#endif
 }
 
 void PolygonImageImporter::Private::render()

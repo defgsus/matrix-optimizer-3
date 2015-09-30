@@ -46,7 +46,7 @@ const QString& versionString()
 const QString& applicationName()
 {
     static const QString ret =
-            "Matrix Optimizer "
+            "VIOSO Matrix "
 //            "Client "
             + versionString()
 #ifdef MO_HAMBURG

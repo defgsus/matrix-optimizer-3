@@ -18,6 +18,7 @@
 #include "gl/compatibility.h"
 #include "gl/texture.h"
 #include "math/vector.h"
+#include "math/constants.h"
 #include "geom/geometry.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
@@ -80,7 +81,7 @@ ImageGallery::~ImageGallery()
     delete vaoFrame_;
     for (auto v : entities_)
         delete v;
-    delete frameTexSet_;
+    //delete frameTexSet_;
 }
 
 void ImageGallery::serialize(IO::DataStream & io) const
@@ -137,10 +138,28 @@ void ImageGallery::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("frametex", "frame texture");
+    params()->beginParameterGroup("arrangement", "arrangement");
 
-        frameTexSet_->setNoneTextureProxy(true);
-        frameTexSet_->createParameters("_frametex", TextureSetting::TEX_NONE, true);
+        arrangement_ = params()->createSelectParameter(
+                    "arrangement", tr("arrangement"),
+                    tr("Selects how the images will be arranged in space"),
+        { "row", "col", "circ", "cyl"},
+        { tr("row"), tr("column"), tr("circle"), tr("cylinder") },
+        { tr("All images are arranged besides one another"),
+          tr("All images are arranged above one another"),
+          tr("All images are arranged in a circle"),
+          tr("All images are arranged like pictures on a cylindrical wall") },
+        { A_ROW, A_COLUMN, A_CIRCLE, A_CYLINDER },
+                    A_ROW,
+                    true, false);
+
+        spacing_ = params()->createFloatParameter(
+                    "spacing", tr("spacing"), tr("The space between each image"),
+                    1.f, 0.1f);
+
+        radius_ = params()->createFloatParameter(
+                    "radius", tr("radius"), tr("The radius of the whole arrangement"),
+                    10.f, 0.1f);
 
     params()->endParameterGroup();
 
@@ -195,6 +214,14 @@ void ImageGallery::createParameters()
                                    tr("Exponent for the specular lighting - the higher, the narrower"),
                                    10.0, 0.1);
         specExpF_->setMinValue(0.001);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("frametex", "frame texture");
+
+        frameTexSet_->setNoneTextureProxy(true);
+        frameTexSet_->createParameters("_frametex", TextureSetting::TEX_NONE, true);
 
     params()->endParameterGroup();
 
@@ -260,12 +287,20 @@ void ImageGallery::updateParameterVisibility()
     specAmtF_->setVisible( isLight );
     specExpF_->setVisible( isLight );
 
+    auto mode = Arrangement(arrangement_->baseValue());
+    spacing_->setVisible( mode == A_COLUMN
+                          || mode == A_ROW);
+    radius_->setVisible( mode == A_CIRCLE
+                         || mode == A_CYLINDER);
+
     frameTexSet_->updateParameterVisibility();
 }
 
 void ImageGallery::getNeededFiles(IO::FileList &files)
 {
     ObjectGl::getNeededFiles(files);
+
+    frameTexSet_->getNeededFiles(files, IO::FT_TEXTURE);
 
     for (const QString& fn : imageList_->baseValue())
         files << IO::FileListEntry(fn, IO::FT_TEXTURE);
@@ -435,6 +470,8 @@ void ImageGallery::setupShader_()
     u_light_amt_ = shader_->getUniform(src->uniformNameLightAmt());
     u_cam_pos_ = shader_->getUniform("u_cam_pos");
     u_tex_ = shader_->getUniform("tex_0");
+    if (u_tex_)
+        u_tex_->ints[0] = 0;
 
     uniformProj_ = shader_->getUniform(src->uniformNameProjection());
     uniformCVT_ = shader_->getUniform(src->uniformNameCubeViewTransformation());
@@ -458,6 +495,7 @@ void ImageGallery::setupVaos_()
     if (!shader_ || !shader_->isReady())
         return;
 
+    // image geom
     {
         // get the input geometries
         auto geoms = paramImageGeom_->getGeometries(0, MO_GFX_THREAD);
@@ -465,8 +503,10 @@ void ImageGallery::setupVaos_()
         // construct a single Geometry from it
         auto geom = GEOM::Geometry::createFrom(geoms);
 
+        geom->getExtent(&extentMin_, &extentMax_);
+
         if (geom->numVertices())
-        {
+        {            
             // create VAO
             try
             {
@@ -486,6 +526,7 @@ void ImageGallery::setupVaos_()
         geom->releaseRef();
     }
 
+    // frame geom
     {
         // get the input geometries
         auto geoms = paramFrameGeom_->getGeometries(0, MO_GFX_THREAD);
@@ -495,6 +536,14 @@ void ImageGallery::setupVaos_()
 
         if (geom->numVertices())
         {
+            Vec3 minE, maxE;
+            geom->getExtent(&minE, &maxE);
+            extentMin_.x = std::min(extentMin_.x, minE.x);
+            extentMin_.y = std::min(extentMin_.y, minE.y);
+            extentMin_.z = std::min(extentMin_.z, minE.z);
+            extentMax_.x = std::max(extentMax_.x, maxE.x);
+            extentMax_.y = std::max(extentMax_.y, maxE.y);
+            extentMax_.z = std::max(extentMax_.z, maxE.z);
 
             // create VAO
             try
@@ -517,6 +566,8 @@ void ImageGallery::setupVaos_()
 
         geom->releaseRef();
     }
+
+    extent_ = extentMax_ - extentMin_;
 
     doCreateVaos_ = false;
 }
@@ -662,13 +713,63 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
     }
 
     // --- calc individual transformation ---
-    for (auto v : entities_)
-    {
-        Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
-        trans = glm::translate(trans, Vec3(0,0,-5));
 
-        v->transformCurrent = trans;
+    const Float
+            spacing = spacing_->value(time, thread),
+            radius = radius_->value(time, thread);
+
+    switch (Arrangement(arrangement_->baseValue()))
+    {
+        case A_ROW:
+        {
+            Float x = 0.;
+            for (auto v : entities_)
+            {
+                Mat4 trans = glm::translate(Mat4(1.), Vec3(x, 0, 0));
+                x += extent_.x + spacing;
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_COLUMN:
+        {
+            Float y = 0.;
+            for (auto v : entities_)
+            {
+                Mat4 trans = glm::translate(Mat4(1.), Vec3(0, y, 0));
+                y += extent_.y + spacing;
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_CIRCLE:
+        {
+            for (auto v : entities_)
+            {
+                Float t = v->indexT * TWO_PI;
+                Mat4 trans = glm::translate(Mat4(1.),
+                            Vec3(radius * std::sin(t), radius * std::cos(t), 0));
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_CYLINDER:
+            for (auto v : entities_)
+            {
+                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
+                trans = glm::translate(trans, Vec3(0,0,-radius));
+
+                v->transformCurrent = trans;
+            }
+        break;
     }
+
 
     // render each entity
     for (auto v : entities_)
@@ -706,8 +807,8 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
                 MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE,
                                                 &(trans * v->transformFrame)[0][0]) );
             // bind frame texture
-            if (frameTexSet_->isEnabled())
-                frameTexSet_->bind(time, thread);
+            // (note: 'None' type binds a white picture)
+            frameTexSet_->bind(time, thread);
 
             // render frame
             vaoFrame_->drawElements();

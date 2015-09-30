@@ -32,7 +32,6 @@ public:
         LM_PER_FRAGMENT
     };
 
-
     MO_OBJECT_CONSTRUCTOR(Model3d);
     ~Model3d();
 
@@ -89,7 +88,8 @@ private:
     GEOM::GeometryFactorySettings * geomSettings_;
     GEOM::Geometry * nextGeometry_;
 
-    TextureSetting * texture_, *textureBump_;
+    TextureSetting * texture_, *textureBump_,
+                    * textureEnv_;
     ColorPostProcessingSetting * texturePostProc_;
     TextureMorphSetting
         *textureMorph_,
@@ -100,18 +100,21 @@ private:
         *diffAmt_, *diffExp_, *specAmt_, *specExp_,
         *bumpScale_,
         *vertexExtrude_, *paramLineWidth_,
-        *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_;
+        *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_,
+        *envMapAmt_, *envMapAmt2_, *envMapAmt3_;
     ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
-                    * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_;
+                    * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_,
+                    * doEnvMap_;
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_,
                 *glslNormal_, *glslLight_;
     ParameterInt * paramNumInstance_;
 
     GL::Uniform * u_cam_pos_, * u_light_amt_, * u_bump_scale_,
                 * u_vertex_extrude_, * u_pointsize_, * u_instance_count_,
-                * u_tex_0_, *u_texn_0_;
+                * u_tex_0_, *u_texn_0_, *u_tex_env_0_,
+                * u_env_map_amt_;
 
-    bool doRecompile_;
+    bool doRecompile_, envTexCompiledCube_;
     int loadedVersion_;
 };
 
