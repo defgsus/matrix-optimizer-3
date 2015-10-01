@@ -34,7 +34,9 @@ public:
         A_CIRCLE,
         A_CLOCK,
         A_CYLINDER_H,
-        A_CYLINDER_V
+        A_CYLINDER_V,
+        A_RANDOM_PLANE,
+        A_RANDOM_3D
     };
 
     MO_OBJECT_CONSTRUCTOR(ImageGallery);
@@ -83,10 +85,18 @@ private:
         *diffAmt_, *diffExp_, *specAmt_, *specExp_,
         *diffAmtF_, *diffExpF_, *specAmtF_, *specExpF_,
         *spacing_, *radius_, *scale_,
-        *rotation_, *rotX_, *rotY_, *rotZ_;
+        *radiusX_, *radiusY_, *radiusZ_,
+        *rotation_, *rotX_, *rotY_, *rotZ_,
+        *pickIndex_, *pickMix_,
+        *pickPosX_, *pickPosY_, *pickPosZ_,
+        *pickScale_,
+        *pickRot_, *pickRotX_, *pickRotY_, *pickRotZ_;
+    ParameterInt
+        *randomSeed_;
     ParameterSelect *arrangement_, *lightMode_,
         * keepImageAspect_, * keepFrameAspect_,
-        * alignH_, * alignV_;
+        * alignH_, * alignV_,
+        * doPickScale_, * doPickPos_, * doPickRot_;
     ParameterImageList *imageList_;
     ParameterGeometry *paramImageGeom_,
                         *paramFrameGeom_;

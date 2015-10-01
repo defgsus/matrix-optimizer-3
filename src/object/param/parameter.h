@@ -110,7 +110,7 @@ public:
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
     /** Notifies scene (XXX need to refacture into ObjectEditor) */
-    void setVisible(bool visible);
+    bool setVisible(bool visible);
     /** Sets the flag for displaying the parameter in the ObjectGraphView */
     void setVisibleGraph(bool visible) { isVisibleGraph_ = visible; }
     /** Sets the flag for displaying the parameter in the Interface */

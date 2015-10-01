@@ -19,6 +19,8 @@
 #include "gl/texture.h"
 #include "math/vector.h"
 #include "math/constants.h"
+#include "math/random.h"
+#include "math/functions.h"
 #include "geom/geometry.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
@@ -55,7 +57,8 @@ struct ImageGallery::Entity_
     Float indexT, aspect, heightM;
     Mat4 transformFrame,
          transformImage,
-         transformCurrent;
+         transformCurrent,
+         transformRnd;
 };
 
 
@@ -143,16 +146,20 @@ void ImageGallery::createParameters()
         arrangement_ = params()->createSelectParameter(
                     "arrangement", tr("arrangement"),
                     tr("Selects how the images will be arranged in space"),
-        { "row", "col", "circ", "clock", "cyl", "cylv" },
+        { "row", "col", "circ", "clock", "cyl", "cylv", "rndp", "rnd3" },
         { tr("row"), tr("column"), tr("circle"), tr("clock"),
-          tr("cylinder horizontal"), tr("cylinder vertical") },
-        { tr("All images are arranged besides one another"),
-          tr("All images are arranged above one another"),
-          tr("All images are arranged in a circle"),
-          tr("All images are arranged in a circle, each image's up-axis is pointing to the periphery"),
-          tr("All images are arranged like pictures on a cylindrical wall"),
-          tr("All images are arranged like pictures on a cylindrical wheel") },
-        { A_ROW, A_COLUMN, A_CIRCLE, A_CLOCK, A_CYLINDER_H, A_CYLINDER_V },
+          tr("cylinder horizontal"), tr("cylinder vertical"),
+          tr("random 2d"), tr("random 3d") },
+        { tr("The images are arranged besides one another"),
+          tr("The images are arranged above one another"),
+          tr("The images are arranged in a circle"),
+          tr("The images are arranged in a circle, each image's up-axis is pointing to the periphery"),
+          tr("The images are arranged on a cylindrical wall"),
+          tr("The images are arranged on a cylindrical wheel"),
+          tr("The images are arranged randomly on the xy-plane"),
+          tr("The images are arranged randomly in space"),},
+        { A_ROW, A_COLUMN, A_CIRCLE, A_CLOCK, A_CYLINDER_H, A_CYLINDER_V,
+          A_RANDOM_PLANE, A_RANDOM_3D },
                     A_ROW,
                     true, false);
 
@@ -172,12 +179,28 @@ void ImageGallery::createParameters()
                 { Qt::AlignTop, Qt::AlignBottom, Qt::AlignCenter },
                 Qt::AlignBottom, true, false);
 
+        randomSeed_ = params()->createIntParameter(
+                    "rseed", tr("random seed"), tr("The start seed defining the random pattern"),
+                    0, true, false);
+
         spacing_ = params()->createFloatParameter(
                     "spacing", tr("spacing"), tr("The space between each image"),
                     1.f, 0.1f);
 
         radius_ = params()->createFloatParameter(
                     "radius", tr("radius"), tr("The radius of the whole arrangement"),
+                    10.f, 0.1f);
+
+        radiusX_ = params()->createFloatParameter(
+                    "radius_x", tr("radius x"), tr("The extent on the x axis"),
+                    10.f, 0.1f);
+
+        radiusY_ = params()->createFloatParameter(
+                    "radius_y", tr("radius y"), tr("The extent on the y axis"),
+                    10.f, 0.1f);
+
+        radiusZ_ = params()->createFloatParameter(
+                    "radius_z", tr("radius z"), tr("The extent on the z axis"),
                     10.f, 0.1f);
 
     params()->endParameterGroup();
@@ -195,11 +218,62 @@ void ImageGallery::createParameters()
                     0.f, 1.f);
 
         const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
-        rotX_ = params()->createFloatParameter("x", tr("rotation axis x"), axisTip, 0);
-        rotY_ = params()->createFloatParameter("y", tr("rotation axis y"), axisTip, 0);
-        rotZ_ = params()->createFloatParameter("z", tr("rotation axis z"), axisTip, 1);
+        rotX_ = params()->createFloatParameter("rot_x", tr("rotation axis x"), axisTip, 0);
+        rotY_ = params()->createFloatParameter("rot_y", tr("rotation axis y"), axisTip, 0);
+        rotZ_ = params()->createFloatParameter("rot_z", tr("rotation axis z"), axisTip, 1);
 
     params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("pick", tr("image picking"));
+
+        doPickPos_ = params()->createBooleanParameter(
+                    "do_pick_pos", tr("pick position"),
+                    tr("When enabled, the position of the picked image is changed"),
+                    tr("Off"), tr("On"), false, true, false);
+
+        doPickScale_ = params()->createBooleanParameter(
+                    "do_pick_scale", tr("pick scale"),
+                    tr("When enabled, the scale of the picked image is changed"),
+                    tr("Off"), tr("On"), false, true, false);
+
+        doPickRot_ = params()->createBooleanParameter(
+                    "do_pick_rot", tr("pick rotation"),
+                    tr("When enabled, the rotation of the picked image is changed"),
+                    tr("Off"), tr("On"), false, true, false);
+
+        pickIndex_ = params()->createFloatParameter(
+                    "pick_index", tr("pick index"), tr("Selects the picture which should be picked "
+                                                       "(starting at 0)"), 0.f);
+        pickMix_ = params()->createFloatParameter(
+                    "pick_mix", tr("pick"), tr("The mix value for the transformation, "
+                                               "0.0 = unpicked, 1.0 = picked"), 1.f, 0.f, 1.f, 0.01f);
+
+        pickPosX_ = params()->createFloatParameter(
+                    "pick_pos_x", tr("position x"), tr("X component of the absolute position vector"),
+                    0.f, 0.1f);
+        pickPosY_ = params()->createFloatParameter(
+                    "pick_pos_y", tr("position y"), tr("Y component of the absolute position vector"),
+                    0.f, 0.1f);
+        pickPosZ_ = params()->createFloatParameter(
+                    "pick_pos_z", tr("position z"), tr("Z component of the absolute position vector"),
+                    0.f, 0.1f);
+
+        pickScale_ = params()->createFloatParameter(
+                    "pick_scale", tr("scale"), tr("Scale multiplier for the picked image"),
+                    1.f, 0.1f);
+
+        pickRot_ = params()->createFloatParameter(
+                    "pick_rot_angle", tr("rotation angle"),
+                    tr("Rotation angle in degree"),
+                    0.f, 1.f);
+
+        pickRotX_ = params()->createFloatParameter("pick_rot_x", tr("rotation axis x"), axisTip, 0);
+        pickRotY_ = params()->createFloatParameter("pick_rot_y", tr("rotation axis y"), axisTip, 0);
+        pickRotZ_ = params()->createFloatParameter("pick_rot_z", tr("rotation axis z"), axisTip, 1);
+
+    params()->endParameterGroup();
+
 
 
     params()->beginParameterGroup("light", tr("lighting"));
@@ -306,8 +380,10 @@ void ImageGallery::onParameterChanged(Parameter *p)
       || frameTexSet_->needsReinit(p))
         requestReinitGl();
 
-    if (p == keepFrameAspect_
-        || p == keepImageAspect_)
+    if (   p == keepFrameAspect_
+        || p == keepImageAspect_
+        || p == arrangement_
+        || p == randomSeed_)
         doCalcBaseTransform_ = true;
 }
 
@@ -327,12 +403,33 @@ void ImageGallery::updateParameterVisibility()
 
     auto mode = Arrangement(arrangement_->baseValue());
     spacing_->setVisible( mode == A_COLUMN
-                          || mode == A_ROW);
+                          || mode == A_ROW );
     radius_->setVisible( mode == A_CIRCLE
+                         || mode == A_CLOCK
                          || mode == A_CYLINDER_V
-                         || mode == A_CYLINDER_H);
+                         || mode == A_CYLINDER_H
+                         || mode == A_RANDOM_PLANE );
+    radiusX_->setVisible(
+        radiusY_->setVisible(
+            radiusZ_->setVisible(
+                mode == A_RANDOM_3D )));
     alignH_->setVisible( mode == A_ROW );
     alignV_->setVisible( mode == A_COLUMN );
+    randomSeed_->setVisible( mode == A_RANDOM_PLANE );
+
+    bool picking = doPickPos_->baseValue()
+            || doPickRot_->baseValue()
+            || doPickScale_->baseValue();
+    pickIndex_->setVisible(picking);
+    pickMix_->setVisible(picking);
+    pickPosX_->setVisible( doPickPos_->baseValue() );
+    pickPosY_->setVisible( doPickPos_->baseValue() );
+    pickPosZ_->setVisible( doPickPos_->baseValue() );
+    pickScale_->setVisible( doPickScale_->baseValue() );
+    pickRot_->setVisible( doPickRot_->baseValue() );
+    pickRotX_->setVisible( doPickRot_->baseValue() );
+    pickRotY_->setVisible( doPickRot_->baseValue() );
+    pickRotZ_->setVisible( doPickRot_->baseValue() );
 
     frameTexSet_->updateParameterVisibility();
 }
@@ -822,6 +919,8 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
 void ImageGallery::calcEntityBaseTransform_()
 {
+    MATH::Random<> rnd(randomSeed_->baseValue());
+
     for (auto v : entities_)
     {
         if (keepFrameAspect_->baseValue())
@@ -834,6 +933,12 @@ void ImageGallery::calcEntityBaseTransform_()
         else
             v->transformImage = Mat4(1.);
 
+        if (arrangement_->baseValue() == A_RANDOM_PLANE)
+        {
+            v->transformRnd = glm::translate(Mat4(1.),
+                Vec3(rnd.rand(-1.f, 1.f), rnd.rand(-1.f, 1.f), 0.f));
+        }
+
         v->heightM = keepFrameAspect_->baseValue()
                     && keepImageAspect_->baseValue()
                 ? (1.f / v->aspect) : 1.f;
@@ -842,11 +947,37 @@ void ImageGallery::calcEntityBaseTransform_()
     doCalcBaseTransform_ = false;
 }
 
+namespace {
+    Float pick_mix(Float index1, Float index2)
+    {
+        Float x = std::max(0.f, 1.f - std::abs(Float(index1 - index2)));
+        return x * x * x * (x * (x * 6.f - 15.f) + 10.f);
+    }
+    /** removes the angle with rising @p mix [0,1] */
+    Float remove_angle(Float a, Float mix)
+    {
+        Float ang = MATH::moduloSigned(a, 360.f);
+        return ang < 180.f
+                ? (ang - mix * ang) : (ang + mix * (360.f - ang));
+    }
+    Float mix_angle(Float a1, Float a2, Float mix)
+    {
+        Float ang1 = MATH::moduloSigned(a1, 360.f),
+              ang2 = MATH::moduloSigned(a2, 360.f);
+        if ((ang2 - ang1) > 180.f)
+            ang2 -= 360.f;
+        else if (ang1 - ang2 > 180.f)
+            ang1 -= 360.f;
+        return ang1 + mix * (ang2 - ang1);
+    }
+}
 
 void ImageGallery::calcEntityTransform_(Double time, uint thread)
 {
     if (entities_.empty())
         return;
+
+    // get some parameter values
 
     const Float
             spacing = spacing_->value(time, thread),
@@ -854,6 +985,31 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
     const int
             alignH = alignH_->baseValue(),
             alignV = alignV_->baseValue();
+    const bool
+            doPickPos = doPickPos_->baseValue(),
+            doPickRot = doPickRot_->baseValue(),
+            doPickScale = doPickScale_->baseValue();
+
+    Float pickIndex=0.f, pickMix=0.f, pickRot=0.f;
+    Vec3 pickPos, pickScale, pickRotAxis;
+    if (doPickPos)
+        pickPos = Vec3(pickPosX_->value(time, thread),
+                       pickPosY_->value(time, thread),
+                       pickPosZ_->value(time, thread));
+    if (doPickScale)
+        pickScale = Vec3(pickScale_->value(time, thread));
+    if (doPickRot)
+    {
+        pickRot = pickRot_->value(time, thread);
+        pickRotAxis = Vec3(pickRotX_->value(time, thread),
+                           pickRotY_->value(time, thread),
+                           pickRotZ_->value(time, thread));
+    }
+    if (doPickPos || doPickScale || doPickRot)
+    {
+        pickIndex = pickIndex_->value(time, thread),
+        pickMix = pickMix_->value(time, thread);
+    }
 
     switch (Arrangement(arrangement_->baseValue()))
     {
@@ -922,7 +1078,9 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
                 Mat4 trans = glm::translate(Mat4(1.),
                             Vec3(radius * std::sin(t), radius * std::cos(t), 0));
 
-                trans = MATH::rotate(trans, v->indexT * 360.f, Vec3(0,0,-1));
+                Float   mix = pick_mix(pickIndex, v->index),
+                        ang = remove_angle(v->indexT * 360.f, mix);
+                trans = MATH::rotate(trans, ang, Vec3(0,0,-1));
 
                 v->transformCurrent = trans;
             }
@@ -932,7 +1090,9 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
         case A_CYLINDER_H:
             for (auto v : entities_)
             {
-                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
+                Float   mix = pick_mix(pickIndex, v->index),
+                        ang = remove_angle(v->indexT * 360.f, mix);
+                Mat4 trans = MATH::rotate(Mat4(1.), ang, Vec3(0,1,0));
                 trans = glm::translate(trans, Vec3(0,0,-radius));
 
                 v->transformCurrent = trans;
@@ -942,11 +1102,41 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
         case A_CYLINDER_V:
             for (auto v : entities_)
             {
-                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(1,0,0));
+                Float   mix = pick_mix(pickIndex, v->index),
+                        ang = remove_angle(v->indexT * 360.f, mix);
+                Mat4 trans = MATH::rotate(Mat4(1.), ang, Vec3(1,0,0));
                 trans = glm::translate(trans, Vec3(0,0,-radius));
 
                 v->transformCurrent = trans;
             }
+        break;
+
+        case A_RANDOM_PLANE:
+        {
+            const Vec4 sc = Vec4(radius, radius, 1, 1);
+            for (auto v : entities_)
+            {
+                Mat4 trans = v->transformRnd;
+                trans[3] *= sc;
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_RANDOM_3D:
+        {
+            const Vec4 sc = Vec4(radiusX_->value(time, thread),
+                                 radiusY_->value(time, thread),
+                                 radiusZ_->value(time, thread), 1);
+            for (auto v : entities_)
+            {
+                Mat4 trans = v->transformRnd;
+                trans[3] *= sc;
+
+                v->transformCurrent = trans;
+            }
+        }
         break;
     }
 
@@ -957,11 +1147,44 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
                         rotY_->value(time, thread),
                         rotZ_->value(time, thread));
     const Float rota = rotation_->value(time, thread);
-    for (auto v : entities_)
+
+    if (!doPickRot && !doPickScale && !doPickPos)
     {
-        v->transformCurrent =
-                MATH::rotate(glm::scale(v->transformCurrent, scale)
-                            , rota, rotv);
+        for (auto v : entities_)
+        {
+            v->transformCurrent =
+                    MATH::rotate(glm::scale(v->transformCurrent, scale)
+                                , rota, rotv);
+        }
+    }
+    else // with picking
+    {
+        for (auto v : entities_)
+        {
+            // mix by index selection
+            Float mix = pickMix * pick_mix(pickIndex, v->index);
+
+            Vec3 fscale = doPickScale
+                    ? (scale + mix * (pickScale - scale))
+                    : scale;
+            Vec3 frotv = doPickRot
+                    ? (rotv + mix * (pickRotAxis - rotv))
+                    : rotv;
+            Float frota = doPickRot
+                    ? mix_angle(rota, pickRot, mix)
+                    : rota;
+
+            // blend rotation and scale
+            v->transformCurrent =
+                    MATH::rotate(glm::scale(v->transformCurrent, fscale)
+                                , frota, frotv);
+
+            // blend position
+            if (doPickPos)
+                v->transformCurrent[3] = v->transformCurrent[3]
+                        + mix * (Vec4(pickPos, 1.) - v->transformCurrent[3]);
+
+        }
     }
 }
 

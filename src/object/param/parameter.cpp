@@ -179,7 +179,7 @@ QString Parameter::infoIdName() const
 
 
 
-void Parameter::setVisible(bool visible)
+bool Parameter::setVisible(bool visible)
 {
     if (visible != isVisible_)
     {
@@ -190,6 +190,7 @@ void Parameter::setVisible(bool visible)
             if (Scene * scene = object()->sceneObject())
                 scene->notifyParameterVisibility(this);
     }
+    return isVisible_;
 }
 
 //void Parameter::setInterfaceProperties(const Properties &p)
