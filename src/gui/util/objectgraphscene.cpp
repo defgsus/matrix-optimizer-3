@@ -114,6 +114,7 @@ public:
     void createNewObjectMenu(ActionList& actions, Object * o);
     void createClipboardMenu(ActionList& actions, Object * parent, const QList<AbstractObjectItem*>& items);
     void createObjectEditMenu(ActionList& actions, Object * o);
+    //void createObjectGroupMenu(ActionList& actions, const QList<AbstractObjectItem*>& items);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts,
                               bool childObjects = true, int groups = Object::TG_ALL);
 
@@ -1642,6 +1643,32 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         ObjectFactory::storeObjectTemplate(obj);
     });
 }
+
+/*
+void ObjectGraphScene::Private::createObjectGroupMenu(
+        ActionList& actions, const QList<AbstractObjectItem*>& items)
+{
+    if (!items.size() > 1)
+        return;
+
+    QAction * a;
+    actions.addSeparator(scene);
+
+    //Object * obj = items.first()->object();
+    QList<Object*> objs;
+    for (auto i : items)
+        objs << i->object();
+
+    // group
+    a = actions.addAction(tr("Group objects"), scene);
+    a->setStatusTip(tr("Puts the selected objects into a group object"));
+    connect(a, &QAction::triggered, [this, objs]()
+    {
+        editor->groupObjects(objs);
+    });
+
+}
+*/
 
 namespace {
 

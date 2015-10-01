@@ -400,8 +400,18 @@ bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
     return true;
 }
 
+/*
+void ObjectEditor::groupObjects(const QList<Object*>& list)
+{
+    if (list.isEmpty())
+        return;
+    auto p = list.begin();
+    for (auto o : list)
+    {
 
-
+    }
+}
+*/
 
 void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int insert_index)
 {

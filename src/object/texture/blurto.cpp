@@ -200,6 +200,7 @@ void BlurTO::updateParameterVisibility()
     bool mask = p_->m_mask->baseValue();
     p_->p_mask_min->setVisible(mask);
     p_->p_mask_max->setVisible(mask);
+    p_->p_mask_thresh->setVisible(mask);
 }
 
 

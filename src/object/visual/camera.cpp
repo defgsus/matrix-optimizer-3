@@ -729,7 +729,7 @@ namespace {
                 break;
             }
             if (!doinc)
-                break;
+                continue;
 
             // check for type
             if (auto ogl = dynamic_cast<ObjectGl*>(o))
@@ -788,6 +788,11 @@ QList<ObjectGl*> Camera::getRenderObjects()
         rlistIgn << QRegExp(s.simplified(), Qt::CaseSensitive, QRegExp::WildcardUnix);
 
     getRenderObjects2(s, list, rlistInc, rlistIgn);
+#if 0
+    MO_PRINT("--camera '" << name() << "'--");
+    for (auto s : list)
+        MO_PRINT(s->name());
+#endif
     return list;
 }
 

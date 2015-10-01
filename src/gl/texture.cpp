@@ -182,12 +182,12 @@ bool Texture::isCube() const
 
 bool Texture::is3d() const
 {
-    return target_ == gl::GL_TEXTURE_3D;
+    return target_ == GL_TEXTURE_3D;
 }
 
 bool Texture::isMultiSample() const
 {
-    return target_ == gl::GL_TEXTURE_2D_MULTISAMPLE;
+    return target_ == GL_TEXTURE_2D_MULTISAMPLE;
 }
 
 void Texture::create(gl::GLsizei width,

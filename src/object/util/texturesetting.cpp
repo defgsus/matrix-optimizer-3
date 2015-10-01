@@ -75,7 +75,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
     auto params = object_->params();
 
     paramType_ = params->createSelectParameter(
-            "_imgtype" + id_suffix, tr("image type"), tr("Type or source of the image data"),
+            "_imgtype" + id_suffix, tr("image source"), tr("Type or source of the image data"),
             { "none", "param", "file", "master", "masterd" },
             textureTypeNames,
             { tr("No texture will be used"),
@@ -201,8 +201,9 @@ void TextureSetting::initGl()
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
-        constTexture_ = 0;
-        // param will be modulated in realtime
+                        // XXX This is a hack
+        constTexture_ = paramTex_->value(0, MO_GFX_THREAD);
+        // param will be asked in TextureSetting::bind()
         return;
     }
 
@@ -370,6 +371,8 @@ void TextureSetting::bind(Double time, uint thread, uint slot)
         tex = paramTex_->value(time, thread);
         if (!tex)
             return;
+        // XXX assign as current texture
+        constTexture_ = tex;
     }
 
     if (!tex)

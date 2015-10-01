@@ -784,6 +784,10 @@ void Model3d::setupDrawable_()
     if (textureEnv_->isEnabled())
     {
         src->addDefine("#define MO_ENABLE_ENV_MAP");
+        // XXX Note, when the texture is a tex-input,
+        // this check only occures after the first render pass
+        // because TextureSetting::bind() in renderGl() is
+        // the first to actually read the texture input
         if (textureEnv_->isCube())
             src->addDefine("#define MO_ENV_MAP_IS_CUBE");
         envTexCompiledCube_ = textureEnv_->isCube();
@@ -896,18 +900,26 @@ void Model3d::setupDrawable_()
     uniformSetting_->tieToShader(draw_->shader());
 }
 
+
+
 void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 {
     MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
 
     /** @todo wireframe-mode for Model3d, eg. glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
 
+    //if (textureEnv_->texture())
+    //MO_PRINT(applicationTime() << " was "
+    //  << envTexCompiledCube_ << " is " << textureEnv_->texture()->isCube());
+
     // recompile if 2d/cubemap change in environement texture
     // XXX Possibly for equirect/fisheye change too, once this is implemented
     if (textureEnv_->isEnabled()
         && textureEnv_->texture()
         && textureEnv_->texture()->isCube() != envTexCompiledCube_)
+    {
         doRecompile_ = true;
+    }
 
     if (nextGeometry_)
     {

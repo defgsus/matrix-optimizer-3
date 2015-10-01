@@ -154,6 +154,10 @@ public slots:
         this call simplifies to setObjectIndex() */
     bool moveObject(Object * object, Object * newParent, int newIndex = -1);
 
+    //bool groupObjects(const QList<Object*>& list);
+
+    // -------- object specific funcs --------
+
     /** Works the same as addObject().
         If @p object is a ValueTextureInterface and @p newObject has a texture input,
         they will be connected. */
