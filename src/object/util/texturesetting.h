@@ -145,7 +145,8 @@ private:
     ParameterTexture * paramTex_;
 
     QString errorStr_;
-    bool createNoneTex_;
+    bool createNoneTex_,
+         isParamCube_;
 };
 
 } // namespace MO

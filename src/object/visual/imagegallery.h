@@ -32,7 +32,9 @@ public:
         A_ROW,
         A_COLUMN,
         A_CIRCLE,
-        A_CYLINDER
+        A_CLOCK,
+        A_CYLINDER_H,
+        A_CYLINDER_V
     };
 
     MO_OBJECT_CONSTRUCTOR(ImageGallery);
@@ -58,17 +60,15 @@ protected:
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
-signals:
-
-private slots:
+private:
 
     void setupShader_();
     void setupVaos_();
-    void calcBaseTransform_();
     void releaseVaos_();
     void releaseAll_();
 
-private:
+    void calcEntityBaseTransform_();
+    void calcEntityTransform_(Double time, uint thread);
 
     struct Entity_;
 
@@ -82,9 +82,11 @@ private:
         *fr_, *fg_, *fb_, *fa_, *fbright_,
         *diffAmt_, *diffExp_, *specAmt_, *specExp_,
         *diffAmtF_, *diffExpF_, *specAmtF_, *specExpF_,
-        *spacing_, *radius_;
+        *spacing_, *radius_, *scale_,
+        *rotation_, *rotX_, *rotY_, *rotZ_;
     ParameterSelect *arrangement_, *lightMode_,
-        * keepImageAspect_, * keepFrameAspect_;
+        * keepImageAspect_, * keepFrameAspect_,
+        * alignH_, * alignV_;
     ParameterImageList *imageList_;
     ParameterGeometry *paramImageGeom_,
                         *paramFrameGeom_;

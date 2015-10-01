@@ -173,6 +173,10 @@ bool TextureSetting::isEnabled() const
 
 bool TextureSetting::isCube() const
 {
+    // Return the last known state from bind()
+    if (paramType_->baseValue() == TEX_PARAM)
+        return isParamCube_;
+
     return constTexture_ && constTexture_->isCube();
 }
 
@@ -201,9 +205,12 @@ void TextureSetting::initGl()
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
-                        // XXX This is a hack
-        constTexture_ = paramTex_->value(0, MO_GFX_THREAD);
-        // param will be asked in TextureSetting::bind()
+        // XXX This is a hack
+        if (auto t = paramTex_->value(0, MO_GFX_THREAD))
+            isParamCube_ = t->isCube();
+        else
+            isParamCube_ = false;
+        // tex-param will be queried in TextureSetting::bind()
         return;
     }
 
@@ -371,8 +378,9 @@ void TextureSetting::bind(Double time, uint thread, uint slot)
         tex = paramTex_->value(time, thread);
         if (!tex)
             return;
+        isParamCube_ = tex->isCube();
         // XXX assign as current texture
-        constTexture_ = tex;
+        //constTexture_ = tex;
     }
 
     if (!tex)

@@ -52,7 +52,7 @@ struct ImageGallery::Entity_
 
     GL::Texture * tex;
     int index;
-    Float indexT, aspect;
+    Float indexT, aspect, heightM;
     Mat4 transformFrame,
          transformImage,
          transformCurrent;
@@ -138,20 +138,39 @@ void ImageGallery::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("arrangement", "arrangement");
+    params()->beginParameterGroup("arrangement", tr("arrangement"));
 
         arrangement_ = params()->createSelectParameter(
                     "arrangement", tr("arrangement"),
                     tr("Selects how the images will be arranged in space"),
-        { "row", "col", "circ", "cyl"},
-        { tr("row"), tr("column"), tr("circle"), tr("cylinder") },
+        { "row", "col", "circ", "clock", "cyl", "cylv" },
+        { tr("row"), tr("column"), tr("circle"), tr("clock"),
+          tr("cylinder horizontal"), tr("cylinder vertical") },
         { tr("All images are arranged besides one another"),
           tr("All images are arranged above one another"),
           tr("All images are arranged in a circle"),
-          tr("All images are arranged like pictures on a cylindrical wall") },
-        { A_ROW, A_COLUMN, A_CIRCLE, A_CYLINDER },
+          tr("All images are arranged in a circle, each image's up-axis is pointing to the periphery"),
+          tr("All images are arranged like pictures on a cylindrical wall"),
+          tr("All images are arranged like pictures on a cylindrical wheel") },
+        { A_ROW, A_COLUMN, A_CIRCLE, A_CLOCK, A_CYLINDER_H, A_CYLINDER_V },
                     A_ROW,
                     true, false);
+
+        alignH_ = params()->createSelectParameter("alignment_h", tr("alignment"),
+                tr("Selects the alignment for the images"),
+                { "l", "r", "c" },
+                { tr("left"), tr("right"), tr("center") },
+                { tr("left"), tr("right"), tr("center") },
+                { Qt::AlignLeft, Qt::AlignRight, Qt::AlignCenter },
+                Qt::AlignLeft, true, false);
+
+        alignV_ = params()->createSelectParameter("alignment_v", tr("alignment"),
+                tr("Selects the alignment for the images"),
+                { "t", "b", "c" },
+                { tr("top"), tr("bottom"), tr("center") },
+                { tr("top"), tr("bottom"), tr("center") },
+                { Qt::AlignTop, Qt::AlignBottom, Qt::AlignCenter },
+                Qt::AlignBottom, true, false);
 
         spacing_ = params()->createFloatParameter(
                     "spacing", tr("spacing"), tr("The space between each image"),
@@ -164,7 +183,26 @@ void ImageGallery::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("light", "lighting");
+    params()->beginParameterGroup("orient", tr("orientation"));
+
+        scale_ = params()->createFloatParameter(
+                    "scale", tr("scale"), tr("Scale multiplier for each image and frame"),
+                    1.f, 0.1f);
+
+        rotation_ = params()->createFloatParameter(
+                    "rot_angle", tr("rotation angle"),
+                    tr("Rotation angle in degree"),
+                    0.f, 1.f);
+
+        const QString axisTip = tr("Unit vector describing the axis to rotate around (internally normalized)");
+        rotX_ = params()->createFloatParameter("x", tr("rotation axis x"), axisTip, 0);
+        rotY_ = params()->createFloatParameter("y", tr("rotation axis y"), axisTip, 0);
+        rotZ_ = params()->createFloatParameter("z", tr("rotation axis z"), axisTip, 1);
+
+    params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("light", tr("lighting"));
 
         lightMode_ = params()->createSelectParameter("lightmode", tr("lighting mode"),
             tr("Selects the way how the lighting is calculated"),
@@ -218,7 +256,7 @@ void ImageGallery::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("frametex", "frame texture");
+    params()->beginParameterGroup("frametex", tr("frame texture"));
 
         frameTexSet_->setNoneTextureProxy(true);
         frameTexSet_->createParameters("_frametex", TextureSetting::TEX_NONE, true);
@@ -291,7 +329,10 @@ void ImageGallery::updateParameterVisibility()
     spacing_->setVisible( mode == A_COLUMN
                           || mode == A_ROW);
     radius_->setVisible( mode == A_CIRCLE
-                         || mode == A_CYLINDER);
+                         || mode == A_CYLINDER_V
+                         || mode == A_CYLINDER_H);
+    alignH_->setVisible( mode == A_ROW );
+    alignV_->setVisible( mode == A_COLUMN );
 
     frameTexSet_->updateParameterVisibility();
 }
@@ -403,23 +444,6 @@ GL::ShaderSource ImageGallery::shaderSource() const
     return *shader_->source();
 }
 
-void ImageGallery::calcBaseTransform_()
-{
-    for (auto v : entities_)
-    {
-        if (keepFrameAspect_->baseValue())
-            v->transformFrame = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
-        else
-            v->transformFrame = Mat4(1.);
-
-        if (keepImageAspect_->baseValue())
-            v->transformImage = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
-        else
-            v->transformImage = Mat4(1.);
-    }
-
-    doCalcBaseTransform_ = false;
-}
 
 void ImageGallery::setupShader_()
 {
@@ -638,7 +662,7 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
     if (doCalcBaseTransform_)
     {
-        calcBaseTransform_();
+        calcEntityBaseTransform_();
     }
 
     if (!shader_ || !vaoImage_ || !vaoImage_->isCreated())
@@ -714,62 +738,7 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
     // --- calc individual transformation ---
 
-    const Float
-            spacing = spacing_->value(time, thread),
-            radius = radius_->value(time, thread);
-
-    switch (Arrangement(arrangement_->baseValue()))
-    {
-        case A_ROW:
-        {
-            Float x = 0.;
-            for (auto v : entities_)
-            {
-                Mat4 trans = glm::translate(Mat4(1.), Vec3(x, 0, 0));
-                x += extent_.x + spacing;
-
-                v->transformCurrent = trans;
-            }
-        }
-        break;
-
-        case A_COLUMN:
-        {
-            Float y = 0.;
-            for (auto v : entities_)
-            {
-                Mat4 trans = glm::translate(Mat4(1.), Vec3(0, y, 0));
-                y += extent_.y + spacing;
-
-                v->transformCurrent = trans;
-            }
-        }
-        break;
-
-        case A_CIRCLE:
-        {
-            for (auto v : entities_)
-            {
-                Float t = v->indexT * TWO_PI;
-                Mat4 trans = glm::translate(Mat4(1.),
-                            Vec3(radius * std::sin(t), radius * std::cos(t), 0));
-
-                v->transformCurrent = trans;
-            }
-        }
-        break;
-
-        case A_CYLINDER:
-            for (auto v : entities_)
-            {
-                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
-                trans = glm::translate(trans, Vec3(0,0,-radius));
-
-                v->transformCurrent = trans;
-            }
-        break;
-    }
-
+    calcEntityTransform_(time, thread);
 
     // render each entity
     for (auto v : entities_)
@@ -851,7 +820,150 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 }
 
 
+void ImageGallery::calcEntityBaseTransform_()
+{
+    for (auto v : entities_)
+    {
+        if (keepFrameAspect_->baseValue())
+            v->transformFrame = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
+        else
+            v->transformFrame = Mat4(1.);
 
+        if (keepImageAspect_->baseValue())
+            v->transformImage = glm::scale(Mat4(1.), Vec3(1.f, 1.f / v->aspect, 1.f));
+        else
+            v->transformImage = Mat4(1.);
+
+        v->heightM = keepFrameAspect_->baseValue()
+                    && keepImageAspect_->baseValue()
+                ? (1.f / v->aspect) : 1.f;
+    }
+
+    doCalcBaseTransform_ = false;
+}
+
+
+void ImageGallery::calcEntityTransform_(Double time, uint thread)
+{
+    if (entities_.empty())
+        return;
+
+    const Float
+            spacing = spacing_->value(time, thread),
+            radius = radius_->value(time, thread);
+    const int
+            alignH = alignH_->baseValue(),
+            alignV = alignV_->baseValue();
+
+    switch (Arrangement(arrangement_->baseValue()))
+    {
+        case A_ROW:
+        {
+            Float x = 0.;
+            if (alignH == Qt::AlignCenter)
+                x = -.5f * entities_.size() * (extent_.x + spacing);
+            else if (alignH == Qt::AlignRight)
+                x = -1.f * entities_.size() * (extent_.x + spacing);
+            for (auto v : entities_)
+            {
+                Mat4 trans = glm::translate(Mat4(1.), Vec3(x, 0, 0));
+                x += extent_.x + spacing;
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_COLUMN:
+        {
+            Float y = 0.;
+            if (alignV != Qt::AlignTop)
+            {
+                // find actual height first
+                Float height = 0.f;
+                for (auto v : entities_)
+                    height += extent_.y * v->heightM + spacing;
+                if (alignV == Qt::AlignBottom)
+                    y = height;
+                else if (alignV == Qt::AlignCenter)
+                    y = .5f * height;
+            }
+            for (auto v : entities_)
+            {
+                const Float ys = extent_.y * v->heightM * .5;
+                if (v != entities_.first())
+                    y -= ys;
+                Mat4 trans = glm::translate(Mat4(1.), Vec3(0, y, 0));
+                y -= ys + spacing;
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_CIRCLE:
+        {
+            for (auto v : entities_)
+            {
+                Float t = v->indexT * TWO_PI;
+                Mat4 trans = glm::translate(Mat4(1.),
+                            Vec3(radius * std::sin(t), radius * std::cos(t), 0));
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_CLOCK:
+        {
+            for (auto v : entities_)
+            {
+                Float t = v->indexT * TWO_PI;
+                Mat4 trans = glm::translate(Mat4(1.),
+                            Vec3(radius * std::sin(t), radius * std::cos(t), 0));
+
+                trans = MATH::rotate(trans, v->indexT * 360.f, Vec3(0,0,-1));
+
+                v->transformCurrent = trans;
+            }
+        }
+        break;
+
+        case A_CYLINDER_H:
+            for (auto v : entities_)
+            {
+                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(0,1,0));
+                trans = glm::translate(trans, Vec3(0,0,-radius));
+
+                v->transformCurrent = trans;
+            }
+        break;
+
+        case A_CYLINDER_V:
+            for (auto v : entities_)
+            {
+                Mat4 trans = MATH::rotate(Mat4(1.), v->indexT * 360.f, Vec3(1,0,0));
+                trans = glm::translate(trans, Vec3(0,0,-radius));
+
+                v->transformCurrent = trans;
+            }
+        break;
+    }
+
+    // final transform
+    const Vec3
+            scale = Vec3(scale_->value(time, thread)),
+            rotv = Vec3(rotX_->value(time, thread),
+                        rotY_->value(time, thread),
+                        rotZ_->value(time, thread));
+    const Float rota = rotation_->value(time, thread);
+    for (auto v : entities_)
+    {
+        v->transformCurrent =
+                MATH::rotate(glm::scale(v->transformCurrent, scale)
+                            , rota, rotv);
+    }
+}
 
 
 } // namespace MO
