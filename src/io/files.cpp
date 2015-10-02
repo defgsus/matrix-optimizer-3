@@ -20,6 +20,13 @@
 namespace MO {
 namespace IO {
 
+void Files::fixDirectoryString(QString& f)
+{
+#ifdef Q_OS_WIN
+    f.replace('/', QDir::separator());
+#endif
+}
+
 
 QString Files::directory(FileType ft, bool retCur)
 {
@@ -63,7 +70,8 @@ void Files::setFilename(FileType ft, const QString& fn)
 
 void Files::setDirectory(FileType ft, const QString &path)
 {
-    settings()->setValue("Directory/" + fileTypeIds[ft], path);
+    settings()->setValue("Directory/" + fileTypeIds[ft],
+                         QFileInfo(path).absolutePath());
 }
 
 QString Files::getOpenFileName(FileType ft, QWidget *parent, bool updateDirectory, bool updateFile)
@@ -77,7 +85,7 @@ QString Files::getOpenFileName(FileType ft, QWidget *parent, bool updateDirector
     diag.setConfirmOverwrite(false);
     diag.setAcceptMode(QFileDialog::AcceptOpen);
     diag.setWindowTitle(QFileDialog::tr("Open %1").arg(fileTypeNames[ft]));
-    diag.setDirectory(fn);
+    diag.setDirectory(QFileInfo(fn).absolutePath());
     diag.setNameFilters(fileTypeDialogFilters[ft]);
     diag.setFileMode(QFileDialog::ExistingFiles);
     if (!fn.isEmpty())
@@ -113,7 +121,7 @@ QStringList Files::getOpenFileNames(FileType ft, QWidget *parent, bool updateDir
     diag.setConfirmOverwrite(false);
     diag.setAcceptMode(QFileDialog::AcceptOpen);
     diag.setWindowTitle(QFileDialog::tr("Open %1").arg(fileTypeNames[ft]));
-    diag.setDirectory(fn);
+    diag.setDirectory(QFileInfo(fn).absolutePath());
     diag.setNameFilters(fileTypeDialogFilters[ft]);
     diag.setFileMode(QFileDialog::ExistingFiles);
     if (!fn.isEmpty())
@@ -139,13 +147,16 @@ QStringList Files::getOpenFileNames(FileType ft, QWidget *parent, bool updateDir
 
 QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirectory, bool updateFile)
 {
+    QString fn = directory(ft);
+    fixDirectoryString(fn);
+
     // prepare a file dialog
     QFileDialog diag(parent);
     diag.setDefaultSuffix(fileTypeExtensions[ft][0]);
     diag.setConfirmOverwrite(true);
     diag.setAcceptMode(QFileDialog::AcceptSave);
     diag.setWindowTitle(QFileDialog::tr("Save %1").arg(fileTypeNames[ft]));
-    diag.setDirectory(directory(ft));
+    diag.setDirectory(fn);
     diag.setNameFilters(fileTypeDialogFilters[ft]);
 
     if (diag.exec() == QDialog::Rejected
@@ -176,7 +187,7 @@ QString Files::getSaveFileName(FileType ft, QWidget *parent, bool updateDirector
         return QString();
     */
 
-    QString fn = diag.selectedFiles()[0];
+    fn = diag.selectedFiles()[0];
 
     if (updateFile)
         setFilename(ft, fn);
@@ -201,7 +212,7 @@ QString Files::getDirectory(FileType ft, QWidget *parent, bool updateDirectory, 
         diag.setWindowTitle(QFileDialog::tr("Choose directory for %1").arg(fileTypeNames[ft]));
     else
         diag.setWindowTitle(title);
-    diag.setDirectory(fn);
+    diag.setDirectory(QFileInfo(fn).absolutePath());
     diag.setFileMode(QFileDialog::Directory);
     diag.setOption(QFileDialog::ShowDirsOnly, true);
 

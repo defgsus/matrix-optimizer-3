@@ -24,6 +24,9 @@ class Files
 public:
     Files() { }
 
+    /** Replaces '/' on Windows */
+    static void fixDirectoryString(QString&);
+
     /** Returns directory for given filetype */
     static QString directory(FileType, bool returnCurrentPathIfNotDefined = true);
 
