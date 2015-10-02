@@ -933,10 +933,13 @@ void ImageGallery::calcEntityBaseTransform_()
         else
             v->transformImage = Mat4(1.);
 
-        if (arrangement_->baseValue() == A_RANDOM_PLANE)
+        if (arrangement_->baseValue() == A_RANDOM_PLANE
+         || arrangement_->baseValue() == A_RANDOM_3D)
         {
             v->transformRnd = glm::translate(Mat4(1.),
-                Vec3(rnd.rand(-1.f, 1.f), rnd.rand(-1.f, 1.f), 0.f));
+                Vec3(rnd.rand(-1.f, 1.f),
+                     rnd.rand(-1.f, 1.f),
+                     rnd.rand(-1.f, 1.f) ));
         }
 
         v->heightM = keepFrameAspect_->baseValue()
@@ -963,12 +966,21 @@ namespace {
     Float mix_angle(Float a1, Float a2, Float mix)
     {
         Float ang1 = MATH::moduloSigned(a1, 360.f),
-              ang2 = MATH::moduloSigned(a2, 360.f);
-        if ((ang2 - ang1) > 180.f)
+              ang2 = MATH::moduloSigned(a2, 360.f),
+              a = ang1 < 180.f
+                ? (ang1 - mix * ang1) : (ang1 + mix * (360.f - ang1)),
+              b = ang2 < 180.f
+                ? mix * ang2 : 360.f + mix * (ang2 - 360.f);
+        return MATH::moduloSigned(a + b, 360.f);
+       /* bool b1 = ang1 < 180.f,
+             b2 = ang2 < 180.f;
+        if (b1 == b2)
+            return ang1 + mix * (ang2 - ang1);
+        if (b1 && (ang2 - ang1) > 180.f) // && !b2
             ang2 -= 360.f;
         else if (ang1 - ang2 > 180.f)
             ang1 -= 360.f;
-        return ang1 + mix * (ang2 - ang1);
+        return ang1 + mix * (ang2 - ang1);*/
     }
 }
 
@@ -1074,12 +1086,13 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
         {
             for (auto v : entities_)
             {
+                Float   mix = pickMix * pick_mix(pickIndex, v->index),
+                        ang = doPickRot ? remove_angle(v->indexT * 360.f, mix) : v->indexT * 360.f;
+
                 Float t = v->indexT * TWO_PI;
                 Mat4 trans = glm::translate(Mat4(1.),
                             Vec3(radius * std::sin(t), radius * std::cos(t), 0));
 
-                Float   mix = pick_mix(pickIndex, v->index),
-                        ang = remove_angle(v->indexT * 360.f, mix);
                 trans = MATH::rotate(trans, ang, Vec3(0,0,-1));
 
                 v->transformCurrent = trans;
@@ -1090,8 +1103,8 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
         case A_CYLINDER_H:
             for (auto v : entities_)
             {
-                Float   mix = pick_mix(pickIndex, v->index),
-                        ang = remove_angle(v->indexT * 360.f, mix);
+                Float   mix = pickMix * pick_mix(pickIndex, v->index),
+                        ang = doPickRot ? remove_angle(v->indexT * 360.f, mix) : v->indexT * 360.f;
                 Mat4 trans = MATH::rotate(Mat4(1.), ang, Vec3(0,1,0));
                 trans = glm::translate(trans, Vec3(0,0,-radius));
 
@@ -1102,8 +1115,8 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
         case A_CYLINDER_V:
             for (auto v : entities_)
             {
-                Float   mix = pick_mix(pickIndex, v->index),
-                        ang = remove_angle(v->indexT * 360.f, mix);
+                Float   mix = pickMix * pick_mix(pickIndex, v->index),
+                        ang = doPickRot ? remove_angle(v->indexT * 360.f, mix) : v->indexT * 360.f;
                 Mat4 trans = MATH::rotate(Mat4(1.), ang, Vec3(1,0,0));
                 trans = glm::translate(trans, Vec3(0,0,-radius));
 
@@ -1113,7 +1126,7 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
 
         case A_RANDOM_PLANE:
         {
-            const Vec4 sc = Vec4(radius, radius, 1, 1);
+            const Vec4 sc = Vec4(radius, radius, 0, 1);
             for (auto v : entities_)
             {
                 Mat4 trans = v->transformRnd;
@@ -1173,6 +1186,9 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
             Float frota = doPickRot
                     ? mix_angle(rota, pickRot, mix)
                     : rota;
+            //if (mix > .5)
+                /*MO_PRINT(rota << " " << pickRot << " (" << mix << ") -> " << frota
+                         << " (diff " << std::abs(rota - pickRot) << ")");*/
 
             // blend rotation and scale
             v->transformCurrent =
