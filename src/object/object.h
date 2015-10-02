@@ -188,7 +188,9 @@ public:
         DT_PARAM_GROUP_EXPANDED,
         DT_SELECTED_PARAM,
         /** Height of a track in TrackView (int) */
-        DT_TRACK_HEIGHT
+        DT_TRACK_HEIGHT,
+        /** Value of vertical scrollbar in ParmaterView (int) */
+        DT_PARAM_VIEW_Y
     };
 
     // -------------- ctor -------------------

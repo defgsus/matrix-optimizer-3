@@ -67,6 +67,8 @@ private slots:
     void onSequenceChanged(MO::Sequence *);
     void updateWidgetValue_(MO::Parameter*);
 
+    void onScrollBarChange_(int);
+
 protected:
 
     void resizeEvent(QResizeEvent *);
@@ -75,7 +77,7 @@ private:
 
     GroupWidget * getGroupWidget_(const Parameter*);
 
-    void squeezeView_();
+    //void squeezeView_();
     void createWidgets_();
     void clearWidgets_();
     /** update values of parameter widgets */
@@ -92,8 +94,10 @@ private:
 
     QVBoxLayout * layout_;
     QScrollArea * scrollArea_;
-    QWidget * container_;
+    QWidget * container_, * p_stretch_;
 
+    bool doStoreScrollbarPos_;
+    int curScrollbarValue_;
 };
 
 } // namespace GUI

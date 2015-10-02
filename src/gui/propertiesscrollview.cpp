@@ -66,7 +66,10 @@ void PropertiesScrollView::createWidgtes_()
     }
     p_widgets_.clear();
     if (p_stretch_)
+    {
         p_stretch_->deleteLater();
+        p_stretch_ = 0;
+    }
 
     // widget container
     if (!p_container_)
