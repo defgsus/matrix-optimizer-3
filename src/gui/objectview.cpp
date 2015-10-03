@@ -97,7 +97,7 @@ void ObjectView::setObject(Object * object)
 
     if (object_)
     {
-        // XXX no f**ng working
+        // XXX not working with qss
         /*auto p = icon_->palette();
         p.setColor(QPalette::Window, ObjectFactory::colorForObject(object_));
         icon_->setPalette(p);
@@ -112,7 +112,8 @@ void ObjectView::setObject(Object * object)
     updateImage();
     updateNameLabel_();
 
-    paramView_->setObject(object_);
+    if (paramView_->object() != object_)
+        paramView_->setObject(object_);
     list_->setParentObject(object_);
 }
 

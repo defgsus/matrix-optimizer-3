@@ -92,11 +92,12 @@ private:
         *pickScale_,
         *pickRot_, *pickRotX_, *pickRotY_, *pickRotZ_;
     ParameterInt
-        *randomSeed_;
+        *randomSeed_, * mipmaps_;
     ParameterSelect *arrangement_, *lightMode_,
         * keepImageAspect_, * keepFrameAspect_,
         * alignH_, * alignV_,
-        * doPickScale_, * doPickPos_, * doPickRot_;
+        * doPickScale_, * doPickPos_, * doPickRot_,
+        * paramMin_, * paramMag_;
     ParameterImageList *imageList_;
     ParameterGeometry *paramImageGeom_,
                         *paramFrameGeom_;

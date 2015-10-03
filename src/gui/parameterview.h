@@ -40,6 +40,9 @@ class ParameterView : public QWidget
 public:
     explicit ParameterView(QWidget *parent = 0);
 
+    /** Currently assigned Object, or null */
+    Object * object() const { return object_; }
+
 signals:
 
     /** When creating a modulator track */

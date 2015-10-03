@@ -47,6 +47,7 @@ Texture::Texture()
         format_			(GL_NONE),
         input_format_	(GL_NONE),
         type_			(GL_NONE),
+        mipLevels_      (0),
         hash_           (-1)
 {
     MO_DEBUG_IMG("Texture::Texture()");
@@ -406,6 +407,65 @@ void Texture::create()
 }
 
 
+void Texture::createMipmaps(uint max_level, gl::GLenum mode)
+{
+    if (target_ == GL_TEXTURE_2D)
+    {
+        auto img = toQImage().mirrored(false, true);
+
+        // decide format
+    #if QT_VERSION >= 0x050200
+        const GLenum iformat = GL_RGBA;
+        const QImage::Format fmt = QImage::Format_RGBA8888;
+    #else
+        const GLenum iformat = GL_RGB;
+        const QImage::Format fmt = QImage::Format_RGB888;
+    #endif
+        const GLenum itype = GL_UNSIGNED_BYTE;
+
+        // convert image
+        if (img.format() != fmt)
+        {
+            img = img.convertToFormat(fmt);
+        }
+
+        // bind texture and setup mip-map levels
+        bind();
+        setTexParameter(GL_TEXTURE_BASE_LEVEL, 0);
+        setTexParameter(GL_TEXTURE_MAX_LEVEL, max_level);
+        setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(mode));
+
+        // create each mip-map
+        for (uint level = 1; level <= max_level; ++level)
+        {
+            img = img.scaled(img.width() / 2, img.height() / 2,
+                             Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+
+            // upload texture
+            MO_CHECK_GL_THROW(
+            gl::glTexImage2D(
+                target_,
+                // mipmap level
+                level,
+                // color components
+                GLint(format_),
+                // size
+                img.width(), img.height(),
+                // boarder
+                0,
+                // input format
+                iformat,
+                // data type
+                itype,
+                // ptr
+                img.constBits())
+            );
+        }
+    }
+
+    mipLevels_ = max_level;
+}
+
 void Texture::upload(gl::GLint mipmap_level)
 {
     MO_DEBUG_IMG("Texture::upload(mipmap=" << mipmap_level << ")");
@@ -737,7 +797,7 @@ QImage Texture::toQImage() const
 // ------------------------ static ----------------------------
 
 
-Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format)
+Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, uint mipmap_levels)
 {
     MO_DEBUG_IMG("Texture::createFromQImage(" << &img << ", " << gpu_format << ")");
 
@@ -819,6 +879,10 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format)
                         );
         }
 
+        // XXX This could be more efficient because
+        // we have the original QImage still around
+        if (mipmap_levels > 0)
+            tex->createMipmaps(mipmap_levels);
     }
     catch (Exception & e)
     {
@@ -832,7 +896,8 @@ Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format)
 }
 
 
-Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format)
+Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_format,
+                                   uint mipmap_levels)
 {
     ImageReader reader;
     reader.setFilename(filename);
@@ -844,7 +909,7 @@ Texture * Texture::createFromImage(const QString &filename, gl::GLenum gpu_forma
                          << filename << "'\n'" << reader.errorString() << "'");
     }
 
-    return createFromImage(img, gpu_format);
+    return createFromImage(img, gpu_format, mipmap_levels);
 }
 
 } // namespace GL

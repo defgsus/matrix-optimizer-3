@@ -112,6 +112,39 @@ void ImageGallery::createParameters()
                                          tr("The list of images to display"),
                                          QStringList() << ":/texture/mo_black.png");
 
+        mipmaps_ = params()->createIntParameter(
+                    "image_mipmap", tr("mip-map levels"),
+                    tr("The number of mip-map levels to create, "
+                       "where each level is half the size of the previous level - 0 means no mip-mapping"),
+                    0, true, false);
+        mipmaps_->setMinValue(0);
+
+        paramMag_ = params()->createSelectParameter(
+                    "image_mag", tr("magnification"),
+                    tr("The interpolation mode for pixel magnification"),
+                    { "n", "l" },
+                    { tr("nearest"), tr("linear") },
+                    { tr("nearest"), tr("linear") },
+                    { int(gl::GL_NEAREST), int(gl::GL_LINEAR) },
+                    int(gl::GL_LINEAR),
+                    true, false);
+
+        paramMin_ = params()->createSelectParameter(
+                    "image_min", tr("minification"),
+                    tr("The interpolation mode for pixel minification"),
+                    { "n", "l", "nmn", "lmn", "nml", "lml" },
+                    { tr("nearest"), tr("linear"), tr("nearest mipmap nearest"),
+                      tr("linear mipmap nearest"), tr("nearest mipmap linear"),
+                      tr("linear mipmap linear") },
+                    { tr("nearest"), tr("linear"), tr("nearest mipmap nearest"),
+                      tr("linear mipmap nearest"), tr("nearest mipmap linear"),
+                      tr("linear mipmap linear") },
+                    { int(gl::GL_NEAREST), int(gl::GL_LINEAR), int(gl::GL_NEAREST_MIPMAP_NEAREST),
+                      int(gl::GL_LINEAR_MIPMAP_NEAREST), int(gl::GL_NEAREST_MIPMAP_LINEAR),
+                      int(gl::GL_LINEAR_MIPMAP_LINEAR) },
+                    int(gl::GL_LINEAR),
+                    true, false);
+
         paramImageGeom_ = params()->createGeometryParameter(
                     "geometry_image", tr("image geometry"),
                     tr("The geometry that is used to display each image"));
@@ -377,7 +410,8 @@ void ImageGallery::onParameterChanged(Parameter *p)
     }
 
     if (p == imageList_
-      || frameTexSet_->needsReinit(p))
+        || p == mipmaps_
+        || frameTexSet_->needsReinit(p))
         requestReinitGl();
 
     if (   p == keepFrameAspect_
@@ -492,7 +526,12 @@ void ImageGallery::initGl(uint /*thread*/)
         try
         {
             // get texture
-            auto tex = GL::Texture::createFromImage(fnl, gl::GL_RGBA);
+            auto tex = GL::Texture::createFromImage(
+                        fnl, gl::GL_RGBA, mipmaps_->baseValue());
+
+            // interpolation modes
+            tex->setTexParameter(gl::GL_TEXTURE_MIN_FILTER, paramMin_->baseValue());
+            tex->setTexParameter(gl::GL_TEXTURE_MAG_FILTER, paramMag_->baseValue());
 
             // add an entry in vao entity list
             auto v = new Entity_();
@@ -907,6 +946,9 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
         // bind the image texture
         v->tex->bind();
+        // set interpolation mode
+        v->tex->setTexParameter(gl::GL_TEXTURE_MIN_FILTER, paramMin_->baseValue());
+        v->tex->setTexParameter(gl::GL_TEXTURE_MAG_FILTER, paramMag_->baseValue());
 
         // render image
         vaoImage_->drawElements();
@@ -972,15 +1014,6 @@ namespace {
               b = ang2 < 180.f
                 ? mix * ang2 : 360.f + mix * (ang2 - 360.f);
         return MATH::moduloSigned(a + b, 360.f);
-       /* bool b1 = ang1 < 180.f,
-             b2 = ang2 < 180.f;
-        if (b1 == b2)
-            return ang1 + mix * (ang2 - ang1);
-        if (b1 && (ang2 - ang1) > 180.f) // && !b2
-            ang2 -= 360.f;
-        else if (ang1 - ang2 > 180.f)
-            ang1 -= 360.f;
-        return ang1 + mix * (ang2 - ang1);*/
     }
 }
 

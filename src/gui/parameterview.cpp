@@ -147,6 +147,7 @@ void ParameterView::clearWidgets_()
 {
     doStoreScrollbarPos_ = false;
 
+    bool doUpdate = updatesEnabled();
     setUpdatesEnabled(false);
 
 #if 1
@@ -191,7 +192,8 @@ void ParameterView::clearWidgets_()
 
     paramMap_.clear();
 
-    setUpdatesEnabled(true);
+    if (doUpdate)
+        setUpdatesEnabled(true);
 }
 
 GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
@@ -230,12 +232,13 @@ GroupWidget * ParameterView::getGroupWidget_(const Parameter * p)
 
 void ParameterView::createWidgets_()
 {
+    setUpdatesEnabled(false);
+
     clearWidgets_();
 
     if (!object_)
         return;
 
-    setUpdatesEnabled(false);
 
     QWidget * prev = 0;
     for (auto p : parameters_)
@@ -275,12 +278,13 @@ void ParameterView::createWidgets_()
     p_stretch_ = new QWidget(container_);
     layout_->addWidget(p_stretch_);
     layout_->setStretch(layout_->indexOf(p_stretch_), 2);
+    layout_->activate();
 
     // another hack... duh
-    scrollArea_->widget()->setGeometry(
+    container_->setGeometry(
                 0, 0, scrollArea_->width()
                         -scrollArea_->verticalScrollBar()->width()-2,
-                scrollArea_->widget()->height());
+                container_->height());
 
     //squeezeView_();
 
@@ -299,8 +303,8 @@ void ParameterView::createWidgets_()
             scrollArea_->verticalScrollBar()->setValue(0);
     }
 
-    doStoreScrollbarPos_ = true;
     setUpdatesEnabled(true);
+    doStoreScrollbarPos_ = true;
 }
 
 

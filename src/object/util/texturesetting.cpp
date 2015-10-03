@@ -105,12 +105,35 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
                 "\nvoid main()\n{\n\timage.fill(1,0,0);\n}\n");
 */
     paramInterpol_ = params->createBooleanParameter(
-                "_imginterpol" + id_suffix, tr("interpolation"),
+                "_imginterpol" + id_suffix, tr("magnification"),
                 tr("The interpolation mode for pixel magnification"),
                 tr("No interpolation"),
                 tr("Linear interpolation"),
                 true,
                 true, false);
+
+    paramMinify_ = params->createSelectParameter(
+                "_imgminific" + id_suffix, tr("minification"),
+                tr("The interpolation mode for pixel minification"),
+                { "n", "l", "nmn", "lmn", "nml", "lml" },
+                { tr("nearest"), tr("linear"), tr("nearest mipmap nearest"),
+                  tr("linear mipmap nearest"), tr("nearest mipmap linear"),
+                  tr("linear mipmap linear") },
+                { tr("nearest"), tr("linear"), tr("nearest mipmap nearest"),
+                  tr("linear mipmap nearest"), tr("nearest mipmap linear"),
+                  tr("linear mipmap linear") },
+                { int(GL_NEAREST), int(GL_LINEAR), int(GL_NEAREST_MIPMAP_NEAREST),
+                  int(GL_LINEAR_MIPMAP_NEAREST), int(GL_NEAREST_MIPMAP_LINEAR),
+                  int(GL_LINEAR_MIPMAP_LINEAR) },
+                int(GL_LINEAR),
+                true, false);
+
+    paramMipmaps_ = params->createIntParameter(
+                "_imgmipmaps" + id_suffix, tr("mip-map levels"),
+                tr("The number of mip-map levels to create, "
+                   "where each level is half the size of the previous level"),
+                1, true, false);
+    paramMipmaps_->setMinValue(1);
 
     paramWrapX_ = params->createSelectParameter(
             "_imgwrapx" + id_suffix, tr("on horiz. edges"),
@@ -140,6 +163,7 @@ bool TextureSetting::needsReinit(Parameter *p) const
 {
     return (p == paramType_
 //        ||  p == paramAngelScript_
+            || p == paramMinify_ || p == paramMipmaps_
         || (p == paramFilename_ && paramType_->baseValue() == TEX_FILE)
             );
 }
@@ -148,6 +172,8 @@ void TextureSetting::updateParameterVisibility()
 {
     paramTex_->setVisible( paramType_->baseValue() == TEX_PARAM );
     paramFilename_->setVisible( paramType_->baseValue() == TEX_FILE );
+
+    paramMipmaps_->setVisible( isMipmap() );
 
     //paramAngelScript_->setVisible(paramType_->baseValue() == TEX_ANGELSCRIPT);
 }
@@ -178,6 +204,17 @@ bool TextureSetting::isCube() const
         return isParamCube_;
 
     return constTexture_ && constTexture_->isCube();
+}
+
+bool TextureSetting::isMipmap() const
+{
+    const auto type = (TextureType)paramType_->baseValue();
+    const auto mode = (GLenum)paramMinify_->baseValue();
+
+    return  type == TEX_FILE
+         && mode != GL_LINEAR
+         && mode != GL_NEAREST
+         && paramMipmaps_->baseValue() > 0;
 }
 
 uint TextureSetting::width() const
@@ -320,6 +357,10 @@ void TextureSetting::setTextureFromImage_(const QString& fn)
 
     // upload to GPU
     texture_ = GL::Texture::createFromImage(img, GL_RGBA);
+    if (isMipmap())
+        texture_->createMipmaps(paramMipmaps_->baseValue(),
+                                (GLenum)paramMinify_->baseValue());
+
     constTexture_ = texture_;
 }
 
@@ -397,11 +438,14 @@ void TextureSetting::bind(Double time, uint thread, uint slot)
 
     if (!tex->isMultiSample())
     {
-        // set interpolation mode
+        // set mag. interpolation mode
         if (paramInterpol_->baseValue())
             tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR));
         else
             tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
+
+        // min. interpolation mode
+        tex->setTexParameter(GL_TEXTURE_MIN_FILTER, paramMinify_->baseValue());
 
         // wrapmode
         if (paramWrapX_->baseValue() == WM_CLAMP)

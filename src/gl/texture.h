@@ -63,12 +63,12 @@ public:
     /** Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
-    static Texture * createFromImage(const QImage&, gl::GLenum gpu_format);
+    static Texture * createFromImage(const QImage&, gl::GLenum gpu_format, uint mipmap_levels = 0);
 
     /** Creates a new Texture from an image file.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present. */
-    static Texture * createFromImage(const QString& filename, gl::GLenum gpu_format);
+    static Texture * createFromImage(const QString& filename, gl::GLenum gpu_format, uint mipmap_levels = 0);
 
     // --------------- getter ---------------------
 
@@ -87,6 +87,10 @@ public:
     bool isMultiSample() const;
 
     gl::GLsizei numMultiSamples() const;
+
+    /** Returns the set number of mip-map levels, 0 for no mip-mapping.
+        @see createMipmaps() */
+    uint mipmapLevels() const { return mipLevels_; }
 
     /** Returns a number which can be used to check if the texture has changed.
         Used by texture-in objects.
@@ -168,6 +172,10 @@ public:
     /** Creates the texture on the device as defined in constructor.
         @throws GlException */
     void create();
+
+    /** Creates mip-map levels for the base texture.
+        The texture must already be created on the GPU. */
+    void createMipmaps(uint max_level, gl::GLenum mode = gl::GL_LINEAR_MIPMAP_LINEAR);
 
     /** Uploads the data specified previously.
         <br>if ptr_to_data in constructor or create() was NULL,
@@ -259,6 +267,7 @@ private:
         type_;
 
     QString name_;
+    uint mipLevels_;
     int hash_;
 };
 

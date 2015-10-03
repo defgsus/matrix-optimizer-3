@@ -91,6 +91,9 @@ public:
     /** Is the texture a cubemap texture? */
     bool isCube() const;
 
+    /** Returns true if one of the mip-map minifying modes is selected */
+    bool isMipmap() const;
+
     /** The width of the texture, when initialized */
     uint width() const;
     /** The height of the texture, when initialized */
@@ -139,7 +142,8 @@ private:
     const GL::Texture * constTexture_;
 
     ParameterSelect * paramType_, *paramInterpol_,
-                    *paramWrapX_, *paramWrapY_;
+                    *paramWrapX_, *paramWrapY_, *paramMinify_;
+    ParameterInt * paramMipmaps_;
     ParameterFilename * paramFilename_;
     //ParameterText * paramAngelScript_;
     ParameterTexture * paramTex_;

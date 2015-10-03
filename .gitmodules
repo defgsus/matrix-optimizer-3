@@ -1,0 +1,3 @@
+[submodule "src/3rd/polypartition"]
+	path = src/3rd/polypartition
+	url = https://github.com/ivanfratric/polypartition.git
