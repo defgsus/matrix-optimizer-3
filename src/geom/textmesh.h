@@ -10,6 +10,7 @@ namespace GEOM {
 
 class Geometry;
 
+/** A QFont/QString to Geometry converter :) */
 class TextMesh
 {
 public:
@@ -33,6 +34,8 @@ public:
 
     void setText(const QString&);
     void setFont(const QFont&);
+
+    // --- execute ---
 
     /** Geometry will be added to @p g */
     void getGeometry(Geometry*g) const;

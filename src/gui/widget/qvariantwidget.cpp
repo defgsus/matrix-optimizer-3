@@ -16,6 +16,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QToolButton>
+#include <QFontComboBox>
 
 #include "qvariantwidget.h"
 #include "spinbox.h"
@@ -449,6 +450,15 @@ void QVariantWidget::Private::createWidgets()
             }
             break;
 
+            case QMetaType::QFont:
+            {
+                auto e = new QFontComboBox(widget);
+                edit = e;
+                f_update_widget = [=](){ e->setCurrentFont(v.value<QFont>()); };
+                f_update_value = [=](){ v = e->currentFont(); };
+                connect(e, SIGNAL(currentFontChanged(QFont)), widget, SLOT(onValueChanged_()));
+            }
+            break;
 
             default:
                 isHandled = false;
