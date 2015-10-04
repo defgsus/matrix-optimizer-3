@@ -56,6 +56,13 @@ public:
 
     // -------------- tesselation ------------------
 
+    void addPolygon(const QVector<Vec2>& points);
+    void addPolygon(const QVector<DVec2>& points);
+    void addPolygon(const QVector<QPointF>& points);
+    void addPolygon(const QPolygonF& points);
+
+    void tesselate();
+
     /** @{ */
     /** Tesselates the polygon described by @p points.
         The points must describe the contour of a polygon in anti-clockwise order.

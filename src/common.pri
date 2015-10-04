@@ -333,7 +333,9 @@ HEADERS += \
     $$PWD/object/visual/imagegallery.h \
     $$PWD/object/param/parametergeometry.h \
     $$PWD/object/param/modulatorgeometry.h \
-    $$PWD/object/interface/valuegeometryinterface.h
+    $$PWD/object/interface/valuegeometryinterface.h \
+    $$PWD/geom/geometrymodifiertext.h \
+    $$PWD/geom/textmesh.h
 
 
 SOURCES += \
@@ -455,7 +457,6 @@ SOURCES += \
     src/io/systeminfo.cpp \
     src/io/filemanager.cpp \
     src/network/eventcom.cpp \
-    src/geom/tesselator.cpp \
     src/object/synthesizer.cpp \
     src/audio/tool/synth.cpp \
     src/audio/tool/filter24.cpp \
@@ -622,4 +623,8 @@ SOURCES += \
     $$PWD/object/visual/textureoverlay.cpp \
     $$PWD/object/visual/imagegallery.cpp \
     $$PWD/object/param/parametergeometry.cpp \
-    $$PWD/object/param/modulatorgeometry.cpp
+    $$PWD/object/param/modulatorgeometry.cpp \
+    $$PWD/geom/tesselator_glu.cpp \
+    $$PWD/geom/tesselator.cpp \
+    $$PWD/geom/geometrymodifiertext.cpp \
+    $$PWD/geom/textmesh.cpp

@@ -62,7 +62,8 @@ windows { DEFINES += \
                 MO_DISABLE_LADSPA \
                 MO_DISABLE_DUMB \
                 MO_DISABLE_NIFTI \
-                MO_DISABLE_SHP
+                MO_DISABLE_SHP \
+                MO_DISABLE_GLU
 }
 
 # for optirun bug (XXX old and obsolete by now)
@@ -126,6 +127,7 @@ include(src/common.pri)
 include(src/client.pri)
 include(src/tests/tests.pri)
 include(other_files.pri)
+include(src/3rd/3rd.pri)
 
 
 ####################### BISON PARSER #######################
