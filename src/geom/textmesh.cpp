@@ -4,6 +4,7 @@
 #include <QVector>
 #include <QTransform>
 #include <QFontMetrics>
+#include <QFontInfo>
 
 #include "3rd/polypartition/src/polypartition.h"
 
@@ -54,6 +55,7 @@ struct TextMesh::Private
     QMap<QChar, Char> polyMap;
     QVector<qreal> xOffset;
     QRectF boundingRect;
+    qreal descent;
 };
 
 
@@ -115,6 +117,36 @@ void TextMesh::Private::createProps()
     props.set("font", QObject::tr("font"),
             QObject::tr("The font to use"),
             QFont());
+
+    Properties::NamedValues alignH;
+    alignH.set("left", QObject::tr("left"), QObject::tr("Align on the left side"), (int)Qt::AlignLeft);
+    alignH.set("center", QObject::tr("center"), QObject::tr("Align on the center"), (int)Qt::AlignCenter);
+    alignH.set("right", QObject::tr("right"), QObject::tr("Align on the right side"), (int)Qt::AlignRight);
+    props.set("align_h", QObject::tr("alignment horizontal"),
+            QObject::tr("Selects horizontal alignment for the text"), alignH, (int)Qt::AlignCenter);
+
+    Properties::NamedValues alignV;
+    alignV.set("top", QObject::tr("top"), QObject::tr("Align on the top"), (int)Qt::AlignTop);
+    alignV.set("center", QObject::tr("center"), QObject::tr("Align on the center"), (int)Qt::AlignCenter);
+    alignV.set("bottom", QObject::tr("bottom"), QObject::tr("Align on the bottom"), (int)Qt::AlignBottom);
+    alignV.set("baseline", QObject::tr("baseline"),
+               QObject::tr("Align on the baseline of the font"), (int)Qt::AlignBaseline);
+    props.set("align_v", QObject::tr("alignment vertical"),
+            QObject::tr("Selects vertical alignment for the text"), alignV, (int)Qt::AlignBottom);
+
+    Properties::NamedValues triMode;
+    triMode.set("ec", QObject::tr("ear clipping"),
+               QObject::tr("Low-cost ear clipping method"), 0);
+    triMode.set("opt", QObject::tr("optimal"),
+               QObject::tr("Optimal triangulation in terms of minimal edge length"), 1);
+    props.set("tri_method", QObject::tr("triangulation method"),
+            QObject::tr("The method used for triangulation"), triMode, 0);
+
+    props.setUpdateVisibilityCallback([](Properties&p)
+    {
+        int mode = p.get("mode").toInt();
+        p.setVisible("tri_method", mode == M_TESS);
+    });
 }
 
 void TextMesh::Private::getGeometry(Geometry *g, bool shared)
@@ -215,6 +247,9 @@ void TextMesh::Private::getPolys()
     QFont font = props.get("font").value<QFont>();
     font.setStyleStrategy(QFont::PreferOutline);
     QFontMetrics fm(font);
+    //QFontInfo fi(font);
+    //qreal pfac = qreal(fm.height()) / fi.pointSizeF();
+    descent = fm.descent();
 
     int k=0;
     for (auto chr : text)
@@ -282,14 +317,31 @@ void TextMesh::Private::getPolys()
         r.moveRight(r.right() + xOffset[k++]);
         boundingRect = boundingRect.united(r);
     }
+    // XXX Bounding rect is +x, +y,
+    // while char polygons are still +x, -y !!
     boundingRect.setTop(-boundingRect.top());
     boundingRect.setBottom(-boundingRect.bottom());
 }
 
 void TextMesh::Private::getOffset(qreal &x, qreal &y)
 {
-    x = -boundingRect.center().x();
-    y = -boundingRect.center().y();
+    int ah = props.get("align_h").toInt(),
+        av = props.get("align_v").toInt();
+    switch (ah)
+    {
+        default:
+        case Qt::AlignLeft: x = -boundingRect.left(); break;
+        case Qt::AlignRight: x = -boundingRect.right(); break;
+        case Qt::AlignCenter: x = -boundingRect.center().x(); break;
+    }
+    switch (av)
+    {
+        default:
+        case Qt::AlignTop: y = -boundingRect.top(); break;
+        case Qt::AlignBottom: y = -boundingRect.bottom(); break;
+        case Qt::AlignBaseline: y = -boundingRect.bottom() - descent; break;
+        case Qt::AlignCenter: y = -boundingRect.center().y(); break;
+    }
 }
 
 
@@ -301,11 +353,13 @@ void TextMesh::Private::triangulate(Char & c)
     {
         // convert to TPPLPoly
         TPPLPoly tp;
+        // avoid duplicate points for TPPL lib
         const int si = poly.isClosed() ? poly.size() - 1
                                        : poly.size();
         tp.Init(si);
         for (int i=0; i<si; ++i)
             tp.GetPoint(i) = TPPLPoint(poly[i].x(), poly[i].y());
+        // holes are CW order
         tp.SetHole(tp.GetOrientation() == TPPL_CW);
 
         inp.push_back(tp);
@@ -316,7 +370,10 @@ void TextMesh::Private::triangulate(Char & c)
     TPPLPartition part;
 
     std::list<TPPLPoly> tris;
-    part.Triangulate_EC(&inp, &tris);
+    if (props.get("tri_method").toInt() == 0)
+        part.Triangulate_EC(&inp, &tris);
+    else
+        part.Triangulate_OPT(&inp, &tris);
 
     // get triangles
     c.tris.clear();
@@ -388,11 +445,13 @@ void TextMesh::Private::createLines(Geometry *g, bool shared)
             }
         }
     }
-
+#if 0
+    // XXX debug boundingRect
     g->addLine(Vec3(boundingRect.left(), boundingRect.top(), 0.),
                Vec3(boundingRect.right(), boundingRect.top(), 0.));
     g->addLine(Vec3(boundingRect.left(), boundingRect.top(), 0.),
                Vec3(boundingRect.left(), boundingRect.bottom(), 0.));
+#endif
 }
 
 void TextMesh::Private::createTriangles(Geometry *g, bool shared)
