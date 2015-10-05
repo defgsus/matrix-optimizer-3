@@ -24,6 +24,8 @@ void Files::fixDirectoryString(QString& f)
 {
 #ifdef Q_OS_WIN
     f.replace('/', QDir::separator());
+#else
+    Q_UNUSED(f);
 #endif
 }
 

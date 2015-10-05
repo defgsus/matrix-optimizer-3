@@ -683,7 +683,7 @@ void DiskRenderer::Private::normalizeAndSplitAudio()
                          dataout(bsize);
 
         // split data
-        for (size_t i=0; i<ininfo.frames; i += bsize)
+        for (size_t i=0; i<(size_t)ininfo.frames; i += bsize)
         {
             // read a chunk - interlaced
             size_t left = std::min(bsize, size_t(ininfo.frames) - i);
