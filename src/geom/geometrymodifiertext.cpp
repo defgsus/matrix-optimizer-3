@@ -1,5 +1,6 @@
 
 #include "geometrymodifiertext.h"
+#include "geometry.h"
 #include "geom/textmesh.h"
 #include "io/datastream.h"
 
@@ -13,6 +14,16 @@ GeometryModifierText::GeometryModifierText()
 {
     TextMesh tm;
     properties() = tm.properties();
+    properties().set("shared_vertices",
+                     QObject::tr("shared vertices"),
+                     QObject::tr("If enabled, vertices with same positions are reused"),
+                     false);
+    properties().set("color", QObject::tr("ambient color"),
+                     QObject::tr("The base color of the geometry"),
+                     QVector<Float>() << .5f << .5f << .5f << 1.f,
+                     QVector<Float>() << 0.f << 0.f << 0.f << 0.f,
+                     QVector<Float>() << 1.f << 1.f << 1.f << 1.f,
+                     QVector<Float>() << .1f << .1f << .1f << .1f);
 }
 
 QString GeometryModifierText::statusTip() const
@@ -36,9 +47,12 @@ void GeometryModifierText::deserialize(IO::DataStream &io)
 
 void GeometryModifierText::execute(Geometry * g)
 {
+    auto color = properties().get("color").value<QVector<Float>>();
+    g->setColor(color[0], color[1], color[2], color[3]);
+
     TextMesh tm;
     tm.setProperties(properties());
-    tm.getGeometry(g);
+    tm.getGeometry(g, properties().get("shared_vertices").toBool());
 }
 
 

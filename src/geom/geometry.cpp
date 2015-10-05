@@ -745,6 +745,13 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     lineIndex_.push_back(p2);
 }
 
+void Geometry::addLine(const Vec3 &p1, const Vec3 &p2)
+{
+    auto i1 = addVertex(p1.x, p1.y, p1.z),
+         i2 = addVertex(p2.x, p2.y, p2.z);
+    addLine(i1, i2);
+}
+
 void Geometry::addPoint(IndexType p1)
 {
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());

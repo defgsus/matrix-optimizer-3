@@ -352,6 +352,7 @@ public:
 
     /** Connects two previously created indices to form a line */
     void addLine(IndexType p1, IndexType p2);
+    void addLine(const Vec3& p1, const Vec3& p2);
 
     /** Create a point sprite for the vertex */
     void addPoint(IndexType idx);

@@ -38,7 +38,7 @@ public:
     // --- execute ---
 
     /** Geometry will be added to @p g */
-    void getGeometry(Geometry*g) const;
+    void getGeometry(Geometry*g, bool shared_vertices) const;
 
 private:
     struct Private;

@@ -3,13 +3,21 @@
 #include <QMap>
 #include <QVector>
 #include <QTransform>
+#include <QFontMetrics>
 
 #include "3rd/polypartition/src/polypartition.h"
 
 #include "textmesh.h"
 #include "geometry.h"
 #include "types/properties.h"
+#include "io/error.h"
 
+#if 0
+#   include "io/log.h"
+#   define MO_DEBUG_TM(arg__) MO_PRINT("TextMesh::" << arg__)
+#else
+#   define MO_DEBUG_TM(unused__)
+#endif
 
 namespace MO {
 namespace GEOM {
@@ -19,8 +27,9 @@ struct TextMesh::Private
     struct Char
     {
         QList<QPolygonF> polys;
-        QSizeF size;
+        QRectF rect;
         std::list<TPPLPoly> tris;
+        qreal x;
     };
 
     Private(TextMesh * p) : p(p)
@@ -30,16 +39,21 @@ struct TextMesh::Private
 
     void createProps();
 
+    static void removeCurves(const QPainterPath& in, QPainterPath& out);
     void getPolys();
+    void getPolys(const QPainterPath& path, QList<QPolygonF>& polys);
+    void getOffset(qreal& x, qreal& y);
     void triangulate(Char&);
-    void createLines(Geometry * g);
-    void createTriangles(Geometry * g);
-    void getGeometry(Geometry * g);
+    void createLines(Geometry * g, bool shared);
+    void createTriangles(Geometry * g, bool shared);
+    void getGeometry(Geometry * g, bool shared);
 
     TextMesh * p;
     Properties props;
 
     QMap<QChar, Char> polyMap;
+    QVector<qreal> xOffset;
+    QRectF boundingRect;
 };
 
 
@@ -74,9 +88,9 @@ void TextMesh::setFont(const QFont& f)
     p_->props.set("font", f);
 }
 
-void TextMesh::getGeometry(Geometry *g) const
+void TextMesh::getGeometry(Geometry *g, bool shared_vertices) const
 {
-    p_->getGeometry(g);
+    p_->getGeometry(g, shared_vertices);
 }
 
 void TextMesh::Private::createProps()
@@ -103,14 +117,14 @@ void TextMesh::Private::createProps()
             QFont());
 }
 
-void TextMesh::Private::getGeometry(Geometry *g)
+void TextMesh::Private::getGeometry(Geometry *g, bool shared)
 {
     getPolys();
 
     int mode = props.get("mode").toInt();
     if (mode == M_POLYLINE)
     {
-        createLines(g);
+        createLines(g, shared);
         return;
     }
 
@@ -119,21 +133,95 @@ void TextMesh::Private::getGeometry(Geometry *g)
 
     if (mode == M_TESS)
     {
-        createTriangles(g);
+        createTriangles(g, shared);
         return;
     }
 
 }
 
+void TextMesh::Private::removeCurves(const QPainterPath &in, QPainterPath &out)
+{
+    out.moveTo(in.pointAtPercent(0.));
+    qreal l_ang = in.angleAtPercent(0.);
+    qreal st = 0.1;
+
+    for (qreal t = 0.; t<=1.;)
+    {
+    again_:
+        qreal ang = in.angleAtPercent(t);
+        bool diff = std::abs(ang - l_ang) > 10.;
+
+        if (diff && st > 0.001)
+        {
+            st /= 2;
+            t -= st;
+            goto again_;
+        }
+        else if (st < 0.01)
+            st *= 2.;
+
+        l_ang = ang;
+
+        out.lineTo(in.pointAtPercent(t));
+
+        t += st;
+        //t += std::max(qreal(0.001), 0.01 - 0.1*std::abs(in.slopeAtPercent(t)));
+    }
+
+}
+
+void TextMesh::Private::getPolys(const QPainterPath &path, QList<QPolygonF> &polys)
+{
+    QPolygonF poly;
+    // get first outline
+    int i;
+    for (i=0; i<path.elementCount(); ++i)
+    {
+        auto e = path.elementAt(i);
+        if (e.isMoveTo() && i != 0)
+            break;
+
+        poly << QPointF(e);
+    }
+    polys << poly;
+    // additional polygons?
+    if (i < path.elementCount() - 1)
+    {
+        poly.clear();
+
+        for (; i<path.elementCount(); ++i)
+        {
+            auto e = path.elementAt(i);
+            if (e.isMoveTo() && !poly.empty())
+            {
+                polys << poly;
+                poly.clear();
+            }
+            poly << QPointF(e);
+        }
+        if (poly.size() > 2)
+            polys << poly;
+    }
+}
+
 void TextMesh::Private::getPolys()
 {
+    MO_DEBUG_TM("getPolys()");
+
     polyMap.clear();
+    xOffset.clear();
 
     const QString text = props.get("text").toString();
-    const QFont font = props.get("font").value<QFont>();
+    QFont font = props.get("font").value<QFont>();
+    font.setStyleStrategy(QFont::PreferOutline);
+    QFontMetrics fm(font);
 
+    int k=0;
     for (auto chr : text)
     {
+        // store x-offset
+        xOffset.append( fm.width(text, k++) );
+
         // don't create duplicates
         {
             auto i = polyMap.find(chr);
@@ -145,28 +233,65 @@ void TextMesh::Private::getPolys()
         QPainterPath path;
         path.addText(0, 0, font, chr);
 
+        MO_DEBUG_TM("QPainterPath.elementCount() == " << path.elementCount());
+
         // create the poly struct
         Char c;
-        // flip y
-        // XXX break triangulation
-        QTransform trans;
-        //trans.scale(1., -1.);
-        // get list of polygons
-        c.polys = path.toSubpathPolygons(trans);
 
         // flip y
-        /*for (auto & poly : c.polys)
-            for (auto & p : poly)
-                p.ry() = -p.y();
-        */
+        QTransform trans;
+        // XXX changes winding order and breaks triangulation
+        //trans.scale(1., -1.);
+
+        // make curves be made of many lines
+        //QPainterPath spath;
+        //removeCurves(path, spath);
+
+        // get list of polygons
+        //c.polys = spath.simplified().toSubpathPolygons(trans);
+        getPolys(path, c.polys);
+
+        MO_DEBUG_TM(c.polys.size() << " polys:");
+        for (const QPolygonF& p : c.polys)
+        {
+            MO_DEBUG_TM(p.size() << " points");
+            //qInfo() << p.poly;
+        }
 
         // get extend
-        c.size = path.boundingRect().size();
+        c.rect = path.boundingRect();
 
         // remember
         polyMap.insert(chr, c);
     }
+
+    // -- get bounding rect --
+
+    boundingRect = QRectF();
+
+    if (polyMap.isEmpty())
+        return;
+
+    k = 0;
+    for (auto chr : text)
+    {
+        auto i = polyMap.find(chr);
+        MO_ASSERT(i != polyMap.end(), "");
+
+        QRectF r = i.value().rect;
+        r.moveRight(r.right() + xOffset[k++]);
+        boundingRect = boundingRect.united(r);
+    }
+    boundingRect.setTop(-boundingRect.top());
+    boundingRect.setBottom(-boundingRect.bottom());
 }
+
+void TextMesh::Private::getOffset(qreal &x, qreal &y)
+{
+    x = -boundingRect.center().x();
+    y = -boundingRect.center().y();
+}
+
 
 void TextMesh::Private::triangulate(Char & c)
 {
@@ -176,9 +301,12 @@ void TextMesh::Private::triangulate(Char & c)
     {
         // convert to TPPLPoly
         TPPLPoly tp;
-        tp.Init(poly.size());
-        for (int i=0; i<poly.size(); ++i)
+        const int si = poly.isClosed() ? poly.size() - 1
+                                       : poly.size();
+        tp.Init(si);
+        for (int i=0; i<si; ++i)
             tp.GetPoint(i) = TPPLPoint(poly[i].x(), poly[i].y());
+        tp.SetHole(tp.GetOrientation() == TPPL_CW);
 
         inp.push_back(tp);
     }
@@ -195,14 +323,18 @@ void TextMesh::Private::triangulate(Char & c)
     for (TPPLPoly & tri : tris)
     {
         if (tri.GetNumPoints() != 3)
+        {
+            abort();
             continue;
+        }
 
         // fix orientation
+        // we change them to CW...
         if (tri.GetOrientation() == TPPL_CCW)
         {
             std::swap(tri.GetPoint(1), tri.GetPoint(2));
         }
-
+        // ... and flip y, so we get CCW again
         tri.GetPoint(0).y *= -1.;
         tri.GetPoint(1).y *= -1.;
         tri.GetPoint(2).y *= -1.;
@@ -211,11 +343,14 @@ void TextMesh::Private::triangulate(Char & c)
     }
 }
 
-void TextMesh::Private::createLines(Geometry *g)
+void TextMesh::Private::createLines(Geometry *g, bool shared)
 {
     const QString text = props.get("text").toString();
 
-    qreal x = 0., y = 0.;
+    qreal xo, yo;
+    getOffset(xo, yo);
+
+    int k=0;
     for (auto chr : text)
     {
         auto mapi = polyMap.find(chr);
@@ -223,43 +358,52 @@ void TextMesh::Private::createLines(Geometry *g)
             continue;
 
         const Char& c = mapi.value();
+        qreal x = xOffset[k++] + xo, y = yo;
 
-        for (const QPolygonF& p : c.polys)
+        for (const QPolygonF& poly : c.polys)
         {
-            if (p.empty())
+            if (poly.empty())
                 continue;
 
-            int i;
-            for (i=0; i<p.size()-2; ++i)
-            {
-                auto p1 = g->addVertex( p[i].x() + x,
-                                       -p[i].y() + y, 0),
-                     p2 = g->addVertex( p[i+1].x() + x,
-                                       -p[i+1].y() + y, 0);
-                g->addLine(p1, p2);
-            }
-            if (p.isClosed())
-            {
-                auto p1 = g->addVertex( p[i].x() + x,
-                                       -p[i].y() + y, 0),
-                     p2 = g->addVertex( p[0].x() + x,
-                                       -p[0].y() + y, 0);
-                g->addLine(p1, p2);
-            }
+            g->setNormal(0,0,1);
 
-            x += (c.size.width()) * 1.1;
+            if (shared)
+            {
+                QVector<Geometry::IndexType> idx;
+                for (auto & p : poly)
+                    idx << g->addVertex(p.x() + x, -p.y() + y, 0.f);
+
+                for (int i=0; i<idx.size()-1; ++i)
+                {
+                    g->addLine(idx[i], idx[i+1]);
+                }
+            }
+            else
+            {
+                for (int i=0; i<poly.size()-1; ++i)
+                {
+                    g->addLine(Vec3(poly[i].x() + x, -poly[i].y() + y, 0.f),
+                               Vec3(poly[i+1].x() + x, -poly[i+1].y() + y, 0.f));
+                }
+            }
         }
-
     }
 
+    g->addLine(Vec3(boundingRect.left(), boundingRect.top(), 0.),
+               Vec3(boundingRect.right(), boundingRect.top(), 0.));
+    g->addLine(Vec3(boundingRect.left(), boundingRect.top(), 0.),
+               Vec3(boundingRect.left(), boundingRect.bottom(), 0.));
 }
 
-void TextMesh::Private::createTriangles(Geometry *g)
+void TextMesh::Private::createTriangles(Geometry *g, bool shared)
 {
     const QString text = props.get("text").toString();
     const Float depth = props.get("depth").toFloat();
 
-    qreal x = 0., y = 0.;
+    qreal xo, yo;
+    getOffset(xo, yo);
+
+    int k=0;
     for (auto chr : text)
     {
         auto mapi = polyMap.find(chr);
@@ -267,6 +411,7 @@ void TextMesh::Private::createTriangles(Geometry *g)
             continue;
 
         const Char& c = mapi.value();
+        qreal x = xOffset[k++] + xo, y = yo;
 
         for (const TPPLPoly& p : c.tris)
         {
@@ -288,7 +433,7 @@ void TextMesh::Private::createTriangles(Geometry *g)
 
             if (depth > 0.f)
             {
-                if (g->sharedVertices())
+                if (shared)
                 {
                     auto pd1 = g->addVertex(x1, y1, -depth),
                          pd2 = g->addVertex(x2, y2, -depth),
@@ -322,11 +467,8 @@ void TextMesh::Private::createTriangles(Geometry *g)
 
                     g->addTriangle(vd1, vd3, vd2);
                 }
-
             }
         }
-
-        x += (c.size.width()) * 1.1;
     }
 
 }
