@@ -40,6 +40,9 @@ namespace IO {
         FT_HELP_EXPORT,
         FT_LADSPA,
         FT_TEXT,
+        FT_TEXT_GLSL,
+        FT_TEXT_ANGELSCRIPT,
+        FT_TEXT_EQUATION,
         FT_SSW_PROJECT
     };
 

@@ -13,12 +13,16 @@
 
 #include <QWidget>
 
+#include "io/filetypes.h"
+
 class QSyntaxHighlighter;
 
 namespace MO {
 namespace GUI {
 
-
+/** Abstract source code editor.
+    Implement compile() and getHelpUrl() in derived classes
+    to handle the implemented language */
 class AbstractScriptWidget : public QWidget
 {
     Q_OBJECT
@@ -32,7 +36,7 @@ public:
     };
 
 
-    explicit AbstractScriptWidget(QWidget *parent = 0);
+    explicit AbstractScriptWidget(IO::FileType type = IO::FT_TEXT, QWidget *parent = 0);
     ~AbstractScriptWidget();
 
     // -------------- getter -------------------------------
@@ -41,6 +45,10 @@ public:
 
     /** Returns true when the current text has been successfully compiled. */
     bool isScriptValid() const;
+    /** Returns true when the script text has been edited */
+    bool isChanged() const;
+
+    IO::FileType fileType() const;
 
 signals:
 
@@ -52,6 +60,12 @@ public slots:
 
     /** Sets the current script text */
     void setScriptText(const QString&);
+
+    bool loadScript();
+    bool saveScript();
+    bool saveScriptAs();
+    bool loadScript(const QString& fn);
+    bool saveScript(const QString& fn);
 
     /** Checks syntax when script was changed
         and always sends a scriptTextChanged() signal */
@@ -78,6 +92,10 @@ public slots:
     void addCompileMessage(int line, MessageType t, const QString & text);
 
 protected:
+
+    /** Returns true if script is unchanged or if user
+        chooses to discard changes */
+    bool isSaveToChange();
 
     void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
 

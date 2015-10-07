@@ -52,7 +52,7 @@ void ObjectListWidget::setParentObject(Object *parent)
     // rather display the parent if this object is empty
     if (parent)
     {
-        // XXX For now, always show parent
+        // XXX For now, always show/select parent
         if (/*parent->childObjects().isEmpty()
             &&*/ parent->parentObject())
         {

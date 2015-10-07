@@ -125,6 +125,10 @@ void Camera::createParameters()
                                             1000.0,
                                             0.00002, 100000.0, 1.0);
 
+        p_tex_format_ = params()->createTextureFormatParameter("fbo_format", tr("framebuffer format"),
+                                                    tr("The channel format of the framebuffer"));
+        p_tex_type_ = params()->createTextureTypeParameter("fbo_type", tr("framebuffer type"),
+                                                    tr("The type-per-channel of the framebuffer"));
 
         p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
@@ -206,6 +210,7 @@ void Camera::onParameterChanged(Parameter * p)
     }
 
     if (p == p_width_ || p == p_height_ || p == p_cubeRes_
+        || p_tex_format_ || p == p_tex_type_
         || p == p_multiSample_)
         requestReinitGl();
 
@@ -345,7 +350,9 @@ void Camera::initGl(uint thread)
     fbo_ = new GL::FrameBufferObject(
                 width,
                 height,
-                gl::GLenum(scene->frameBufferFormat()),
+                gl::GLenum(Parameters::getTexFormat(p_tex_format_->baseValue(),
+                                                    p_tex_type_->baseValue())),
+                gl::GLenum(p_tex_format_->baseValue()),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 cubeMapped);
@@ -369,7 +376,9 @@ void Camera::initGl(uint thread)
         msFbo_ = new GL::FrameBufferObject(
                     width,
                     height,
-                    gl::GLenum(scene->frameBufferFormat()),
+                    gl::GLenum(Parameters::getTexFormat(p_tex_format_->baseValue(),
+                                                        p_tex_type_->baseValue())),
+                    gl::GLenum(p_tex_format_->baseValue()),
                     gl::GL_FLOAT,
                     GL::FrameBufferObject::A_DEPTH,
                     cubeMapped,

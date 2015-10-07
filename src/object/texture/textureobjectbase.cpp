@@ -89,7 +89,8 @@ struct TextureObjectBase::PrivateTO
                     * p_r_min, * p_r_max,
                     * p_g_min, * p_g_max,
                     * p_b_min, * p_b_max,
-                    * p_a_min, * p_a_max;
+                    * p_a_min, * p_a_max,
+                    * p_res_scale;
     ParameterSelect * p_magInterpol, * p_enableOut,
                 * p_texType, * p_texFormat, *p_resMode;
     ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
@@ -220,12 +221,15 @@ void TextureObjectBase::PrivateTO::createParameters()
 
         p_resMode  = to->params()->createSelectParameter("to_res_mode", tr("resolution"),
                     tr("Selects how the resolution is defined"),
-                    { "custom", "input" },
-                    { tr("custom"), tr("input") },
+                    { "custom", "input", "scaled", "fix_width", "fix_height" },
+                    { tr("custom"), tr("input"), tr("input scaled"),
+                      tr("input ratio width"), tr("input ratio height") },
                     { tr("Resolution can be freely set"),
-                      tr("The resolution from the input texture is used") },
-                    { RM_CUSTOM, RM_INPUT },
-                    RM_CUSTOM,
+                      tr("The resolution from the input texture is used"),
+                      tr("A scaled resolution with same ratio as the input texture is used") },
+                    { RM_CUSTOM, RM_INPUT, RM_INPUT_SCALED,
+                      RM_INPUT_FIX_WIDTH, RM_INPUT_FIX_HEIGHT },
+                    RM_INPUT,
                     true, false);
 
         p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of texture in pixels"),
@@ -234,18 +238,21 @@ void TextureObjectBase::PrivateTO::createParameters()
                                       1024, 16, 4096*4, 16, true, false);
         p_depth = to->params()->createIntParameter("to_depth", tr("depth"), tr("Depth of texture in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
-
-        p_split = to->params()->createIntParameter("to_split", tr("segments"),
-                                    tr("Split rendering of the output into separate regions for better gui response"),
-                                    1, 1, 4096, 1, true, false);
-        /** @todo fix split/segmentation in TextureObjectBase */
-        p_split->setZombie(true);
+        p_res_scale = to->params()->createFloatParameter("to_res_scale",
+                        tr("scale"), tr("A multiplier for the input texture"),
+                                                         1.f, 0.125f, true, false);
+        p_res_scale->setMinValue(0.f);
 
         p_texFormat = to->params()->createTextureFormatParameter("to_format", tr("texture format"),
                                                     tr("The channel format of the output texture"));
         p_texType = to->params()->createTextureTypeParameter("to_type", tr("texture type"),
                                                     tr("The type-per-channel of the output texture"));
 
+        p_split = to->params()->createIntParameter("to_split", tr("segments"),
+                                    tr("Split rendering of the output into separate regions for better gui response"),
+                                    1, 1, 4096, 1, true, false);
+        /** @todo fix split/segmentation in TextureObjectBase */
+        p_split->setZombie(true);
 
     to->params()->endParameterGroup();
 
@@ -328,6 +335,8 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
 
     if (p == p_to_->p_width
         || p == p_to_->p_height
+        || p == p_to_->p_res_scale
+        || p == p_to_->p_resMode
         || p == p_to_->p_depth
         || p == p_to_->p_aa
         || p == p_to_->p_texFormat
@@ -345,9 +354,11 @@ void TextureObjectBase::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
-    bool res = p_to_->p_resMode->baseValue() == RM_CUSTOM;
-    p_to_->p_width->setVisible(res);
-    p_to_->p_height->setVisible(res);
+    const auto resMode = (ResolutionMode)p_to_->p_resMode->baseValue();
+    bool res = resMode == RM_CUSTOM;
+    p_to_->p_width->setVisible(res || resMode == RM_INPUT_FIX_WIDTH);
+    p_to_->p_height->setVisible(res || resMode == RM_INPUT_FIX_HEIGHT);
+    p_to_->p_res_scale->setVisible(resMode == RM_INPUT_SCALED);
     p_to_->p_depth->setVisible(res && false);
 }
 
@@ -574,10 +585,16 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     if (index >= (uint)shaderQuads.size())
         return;
 
-    // get input res
+    // check correct resolution
     uint width = p_width->baseValue(),
          height = p_height->baseValue();
-    if (p_resMode->baseValue() == RM_INPUT)
+
+    // -- find input resolution --
+    auto resMode = (ResolutionMode)p_resMode->baseValue();
+    if (   resMode == RM_INPUT
+        || resMode == RM_INPUT_SCALED
+        || resMode == RM_INPUT_FIX_WIDTH
+        || resMode == RM_INPUT_FIX_HEIGHT)
     {
         for (int i=0; i<p_textures.length(); ++i)
         {
@@ -590,6 +607,25 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
             }
         }
 
+        if (resMode == RM_INPUT_SCALED)
+        {
+            Float s = p_res_scale->baseValue();
+            width = std::max(uint(2), uint(width * s));
+            height = std::max(uint(2), uint(height * s));
+        }
+
+        if (resMode == RM_INPUT_FIX_WIDTH)
+        {
+            Float a = Float(height) / std::max(uint(1), width);
+            width = p_width->baseValue();
+            height = width * a;
+        }
+        if (resMode == RM_INPUT_FIX_HEIGHT)
+        {
+            Float a = Float(width) / std::max(uint(1), height);
+            height = p_height->baseValue();
+            width = height * a;
+        }
     }
 
     // update FBO/resolution

@@ -28,7 +28,10 @@ public:
     enum ResolutionMode
     {
         RM_CUSTOM,
-        RM_INPUT
+        RM_INPUT,
+        RM_INPUT_SCALED,
+        RM_INPUT_FIX_WIDTH,
+        RM_INPUT_FIX_HEIGHT
     };
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(TextureObjectBase);

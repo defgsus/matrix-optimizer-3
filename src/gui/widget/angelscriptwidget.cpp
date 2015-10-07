@@ -59,7 +59,7 @@ public:
 
 
 AngelScriptWidget::AngelScriptWidget(QWidget *parent)
-    : AbstractScriptWidget  (parent),
+    : AbstractScriptWidget  (IO::FT_TEXT_ANGELSCRIPT, parent),
       p_                    (new Private(this))
 {
     p_->createObjects();

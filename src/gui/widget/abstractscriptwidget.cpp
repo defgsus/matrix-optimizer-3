@@ -17,10 +17,12 @@
 #include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
-
+#include <QMessageBox>
+#include <QFile>
 
 #include "abstractscriptwidget.h"
 #include "gui/helpdialog.h"
+#include "io/files.h"
 #include "io/settings.h"
 //#include "io/log.h"
 
@@ -38,6 +40,7 @@ public:
         , ignoreTextChange  (false)
         , isUpdateOptional  (false)
         , isAlwaysUpdate    (false)
+        , isChanged         (false)
     { }
 
     void createWidgets();
@@ -71,9 +74,11 @@ public:
     QTimer * timer;
 
     bool isValid, ignoreTextChange,
-        isUpdateOptional, isAlwaysUpdate;
+        isUpdateOptional, isAlwaysUpdate,
+        isChanged;
 
-    QString curText;
+    IO::FileType fileType;
+    QString curText, curFilename;
 
     QList<Message> messages;
 };
@@ -81,12 +86,13 @@ public:
 
 /** @todo TextEditDialog duplicates update functionality from AbstractScriptWidget and
             it's a bit more involving to work on that */
-AbstractScriptWidget::AbstractScriptWidget(QWidget *parent)
+AbstractScriptWidget::AbstractScriptWidget(IO::FileType type, QWidget *parent)
     : QWidget       (parent),
       p_sw_         (new PrivateSW(this))
 {
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
+    p_sw_->fileType = type;
     p_sw_->createWidgets();
     p_sw_->updateInfoWidget();
 }
@@ -127,6 +133,7 @@ void AbstractScriptWidget::setScriptText(const QString & t)
     p_sw_->isValid = false;
     p_sw_->curText = t;
     p_sw_->editor->setPlainText(t);
+    p_sw_->isChanged = false;
 }
 
 void AbstractScriptWidget::updateScript()
@@ -158,7 +165,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         editor->setProperty("code", true);
         editor->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
         /// @todo AbstractScriptWidget editor is squeezed by the message list
-        editor->setMinimumHeight(500);
+        editor->setMinimumHeight(400);
         lv->addWidget(editor, 10);
         connect(editor, &QPlainTextEdit::textChanged, [this]()
         {
@@ -234,6 +241,7 @@ void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
     // only compile when changed
     if (tmp != curText)
     {
+        isChanged = true;
         messages.clear();
         isValid = widget->compile();
     }
@@ -267,6 +275,28 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
         && (e->modifiers() & Qt::ALT || e->modifiers() & Qt::CTRL))
     {
         p_sw_->onTextChanged(true);
+        e->accept();
+        return;
+    }
+
+    if (e->modifiers() & Qt::CTRL && e->key() == Qt::Key_L)
+    {
+        loadScript();
+        e->accept();
+        return;
+    }
+
+    if (e->modifiers() & Qt::CTRL && e->key() == Qt::Key_S)
+    {
+        saveScript();
+        e->accept();
+        return;
+    }
+
+    if (e->modifiers() & Qt::CTRL && e->modifiers() & Qt::SHIFT
+            && e->key() == Qt::Key_L)
+    {
+        saveScriptAs();
         e->accept();
         return;
     }
@@ -353,6 +383,95 @@ int AbstractScriptWidget::PrivateSW::posForLine(int line) const
     }
     return pos;
 }
+
+IO::FileType AbstractScriptWidget::fileType() const
+{
+    return p_sw_->fileType;
+}
+
+bool AbstractScriptWidget::isSaveToChange()
+{
+    if (!p_sw_->isChanged)
+        return true;
+
+    int a = QMessageBox::question(
+                this, tr("Keep script?"),
+                tr("The current script has not been stored, "
+                   "do you want to loose the changes?"),
+                tr("Discard"), tr("Keep"));
+    if (a == 1)
+        return false;
+    return true;
+}
+
+bool AbstractScriptWidget::saveScript(const QString &fn)
+{
+    QFile f(fn);
+    if (!f.open(QFile::WriteOnly | QFile::Text))
+    {
+        QMessageBox::critical(this, tr("Save script"),
+                              tr("Error saving script %1\n%2")
+                              .arg(fn).arg(f.errorString()));
+        return false;
+    }
+
+    auto data = p_sw_->editor->toPlainText().toUtf8();
+    if (f.write(data) != data.size())
+    {
+        QMessageBox::critical(this, tr("Save script"),
+                              tr("Error saving script %1\n%2")
+                              .arg(fn).arg(f.errorString()));
+        return false;
+    }
+
+    p_sw_->curFilename = fn;
+    p_sw_->isChanged = false;
+    return true;
+}
+
+bool AbstractScriptWidget::loadScript(const QString &fn)
+{
+    QFile f(fn);
+    if (!f.open(QFile::ReadOnly | QFile::Text))
+    {
+        QMessageBox::critical(this, tr("Load script"),
+                              tr("Error loading script %1\n%2")
+                              .arg(fn).arg(f.errorString()));
+        return false;
+    }
+
+    auto data = f.readAll();
+    setScriptText(QString::fromUtf8(data));
+
+    p_sw_->curFilename = fn;
+    p_sw_->isChanged = false;
+    return true;
+}
+
+bool AbstractScriptWidget::loadScript()
+{
+    QString fn = IO::Files::getOpenFileName(fileType(), this);
+    if (fn.isEmpty())
+        return false;
+    return loadScript(fn);
+}
+
+bool AbstractScriptWidget::saveScript()
+{
+    QString fn = p_sw_->curFilename;
+    if (fn.isEmpty() || !saveScript(fn))
+        return saveScriptAs();
+    return saveScript(fn);
+}
+
+bool AbstractScriptWidget::saveScriptAs()
+{
+    QString fn = IO::Files::getSaveFileName(fileType(), this);
+    if (fn.isEmpty())
+        return false;
+    return saveScript(fn);
+}
+
 
 } // namespace GUI
 } // namespace MO

@@ -35,6 +35,9 @@ namespace IO {
       "helpexp",
       "ladspa",
       "text",
+      "glsl",
+      "angelscript",
+      "equation",
       "ssw"
     };
 
@@ -58,6 +61,9 @@ namespace IO {
       QObject::tr("Help export"),
       QObject::tr("Ladspa directory"),
       QObject::tr("Text"),
+      QObject::tr("Glsl"),
+      QObject::tr("Angelscript"),
+      QObject::tr("Equation"),
       QObject::tr("SSW Project")
     };
 
@@ -81,6 +87,9 @@ namespace IO {
         { "xml-equ" },
         { "" },
         { "so" },
+        { "txt", "asc" },
+        { "glsl", "vert", "frag", "txt", "asc" },
+        { "as", "txt", "asc" },
         { "txt", "asc" },
         { "uifm" }
     };
@@ -120,7 +129,14 @@ namespace IO {
         { QObject::tr("equation xml files") + " ( *.xml *.xml-equ )" },
         { QObject::tr("* (*)") },
         { QObject::tr("* (*)") },
-        { QObject::tr("text files") + " ( *.txt *.asc )" },
+        { QObject::tr("text files") + " ( *.txt *.asc )",
+          QObject::tr("all files (*)") },
+        { QObject::tr("glsl source") + " ( *.glsl *.frag *.vert *.txt *.asc )",
+          QObject::tr("all files (*)") },
+        { QObject::tr("angelscript source") + " ( *.as *.txt *.asc )",
+          QObject::tr("all files (*)") },
+        { QObject::tr("equations") + " ( *.txt *.asc )",
+          QObject::tr("all files (*)") },
         { QObject::tr("SSW-JSON-Project (*.uifm)") },
     };
 

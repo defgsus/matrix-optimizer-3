@@ -115,7 +115,8 @@ private:
         *p_cameraOrthoScale_, *p_cameraOrthoMix_,
         *p_backR_, *p_backG_, *p_backB_, *p_backA_,
         *p_near_, *p_far_;
-    ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_;
+    ParameterSelect * p_cameraMode_, *p_magInterpol_, *p_enableOut_,
+            * p_tex_format_, *p_tex_type_;
     ParameterInt * p_width_, * p_height_,
                  * p_cubeRes_, * p_multiSample_;
     ParameterText * p_wcInclude_,

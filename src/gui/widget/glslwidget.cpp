@@ -17,7 +17,7 @@ namespace MO {
 namespace GUI {
 
 GlslWidget::GlslWidget(QWidget * parent)
-    : AbstractScriptWidget(parent)
+    : AbstractScriptWidget(IO::FT_TEXT_GLSL, parent)
 {
     auto syn = new SyntaxHighlighter(this);
     syn->initForGlsl();

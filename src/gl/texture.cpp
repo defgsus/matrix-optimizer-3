@@ -442,7 +442,7 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
                              Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
             // upload texture
-            MO_CHECK_GL_THROW(
+            MO_CHECK_GL_THROW_TEXT(
             gl::glTexImage2D(
                 target_,
                 // mipmap level
@@ -451,7 +451,7 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
                 GLint(format_),
                 // size
                 img.width(), img.height(),
-                // boarder
+                // border
                 0,
                 // input format
                 iformat,
@@ -459,7 +459,9 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
                 itype,
                 // ptr
                 img.constBits())
-            );
+            , "when uploading mip-map texture\n"
+              "target="<<target_<<" level="<<level<<" format="<<format_
+              <<" iformat="<<iformat<<" itype="<<itype);
         }
     }
 
@@ -542,7 +544,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
         case GL_TEXTURE_2D:
 
-            MO_CHECK_GL_THROW(
+            MO_CHECK_GL_THROW_TEXT(
             gl::glTexImage2D(
                 target_,
                 // mipmap level
@@ -558,7 +560,10 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // data type
                 type_,
                 // ptr
-                ptr));
+                ptr)
+                , "when uploading texture\n"
+                  "target="<<target_<<" mipmap_level="<<mipmap_level<<" format="<<format_
+                  <<" input_format="<<input_format_<<" type="<<type_ );
 
             if (!uploaded_)
             {

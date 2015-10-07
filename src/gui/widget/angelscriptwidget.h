@@ -10,8 +10,8 @@
 
 #ifndef MO_DISABLE_ANGELSCRIPT
 
-#ifndef ANGELSCRIPTWIDGET_H
-#define ANGELSCRIPTWIDGET_H
+#ifndef MOSRC_GUI_WIDGET_ANGELSCRIPTWIDGET_H
+#define MOSRC_GUI_WIDGET_ANGELSCRIPTWIDGET_H
 
 #include "abstractscriptwidget.h"
 
@@ -57,6 +57,6 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // ANGELSCRIPTWIDGET_H
+#endif // MOSRC_GUI_WIDGET_ANGELSCRIPTWIDGET_H
 
 #endif // MO_DISABLE_ANGELSCRIPT
