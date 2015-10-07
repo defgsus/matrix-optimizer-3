@@ -83,6 +83,7 @@ struct TextureObjectBase::PrivateTO
     uint maxIns, fboDepth;
     QStringList inpNames;
     bool hasColorRange;
+    QList<GL::Shader::CompileMessage> lastMessages;
 
     ParameterFloat  * p_out_r, * p_out_g, * p_out_b, * p_out_a,
                     * p_r_min, * p_r_max,
@@ -350,6 +351,11 @@ void TextureObjectBase::updateParameterVisibility()
     p_to_->p_depth->setVisible(res && false);
 }
 
+const QList<GL::Shader::CompileMessage>& TextureObjectBase::compileMessages() const
+{
+    return p_to_->lastMessages;
+}
+
 GL::FrameBufferObject * TextureObjectBase::fbo() const
 {
     return p_to_->fbo;
@@ -512,6 +518,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     //if (!fbo)
         //createFbo(16, 16);
 
+    lastMessages.clear();
+
     // create quad and compile shader
 
     ShaderQuad quad;
@@ -548,8 +556,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     }
     catch (Exception& )
     {
+        lastMessages = quad.quad->shader()->compileMessages();
         to->setErrorMessage(quad.quad->shader()->compileMessagesString());
-        // @todo Send compile messages from TextureObjectBase::compileShaderQuad() to caller
 
         // clean-up
         delete quad.quad;

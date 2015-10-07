@@ -15,6 +15,7 @@
 
 #include "object/visual/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "gl/shader.h"
 
 namespace MO {
 
@@ -60,6 +61,9 @@ public:
         if @p sendGui, this will be done via ObjectEditor */
     void setEnableMasterOut(bool enable, bool sendGui = false);
     void setResolutionMode(ResolutionMode mode, bool sendGui = false);
+
+    /** Returns the list of last compile messages, e.g. from createShaderQuad() */
+    const QList<GL::Shader::CompileMessage>& compileMessages() const;
 
     // ------ texture connections --------
 

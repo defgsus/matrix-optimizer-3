@@ -74,4 +74,5 @@ OTHER_FILES += $$BISON_FILES \
     assets/help/en/object/model3d.html
 
 DISTFILES += \
-    $$PWD/assets/shader/to/threshold.frag
+    $$PWD/assets/shader/to/threshold.frag \
+    $$PWD/assets/shader/to/shader.frag
