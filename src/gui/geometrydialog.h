@@ -24,6 +24,7 @@ class QToolButton;
 class QStatusBar;
 class QProgressBar;
 class QVBoxLayout;
+class QScrollArea;
 
 namespace MO {
 namespace GUI {
@@ -117,6 +118,8 @@ protected:
     QLabel * labelInfo_;
     QToolButton *butSavePreset_, *butSavePresetAs_, *butDeletePreset_;
     QComboBox * comboPreset_, *comboView_, * comboType_;
+    QScrollArea * geomScroll_;
+    bool firstInit_;
 };
 
 

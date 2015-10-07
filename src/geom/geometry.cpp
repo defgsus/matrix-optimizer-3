@@ -671,6 +671,21 @@ void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
     }
 }
 
+void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3,
+                           const Vec2& tex1, const Vec2& tex2, const Vec2& tex3)
+{
+    if (checkTriangle(p1, p2, p3))
+    {
+        setTexCoord(tex1);
+        auto i1 = addVertex(p1.x, p1.y, p1.z);
+        setTexCoord(tex2);
+        auto i2 = addVertex(p2.x, p2.y, p2.z);
+        setTexCoord(tex3);
+        auto i3 = addVertex(p3.x, p3.y, p3.z);
+        addTriangle(i1, i2, i3);
+    }
+}
+
 #ifndef MO_DISABLE_EDGEFLAG
 void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3,
                            bool edge1, bool edge2, bool edge3)

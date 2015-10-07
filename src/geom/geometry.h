@@ -269,6 +269,12 @@ public:
     void setTexCoord(TextureCoordType u, TextureCoordType v)
         { curU_ = u; curV_ = v; }
 
+    /** Sets the current texture coordinates.
+        Any subsequent call to the easy form of
+        addVertex() will use this coords. */
+    void setTexCoord(const Vec2& uv)
+        { curU_ = uv.x; curV_ = uv.y; }
+
 #ifndef MO_DISABLE_EDGEFLAG
     /** Sets the current edge flag.
         Any subsequent call to the easy form of
@@ -305,6 +311,8 @@ public:
         @see setColor(), setNormal() */
     IndexType addVertex(VertexType x, VertexType y, VertexType z)
         { return addVertex(x,y,z, curNx_,curNy_,curNz_, curR_, curG_, curB_, curA_, curU_, curV_); }
+    IndexType addVertex(const Vec3& v)
+        { return addVertex(v.x, v.y, v.z); }
 
     /** Adds a vertex (point) with normal and color.
         If setSharedVertices() was enabled, the vertex might
@@ -341,6 +349,8 @@ public:
     void addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
     /** Creates three vertices and connects them with a triangle. */
     void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
+    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3,
+                     const Vec2& tex1, const Vec2& tex2, const Vec2& tex3);
 
 #ifndef MO_DISABLE_EDGEFLAG
     /** Connects three previously created indices to form a triangle. */

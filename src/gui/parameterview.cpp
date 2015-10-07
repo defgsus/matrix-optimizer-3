@@ -281,9 +281,11 @@ void ParameterView::createWidgets_()
     layout_->activate();
 
     // another hack... duh
+    int w = scrollArea_->width() - 2;
+    if (scrollArea_->verticalScrollBar()->isVisible())
+        w -= scrollArea_->verticalScrollBar()->width();
     container_->setGeometry(
-                0, 0, scrollArea_->width()
-                        -scrollArea_->verticalScrollBar()->width()-2,
+                0, 0, w,
                 container_->height());
 
     //squeezeView_();

@@ -22,6 +22,14 @@ public:
         M_TESS
     };
 
+    enum Axis
+    {
+        A_NONE,
+        A_X,
+        A_Y,
+        A_Z
+    };
+
     TextMesh();
     ~TextMesh();
 

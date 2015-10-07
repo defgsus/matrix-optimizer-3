@@ -49,6 +49,7 @@ void GeometryModifierText::execute(Geometry * g)
 {
     auto color = properties().get("color").value<QVector<Float>>();
     g->setColor(color[0], color[1], color[2], color[3]);
+    g->setNormal(0,0,1);
 
     TextMesh tm;
     tm.setProperties(properties());

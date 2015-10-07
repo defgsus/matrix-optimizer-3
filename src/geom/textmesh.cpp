@@ -11,6 +11,7 @@
 #include "textmesh.h"
 #include "geometry.h"
 #include "types/properties.h"
+#include "math/vector.h"
 #include "io/error.h"
 
 #if 0
@@ -53,9 +54,15 @@ struct TextMesh::Private
     static bool isNext(const Char& c, int i1, int i2);
     void getPolys();
     void getPolys(const QPainterPath& path, QList<QPolygonF>& polys);
-    void getOffset(qreal& x, qreal& y);
+    // offset from alignment
+    void getOffset(qreal& x, qreal& y) const;
+    Vec2 getTexCoord(qreal x, qreal y) const;
+    Vec3 getTransform(qreal x, qreal y, qreal z, qreal x_off, const Char& c) const;
     void triangulate(Char&);
-    void createLines(Geometry * g, bool shared);
+    // copy some often used variables from Properties
+    void getPropsTemp();
+    void createLinesShared(Geometry * g);
+    void createLinesUnshared(Geometry * g);
     void createTrianglesShared(Geometry * g);
     void createTrianglesUnshared(Geometry * g);
     void getGeometry(Geometry * g, bool shared);
@@ -67,6 +74,10 @@ struct TextMesh::Private
     QVector<qreal> xOffset;
     QRectF boundingRect;
     qreal descent;
+
+    Axis rotMode;
+    Float rotRadius, rotRadiusScaled, rotAngle, rotAngleOffs;
+    Vec3 rotAxis;
 };
 
 
@@ -123,7 +134,7 @@ void TextMesh::Private::createProps()
 
     props.set("depth", QObject::tr("depth"),
               QObject::tr("The visual depth in default units for extruded geometry"),
-              0.f);
+              0.f, 0.1f);
 
     props.set("font", QObject::tr("font"),
             QObject::tr("The font to use"),
@@ -153,10 +164,32 @@ void TextMesh::Private::createProps()
     props.set("tri_method", QObject::tr("triangulation method"),
             QObject::tr("The method used for triangulation"), triMode, 0);
 
+    Properties::NamedValues rotMode;
+    rotMode.set("0", QObject::tr("off"), QObject::tr("No rotation"), (int)A_NONE);
+    //rotMode.set("x", QObject::tr("x"), QObject::tr("Rotate around x-axis"), (int)A_X);
+    rotMode.set("y", QObject::tr("y"), QObject::tr("Rotate around y-axis"), (int)A_Y);
+    rotMode.set("z", QObject::tr("z"), QObject::tr("Rotate around z-axis"), (int)A_Z);
+    props.set("rotation", QObject::tr("rotation"),
+              QObject::tr("Selects the axis of rotation for curved text"),
+              rotMode, (int)A_NONE);
+    props.set("rotation_radius", QObject::tr("rotation radius"),
+              QObject::tr("A multiplier for the radius of an imaginary circle on which the rotated letters are placed"),
+              1.f, 0.1f);
+    props.set("rotation_degree", QObject::tr("rotation angle"),
+              QObject::tr("The rotation angle in degree per unit"),
+              1.f, 0.1f);
+    props.set("rotation_degree_offset", QObject::tr("rotation angle offset"),
+              QObject::tr("The offset to the rotation angle in degree"),
+              0.f);
+
     props.setUpdateVisibilityCallback([](Properties&p)
     {
         int mode = p.get("mode").toInt();
         p.setVisible("tri_method", mode == M_TESS);
+
+        bool isRot = p.get("rotation").toInt() != A_NONE;
+        p.setVisible("rotation_radius", isRot);
+        p.setVisible("rotation_degree", isRot);
     });
 }
 
@@ -167,7 +200,10 @@ void TextMesh::Private::getGeometry(Geometry *g, bool shared)
     int mode = props.get("mode").toInt();
     if (mode == M_POLYLINE)
     {
-        createLines(g, shared);
+        if (shared)
+            createLinesShared(g);
+        else
+            createLinesUnshared(g);
         return;
     }
 
@@ -337,9 +373,32 @@ void TextMesh::Private::getPolys()
     // while char polygons are still +x, -y !!
     boundingRect.setTop(-boundingRect.top());
     boundingRect.setBottom(-boundingRect.bottom());
+    // avoid zero size (avoid division by zero)
+    if (boundingRect.width() == 0.)
+        boundingRect.setRight(boundingRect.left() + 0.01);
+    if (boundingRect.height() == 0.)
+        boundingRect.setTop(boundingRect.bottom() + 0.01);
+
+    getPropsTemp();
 }
 
-void TextMesh::Private::getOffset(qreal &x, qreal &y)
+void TextMesh::Private::getPropsTemp()
+{
+    rotMode = (Axis)props.get("rotation").toInt();
+    rotAxis = rotMode == A_X ? Vec3(1,0,0)
+                             : rotMode == A_Y ? Vec3(0,1,0)
+                                              : Vec3(0,0,1);
+    rotRadius = props.get("rotation_radius").toFloat();
+    rotAngle = props.get("rotation_degree").toFloat();
+    rotAngleOffs = props.get("rotation_degree_offset").toFloat();
+
+    rotRadiusScaled = rotRadius * boundingRect.width();
+    if (std::abs(rotAngle) > 0.00001)
+        rotRadiusScaled /= rotAngle;
+
+}
+
+void TextMesh::Private::getOffset(qreal &x, qreal &y) const
 {
     int ah = props.get("align_h").toInt(),
         av = props.get("align_v").toInt();
@@ -360,6 +419,36 @@ void TextMesh::Private::getOffset(qreal &x, qreal &y)
     }
 }
 
+Vec2 TextMesh::Private::getTexCoord(qreal x, qreal y) const
+{
+    return Vec2(
+                (x - boundingRect.left()) / boundingRect.width(),
+                (y - boundingRect.bottom()) / boundingRect.height());
+}
+
+Vec3 TextMesh::Private::getTransform(qreal x, qreal y, qreal z, qreal x_off, const Char & c) const
+{
+    if (rotMode == A_NONE)
+        return Vec3(x, y, z);
+    else
+    if (rotMode == A_Y)
+    {
+        Vec3 v = Vec3(x - c.rect.center().x() - x_off, y, z - rotRadiusScaled);
+        Vec3 r = MATH::rotateY(v, -rotAngle * Float(x_off) - rotAngleOffs);
+        r.x += c.rect.center().x();
+        r.z += rotRadiusScaled;
+        return r;
+    }
+    else
+    //if (rotMode == A_Z)
+    {
+        Vec3 v = Vec3(x - c.rect.center().x() - x_off, y + rotRadiusScaled, z);
+        Vec3 r = MATH::rotateZ(v, -rotAngle * Float(x_off) - rotAngleOffs);
+        r.x += c.rect.center().x();
+        r.y -= rotRadiusScaled;
+        return r;
+    }
+}
 
 void TextMesh::Private::triangulate(Char & c)
 {
@@ -427,9 +516,10 @@ void TextMesh::Private::triangulate(Char & c)
     }
 }
 
-void TextMesh::Private::createLines(Geometry *g, bool shared)
+void TextMesh::Private::createLinesShared(Geometry *g)
 {
     const QString text = props.get("text").toString();
+    const Float depth = props.get("depth").toFloat();
 
     qreal xo, yo;
     getOffset(xo, yo);
@@ -449,26 +539,23 @@ void TextMesh::Private::createLines(Geometry *g, bool shared)
             if (poly.empty())
                 continue;
 
-            g->setNormal(0,0,1);
+            // create vertices
+            QVector<Geometry::IndexType> idx;
+            for (auto & p : poly)
+                idx << g->addVertex(getTransform(p.x() + x, -p.y() + y, 0.f, x, c));
+            // connect
+            for (int i=0; i<idx.size()-1; ++i)
+                g->addLine(idx[i], idx[i+1]);
 
-            if (shared)
+            if (depth > 0.f)
             {
-                QVector<Geometry::IndexType> idx;
+                QVector<Geometry::IndexType> idx2;
                 for (auto & p : poly)
-                    idx << g->addVertex(p.x() + x, -p.y() + y, 0.f);
-
+                    idx2 << g->addVertex(getTransform(p.x() + x, -p.y() + y, -depth, x, c));
                 for (int i=0; i<idx.size()-1; ++i)
-                {
-                    g->addLine(idx[i], idx[i+1]);
-                }
-            }
-            else
-            {
-                for (int i=0; i<poly.size()-1; ++i)
-                {
-                    g->addLine(Vec3(poly[i].x() + x, -poly[i].y() + y, 0.f),
-                               Vec3(poly[i+1].x() + x, -poly[i+1].y() + y, 0.f));
-                }
+                    g->addLine(idx2[i], idx2[i+1]);
+                for (int i=0; i<idx.size(); ++i)
+                    g->addLine(idx[i], idx2[i]);
             }
         }
     }
@@ -480,6 +567,58 @@ void TextMesh::Private::createLines(Geometry *g, bool shared)
                Vec3(boundingRect.left(), boundingRect.bottom(), 0.));
 #endif
 }
+
+void TextMesh::Private::createLinesUnshared(Geometry *g)
+{
+    const QString text = props.get("text").toString();
+    const Float depth = props.get("depth").toFloat();
+
+    qreal xo, yo;
+    getOffset(xo, yo);
+
+    int k=0;
+    for (auto chr : text)
+    {
+        auto mapi = polyMap.find(chr);
+        if (mapi == polyMap.end())
+            continue;
+
+        const Char& c = mapi.value();
+        // char offset + offset from alignment
+        qreal x = xOffset[k++] + xo, y = yo;
+
+        for (const QPolygonF& poly : c.polys)
+        {
+            if (poly.empty())
+                continue;
+
+            Vec3 p0, p1;
+            for (int i=0; i<poly.size(); ++i)
+            {
+                p1 = getTransform(poly[i].x() + x, -poly[i].y() + y, 0., x, c);
+                if (i>0)
+                    g->addLine(p0, p1);
+                p0 = p1;
+            }
+            if (depth > 0.f)
+            {
+                for (int i=0; i<poly.size(); ++i)
+                {
+                    p1 = getTransform(poly[i].x() + x, -poly[i].y() + y, -depth, x, c);
+                    if (i>0)
+                        g->addLine(p0, p1);
+                    p0 = p1;
+                }
+                for (int i=0; i<poly.size(); ++i)
+                {
+                    g->addLine(getTransform(poly[i].x() + x, -poly[i].y() + y, 0., x, c),
+                               getTransform(poly[i].x() + x, -poly[i].y() + y, -depth, x, c));
+                }
+            }
+        }
+    }
+}
+
 
 bool TextMesh::Private::isNext(const Char& c, int i1, int i2)
 {
@@ -529,11 +668,17 @@ void TextMesh::Private::createTrianglesShared(Geometry *g)
                 // only create points once
                 if (indexMap.find(idx) == indexMap.end())
                 {
+                    // set tex-coord
+                    g->setTexCoord(getTexCoord(x1-xo, y1-yo));
                     // add vertex and remember index
-                    indexMap.insert(std::make_pair(idx, (int)g->addVertex(x1, y1, 0)));
-                    // unique index for back-side
+                    indexMap.insert(std::make_pair(idx,
+                        (int)g->addVertex(getTransform(x1, y1, 0, x, c))));
                     if (depth > 0.f)
-                        indexMap.insert(std::make_pair(-idx-1, (int)g->addVertex(x1, y1, -depth)));
+                    {
+                        // unique index for back-side
+                        indexMap.insert(std::make_pair(-idx-1,
+                            (int)g->addVertex(getTransform(x1, y1, -depth, x, c))));
+                    }
                 }
             }
         }
@@ -633,41 +778,42 @@ void TextMesh::Private::createTrianglesUnshared(Geometry *g)
                     isNext1 = isNext(c, i1, i2),
                     isNext2 = isNext(c, i2, i3),
                     isNext3 = isNext(c, i3, i1);
+            const Vec3
+                    v1 = getTransform(x1, y1, 0, x, c),
+                    v2 = getTransform(x2, y2, 0, x, c),
+                    v3 = getTransform(x3, y3, 0, x, c);
+            const Vec2
+                    tex1 = getTexCoord(v1.x, v1.y),
+                    tex2 = getTexCoord(v2.x, v2.y),
+                    tex3 = getTexCoord(v3.x, v3.y);
 
-            auto p1 = g->addVertex(x1, y1, 0),
-                 p2 = g->addVertex(x2, y2, 0),
-                 p3 = g->addVertex(x3, y3, 0);
-
-            g->addTriangle(p1, p2, p3);
+            g->addTriangle(v1, v2, v3, tex1, tex2, tex3);
 
             if (depth > 0.f)
             {
                 const Vec3
-                        v1 =  Vec3(x1, y1, 0),
-                        v2 =  Vec3(x2, y2, 0),
-                        v3 =  Vec3(x3, y3, 0),
-                        vd1 = Vec3(x1, y1, -depth),
-                        vd2 = Vec3(x2, y2, -depth),
-                        vd3 = Vec3(x3, y3, -depth);
+                        vd1 = getTransform(x1, y1, -depth, x, c),
+                        vd2 = getTransform(x2, y2, -depth, x, c),
+                        vd3 = getTransform(x3, y3, -depth, x, c);
 
                 // extruded outline
                 if (isNext1)
                 {
-                    g->addTriangle(v1, vd1, v2);
-                    g->addTriangle(v2, vd1, vd2);
+                    g->addTriangle(v1, vd1, v2, tex1, tex1, tex2);
+                    g->addTriangle(v2, vd1, vd2, tex2, tex1, tex2);
                 }
                 if (isNext2)
                 {
-                    g->addTriangle(v2, vd2, v3);
-                    g->addTriangle(v3, vd2, vd3);
+                    g->addTriangle(v2, vd2, v3, tex2, tex2, tex3);
+                    g->addTriangle(v3, vd2, vd3, tex3, tex2, tex3);
                 }
                 if (isNext3)
                 {
-                    g->addTriangle(v3, vd1, v1);
-                    g->addTriangle(v3, vd3, vd1);
+                    g->addTriangle(v3, vd1, v1, tex3, tex1, tex1);
+                    g->addTriangle(v3, vd3, vd1, tex3, tex3, tex1);
                 }
                 // back
-                g->addTriangle(vd1, vd3, vd2);
+                g->addTriangle(vd1, vd3, vd2, tex1, tex3, tex2);
             }
         }
     }

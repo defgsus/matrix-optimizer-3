@@ -7,6 +7,7 @@
 
     <p>created 7/28/2014</p>
 */
+
 #include <QLayout>
 #include <QComboBox>
 #include <QLabel>
@@ -18,6 +19,8 @@
 #include <QPushButton>
 #include <QStatusBar>
 #include <QStatusTipEvent>
+#include <QScrollArea>
+#include <QScrollBar>
 #include <QProgressBar>
 #include <QMenu>
 #include <QCloseEvent>
@@ -54,7 +57,9 @@ GeometryDialog::GeometryDialog(const GEOM::GeometryFactorySettings *set,
     ignoreUpdate_   (false),
     closeRequest_   (false),
     isChanged_      (false),
-    isAttached_     (set != 0)
+    isAttached_     (set != 0),
+    geomScroll_     (0),
+    firstInit_      (true)
 {
     setObjectName("_GeometryWidget");
 
@@ -89,6 +94,19 @@ GeometryDialog::~GeometryDialog()
 
 bool GeometryDialog::event(QEvent * e)
 {
+    if (dynamic_cast<QShowEvent*>(e)
+            || dynamic_cast<QResizeEvent*>(e))
+    {
+        if (geomScroll_)
+        {
+            int w = geomScroll_->width() - 2,
+                h = geomScroll_->widget()->height();
+            if (geomScroll_->verticalScrollBar()->isVisible())
+                w -= geomScroll_->verticalScrollBar()->width();
+            geomScroll_->widget()->setGeometry(0, 0, w, h);
+        }
+    }
+
     if (QStatusTipEvent * tip = dynamic_cast<QStatusTipEvent*>(e))
     {
         statusBar_->showMessage(tip->tip());
@@ -168,7 +186,7 @@ void GeometryDialog::createMainWidgets_()
         lv0->addLayout(lh);
 
             auto lv = new QVBoxLayout();
-            lh->addLayout(lv);
+            lh->addLayout(lv, 2);
 
                 // geometry widget
                 geoWidget_ = new GeometryWidget(GeometryWidget::RM_DIRECT, this);
@@ -340,12 +358,20 @@ void GeometryDialog::createMainWidgets_()
                     newModifierPopup_(0);
                 });
 
-                // place to add modifier widgets
-                modifierLayout_ = new QVBoxLayout();
-                lv->addLayout(modifierLayout_);
+                // -- place to add modifier widgets --
+
+                geomScroll_ = new QScrollArea(this);
+                geomScroll_->setMinimumWidth(450);
+                lv->addWidget(geomScroll_);
+
+                auto cw = new QWidget(geomScroll_);
+                cw->setObjectName("_geom_scroll_container");
+                cw->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Minimum);
+                modifierLayout_ = new QVBoxLayout(cw);
                 modifierLayout_->setMargin(0);
                 modifierLayout_->setSpacing(1);
-
+                modifierLayout_->setSizeConstraint(QLayout::SetMinAndMaxSize);
+                geomScroll_->setWidget(cw);
 
                 // info label
                 labelInfo_ = new QLabel(this);
