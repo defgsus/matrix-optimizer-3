@@ -16,6 +16,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "object/param/parametertexture.h"
+#include "object/util/useruniformsetting.h"
 #include "gl/screenquad.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
@@ -37,6 +38,7 @@ struct ShaderTO::Private
 {
     Private(ShaderTO * to)
         : to            (to)
+        , uniformSetting(new UserUniformSetting(to))
     { }
 
     void createParameters();
@@ -50,7 +52,8 @@ struct ShaderTO::Private
             * p_glsl;
     ParameterFloat
             * p_r, * p_g, * p_b, * p_a;
-
+    UserUniformSetting
+            * uniformSetting;
     GL::Uniform
             * u_color,
             * u_res,
@@ -151,13 +154,21 @@ void ShaderTO::Private::createParameters()
         p_a = to->params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of output"), 1.0,  0.,1.,  0.025);
 
     to->params()->endParameterGroup();
+
+    to->params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        uniformSetting->createParameters("g");
+
+    to->params()->endParameterGroup();
+
 }
 
 void ShaderTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == p_->p_glsl)
+    if (p == p_->p_glsl
+        || p_->uniformSetting->needsReinit(p))
         requestReinitGl();
 
 }
@@ -171,6 +182,8 @@ void ShaderTO::onParametersLoaded()
 void ShaderTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
+
+    p_->uniformSetting->updateParameterVisibility();
 }
 
 
@@ -186,7 +199,9 @@ void ShaderTO::Private::initGl()
         src.loadVertexSource(":/shader/to/default.vert");
         src.loadFragmentSource(":/shader/to/shader.frag");
         src.pasteDefaultIncludes();
-        src.replace("//%mo_user_code%", p_glsl->baseValue());
+        src.replace("//%mo_user_code%",
+                uniformSetting->getDeclarations()
+                + "\n#line 0\n" + p_glsl->baseValue());
     }
     catch (Exception& e)
     {
@@ -216,6 +231,7 @@ void ShaderTO::Private::initGl()
     u_chan_res = shader->getUniform("iChannelResolution[0]");
     u_date = shader->getUniform("iDate");
     u_samplerate = shader->getUniform("iSampleRate");
+    uniformSetting->tieToShader(shader);
 }
 
 void ShaderTO::Private::releaseGl()
@@ -269,7 +285,10 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double
     if (u_samplerate)
         u_samplerate->floats[0] = to->sampleRate();
 
-    to->renderShaderQuad(time, thread);
+    uint texSlot = 0;
+    uniformSetting->updateUniforms(time, thread, texSlot);
+
+    to->renderShaderQuad(0, time, thread, texSlot);
 }
 
 

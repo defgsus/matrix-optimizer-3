@@ -147,7 +147,7 @@ void QVariantWidget::Private::createWidgets()
     }
 
     widget->setStatusTip(tip);
-
+    label->setStatusTip(tip);
 
     // ----- create appropriate sub-widgets -----
 
