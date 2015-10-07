@@ -33,9 +33,11 @@ typedef double tppl_float;
 struct TPPLPoint {
     tppl_float x;
     tppl_float y;
+    int index;
 
-    TPPLPoint() : x(0.), y(0.) { }
-    TPPLPoint(tppl_float x, tppl_float y) : x(x), y(y) { }
+    TPPLPoint() : x(0.), y(0.), index(0) { }
+    TPPLPoint(tppl_float x, tppl_float y, int index = 0)
+        : x(x), y(y), index(index) { }
 
     TPPLPoint operator + (const TPPLPoint& p) const {
         TPPLPoint r;
@@ -162,6 +164,7 @@ struct TPPLPoint {
             bool isActive;
             bool isConvex;
             bool isEar;
+            int index;
             
             TPPLPoint p;
             tppl_float angle;

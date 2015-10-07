@@ -386,10 +386,13 @@ int TPPLPartition::Triangulate_EC(TPPLPoly *poly, list<TPPLPoly> *triangles) {
 
 	numvertices = poly->GetNumPoints();
 
+    // copy poly to PartitionVertex array
 	vertices = new PartitionVertex[numvertices];
 	for(i=0;i<numvertices;i++) {
 		vertices[i].isActive = true;
 		vertices[i].p = poly->GetPoint(i);
+        vertices[i].index = poly->GetPoint(i).index;
+        // store order
 		if(i==(numvertices-1)) vertices[i].next=&(vertices[0]);
 		else vertices[i].next=&(vertices[i+1]);
 		if(i==0) vertices[i].previous = &(vertices[numvertices-1]);

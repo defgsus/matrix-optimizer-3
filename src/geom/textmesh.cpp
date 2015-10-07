@@ -1,7 +1,7 @@
-#include <QDebug>
+#include <map>
+
+#include <QList>
 #include <QPainterPath>
-#include <QMap>
-#include <QVector>
 #include <QTransform>
 #include <QFontMetrics>
 #include <QFontInfo>
@@ -14,6 +14,7 @@
 #include "io/error.h"
 
 #if 0
+#   include <QDebug>
 #   include "io/log.h"
 #   define MO_DEBUG_TM(arg__) MO_PRINT("TextMesh::" << arg__)
 #else
@@ -25,12 +26,20 @@ namespace GEOM {
 
 struct TextMesh::Private
 {
+    struct PolyLoop
+    {
+        int start, len;
+    };
+
     struct Char
     {
         QList<QPolygonF> polys;
         QRectF rect;
         std::list<TPPLPoly> tris;
         qreal x;
+        // for each final poly point (loop-point)
+        // stores the start index and the length of the poly
+        std::map<int, PolyLoop> loopMap;
     };
 
     Private(TextMesh * p) : p(p)
@@ -41,12 +50,14 @@ struct TextMesh::Private
     void createProps();
 
     static void removeCurves(const QPainterPath& in, QPainterPath& out);
+    static bool isNext(const Char& c, int i1, int i2);
     void getPolys();
     void getPolys(const QPainterPath& path, QList<QPolygonF>& polys);
     void getOffset(qreal& x, qreal& y);
     void triangulate(Char&);
     void createLines(Geometry * g, bool shared);
-    void createTriangles(Geometry * g, bool shared);
+    void createTrianglesShared(Geometry * g);
+    void createTrianglesUnshared(Geometry * g);
     void getGeometry(Geometry * g, bool shared);
 
     TextMesh * p;
@@ -165,7 +176,10 @@ void TextMesh::Private::getGeometry(Geometry *g, bool shared)
 
     if (mode == M_TESS)
     {
-        createTriangles(g, shared);
+        if (shared)
+            createTrianglesShared(g);
+        else
+            createTrianglesUnshared(g);
         return;
     }
 
@@ -286,9 +300,11 @@ void TextMesh::Private::getPolys()
         //c.polys = spath.simplified().toSubpathPolygons(trans);
         getPolys(path, c.polys);
 
+        // debugging
         MO_DEBUG_TM(c.polys.size() << " polys:");
         for (const QPolygonF& p : c.polys)
         {
+            Q_UNUSED(p);
             MO_DEBUG_TM(p.size() << " points");
             //qInfo() << p.poly;
         }
@@ -349,16 +365,26 @@ void TextMesh::Private::triangulate(Char & c)
 {
     std::list<TPPLPoly> inp;
 
+    // convert to TPPLPoly
+    int idx = 0;
     for (const QPolygonF& poly : c.polys)
     {
-        // convert to TPPLPoly
-        TPPLPoly tp;
         // avoid duplicate points for TPPL lib
         const int si = poly.isClosed() ? poly.size() - 1
                                        : poly.size();
+
+        // store info about single polys and their loop-points
+        PolyLoop pl;
+        pl.start = idx;
+        pl.len = si;
+        c.loopMap.insert(std::make_pair(idx + si - 1, pl));
+
+        // create the poly and copy pos and index
+        TPPLPoly tp;
         tp.Init(si);
         for (int i=0; i<si; ++i)
-            tp.GetPoint(i) = TPPLPoint(poly[i].x(), poly[i].y());
+            tp.GetPoint(i) = TPPLPoint(poly[i].x(), poly[i].y(), idx++);
+
         // holes are CW order
         tp.SetHole(tp.GetOrientation() == TPPL_CW);
 
@@ -379,14 +405,15 @@ void TextMesh::Private::triangulate(Char & c)
     c.tris.clear();
     for (TPPLPoly & tri : tris)
     {
+        MO_ASSERT(tri.GetNumPoints() == 3,
+                  "illegal polygon from triangulation ("
+                            << tri.GetNumPoints() << " vertices)");
+
         if (tri.GetNumPoints() != 3)
-        {
-            abort();
             continue;
-        }
 
         // fix orientation
-        // we change them to CW...
+        //   change it to CW...
         if (tri.GetOrientation() == TPPL_CCW)
         {
             std::swap(tri.GetPoint(1), tri.GetPoint(2));
@@ -454,7 +481,121 @@ void TextMesh::Private::createLines(Geometry *g, bool shared)
 #endif
 }
 
-void TextMesh::Private::createTriangles(Geometry *g, bool shared)
+bool TextMesh::Private::isNext(const Char& c, int i1, int i2)
+{
+    if ((i1 + 1) == i2 || (i2 + 1) == i1)
+        return true;
+    auto l = c.loopMap.find(i1);
+    if (l != c.loopMap.end() && i2 == l->second.start)
+        return true;
+    l = c.loopMap.find(i2);
+    if (l != c.loopMap.end() && i1 == l->second.start)
+        return true;
+    return false;
+}
+
+void TextMesh::Private::createTrianglesShared(Geometry *g)
+{
+    const QString text = props.get("text").toString();
+    const Float depth = props.get("depth").toFloat();
+
+    qreal xo, yo;
+    getOffset(xo, yo);
+
+    int k=0;
+    for (auto chr : text)
+    {
+        auto mapi = polyMap.find(chr);
+        if (mapi == polyMap.end())
+            continue;
+
+        const Char& c = mapi.value();
+        // char offset + offset from alignment
+        qreal x = xOffset[k++] + xo, y = yo;
+
+        // get vertices
+        std::map<int, int> indexMap;
+        for (const TPPLPoly& p : c.tris)
+        {
+            if (p.GetNumPoints() < 3)
+                continue;
+            for (int j = 0; j<3; ++j)
+            {
+                const int idx = p.GetPoint(j).index;
+                const Float
+                        x1 = p.GetPoint(j).x + x,
+                        y1 = p.GetPoint(j).y + y;
+
+                // only create points once
+                if (indexMap.find(idx) == indexMap.end())
+                {
+                    // add vertex and remember index
+                    indexMap.insert(std::make_pair(idx, (int)g->addVertex(x1, y1, 0)));
+                    // unique index for back-side
+                    if (depth > 0.f)
+                        indexMap.insert(std::make_pair(-idx-1, (int)g->addVertex(x1, y1, -depth)));
+                }
+            }
+        }
+
+        // connect triangles
+        for (const TPPLPoly& p : c.tris)
+        {
+            if (p.GetNumPoints() < 3)
+                continue;
+
+            // original index
+            const int
+                    i1 = p.GetPoint(0).index,
+                    i2 = p.GetPoint(1).index,
+                    i3 = p.GetPoint(2).index,
+            // index in geometry
+                    v1 = indexMap.find(i1)->second,
+                    v2 = indexMap.find(i2)->second,
+                    v3 = indexMap.find(i3)->second;
+            // see if consecutive in original polygon
+            const bool
+                    isNext1 = isNext(c, i1, i2),
+                    isNext2 = isNext(c, i2, i3),
+                    isNext3 = isNext(c, i3, i1);
+
+            g->addTriangle(v1, v2, v3);
+
+            if (depth > 0.f)
+            {
+                const int
+                        vd1 = indexMap.find(-i1-1)->second,
+                        vd2 = indexMap.find(-i2-1)->second,
+                        vd3 = indexMap.find(-i3-1)->second;
+
+                // extruded outline
+                if (isNext1)
+                {
+                    g->addTriangle(v1, vd1, v2);
+                    g->addTriangle(v2, vd1, vd2);
+                }
+                if (isNext2)
+                {
+                    g->addTriangle(v2, vd2, v3);
+                    g->addTriangle(v3, vd2, vd3);
+                }
+                if (isNext3)
+                {
+                    g->addTriangle(v3, vd1, v1);
+                    g->addTriangle(v3, vd3, vd1);
+                }
+
+                // back
+                g->addTriangle(vd1, vd3, vd2);
+            }
+        }
+    }
+
+}
+
+
+
+void TextMesh::Private::createTrianglesUnshared(Geometry *g)
 {
     const QString text = props.get("text").toString();
     const Float depth = props.get("depth").toFloat();
@@ -477,12 +618,21 @@ void TextMesh::Private::createTriangles(Geometry *g, bool shared)
             if (p.GetNumPoints() < 3)
                 continue;
 
-            Float x1 = p.GetPoint(0).x + x,
-                  x2 = p.GetPoint(1).x + x,
-                  x3 = p.GetPoint(2).x + x,
-                  y1 = p.GetPoint(0).y + y,
-                  y2 = p.GetPoint(1).y + y,
-                  y3 = p.GetPoint(2).y + y;
+            const Float
+                    x1 = p.GetPoint(0).x + x,
+                    x2 = p.GetPoint(1).x + x,
+                    x3 = p.GetPoint(2).x + x,
+                    y1 = p.GetPoint(0).y + y,
+                    y2 = p.GetPoint(1).y + y,
+                    y3 = p.GetPoint(2).y + y;
+            const int
+                    i1 = p.GetPoint(0).index,
+                    i2 = p.GetPoint(1).index,
+                    i3 = p.GetPoint(2).index;
+            const bool
+                    isNext1 = isNext(c, i1, i2),
+                    isNext2 = isNext(c, i2, i3),
+                    isNext3 = isNext(c, i3, i1);
 
             auto p1 = g->addVertex(x1, y1, 0),
                  p2 = g->addVertex(x2, y2, 0),
@@ -492,40 +642,32 @@ void TextMesh::Private::createTriangles(Geometry *g, bool shared)
 
             if (depth > 0.f)
             {
-                if (shared)
+                const Vec3
+                        v1 =  Vec3(x1, y1, 0),
+                        v2 =  Vec3(x2, y2, 0),
+                        v3 =  Vec3(x3, y3, 0),
+                        vd1 = Vec3(x1, y1, -depth),
+                        vd2 = Vec3(x2, y2, -depth),
+                        vd3 = Vec3(x3, y3, -depth);
+
+                // extruded outline
+                if (isNext1)
                 {
-                    auto pd1 = g->addVertex(x1, y1, -depth),
-                         pd2 = g->addVertex(x2, y2, -depth),
-                         pd3 = g->addVertex(x3, y3, -depth);
-
-                    g->addTriangle(p1, pd1, p2);
-                    g->addTriangle(p2, pd1, pd2);
-                    g->addTriangle(p2, pd2, p3);
-                    g->addTriangle(p3, pd2, pd3);
-                    g->addTriangle(p3, pd1, p1);
-                    g->addTriangle(p3, pd3, pd1);
-
-                    g->addTriangle(pd1, pd3, pd2);
-                }
-                else
-                {
-                    const Vec3
-                            v1 =  Vec3(x1, y1, 0),
-                            v2 =  Vec3(x2, y2, 0),
-                            v3 =  Vec3(x3, y3, 0),
-                            vd1 = Vec3(x1, y1, -depth),
-                            vd2 = Vec3(x2, y2, -depth),
-                            vd3 = Vec3(x3, y3, -depth);
-
                     g->addTriangle(v1, vd1, v2);
                     g->addTriangle(v2, vd1, vd2);
+                }
+                if (isNext2)
+                {
                     g->addTriangle(v2, vd2, v3);
                     g->addTriangle(v3, vd2, vd3);
+                }
+                if (isNext3)
+                {
                     g->addTriangle(v3, vd1, v1);
                     g->addTriangle(v3, vd3, vd1);
-
-                    g->addTriangle(vd1, vd3, vd2);
                 }
+                // back
+                g->addTriangle(vd1, vd3, vd2);
             }
         }
     }

@@ -10,7 +10,8 @@ namespace GEOM {
 
 class Geometry;
 
-/** A QFont/QString to Geometry converter :) */
+/** A QFont/QString to Geometry converter :)
+    with triangulation and extrusion */
 class TextMesh
 {
 public:
