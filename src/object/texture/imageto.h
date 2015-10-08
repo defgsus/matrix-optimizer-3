@@ -50,6 +50,7 @@ private:
 
     QString initFilename_;
     ParameterFilename * pFilename_;
+    ParameterInt * pMipmaps_;
     GL::Texture * tex_;
 };
 

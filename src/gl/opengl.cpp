@@ -101,6 +101,7 @@ gl::GLuint channelSize(gl::GLenum channel_format)
         case GL_RGB10_A2:
         case GL_RGBA12:
         case GL_RGBA16:
+        case GL_RGBA16F:
         case GL_RGBA32F:	return 4;
 
         default:

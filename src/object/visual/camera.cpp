@@ -657,7 +657,7 @@ GL::FrameBufferObject * Camera::fbo() const
 
 const GL::Texture * Camera::valueTexture(uint channel, Double , uint ) const
 {
-    if (!fbo_)
+    if (!fbo_ || channel > 1)
         return 0;
     if (channel == 1)
         return fbo_->depthTexture();

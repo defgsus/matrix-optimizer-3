@@ -143,6 +143,8 @@ public:
     void initDefaultUpdateMode(UpdateMode m, bool visible = true)
         { p_defaultUpdateMode_ = m; p_updateModeVisible_ = visible; }
 
+    bool isRenderSettingsEnabled() const { return p_enableCreateRenderSettings_; }
+
     DepthTestMode defaultDepthTestMode() const { return p_defaultDepthTestMode_; }
     DepthWriteMode defaultDepthWriteMode() const { return p_defaultDepthWriteMode_; }
     AlphaBlendSetting::Mode defaultAlphaBlendMode() const { return p_defaultAlphaBlendMode_; }

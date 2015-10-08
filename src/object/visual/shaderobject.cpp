@@ -175,9 +175,9 @@ QSize ShaderObject::resolution() const
                 : QSize();
 }
 
-const GL::Texture * ShaderObject::valueTexture(uint , Double , uint ) const
+const GL::Texture * ShaderObject::valueTexture(uint chan, Double , uint ) const
 {
-    return fbo_ ? fbo_->colorTexture() : 0;
+    return chan == 0 && fbo_ ? fbo_->colorTexture() : 0;
 }
 
 

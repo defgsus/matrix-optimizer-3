@@ -16,6 +16,7 @@
 #include "texture.h"
 #include "io/imagereader.h"
 #include "io/streamoperators_glbinding.h"
+#include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -41,13 +42,13 @@ Texture::Texture()
         height_			(0),
         depth_          (0),
         multiSamples_   (0),
+        mipLevels_      (0),
         memory_ 		(0),
         handle_			(invalidGl),
         target_			(GL_NONE),
         format_			(GL_NONE),
         input_format_	(GL_NONE),
         type_			(GL_NONE),
-        mipLevels_      (0),
         hash_           (-1)
 {
     MO_DEBUG_IMG("Texture::Texture()");
@@ -59,25 +60,26 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
                  gl::GLenum format, gl::GLenum input_format,
                  gl::GLenum type, void *ptr_to_data,
                  gl::GLsizei multiSamples)
-    : ptr_			(ptr_to_data),
-      ptr_px_         (0),
-      ptr_nx_         (0),
-      ptr_py_         (0),
-      ptr_ny_         (0),
-      ptr_pz_         (0),
-      ptr_nz_         (0),
-      uploaded_		(false),
-      width_		(width),
-      height_         (height),
-      depth_          (0),
-      multiSamples_ (multiSamples),
-      memory_ 		(0),
-      handle_		(invalidGl),
-      target_		(multiSamples ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D),
-      format_		(format),
-      input_format_	(input_format),
-      type_			(type),
-      hash_           (-1)
+    : ptr_              (ptr_to_data),
+      ptr_px_           (0),
+      ptr_nx_           (0),
+      ptr_py_           (0),
+      ptr_ny_           (0),
+      ptr_pz_           (0),
+      ptr_nz_           (0),
+      uploaded_         (false),
+      width_            (width),
+      height_           (height),
+      depth_            (0),
+      multiSamples_     (multiSamples),
+      mipLevels_        (0),
+      memory_           (0),
+      handle_           (invalidGl),
+      target_           (multiSamples ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D),
+      format_           (format),
+      input_format_     (input_format),
+      type_             (type),
+      hash_             (-1)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height
                 << ", " << format << ", " << input_format
@@ -100,6 +102,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
       height_		(height),
       depth_        (depth),
       multiSamples_ (0),
+      mipLevels_    (0),
       memory_ 		(0),
       handle_		(invalidGl),
       target_		(GL_TEXTURE_3D),
@@ -132,6 +135,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       height_		(height),
       depth_        (0),
       multiSamples_ (0),
+      mipLevels_    (0),
       memory_ 		(0),
       handle_		(invalidGl),
       target_		(GL_TEXTURE_CUBE_MAP),
@@ -175,6 +179,35 @@ Texture * Texture::constructFrom(const Texture * t)
     return c;
 }
 
+QString Texture::infoString() const
+{
+    if (!isHandle())
+        return QObject::tr("none");
+    if (!isAllocated())
+        return QObject::tr("incomplete");
+
+    std::stringstream s;
+
+    s << "\"" << name() << "\", ";
+
+    if (isCube())
+        s << "cube " << width();
+    else
+    {
+        s << width() << "x" << height();
+        if (is3d())
+            s << "x" << depth();
+    }
+    s << ", format=" << format();
+    //s << ", type=" << type();
+    if (numMipmapLevels())
+        s << ", mipmaps=" << numMipmapLevels();
+    if (isMultiSample())
+        s << ", multisample=" << numMultiSamples();
+    s << ", memory=~" << byte_to_string(memory());
+
+    return QString::fromStdString(s.str());
+}
 
 bool Texture::isCube() const
 {
@@ -206,6 +239,8 @@ void Texture::create(gl::GLsizei width,
     width_ = width;
     height_ = 0;
     depth_ = 0;
+    multiSamples_ = 0;
+    mipLevels_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -240,6 +275,8 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height,
     width_ = width;
     height_ = height;
     depth_ = 0;
+    multiSamples_ = 0;
+    mipLevels_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -274,6 +311,8 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
     height_ = height;
     depth_ = depth;
     handle_ = genTexture_();
+    multiSamples_ = 0;
+    mipLevels_ = 0;
     uploaded_ = false;
     format_ = format;
     input_format_ = input_format;
@@ -310,6 +349,8 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height,
     width_ = width;
     height_ = height;
     depth_ = 0;
+    multiSamples_ = 0;
+    mipLevels_ = 0;
     handle_ = genTexture_();
     uploaded_ = false;
     format_ = format;
@@ -415,10 +456,10 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
 
         // decide format
     #if QT_VERSION >= 0x050200
-        const GLenum iformat = GL_RGBA;
+        const GLenum iformat = GL_BGRA;
         const QImage::Format fmt = QImage::Format_RGBA8888;
     #else
-        const GLenum iformat = GL_RGB;
+        const GLenum iformat = GL_BGR;
         const QImage::Format fmt = QImage::Format_RGB888;
     #endif
         const GLenum itype = GL_UNSIGNED_BYTE;
@@ -438,8 +479,15 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
         // create each mip-map
         for (uint level = 1; level <= max_level; ++level)
         {
+            // quit if it gets too small
+            if (img.width() < 8 || img.height() < 8)
+            {
+                setTexParameter(GL_TEXTURE_MAX_LEVEL, level-1);
+                break;
+            }
+
             img = img.scaled(img.width() / 2, img.height() / 2,
-                             Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                             Qt::IgnoreAspectRatio, Qt::SmoothTransformation);                
 
             // upload texture
             MO_CHECK_GL_THROW_TEXT(

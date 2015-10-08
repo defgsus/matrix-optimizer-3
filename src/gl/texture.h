@@ -72,6 +72,9 @@ public:
 
     // --------------- getter ---------------------
 
+    /** Returns a one-liner with info about the texture */
+    QString infoString() const;
+
     /** Returns whether the texture can be bound/created/uploaded. */
     bool isHandle() const { return handle_ != invalidGl; }
     /** Returns whether the texture is allocated on the device. */
@@ -86,11 +89,11 @@ public:
     /** Returns true when texture target equals GL_TEXTURE_2D_MULTISAMPLE */
     bool isMultiSample() const;
 
-    gl::GLsizei numMultiSamples() const;
+    gl::GLsizei numMultiSamples() const { return multiSamples_; }
 
     /** Returns the set number of mip-map levels, 0 for no mip-mapping.
         @see createMipmaps() */
-    uint mipmapLevels() const { return mipLevels_; }
+    uint numMipmapLevels() const { return mipLevels_; }
 
     /** Returns a number which can be used to check if the texture has changed.
         Used by texture-in objects.
@@ -251,6 +254,7 @@ private:
         height_,
         depth_,
         multiSamples_,
+        mipLevels_,
     /** calculated memory of texture in bytes */
         memory_;
     gl::GLuint
@@ -267,7 +271,6 @@ private:
         type_;
 
     QString name_;
-    uint mipLevels_;
     int hash_;
 };
 

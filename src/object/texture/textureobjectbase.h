@@ -52,21 +52,40 @@ public:
     //virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
 
     // -------- TextureObject ------------
+    // --- getter ----
 
+    /** Returns the resolution of the internal Framebuffer, or an invalid QSize */
     QSize resolution() const;
+
+    /** Returns aspect ratio of the internal Framebuffer */
     Float aspectRatio() const;
+
     /** Number of maximum inputs for this object */
     uint numberTextureInputs() const;
     /** Returns true, when the @p index'th parameter is attached to a texture output */
     bool hasTextureInput(uint index) const;
 
+    /** Returns the list of last compile messages, e.g. from createShaderQuad() */
+    const QList<GL::Shader::CompileMessage>& compileMessages() const;
+
+    /** Returns the currently set resolution mode */
+    ResolutionMode getResolutionMode() const;
+
+    /** Returns the currently set texture format */
+    gl::GLenum getTextureFormat() const;
+
+    /** For a given input resolution, returns the resolution
+        according to current ResolutionMode setting.
+        For RM_CUSTOM the returned resolution is unchanged.
+        For all other modes, the resolution is scaled accordingly. */
+    QSize adjustResolution(const QSize& s) const;
+
+    // ---- setter -----
+
     /** Sets the master-out parameter.
         if @p sendGui, this will be done via ObjectEditor */
     void setEnableMasterOut(bool enable, bool sendGui = false);
     void setResolutionMode(ResolutionMode mode, bool sendGui = false);
-
-    /** Returns the list of last compile messages, e.g. from createShaderQuad() */
-    const QList<GL::Shader::CompileMessage>& compileMessages() const;
 
     // ------ texture connections --------
 

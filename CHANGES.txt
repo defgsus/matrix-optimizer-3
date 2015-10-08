@@ -1,3 +1,11 @@
+3.0.3.4
+
+ - Text extrusion in geometry editor (outline, 3d, rotated)
+ - framebuffer format & type selection for Camera
+ - mip-mapping in all objects that load textures from files
+ - Shader texture object, compatible with ShaderToy code
+ - Load/Save hot-keys in all script editors
+
 3.0.3.3
 
  - environment mapping in Model3d

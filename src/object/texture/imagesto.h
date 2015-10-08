@@ -50,7 +50,7 @@ private:
 
     QStringList filenames_, initFilenames_;
     ParameterImageList * pFilenames_;
-    ParameterInt * pIndex_;
+    ParameterInt * pIndex_, *pMipmaps_;
     QList<GL::Texture*> tex_;
 };
 

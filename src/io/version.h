@@ -22,13 +22,14 @@
     3.0.2.47 lots of fixes
     3.0.3    start windows port (-> vioso)
     3.0.3.2  see changes.txt (-> vioso)
+    3.0.3.3  -> vioso
 */
 
 // all limited to 8 bit
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  3
-#define MO_VERSION_MICRO 3
+#define MO_VERSION_MICRO 4
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */

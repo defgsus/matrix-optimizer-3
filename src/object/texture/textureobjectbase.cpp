@@ -372,8 +372,10 @@ GL::FrameBufferObject * TextureObjectBase::fbo() const
     return p_to_->fbo;
 }
 
-const GL::Texture * TextureObjectBase::valueTexture(uint , Double , uint ) const
+const GL::Texture * TextureObjectBase::valueTexture(uint chan, Double , uint ) const
 {
+    if (chan != 0)
+        return 0;
     if (p_to_->outputTex)
         return p_to_->outputTex;
     return fbo() ? fbo()->colorTexture() : 0;
@@ -577,6 +579,49 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     }
 }
 
+TextureObjectBase::ResolutionMode TextureObjectBase::getResolutionMode() const
+{
+    return ResolutionMode( p_to_->p_resMode->baseValue() );
+}
+
+gl::GLenum TextureObjectBase::getTextureFormat() const
+{
+    return (gl::GLenum)
+            Parameters::getTexFormat(p_to_->p_texFormat->baseValue(),
+                                     p_to_->p_texType->baseValue());
+    //return gl::GLenum( p_to_->p_texFormat->baseValue() );
+}
+
+QSize TextureObjectBase::adjustResolution(const QSize& res) const
+{
+    switch (getResolutionMode())
+    {
+        default:
+        case RM_CUSTOM:
+            return res;
+
+        case RM_INPUT_SCALED:
+        {
+            Float s = p_to_->p_res_scale->baseValue();
+            return QSize(std::max(uint(2), uint(res.width() * s)),
+                         std::max(uint(2), uint(res.height() * s)));
+        }
+
+        case RM_INPUT_FIX_WIDTH:
+        {
+            Float a = Float(res.height()) / std::max(int(1), res.width());
+            return QSize(p_to_->p_width->baseValue(),
+                         res.width() * a);
+        }
+
+        case RM_INPUT_FIX_HEIGHT:
+        {
+            Float a = Float(res.width()) / std::max(int(1), res.height());
+            return QSize(p_to_->p_height->baseValue(),
+                         res.height() * a);
+        }
+    }
+}
 
 void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uint thread, uint& texSlot)
 {
@@ -589,13 +634,10 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     uint width = p_width->baseValue(),
          height = p_height->baseValue();
 
-    // -- find input resolution --
-    auto resMode = (ResolutionMode)p_resMode->baseValue();
-    if (   resMode == RM_INPUT
-        || resMode == RM_INPUT_SCALED
-        || resMode == RM_INPUT_FIX_WIDTH
-        || resMode == RM_INPUT_FIX_HEIGHT)
+    auto resMode = to->getResolutionMode();
+    if (resMode != RM_CUSTOM)
     {
+        // -- find input resolution --
         for (int i=0; i<p_textures.length(); ++i)
         {
             const GL::Texture * tex = p_textures[i]->value(time, thread);
@@ -607,25 +649,9 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
             }
         }
 
-        if (resMode == RM_INPUT_SCALED)
-        {
-            Float s = p_res_scale->baseValue();
-            width = std::max(uint(2), uint(width * s));
-            height = std::max(uint(2), uint(height * s));
-        }
-
-        if (resMode == RM_INPUT_FIX_WIDTH)
-        {
-            Float a = Float(height) / std::max(uint(1), width);
-            width = p_width->baseValue();
-            height = width * a;
-        }
-        if (resMode == RM_INPUT_FIX_HEIGHT)
-        {
-            Float a = Float(width) / std::max(uint(1), height);
-            height = p_height->baseValue();
-            width = height * a;
-        }
+        QSize res = to->adjustResolution(QSize(width, height));
+        width = res.width();
+        height = res.height();
     }
 
     // update FBO/resolution

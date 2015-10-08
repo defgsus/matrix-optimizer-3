@@ -11,8 +11,8 @@
 #include "imageto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterint.h"
 #include "object/param/parameterfilename.h"
-#include "object/param/parameterselect.h"
 #include "gl/texture.h"
 #include "io/filemanager.h"
 #include "io/datastream.h"
@@ -63,6 +63,14 @@ void ImageTO::createParameters()
                     IO::FT_TEXTURE,
                     initFilename_);
 
+        pMipmaps_ = params()->createIntParameter(
+                    "mipmaps", tr("mip-map levels"),
+                    tr("The number of mip-map levels to create, "
+                       "where each level is half the size of the previous level, "
+                       "0 means no mip-maps"),
+                    0, true, false);
+        pMipmaps_->setMinValue(0);
+
     params()->endParameterGroup();
 }
 
@@ -70,7 +78,8 @@ void ImageTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == pFilename_)
+    if (p == pFilename_
+        || p == pMipmaps_)
         requestReinitGl();
 }
 
@@ -115,7 +124,8 @@ void ImageTO::initGl(uint thread)
     try
     {
         QString fn = IO::fileManager().localFilename(pFilename_->baseValue());
-        tex_ = GL::Texture::createFromImage(fn, gl::GL_RGBA);
+        tex_ = GL::Texture::createFromImage(fn, getTextureFormat(),
+                                            pMipmaps_->baseValue());
     }
     catch (const Exception& e)
     {
@@ -132,9 +142,9 @@ void ImageTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * ImageTO::valueTexture(uint , Double , uint ) const
+const GL::Texture * ImageTO::valueTexture(uint chan, Double , uint ) const
 {
-    return tex_;
+    return chan==0 ? tex_ : 0;
 }
 
 

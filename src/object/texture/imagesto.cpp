@@ -12,7 +12,6 @@
 #include "object/param/parameters.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterimagelist.h"
-#include "object/param/parameterselect.h"
 #include "gl/texture.h"
 #include "io/filemanager.h"
 #include "io/datastream.h"
@@ -62,9 +61,17 @@ void ImagesTO::createParameters()
                     "filenames", tr("image files"), tr("The list of images"),
                     initFilenames_);
 
+        pMipmaps_ = params()->createIntParameter(
+                    "mipmaps", tr("mip-map levels"),
+                    tr("The number of mip-map levels to create, "
+                       "where each level is half the size of the previous level, "
+                       "0 means no mip-maps"),
+                    0, true, false);
+        pMipmaps_->setMinValue(0);
+
         pIndex_ = params()->createIntParameter(
                     "index", tr("image index"),
-                    tr("Selects the texture, first is 0"),
+                    tr("Selects the output texture, first is 0"),
                     0, true, true);
         pIndex_->setMinValue(0);
 
@@ -75,7 +82,8 @@ void ImagesTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == pFilenames_)
+    if (p == pFilenames_
+       || p == pMipmaps_)
         requestReinitGl();
 }
 
@@ -119,7 +127,8 @@ void ImagesTO::initGl(uint thread)
 
         try
         {
-            auto tex = GL::Texture::createFromImage(fnl, gl::GL_RGBA);
+            auto tex = GL::Texture::createFromImage(fnl, getTextureFormat(),
+                                                    pMipmaps_->baseValue());
             tex_ << tex;
         }
         catch (const Exception& e)
@@ -142,9 +151,9 @@ void ImagesTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * ImagesTO::valueTexture(uint , Double time, uint thread) const
+const GL::Texture * ImagesTO::valueTexture(uint chan, Double time, uint thread) const
 {
-    if (tex_.isEmpty())
+    if (tex_.isEmpty() || chan != 0)
         return 0;
 
     int index = std::min(pIndex_->value(time, thread), tex_.count() - 1);

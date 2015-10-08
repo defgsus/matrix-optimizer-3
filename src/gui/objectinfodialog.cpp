@@ -16,6 +16,7 @@
 
 #include "objectinfodialog.h"
 #include "types/vector.h"
+#include "gl/texture.h"
 #include "io/streamoperators_qt.h"
 #include "object/object.h"
 #include "object/scene.h"
@@ -138,6 +139,7 @@ void ObjectInfoDialog::setObject(Object * o)
     // ---------- render modes ---------
 
     if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+    if (gl->isRenderSettingsEnabled())
     {
         s << "<p>render count: " << gl->renderCount()
           << "<br/>depth test: " << gl->depthTestModeNames[gl->depthTestMode()]
@@ -146,18 +148,18 @@ void ObjectInfoDialog::setObject(Object * o)
           << "</p>";
     }
 
-    // ---------- resolution -----------
+    // ---------- texture outputs -----------
 
-    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(o))
+    if (ValueTextureInterface * ti = dynamic_cast<ValueTextureInterface*>(o))
     {
-        auto r = to->resolution();
-        s << "<p>resolution: " << r.width() << "x" << r.height() << "</p>\n";
-    }
-
-    if (ShaderObject * sh = qobject_cast<ShaderObject*>(o))
-    {
-        auto r = sh->resolution();
-        s << "<p>resolution: " << r.width() << "x" << r.height() << "</p>\n";
+        s << "<p>textures:<ul>";
+        for (uint chan = 0; chan<32; ++chan)
+        {
+            const GL::Texture * t = ti->valueTexture(chan, curTime, MO_GUI_THREAD);
+            if (t)
+                s << "<li>" << t->infoString() << "</li>";
+        }
+        s << "</ul></p>";
     }
 
     // ---------- matrix ---------------
