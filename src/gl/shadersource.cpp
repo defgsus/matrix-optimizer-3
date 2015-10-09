@@ -87,10 +87,10 @@ void ShaderSource::loadDefaultSource()
 #endif
 }
 
-void ShaderSource::addDefine(const QString &defineCommand)
+void ShaderSource::addDefine(const QString &defineCommand, bool addAfter)
 {
-    p_addDefine_(vert_, defineCommand);
-    p_addDefine_(frag_, defineCommand);
+    p_addDefine_(vert_, defineCommand, !addAfter);
+    p_addDefine_(frag_, defineCommand, !addAfter);
 }
 
 void ShaderSource::finalize()

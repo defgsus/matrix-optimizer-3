@@ -82,7 +82,7 @@ public:
     /** Adds a define to all sources.
         Defines are added after all #version, #extension and other #define lines.
         An #undef can also be added that way. */
-    void addDefine(const QString& defineCommand);
+    void addDefine(const QString& defineCommand, bool addAfterOtherDefines = true);
 
     /** Replaces a piece of text */
     void replace(const QString& before, const QString& after, bool adjustLineNumber = false);

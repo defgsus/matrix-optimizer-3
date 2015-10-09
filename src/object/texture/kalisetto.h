@@ -8,21 +8,21 @@
     <p>created 10/9/2015</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_POSTERIZETO_H
-#define MOSRC_OBJECT_TEXTURE_POSTERIZETO_H
+#ifndef MOSRC_OBJECT_TEXTURE_KALISETTO_H
+#define MOSRC_OBJECT_TEXTURE_KALISETTO_H
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
-/** Dithering / Posterization post-processing */
-class PosterizeTO : public TextureObjectBase
+/** The infamous Kali-Set 2d texture */
+class KaliSetTO : public TextureObjectBase
 {
     Q_OBJECT
 public:
 
-    MO_OBJECT_CONSTRUCTOR(PosterizeTO);
-    ~PosterizeTO();
+    MO_OBJECT_CONSTRUCTOR(KaliSetTO);
+    ~KaliSetTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -47,4 +47,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_POSTERIZETO_H
+#endif // MOSRC_OBJECT_TEXTURE_KALISETTO_H
