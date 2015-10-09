@@ -336,7 +336,8 @@ HEADERS += \
     $$PWD/object/interface/valuegeometryinterface.h \
     $$PWD/geom/geometrymodifiertext.h \
     $$PWD/geom/textmesh.h \
-    $$PWD/object/texture/shaderto.h
+    $$PWD/object/texture/shaderto.h \
+    $$PWD/object/texture/posterizeto.h
 
 
 SOURCES += \
@@ -629,4 +630,5 @@ SOURCES += \
     $$PWD/geom/tesselator.cpp \
     $$PWD/geom/geometrymodifiertext.cpp \
     $$PWD/geom/textmesh.cpp \
-    $$PWD/object/texture/shaderto.cpp
+    $$PWD/object/texture/shaderto.cpp \
+    $$PWD/object/texture/posterizeto.cpp

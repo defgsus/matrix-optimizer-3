@@ -9,7 +9,7 @@
 */
 
 #include <QDate>
-
+#include <QDebug>
 #include "shaderto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"

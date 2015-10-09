@@ -75,4 +75,5 @@ OTHER_FILES += $$BISON_FILES \
 
 DISTFILES += \
     $$PWD/assets/shader/to/threshold.frag \
-    $$PWD/assets/shader/to/shader.frag
+    $$PWD/assets/shader/to/shader.frag \
+    $$PWD/assets/shader/to/posterize.frag

@@ -49,6 +49,7 @@
         <file alias="distancemap.frag">assets/shader/to/distancemap.frag</file>
         <file alias="threshold.frag">assets/shader/to/threshold.frag</file>
         <file alias="shader.frag">assets/shader/to/shader.frag</file>
+        <file alias="posterize.frag">assets/shader/to/posterize.frag</file>
     </qresource>
     <qresource prefix="/shader/inc/to">
         <file alias="header">assets/shader/to/header.glsl</file>
