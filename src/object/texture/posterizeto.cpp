@@ -41,7 +41,8 @@ struct PosterizeTO::Private
     ParameterFloat
             * p_posSteps, * p_colorSteps, * p_tolerance;
     ParameterSelect
-            * p_shape, * p_smooth, * p_mono, * p_quantTex, * p_quantColor;
+            * p_shape, * p_smooth, * p_mono, * p_quantTex, * p_quantColor,
+            * p_alpha;
     GL::Uniform
             * u_quant,
             * u_tolerance;
@@ -126,6 +127,12 @@ void PosterizeTO::Private::createParameters()
                     "tolerance", tr("tolerance"), tr("Tolerance / smoothness"), 0.5, 0.05);
 
 
+        p_alpha = to->params()->createBooleanParameter("use_alpha", tr("use alpha"),
+                                tr("Include alpha channel in posterization"),
+                                tr("Off"),
+                                tr("On"),
+                                false, true, false);
+
         p_mono = to->params()->createBooleanParameter("mono", tr("monochrome"),
                                 tr("Strictly monochrome colors"),
                                 tr("Off"),
@@ -158,6 +165,7 @@ void PosterizeTO::onParameterChanged(Parameter * p)
     if (p == p_->p_shape
         || p == p_->p_smooth
         || p == p_->p_mono
+        || p == p_->p_alpha
         || p == p_->p_quantColor
         || p == p_->p_quantTex)
         requestReinitGl();
@@ -194,6 +202,7 @@ void PosterizeTO::Private::initGl()
         src.addDefine(QString("#define QUANT_COLOR %1").arg(p_quantColor->baseValue()));
         src.addDefine(QString("#define QUANT_TEX %1").arg(p_quantTex->baseValue()));
         src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()));
+        src.addDefine(QString("#define USE_ALPHA %1").arg(p_alpha->baseValue()));
         src.addDefine(QString("#define SMOOTH_STEP %1").arg(p_smooth->baseValue()));
         src.addDefine(QString("#define SHAPE %1").arg(p_shape->baseValue()));
     }

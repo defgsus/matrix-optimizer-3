@@ -7,6 +7,7 @@ uniform float       u_tolerance; // for smoothstep
 //#define QUANT_COLOR 0,1
 //#define QUANT_TEX 0,1
 //#define MONOCHROME 0,1
+//#define USE_ALPHA 0,1
 //#define SHAPE 0-5
 //#define SMOOTH_STEP 0,1
 
@@ -43,8 +44,8 @@ float dither_func(in float val, in vec2 pos)
 #endif
 }
 
-// pos in in pixels!
-vec3 posterize(in sampler2D tex, in vec2 pos)
+// pos is in pixels!
+vec4 posterize(in sampler2D tex, in vec2 pos)
 {
     // texture lookup pos
 #if QUANT_TEX
@@ -58,23 +59,33 @@ vec3 posterize(in sampler2D tex, in vec2 pos)
     vec2 griduv = pos / u_resolution.y * u_quant.x;
 
     // input color
-    vec3 color = texture(tex, texuv).xyz;
+    vec4 color = texture(tex, texuv);
 #if QUANT_COLOR
     color = floor(color*u_quant.y)/u_quant.y;
 #endif
 
 #if MONOCHROME
-    return vec3(dither_func(dot(color,vec3(.3,.6,.1)), griduv));
+    #if USE_ALPHA
+        return vec4(dither_func(dot(color,vec3(.3,.6,.1)), griduv),
+                    dither_func(color.w));
+    #else
+        return vec4(dither_func(dot(color,vec3(.3,.6,.1)), griduv), 1.);
+    #endif
 #else
-    return vec3(dither_func(color.x, griduv),
-                dither_func(color.y, griduv),
-                dither_func(color.z, griduv));
+    #if USE_ALPHA
+        return vec4(dither_func(color.x, griduv),
+                    dither_func(color.y, griduv),
+                    dither_func(color.z, griduv),
+                    dither_func(color.w, griduv));
+    #else
+        return vec4(dither_func(color.x, griduv),
+                    dither_func(color.y, griduv),
+                    dither_func(color.z, griduv), 1.);
+    #endif
 #endif
 }
 
 void main()
 {
-    vec3 col = posterize(u_tex, v_texCoord * u_resolution.xy);
-
-    fragColor = vec4(col, 1.);
+    fragColor = posterize(u_tex, v_texCoord * u_resolution.xy);
 }
