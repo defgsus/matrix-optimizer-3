@@ -58,7 +58,7 @@ void ModulatorObjectFloat::createParameters()
     params()->endParameterGroup();
 }
 
-Double ModulatorObjectFloat::value(Double time, uint thread) const
+Double ModulatorObjectFloat::valueFloat(uint, Double time, uint thread) const
 {
     return offset_ + p_value_->value(time, thread)
                      * p_amp_->value(time, thread);

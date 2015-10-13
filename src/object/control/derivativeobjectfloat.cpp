@@ -87,7 +87,7 @@ void DerivativeObjectFloat::createParameters()
     params()->endParameterGroup();
 }
 
-Double DerivativeObjectFloat::value(Double time, uint thread) const
+Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
 {
     DifferentiationMethod method = (DifferentiationMethod)p_method_->baseValue();
     int method_order = method * 10 + p_order_->value(time, thread);

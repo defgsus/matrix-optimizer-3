@@ -338,7 +338,9 @@ HEADERS += \
     $$PWD/geom/textmesh.h \
     $$PWD/object/texture/shaderto.h \
     $$PWD/object/texture/posterizeto.h \
-    $$PWD/object/texture/kalisetto.h
+    $$PWD/object/texture/kalisetto.h \
+    $$PWD/tool/linearizerfloat.h \
+    $$PWD/object/control/oscinputobject.h
 
 
 SOURCES += \
@@ -633,4 +635,6 @@ SOURCES += \
     $$PWD/geom/textmesh.cpp \
     $$PWD/object/texture/shaderto.cpp \
     $$PWD/object/texture/posterizeto.cpp \
-    $$PWD/object/texture/kalisetto.cpp
+    $$PWD/object/texture/kalisetto.cpp \
+    $$PWD/tool/linearizerfloat.cpp \
+    $$PWD/object/control/oscinputobject.cpp

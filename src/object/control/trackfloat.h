@@ -33,7 +33,7 @@ public:
 
     virtual QList<Object*> getModulatingObjects() const;
 
-    Double value(Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
     /** Writes @p number values starting at @p time into the pointer */
     void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;

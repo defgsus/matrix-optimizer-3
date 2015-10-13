@@ -22,7 +22,7 @@ class ValueFloatInterface
 public:
     virtual ~ValueFloatInterface() { }
 
-    virtual Double value(Double time, uint thread) const = 0;
+    virtual Double valueFloat(uint channel, Double time, uint thread) const = 0;
 
 };
 

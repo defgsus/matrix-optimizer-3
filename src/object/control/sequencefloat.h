@@ -188,7 +188,7 @@ public:
     PPP_NAMESPACE::Parser * equation(uint thread);
     const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
-    Double value(Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
 signals:
 

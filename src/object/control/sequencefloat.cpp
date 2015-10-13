@@ -708,7 +708,7 @@ Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
         return fade;
 }
 
-Double SequenceFloat::value(Double gtime, uint thread) const
+Double SequenceFloat::valueFloat(uint, Double gtime, uint thread) const
 {
     if (cacheTime_ == gtime)
         return cacheValue_;
@@ -880,14 +880,14 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
 
     Double time = localStart;
 
-    minValue = maxValue = value(time + start(), thread);
+    minValue = maxValue = valueFloat(0, time + start(), thread);
 
     std::mt19937 rnd(12345);
 
     while (time < localEnd)
     {
-        minValue = std::min(minValue, value(time + start(), thread));
-        maxValue = std::max(maxValue, value(time + start(), thread));
+        minValue = std::min(minValue, valueFloat(0, time + start(), thread));
+        maxValue = std::max(maxValue, valueFloat(0, time + start(), thread));
 
         time += step * (1.0 + (Double)rnd()/rnd.max());
     }

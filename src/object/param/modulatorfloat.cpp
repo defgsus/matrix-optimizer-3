@@ -139,7 +139,7 @@ Double ModulatorFloat::value(Double time, uint thread) const
                 if (seq->parentClip() && !seq->parentClip()->isPlaying())
                     return 0.0;
             }
-            return amplitude_ * interface_->value(time, thread);
+            return amplitude_ * interface_->valueFloat(0, time, thread);
         }
 
         case ST_AUDIO_OBJECT:

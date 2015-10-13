@@ -91,7 +91,7 @@ void ObjectInfoDialog::setObject(Object * o)
     if (auto fi = dynamic_cast<ValueFloatInterface*>(o))
     {
         s << "<p>float value at " << curTime << " sec: "
-          << fi->value(curTime, MO_GUI_THREAD) << "</p>\n";
+          << fi->valueFloat(0, curTime, MO_GUI_THREAD) << "</p>\n";
     }
 
     // ---- geometry value -----
