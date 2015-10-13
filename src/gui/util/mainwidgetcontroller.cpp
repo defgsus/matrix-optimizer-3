@@ -831,14 +831,14 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
             l->addWidget(script);
             script->setScriptText(settings()->value("tmp/AngelScript", exampleAngelScript()).toString());
-            connect(script, &AngelScriptWidget::scriptTextChanged, [=]()
-            {
-                settings()->setValue("tmp/AngelScript", script->scriptText());
-            });
             auto but = new QPushButton(tr("&Run"), diag);
             //but->setShortcut(Qt::CTRL + Qt::Key_B);
             l->addWidget(but);
-            connect(but, SIGNAL(clicked()), script, SLOT(executeScript()));
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                settings()->setValue("tmp/AngelScript", script->scriptText());
+                script->executeScript();
+            });
             diag->show();
         });
 #ifndef MO_HAMBURG

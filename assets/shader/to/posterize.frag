@@ -65,11 +65,11 @@ vec4 posterize(in sampler2D tex, in vec2 pos)
 #endif
 
 #if MONOCHROME
+    float m = dither_func(dot(color.xyz,vec3(.3,.6,.1)), griduv);
     #if USE_ALPHA
-        return vec4(dither_func(dot(color,vec3(.3,.6,.1)), griduv),
-                    dither_func(color.w));
+        return vec4(m, m, m, dither_func(color.w, griduv));
     #else
-        return vec4(dither_func(dot(color,vec3(.3,.6,.1)), griduv), 1.);
+        return vec4(m, m, m, 1.);
     #endif
 #else
     #if USE_ALPHA

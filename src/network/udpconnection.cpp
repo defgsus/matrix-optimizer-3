@@ -143,6 +143,7 @@ QByteArray UdpConnection::readData()
 
 void UdpConnection::receive_()
 {
+    bool ready = false;
     while (socket_->hasPendingDatagrams())
     {
         QByteArray datagram;
@@ -154,11 +155,17 @@ void UdpConnection::receive_()
         socket_->readDatagram(datagram.data(), datagram.size(),
                               &sender, &senderPort);
 
-        MO_DEBUG_UDP("UdpConnection::received " << datagram.size() << " bytes from " << addr_.toString() << ":" << port_ << ")");
+        MO_DEBUG_UDP("UdpConnection::received "
+                     << datagram.size() << " bytes from "
+                     << addr_.toString() << ":" << port_ << "): '"
+                     << QString::fromUtf8(datagram) << "'");
 
         data_.append(datagram);
-        emit dataReady();
+        ready = true;
     }
+
+    if (ready)
+        emit dataReady();
 }
 
 

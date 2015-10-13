@@ -170,12 +170,23 @@ void UdpConnectionAS::connectListen_()
 {
     UdpConnection::connect(con, &UdpConnection::dataReady, [=]()
     {
-        QByteArray data = con->readData();
+        QString data;
+        while (con->isData())
+        {
+            QByteArray arr = con->readData();
+            for (auto & a : arr)
+                if (a == 0)
+                    a = 32;
+            data += QString::fromUtf8(arr);
+        }
+
         if (data.isEmpty())
         {
             MO_WARNING("UdpConnectionAS received null data from UdpConnection");
             return;
         }
+
+        StringAS stringAS = toStringAS(data);
 
         for (auto & i : callbacks)
         {
@@ -183,9 +194,7 @@ void UdpConnectionAS::connectListen_()
 
             cb->context->Prepare(cb->function);
 
-            // construct data type
-            StringAS s = data.constData();
-            cb->context->SetArgAddress(0, &s);
+            cb->context->SetArgAddress(0, &stringAS);
 
             // run
             int r = cb->context->Execute();
