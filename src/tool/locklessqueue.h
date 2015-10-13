@@ -23,6 +23,7 @@
 namespace MO {
 
 
+/** Lockless FILO-stack for one producer and one consumer thread */
 template <class T>
 class LocklessQueue
 {

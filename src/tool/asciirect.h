@@ -17,6 +17,7 @@
 
 namespace MO {
 
+/** A 2d-graphic to ascii converter */
 class AsciiRect
 {
 public:

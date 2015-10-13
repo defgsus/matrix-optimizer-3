@@ -120,6 +120,10 @@ public:
     /** Returns the internal framebuffer on which the shader renders, or NULL */
     GL::FrameBufferObject * fbo() const;
 
+    /** Returns a copy of the source for the @p index'th shaderquad, or
+        empty source if not defined/compiled. */
+    GL::ShaderSource shaderSource(uint index) const;
+
 protected:
 
     /** Creates a new quad with attached shader.
@@ -132,7 +136,7 @@ protected:
                                       const QList<QString>& texUniformNames = QList<QString>());
 
     /** Returns the previously created quad, or NULL */
-    GL::ScreenQuad * shaderQuad(uint index);
+    GL::ScreenQuad * shaderQuad(uint index) const;
 
     /** Draws the index'th quad.
         @p texSlot determines the first texture slot to bind the input textures to,

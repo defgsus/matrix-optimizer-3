@@ -372,6 +372,12 @@ GL::FrameBufferObject * TextureObjectBase::fbo() const
     return p_to_->fbo;
 }
 
+GL::ShaderSource TextureObjectBase::shaderSource(uint index) const
+{
+    auto s = shaderQuad(index);
+    return s ? *s->shader()->source() : GL::ShaderSource();
+}
+
 const GL::Texture * TextureObjectBase::valueTexture(uint chan, Double , uint ) const
 {
     if (chan != 0)
@@ -517,7 +523,7 @@ bool TextureObjectBase::hasInputTextureChanged(Double time, uint thread) const
     return false;
 }
 
-GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index)
+GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index) const
 {
     return index < (uint)p_to_->shaderQuads.size() ? p_to_->shaderQuads[index].quad : 0;
 }

@@ -36,6 +36,7 @@
 #include "object/audioobject.h"
 #include "object/visual/model3d.h"
 #include "object/visual/geometryobject.h"
+#include "object/texture/textureobjectbase.h"
 #include "object/objectfactory.h"
 #include "object/control/sequencefloat.h"
 #include "object/param/parameters.h"
@@ -1603,6 +1604,34 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
             diag->setAttribute(Qt::WA_DeleteOnClose, true);
             diag->show();
         });
+    }
+
+    // TextureObject specific
+    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(obj))
+    {
+        // show source code
+        auto sub = new QMenu(tr("Show shader source"));
+        a = actions.addMenu(sub, scene);
+        a->setIcon(QIcon(":/icon/obj_glsl.png"));
+        a->setStatusTip(tr("Shows the full shader source code including user-code, "
+                           "automatic defines and overrides, and include files"));
+
+        a = sub->addAction(tr("vertex shader"));
+        a->setData(0);
+        a = sub->addAction(tr("fragment shader"));
+        a->setData(1);
+
+        connect(sub, &QMenu::triggered, [=](QAction * a)
+        {
+            QString src = a->data().toInt() == 0
+                    ? to->shaderSource(0).vertexSource()
+                    : to->shaderSource(0).fragmentSource();
+
+            auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
+            diag->setAttribute(Qt::WA_DeleteOnClose, true);
+            diag->show();
+        });
+
     }
 
     // GeometryObject specific

@@ -41,7 +41,7 @@ public:
 
     void run() Q_DECL_OVERRIDE
     {
-        setCurrentThreadName(QString("IMAGEW%1").arg(index));
+        setCurrentThreadName(QString("WORK%1").arg(index));
 
         doStop = false;        
         func = 0;

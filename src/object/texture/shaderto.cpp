@@ -201,7 +201,7 @@ void ShaderTO::Private::initGl()
         src.pasteDefaultIncludes();
         src.replace("//%mo_user_code%",
                 uniformSetting->getDeclarations()
-                + "\n#line 0\n" + p_glsl->baseValue());
+                + "\n#line 1\n" + p_glsl->baseValue());
     }
     catch (Exception& e)
     {
