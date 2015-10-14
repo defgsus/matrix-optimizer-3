@@ -23,6 +23,15 @@ public:
     MO_OBJECT_CONSTRUCTOR(OscInputObject);
     ~OscInputObject();
 
+    Type type() const { return T_CONTROL; }
+
+    virtual void createParameters() Q_DECL_OVERRIDE;
+    virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+
+    // ---- float interface ----
+
     Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
 

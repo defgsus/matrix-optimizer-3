@@ -60,6 +60,14 @@ inline F interpol_smooth(F t, F y, F y1)
     return y + t * (y1 - y);
 }
 
+/** Interpolate smoothly (and steeper as interpol_smooth()) between y and y1, by t [0,1] */
+template <typename F>
+inline F interpol_smooth2(F t, F y, F y1)
+{
+    t = t * t * t * (t * (t * (F)6 - (F)15) + (F)10);
+    return y + t * (y1 - y);
+}
+
 /** 6-point interpolation. <br>
     from somewhere in musicdsp.org <br>
 

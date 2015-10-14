@@ -36,6 +36,7 @@
 #include "object/visual/oscillograph.h"
 #include "object/visual/imagegallery.h"
 #include "object/textobject.h"
+#include "object/control/oscinputobject.h"
 #ifndef MO_DISABLE_SPATIAL
 #   include "object/synthesizer.h"
 #   include "object/microphonegroup.h"
@@ -84,7 +85,8 @@ struct AppIcons::Private
         I_TO_BLUR,
         I_TEXT,
         I_MICROPHONE_GROUP,
-        I_GALLERY
+        I_GALLERY,
+        I_OSCIN
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -162,6 +164,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_TEXT, ":/icon/obj_text.png");
     nameMap_.insert(I_MICROPHONE_GROUP, ":/icon/obj_microphone_group.png");
     nameMap_.insert(I_GALLERY, ":/icon/obj_gallery.png");
+    nameMap_.insert(I_OSCIN, ":/icon/obj_oscin.png");
 }
 
 
@@ -198,6 +201,9 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 
         return I_AUDIO;
     }
+
+    if (qobject_cast<const OscInputObject*>(o))
+        return I_OSCIN;
 
     if (qobject_cast<const AScriptObject*>(o))
         return I_ANGELSCRIPT;

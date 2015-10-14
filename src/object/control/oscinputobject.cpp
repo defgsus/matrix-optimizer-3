@@ -9,6 +9,8 @@
 */
 
 #include "oscinputobject.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterselect.h"
 #include "tool/linearizerfloat.h"
 #include "io/datastream.h"
 
@@ -24,7 +26,10 @@ struct OscInputObject::Private
 
     }
 
+    void updateInterpolationMode();
+
     OscInputObject * p;
+    ParameterSelect * p_interpol;
     LinearizerFloat linear;
 };
 
@@ -35,6 +40,11 @@ OscInputObject::OscInputObject(QObject *parent)
 {
     setName("OscInput");
     setNumberOutputs(ST_FLOAT, 1);
+
+    p_->linear.insertValue(0, 0);
+    p_->linear.insertValue(1, 1);
+    p_->linear.insertValue(2, -2);
+    p_->linear.insertValue(3, 3);
 }
 
 OscInputObject::~OscInputObject()
@@ -56,9 +66,57 @@ void OscInputObject::deserialize(IO::DataStream &io)
     io.readHeader("osci", 1);
 }
 
-Double OscInputObject::valueFloat(uint , Double , uint ) const
+void OscInputObject::createParameters()
 {
+    Object::createParameters();
 
+    params()->beginParameterGroup("osc", tr("OSC"));
+
+        p_->p_interpol = params()->createSelectParameter(
+            "interpolation", tr("interpolation"),
+            tr("Selects the interpolation mode for smoothing input values"),
+            { "none", "linear", "smooth", "smooth2" },
+            { tr("none"), tr("linear"), tr("smooth"), tr("smooth steeper") },
+            { tr("No interpolation"),
+              tr("Linear interpolation"),
+              tr("Smooth transition from one value to the next"),
+              tr("Steep smooth transition from one value to the next") },
+            { LinearizerFloat::IM_NONE, LinearizerFloat::IM_LINEAR,
+              LinearizerFloat::IM_SMOOTH, LinearizerFloat::IM_SMOOTH2 },
+            LinearizerFloat::IM_NONE,
+            true, false);
+
+    params()->endParameterGroup();
 }
+
+void OscInputObject::onParametersLoaded()
+{
+    Object::onParametersLoaded();
+    p_->updateInterpolationMode();
+}
+
+void OscInputObject::onParameterChanged(Parameter *p)
+{
+    Object::onParameterChanged(p);
+    if (p == p_->p_interpol)
+        p_->updateInterpolationMode();
+}
+
+void OscInputObject::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+}
+
+void OscInputObject::Private::updateInterpolationMode()
+{
+    linear.setInterpolationMode(
+                (LinearizerFloat::InterpolationMode)p_interpol->baseValue());
+}
+
+Double OscInputObject::valueFloat(uint , Double time, uint ) const
+{
+    return p_->linear.getValue(time);
+}
+
 
 } // namespace MO

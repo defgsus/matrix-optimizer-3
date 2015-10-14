@@ -19,21 +19,42 @@ namespace MO {
 class LinearizerFloat
 {
 public:
+
+    enum InterpolationMode
+    {
+        IM_NONE,
+        IM_LINEAR,
+        IM_SMOOTH,
+        IM_SMOOTH2
+    };
+
     LinearizerFloat();
     ~LinearizerFloat();
 
-    /** Read the value from stack */
-    Float getValue(Double time) const;
+    /** Reads a value from history.
+        Threadsafe. */
+    Double getValue(Double time) const;
+
+    InterpolationMode interpolationMode() const;
 
     // ---- setter ----
 
+    /** Clears all values.
+        Threadsafe. */
     void clear();
 
-    /** Put a value into the stack.
-        Threadsafe! */
-    void insertValue(Double time, Float value);
+    /** Puts a value into the stack.
+        @p time must be increasing. Time values smaller or equal to the last
+        time given to this function are silently ignored.
+        Threadsafe. */
+    void insertValue(Double time, Double value);
+
+    void setInterpolationMode(InterpolationMode);
 
 private:
+
+    LinearizerFloat(const LinearizerFloat&) = delete;
+    void operator=(const LinearizerFloat&) = delete;
 
     struct Private;
     Private * p_;

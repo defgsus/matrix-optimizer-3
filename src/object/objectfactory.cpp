@@ -146,6 +146,9 @@ int ObjectFactory::hueForObject(int type)
     if (type & Object::TG_MODULATOR_OBJECT)
         return 170;
     else
+    if (type & Object::TG_MODULATOR)
+        return 160;
+    else
     if (type & Object::T_AUDIO_OBJECT)
         return 350;
     else
@@ -184,139 +187,8 @@ QColor ObjectFactory::colorForObject(const Object * o, bool darkSet)
 
     return QColor::fromHsl(hue, sat, bright);
 }
-#if 0
-const QIcon& ObjectFactory::iconForObject(const Object * o)
-{
-    static QIcon iconNone(":/icon/obj_none.png");
-    static QIcon icon3d(":/icon/obj_3d.png");
-    static QIcon iconParameter(":/icon/obj_parameter.png");
-    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
-    static QIcon iconMicrophone(":/icon/obj_microphone.png");
-    static QIcon iconCamera(":/icon/obj_camera.png");
-    static QIcon iconTrack(":/icon/obj_track.png");
-    static QIcon iconTranslation(":/icon/obj_translation.png");
-    static QIcon iconRotation(":/icon/obj_rotation.png");
-    static QIcon iconScale(":/icon/obj_scale.png");
-    static QIcon iconShear(":/icon/obj_shear.png");
-    static QIcon iconLook(":/icon/obj_look.png");
-    static QIcon iconLookAt(":/icon/obj_lookat.png");
-    static QIcon iconMix(":/icon/obj_mix.png");
-    static QIcon iconGroup(":/icon/obj_group.png");
-    static QIcon iconLight(":/icon/obj_light.png");
-    static QIcon iconModulator(":/icon/obj_modulator.png");
-    static QIcon iconAUEnv(":/icon/obj_au_env.png");
-    static QIcon iconAUFilter(":/icon/obj_au_filter.png");
-    static QIcon iconAUFilterBank(":/icon/obj_au_filterbank.png");
-    static QIcon iconMusicNote(":/icon/music_note.png");
-    static QIcon iconClip(":/icon/obj_clip.png");
-    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
-    static QIcon iconAudio(":/icon/obj_audio.png");
-
-/*    if (qobject_cast<const Synthesizer*>(o))
-        return iconMusicNote;
-*/
-    if (o->isClip())
-        return iconClip;
-
-    if (o->isClipController())
-        return iconClipCont;
-
-    if (o->isAudioObject())
-        return iconAudio;
-
-    if (o->isTransformation())
-    {
-        if (qobject_cast<const Translation*>(o))
-            return iconTranslation;
-        if (qobject_cast<const AxisRotation*>(o))
-            return iconRotation;
-        if (qobject_cast<const Scale*>(o))
-            return iconScale;
-        if (qobject_cast<const Shear*>(o))
-            return iconShear;
-        if (qobject_cast<const Look*>(o))
-            return iconLook;
-        if (qobject_cast<const LookAt*>(o))
-            return iconLookAt;
-        if (qobject_cast<const Mix*>(o))
-            return iconMix;
-    }
-
-    if (o->isAudioObject())
-    {
-        return iconParameter;
-    }
-
-    if (o->isAudioObject())
-    {
-//        if (qobject_cast<const EnvelopeUnit*>(o))
-//            return iconAUEnv;
-        if (qobject_cast<const FilterAO*>(o))
-            return iconAUFilter;
-        //if (qobject_cast<const FilterBankUnit*>(o))
-//            return iconAUFilterBank;
-    }
 
 
-    if (o->type() & Object::T_GROUP) return iconGroup;
-    if (o->isTrack()) return iconTrack;
-    if (o->type() & Object::TG_FLOAT) return iconParameter;
-    if (o->isCamera()) return iconCamera;
-    if (o->isMicrophone()) return iconMicrophone;
-    if (o->isSoundSource()) return iconSoundSource;
-    if (o->isGl()) return icon3d;
-    if (o->isParameter()) return iconParameter;
-    if (o->isLightSource()) return iconLight;
-    if (o->isModulatorObject()) return iconModulator;
-
-    return iconNone;
-}
-
-const QIcon& ObjectFactory::iconForObject(int type)
-{
-    static QIcon iconNone(":/icon/obj_none.png");
-    static QIcon icon3d(":/icon/obj_3d.png");
-    static QIcon iconParameter(":/icon/obj_parameter.png");
-    static QIcon iconSoundSource(":/icon/obj_soundsource.png");
-    static QIcon iconMicrophone(":/icon/obj_microphone.png");
-    static QIcon iconCamera(":/icon/obj_camera.png");
-    static QIcon iconTranslation(":/icon/obj_translation.png");
-    static QIcon iconRotation(":/icon/obj_rotation.png");
-    static QIcon iconScale(":/icon/obj_scale.png");
-    static QIcon iconTrack(":/icon/obj_track.png");
-    static QIcon iconClip(":/icon/obj_clip.png");
-    static QIcon iconClipCont(":/icon/obj_clipcontroller.png");
-    static QIcon iconAudio(":/icon/obj_audio.png");
-
-    switch (type)
-    {
-        case Object::T_OBJECT: return icon3d;
-        case Object::T_TRANSFORMATION: return iconTranslation;
-        case Object::T_MICROPHONE: return iconMicrophone;
-        case Object::T_CAMERA: return iconCamera;
-        case Object::T_SOUNDSOURCE: return iconSoundSource;
-        case Object::T_CLIP: return iconClip;
-        case Object::T_CLIP_CONTROLLER: return iconClipCont;
-        case Object::T_AUDIO_OBJECT: return iconAudio;
-    }
-    if (type & Object::TG_TRACK) return iconTrack;
-    if (type & Object::TG_FLOAT) return iconParameter;
-
-    return iconNone;
-}
-
-QIcon ObjectFactory::iconForObject(const Object * obj, QColor color, const QSize& size)
-{
-    QSize si = size;
-    QIcon org = iconForObject(obj);
-    if (si.isEmpty())
-        si = QSize(128, 128);
-    QPixmap pix(si);
-    pix.fill(color);
-    pix.setMask(org.pixmap(si).mask());
-    return QIcon(pix);
-}
-#endif
 bool ObjectFactory::registerObject(Object * obj)
 {
     if (instance().objectMap_.find(obj->className())

@@ -132,7 +132,8 @@ public:
         T_ANGELSCRIPT       = 1<<21,
         T_SHADER            = 1<<22,
         T_TEXTURE           = 1<<23,
-        T_TEXT              = 1<<24 // a text source of some kind
+        T_TEXT              = 1<<24, //! a text source of some kind
+        T_CONTROL           = 1<<25 //! generator of control signals, not specified otherwise
     };
     enum TypeGroups
     {
@@ -150,7 +151,7 @@ public:
         /** All objects that can serve as a modulator source */
         TG_MODULATOR        = TG_MODULATOR_OBJECT
                                 | TG_TRACK | TG_SEQUENCE | T_SEQUENCEGROUP
-                                | T_OSCILLATOR,
+                                | T_OSCILLATOR | T_CONTROL,
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 

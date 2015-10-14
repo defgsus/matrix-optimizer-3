@@ -71,5 +71,6 @@
         <file alias="dir_up.png">assets/icon/dir_up.png</file>
         <file alias="obj_geometry.png">assets/icon/obj_geometry.png</file>
         <file alias="obj_gallery.png">assets/icon/obj_gallery.png</file>
+        <file alias="obj_oscin.png">assets/icon/obj_oscin.png</file>
     </qresource>
 </RCC>

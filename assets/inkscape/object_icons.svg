@@ -172,8 +172,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8"
-     inkscape:cx="508.94893"
-     inkscape:cy="357.91806"
+     inkscape:cx="209.66322"
+     inkscape:cy="115.06092"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -3363,5 +3363,39 @@
        width="68.188736"
        id="rect3130-6-7"
        style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect2985-78-0"
+       width="68.188736"
+       height="68.188736"
+       x="868.26782"
+       y="-79.094368"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_oscin.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_oscin.png"
+       sodipodi:nodetypes="cccccccc"
+       inkscape:connector-curvature="0"
+       id="path4257-89"
+       d="m 26.071436,898.14791 0.35714,15.71428 24.64286,-0.35714 0,10.35714 15.71428,-18.57143 -15.71428,-17.5 0,10.35714 z"
+       style="fill:none;stroke:#000000;stroke-width:1.89999998;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+    <text
+       xml:space="preserve"
+       style="font-size:20.21321869px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Ebrima;-inkscape-font-specification:Ebrima"
+       x="28.427507"
+       y="910.80841"
+       id="text3374"
+       sodipodi:linespacing="125%"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_oscin.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001"><tspan
+         sodipodi:role="line"
+         id="tspan3376"
+         x="28.427507"
+         y="910.80841">osc</tspan></text>
   </g>
 </svg>
