@@ -578,7 +578,48 @@ void SequenceFloat::setTimeline(const MATH::Timeline1d & tl)
     if (sequenceType() != ST_TIMELINE)
         setSequenceType(ST_TIMELINE);
 
+    MO_ASSERT(timeline_, "");
     *timeline_ = tl;
+}
+
+void SequenceFloat::addTimeline(const MATH::Timeline1d & tl, Double timeOffset, bool adjustLength)
+{
+    if (sequenceType() != ST_TIMELINE)
+        setSequenceType(ST_TIMELINE);
+
+    MO_ASSERT(timeline_, "");
+    timeline_->addTimeline(tl, timeOffset);
+
+    if (adjustLength)
+    {
+        const Double
+                tmin = timeline_->tmin(),
+                tmax = timeline_->tmax();
+        if (tmin < start())
+            setStart(tmin);
+        if (tmax > end())
+            setEnd(tmax);
+    }
+}
+
+void SequenceFloat::overwriteTimeline(const MATH::Timeline1d & tl, Double timeOffset, bool adjustLength)
+{
+    if (sequenceType() != ST_TIMELINE)
+        setSequenceType(ST_TIMELINE);
+
+    MO_ASSERT(timeline_, "");
+    timeline_->overwriteTimeline(tl, timeOffset);
+
+    if (adjustLength)
+    {
+        const Double
+                tmin = timeline_->tmin(),
+                tmax = timeline_->tmax();
+        if (tmin < start())
+            setStart(tmin);
+        if (tmax > end())
+            setEnd(tmax);
+    }
 }
 
 void SequenceFloat::updateValueObjects_()
@@ -659,6 +700,16 @@ PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread)
 const PPP_NAMESPACE::Parser * SequenceFloat::equation(uint thread) const
 {
     return equation_[thread] ? equation_[thread]->equation : 0;
+}
+
+void SequenceFloat::setSequenceType(SequenceType m)
+{
+    if (m != p_mode_->baseValue())
+    {
+        p_mode_->setValue(m);
+        updateValueObjects_();
+        updateParameterVisibility();
+    }
 }
 
 void SequenceFloat::setEquationText(const QString & t)

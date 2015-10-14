@@ -227,6 +227,13 @@ class Timeline1d : public RefCounted
     /** remove all points */
     void clear();
 
+    /** Adds the timeline data at the specified offset */
+    void addTimeline(const Timeline1d&, Double timeOffset);
+
+    /** Adds the timeline data at the specified offset and
+        deletes any previous points in that area. */
+    void overwriteTimeline(const Timeline1d&, Double timeOffset);
+
     /** adds a point if time is not already present */
     Point* add(Double time, Double value, Point::Type typ = Point::DEFAULT);
 
@@ -242,6 +249,9 @@ class Timeline1d : public RefCounted
 
     /** removes the point with this hash. */
     void remove(TpHash hash);
+
+    /** Removes all points in the given range */
+    void remove(Double start, Double end);
 
     /** set a low and high limit for output values */
     void setLimit(Double lmin, Double lmax)

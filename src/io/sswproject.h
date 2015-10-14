@@ -24,6 +24,7 @@ namespace MATH { class Timeline1d; }
 class JsonTreeModel;
 class SswSource;
 class Object;
+class Properties;
 
 /** SpatialSound Wave project loader.
     This handles the new (since ~2014) JSON format of the SSW.
@@ -35,6 +36,7 @@ public:
     SswProject();
     ~SswProject();
 
+    /** Converts the time-code in the ssw files to seconds */
     static Double sswTime2Sec(Double t);
 
     // ------------- io -------------
@@ -57,11 +59,18 @@ public:
         Ready after load() */
     const QList<SswSource*>& soundSources() const;
 
+    // --------- properties ----------
+
+    const Properties& properties() const;
+
+    void setProperties(const Properties&);
+
 private:
     friend class SswSource;
     struct Private;
     Private * p_;
 };
+
 
 /** Representation of one sound source in a SswProject.
     *Currently* this structure is read-only,

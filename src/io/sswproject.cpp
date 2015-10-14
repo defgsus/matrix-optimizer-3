@@ -23,18 +23,24 @@
 #include "object/control/sequencefloat.h"
 #include "object/util/objecteditor.h"
 #include "math/timeline1d.h"
+#include "types/properties.h"
 #include "io/error.h"
+
 
 namespace MO {
 
 Double SswProject::sswTime2Sec(Double t)
 {
-    return t / 1000.;
+    return t / 1000. / 2.3183391;//1.174203812;
 }
 
 struct SswProject::Private
 {
-    Private(SswProject * ssw) : ssw(ssw) { }
+    Private(SswProject * ssw) : ssw(ssw)
+    {
+        createProperties();
+    }
+
     ~Private()
     {
         clear();
@@ -48,12 +54,15 @@ struct SswProject::Private
         document = QJsonDocument();
     }
 
-    /** Returns the object for a json url, e.g. "uifm/model/ssc/audio/scenes/scene0" */
+    void createProperties();
+    /** Returns the object for a json url, e.g. "uifm/model/ssc/audio/scenes/scene0".
+        If the object name contains '/' replace them with '['. */
     QJsonObject getObjectByPath(const QString& path);
     /** Constructs the SswSources from the QJsonDocument */
     void createSources();
     void createSource(SswSource * source, const QJsonObject& desc);
     void createAnimation(SswSource * source, const QJsonObject& desc);
+    void setTimelineType(MATH::Timeline1d*);
     static Vec3 arrayToVec3(const QJsonArray& a)
     {
         Vec3 v;
@@ -66,6 +75,7 @@ struct SswProject::Private
     QJsonDocument document;
     QList<SswSource*> sources;
     Double leftTime;
+    Properties props;
 };
 
 SswProject::SswProject()
@@ -77,6 +87,23 @@ SswProject::SswProject()
 SswProject::~SswProject()
 {
     delete p_;
+}
+
+const Properties& SswProject::properties() const
+{
+    return p_->props;
+}
+
+void SswProject::setProperties(const Properties& p)
+{
+    p_->props = p;
+}
+
+void SswProject::Private::createProperties()
+{
+    props.set("single_seq", QObject::tr("single sequence"),
+              QObject::tr("If enabled only a single sequence is created for all automations "
+                          "of one track"), false);
 }
 
 const QList<SswSource*>& SswProject::soundSources() const
@@ -155,7 +182,7 @@ void SswProject::Private::createSources()
         auto it2 = obj.find("isActive");
         if (it2 == obj.end() || !it2.value().toBool())
             continue;
-        // get index (they are more randomly ordered in the json file)
+        // get index (they are not necessarily ordered in the json file)
         int idx = it.key().mid(3).toInt();
 
         auto source = new SswSource(ssw);
@@ -203,6 +230,8 @@ void SswProject::Private::createSources()
 
 void SswProject::Private::createSource(SswSource *source, const QJsonObject& obj)
 {
+    // assigns QVariant 'val' from children in QJsonObject 'obj'
+    // and throws errors for unfound id or wrong type
 #define MO__GET(name__, type__) \
     { \
         auto it = obj.find(name__); \
@@ -229,6 +258,19 @@ void SswProject::Private::createSource(SswSource *source, const QJsonObject& obj
 
     MO__GET("xyz", Array);
     source->p_pos_ = arrayToVec3(val.toArray());
+}
+
+void SswProject::Private::setTimelineType(MATH::Timeline1d * tl)
+{
+    if (tl->empty())
+        return;
+
+    for (auto & p : tl->getData())
+    {
+        p.second.type = MATH::Timeline1d::Point::SMOOTH;
+    }
+
+    tl->getData().rbegin()->second.type = MATH::Timeline1d::Point::CONSTANT;
 }
 
 void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& baseobj)
@@ -296,10 +338,16 @@ void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& 
                             for (int i=0; i<array.count() / 4; ++i)
                             {
                                 Double ti = sswTime2Sec(array[i*4].toDouble());
+                                // skip the infinity control points
+                                if (ti < 0 || ti > 50000)
+                                    continue;
                                 am->x->add(ti, array[i*4+1].toDouble());
                                 am->y->add(ti, array[i*4+2].toDouble());
                                 //am->z->add(ti, array[i*4+3].toDouble());
                             }
+                            setTimelineType(am->x);
+                            setTimelineType(am->y);
+                            //setTimelineType(am->z);
                         break;
 
                         case SswSource::AT_GAIN:
@@ -307,8 +355,11 @@ void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& 
                             for (int i=0; i<array.count() / 2; ++i)
                             {
                                 Double ti = sswTime2Sec(array[i*2].toDouble());
+                                if (ti < 0 || ti > 50000)
+                                    continue;
                                 am->gainDb->add(ti, array[i*2+1].toDouble());
                             }
+                            setTimelineType(am->gainDb);
                         break;
 
                         case SswSource::AT_TYPE:
@@ -316,6 +367,8 @@ void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& 
                             for (int i=0; i<array.count() / 2; ++i)
                             {
                                 Double ti = sswTime2Sec(array[i*2].toDouble());
+                                if (ti < 0 || ti > 50000)
+                                    continue;
                                 QString name = array[i*2+1].toString();
                                 Double val = name == "planewave"
                                         ? SswSource::T_PLANE
@@ -348,11 +401,16 @@ void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& 
     }
 
     // sort by recordId
+    // XXX Don't sort because it seems that
+    // automations are sorted in order of creation
+    // and may overwrite previous automations
+#if 0
     qSort(source->p_automation_.begin(), source->p_automation_.end(),
           [=](SswSource::Automation*l, SswSource::Automation*r)
     {
         return l->recordId < r->recordId;
     });
+#endif
 
 #undef MO__GET
 }
@@ -377,15 +435,15 @@ QString SswProject::infoString() const
     for (const SswSource * src : p_->sources)
     {
         s << "<tr><td>" << (1 + src->index())
-          << "</td><td>" << src->label()
-          << "</td><td>" << src->gainDb()
-          << "</td><td>" << src->typeName()
-          << "</td><td>" << src->position().x << ", "
+          << "&nbsp;</td><td>" << src->label()
+          << "&nbsp;</td><td>" << src->gainDb()
+          << "&nbsp;</td><td>" << src->typeName()
+          << "&nbsp;</td><td>" << src->position().x << ", "
                          << src->position().y << ", " << src->position().z
-          << "</td><td>" << src->p_automation_.count()
-          << "</td><td>" << src->startTime()
-          << "</td><td>" << src->endTime()
-          << "</td></tr>\n";
+          << "&nbsp;</td><td>" << src->p_automation_.count()
+          << "&nbsp;</td><td>" << src->startTime()
+          << "&nbsp;</td><td>" << src->endTime()
+          << "&nbsp;</td></tr>\n";
     }
     s << "</table>\n";
 
@@ -455,6 +513,8 @@ Object * SswSource::createObject()
 
 Object * SswSource::createObject(Object * root, bool& created)
 {
+    const bool singleSeq = p_project_->properties().get("single_seq").toBool();
+
     const QString name = QString("src%1_%2").arg(index()).arg(label());
     Object * group = 0;
 
@@ -466,7 +526,10 @@ Object * SswSource::createObject(Object * root, bool& created)
     // create
     if (!group)
     {
-        group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
+        if (singleSeq)
+            group = ObjectFactory::loadObject(":/templates/ssw_group_seq.mo3-obj");
+        else
+            group = ObjectFactory::loadObject(":/templates/ssw_group.mo3-obj");
         group->setName(name);
         created = true;
     }
@@ -484,6 +547,8 @@ Object * SswSource::createObject(Object * root, bool& created)
 
 void SswSource::createSequences(Object *group)
 {
+    const bool singleSeq = p_project_->properties().get("single_seq").toBool();
+
     auto track = group->findObjectByNamePath("Pos X");
     MO_ASSERT(track, "Could not find track in ssw template");
     ObjectPrivate::deleteChildren(track);
@@ -494,45 +559,65 @@ void SswSource::createSequences(Object *group)
     MO_ASSERT(track, "Could not find track in ssw template");
     ObjectPrivate::deleteChildren(track);
 
-    for (Automation * a : automations())
+    if (!singleSeq)
     {
-        if (a->x)
+        for (Automation * a : automations())
         {
-            auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("%1 x%2").arg(label()).arg(a->recordId));
-            seq->setTimeline(*a->x);
-            seq->setStart(a->start - p_project_->p_->leftTime);
-            seq->setEnd(a->end);
+            if (a->x)
+            {
+                auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
+                seq->setName(QString("%1 x%2").arg(label()).arg(a->recordId));
+                seq->setTimeline(*a->x);
+                seq->setStart(a->start - p_project_->p_->leftTime);
+                seq->setEnd(a->end - p_project_->p_->leftTime);
 
-            auto track = group->findObjectByNamePath("Pos X");
-            MO_ASSERT(track, "Could not find track in ssw template");
-            ObjectPrivate::addObject(track, seq);
+                auto track = group->findObjectByNamePath("Pos X");
+                MO_ASSERT(track, "Could not find track in ssw template");
+                ObjectPrivate::addObject(track, seq);
+            }
+
+            if (a->y)
+            {
+                auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
+                seq->setName(QString("%1 y%2").arg(label()).arg(a->recordId));
+                seq->setTimeline(*a->y);
+                seq->setStart(a->start - p_project_->p_->leftTime);
+                seq->setEnd(a->end - p_project_->p_->leftTime);
+
+                auto track = group->findObjectByNamePath("Pos Y");
+                MO_ASSERT(track, "Could not find track in ssw template");
+                ObjectPrivate::addObject(track, seq);
+            }
+
+            if (a->z)
+            {
+                auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
+                seq->setName(QString("%1 z%2").arg(label()).arg(a->recordId));
+                seq->setTimeline(*a->z);
+                seq->setStart(a->start - p_project_->p_->leftTime);
+                seq->setEnd(a->end - p_project_->p_->leftTime);
+
+                auto track = group->findObjectByNamePath("Pos Z");
+                MO_ASSERT(track, "Could not find track in ssw template");
+                ObjectPrivate::addObject(track, seq);
+            }
         }
+    }
+    else
+    {
+        SequenceFloat
+                *seqX = dynamic_cast<SequenceFloat*>(group->findObjectByNamePath("Pos X")),
+                *seqY = dynamic_cast<SequenceFloat*>(group->findObjectByNamePath("Pos Y")),
+                *seqZ = dynamic_cast<SequenceFloat*>(group->findObjectByNamePath("Pos Z"));
 
-        if (a->y)
+        for (Automation * a : automations())
         {
-            auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("%1 y%2").arg(label()).arg(a->recordId));
-            seq->setTimeline(*a->y);
-            seq->setStart(a->start - p_project_->p_->leftTime);
-            seq->setEnd(a->end);
-
-            auto track = group->findObjectByNamePath("Pos Y");
-            MO_ASSERT(track, "Could not find track in ssw template");
-            ObjectPrivate::addObject(track, seq);
-        }
-
-        if (a->z)
-        {
-            auto seq = static_cast<SequenceFloat*>(ObjectFactory::createObject("SequenceFloat"));
-            seq->setName(QString("%1 z%2").arg(label()).arg(a->recordId));
-            seq->setTimeline(*a->z);
-            seq->setStart(a->start - p_project_->p_->leftTime);
-            seq->setEnd(a->end);
-
-            auto track = group->findObjectByNamePath("Pos Z");
-            MO_ASSERT(track, "Could not find track in ssw template");
-            ObjectPrivate::addObject(track, seq);
+            if (a->x && seqX)
+                seqX->overwriteTimeline(*a->x, a->start - p_project_->p_->leftTime, true);
+            if (a->y && seqY)
+                seqY->overwriteTimeline(*a->y, a->start - p_project_->p_->leftTime, true);
+            if (a->z && seqZ)
+                seqZ->overwriteTimeline(*a->z, a->start - p_project_->p_->leftTime, true);
         }
     }
 }

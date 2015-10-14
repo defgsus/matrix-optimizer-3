@@ -95,7 +95,7 @@ public:
     void setColor(const QColor& color) { color_ = color; }
 
     void setStart(Double t)
-        { p_start_->setValue(t); }
+        { p_start_->setValue(std::max(Double(0), t)); }
 
     void setEnd(Double t)
         { p_length_->setValue(std::max(minimumLength(),

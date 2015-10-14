@@ -23,7 +23,7 @@ Sequence::Sequence(QObject *parent) :
     parentClip_     (0),
     color_          (QColor(80, 120, 80))
 {
-    setName("Sequence");
+    setName("*Sequence*");
 }
 
 void Sequence::serialize(IO::DataStream &io) const

@@ -264,7 +264,6 @@ HEADERS += \
     src/object/control/sequence.h \
     src/object/control/modulatorobject.h \
     src/object/control/modulatorobjectfloat.h \
-    src/object/control/sequences.h \
     src/object/control/track.h \
     src/object/control/trackfloat.h \
     src/object/control/clip.h \
@@ -564,7 +563,6 @@ SOURCES += \
     src/object/control/sequence.cpp \
     src/object/control/modulatorobject.cpp \
     src/object/control/modulatorobjectfloat.cpp \
-    src/object/control/sequences.cpp \
     src/object/control/track.cpp \
     src/object/control/trackfloat.cpp \
     src/object/control/clip.cpp \

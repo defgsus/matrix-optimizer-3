@@ -24,6 +24,9 @@ public:
     explicit SswImporter(QWidget *parent = 0);
     ~SswImporter();
 
+    /** Returns true when @p index'th source/list item is enabled */
+    bool isEnabled(uint index) const;
+
 signals:
 
 public slots:

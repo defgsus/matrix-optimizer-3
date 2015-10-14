@@ -425,6 +425,23 @@ void Timeline1d::clear()
     data_.clear();
 }
 
+void Timeline1d::addTimeline(const Timeline1d& tl, Double timeOffset)
+{
+    for (const auto & p : tl.data_)
+    {
+        add(p.second.t + timeOffset, p.second.val, p.second.type);
+    }
+}
+
+void Timeline1d::overwriteTimeline(const Timeline1d& tl, Double timeOffset)
+{
+    remove(tl.tmin() + timeOffset, tl.tmax() + timeOffset);
+
+    for (const auto & p : tl.data_)
+    {
+        add(p.second.t + timeOffset, p.second.val, p.second.type);
+    }
+}
 
 Timeline1d::Point* Timeline1d::add(Double time, Double value, Point::Type typ)
 {
@@ -515,6 +532,22 @@ void Timeline1d::remove(TpHash hash)
     if (cur_==&i->second) cur_ = 0;
 
     data_.erase(i);
+}
+
+void Timeline1d::remove(Double start, Double end)
+{
+    if (data_.empty())
+        return;
+
+    auto s = first(start);
+    if (s == data_.end())
+        return;
+
+    auto e = first(end);
+    if (e == data_.end())
+        --e;
+
+    data_.erase(s, e);
 }
 
 

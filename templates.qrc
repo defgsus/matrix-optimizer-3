@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/templates">
         <file alias="ssw_group.mo3-obj">assets/templates/ssw_group.mo3-obj</file>
+        <file alias="ssw_group_seq.mo3-obj">assets/templates/ssw_group_seq.mo3-obj</file>
     </qresource>
 </RCC>

@@ -148,7 +148,7 @@ public:
 #endif
     // ------------ setter --------------
 
-    void setSequenceType(SequenceType m) { p_mode_->setValue(m); updateValueObjects_(); }
+    void setSequenceType(SequenceType m);
 
     void setOscillatorMode(AUDIO::Waveform::Type mode) { p_oscMode_->setValue(mode); }
 
@@ -180,8 +180,19 @@ public:
 
     // ------------ values --------------
 
-    /** Sets the sequenceType to ST_TIMELINE if necessary and copies the timeline data */
+    /** Copies the timeline data and sets the sequenceType to ST_TIMELINE if necessary */
     void setTimeline(const MATH::Timeline1d&);
+    /** Adds the timeline data to the internal timeline and
+        sets the sequenceType to ST_TIMELINE if necessary.
+        If @p adjustLength is true, the sequence start and end will be adjusted
+        to contain the timeline if necessary. */
+    void addTimeline(const MATH::Timeline1d&, Double timeOffset, bool adjustLength = true);
+    /** Adds the timeline to the internal timeline overwrites deletes any previous
+        data that might have been there in the range of the given timeline.
+        Sets the sequenceType to ST_TIMELINE if necessary.
+        If @p adjustLength is true, the sequence start and end will be adjusted
+        to contain the timeline if necessary. */
+    void overwriteTimeline(const MATH::Timeline1d&, Double timeOffset, bool adjustLength = true);
 
     MATH::Timeline1d * timeline() { return timeline_; }
     const MATH::Timeline1d * timeline() const { return timeline_; }

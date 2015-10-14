@@ -307,6 +307,10 @@ void SequenceView::adjustViewspaceVertically()
     }
 
     setViewSpace(v);
+
+    // save the current viewspace
+    if (sequence_)
+        sceneSettings()->setViewSpace(sequence_, v);
 }
 
 void SequenceView::onViewSpaceChanged_(const UTIL::ViewSpace & v)

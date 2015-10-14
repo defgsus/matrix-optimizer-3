@@ -91,7 +91,7 @@ void PropertiesScrollView::createWidgtes_()
     // create one for each property
     for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
     {
-        auto widget = new QVariantWidget(i.key(), i.value().value(), p_container_);
+        auto widget = new QVariantWidget(i.key(), p_props_, p_container_);
         widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         // keep track
