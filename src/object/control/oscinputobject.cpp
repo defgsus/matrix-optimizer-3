@@ -8,9 +8,13 @@
     <p>created 10/13/2015</p>
 */
 
+#include <QList>
+
 #include "oscinputobject.h"
 #include "object/param/parameters.h"
+#include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
 #include "tool/linearizerfloat.h"
 #include "io/datastream.h"
 
@@ -26,10 +30,14 @@ struct OscInputObject::Private
 
     }
 
+    void setParamVis();
+    void setNumChan();
     void updateInterpolationMode();
 
     OscInputObject * p;
     ParameterSelect * p_interpol;
+    ParameterInt * p_numChan;
+    QList<ParameterText*> p_ids;
     LinearizerFloat linear;
 };
 
@@ -39,7 +47,6 @@ OscInputObject::OscInputObject(QObject *parent)
     , p_        (new Private(this))
 {
     setName("OscInput");
-    setNumberOutputs(ST_FLOAT, 1);
 
     p_->linear.insertValue(0, 0);
     p_->linear.insertValue(1, 1);
@@ -86,6 +93,22 @@ void OscInputObject::createParameters()
             LinearizerFloat::IM_NONE,
             true, false);
 
+        p_->p_numChan = params()->createIntParameter(
+                    "num_channel", tr("number channels"),
+                    tr("The number of different channels in this object"),
+                    1, 1, 20, 1, true, false);
+
+        for (int i=0; i<p_->p_numChan->maxValue(); ++i)
+        {
+            p_->p_ids << params()->createTextParameter(
+                             QString("id_%1").arg(i),
+                             tr("id %1").arg(i),
+                             tr("The name of the osc value"),
+                             TT_PLAIN_TEXT,
+                             QString("value_%1").arg(i),
+                             true, false);
+        }
+
     params()->endParameterGroup();
 }
 
@@ -93,6 +116,7 @@ void OscInputObject::onParametersLoaded()
 {
     Object::onParametersLoaded();
     p_->updateInterpolationMode();
+    p_->setNumChan();
 }
 
 void OscInputObject::onParameterChanged(Parameter *p)
@@ -100,11 +124,43 @@ void OscInputObject::onParameterChanged(Parameter *p)
     Object::onParameterChanged(p);
     if (p == p_->p_interpol)
         p_->updateInterpolationMode();
+    if (p == p_->p_numChan)
+        p_->setNumChan();
+
+    if (p_->p_ids.indexOf((ParameterText*)p) >= 0)
+        emitConnectionsChanged();
 }
 
 void OscInputObject::updateParameterVisibility()
 {
     Object::updateParameterVisibility();
+    p_->setParamVis();
+}
+
+void OscInputObject::Private::setParamVis()
+{
+    const int num = p_numChan->baseValue();
+    for (int i=0; i<p_ids.size(); ++i)
+    {
+        p_ids[i]->setVisible(i < num);
+    }
+}
+
+void OscInputObject::Private::setNumChan()
+{
+    const int num = p_numChan->baseValue();
+    p->setNumberOutputs(ST_FLOAT, num);
+}
+
+QString OscInputObject::getOutputName(SignalType st, uint channel) const
+{
+    if (st != ST_FLOAT)
+        return Object::getOutputName(st, channel);
+
+    if ((int)channel >= p_->p_ids.size())
+        return QString("id %").arg(channel);
+    else
+        return p_->p_ids[channel]->baseValue();
 }
 
 void OscInputObject::Private::updateInterpolationMode()

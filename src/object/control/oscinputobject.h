@@ -29,6 +29,7 @@ public:
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual QString getOutputName(SignalType, uint channel) const Q_DECL_OVERRIDE;
 
     // ---- float interface ----
 

@@ -646,6 +646,9 @@ public:
         If @p emitSignal is true, the ObjectEditor, if attached, will be notified. */
     void setNumberOutputs(SignalType t, uint num, bool emitSignal = true);
 
+    /** Signals a change of connections through the ObjectEditor, if attached. */
+    void emitConnectionsChanged();
+
 protected:
 
     /** Sets the desired outputs for the object.

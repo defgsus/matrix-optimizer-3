@@ -1430,6 +1430,12 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
         editor()->emitAudioChannelsChanged(this);
 }
 
+void Object::emitConnectionsChanged()
+{
+    if (editor())
+        editor()->emitAudioChannelsChanged(this);
+}
+
 
 void Object::setErrorMessage(const QString &errorString)
 {
