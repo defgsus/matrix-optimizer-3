@@ -66,11 +66,10 @@ void OscInputs::releaseListener(uint16_t port)
     if (i == portMap_.end())
         return;
 
-    if (i.value()->referenceCount() > 2)
+    if (i.value()->referenceCount() > 1)
         i.value()->releaseRef();
     else
     {
-        i.value()->releaseRef();
         i.value()->releaseRef();
         portMap_.remove(port);
         emit instance()->listenersChanged();

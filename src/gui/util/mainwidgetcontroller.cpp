@@ -74,6 +74,7 @@
 #include "gui/widget/envelopewidget.h"
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
+#include "gui/oscview.h"
 #ifndef MO_DISABLE_ANGLESCRIPT
 #   include "gui/widget/angelscriptwidget.h"
 #   include "script/angelscript.h"
@@ -315,6 +316,8 @@ void MainWidgetController::createObjects_()
                 this, SLOT(sendSceneToClients_()));
     }
 #endif
+
+    oscView_ = new OscView(window_);
 
     // gl manager and window
     glManager_ = new GL::Manager(this);

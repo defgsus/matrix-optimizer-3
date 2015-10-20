@@ -103,7 +103,7 @@ void OscInputObject::createParameters()
         p_->p_port = params()->createIntParameter(
                     "port", tr("udp port"),
                     tr("The port number"),
-                    8000, 1, 65535, 1, true, false);
+                    51000, 1, 65535, 1, true, false);
 
         p_->p_interpol = params()->createSelectParameter(
             "interpolation", tr("interpolation"),

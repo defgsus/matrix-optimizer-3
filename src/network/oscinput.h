@@ -60,9 +60,6 @@ signals:
     /** Emitted when a value has been received */
     void valueChanged(const QString& id);
 
-    /** Emitted when getListener() created a listener or
-        releaseListener() removed a listener */
-    void listenersChanged();
 };
 
 

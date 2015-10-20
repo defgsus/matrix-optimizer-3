@@ -54,6 +54,7 @@ class FrontItemEditor;
 class RecentFiles;
 class ObjectOutputView;
 class AssetBrowser;
+class OscView;
 
 /** Top-Level widget container and gui logic. */
 class MainWidgetController : public QObject
@@ -88,6 +89,7 @@ public:
     AssetBrowser * assetBrowser() const { return assetBrowser_; }
     //QObjectInspector * objectInspector() const { return qobjectInspector_; }
     ServerView * serverView() const { return serverView_; }
+    OscView * oscView() const { return oscView_; }
     QStatusBar * statusBar() const { return statusBar_; }
     QMenu * viewMenu() const { return viewMenu_; }
 
@@ -262,6 +264,7 @@ private:
     ObjectOutputView * objectOutputView_;
     AssetBrowser * assetBrowser_;
     TransportWidget * transportWidget_;
+    OscView * oscView_;
 
     bool isVisibleSequencer_,
          isVisibleClipView_,

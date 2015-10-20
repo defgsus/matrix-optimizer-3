@@ -32,6 +32,7 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/assetbrowser.h"
 #include "gui/widget/spacer.h"
+#include "gui/oscview.h"
 #include "object/scene.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -171,6 +172,9 @@ void MainWindow::createDockWidgets_()
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Browser"), controller_->assetBrowser());
+    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+
+    dock = createDockWidget(tr("OSC Listeners"), controller_->oscView());
     addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());
