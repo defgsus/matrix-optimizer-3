@@ -95,6 +95,7 @@ const QMap<QString, QVariant>& OscInput::values() const
 
 namespace {
 
+    /** Read POD type data from raw osc stream */
     template <typename T>
     T get_value(const char * d)
     {
@@ -113,9 +114,12 @@ namespace {
 
 void OscInput::Private::readData()
 {
-    const QByteArray data = udp->readData();
-    //while (udp->isData())
-    //    data += ;
+    /** @todo Read all data from osc inputs, not only last one */
+    QByteArray data;// = udp->readData();
+    while (udp->isData())
+        data = udp->readData();
+
+    //qInfo() << data;
 
     const QString id = QString::fromLatin1(data);
     if (id.isEmpty())
@@ -123,7 +127,7 @@ void OscInput::Private::readData()
 
     // go to end of zeros after id
     int i = id.size();
-    while (i < data.size() && data[i] == 0)
+    while (i < data.size() && (char)data[i] == 0)
         ++i;
     if (i >= data.size() - 1)
         return;
@@ -133,7 +137,7 @@ void OscInput::Private::readData()
     auto fmt = data[++i];
 
     // go to end of zeros after format(s)
-    while (i < data.size() && data[i] != 0)
+    while (i < data.size() && (char)data[i] != 0)
         ++i;
 
     i = (i/4 + 1) * 4;
@@ -159,6 +163,8 @@ void OscInput::Private::readData()
             valueMap.insert(id, get_value<int32_t>(&data.data()[i]));
         break;
     }
+
+    //qInfo() << p->value(id);
 
     emit p->valueChanged(id);
 }

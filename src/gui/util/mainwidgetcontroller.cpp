@@ -1763,9 +1763,7 @@ void MainWidgetController::start()
     if (!audioEngine_)
         audioEngine_ = new LiveAudioEngine(this);
     if (audioEngine_->scene() != scene_)
-    {
         audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
-    }
 
     // update audio config for clients
 #ifndef MO_DISABLE_SERVER

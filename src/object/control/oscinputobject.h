@@ -30,15 +30,17 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
     virtual QString getOutputName(SignalType, uint channel) const Q_DECL_OVERRIDE;
+    virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
     // ---- float interface ----
 
     Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
 
-
 signals:
 
-public slots:
+private slots:
+
+    void onValueChanged(const QString& id);
 
 private:
     struct Private;
