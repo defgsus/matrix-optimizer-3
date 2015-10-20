@@ -339,7 +339,9 @@ HEADERS += \
     $$PWD/object/texture/posterizeto.h \
     $$PWD/object/texture/kalisetto.h \
     $$PWD/tool/linearizerfloat.h \
-    $$PWD/object/control/oscinputobject.h
+    $$PWD/object/control/oscinputobject.h \
+    $$PWD/network/oscinput.h \
+    $$PWD/network/oscinputs.h
 
 
 SOURCES += \
@@ -635,4 +637,6 @@ SOURCES += \
     $$PWD/object/texture/posterizeto.cpp \
     $$PWD/object/texture/kalisetto.cpp \
     $$PWD/tool/linearizerfloat.cpp \
-    $$PWD/object/control/oscinputobject.cpp
+    $$PWD/object/control/oscinputobject.cpp \
+    $$PWD/network/oscinput.cpp \
+    $$PWD/network/oscinputs.cpp

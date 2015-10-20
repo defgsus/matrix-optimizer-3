@@ -8,7 +8,9 @@
     <p>created 10/13/2015</p>
 */
 
-#include <QList>
+#include <QVector>
+#include <QDebug>
+#include <QByteArray>
 
 #include "oscinputobject.h"
 #include "object/param/parameters.h"
@@ -16,6 +18,8 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "tool/linearizerfloat.h"
+#include "network/oscinput.h"
+#include "network/oscinputs.h"
 #include "io/datastream.h"
 
 namespace MO {
@@ -25,20 +29,37 @@ MO_REGISTER_OBJECT(OscInputObject)
 struct OscInputObject::Private
 {
     Private(OscInputObject * p)
-        : p(p)
+        : p     (p)
+        //, udp   (new UdpConnection)
+        , osc   (0)
     {
+        for (int i=0; i<10; ++i)
+            linear << new LinearizerFloat;
 
+        //connect(udp, &UdpConnection::dataReady, [=]() { readData(); });
+    }
+
+    ~Private()
+    {
+        for (auto l : linear)
+            delete l;
+        if (osc)
+            osc->releaseRef();
     }
 
     void setParamVis();
     void setNumChan();
+    void setPort();
+    void readData();
     void updateInterpolationMode();
 
     OscInputObject * p;
     ParameterSelect * p_interpol;
-    ParameterInt * p_numChan;
-    QList<ParameterText*> p_ids;
-    LinearizerFloat linear;
+    ParameterInt * p_numChan, * p_port;
+    QVector<ParameterText*> p_ids;
+    QVector<LinearizerFloat*> linear;
+
+    OscInput * osc;
 };
 
 
@@ -48,10 +69,10 @@ OscInputObject::OscInputObject(QObject *parent)
 {
     setName("OscInput");
 
-    p_->linear.insertValue(0, 0);
-    p_->linear.insertValue(1, 1);
-    p_->linear.insertValue(2, -2);
-    p_->linear.insertValue(3, 3);
+    p_->linear[0]->insertValue(0, 0);
+    p_->linear[0]->insertValue(1, 1);
+    p_->linear[0]->insertValue(2, -2);
+    p_->linear[0]->insertValue(3, 3);
 }
 
 OscInputObject::~OscInputObject()
@@ -79,6 +100,11 @@ void OscInputObject::createParameters()
 
     params()->beginParameterGroup("osc", tr("OSC"));
 
+        p_->p_port = params()->createIntParameter(
+                    "port", tr("udp port"),
+                    tr("The port number"),
+                    8000, 1, 65535, 1, true, false);
+
         p_->p_interpol = params()->createSelectParameter(
             "interpolation", tr("interpolation"),
             tr("Selects the interpolation mode for smoothing input values"),
@@ -96,7 +122,7 @@ void OscInputObject::createParameters()
         p_->p_numChan = params()->createIntParameter(
                     "num_channel", tr("number channels"),
                     tr("The number of different channels in this object"),
-                    1, 1, 20, 1, true, false);
+                    1, 1, p_->linear.size(), 1, true, false);
 
         for (int i=0; i<p_->p_numChan->maxValue(); ++i)
         {
@@ -117,6 +143,7 @@ void OscInputObject::onParametersLoaded()
     Object::onParametersLoaded();
     p_->updateInterpolationMode();
     p_->setNumChan();
+    p_->setPort();
 }
 
 void OscInputObject::onParameterChanged(Parameter *p)
@@ -126,6 +153,8 @@ void OscInputObject::onParameterChanged(Parameter *p)
         p_->updateInterpolationMode();
     if (p == p_->p_numChan)
         p_->setNumChan();
+    if (p == p_->p_port)
+        p_->setPort();
 
     if (p_->p_ids.indexOf((ParameterText*)p) >= 0)
         emitConnectionsChanged();
@@ -135,6 +164,17 @@ void OscInputObject::updateParameterVisibility()
 {
     Object::updateParameterVisibility();
     p_->setParamVis();
+}
+
+QString OscInputObject::getOutputName(SignalType st, uint channel) const
+{
+    if (st != ST_FLOAT)
+        return Object::getOutputName(st, channel);
+
+    if ((int)channel >= p_->p_ids.size())
+        return QString("id %").arg(channel);
+    else
+        return p_->p_ids[channel]->baseValue();
 }
 
 void OscInputObject::Private::setParamVis()
@@ -152,26 +192,31 @@ void OscInputObject::Private::setNumChan()
     p->setNumberOutputs(ST_FLOAT, num);
 }
 
-QString OscInputObject::getOutputName(SignalType st, uint channel) const
+void OscInputObject::Private::setPort()
 {
-    if (st != ST_FLOAT)
-        return Object::getOutputName(st, channel);
-
-    if ((int)channel >= p_->p_ids.size())
-        return QString("id %").arg(channel);
-    else
-        return p_->p_ids[channel]->baseValue();
+    if (osc)
+        OscInputs::releaseListener(osc->port());
+    const int num = p_port->baseValue();
+    osc = OscInputs::getListener(num);
 }
 
 void OscInputObject::Private::updateInterpolationMode()
 {
-    linear.setInterpolationMode(
-                (LinearizerFloat::InterpolationMode)p_interpol->baseValue());
+    for (auto l : linear)
+        l->setInterpolationMode(
+            (LinearizerFloat::InterpolationMode)p_interpol->baseValue());
 }
 
-Double OscInputObject::valueFloat(uint , Double time, uint ) const
+void OscInputObject::Private::readData()
 {
-    return p_->linear.getValue(time);
+
+}
+
+Double OscInputObject::valueFloat(uint chan, Double time, uint ) const
+{
+    return chan < (uint)p_->linear.size()
+            ? p_->linear[chan]->getValue(time)
+            : 0.;
 }
 
 
