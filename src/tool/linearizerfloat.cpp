@@ -24,7 +24,7 @@ struct LinearizerFloat::Private
     Private(LinearizerFloat*p)
         : p             (p)
         , lastInTime    (-1.)
-        , interpolMode  (IM_NONE)
+        , interpolMode  (MATH::IT_NONE)
     {
     }
 
@@ -44,7 +44,7 @@ struct LinearizerFloat::Private
     QReadWriteLock mutex;
     QList<TValue> list;
     Double lastInTime;
-    InterpolationMode interpolMode;
+    MATH::InterpolationType interpolMode;
 };
 
 
@@ -59,12 +59,12 @@ LinearizerFloat::~LinearizerFloat()
     delete p_;
 }
 
-LinearizerFloat::InterpolationMode LinearizerFloat::interpolationMode() const
+MATH::InterpolationType LinearizerFloat::interpolationType() const
 {
     return p_->interpolMode;
 }
 
-void LinearizerFloat::setInterpolationMode(InterpolationMode m)
+void LinearizerFloat::setInterpolationMode(MATH::InterpolationType m)
 {
     p_->interpolMode = m;
 }
@@ -126,7 +126,7 @@ Double LinearizerFloat::Private::getValue(Double time)
         --i;
     }
 
-    if (interpolMode == IM_NONE || j == list.end())
+    if (interpolMode == MATH::IT_NONE || j == list.end())
         return i->value;
 
     const Double
@@ -135,9 +135,9 @@ Double LinearizerFloat::Private::getValue(Double time)
             // interpolation step [0,1]
             t = (time - i->time) / std::max(0.00001, td);
 
-    if (interpolMode == IM_LINEAR)
+    if (interpolMode == MATH::IT_LINEAR)
         return MATH::interpol_linear(t, i->value, j->value);
-    else if (interpolMode == IM_SMOOTH)
+    else if (interpolMode == MATH::IT_SMOOTH)
         return MATH::interpol_smooth(t, i->value, j->value);
     else
         return MATH::interpol_smooth2(t, i->value, j->value);

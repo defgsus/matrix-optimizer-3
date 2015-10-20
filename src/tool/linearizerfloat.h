@@ -12,6 +12,7 @@
 #define MOSRC_TOOL_LINEARIZERFLOAT_H
 
 #include "types/float.h"
+#include "math/interpolationtype.h"
 
 namespace MO {
 
@@ -20,14 +21,6 @@ class LinearizerFloat
 {
 public:
 
-    enum InterpolationMode
-    {
-        IM_NONE,
-        IM_LINEAR,
-        IM_SMOOTH,
-        IM_SMOOTH2
-    };
-
     LinearizerFloat();
     ~LinearizerFloat();
 
@@ -35,7 +28,7 @@ public:
         Threadsafe. */
     Double getValue(Double time) const;
 
-    InterpolationMode interpolationMode() const;
+    MATH::InterpolationType interpolationType() const;
 
     // ---- setter ----
 
@@ -49,7 +42,7 @@ public:
         Threadsafe. */
     void insertValue(Double time, Double value);
 
-    void setInterpolationMode(InterpolationMode);
+    void setInterpolationMode(MATH::InterpolationType);
 
 private:
 

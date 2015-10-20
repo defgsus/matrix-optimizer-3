@@ -34,6 +34,7 @@
 #include "gui/widget/spacer.h"
 #include "gui/oscview.h"
 #include "object/scene.h"
+#include "tool/keyboardstate.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -280,7 +281,12 @@ void MainWindow::closeEvent(QCloseEvent * e)
 
 void MainWindow::keyPressEvent(QKeyEvent * e)
 {
-    controller_->scene()->keyDown(e->key());
+    KeyboardState::globalInstance().keyDown(e->key());
+}
+
+void MainWindow::keyReleaseEvent(QKeyEvent * e)
+{
+    KeyboardState::globalInstance().keyUp(e->key());
 }
 
 

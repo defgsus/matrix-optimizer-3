@@ -12,6 +12,7 @@
 #include "applicationtime.h"
 #include "network/netevent.h"
 #include "engine/serverengine.h"
+#include "engine/liveaudioengine.h"
 #include "io/application.h"
 #include "io/isclient.h"
 //#include "io/log.h"
@@ -19,10 +20,21 @@
 
 namespace MO {
 
-Double CurrentTime::startTime_ = applicationTime();
+namespace {
+
+
+static Double startTime_ = applicationTime();
+static LiveAudioEngine * audioEngine_ = 0;
+
+}
 
 Double CurrentTime::time()
 {
+#ifndef MO_DISABLE_CLIENT
+    if (audioEngine_)
+        return audioEngine_->second();
+#endif
+
     return applicationTime() - startTime_;
 }
 
@@ -41,5 +53,11 @@ void CurrentTime::setTime(Double time)
     }
 #endif
 }
+
+void CurrentTime::setAudioEngine(LiveAudioEngine * ae)
+{
+    audioEngine_ = ae;
+}
+
 
 }

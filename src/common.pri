@@ -341,7 +341,11 @@ HEADERS += \
     $$PWD/tool/linearizerfloat.h \
     $$PWD/object/control/oscinputobject.h \
     $$PWD/network/oscinput.h \
-    $$PWD/network/oscinputs.h
+    $$PWD/network/oscinputs.h \
+    $$PWD/tool/valuesmoother.h \
+    $$PWD/math/interpolationtype.h \
+    $$PWD/tool/keyboardstate.h \
+    $$PWD/object/control/keyboardobject.h
 
 
 SOURCES += \
@@ -639,4 +643,6 @@ SOURCES += \
     $$PWD/tool/linearizerfloat.cpp \
     $$PWD/object/control/oscinputobject.cpp \
     $$PWD/network/oscinput.cpp \
-    $$PWD/network/oscinputs.cpp
+    $$PWD/network/oscinputs.cpp \
+    $$PWD/tool/keyboardstate.cpp \
+    $$PWD/object/control/keyboardobject.cpp

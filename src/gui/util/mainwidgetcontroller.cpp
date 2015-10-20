@@ -34,6 +34,7 @@
 #include "io/filemanager.h"
 #include "io/helpsystem.h" // for setHelpUrl()
 #include "io/helpexporterhtml.h"
+#include "io/currenttime.h"
 #include "gui/timeline1dview.h"
 #include "gui/timeline1drulerview.h"
 #include "gui/ruler.h"
@@ -1764,6 +1765,8 @@ void MainWidgetController::start()
         audioEngine_ = new LiveAudioEngine(this);
     if (audioEngine_->scene() != scene_)
         audioEngine_->setScene(scene_, MO_AUDIO_THREAD);
+
+    CurrentTime::setAudioEngine(audioEngine_);
 
     // update audio config for clients
 #ifndef MO_DISABLE_SERVER

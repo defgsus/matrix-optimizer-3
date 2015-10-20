@@ -1415,15 +1415,6 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 //    render_();
 }
 
-void Scene::keyDown(int )
-{
-    //MO_DEBUG("down " << key);
-}
-
-void Scene::keyUp(int )
-{
-    //MO_DEBUG("up " << key);
-}
 
 void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
 {

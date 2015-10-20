@@ -15,6 +15,7 @@
 
 namespace MO {
 
+class LiveAudioEngine;
 
 class CurrentTime
 {
@@ -30,9 +31,10 @@ public:
     static void start() { setTime(0.0); }
     static void setTime(Double time);
 
+    static void setAudioEngine(LiveAudioEngine*);
+
 private:
 
-    static Double startTime_;
 };
 
 } // namespace MO
