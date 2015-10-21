@@ -644,7 +644,7 @@ ParameterImageList* Parameters::createImageListParameter(
 
 ParameterCallback * Parameters::createCallbackParameter(
             const QString& id, const QString& name, const QString& statusTip,
-            std::function<void()> callback)
+            std::function<void()> callback, bool modulateable)
 {
     ParameterCallback * param = 0;
 

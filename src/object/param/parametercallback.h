@@ -31,8 +31,6 @@ public:
     const QString& typeName() const Q_DECL_OVERRIDE { static QString s("callback"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_CALLBACK; }
 
-    virtual Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
-
     // ---------------- getter -----------------
 
     std::function<void()> getCallback() const { return p_func_; }
@@ -46,6 +44,13 @@ public:
     /** Execute the callback */
     void fire() { if (p_func_) p_func_(); }
 
+    // ------ modulation --------
+
+    int getModulatorTypes() const Q_DECL_OVERRIDE;
+    Modulator * getModulator(
+            const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
+    /** Calls fire() if input modulation > 0. */
+    void fireIfInput(Double time, uint thread);
 private:
 
     std::function<void()> p_func_;

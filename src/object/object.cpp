@@ -19,7 +19,6 @@
 #include "param/parameters.h"
 #include "param/parameterselect.h"
 #include "param/parameterfloat.h"
-#include "param/modulatoroutput.h"
 #include "audio/spatial/spatialsoundsource.h"
 #include "audio/spatial/spatialmicrophone.h"
 #include "util/objecteditor.h"

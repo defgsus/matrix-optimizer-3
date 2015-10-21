@@ -21,7 +21,7 @@ class ValueTransformationInterface
 public:
     virtual ~ValueTransformationInterface() { }
 
-    virtual Mat4 valueTransformation(Double time, uint thread) const = 0;
+    virtual Mat4 valueTransformation(uint channel, Double time, uint thread) const = 0;
 
 };
 

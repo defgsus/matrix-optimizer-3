@@ -53,7 +53,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
     orthoScaleX_    (3.f),
     orthoScaleY_    (3.f),
     fboSize_        (512, 512),
-    camera_         (new GEOM::FreeCamera()),
+    camera_         (new FreeCamera()),
     fbo_            (0),
     screenQuad_     (0),
     gridObject_     (0)

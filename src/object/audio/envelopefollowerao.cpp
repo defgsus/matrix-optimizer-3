@@ -13,7 +13,6 @@
 #include "audio/tool/envelopefollower.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
-#include "object/param/modulatoroutput.h"
 #include "io/datastream.h"
 #include "io/error.h"
 

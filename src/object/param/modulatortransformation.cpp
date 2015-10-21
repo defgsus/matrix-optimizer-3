@@ -82,7 +82,7 @@ Mat4 ModulatorTransformation::value(Double time, uint thread) const
     if (!modulator() || !modulator()->active(time, thread))
         return Mat4(1.);
 
-    return interface_->valueTransformation(time, thread);
+    return interface_->valueTransformation(outputChannel(), time, thread);
 }
 
 

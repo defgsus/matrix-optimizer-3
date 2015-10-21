@@ -86,6 +86,7 @@ protected:
     void resizeEvent(QResizeEvent *);
 
     void keyPressEvent(QKeyEvent *);
+    void keyReleaseEvent(QKeyEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
@@ -109,7 +110,7 @@ private:
     double fps_;
 
     bool isFreeCamera_;
-    GEOM::FreeCamera * cameraControl_;
+    FreeCamera * cameraControl_;
 
     QPoint lastMousePos_;
 

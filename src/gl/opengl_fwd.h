@@ -14,7 +14,8 @@
 
 namespace MO {
 
-    class Image;
+    class FreeCamera;
+    class FreeFloatCamera;
 
 namespace GL {
 
@@ -41,6 +42,9 @@ namespace GL {
     class RenderSettings;
 
 } // namespace GL
+
+
+
     namespace GEOM {
 
         class Geometry;
@@ -53,10 +57,8 @@ namespace GL {
 
         class ObjLoader;
 
-        class FreeCamera;
-        class FreeFloatCamera;
-
     } // namespace GEOM
+
 } // namespace MO
 
 #endif // MOSRC_GL_OPENGL_FWD_H

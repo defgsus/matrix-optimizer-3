@@ -14,7 +14,6 @@
 #include "types/vector.h"
 
 namespace MO {
-namespace GEOM {
 
 
 class FreeCamera
@@ -24,6 +23,8 @@ public:
 
     // -------------- getter -----------------
 
+    bool isInverse() const { return inverse_; }
+
     const Mat4& getMatrix() const { return matrix_; }
 
     /** Returns forward vector */
@@ -32,6 +33,8 @@ public:
     // -------------- setter -----------------
 
     void setMatrix(const Mat4& );
+
+    void setInverse(bool enable) { inverse_ = enable; }
 
     // ------------- navigation --------------
 
@@ -53,8 +56,7 @@ public:
 private:
 
     Mat4 matrix_;
-
-    //Float moveX_, moveY_, moveZ_;
+    bool inverse_;
 };
 
 /** A velocity based camera controller */
@@ -102,7 +104,8 @@ public:
         applyDamping(delta);
     }
 
-    void applyVelocity(Float delta);
+    void applyVelocity(Float delta) { applyVelocity(delta, delta); }
+    void applyVelocity(Float deltaVel, Float deltaRot);
     void applyDamping(Float delta);
 
 private:
@@ -112,7 +115,6 @@ private:
     Vec3 velo_, veloRot_;
 };
 
-} // namespace GEOM
 } // namespace MO
 
 #endif // MOSRC_GEOM_FREECAMERA_H

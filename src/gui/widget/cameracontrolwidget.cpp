@@ -21,7 +21,7 @@ namespace GUI {
 
 CameraControlWidget::CameraControlWidget(QWidget *parent)
     : QWidget           (parent)
-    , p_cameraControl_  (new GEOM::FreeCamera())
+    , p_cameraControl_  (new FreeCamera())
 {
 }
 

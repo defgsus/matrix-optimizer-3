@@ -13,7 +13,6 @@
 
 #include "modulator.h"
 #include "types/float.h"
-#include "modulatoroutput.h"
 #include "gl/opengl_fwd.h"
 
 namespace MO {

@@ -13,7 +13,6 @@
 
 #include "modulator.h"
 #include "types/float.h"
-#include "modulatoroutput.h"
 
 namespace MO {
 
@@ -81,7 +80,6 @@ protected:
 private:
 
     SourceType sourceType_;
-    ModulatorOutputStaticFloat * outStaticFloat_;
     ValueFloatInterface * interface_;
 
     Double amplitude_, timeOffset_;

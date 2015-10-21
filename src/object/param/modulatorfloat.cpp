@@ -24,7 +24,6 @@ ModulatorFloat::ModulatorFloat(const QString &name, const QString &modulatorId, 
                                Parameter * p, Object *parent)
     : Modulator     (name, modulatorId, outputId, p, parent),
       sourceType_   (ST_NONE),
-      outStaticFloat_   (0),
       interface_    (0),
       amplitude_    (1.0),
       timeOffset_   (0.0)
@@ -94,8 +93,6 @@ bool ModulatorFloat::hasTimeOffset() const
 
 void ModulatorFloat::modulatorChanged_()
 {
-    outStaticFloat_ = 0;
-
     if (modulator() == 0)
         sourceType_ = ST_NONE;
     else

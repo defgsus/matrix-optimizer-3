@@ -215,7 +215,6 @@ HEADERS += \
     src/object/audio/audioinao.h \
     src/object/param/modulatorevent.h \
     src/object/audio/filterbankao.h \
-    src/object/param/modulatoroutput.h \
     src/object/audio/envelopefollowerao.h \
     src/gl/bufferobject.h \
     src/object/audio/delayao.h \
@@ -345,7 +344,8 @@ HEADERS += \
     $$PWD/tool/valuesmoother.h \
     $$PWD/math/interpolationtype.h \
     $$PWD/tool/keyboardstate.h \
-    $$PWD/object/control/keyboardobject.h
+    $$PWD/object/control/keyboardobject.h \
+    $$PWD/object/transform/freefloattransform.h
 
 
 SOURCES += \
@@ -521,7 +521,6 @@ SOURCES += \
     src/object/audio/audioinao.cpp \
     src/object/param/modulatorevent.cpp \
     src/object/audio/filterbankao.cpp \
-    src/object/param/modulatoroutput.cpp \
     src/object/audio/envelopefollowerao.cpp \
     src/gl/bufferobject.cpp \
     src/object/audio/delayao.cpp \
@@ -645,4 +644,5 @@ SOURCES += \
     $$PWD/network/oscinput.cpp \
     $$PWD/network/oscinputs.cpp \
     $$PWD/tool/keyboardstate.cpp \
-    $$PWD/object/control/keyboardobject.cpp
+    $$PWD/object/control/keyboardobject.cpp \
+    $$PWD/object/transform/freefloattransform.cpp

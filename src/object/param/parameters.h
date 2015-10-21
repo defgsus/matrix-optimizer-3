@@ -173,9 +173,8 @@ public:
                 const QString& id, const QString& name, const QString& statusTip,
                 const QStringList& defaultValue = QStringList(), bool editable = true);
 
-    ParameterCallback * createCallbackParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                std::function<void()> callback);
+    ParameterCallback * createCallbackParameter(const QString& id, const QString& name, const QString& statusTip,
+                std::function<void()> callback, bool modulateable = true);
 
     ParameterTexture * createTextureParameter(
                 const QString& id, const QString& name, const QString& statusTip);

@@ -16,10 +16,10 @@
 #include "types/vector.h"
 
 namespace MO {
-namespace GEOM { class FreeCamera; }
+class FreeCamera;
 namespace GUI {
 
-/** Widget with a GEOM::FreeCamera and assigned mouse control */
+/** Widget with a FreeCamera and assigned mouse control */
 class CameraControlWidget : public QWidget
 {
     Q_OBJECT
@@ -28,8 +28,8 @@ public:
     ~CameraControlWidget();
 
     const Mat4& cameraMatrix() const;
-    GEOM::FreeCamera * cameraControl() { return p_cameraControl_; }
-    const GEOM::FreeCamera * cameraControl() const { return p_cameraControl_; }
+    FreeCamera * cameraControl() { return p_cameraControl_; }
+    const FreeCamera * cameraControl() const { return p_cameraControl_; }
 
 signals:
 
@@ -50,7 +50,7 @@ protected:
 
 private:
 
-    GEOM::FreeCamera * p_cameraControl_;
+    FreeCamera * p_cameraControl_;
     QPoint p_lastMousePos_;
 };
 

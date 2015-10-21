@@ -21,7 +21,7 @@
 #include "types/vector.h"
 
 namespace MO {
-namespace GEOM { class FreeCamera; }
+class FreeCamera;
 namespace GUI {
 
 /** A super-duper opengl shader based, fulldome-cube-able draw area.
@@ -190,7 +190,7 @@ private:
 
     QSize fboSize_;
 
-    GEOM::FreeCamera * camera_;
+    FreeCamera * camera_;
     GL::FrameBufferObject * fbo_;
     GL::ScreenQuad * screenQuad_;
     GL::Drawable * gridObject_;

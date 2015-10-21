@@ -763,7 +763,8 @@ public:
     const Mat4& transformation() const { return p_transformation_; }
 
     /** ValueTransformationInterface */
-    virtual Mat4 valueTransformation(Double , uint ) const Q_DECL_OVERRIDE
+    virtual Mat4 valueTransformation(
+            uint /*channel*/, Double /*time*/, uint /*thread*/) const Q_DECL_OVERRIDE
         { return p_transformation_; }
 
     /** Returns the position of this object */

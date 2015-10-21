@@ -12,11 +12,11 @@
 #include "math/vector.h"
 
 namespace MO {
-namespace GEOM {
 
 
 FreeCamera::FreeCamera()
     : matrix_   (1.0)
+    , inverse_  (false)
 {
 }
 
@@ -32,37 +32,58 @@ Vec3 FreeCamera::forward() const
 
 void FreeCamera::moveX(Float steps)
 {
-    matrix_ = glm::translate(Mat4(1.0), Vec3(steps,0,0)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::translate(matrix_, Vec3(steps,0,0));
+    else
+        matrix_ = glm::translate(Mat4(1.0), Vec3(steps,0,0)) * matrix_;
 }
 
 void FreeCamera::moveY(Float steps)
 {
-    matrix_ = glm::translate(Mat4(1.0), Vec3(0,steps,0)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::translate(matrix_, Vec3(0,steps,0));
+    else
+        matrix_ = glm::translate(Mat4(1.0), Vec3(0,steps,0)) * matrix_;
 }
 
 void FreeCamera::moveZ(Float steps)
 {
-    matrix_ = glm::translate(Mat4(1.0), Vec3(0,0,steps)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::translate(matrix_, Vec3(0,0,steps));
+    else
+        matrix_ = glm::translate(Mat4(1.0), Vec3(0,0,steps)) * matrix_;
 }
 
 void FreeCamera::move(const Vec3& steps)
 {
-    matrix_ = glm::translate(Mat4(1.0), steps) * matrix_;
+    if (inverse_)
+        matrix_ = glm::translate(matrix_, steps);
+    else
+        matrix_ = glm::translate(Mat4(1.0), steps) * matrix_;
 }
 
 void FreeCamera::rotateX(Float degree)
 {
-    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::rotate(matrix_, degree, Vec3(1,0,0));
+    else
+        matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
 }
 
 void FreeCamera::rotateY(Float degree)
 {
-    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,1,0)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::rotate(matrix_, degree, Vec3(0,1,0));
+    else
+        matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,1,0)) * matrix_;
 }
 
 void FreeCamera::rotateZ(Float degree)
 {
-    matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
+    if (inverse_)
+        matrix_ = glm::rotate(matrix_, degree, Vec3(0,0,1));
+    else
+        matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
 }
 
 void FreeCamera::setPosition(const Vec3 & v)
@@ -75,12 +96,12 @@ void FreeCamera::setPosition(const Vec3 & v)
 
 
 
-void FreeFloatCamera::applyVelocity(Float delta)
+void FreeFloatCamera::applyVelocity(Float deltaVel, Float deltaRot)
 {
-    cam_.move(velo_ * delta);
-    cam_.rotateZ(veloRot_.z * delta);
-    cam_.rotateY(veloRot_.y * delta);
-    cam_.rotateX(veloRot_.x * delta);
+    cam_.move(velo_ * deltaVel);
+    cam_.rotateZ(veloRot_.z * deltaRot);
+    cam_.rotateY(veloRot_.y * deltaRot);
+    cam_.rotateX(veloRot_.x * deltaRot);
 }
 
 void FreeFloatCamera::applyDamping(Float delta)
@@ -92,5 +113,4 @@ void FreeFloatCamera::applyDamping(Float delta)
 
 
 
-} // namespace GEOM
 } // namespace MO

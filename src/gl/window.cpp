@@ -24,12 +24,14 @@
 
 #include "window.h"
 #include "context.h"
-#include "io/error.h"
-#include "io/log.h"
 #include "geom/freecamera.h"
 #include "gl/scenerenderer.h"
+#include "tool/keyboardstate.h"
 #include "io/application.h"
 #include "io/version.h"
+#include "io/error.h"
+#include "io/log.h"
+
 namespace MO {
 namespace GL {
 
@@ -42,7 +44,7 @@ Window::Window()
       messure_      (new QTime()),
       fps_          (0.0),
       isFreeCamera_ (true),
-      cameraControl_(new GEOM::FreeCamera())
+      cameraControl_(new FreeCamera())
 {
     MO_DEBUG_GL("Window::Window()");
 
@@ -122,8 +124,15 @@ void Window::resizeEvent(QResizeEvent *)
     emit sizeChanged(size() * devicePixelRatio());
 }
 
+void Window::keyReleaseEvent(QKeyEvent * e)
+{
+    KeyboardState::globalInstance().keyUp(e->key());
+}
+
 void Window::keyPressEvent(QKeyEvent * e)
 {
+    KeyboardState::globalInstance().keyDown(e->key());
+
     e->ignore();
 
     if ((e->modifiers() == Qt::ALT && e->key() == Qt::Key_F)
