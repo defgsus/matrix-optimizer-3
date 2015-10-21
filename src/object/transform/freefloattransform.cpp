@@ -119,6 +119,8 @@ void FreeFloatTransform::updateParameterVisibility()
 
 void FreeFloatTransform::applyTransformation(Mat4 &matrix, Double time, uint thread) const
 {
+    reset_->fireIfInput(time, thread);
+
     if (doReset_)
     {
         freefloat_->setMatrix(Mat4(1.));

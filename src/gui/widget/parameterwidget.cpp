@@ -602,15 +602,17 @@ void ParameterWidget::openModulationPopup()
 
     menu->addSection(tr("modulation for %1").arg(param_->name()));
 
-    // --- parameter float ---
+    // --- float inputs ---
 
-    if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param_))
+    if (dynamic_cast<ParameterFloat*>(param_)
+      || dynamic_cast<ParameterInt*>(param_)
+      || dynamic_cast<ParameterCallback*>(param_))
     {
         addCreateModMenuFloat_(menu, param_);
 
         // link to existing modulator
         addLinkModMenu_(menu, param_,
-            pf->getModulatorTypes());
+            param_->getModulatorTypes());
 
         menu->addSeparator();
 
@@ -622,25 +624,6 @@ void ParameterWidget::openModulationPopup()
         // remove modulation
         addRemoveModMenu_(menu, param_);
 
-    }
-    else
-    if (ParameterInt * pi = dynamic_cast<ParameterInt*>(param_))
-    {
-        addCreateModMenuFloat_(menu, param_);
-
-        // link to existing modulator
-        addLinkModMenu_(menu, param_,
-            pi->getModulatorTypes());
-
-        menu->addSeparator();
-
-        // edit modulations
-        addEditModMenu_(menu, param_);
-
-        menu->addSeparator();
-
-        // remove modulation
-        addRemoveModMenu_(menu, param_);
     }
     else
         MO_ASSERT(false, "No modulation menu implemented for requested parameter '"

@@ -675,7 +675,7 @@ ParameterCallback * Parameters::createCallbackParameter(
 
     // override potentially previous
     param->setName(name);
-    param->setModulateable(false);
+    param->setModulateable(modulateable);
     param->setEditable(false);
     param->setStatusTip(statusTip);
     param->setCallback(callback);
