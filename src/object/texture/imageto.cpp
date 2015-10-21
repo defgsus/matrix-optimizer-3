@@ -109,6 +109,8 @@ void ImageTO::setImageFilename(const QString &fn)
 
 void ImageTO::getNeededFiles(IO::FileList & files)
 {
+    TextureObjectBase::getNeededFiles(files);
+
     if (!pFilename_->baseValue().isEmpty())
         files << IO::FileListEntry(pFilename_->baseValue(), IO::FT_TEXTURE);
 }
@@ -124,7 +126,7 @@ void ImageTO::initGl(uint thread)
     try
     {
         QString fn = IO::fileManager().localFilename(pFilename_->baseValue());
-        tex_ = GL::Texture::createFromImage(fn, getTextureFormat(),
+        tex_ = GL::Texture::createFromImage(fn, getDesiredTextureFormat(),
                                             pMipmaps_->baseValue());
     }
     catch (const Exception& e)

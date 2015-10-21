@@ -18,6 +18,7 @@
 #include "object/param/parametertext.h"
 #include "tool/valuesmoother.h"
 #include "tool/keyboardstate.h"
+#include "tool/enumnames.h"
 #include "io/datastream.h"
 #include "io/currenttime.h"
 
@@ -32,7 +33,7 @@ struct KeyboardObject::Private
         Value() : keyCode(0), p_key(0) { }
 
         int keyCode;
-        ParameterText * p_key;
+        ParameterInt * p_key;
         std::vector<ValueSmoother<Double>> smooth;
     };
 
@@ -124,13 +125,12 @@ void KeyboardObject::createParameters()
 
         for (int i=0; i<p_->values.size(); ++i)
         {
-            p_->values[i].p_key = params()->createTextParameter(
-                             QString("key_%1").arg(i),
+            p_->values[i].p_key = params()->createIntParameter(
+                             QString("keycode_%1").arg(i),
                              tr("key %1").arg(i),
                              tr("The recognized key"),
-                             TT_PLAIN_TEXT,
-                             QChar(i + 65),
-                             true, false);
+                             Qt::Key_A + i, true, false);
+            p_->values[i].p_key->setSpecificFlag(Parameter::SF_KEYCODE);
         }
 
     params()->endParameterGroup();
@@ -174,7 +174,7 @@ QString KeyboardObject::getOutputName(SignalType st, uint channel) const
     if ((int)channel >= p_->values.size())
         return QString("key %").arg(channel);
     else
-        return p_->values[channel].p_key->baseValue();
+        return enumName( Qt::Key(p_->values[channel].p_key->baseValue()) );
 }
 
 void KeyboardObject::setNumberThreads(uint num)
@@ -205,8 +205,7 @@ void KeyboardObject::Private::getKeyCodes()
 {
     for (auto & v : values)
     {
-        v.keyCode = v.p_key->baseValue().isEmpty()
-                ? 0 : v.p_key->baseValue().toStdString()[0];
+        v.keyCode = v.p_key->baseValue();
     }
 }
 

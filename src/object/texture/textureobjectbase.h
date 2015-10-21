@@ -71,8 +71,10 @@ public:
     /** Returns the currently set resolution mode */
     ResolutionMode getResolutionMode() const;
 
-    /** Returns the currently set texture format */
-    gl::GLenum getTextureFormat() const;
+    /** Returns the currently set resolution (from parameters) */
+    QSize getDesiredResolution() const;
+    /** Returns the currently set texture format (from parameters) */
+    gl::GLenum getDesiredTextureFormat() const;
 
     /** For a given input resolution, returns the resolution
         according to current ResolutionMode setting.
@@ -125,6 +127,11 @@ public:
     GL::ShaderSource shaderSource(uint index) const;
 
 protected:
+
+    /** Creates a texture with common-parameter specified settings.
+        Ownership is on caller. The texture is only created, not opengl initialized.
+        Use a form of GL::Texture::create() afterwards. */
+    GL::Texture * createTexture() const;
 
     /** Creates a new quad with attached shader.
         Can be called multiple times. Instances can later also be retrieved with shaderQuad().

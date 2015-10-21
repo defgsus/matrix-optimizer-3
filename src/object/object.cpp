@@ -1436,7 +1436,7 @@ void Object::emitConnectionsChanged()
 }
 
 
-void Object::setErrorMessage(const QString &errorString)
+void Object::setErrorMessage(const QString &errorString) const
 {
     if (errorString.isEmpty())
         return;

@@ -790,8 +790,10 @@ public:
     void clearError() { p_errorStr_.clear(); }
     /** Call this during initialization to signal an error to the gui/user.
         Passing an empty string does nothing. Otherise, error strings are
-        accumulated (with newline). */
-    void setErrorMessage(const QString& errorString);
+        accumulated (with newline).
+        This function is const to be called from anywhere but, of course,
+        changes the errorString() */
+    void setErrorMessage(const QString& errorString) const;
 
     // ------------------ files ----------------------
 
@@ -892,9 +894,10 @@ private:
     Mat4 p_transformation_;
 
     /** Used for deserialization errors */
-    QString p_ioLoadErrorStr_,
+    mutable QString
     /** Used during object creation/initialization */
-            p_errorStr_;
+            p_errorStr_,
+            p_ioLoadErrorStr_;
 };
 
 

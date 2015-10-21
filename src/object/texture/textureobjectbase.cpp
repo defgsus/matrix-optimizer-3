@@ -513,6 +513,25 @@ void TextureObjectBase::PrivateTO::createFbo(const QSize &s, uint depth)
     }
 }
 
+GL::Texture * TextureObjectBase::createTexture() const
+{
+    int width = p_to_->p_width->baseValue(),
+        height = p_to_->p_height->baseValue(),
+        format = p_to_->p_texFormat->baseValue(),
+        type = p_to_->p_texType->baseValue();
+
+    auto tex = new GL::Texture(
+            width,
+            height,
+            gl::GLenum(Parameters::getTexFormat(format, type)),
+            gl::GLenum(format),
+            gl::GLenum(type),
+            0
+            );
+
+    return tex;
+}
+
 bool TextureObjectBase::hasInputTextureChanged(Double time, uint thread) const
 {
     for (const ParameterTexture * t : p_to_->p_textures)
@@ -590,12 +609,19 @@ TextureObjectBase::ResolutionMode TextureObjectBase::getResolutionMode() const
     return ResolutionMode( p_to_->p_resMode->baseValue() );
 }
 
-gl::GLenum TextureObjectBase::getTextureFormat() const
+gl::GLenum TextureObjectBase::getDesiredTextureFormat() const
 {
     return (gl::GLenum)
             Parameters::getTexFormat(p_to_->p_texFormat->baseValue(),
                                      p_to_->p_texType->baseValue());
     //return gl::GLenum( p_to_->p_texFormat->baseValue() );
+}
+
+QSize TextureObjectBase::getDesiredResolution() const
+{
+    return QSize(
+                p_to_->p_width->baseValue(),
+                p_to_->p_height->baseValue());
 }
 
 QSize TextureObjectBase::adjustResolution(const QSize& res) const

@@ -47,6 +47,7 @@
 #include "gui/util/objectmenu.h"
 #include "gui/item/frontfloatitem.h"
 #include "model/objectmimedata.h"
+#include "tool/enumnames.h"
 #include "io/application.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -269,29 +270,62 @@ void ParameterWidget::createWidgets_()
     // --- int parameter ---
     if (ParameterInt * pi = dynamic_cast<ParameterInt*>(param_))
     {
-        defaultValueName = QString::number(pi->defaultValue());
-
-        SpinBox * spin = spinInt_ = new SpinBox(this);
-        l->addWidget(spin);
-
-        spin->setMinimum(pi->minValue());
-        spin->setMaximum(pi->maxValue());
-        spin->setSingleStep(pi->smallStep());
-        spin->setValue(pi->baseValue());
-        spin->spinBox()->setMaximumWidth(120);
-        spin->setEnabled(pi->isEditable());
-        spin->setStatusTip(pi->statusTip().isEmpty()
-                           ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
-                           : pi->statusTip());
-
-        setFocusProxy(spin);
-
-        connect(spin, &SpinBox::valueChanged, [=](int value)
+        if (pi->specificFlag() == Parameter::SF_KEYCODE)
         {
-            editor_->setParameterValue(pi, value);
-        });
+            defaultValueName = enumName( Qt::Key( pi->defaultValue() ) );
 
-        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
+            auto combo = new QComboBox(this);
+            l->addWidget(combo);
+
+            for (auto i = keycodeNames().begin(); i != keycodeNames().end(); ++i)
+            {
+                combo->addItem(i.value(), i.key());
+            }
+            combo->setCurrentText(enumName( Qt::Key( pi->baseValue() ) ));
+            combo->setEnabled(pi->isEditable());
+            combo->setStatusTip(pi->statusTip().isEmpty()
+                               ? tr("Select the keycode")
+                               : pi->statusTip());
+
+            setFocusProxy(combo);
+
+            connect(combo, static_cast<void(QComboBox::*)(int)>(
+                        &QComboBox::currentIndexChanged), [=](int idx)
+            {
+                editor_->setParameterValue(pi, combo->itemData(idx).toInt());
+            });
+
+            connect(breset, &QToolButton::pressed, [=]()
+            {
+                combo->setCurrentText(enumName( Qt::Key( pi->baseValue() ) ));
+            });
+        }
+        else
+        {
+            defaultValueName = QString::number(pi->defaultValue());
+
+            SpinBox * spin = spinInt_ = new SpinBox(this);
+            l->addWidget(spin);
+
+            spin->setMinimum(pi->minValue());
+            spin->setMaximum(pi->maxValue());
+            spin->setSingleStep(pi->smallStep());
+            spin->setValue(pi->baseValue());
+            spin->spinBox()->setMaximumWidth(120);
+            spin->setEnabled(pi->isEditable());
+            spin->setStatusTip(pi->statusTip().isEmpty()
+                               ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
+                               : pi->statusTip());
+
+            setFocusProxy(spin);
+
+            connect(spin, &SpinBox::valueChanged, [=](int value)
+            {
+                editor_->setParameterValue(pi, value);
+            });
+
+            connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pi->defaultValue(), true); });
+        }
     }
     else
 

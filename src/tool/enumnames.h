@@ -13,12 +13,16 @@
 
 #include <Qt>
 #include <QString>
+#include <QMap>
 
 namespace MO {
 
 /** Returns the name for a modifier */
 QString enumName(Qt::Modifier);
 
+QString enumName(Qt::Key);
+
+const QMap<int, QString>& keycodeNames();
 
 } // namespace MO
 

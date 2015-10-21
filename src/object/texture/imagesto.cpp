@@ -127,7 +127,7 @@ void ImagesTO::initGl(uint thread)
 
         try
         {
-            auto tex = GL::Texture::createFromImage(fnl, getTextureFormat(),
+            auto tex = GL::Texture::createFromImage(fnl, getDesiredTextureFormat(),
                                                     pMipmaps_->baseValue());
             tex_ << tex;
         }

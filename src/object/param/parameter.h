@@ -27,6 +27,14 @@ class Parameter
 {
 
 public:
+
+    enum SpecificFlag
+    {
+        SF_NONE,
+        /** ParameterInt is a keycode */
+        SF_KEYCODE
+    };
+
     Parameter(Object * object, const QString& idName, const QString& name);
     virtual ~Parameter();
 
@@ -62,6 +70,7 @@ public:
     const QString& idName() const { return idName_; }
     const QString& name() const { return name_; }
     const QString& statusTip() const { return statusTip_; }
+    SpecificFlag specificFlag() const { return p_specFlag_; }
 
     /** Returns a string in the form of 'RealObject/SubObject.parameterId'.
         Goes up the branch until the first Object::TG_REAL_OBJECT */
@@ -106,6 +115,8 @@ public:
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
     void setZombie(bool enable) { isZombie_ = enable; }
+    /** Sets a specific flag/type for the gui widget initialization */
+    void setSpecificFlag(SpecificFlag sf) { p_specFlag_ = sf; }
 
     void setGroup(const QString& id, const QString& name) { groupId_ = id; groupName_ = name; }
 
@@ -198,7 +209,8 @@ private:
     bool isEditable_, isModulateable_,
          isVisible_, isVisibleGraph_, isVisibleInterface_,
          isZombie_;
-
+    SpecificFlag
+        p_specFlag_;
     //QList<QString> modulatorIds_;
 
     QList<Modulator*> modulators_;
