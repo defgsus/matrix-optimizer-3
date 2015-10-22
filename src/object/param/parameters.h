@@ -215,6 +215,8 @@ public:
     ParameterTransformation * createTransformationParameter(
             const QString& id, const QString& name, const QString& statusTip, const Mat4& defaultValue = Mat4(1.));
 
+    ParameterFont * createFontParameter(
+            const QString& id, const QString& name, const QString& statusTip);
 private:
 
     Object * object_;

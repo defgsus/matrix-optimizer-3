@@ -37,7 +37,8 @@ namespace MO {
         ST_TIMELINE1D,
         ST_AUDIO,
         ST_CALLBACK,
-        ST_GEOMETRY
+        ST_GEOMETRY,
+        ST_FONT
     };
 
     namespace IO { class DataStream; }
@@ -79,6 +80,7 @@ namespace MO {
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;
+    class ParameterFont;
     class ParameterGeometry;
     class ParameterSelect;
     class ParameterTimeline1D;

@@ -53,10 +53,13 @@ private:
     ParameterText * pText_;
     ParameterInt * pMipmaps_;
     ParameterFloat * pSize_, *pR_, *pG_, *pB_, *pA_,
-        *pbR_, *pbG_, *pbB_, *pbA_;
-    ParameterSelect * pAlignH_, *pAlignV_;
+        *pbR_, *pbG_, *pbB_, *pbA_,
+        *pBorderSize_, *pCornerRad_;
+    ParameterSelect * pAlignH_, *pAlignV_, *pFit_,
+        *pJoinStyle_, *pBackAlpha_;
+    ParameterFont * pFont_;
     mutable GL::Texture * tex_;
-    bool doRenderText_;
+    mutable bool doRenderText_;
 };
 
 } // namespace MO

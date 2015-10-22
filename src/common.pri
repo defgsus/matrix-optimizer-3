@@ -346,7 +346,8 @@ HEADERS += \
     $$PWD/tool/keyboardstate.h \
     $$PWD/object/control/keyboardobject.h \
     $$PWD/object/transform/freefloattransform.h \
-    $$PWD/object/texture/textto.h
+    $$PWD/object/texture/textto.h \
+    $$PWD/object/param/parameterfont.h
 
 
 SOURCES += \
@@ -647,4 +648,5 @@ SOURCES += \
     $$PWD/tool/keyboardstate.cpp \
     $$PWD/object/control/keyboardobject.cpp \
     $$PWD/object/transform/freefloattransform.cpp \
-    $$PWD/object/texture/textto.cpp
+    $$PWD/object/texture/textto.cpp \
+    $$PWD/object/param/parameterfont.cpp

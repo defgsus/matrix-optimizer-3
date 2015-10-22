@@ -1404,6 +1404,7 @@ QString Object::getSignalName(SignalType t)
         case ST_AUDIO: return tr("audio");
         case ST_CALLBACK: return tr("callback");
         case ST_GEOMETRY: return tr("geometry");
+        case ST_FONT: return tr("font");
     }
     return QString();
 }

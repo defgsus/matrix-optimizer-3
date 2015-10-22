@@ -16,6 +16,7 @@
 #include "parameterimagelist.h"
 #include "parameterfloat.h"
 #include "parameterfilename.h"
+#include "parameterfont.h"
 #include "parametergeometry.h"
 #include "parameterselect.h"
 #include "parametertimeline1d.h"
@@ -991,5 +992,49 @@ ParameterTransformation * Parameters::createTransformationParameter(
 
     return param;
 }
+
+
+ParameterFont * Parameters::createFontParameter(
+        const QString &id, const QString &name, const QString &statusTip)
+{
+    ParameterFont* param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto pf = dynamic_cast<ParameterFont*>(p))
+        {
+            param = pf;
+        }
+        else
+        {
+            MO_ASSERT(false, "object '" << idName() << "' requested font "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterFont(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+    }
+
+    // override potentially previous
+    param->setName(name);
+    //param->setDefaultValue();
+    param->setStatusTip(statusTip);
+    param->setModulateable(false);
+    param->setEditable(false);
+
+    param->setGroup(curGroupId_, curGroupName_);
+
+    return param;
+}
+
 
 } // namespace MO

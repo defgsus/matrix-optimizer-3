@@ -22,6 +22,7 @@
 #include <QDragEnterEvent>
 #include <QDropEvent>
 #include <QMessageBox>
+#include <QFontComboBox>
 
 #include "parameterwidget.h"
 #include "spinbox.h"
@@ -36,6 +37,7 @@
 #include "object/param/parameterimagelist.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterfont.h"
 #include "object/param/parametergeometry.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
@@ -447,6 +449,27 @@ void ParameterWidget::createWidgets_()
     }
     else
 
+    // --- font parameter ---
+    if (ParameterFont * pf = dynamic_cast<ParameterFont*>(param_))
+    {
+        defaultValueName = pf->baseValue().toString();
+
+        auto combo = new QFontComboBox(this);
+        l->addWidget(combo);
+
+        setFocusProxy(combo);
+
+        connect(combo, &QFontComboBox::currentFontChanged, [=](const QFont& f)
+        {
+            editor_->setParameterValue(pf, f);
+        });
+
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            combo->setCurrentFont( pf->defaultValue() );
+        });
+    }
+    else
     // --- imagelist parameter ---
     if (ParameterImageList * pil = dynamic_cast<ParameterImageList*>(param_))
     {

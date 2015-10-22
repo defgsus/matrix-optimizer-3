@@ -10,10 +10,12 @@
 
 #include <QImage>
 #include <QPainter>
+#include <QFontMetricsF>
 
 #include "textto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterfont.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametertext.h"
 #include "object/param/parameterselect.h"
@@ -30,7 +32,7 @@ MO_REGISTER_OBJECT(TextTO)
 
 TextTO::TextTO(QObject *parent)
     : TextureObjectBase (parent)
-    , text_             ("texti")
+    , text_             ("coffee\n&\ncigarettes")
     , pText_            (0)
     , tex_              (0)
     , doRenderText_     (true)
@@ -68,10 +70,25 @@ void TextTO::createParameters()
                     TT_PLAIN_TEXT,
                     text_);
 
+        pFont_ = params()->createFontParameter(
+                    "font", tr("font"), tr("The font to render"));
+
         pSize_ = params()->createFloatParameter(
                     "size", tr("size"),
                     tr("A size parameter in relation to texture resolution"),
                     1., 0.01, true, false);
+
+        pFit_ = params()->createSelectParameter(
+                    "fit", tr("fitting"),
+                    tr("Selects the way the size is interpreted"),
+        { "none", "w", "h", "best" },
+        { tr("none"), tr("width"), tr("height"), tr("best") },
+        { tr("The font size is related to the texture height"),
+          tr("The font size is made to fit the text horizontally"),
+          tr("The font size is made to fit the text vertically"),
+          tr("The font size is made to fit the text vertically and horizontally") },
+        { 0, 1, 2, 3 },
+          3, true, false);
 
         pAlignH_ = params()->createSelectParameter("alignment_h", tr("alignment horiz."),
                 tr("Selects the alignment for the images"),
@@ -91,7 +108,7 @@ void TextTO::createParameters()
 
         pMipmaps_ = params()->createIntParameter(
                     "mipmaps", tr("mip-map levels"),
-                    tr("The number of mip-map levels to create, "
+                    tr("The maximum number of mip-map levels to create, "
                        "where each level is half the size of the previous level, "
                        "0 means no mip-maps"),
                     0, true, false);
@@ -100,7 +117,7 @@ void TextTO::createParameters()
     params()->endParameterGroup();
 
 
-    params()->beginParameterGroup("text", tr("text"));
+    params()->beginParameterGroup("color", tr("color"));
 
         pR_ = params()->createFloatParameter(
                     "red", tr("red"), tr("Red amount of text color"),
@@ -129,17 +146,60 @@ void TextTO::createParameters()
                     1., 0.0, 1.0, 0.1, true, false);
 
     params()->endParameterGroup();
+
+
+    params()->beginParameterGroup("border", tr("border"));
+
+        pBorderSize_ = params()->createFloatParameter(
+                    "border_size", tr("border width"),
+                    tr("Width of the border in relation to resolution"),
+                    0., 0.0, 1.0, 0.01, true, false);
+
+        pJoinStyle_ = params()->createSelectParameter("border_join", tr("corner style"),
+                tr("The way the corners of the border are drawn"),
+                { "bevel", "miter", "round" },
+                { tr("flat"), tr("sharp"), tr("round") },
+                { tr("Flat corners"), tr("Sharp corners"), tr("Round corners") },
+                { Qt::BevelJoin, Qt::MiterJoin, Qt::RoundJoin },
+                Qt::MiterJoin, true, false);
+
+        pCornerRad_ = params()->createFloatParameter(
+                    "corner_radius", tr("corner radius"),
+                    tr("Radius of the rounded corner in relation to resolution"),
+                    0.1, 0.0, 1.0, 0.01, true, false);
+
+        pBackAlpha_ = params()->createBooleanParameter(
+                    "back_alpha", tr("clip border"),
+                    tr("Makes the corners outside the frame transparent"),
+                    tr("Corners are drawn with the background color"),
+                    tr("Corners are transparent"),
+                    true,
+                    true, false);
+
+    params()->endParameterGroup();
+
+    // XXX There should be an initResolutionMode() for constructor
+    setResolutionMode(RM_CUSTOM);
 }
 
 void TextTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == pText_
+    if (       p == pText_
+            || p == pR_ || p == pG_ || p == pB_ || p == pA_
+            || p == pbR_ || p == pbG_ || p == pbB_ || p == pbA_
             || p == pMipmaps_
             || p == pAlignH_
             || p == pAlignV_
-            || p == pSize_)
+            || p == pSize_
+            || p == pFont_
+            || p == pFit_
+            || p == pBorderSize_
+            || p == pJoinStyle_
+            || p == pCornerRad_
+            || p == pBackAlpha_
+            )
         doRenderText_ = true;
 }
 
@@ -152,6 +212,9 @@ void TextTO::onParametersLoaded()
 void TextTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
+
+    pCornerRad_->setVisible( pJoinStyle_->baseValue() == Qt::RoundJoin );
+    pBackAlpha_->setVisible( pJoinStyle_->baseValue() != Qt::MiterJoin );
 }
 
 void TextTO::setText(const QString &text)
@@ -187,6 +250,8 @@ const GL::Texture * TextTO::valueTexture(uint chan, Double , uint ) const
 
     if (doRenderText_)
     {
+        doRenderText_ = false;
+
         if (tex_)
         {
             if (tex_->isHandle())
@@ -194,31 +259,94 @@ const GL::Texture * TextTO::valueTexture(uint chan, Double , uint ) const
             delete tex_;
         }
 
-        // create user-defined format
-        //tex_ = createTexture();
-
+        // create image
         QImage img(getDesiredResolution(), QImage::Format_ARGB32_Premultiplied);
-        img.fill(QColor(std::max(0, std::min(255, int(255 * pbR_->baseValue()))),
-                          std::max(0, std::min(255, int(255 * pbG_->baseValue()))),
-                          std::max(0, std::min(255, int(255 * pbB_->baseValue()))),
-                          std::max(0, std::min(255, int(255 * pbA_->baseValue())))
-                          ));
+
+        const int flags = pAlignH_->baseValue() | pAlignV_->baseValue();
+        const int msize = std::min(img.width(), img.height());
+        const qreal border = msize * .5 * pBorderSize_->baseValue(),
+                    hborder = .5 * border;
+        const QRectF irect = QRectF(img.rect().adjusted(border, border, -border, -border));
+
+        // init background
+        const QColor fillColor = QColor(std::max(0, std::min(255, int(255 * pbR_->baseValue()))),
+                                        std::max(0, std::min(255, int(255 * pbG_->baseValue()))),
+                                        std::max(0, std::min(255, int(255 * pbB_->baseValue()))),
+                                        std::max(0, std::min(255, int(255 * pbA_->baseValue()))));
+        const bool backAlpha = pBackAlpha_->baseValue()
+                && pJoinStyle_->baseValue() != Qt::MiterJoin
+                && border > 0.;
+        if (backAlpha)
+            img.fill(QColor(255,255,255,0));
+        else
+            img.fill(fillColor);
+
+        // get font (to change size)
+        QFont font = pFont_->baseValue();
+
+        // -- choose size --
+
+        Double si = pSize_->baseValue();
+        if (pFit_->baseValue() == 0)
+            si *= irect.height();
+        else
+        {
+            font.setPixelSize(1);
+            QRectF br = QFontMetricsF(font).boundingRect(irect, flags, pText_->baseValue());
+
+            if (br.width() < .1)
+                br.setWidth(.1);
+            if (br.height() < .1)
+                br.setHeight(.1);
+            switch (pFit_->baseValue())
+            {
+                case 1: si *= irect.width() / br.width(); break;
+                case 2: si *= irect.height() / br.height(); break;
+                case 3: si *= std::min(irect.width() / br.width(),
+                                       irect.height() / br.height()); break;
+            }
+        }
+
+        font.setPixelSize(std::max(1, int(si)));
 
         QPainter p(&img);
-
-        QFont font = p.font();
-        font.setPixelSize(std::max(1, int(img.height() * pSize_->baseValue())));
+        p.setRenderHint(QPainter::Antialiasing, true);
         p.setFont(font);
 
-        p.setPen(QColor(std::max(0, std::min(255, int(255 * pR_->baseValue()))),
-                        std::max(0, std::min(255, int(255 * pG_->baseValue()))),
-                        std::max(0, std::min(255, int(255 * pB_->baseValue()))),
-                        std::max(0, std::min(255, int(255 * pA_->baseValue())))
+        const QPen txtpen = QPen(
+                        QColor(std::max(0, std::min(255, int(255 * pR_->baseValue()))),
+                               std::max(0, std::min(255, int(255 * pG_->baseValue()))),
+                               std::max(0, std::min(255, int(255 * pB_->baseValue()))),
+                               std::max(0, std::min(255, int(255 * pA_->baseValue())))
                         ));
 
-        p.drawText(QRectF(img.rect()),
-                   pAlignH_->baseValue() | pAlignV_->baseValue(),
+        // border
+        if (border > 0.)
+        {
+            QPen pen(txtpen);
+            pen.setWidthF(border);
+            pen.setJoinStyle(Qt::PenJoinStyle(pJoinStyle_->baseValue()));
+            p.setPen(pen);
+            if (backAlpha)
+                p.setBrush(QBrush(fillColor));
+            else
+                p.setBrush(Qt::NoBrush);
+            if (pJoinStyle_->baseValue() == Qt::RoundJoin)
+            {
+                const qreal rr = msize * pCornerRad_->baseValue();
+                p.drawRoundedRect(irect.adjusted(-hborder, -hborder, hborder, hborder),
+                                  rr, rr);
+            }
+            else
+                p.drawRect(irect.adjusted(-hborder, -hborder, hborder, hborder));
+        }
+
+        // text
+        p.setPen(txtpen);
+        p.drawText(irect,
+                   flags,
                    pText_->baseValue());
+
 
         p.end();
 
