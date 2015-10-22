@@ -81,21 +81,29 @@ void Parameters::deserialize(IO::DataStream & io)
         QString id;
         io >> id;
 
-        // length for skipping
-        qint64 length;
-        io >> length;
-
-        Parameter * p = findParameter(id);
-        if (!p)
+        try
         {
-#ifdef MO_DEBUG
-            MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
-                                "in input stream.");
-#endif
-            io.skip(length);
+            // length for skipping
+            qint64 length;
+            io >> length;
+
+            Parameter * p = findParameter(id);
+            if (!p)
+            {
+    #ifdef MO_DEBUG
+                MO_IO_WARNING(READ, "skipping unknown parameter '" << id << "' "
+                                    "in input stream.");
+    #endif
+                io.skip(length);
+            }
+            else
+                p->deserialize(io);
         }
-        else
-            p->deserialize(io);
+        catch (Exception& e)
+        {
+            e << "\nin param-id '" << id <<"'";
+            throw;
+        }
     }
 }
 

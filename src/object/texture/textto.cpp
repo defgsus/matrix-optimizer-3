@@ -169,7 +169,7 @@ void TextTO::createParameters()
                     0.1, 0.0, 1.0, 0.01, true, false);
 
         pBackAlpha_ = params()->createBooleanParameter(
-                    "back_alpha", tr("clip border"),
+                    "back_trans", tr("clip border"),
                     tr("Makes the corners outside the frame transparent"),
                     tr("Corners are drawn with the background color"),
                     tr("Corners are transparent"),
@@ -346,7 +346,6 @@ const GL::Texture * TextTO::valueTexture(uint chan, Double , uint ) const
         p.drawText(irect,
                    flags,
                    pText_->baseValue());
-
 
         p.end();
 
