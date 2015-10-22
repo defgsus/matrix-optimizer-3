@@ -723,7 +723,8 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     int numCon = std::max(inputItems.size(), outputItems.size());
 
     // set size accordingly to number of inputs
-    minimumSize.setWidth(numCon > 0 ? 2 : 1);
+    minimumSize.setWidth(1 + (inputItems.isEmpty() ? 0 : 1)
+                           + (outputItems.isEmpty() || object->numChildren()==0 ? 0 : 1) );
     minimumSize.setHeight(1);
     if (numCon)
         minimumSize.rheight() += 1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
@@ -902,6 +903,9 @@ void AbstractObjectItem::adjustSizeToChildren()
                 std::round(crectf.width() / s.width()),
                 std::round(crectf.height() / s.height())
                 );
+    // make room for outputs
+    if (!list.isEmpty() && !p_oi_->outputItems.isEmpty())
+        crect.adjust(0,0,1,0);
 
     /// @todo also shrink top-left corner
 

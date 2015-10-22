@@ -213,11 +213,12 @@ void ShpLoader::Private::getPolyPart(SHPObject * shp, int start, int end, bool /
 {
     QVector<DVec2> points;
     QPolygonF polygon;
-    for (int j=start; j < end; ++j)
+    const int len = end - start;
+    for (int j=0; j < len; ++j)
     {
-        points << DVec2(shp->padfX[j], shp->padfY[j]);
+        points << DVec2(shp->padfX[start+len-1-j], shp->padfY[start+len-1-j]);
 //                        hasZ ? shp->padfZ[j] : 0.f);
-        polygon << QPointF(shp->padfX[j], shp->padfY[j]);
+        polygon << QPointF(shp->padfX[start+j], shp->padfY[start+j]);
     }
     polygons << polygon;
 

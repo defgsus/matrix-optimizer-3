@@ -28,6 +28,7 @@ public:
     std::list<TPPLPoly> out_tri;
 
     void clear();
+    void checkLoop();
     /** Intersect every triangle in tris with @ref input and
         store in @ref multiInput */
     void intersectBasis();
@@ -111,9 +112,19 @@ void Tesselator::createTriangulationMesh(
     setTriangulationMesh(mesh);
 }
 
+void TesselatorPrivate::checkLoop()
+{
+    if (input.isEmpty())
+        return;
+    QVector<DVec2> & in = input.back();
+    if (in.front() == in.back())
+        in.pop_back();
+}
+
 void Tesselator::addPolygon(const QVector<DVec2> &points)
 {
     p_->input << points;
+    p_->checkLoop();
 }
 
 
@@ -123,6 +134,7 @@ void Tesselator::addPolygon(const QVector<Vec2> &points)
     auto & in = p_->input.back();
     for (auto p : points)
         in.append(DVec2(p.x, p.y));
+    p_->checkLoop();
 }
 
 void Tesselator::addPolygon(const QVector<QPointF> &points)
@@ -131,6 +143,7 @@ void Tesselator::addPolygon(const QVector<QPointF> &points)
     auto & in = p_->input.back();
     for (auto p : points)
         in.append(DVec2(p.x(), p.y()));
+    p_->checkLoop();
 }
 
 void Tesselator::addPolygon(const QPolygonF &points)
@@ -139,6 +152,7 @@ void Tesselator::addPolygon(const QPolygonF &points)
     auto & in = p_->input.back();
     for (auto p : points)
         in.append(DVec2(p.x(), p.y()));
+    p_->checkLoop();
 }
 
 void Tesselator::tesselate()
@@ -174,27 +188,35 @@ void TesselatorPrivate::tesselate(bool /*trianglesOnly*/)
     else
         meshedInput = input;
 
-    MO_PRINT("-- " << meshedInput.size() << " polygons --");
+/*    MO_PRINT("-- " << meshedInput.size() << " polygons --");
     for (auto & p : meshedInput)
         MO_PRINT(p.size() << " vertices");
+*/
 
     TPPLPartition partition;
     std::list<TPPLPoly> in_poly;
 
     for (const auto & input : meshedInput)
     {
+        if (input.size() < 3)
+            continue;
+        int si = input.size();
+        if (input.front() == input.back())
+            --si;
+
         in_poly.push_back(TPPLPoly());
         TPPLPoly& poly = in_poly.back();
 
-        poly.Init(input.size());
-        for (int i=0; i<input.size(); ++i)
+        poly.Init(si);
+        poly.SetHole(false);
+        for (int i=0; i<si; ++i)
         {
             poly.GetPoints()[i] = TPPLPoint(input[i].x, input[i].y);
         }
     }
 
     partition.Triangulate_EC(&in_poly, &out_tri);
-    MO_PRINT(out_tri.size() << " triangles");
+//    MO_PRINT(out_tri.size() << " triangles");
 
     fixWinding();
 }

@@ -87,12 +87,15 @@ void ObjectGraphConnectItem::setText(const QString & t)
     {
         text_ = new QGraphicsTextItem(t, this);
         text_->setFont(ObjectGraphSettings::fontConnector());
-        // XXX position not clear to me
-        text_->setPos(rect().left() + 9,
+        // XXX position offset not clear to me
+        text_->setPos(isInput_
+                      ? rect().left() + 9
+                      : rect().right() - text_->boundingRect().width() - 9,
                       rect().top() - text_->boundingRect().height()/3 );
 
-        text_->setDefaultTextColor(
-                    ObjectGraphSettings::colorText(objectItem_->object()));
+        text_->setDefaultTextColor(brush().color().lighter());
+        //text_->setDefaultTextColor(
+        //            ObjectGraphSettings::colorText(objectItem_->object()));
 
         setFlag(ItemClipsToShape, false);
     }
