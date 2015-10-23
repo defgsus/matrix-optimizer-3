@@ -15,6 +15,7 @@
 #ifndef MO_DISABLE_DUMB
 #include <dumb.h>
 #endif
+#include <glib.h>
 
 #include <QTextStream>
 
@@ -64,6 +65,12 @@ QString apiVersionString()
     QTextStream s(&str);
 
     s << "<table>\n"
+      << "<tr><td>Gnu-C</td><td>"
+            << __GNUC__ << "." << __GNUC_MINOR__ << "." << __GNUC_PATCHLEVEL__
+            << " / GLIB "
+            << GLIB_MAJOR_VERSION
+            << "." << GLIB_MINOR_VERSION
+            << "." << GLIB_MICRO_VERSION << "</td></tr>\n"
       << "<tr><td>AngelScript</td><td>" << ANGELSCRIPT_VERSION_STRING << "</td></tr>\n"
       << "<tr><td>PortAudio</td><td>" << Pa_GetVersionText() << "</td></tr>\n"
       << "<tr><td>PortMidi</td><td>latest (2006)</td></tr>\n"

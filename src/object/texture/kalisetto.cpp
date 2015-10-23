@@ -44,7 +44,7 @@ struct KaliSetTO::Private
             *p_scale, *p_scaleX, *p_scaleY,
             *p_bright, *p_exponent, *p_freq;
     ParameterInt
-            *p_numIter;
+            *p_numIter, *p_AntiAlias_;
     ParameterSelect
             *p_numDim, *p_colMode, *p_outMode, *p_mono;
     GL::Uniform
@@ -177,6 +177,12 @@ void KaliSetTO::Private::createParameters()
 
     to->params()->beginParameterGroup("color", tr("color"));
 
+        p_AntiAlias_ = to->params()->createIntParameter(
+                    "aa", tr("antialiasing"),
+                    tr("Square root of the number of multi-samples"),
+                    0, true, false);
+        p_AntiAlias_->setMinValue(0);
+
         p_colMode = to->params()->createSelectParameter(
             "color_mode", tr("color mode"),
             tr("Defines the kind of value to use for the output color"),
@@ -229,7 +235,8 @@ void KaliSetTO::onParameterChanged(Parameter * p)
         || p == p_->p_numIter
         || p == p_->p_numDim
         || p == p_->p_outMode
-        || p == p_->p_mono)
+        || p == p_->p_mono
+        || p == p_->p_AntiAlias_)
         requestReinitGl();
 
 }
@@ -273,6 +280,7 @@ void KaliSetTO::Private::initGl()
         src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
         src.addDefine(QString("#define SINE_OUT %1").arg(p_outMode->baseValue()), false);
         src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()), false);
+        src.addDefine(QString("#define AA %1").arg(p_AntiAlias_->baseValue()), false);
     }
     catch (Exception& e)
     {

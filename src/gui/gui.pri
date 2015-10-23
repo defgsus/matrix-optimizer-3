@@ -121,7 +121,8 @@ HEADERS += \
     $$PWD/widget/imagelistwidget.h \
     $$PWD/imagelistdialog.h \
     $$PWD/widget/imagelist.h \
-    $$PWD/oscview.h
+    $$PWD/oscview.h \
+    $$PWD/widget/blinklamp.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -242,4 +243,5 @@ SOURCES += \
     $$PWD/widget/imagelistwidget.cpp \
     $$PWD/imagelistdialog.cpp \
     $$PWD/widget/imagelist.cpp \
-    $$PWD/oscview.cpp
+    $$PWD/oscview.cpp \
+    $$PWD/widget/blinklamp.cpp

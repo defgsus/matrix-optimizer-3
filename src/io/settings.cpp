@@ -16,6 +16,7 @@
 
 #include "settings.h"
 #include "projection/projectionsystemsettings.h"
+#include "gl/window.h"
 #include "io/diskrendersettings.h"
 #include "io/error.h"
 #include "io/files.h"
@@ -252,6 +253,14 @@ void Settings::storeGeometry(QWindow * win)
     setValue("Geometry/Geom/" + win->objectName(), win->geometry());
     setValue("Geometry/Frame/" + win->objectName(), win->frameGeometry());
 #endif
+
+    // save fullscreen data
+    if (GL::Window * glwin = dynamic_cast<GL::Window*>(win))
+    {
+        setValue("Geometry/Fullscreen/" + win->objectName(), glwin->isFullscreen());
+        if (glwin->isFullscreen())
+            setValue("Geometry/OldGeom/" + win->objectName(), glwin->oldGeometry());
+    }
 }
 
 bool Settings::restoreGeometry(QWindow * win)
@@ -289,6 +298,20 @@ bool Settings::restoreGeometry(QWindow * win)
     }
     */
 #endif
+
+    // restore fullscreen data
+    if (GL::Window * glwin = dynamic_cast<GL::Window*>(win))
+    {
+        const QString
+                keyFs = "Geometry/Fullscreen/" + win->objectName(),
+                keyOldGeom = "Geometry/OldGeom/" + win->objectName();
+        if (contains(keyFs) && value(keyFs).toBool())
+        {
+            const QRect r = getValue(keyOldGeom).value<QRect>();
+            win->setGeometry(r);
+            glwin->setFullscreen(true);
+        }
+    }
 
     if (!found)
     {

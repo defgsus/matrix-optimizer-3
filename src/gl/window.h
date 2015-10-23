@@ -33,6 +33,7 @@ public:
     ~Window();
 
     bool isAnimating() const { return animating_; }
+    bool isFullscreen() const { return windowState() & Qt::WindowFullScreen; }
 
     /** Returns the opengl renderer associated to this window */
     SceneRenderer * renderer() const { return renderer_; }
@@ -54,6 +55,7 @@ public:
     void setScreen(uint screenIndex);
     using QWindow::setScreen;
 
+    const QRect& oldGeometry() const { return oldWinRect_; }
 signals:
 
     void keyPressed(QKeyEvent *);
@@ -71,6 +73,8 @@ signals:
 
 public slots:
 
+    void setFullscreen(bool);
+
     /** Immediately render on current thread */
     void renderNow();
     /** Puts a render request into the event-loop */
@@ -81,16 +85,16 @@ public slots:
     void stopAnimation() { animating_ = false; }
 
 protected:
-    bool event(QEvent *);
-    void exposeEvent(QExposeEvent *);
-    void resizeEvent(QResizeEvent *);
+    bool event(QEvent *) Q_DECL_OVERRIDE;
+    void exposeEvent(QExposeEvent *) Q_DECL_OVERRIDE;
+    void resizeEvent(QResizeEvent *) Q_DECL_OVERRIDE;
 
-    void keyPressEvent(QKeyEvent *);
-    void keyReleaseEvent(QKeyEvent *);
-    void mousePressEvent(QMouseEvent *);
-    void mouseMoveEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
-    void wheelEvent(QWheelEvent *);
+    void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
+    void mousePressEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void mouseReleaseEvent(QMouseEvent *) Q_DECL_OVERRIDE;
+    void wheelEvent(QWheelEvent *) Q_DECL_OVERRIDE;
 
 private:
 
@@ -115,6 +119,7 @@ private:
     QPoint lastMousePos_;
 
     QString displayText_;
+    QRect oldWinRect_;
 };
 
 

@@ -1,5 +1,6 @@
 #include <to/header>
 
+//#define AA 0-... (quadratic)
 //#define SINE_OUT 0,1
 //#define NUM_ITER 1-x
 // 0 final, 1 average, 2 max, 3 min
@@ -78,7 +79,17 @@ vec3 kali_color(in vec2 pos)
 
 void main()
 {
+#if AA == 0
     vec3 col = kali_color(v_texCoord.xy * 2. - 1.);
+#else
+    vec3 col = vec3(0.);
+    for (int j=0; j<AA; ++j)
+    for (int i=0; i<AA; ++i)
+    {
+        col += kali_color((v_texCoord.xy + vec2(i,j) / float(AA) * u_resolution.zw) * 2. - 1.);
+    }
+    col /= (AA * AA);
+#endif
     col = pow(max(col * u_bright.x, vec3(0.)), vec3(u_bright.y));
 
 #if MONOCHROME

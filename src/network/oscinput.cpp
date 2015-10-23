@@ -32,6 +32,7 @@ struct OscInput::Private
     }
 
     void readData();
+    void readMessage(const QByteArray&);
 
     OscInput * p;
     UdpConnection * udp;
@@ -114,11 +115,12 @@ namespace {
 
 void OscInput::Private::readData()
 {
-    /** @todo Read all data from osc inputs, not only last one */
-    QByteArray data;// = udp->readData();
     while (udp->isData())
-        data = udp->readData();
+        readMessage(udp->readData());
+}
 
+void OscInput::Private::readMessage(const QByteArray & data)
+{
     //qInfo() << data;
 
     const QString id = QString::fromLatin1(data);

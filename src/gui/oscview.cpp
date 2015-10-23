@@ -12,8 +12,10 @@
 #include <QLayout>
 
 #include "oscview.h"
+#include "gui/widget/blinklamp.h"
 #include "network/oscinput.h"
 #include "network/oscinputs.h"
+
 
 namespace MO {
 namespace GUI {
@@ -32,6 +34,7 @@ struct OscView::Private
 
     OscView * widget;
     QListWidget * listPort, * listValue;
+    BlinkLamp * inLamp;
 };
 
 OscView::OscView(QWidget *parent)
@@ -55,6 +58,9 @@ void OscView::Private::createWidgets()
 {
     auto lv = new QVBoxLayout(widget);
 
+        inLamp = new BlinkLamp(QSize(8, 8), widget);
+        lv->addWidget(inLamp);
+
         listPort = new QListWidget(widget);
         lv->addWidget(listPort);
         connect(listPort, SIGNAL(currentRowChanged(int)),
@@ -71,6 +77,7 @@ void OscView::onListenersChanged()
 
 void OscView::onValuesChanged()
 {
+    p_->inLamp->blink();
     p_->updateValues();
 }
 
@@ -86,6 +93,8 @@ void OscView::Private::updateListeners()
 
     const auto oscs = OscInputs::listeners();
 
+    int prevSel = listPort->currentRow();
+
     listPort->clear();
     for (OscInput * osc : oscs)
     {
@@ -98,6 +107,14 @@ void OscView::Private::updateListeners()
                 widget, SLOT(onValuesChanged()),
                 Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
     }
+
+    // select previous
+    if (prevSel >= 0 && prevSel < listPort->count())
+        listPort->setCurrentRow(prevSel);
+    // or select first if none was selected previously
+    else
+        if (listPort->count())
+            listPort->setCurrentRow(0);
 
     widget->setUpdatesEnabled(true);
 }

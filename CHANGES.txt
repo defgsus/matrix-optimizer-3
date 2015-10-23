@@ -1,3 +1,12 @@
+3.0.3.5
+
+ - wider objects in scene graph in presence of outputs and/or child objects
+ - Keyboard input object
+ - OpenSoundControl input object and global OSC input view
+ - FreeFloat transformation object
+ - new texture objects: Text, Posterize, KaliSet
+
+
 3.0.3.4
 
  - Text extrusion in geometry editor (outline, 3d, rotated)

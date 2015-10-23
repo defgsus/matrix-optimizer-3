@@ -116,7 +116,7 @@ bool Window::event(QEvent * e)
     return QWindow::event(e);
 }
 
-void Window::resizeEvent(QResizeEvent *)
+void Window::resizeEvent(QResizeEvent * e)
 {
     if (renderer_)
         renderer_->setSize(size() * devicePixelRatio());
@@ -138,8 +138,7 @@ void Window::keyPressEvent(QKeyEvent * e)
     if ((e->modifiers() == Qt::ALT && e->key() == Qt::Key_F)
     || (e->key() == Qt::Key_F11))
     {
-        setWindowState( (Qt::WindowState)(
-            windowState() ^ Qt::WindowFullScreen));
+        setFullscreen(!isFullscreen());
         e->accept();
     }
 
@@ -160,6 +159,16 @@ void Window::keyPressEvent(QKeyEvent * e)
     if (!e->isAccepted())
         emit keyPressed(e);
 }
+
+void Window::setFullscreen(bool f)
+{
+    if (!isFullscreen())
+        oldWinRect_ = geometry();
+
+    setWindowState( (Qt::WindowState)(
+        windowState() ^ Qt::WindowFullScreen));
+}
+
 
 void Window::renderLater()
 {

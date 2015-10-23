@@ -893,17 +893,17 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         m->addSeparator();
 
-        a = new QAction(tr("Show changes"), m);
-        m->addAction(a);
-        connect(a, SIGNAL(triggered()), application(), SLOT(showChanges()));
-
-        a = new QAction(tr("About Matrix Optimizer"), m);
+        a = new QAction(tr("About this software"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application(), SLOT(aboutMO()));
 
         a = new QAction(tr("About Qt"), m);
         m->addAction(a);
         connect(a, SIGNAL(triggered()), application(), SLOT(aboutQt()));
+
+        a = new QAction(tr("Changes"), m);
+        m->addAction(a);
+        connect(a, SIGNAL(triggered()), application(), SLOT(showChanges()));
 
         m->addSeparator();
 
