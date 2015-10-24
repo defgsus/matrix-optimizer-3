@@ -196,11 +196,10 @@ void GeometryObject::setGeometry(const GEOM::Geometry & g)
     emit geometryChanged();
 }
 
-const GEOM::Geometry * GeometryObject::valueGeometry(uint channel, Double time, uint thread) const
+const GEOM::Geometry * GeometryObject::valueGeometry(uint channel, const RenderTime& time) const
 {
     Q_UNUSED(channel);
     Q_UNUSED(time);
-    Q_UNUSED(thread);
     // XXX Can't do it, this function is const
     //if (!geometry())
     //    createGeometry();

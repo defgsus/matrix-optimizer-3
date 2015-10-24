@@ -14,7 +14,7 @@
 #include <QString>
 #include <QPair>
 
-#include "types/float.h"
+#include "types/time.h"
 #include "object/object_fwd.h"
 
 namespace MO {
@@ -28,7 +28,7 @@ public:
     virtual ~ValueTextInterface() { }
 
     /** Return a text. */
-    virtual QPair<QString, TextType> valueText(Double time, uint thread) const = 0;
+    virtual QPair<QString, TextType> valueText(uint channel, const RenderTime& time) const = 0;
 
 };
 

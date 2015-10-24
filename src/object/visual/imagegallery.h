@@ -42,8 +42,8 @@ public:
     MO_OBJECT_CONSTRUCTOR(ImageGallery);
     ~ImageGallery();
 
-    Vec4 imageColor(Double time, uint thread) const;
-    Vec4 frameColor(Double time, uint thread) const;
+    Vec4 imageColor(const RenderTime & time) const;
+    Vec4 frameColor(const RenderTime & time) const;
 
     /** Returns a copy of the shader code after replacements, includes, etc.. */
     GL::ShaderSource shaderSource() const;
@@ -52,7 +52,7 @@ protected:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings& rs, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings& rs, const RenderTime& time) Q_DECL_OVERRIDE;
     virtual void numberLightSourcesChanged(uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;
@@ -70,7 +70,7 @@ private:
     void releaseAll_();
 
     void calcEntityBaseTransform_();
-    void calcEntityTransform_(Double time, uint thread);
+    void calcEntityTransform_(const RenderTime& time);
 
     struct Entity_;
 

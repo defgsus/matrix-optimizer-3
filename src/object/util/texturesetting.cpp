@@ -243,7 +243,7 @@ void TextureSetting::initGl()
     if (paramType_->baseValue() == TEX_PARAM)
     {
         // XXX This is a hack
-        if (auto t = paramTex_->value(0, MO_GFX_THREAD))
+        if (auto t = paramTex_->value(RenderTime(0, MO_GFX_THREAD)))
             isParamCube_ = t->isCube();
         else
             isParamCube_ = false;
@@ -404,7 +404,7 @@ void TextureSetting::setTextureFromAS_(const QString& script)
 #endif
 }
 
-void TextureSetting::bind(Double time, uint thread, uint slot)
+void TextureSetting::bind(const RenderTime& time, uint slot)
 {
     auto tex = constTexture_;
 
@@ -416,7 +416,7 @@ void TextureSetting::bind(Double time, uint thread, uint slot)
 
     if (paramType_->baseValue() == TEX_PARAM)
     {
-        tex = paramTex_->value(time, thread);
+        tex = paramTex_->value(time);
         if (!tex)
             return;
         isParamCube_ = tex->isCube();

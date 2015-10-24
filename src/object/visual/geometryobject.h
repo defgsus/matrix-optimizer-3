@@ -49,7 +49,7 @@ public:
 
     /** Geometry interface */
     const GEOM::Geometry * valueGeometry(
-            uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+            uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
 protected:
 

@@ -131,7 +131,7 @@ void MicrophoneGroup::updateAudioTransformations(Double time, uint thread)
     const Mat4 & trans = transformation(thread, 0);
 
     const Float
-            micdist = pDistance_->value(time, thread);
+            micdist = pDistance_->value(time);
 
     int index = 0;
     for (AUDIO::AudioMicrophone* m : micros_)
@@ -165,7 +165,7 @@ void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, u
         const Double time = stime + sampleRateInv() * i;
 
         const Float
-                micdist = pDistance_->value(time, thread);
+                micdist = pDistance_->value(time);
 
         int index = 0;
         for (AUDIO::AudioMicrophone* m : micros_)
@@ -213,7 +213,7 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
         {
             Double time = Double(pos + j) / sampleRate();
 
-            Mat4 micmat2 = glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time, thread)))
+            Mat4 micmat2 = glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time)))
                             * micmat;
 
             mics[i]->transformationBuffer()->setTransformation(

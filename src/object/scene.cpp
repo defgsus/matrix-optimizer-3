@@ -1000,7 +1000,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint , uint camera_index) const
 
 /// @todo this is all to be moved out of this class REALLY!
 
-void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
+void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
@@ -1023,50 +1023,50 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         destroyDeletedObjects_(true);
 
         // release all openGL resources and quit
-        if (releaseAllGlRequested_[thread])
+        if (releaseAllGlRequested_[time.thread()])
         {
-            releaseSceneGl_(thread);
+            releaseSceneGl_(time.thread());
 
             for (auto o : glObjects_)
-                if (o->isGlInitialized(thread))
-                    o->p_releaseGl_(thread);
+                if (o->isGlInitialized(time.thread()))
+                    o->p_releaseGl_(time.thread());
 
-            releaseAllGlRequested_[thread] = false;
+            releaseAllGlRequested_[time.thread()] = false;
 
-            emit glReleased(thread);
+            emit glReleased(time.thread());
             return;
         }
 
         // initialize scene gl resources
-        if (!fboFinal_[thread])
-            createSceneGl_(thread);
+        if (!fboFinal_[time.thread()])
+            createSceneGl_(time.thread());
 
         // resize fbo on request
         if (fbSize_ != fbSizeRequest_
          || fbFormat_ != fbFormatRequest_)
-            resizeFbo_(thread);
+            resizeFbo_(time.thread());
 
         // initialize object gl resources
         for (auto o : glObjects_)
-            if (o->needsInitGl(thread))// && o->active(time, thread))
+            if (o->needsInitGl(time.thread()))// && o->active(time))
             {
-                if (o->isGlInitialized(thread))
-                    o->p_releaseGl_(thread);
-                o->p_initGl_(thread);
+                if (o->isGlInitialized(time.thread()))
+                    o->p_releaseGl_(time.thread());
+                o->p_initGl_(time.thread());
             }
 
         // --------- render preparation --------------
 
         // position all objects
-        calculateSceneTransform_(thread, time);
+        calculateSceneTransform_(time);
 
         // update lighting uniform-ready data
-        updateLightSettings_(thread, time);
+        updateLightSettings_(time);
 
     }
     catch (Exception & e)
     {
-        e << "\nin Scene::renderScene(" << thread << ") preface";
+        e << "\nin Scene::renderScene(" << time.thread() << ") preface";
         throw;
     }
 
@@ -1078,9 +1078,9 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         GL::RenderSettings renderSet;
         GL::CameraSpace camSpace;
 
-        renderSet.setLightSettings(&lightSettings(thread));
+        renderSet.setLightSettings(&lightSettings(time.thread()));
         renderSet.setCameraSpace(&camSpace);
-        renderSet.setFinalFramebuffer(fboFinal_[thread]);
+        renderSet.setFinalFramebuffer(fboFinal_[time.thread()]);
 
         try
         {
@@ -1089,15 +1089,15 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
             // for each object that renders
             for (ObjectGl * o : frameDrawers_)
             {
-                if (o->active(time, thread))
+                if (o->active(time))
                 {
                     // shaders and texture processors
                     if (o->isShader() || o->isTexture())
                     {
                         if (o->updateMode() == ObjectGl::UM_ALWAYS
-                            || o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread))
+                            || o->isUpdateRequest() || o->params()->haveInputsChanged(time))
                         {
-                            o->p_renderGl_(renderSet, thread, time);
+                            o->p_renderGl_(renderSet, time);
                         }
                     }
 
@@ -1116,7 +1116,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                             glObjectsPerCamera_[cindex] = camera->getRenderObjects();
 
                         // get camera viewspace
-                        camera->initCameraSpace(camSpace, thread, time);
+                        camera->initCameraSpace(camSpace, time);
 
                         // get camera view-matrix
                         const Mat4& cammat = camera->transformation();
@@ -1125,33 +1125,34 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
                         camSpace.setViewMatrix(viewm);
 
                         // for each cubemap
-                        const uint numCubeMaps = camera->numCubeTextures(thread, time);
+                        const uint numCubeMaps = camera->numCubeTextures(time);
                         for (uint i=0; i<numCubeMaps; ++i)
                         {
                             // start camera frame
-                            camera->startGlFrame(thread, time, i);
+                            camera->startGlFrame(time, i);
 
                             camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
                             // render each opengl object per camera & per cube-face
                             for (ObjectGl * o : glObjectsPerCamera_[cindex])
                             if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
-                                && o->active(time, thread))
+                                && o->active(time))
                             {
                                 // XXX Not working for cube-maps
                                 if (o->updateMode() == ObjectGl::UM_ON_CHANGE
-                                    && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time, thread)))
+                                    && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time)))
                                         continue;
 
-                                o->p_renderGl_(renderSet, thread, time);
+                                o->p_renderGl_(renderSet, time);
                             }
 
                             // render debug objects
                             if (debugRenderOptions_)
-                                debugRenderer_[thread]->render(renderSet, thread, debugRenderOptions_);
+                                debugRenderer_[time.thread()]
+                                        ->render(renderSet, time.thread(), debugRenderOptions_);
                         }
 
-                        camera->finishGlFrame(thread, time);
+                        camera->finishGlFrame(time);
                     }
 
                 } // active
@@ -1162,7 +1163,7 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
         }
         catch (Exception & e)
         {
-            e << "\nin Scene::renderScene(" << thread << "): frame-drawers";
+            e << "\nin Scene::renderScene(" << time.thread() << "): frame-drawers";
             throw;
         }
     }
@@ -1177,26 +1178,26 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
 
     using namespace gl;
 
-    fboFinal_[thread]->bind();
-    fboFinal_[thread]->setViewport();
+    fboFinal_[time.thread()]->bind();
+    fboFinal_[time.thread()]->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
     for (ObjectGl * drawer : frameDrawers_)
-    if (drawer->active(time, thread))
+    if (drawer->active(time))
     {
         if (drawer->isCamera())
-            static_cast<Camera*>(drawer)->drawFramebuffer(thread, time);
+            static_cast<Camera*>(drawer)->drawFramebuffer(time);
         else if (drawer->isShader())
-            static_cast<ShaderObject*>(drawer)->drawFramebuffer(thread, time,
-                                                                fboFinal_[thread]->width(),
-                                                                fboFinal_[thread]->height());
+            static_cast<ShaderObject*>(drawer)->drawFramebuffer(time,
+                                                                fboFinal_[time.thread()]->width(),
+                                                                fboFinal_[time.thread()]->height());
         else if (drawer->isTexture())
-            static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(thread, time,
-                                                                fboFinal_[thread]->width(),
-                                                                fboFinal_[thread]->height());
+            static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(time,
+                                                                fboFinal_[time.thread()]->width(),
+                                                                fboFinal_[time.thread()]->height());
     }
-    fboFinal_[thread]->unbind();
+    fboFinal_[time.thread()]->unbind();
 
     // --- draw to screen ---
 
@@ -1219,26 +1220,27 @@ void Scene::renderScene(Double time, uint thread, bool paintToScreen)//, GL::Fra
     //width = fbSize_.width();
     //height = fbSize_.height();
 
-    fboFinal_[thread]->colorTexture()->bind();
+    fboFinal_[time.thread()]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, width, height) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_BLEND) );
     if (isClient())
-        screenQuad_[thread]->draw(width, height);
+        screenQuad_[time.thread()]->draw(width, height);
     else
-        screenQuad_[thread]->drawCentered(width, height, fboFinal_[thread]->aspect());
+        screenQuad_[time.thread()]->drawCentered(width, height,
+                                                 fboFinal_[time.thread()]->aspect());
 
     //if (outputFbo)
     //    outputFbo->unbind();
 }
 
-void Scene::updateLightSettings_(uint thread, Double time)
+void Scene::updateLightSettings_(const RenderTime& time)
 {
-    MO_ASSERT(thread < lightSettings_.size(), "thread " << thread << " for "
+    MO_ASSERT(time.thread() < lightSettings_.size(), "thread " << time.thread() << " for "
               "LightSettings out-of-range (" << lightSettings_.size() << ")");
 
-    GL::LightSettings * l = &lightSettings_[thread];
+    GL::LightSettings * l = &lightSettings_[time.thread()];
 
     // resize if necessary
     if ((int)l->count() != lightSources_.size())
@@ -1247,9 +1249,9 @@ void Scene::updateLightSettings_(uint thread, Double time)
     // fill vectors
     for (uint i=0; i<l->count(); ++i)
     {
-        if (lightSources_[i]->active(time, thread))
+        if (lightSources_[i]->active(time))
         {
-            lightSources_[i]->getLightSettings(l, i, time, thread);
+            lightSources_[i]->getLightSettings(l, i, time);
         }
         else
             // XXX there should be a runtime switch in shader!
@@ -1257,13 +1259,13 @@ void Scene::updateLightSettings_(uint thread, Double time)
     }
 }
 
-void Scene::calculateSceneTransform(uint thread, Double time)
+void Scene::calculateSceneTransform(const RenderTime& time)
 {
     ScopedSceneLockRead lock(this);
-    calculateSceneTransform_(thread, time);
+    calculateSceneTransform_(time);
 }
 
-void Scene::calculateSceneTransform_(uint thread, Double time)
+void Scene::calculateSceneTransform_(const RenderTime& time)
 {
 #if 0
     // interpolate free camera
@@ -1293,14 +1295,14 @@ void Scene::calculateSceneTransform_(uint thread, Double time)
             ++camcount;
         }
 #endif
-        if (o->active(time, thread))
+        if (o->active(time))
         {
 //            if (!freecam)
 //            {
                 // get parent transformation
                 Mat4 matrix(o->parentObject()->transformation());
                 // apply object's transformation
-                o->calculateTransformation(matrix, time, thread);
+                o->calculateTransformation(matrix, time);
                 // write back
                 o->setTransformation(matrix);
 //            }
@@ -1382,7 +1384,7 @@ void Scene::kill()
 #if 1
     // kill now (The calling thread must be GUI thread!)
     glContext_->makeCurrent();
-    renderScene(0, MO_GFX_THREAD);
+    renderScene(RenderTime(0, MO_GFX_THREAD));
     isShutDown_ = true;
 #else
     // move to later (Window must repaint!)

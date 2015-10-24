@@ -170,7 +170,8 @@ void SceneRenderer::render(bool renderToScreen)
     emit scene_->sceneTimeChanged(time);
 #endif
 
-    scene_->renderScene(time, MO_GFX_THREAD, renderToScreen);
+    // ZZZ
+    scene_->renderScene(RenderTime(time, MO_GFX_THREAD), renderToScreen);
 
     gl::glFlush();
     gl::glFinish();

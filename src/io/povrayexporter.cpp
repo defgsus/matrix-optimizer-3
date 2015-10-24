@@ -133,7 +133,7 @@ void PovrayExporter::exportLights_(QTextStream & out, Double time) const
 
     for (LightSource * l : lights)
     {
-        if (!l->active(time, thread_))
+        if (!l->active(RenderTime(time, thread_)))
             continue;
 
         out << "// " << l->name() << "\n"
@@ -141,21 +141,23 @@ void PovrayExporter::exportLights_(QTextStream & out, Double time) const
             << "light_source\n"
             << "{\n"
                 << "\tlocation 0\n"
-                << "\tcolor rgb " << povStr(Vec3(l->lightColor(thread_, time))) << "\n"
+                << "\tcolor rgb " << povStr(Vec3(l->lightColor(RenderTime(time, thread_)))) << "\n"
                 << "\tmatrix " << povStr(l->transformation()) << "\n"
             << "}\n\n";
     }
 }
 
-void PovrayExporter::exportModels_(QTextStream &out, Double time) const
+void PovrayExporter::exportModels_(QTextStream &out, Double ti) const
 {
     out << "// ---------------- models ------------------\n\n";
+
+    RenderTime time(ti, thread_);
 
     auto models = scene_->findChildObjects<Model3d>(QString(), true);
 
     for (Model3d * m : models)
     {
-        if (!m->active(time, thread_)
+        if (!m->active(time)
             || !m->geometry())
             continue;
 
@@ -164,7 +166,7 @@ void PovrayExporter::exportModels_(QTextStream &out, Double time) const
             << "mesh\n"
             << "{\n";
         exportGeometry_(out, "\t", m->geometry());
-        out     << "\tcolor rgbf " << povRgbf(m->modelColor(thread_, time)) << "\n"
+        out     << "\tcolor rgbf " << povRgbf(m->modelColor(time)) << "\n"
                 << "\tmatrix " << povStr(m->transformation()) << "\n"
             << "}\n\n";
     }

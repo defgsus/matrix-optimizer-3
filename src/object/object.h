@@ -24,6 +24,7 @@
 #include "interface/valuetransformationinterface.h"
 #include "types/int.h"
 #include "types/vector.h"
+#include "types/time.h"
 #include "io/filetypes.h"
 
 /** Maximum time in seconds (for widgets mainly) */
@@ -359,7 +360,7 @@ public:
     ActivityScope currentActivityScope() const { return p_currentActivityScope_; }
 
     /** Returns if the object is active at the given time */
-    bool active(Double time, uint thread) const;
+    bool active(const RenderTime& time) const;
 
     /** Returns if the object fits the currently set activity scope */
     bool activeAtAll() const;
@@ -731,25 +732,25 @@ public:
     virtual void calculateSoundSourceTransformation(
                                         const TransformationBuffer * objectTransformation,
                                         const QList<AUDIO::SpatialSoundSource*>&,
-                                        uint bufferSize, SamplePos pos, uint thread);
+                                        const RenderTime& time);
 
     /** Override to fill the audio buffers of the sound sources.
         The base implementation does nothing. */
-    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
-                                            uint bufferSize, SamplePos pos, uint thread)
-    { Q_UNUSED(bufferSize); Q_UNUSED(pos); Q_UNUSED(thread); }
+    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*> sources,
+                                            const RenderTime& time)
+    { Q_UNUSED(sources); Q_UNUSED(time); }
 
     /** Override to update the transformations of each microphone.
         The base implementation simply copies the object transformation. */
     virtual void calculateMicrophoneTransformation(
                                         const TransformationBuffer * objectTransformation,
                                         const QList<AUDIO::SpatialMicrophone*>&,
-                                        uint bufferSize, SamplePos pos, uint thread);
+                                        const RenderTime& time);
 
     /** Override to sample or change the current dsp-block of each virtual microphone. */
     virtual void processMicrophoneBuffers(
-            const QList<AUDIO::SpatialMicrophone*>& microphones, SamplePos pos, uint thread)
-        { Q_UNUSED(microphones); Q_UNUSED(pos); Q_UNUSED(thread); }
+            const QList<AUDIO::SpatialMicrophone*>& microphones, const RenderTime& time)
+        { Q_UNUSED(microphones); Q_UNUSED(time); }
 public:
     // --------------- 3d --------------------------
 
@@ -764,7 +765,7 @@ public:
 
     /** ValueTransformationInterface */
     virtual Mat4 valueTransformation(
-            uint /*channel*/, Double /*time*/, uint /*thread*/) const Q_DECL_OVERRIDE
+            uint /*channel*/, const RenderTime& /*time*/) const Q_DECL_OVERRIDE
         { return p_transformation_; }
 
     /** Returns the position of this object */
@@ -778,7 +779,7 @@ public:
 
     /** Base implementation applies all transformation objects inside this object to the given matrix.
         XXX Made virtual to override Camera's matrix... */
-    virtual void calculateTransformation(Mat4& matrix, Double time, uint thread) const;
+    virtual void calculateTransformation(Mat4& matrix, const RenderTime& time) const;
 
     /** List of all direct transformation childs */
     const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }

@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_INTERFACE_VALUEFLOATINTERFACE_H
 #define MOSRC_OBJECT_INTERFACE_VALUEFLOATINTERFACE_H
 
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -22,7 +22,7 @@ class ValueFloatInterface
 public:
     virtual ~ValueFloatInterface() { }
 
-    virtual Double valueFloat(uint channel, Double time, uint thread) const = 0;
+    virtual Double valueFloat(uint channel, const RenderTime& time) const = 0;
 
 };
 

@@ -125,20 +125,20 @@ void ColorPostProcessingSetting::getUniforms(GL::Shader * shader, const QString&
     u_post_alpha_edge_ = shader->getUniform("u_post_alpha_edge" + id_suffix, true);
 }
 
-void ColorPostProcessingSetting::updateUniforms(Double time, uint thread)
+void ColorPostProcessingSetting::updateUniforms(const RenderTime & time)
 {
-    u_post_trans_->floats[0] = postGray_->value(time, thread);
-    u_post_trans_->floats[1] = postInv_->value(time, thread);
-    u_post_trans_->floats[2] = postShift_->value(time, thread);
-    u_post_bright_->floats[0] = postBright_->value(time, thread);
-    u_post_bright_->floats[1] = postContrast_->value(time, thread);
-    u_post_bright_->floats[2] = postContrastThresh_->value(time, thread);
+    u_post_trans_->floats[0] = postGray_->value(time);
+    u_post_trans_->floats[1] = postInv_->value(time);
+    u_post_trans_->floats[2] = postShift_->value(time);
+    u_post_bright_->floats[0] = postBright_->value(time);
+    u_post_bright_->floats[1] = postContrast_->value(time);
+    u_post_bright_->floats[2] = postContrastThresh_->value(time);
     u_post_alpha_->setFloats(
-                postAlphaR_->value(time, thread),
-                postAlphaG_->value(time, thread),
-                postAlphaB_->value(time, thread),
-                postAlpha_->value(time, thread));
-    u_post_alpha_edge_->floats[0] = postAlphaEdge_->value(time, thread);
+                postAlphaR_->value(time),
+                postAlphaG_->value(time),
+                postAlphaB_->value(time),
+                postAlpha_->value(time));
+    u_post_alpha_edge_->floats[0] = postAlphaEdge_->value(time);
 }
 
 

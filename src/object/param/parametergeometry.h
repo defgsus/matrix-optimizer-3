@@ -36,10 +36,10 @@ public:
     // ---------------- getter -----------------
 
     /** Returns true when any of the Geometries have changed since the last call to ... */
-    bool hasChanged(Double time, uint thread) const Q_DECL_OVERRIDE;
+    bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
     /** Returns all Geometries that are connected to this parameter */
-    QList<const GEOM::Geometry*> getGeometries(Double time, uint thread) const;
+    QList<const GEOM::Geometry*> getGeometries(const RenderTime& time) const;
 
     // ---------------- setter -----------------
 

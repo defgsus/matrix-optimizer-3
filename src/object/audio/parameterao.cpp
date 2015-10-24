@@ -78,15 +78,15 @@ void ParameterAO::updateParameterVisibility()
     paramRate_->setVisible( paramResample_->baseValue() != 0 );
 }
 
-void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
+void ParameterAO::processAudio(const RenderTime& time)
 {
-    if (!audioOutputs(thread).isEmpty())
-    if (auto out = audioOutputs(thread).first())
+    if (!audioOutputs(time.thread()).isEmpty())
+    if (auto out = audioOutputs(time.thread()).first())
     {
         // simply fill-copy when no modulation present
         if (!paramValue_->isModulated())
         {
-            F32 val = paramValue_->value(sampleRateInv() * pos, thread);
+            F32 val = paramValue_->value(time);
 
             for (SamplePos i=0; i<out->blockSize(); ++i)
                 out->write(i, val);
@@ -97,8 +97,7 @@ void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
         {
             for (SamplePos i=0; i<out->blockSize(); ++i)
             {
-                out->write(i, paramValue_->value(
-                               sampleRateInv() * (pos + i), thread));
+                out->write(i, paramValue_->value(time + i));
             }
         }
 
@@ -107,7 +106,7 @@ void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
         {
             // number of samples to ignore the input
             const SamplePos rate =
-                    1.0 / paramRate_->value(sampleRateInv() * pos, thread) * sampleRate();
+                    1.0 / paramRate_->value(time) * sampleRate();
 
             for (SamplePos i=0; i<out->blockSize(); ++i)
             {
@@ -115,8 +114,7 @@ void ParameterAO::processAudio(uint , SamplePos pos, uint thread)
                 {
                     samplesWaited_ = 0;
                     lastSample2_ = lastSample_;
-                    lastSample_ = paramValue_->value(
-                                sampleRateInv() * (pos + i), thread);
+                    lastSample_ = paramValue_->value(time + i);
                 }
 
                 F32 f = F32(samplesWaited_) / rate;

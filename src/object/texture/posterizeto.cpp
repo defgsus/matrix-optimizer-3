@@ -34,7 +34,7 @@ struct PosterizeTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     PosterizeTO * to;
 
@@ -93,9 +93,9 @@ void PosterizeTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void PosterizeTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void PosterizeTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -226,20 +226,20 @@ void PosterizeTO::Private::releaseGl()
 
 }
 
-void PosterizeTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void PosterizeTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_quant)
     {
-        u_quant->setFloats( p_posSteps->value(time, thread),
-                            p_colorSteps->value(time, thread));
+        u_quant->setFloats( p_posSteps->value(time),
+                            p_colorSteps->value(time));
     }
 
     if (u_tolerance)
-        u_tolerance->floats[0] = p_tolerance->value(time, thread);
+        u_tolerance->floats[0] = p_tolerance->value(time);
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

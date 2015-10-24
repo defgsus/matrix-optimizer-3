@@ -100,7 +100,7 @@ void ObjectOutputView::updateLabels_()
 
 void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uint channel, Double time)
 {
-    if (auto tex = ti->valueTexture(channel, time, MO_GUI_THREAD))
+    if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GUI_THREAD)))
     {
         // create resampler
         if (!texRender_)

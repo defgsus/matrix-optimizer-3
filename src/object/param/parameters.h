@@ -19,7 +19,7 @@
 
 #include "object/object_fwd.h"
 #include "types/vector.h"
-#include "types/int.h"
+#include "types/time.h"
 #include "io/filetypes.h"
 
 namespace MO {
@@ -85,7 +85,7 @@ public:
 
     /** Pulling change request for Parameters.
         XXX Only for ParameterTexture right now. */
-    bool haveInputsChanged(Double time, uint thread) const;
+    bool haveInputsChanged(const RenderTime & time) const;
 
     // -------------- setter --------------------
 

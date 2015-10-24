@@ -84,12 +84,12 @@ int ParameterFloat::getModulatorTypes() const
          | Object::T_AUDIO_OBJECT;
 }
 
-Double ParameterFloat::getModulationValue(Double time, uint thread) const
+Double ParameterFloat::getModulationValue(const RenderTime& time) const
 {
     Double mod = 0;
 
     for (auto m : modulators())
-        mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
+        mod += static_cast<ModulatorFloat*>(m)->value(time);
 
     return mod;
 }
@@ -110,31 +110,33 @@ Modulator * ParameterFloat::getModulator(const QString& id, const QString& outpu
 
 
 
-void ParameterFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, Double *ptr) const
+void ParameterFloat::getValues(const RenderTime & time, Double timeIncrement, uint number, Double *ptr) const
 {
+    RenderTime rtime(time);
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time, thread);
-        time += timeIncrement;
+        *ptr++ = value(rtime);
+        rtime.setSecond( rtime.second() + timeIncrement );
     }
 }
 
 
-void ParameterFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, F32 *ptr) const
+void ParameterFloat::getValues(const RenderTime & time, Double timeIncrement, uint number, F32 *ptr) const
 {
+    RenderTime rtime(time);
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = value(time, thread);
-        time += timeIncrement;
+        *ptr++ = value(rtime);
+        rtime.setSecond( rtime.second() + timeIncrement );
     }
 }
-
-void ParameterFloat::getValues(SamplePos pos, uint thread, Double sampleRateInv, uint number, F32 *ptr) const
+/*
+void ParameterFloat::getValues(const RenderTime & time, Double sampleRateInv, uint number, F32 *ptr) const
 {
-    for (uint i=0; i<number; ++i, ++pos)
+    for (uint i=0; i<number; ++i, ++time)
     {
-        *ptr++ = value(sampleRateInv * pos, thread);
+        *ptr++ = value(sampleRateInv * time, thread);
     }
-}
+}*/
 
 } // namespace MO

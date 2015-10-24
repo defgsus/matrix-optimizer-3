@@ -34,7 +34,7 @@ struct KaliSetTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     KaliSetTO * to;
 
@@ -99,9 +99,9 @@ void KaliSetTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void KaliSetTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void KaliSetTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -305,49 +305,49 @@ void KaliSetTO::Private::releaseGl()
 
 }
 
-void KaliSetTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_kali_param)
     {
         u_kali_param->setFloats(
-                    p_paramX->value(time, thread),
-                    p_paramY->value(time, thread),
-                    p_paramZ->value(time, thread),
-                    p_paramW->value(time, thread));
+                    p_paramX->value(time),
+                    p_paramY->value(time),
+                    p_paramZ->value(time),
+                    p_paramW->value(time));
     }
 
     if (u_offset)
     {
         u_offset->setFloats(
-                    p_offsetX->value(time, thread),
-                    p_offsetY->value(time, thread),
-                    p_offsetZ->value(time, thread),
-                    p_offsetW->value(time, thread));
+                    p_offsetX->value(time),
+                    p_offsetY->value(time),
+                    p_offsetZ->value(time),
+                    p_offsetW->value(time));
     }
 
     if (u_scale)
     {
-        Float s = p_scale->value(time, thread);
+        Float s = p_scale->value(time);
         u_scale->setFloats(
-                    p_scaleX->value(time, thread) * s,
-                    p_scaleY->value(time, thread) * s);
+                    p_scaleX->value(time) * s,
+                    p_scaleY->value(time) * s);
     }
 
     if (u_bright)
     {
         u_bright->setFloats(
-                    p_bright->value(time, thread),
-                    p_exponent->value(time, thread));
+                    p_bright->value(time),
+                    p_exponent->value(time));
     }
 
     if (u_freq)
     {
-        u_freq->floats[0] = p_freq->value(time, thread);
+        u_freq->floats[0] = p_freq->value(time);
     }
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

@@ -36,7 +36,7 @@ struct BlurTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     struct Stage
     {
@@ -111,9 +111,9 @@ void BlurTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void BlurTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void BlurTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -245,11 +245,11 @@ void BlurTO::Private::releaseGl()
     stages.clear();
 }
 
-void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // Determine size
     Float six = 1. / 1000., siy = six * to->aspectRatio();
-    if (p_sizeIsPixels->value(time, thread))
+    if (p_sizeIsPixels->value(time))
     {
         auto res = to->resolution();
         six = 1.f / std::max(1, res.width());
@@ -257,17 +257,17 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double t
     }
 
     // scale size by samples
-    Float numSam = std::max(1., p_num->value(time, thread));
+    Float numSam = std::max(1., p_num->value(time));
     six /= numSam;
     siy /= numSam;
 
     // get other values
-    Float size = p_size->value(time, thread),
-          sigma = std::max(0.001, p_sigma->value(time, thread) * numSam * .5),
-          alpha = p_alpha->value(time, thread),
-          maskmin = p_mask_min->value(time, thread),
-          maskmax = p_mask_max->value(time, thread),
-          maskthresh = p_mask_thresh->value(time, thread);
+    Float size = p_size->value(time),
+          sigma = std::max(0.001, p_sigma->value(time) * numSam * .5),
+          alpha = p_alpha->value(time),
+          maskmin = p_mask_min->value(time),
+          maskmax = p_mask_max->value(time),
+          maskthresh = p_mask_thresh->value(time);
 
     // for each stage
     for (const Stage & s : stages)
@@ -284,7 +284,7 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double t
             s.u_mask_range->setFloats(maskmin, maskmax, maskthresh);
 
         uint texSlot = 0;
-        to->renderShaderQuad(s.index, time, thread, texSlot);
+        to->renderShaderQuad(s.index, time, texSlot);
     }
 }
 

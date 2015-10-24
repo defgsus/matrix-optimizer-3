@@ -64,9 +64,9 @@ void MicrophoneAO::createParameters()
 }
 
 void MicrophoneAO::processMicrophoneBuffers(
-        const QList<AUDIO::SpatialMicrophone *> &mics, SamplePos pos, uint thread)
+        const QList<AUDIO::SpatialMicrophone *> &mics, const RenderTime& time)
 {
-    const auto outs = audioOutputs(thread);
+    const auto outs = audioOutputs(time.thread());
     if (outs.isEmpty())
         return;
     AUDIO::AudioBuffer * out = outs[0];
@@ -78,8 +78,9 @@ void MicrophoneAO::processMicrophoneBuffers(
         AUDIO::SpatialMicrophone * mic = mics[0];
         if (out->blockSize() == mic->signal()->blockSize())
         {
-            F32 amp = p_amp_->value(sampleRateInv() * pos, thread);
-            /** @todo cast in stone the block position for Object::processMicrophoneBuffers(), e.g. current or last */
+            F32 amp = p_amp_->value(time);
+            /** @todo cast in stone the block position for Object::processMicrophoneBuffers(),
+             * e.g. current or last */
             out->writeBlockMul(mic->signal()->writePointer(), amp);
         }
     }

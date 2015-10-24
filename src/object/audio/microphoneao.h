@@ -32,9 +32,9 @@ public:
 protected:
 
     virtual void processMicrophoneBuffers(
-            const QList<AUDIO::SpatialMicrophone*>& microphones, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+            const QList<AUDIO::SpatialMicrophone*>& microphones, const RenderTime& time) Q_DECL_OVERRIDE;
 
-    virtual void processAudio(uint , SamplePos , uint ) Q_DECL_OVERRIDE { }
+    virtual void processAudio(const RenderTime& ) Q_DECL_OVERRIDE { }
 
 private:
 

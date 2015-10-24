@@ -613,14 +613,14 @@ const GEOM::Geometry* Model3d::geometry() const
     return draw_ ? draw_->geometry() : 0;
 }
 
-Vec4 Model3d::modelColor(Double time, uint thread) const
+Vec4 Model3d::modelColor(const RenderTime& time) const
 {
-    const auto b = cbright_->value(time, thread);
+    const auto b = cbright_->value(time);
     return Vec4(
-        cr_->value(time, thread) * b,
-        cg_->value(time, thread) * b,
-        cb_->value(time, thread) * b,
-        ca_->value(time, thread));
+        cr_->value(time) * b,
+        cg_->value(time) * b,
+        cb_->value(time) * b,
+        ca_->value(time));
 }
 
 const GEOM::GeometryFactorySettings& Model3d::geometrySettings() const
@@ -902,7 +902,7 @@ void Model3d::setupDrawable_()
 
 
 
-void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
+void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 {
     MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
 
@@ -965,54 +965,54 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
     {
         MO_DEBUG_MODEL("Model3d::renderGl: drawing");
 
-        const int numDup = paramNumInstance_->value(time, thread);
+        const int numDup = paramNumInstance_->value(time);
 
         // update uniforms
-        const auto bright = cbright_->value(time, thread);
+        const auto bright = cbright_->value(time);
         draw_->setAmbientColor(
-                    cr_->value(time, thread) * bright,
-                    cg_->value(time, thread) * bright,
-                    cb_->value(time, thread) * bright,
-                    ca_->value(time, thread));
+                    cr_->value(time) * bright,
+                    cg_->value(time) * bright,
+                    cb_->value(time) * bright,
+                    ca_->value(time));
 
         if (u_instance_count_)
             u_instance_count_->floats[0] = numDup;
         if (u_light_amt_)
             u_light_amt_->setFloats(
-                        diffAmt_->value(time, thread),
-                        diffExp_->value(time, thread),
-                        specAmt_->value(time, thread),
-                        specExp_->value(time, thread));
+                        diffAmt_->value(time),
+                        diffExp_->value(time),
+                        specAmt_->value(time),
+                        specExp_->value(time));
         if (u_bump_scale_)
-            u_bump_scale_->floats[0] = bumpScale_->value(time, thread);
+            u_bump_scale_->floats[0] = bumpScale_->value(time);
         if (u_vertex_extrude_)
-            u_vertex_extrude_->floats[0] = vertexExtrude_->value(time, thread);
+            u_vertex_extrude_->floats[0] = vertexExtrude_->value(time);
         if (u_env_map_amt_)
             u_env_map_amt_->setFloats(
-                        envMapAmt_->value(time, thread),
-                        envMapAmt2_->value(time, thread),
-                        envMapAmt3_->value(time, thread));
+                        envMapAmt_->value(time),
+                        envMapAmt2_->value(time),
+                        envMapAmt3_->value(time));
 
 
         uint texSlot = 0;
-        uniformSetting_->updateUniforms(time, thread, texSlot);
+        uniformSetting_->updateUniforms(time, texSlot);
 
         // bind the model3d specific textures
-        if (u_tex_0_) { texture_->bind(time, thread, texSlot); u_tex_0_->ints[0] = texSlot++; }
-        if (u_texn_0_) { textureBump_->bind(time, thread, texSlot); u_texn_0_->ints[0] = texSlot++; }
-        if (u_tex_env_0_) { textureEnv_->bind(time, thread, texSlot); u_tex_env_0_->ints[0] = texSlot++; }
+        if (u_tex_0_) { texture_->bind(time, texSlot); u_tex_0_->ints[0] = texSlot++; }
+        if (u_texn_0_) { textureBump_->bind(time, texSlot); u_texn_0_->ints[0] = texSlot++; }
+        if (u_tex_env_0_) { textureEnv_->bind(time, texSlot); u_tex_env_0_->ints[0] = texSlot++; }
 
         if (texture_->isEnabled())
         {
             if (texturePostProc_->isEnabled())
-                texturePostProc_->updateUniforms(time, thread);
+                texturePostProc_->updateUniforms(time);
 
-            textureMorph_->updateUniforms(time, thread);
+            textureMorph_->updateUniforms(time);
         }
 
         if (textureBump_->isEnabled())
         {
-            textureBumpMorph_->updateUniforms(time, thread);
+            textureBumpMorph_->updateUniforms(time);
         }
 
         if (u_cam_pos_)
@@ -1023,20 +1023,20 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
 
         // draw state
 
-        GL::Properties::staticInstance().setLineSmooth(paramLineSmooth_->value(time, thread) != 0);
-        GL::Properties::staticInstance().setPolygonSmooth(paramPolySmooth_->value(time, thread) != 0);
-        GL::Properties::staticInstance().setLineWidth(paramLineWidth_->value(time, thread));
-        GL::Properties::staticInstance().setPointSize(paramPointSize_->value(time, thread));
+        GL::Properties::staticInstance().setLineSmooth(paramLineSmooth_->value(time) != 0);
+        GL::Properties::staticInstance().setPolygonSmooth(paramPolySmooth_->value(time) != 0);
+        GL::Properties::staticInstance().setLineWidth(paramLineWidth_->value(time));
+        GL::Properties::staticInstance().setPointSize(paramPointSize_->value(time));
 
         if (pointSizeAuto_->baseValue())
         {
             MO_CHECK_GL( gl::glEnable(gl::GL_PROGRAM_POINT_SIZE) );
             if (u_pointsize_)
             {
-                float mi = paramPointSize_->value(time, thread);
+                float mi = paramPointSize_->value(time);
                 u_pointsize_->setFloats(mi,
-                                        paramPointSizeMax_->value(time, thread) - mi,
-                                        1.f / paramPointSizeDistFac_->value(time, thread),
+                                        paramPointSizeMax_->value(time) - mi,
+                                        1.f / paramPointSizeDistFac_->value(time),
                                         0);
             }
         }
@@ -1052,7 +1052,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
                             viewTrans,
                             trans,
                             &rs.lightSettings(),
-                            time, numDup);
+                            time.second(), numDup);
 
         //MO_CHECK_GL( glPolygonMode(gl::GL_FRONT, gl::GL_FILL) );
 

@@ -63,9 +63,9 @@ void TransformationInput::createParameters()
     params()->endParameterGroup();
 }
 
-void TransformationInput::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void TransformationInput::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
-    const Mat4 m = p_trans_->value(time, thread);
+    const Mat4 m = p_trans_->value(time);
 
     switch (p_apply_->baseValue())
     {

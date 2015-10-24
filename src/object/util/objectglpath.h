@@ -14,8 +14,7 @@
 #include <QList>
 
 #include "object/object_fwd.h"
-#include "types/int.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 namespace GL { class Context; }
@@ -38,7 +37,7 @@ public:
 
     // ---------------- calc ------------------
 
-    void calcTransformations(Double time);
+    void calcTransformations(const RenderTime& time);
 
     // --------------- render -----------------
 

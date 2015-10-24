@@ -14,9 +14,9 @@
 
 #include <QObject>
 
-#include "types/float.h"
 #include "object/object_fwd.h"
 #include "gl/opengl_fwd.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -55,7 +55,7 @@ public:
 
     /** Sets the uniform values (cpu).
         The next GL::Shader::sendUniforms() will update the value on gpu. */
-    void updateUniforms(Double time, uint thread);
+    void updateUniforms(const RenderTime& time);
 
 private:
 

@@ -15,7 +15,7 @@
 #include <QVector>
 
 #include "object/object_fwd.h"
-#include "types/float.h"
+#include "types/time.h"
 
 
 namespace MO {
@@ -64,7 +64,7 @@ public:
     /** Update all found uniform values.
         Will also bind textures when needed, starting with @p texSlot,
         which is increased for every bound texture. */
-    void updateUniforms(Double time, uint thread, uint& texSlot);
+    void updateUniforms(const MO::RenderTime & time, uint& texSlot);
 
     void releaseGl();
 

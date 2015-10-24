@@ -443,13 +443,13 @@ void Camera::releaseGl(uint )
     }
 }
 
-void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) const
+void Camera::initCameraSpace(GL::CameraSpace &cam, const RenderTime& time) const
 {
     cam.setSize(fbo_->width(), fbo_->height());
 
     const Float
-            near = p_near_->value(time, thread),
-            far = p_far_->value(time, thread);
+            near = p_near_->value(time),
+            far = p_far_->value(time);
 
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
@@ -465,16 +465,16 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     if (renderMode_ == RM_PERSPECTIVE)
     {
-        const Float angle = p_cameraAngle_->value(time, thread);
+        const Float angle = p_cameraAngle_->value(time);
         cam.setFieldOfView(angle);
 
         const Mat4 mat1 = MATH::perspective(angle, aspectRatio_, near, far);
 
         // mix with orthographic matrix
-        const Float mix = p_cameraOrthoMix_->value(time, thread);
+        const Float mix = p_cameraOrthoMix_->value(time);
         if (mix > 0.f)
         {
-            const Float sc = p_cameraOrthoScale_->value(time, thread);
+            const Float sc = p_cameraOrthoScale_->value(time);
             const Mat4 mat2 = glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far);
 
             cam.setProjectionMatrix(mat1 + std::min(1.f, mix) * (mat2 - mat1));
@@ -486,7 +486,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
 
     if (renderMode_ == RM_ORTHOGRAPHIC)
     {
-        const Float sc = p_cameraOrthoScale_->value(time, thread);
+        const Float sc = p_cameraOrthoScale_->value(time);
         cam.setFieldOfView(90.); // XXX ???
         cam.setProjectionMatrix(
                     glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far));
@@ -506,12 +506,12 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, uint thread, Double time) con
     }
 }
 
-uint Camera::numCubeTextures(uint thread, Double time) const
+uint Camera::numCubeTextures(const RenderTime & time) const
 {
     if (renderMode_ != RM_FULLDOME_CUBE)
         return 1;
 
-    return (p_cameraFdAngle_->value(time, thread) >= 250.f)
+    return (p_cameraFdAngle_->value(time) >= 250.f)
                ? 6 : 5;
 
 }
@@ -542,55 +542,55 @@ void Camera::setOverrideMatrix(const Mat4 &m)
     useOverrideMatrix_ = true;
 }
 
-void Camera::calculateTransformation(Mat4& matrix, Double time, uint thread) const
+void Camera::calculateTransformation(Mat4& matrix, const RenderTime& time) const
 {
     if (useOverrideMatrix_)
     {
         // XXX Just for the moment...
 
         Float inc = 1.f / 6.f;
-        if (thread == MO_AUDIO_THREAD)
+        if (time.thread() == MO_AUDIO_THREAD)
             inc = 6.f*sampleRateInv();
 
-        cheat_[thread] += inc * (overrideMatrix_ - cheat_[thread]);
+        cheat_[time.thread()] += inc * (overrideMatrix_ - cheat_[time.thread()]);
 
         // normalize matrix components
         // to avoid too much deformation
         // XXX still hacky
-        Vec3 v = glm::normalize(Vec3(cheat_[thread][0]));
-        cheat_[thread][0].x = v.x;
-        cheat_[thread][0].y = v.y;
-        cheat_[thread][0].z = v.z;
-        v = glm::normalize(Vec3(cheat_[thread][1]));
-        cheat_[thread][1].x = v.x;
-        cheat_[thread][1].y = v.y;
-        cheat_[thread][1].z = v.z;
-        v = glm::normalize(Vec3(cheat_[thread][2]));
-        cheat_[thread][2].x = v.x;
-        cheat_[thread][2].y = v.y;
-        cheat_[thread][2].z = v.z;
+        Vec3 v = glm::normalize(Vec3(cheat_[time.thread()][0]));
+        cheat_[time.thread()][0].x = v.x;
+        cheat_[time.thread()][0].y = v.y;
+        cheat_[time.thread()][0].z = v.z;
+        v = glm::normalize(Vec3(cheat_[time.thread()][1]));
+        cheat_[time.thread()][1].x = v.x;
+        cheat_[time.thread()][1].y = v.y;
+        cheat_[time.thread()][1].z = v.z;
+        v = glm::normalize(Vec3(cheat_[time.thread()][2]));
+        cheat_[time.thread()][2].x = v.x;
+        cheat_[time.thread()][2].y = v.y;
+        cheat_[time.thread()][2].z = v.z;
 
         bool playing = false;
         if (auto s = sceneObject())
             playing = s->isPlaying();
 
         // don't smooth matrix for graphics in non-playback
-        if (thread != MO_AUDIO_THREAD && !playing)
+        if (time.thread() != MO_AUDIO_THREAD && !playing)
             matrix = overrideMatrix_;
         else
-            matrix = cheat_[thread];
+            matrix = cheat_[time.thread()];
     }
     else
     {
-        Object::calculateTransformation(matrix, time, thread);
-        cheat_[thread] = matrix;
+        Object::calculateTransformation(matrix, time);
+        cheat_[time.thread()] = matrix;
     }
 
     //matrix = MATH::rotate(matrix, -90.f, Vec3(1,0,0));
 }
 
 
-void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
+void Camera::startGlFrame(const RenderTime& time, uint cubeMapIndex)
 {
     GL::FrameBufferObject * fbo = msFbo_ ? msFbo_ : fbo_;
 
@@ -619,16 +619,16 @@ void Camera::startGlFrame(uint thread, Double time, uint cubeMapIndex)
 
     // --- background ---
 
-    MO_CHECK_GL( glClearColor(p_backR_->value(time, thread),
-                              p_backG_->value(time, thread),
-                              p_backB_->value(time, thread),
-                              p_backA_->value(time, thread)) );
+    MO_CHECK_GL( glClearColor(p_backR_->value(time),
+                              p_backG_->value(time),
+                              p_backB_->value(time),
+                              p_backA_->value(time)) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT) );
 
     fbo->setChanged();
 }
 
-void Camera::finishGlFrame(uint , Double)
+void Camera::finishGlFrame(const RenderTime &)
 {
     if (msFbo_)
     {
@@ -655,7 +655,7 @@ GL::FrameBufferObject * Camera::fbo() const
     return fbo_;
 }
 
-const GL::Texture * Camera::valueTexture(uint channel, Double , uint ) const
+const GL::Texture * Camera::valueTexture(uint channel, const RenderTime& ) const
 {
     if (!fbo_ || channel > 1)
         return 0;
@@ -666,17 +666,17 @@ const GL::Texture * Camera::valueTexture(uint channel, Double , uint ) const
 }
 
 
-void Camera::drawFramebuffer(uint thread, Double time)
+void Camera::drawFramebuffer(const RenderTime& time)
 {
-    if (p_enableOut_->value(time, thread) == 0)
+    if (p_enableOut_->value(time) == 0)
         return;
 
     // -- shader uniforms --
 
-    uColor_->floats[3] = p_cameraMix_->value(time, thread);
+    uColor_->floats[3] = p_cameraMix_->value(time);
 
     if (renderMode_ == RM_FULLDOME_CUBE)
-        uAngle_->floats[0] = p_cameraFdAngle_->value(time, thread);
+        uAngle_->floats[0] = p_cameraFdAngle_->value(time);
 
     // -- render camera frame onto current context --
 
@@ -685,10 +685,10 @@ void Camera::drawFramebuffer(uint thread, Double time)
 
     // final framebuffer
     const GL::FrameBufferObject
-            * scenefbo = sceneObject()->fboMaster(thread);
+            * scenefbo = sceneObject()->fboMaster(time.thread());
 
     // set blendmode
-    alphaBlend_.apply(time, thread);
+    alphaBlend_.apply(time);
 
     // bind the color texture from the fbo
     MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );

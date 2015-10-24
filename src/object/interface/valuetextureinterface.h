@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_INTERFACE_VALUETEXTUREINTERFACE_H
 #define MOSRC_OBJECT_INTERFACE_VALUETEXTUREINTERFACE_H
 
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 namespace GL { class Texture; }
@@ -24,7 +24,7 @@ public:
 
     /** Return a ready-to-use texture or NULL.
         Texture is not required to be bound on return. */
-    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const = 0;
+    virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const = 0;
 
 };
 

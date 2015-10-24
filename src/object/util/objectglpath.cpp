@@ -146,8 +146,10 @@ void ObjectGlPath::createPath(Scene *scene, GL::Context * c, uint thread)
     p_->createPath(scene);
 }
 
-void ObjectGlPath::calcTransformations(Double time)
+void ObjectGlPath::calcTransformations(const RenderTime& time)
 {
+    MO_ASSERT(time.thread() == p_->thread, "thread mismatch");
+
     for (Private::ObjectBuffer * b : p_->transformationObjects)
     {
         if (b->parentMatrix)
@@ -155,9 +157,7 @@ void ObjectGlPath::calcTransformations(Double time)
             // copy from parent
             b->calcMatrix = *b->parentMatrix;
             // apply transform for one sample
-            b->object->calculateTransformation(b->calcMatrix,
-                                               time,
-                                               p_->thread);
+            b->object->calculateTransformation(b->calcMatrix, time);
         }
     }
 }

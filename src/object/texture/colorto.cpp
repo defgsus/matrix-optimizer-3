@@ -34,7 +34,7 @@ struct ColorTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     ColorTO * to;
 
@@ -95,9 +95,9 @@ void ColorTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void ColorTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void ColorTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -203,36 +203,36 @@ void ColorTO::Private::releaseGl()
 
 }
 
-void ColorTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void ColorTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_color)
     {
-        float b = p_bright->value(time, thread);
-        u_color->setFloats( p_r->value(time, thread) * b,
-                            p_g->value(time, thread) * b,
-                            p_b->value(time, thread) * b,
-                            p_a->value(time, thread));
+        float b = p_bright->value(time);
+        u_color->setFloats( p_r->value(time) * b,
+                            p_g->value(time) * b,
+                            p_b->value(time) * b,
+                            p_a->value(time));
     }
 
     if (u_hsv)
-        u_hsv->setFloats(   p_hue->value(time, thread),
-                            p_sat->value(time, thread),
-                            p_bright2->value(time, thread));
+        u_hsv->setFloats(   p_hue->value(time),
+                            p_sat->value(time),
+                            p_bright2->value(time));
 
     if (u_gamma_exp)
     {
-        Double g = p_gamma->value(time, thread);
-        u_gamma_exp->setFloats( 1./(g*p_gamma_r->value(time, thread)),
-                                1./(g*p_gamma_g->value(time, thread)),
-                                1./(g*p_gamma_b->value(time, thread)));
+        Double g = p_gamma->value(time);
+        u_gamma_exp->setFloats( 1./(g*p_gamma_r->value(time)),
+                                1./(g*p_gamma_g->value(time)),
+                                1./(g*p_gamma_b->value(time)));
     }
 
     if (u_invert)
         u_invert->ints[0] = p_invert->baseValue();
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

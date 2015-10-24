@@ -20,10 +20,10 @@ public:
 
 protected:
 
-    void processWhiteNoise(uint, SamplePos, uint thread);
-    void processPinkNoise(uint, SamplePos, uint thread);
+    void processWhiteNoise(const RenderTime& time);
+    void processPinkNoise(const RenderTime & time);
 
-    virtual void processAudio(uint, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+    virtual void processAudio(const RenderTime& time) Q_DECL_OVERRIDE;
 
 private:
 

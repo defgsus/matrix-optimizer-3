@@ -57,11 +57,11 @@ int ParameterTransformation::getModulatorTypes() const
             Object::TG_REAL_OBJECT;
 }
 
-Mat4 ParameterTransformation::value(Double time, uint thread) const
+Mat4 ParameterTransformation::value(const RenderTime& time) const
 {
     for (auto m : modulators())
     {
-        Mat4 mat = static_cast<ModulatorTransformation*>(m)->value(time, thread);
+        Mat4 mat = static_cast<ModulatorTransformation*>(m)->value(time);
         return mat;
     }
 

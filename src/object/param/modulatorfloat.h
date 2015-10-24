@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_PARAM_MODULATORFLOAT_H
 
 #include "modulator.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -58,7 +58,7 @@ public:
     bool hasTimeOffset() const;
 
     /** Returns the modulation-value at given time */
-    Double value(Double time, uint thread) const;
+    Double value(const RenderTime& time) const;
 
     /** Returns the amplitude of the modulation value */
     Double amplitude() const { return amplitude_; }

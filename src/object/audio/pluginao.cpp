@@ -290,7 +290,7 @@ void PluginAO::Private::loadPlugin()
 #endif
 }
 
-void PluginAO::processAudio(uint bsize, SamplePos pos, uint thread)
+void PluginAO::processAudio(const RenderTime& time)
 {
 #ifndef MO_DISABLE_LADSPA
     // lazy exchange new plugin
@@ -312,23 +312,22 @@ void PluginAO::processAudio(uint bsize, SamplePos pos, uint thread)
 
     // initialize with correct blocksize
     if (!p_->plugin->isInitialized()
-        || p_->usedPlugin->blockSize() != bsize
+        || p_->usedPlugin->blockSize() != time.bufferSize()
         || p_->usedPlugin->sampleRate() != sampleRate())
-        p_->usedPlugin->initialize(bsize, sampleRate());
+        p_->usedPlugin->initialize(time.bufferSize(), sampleRate());
 
     // execute
     if (p_->usedPlugin->isInitialized())
     {
         // set control values
-        Double time = Double(pos) / sampleRate();
         for (size_t i=0; i<p_->usedPlugin->numControlInputs(); ++i)
         {
             if (i < p_->params.size())
-                p_->usedPlugin->setControlValue(i, p_->params[i]->value(time, thread));
+                p_->usedPlugin->setControlValue(i, p_->params[i]->value(time));
         }
 
         // process dsp
-        p_->usedPlugin->process(audioInputs(thread), audioOutputs(thread));
+        p_->usedPlugin->process(audioInputs(time.thread()), audioOutputs(time.thread()));
     }
 #else
     Q_UNUSED(bsize);

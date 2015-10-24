@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_PARAM_PARAMETERFLOAT_H
 
 #include "parameter.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -42,18 +42,18 @@ public:
     Double maxValue() const { return maxValue_; }
     Double smallStep() const { return smallStep_; }
 
-    Double value(Double time, uint thread) const
-        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time, thread) )); }
+    Double value(const RenderTime& time) const
+        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time) )); }
     Double baseValue() const { return value_; }
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement, uint number, Double * ptr) const;
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, uint thread, Double timeIncrement, uint number, F32 * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement, uint number, F32 * ptr) const;
 
     /** Writes @p number values starting at @p pos into the pointer */
-    void getValues(SamplePos pos, uint thread, Double sampleRateInv, uint number, F32 * ptr) const;
+    //void getValues(const RenderTime& time, Double sampleRateInv, uint number, F32 * ptr) const;
 
     // ---------------- setter -----------------
 
@@ -74,7 +74,7 @@ public:
     int getModulatorTypes() const Q_DECL_OVERRIDE;
 
     /** Receives modulation value at time */
-    Double getModulationValue(Double time, uint thread) const;
+    Double getModulationValue(const RenderTime& time) const;
 
     virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 

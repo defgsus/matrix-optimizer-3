@@ -38,7 +38,7 @@ struct MixTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
     QString getModSyntax(ModFunc);
 
     MixTO * to;
@@ -94,9 +94,9 @@ void MixTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void MixTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void MixTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -249,11 +249,11 @@ void MixTO::Private::releaseGl()
 
 }
 
-void MixTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void MixTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

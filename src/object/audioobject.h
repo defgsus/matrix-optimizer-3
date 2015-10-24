@@ -68,11 +68,11 @@ public:
      *  Right now it's non-reentrant in Object base */
 
     /** Processes dsp data. */
-    void processAudioBase(uint bufferSize, SamplePos pos, uint thread);
+    void processAudioBase(const RenderTime& time);
 
 #ifndef MO_DISABLE_CLIENT
     /** Should be called when an udp packet has been received for the object */
-    void clientFakeAudio(uint bufferSize, SamplePos pos, uint thread);
+    void clientFakeAudio(const RenderTime & time);
 #endif
 
     // ------------------ modulator outputs -------------------
@@ -83,7 +83,7 @@ public:
         //XXX should: Work by looking up the previous output buffer. but thread issue here
         Fortunately, it works quite well, on my system at least
         Returns 0.0 for unknown or empty channels. */
-    Double getAudioOutputAsFloat(uint channel, Double time, uint thread) const;
+    Double getAudioOutputAsFloat(uint channel, const RenderTime& time) const;
 
 protected: // ---------------- protected virtual interface -----------------------
 
@@ -120,7 +120,7 @@ protected: // ---------------- protected virtual interface ---------------------
     /** Process dsp data here.
         The inputs and outputs are in audioInputs() and audioOutputs() respectively.
         Called by audio thread. */
-    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread) = 0;
+    virtual void processAudio(const RenderTime& time) = 0;
 
     /** Call this to clear the audio output channels from inside processAudio(). */
     void writeNullBlock(SamplePos pos, uint thread);

@@ -27,7 +27,7 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    virtual void applyTransformation(Mat4& matrix, Double time, uint thread) const
+    virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const
                                                         Q_DECL_OVERRIDE;
 
 signals:
@@ -43,7 +43,6 @@ protected:
         * vel_, *velr_, *damp_;
     ParameterCallback * reset_;
     mutable bool doReset_;
-    mutable Double lastTime_;
 };
 
 

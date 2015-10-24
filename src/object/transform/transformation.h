@@ -25,7 +25,7 @@ public:
     virtual Type type() const { return T_TRANSFORMATION; }
     virtual bool isTransformation() const { return true; }
 
-    virtual void applyTransformation(Mat4& matrix, Double time, uint thread) const = 0;
+    virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const = 0;
 
 signals:
 

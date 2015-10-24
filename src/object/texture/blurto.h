@@ -33,7 +33,7 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
 

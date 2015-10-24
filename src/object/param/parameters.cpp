@@ -188,10 +188,10 @@ void Parameters::getModulatorIds(QSet<QString>& set) const
     }
 }
 
-bool Parameters::haveInputsChanged(Double time, uint thread) const
+bool Parameters::haveInputsChanged(const RenderTime& time) const
 {
     for (Parameter * p : parameters_)
-        if (!p->isZombie() && p->isModulated() && p->hasChanged(time, thread))
+        if (!p->isZombie() && p->isModulated() && p->hasChanged(time))
             return true;
 
     return false;

@@ -256,11 +256,13 @@ void Synthesizer::setCallbacks_()
 
             VoicePos_ p;
 
+            RenderTime time(data->timeStarted, data->thread);
+
             // get position from parameters
             Vec3 pos(
-                p_audioX_->value(data->timeStarted, data->thread),
-                p_audioY_->value(data->timeStarted, data->thread),
-                p_audioZ_->value(data->timeStarted, data->thread)
+                p_audioX_->value(time),
+                p_audioY_->value(time),
+                p_audioZ_->value(time)
                 );
 
             // add values from equation
@@ -323,7 +325,7 @@ void Synthesizer::panic()
 void Synthesizer::calculateSoundSourceTransformation(
                                     const TransformationBuffer * objectTransformation,
                                     const QList<AUDIO::SpatialSoundSource*>& snd,
-                                    uint bufferSize, SamplePos pos, uint /*thread*/)
+                                    const RenderTime& rtime)
 {
     if (!p_polyAudio_->baseValue())
         return;
@@ -332,16 +334,16 @@ void Synthesizer::calculateSoundSourceTransformation(
 
     for (int i=0; i<snd.size(); ++i)
     {
-        for (uint j=0; j<bufferSize; ++j)
+        for (uint j=0; j<rtime.bufferSize(); ++j)
         {
-            Double time = sampleRateInv() * (pos + j);
+            //Double time = sampleRateInv() * (rtime.sample() + j);
 
             // get object's transformation
             const Mat4& trans = objectTransformation->transformation(j);
 
             // get next audio transformation from fifo buffer
             if (!audioPosFifo_[i].empty()
-                    && time >= audioPosFifo_[i].front().sceneTime)
+                    && rtime.second() >= audioPosFifo_[i].front().sceneTime)
             {
                 /*MO_DEBUG("new transformation: s=" << j
                          << " ss=" << audioPosFifo_[thread][i].front().sample
@@ -414,7 +416,7 @@ void Synthesizer::updateAudioTransformations(Double sceneTime, uint size, uint t
 #endif
 
 void Synthesizer::calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*> snd,
-                                             uint bufferSize, SamplePos pos, uint thread)
+                                             const RenderTime& time)
 {
     if (doPanic_)
     {
@@ -425,19 +427,19 @@ void Synthesizer::calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSour
     if (!p_polyAudio_->baseValue())
     {
         // mono output
-        synth_->feedSynth(pos, thread, bufferSize);
+        synth_->feedSynth(time);
         // get synth output
-        synth_->synth()->process(snd[0]->signal()->writePointer(), bufferSize);
+        synth_->synth()->process(snd[0]->signal()->writePointer(), time.bufferSize());
     }
     else
     {
         // polyphonic output
-        synth_->feedSynth(pos, thread, bufferSize);
+        synth_->feedSynth(time);
         // get polyphonic synth output
         std::vector<F32*> ptr(synth_->synth()->numberVoices());
         for (int i=0; i<(int)synth_->synth()->numberVoices(); ++i)
             ptr[i] = i < snd.size() ? snd[i]->signal()->writePointer() : 0;
-        synth_->synth()->process(&ptr[0], bufferSize);
+        synth_->synth()->process(&ptr[0], time.bufferSize());
     }
 }
 

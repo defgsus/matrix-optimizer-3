@@ -54,12 +54,12 @@ int ParameterCallback::getModulatorTypes() const
          | Object::T_AUDIO_OBJECT;
 }
 
-void ParameterCallback::fireIfInput(Double time, uint thread)
+void ParameterCallback::fireIfInput(const RenderTime& time)
 {
     Double mod = 0;
 
     for (auto m : modulators())
-        mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
+        mod += static_cast<ModulatorFloat*>(m)->value(time);
 
     if (mod > 0.)
         fire();

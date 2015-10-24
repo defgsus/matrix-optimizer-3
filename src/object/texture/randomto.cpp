@@ -35,7 +35,7 @@ struct RandomTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     RandomTO * to;
 
@@ -118,9 +118,9 @@ void RandomTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void RandomTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void RandomTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -349,57 +349,57 @@ void RandomTO::Private::releaseGl()
 
 }
 
-void RandomTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void RandomTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_color)
     {
-        float b = p_bright->value(time, thread);
-        u_color->setFloats( p_r->value(time, thread) * b,
-                            p_g->value(time, thread) * b,
-                            p_b->value(time, thread) * b,
-                            p_a->value(time, thread));
+        float b = p_bright->value(time);
+        u_color->setFloats( p_r->value(time) * b,
+                            p_g->value(time) * b,
+                            p_b->value(time) * b,
+                            p_a->value(time));
     }
 
     if (u_hsv)
-        u_hsv->setFloats(   p_hue->value(time, thread),
-                            p_sat->value(time, thread),
-                            p_bright->value(time, thread));
+        u_hsv->setFloats(   p_hue->value(time),
+                            p_sat->value(time),
+                            p_bright->value(time));
 
     if (u_gamma_exp)
     {
-        Double g = p_gamma->value(time, thread);
-        u_gamma_exp->setFloats( 1./(g*p_gamma_r->value(time, thread)),
-                                1./(g*p_gamma_g->value(time, thread)),
-                                1./(g*p_gamma_b->value(time, thread)));
+        Double g = p_gamma->value(time);
+        u_gamma_exp->setFloats( 1./(g*p_gamma_r->value(time)),
+                                1./(g*p_gamma_g->value(time)),
+                                1./(g*p_gamma_b->value(time)));
     }
 
     if (u_start_seed)
     {
-        int seed = p_seed->value(time, thread);
+        int seed = p_seed->value(time);
         u_start_seed->setFloats(seed % 101, (seed / 101) % 101, seed / 101 / 101);
     }
 
     if (u_scale)
-        u_scale->setFloats(p_size->value(time, thread),
-                           p_size_add->value(time, thread));
+        u_scale->setFloats(p_size->value(time),
+                           p_size_add->value(time));
 
     if (u_amp)
-        u_amp->setFloats(p_amp_mul->value(time, thread));
+        u_amp->setFloats(p_amp_mul->value(time));
     if (u_rnd_rotate)
-        u_rnd_rotate->setFloats(p_rnd_rot->value(time, thread) / 180. * PI);
+        u_rnd_rotate->setFloats(p_rnd_rot->value(time) / 180. * PI);
     if (u_voro)
-        u_voro->setFloats(p_voro_cell->value(time, thread),
-                          p_voro_smooth->value(time, thread));
+        u_voro->setFloats(p_voro_cell->value(time),
+                          p_voro_smooth->value(time));
     if (u_mask)
-        u_mask->setFloats(p_range_min->value(time, thread),
-                          p_range_max->value(time, thread),
-                          p_thresh->value(time, thread));
+        u_mask->setFloats(p_range_min->value(time),
+                          p_range_max->value(time),
+                          p_thresh->value(time));
     if (u_max_steps)
-        u_max_steps->ints[0] = p_steps->value(time, thread);
+        u_max_steps->ints[0] = p_steps->value(time);
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

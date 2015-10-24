@@ -240,7 +240,7 @@ void ConvolveAO::Private::initConvolver()
     delayCleared = true;
 }
 
-void ConvolveAO::processAudio(uint bsize, SamplePos pos, uint thread)
+void ConvolveAO::processAudio(const RenderTime& time)
 {
     // init convolution buffer
     if (p_->needUpdate)
@@ -250,42 +250,40 @@ void ConvolveAO::processAudio(uint bsize, SamplePos pos, uint thread)
     }
 
     // init output buffer
-    if (p_->outbuf.blockSize() != bsize)
+    if (p_->outbuf.blockSize() != time.bufferSize())
     {
         // XXX not reentrant either
-        p_->outbuf.setSize(bsize);
-        p_->outbuf2.setSize(bsize);
+        p_->outbuf.setSize(time.bufferSize());
+        p_->outbuf2.setSize(time.bufferSize());
     }
 
-    const Double time = sampleRateInv() * pos;
+    bool doPp = p_->pPostProc->value(time);
 
-    bool doPp = p_->pPostProc->value(time, thread);
-
-    const F32 amp = p_->pAmp->value(time, thread),
-              wet = p_->pWet->value(time, thread);
+    const F32 amp = p_->pAmp->value(time),
+              wet = p_->pWet->value(time);
     F32 dtime=0.f, damt=0.f;
 
     // prepare postproc
     if (doPp)
     {
         // delay can at least be equal to buffer-size
-        dtime = std::max(0., p_->pDelayTime->value(time, thread) * sampleRate() - bsize);
-        damt = p_->pFeedback->value(time, thread);
+        dtime = std::max(0., p_->pDelayTime->value(time) * sampleRate() - time.bufferSize());
+        damt = p_->pFeedback->value(time);
 
         // update delay
         if (p_->delay.size() <= dtime)
             p_->delay.resize(dtime+1);
 
-        if (p_->inbuf.blockSize() != bsize)
-            p_->inbuf.setSize(bsize);
+        if (p_->inbuf.blockSize() != time.bufferSize())
+            p_->inbuf.setSize(time.bufferSize());
 
         p_->delayCleared = false;
 
         // update filter settings
         // XXX Note that these are only updated at the beginning of one dsp block!
-        Float   freq = p_->pfFreq->value(time, thread),
-                freqHp = p_->pfFreqHp->value(time, thread),
-                res = p_->pfReso->value(time, thread);
+        Float   freq = p_->pfFreq->value(time),
+                freqHp = p_->pfFreqHp->value(time),
+                res = p_->pfReso->value(time);
 
         if (   p_->filter.resonance() != res
             || p_->filter.frequency() != freq
@@ -311,7 +309,7 @@ void ConvolveAO::processAudio(uint bsize, SamplePos pos, uint thread)
         p_->delayCleared = true;
     }
 
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
     [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
         if (!doPp)
@@ -324,7 +322,7 @@ void ConvolveAO::processAudio(uint bsize, SamplePos pos, uint thread)
             // get input
             in->readBlock(p_->inbuf.writePointer());
             // mix delay feedback
-            for (uint i = 0; i < bsize; ++i)
+            for (uint i = 0; i < time.bufferSize(); ++i)
                 p_->inbuf.writePointer()[i] +=
                     damt * p_->delay.read(dtime - i);
 
@@ -332,16 +330,16 @@ void ConvolveAO::processAudio(uint bsize, SamplePos pos, uint thread)
             p_->convolver.process(&p_->inbuf, &p_->outbuf);
 
             // filter
-            p_->filter.process(p_->outbuf.readPointer(), p_->inbuf.writePointer(), bsize);
-            p_->filterHp.process(p_->inbuf.readPointer(), p_->outbuf.writePointer(), bsize);
+            p_->filter.process(p_->outbuf.readPointer(), p_->inbuf.writePointer(), time.bufferSize());
+            p_->filterHp.process(p_->inbuf.readPointer(), p_->outbuf.writePointer(), time.bufferSize());
 
             // write convoluted signal to delay line
-            p_->delay.writeBlock(p_->outbuf.readPointer(), bsize);
+            p_->delay.writeBlock(p_->outbuf.readPointer(), time.bufferSize());
 
         }
 
         // mix into output channel
-        for (size_t i=0; i<bsize; ++i)
+        for (size_t i=0; i<time.bufferSize(); ++i)
             out->write(i, in->readPointer()[i] + wet * (
                         amp * p_->outbuf.writePointer()[i] - in->readPointer()[i])
                        );

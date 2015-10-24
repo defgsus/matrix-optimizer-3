@@ -40,16 +40,16 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     /** texture output interface */
-    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
 
     /** Draws the contents of the framebuffer on a [-1,1] quad.
         @p width and @p height are the size of the viewport of the current context. */
-    void drawFramebuffer(uint thread, Double time, int width, int height);
+    void drawFramebuffer(const RenderTime& time, int width, int height);
 
     /** Returns the internal framebuffer on which the shader renders, or NULL */
     GL::FrameBufferObject * fbo() const { return fbo_; }

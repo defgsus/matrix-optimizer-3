@@ -226,7 +226,8 @@ void UdpAudioConnection::Private::deconstructPacket_(const QByteArray& data)
     // read and forward pointer
     s.readRawData((char *)b->buf->writePointer(), b->buf->blockSizeBytes());
     b->buf->nextBlock();
-    b->ao->clientFakeAudio(b->buf->blockSize(), pos, MO_AUDIO_THREAD);
+    // ZZZ
+    b->ao->clientFakeAudio(RenderTime(pos, b->ao->sampleRate(), b->buf->blockSize(), MO_AUDIO_THREAD));
     b->curPos = pos;
 
     MO_DEBUG_UDP("UdpAudioConnection: received buffer "

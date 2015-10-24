@@ -226,7 +226,7 @@ void KeyboardObject::Private::getValue(const QString& id)
 }
 */
 
-Double KeyboardObject::valueFloat(uint chan, Double time, uint thread) const
+Double KeyboardObject::valueFloat(uint chan, const RenderTime& time) const
 {
     if ((int)chan >= p_->values.size())
         return 0.;
@@ -234,11 +234,11 @@ Double KeyboardObject::valueFloat(uint chan, Double time, uint thread) const
     //if (p_->p_interpol->baseValue() == MATH::IT_NONE)
     return KeyboardState::globalInstance().isDown(
             p_->values[chan].keyCode)
-            ? p_->p_onValue->value(time, thread)
-            : p_->p_offValue->value(time, thread);
+            ? p_->p_onValue->value(time)
+            : p_->p_offValue->value(time);
     /*
     Private::Value & v = p_->values[chan];
-    const Double st = std::max(0.0001, p_->p_smoothTime->value(time, thread));
+    const Double st = std::max(0.0001, p_->p_smoothTime->value(time));
 
     return v.smooth[thread].get(time, st, (MATH::InterpolationType)p_->p_interpol->baseValue());
     */

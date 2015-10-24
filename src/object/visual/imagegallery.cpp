@@ -478,24 +478,24 @@ void ImageGallery::getNeededFiles(IO::FileList &files)
         files << IO::FileListEntry(fn, IO::FT_TEXTURE);
 }
 
-Vec4 ImageGallery::imageColor(Double time, uint thread) const
+Vec4 ImageGallery::imageColor(const RenderTime& time) const
 {
-    const auto b = mbright_->value(time, thread);
+    const auto b = mbright_->value(time);
     return Vec4(
-        mr_->value(time, thread) * b,
-        mg_->value(time, thread) * b,
-        mb_->value(time, thread) * b,
-        ma_->value(time, thread));
+        mr_->value(time) * b,
+        mg_->value(time) * b,
+        mb_->value(time) * b,
+        ma_->value(time));
 }
 
-Vec4 ImageGallery::frameColor(Double time, uint thread) const
+Vec4 ImageGallery::frameColor(const RenderTime& time) const
 {
-    const auto b = fbright_->value(time, thread);
+    const auto b = fbright_->value(time);
     return Vec4(
-        fr_->value(time, thread) * b,
-        fg_->value(time, thread) * b,
-        fb_->value(time, thread) * b,
-        fa_->value(time, thread));
+        fr_->value(time) * b,
+        fg_->value(time) * b,
+        fb_->value(time) * b,
+        fa_->value(time));
 }
 
 
@@ -658,7 +658,7 @@ void ImageGallery::setupVaos_()
     // image geom
     {
         // get the input geometries
-        auto geoms = paramImageGeom_->getGeometries(0, MO_GFX_THREAD);
+        auto geoms = paramImageGeom_->getGeometries(RenderTime(0, MO_GFX_THREAD));
 
         // construct a single Geometry from it
         auto geom = GEOM::Geometry::createFrom(geoms);
@@ -689,7 +689,7 @@ void ImageGallery::setupVaos_()
     // frame geom
     {
         // get the input geometries
-        auto geoms = paramFrameGeom_->getGeometries(0, MO_GFX_THREAD);
+        auto geoms = paramFrameGeom_->getGeometries(RenderTime(0, MO_GFX_THREAD));
 
         // construct a single Geometry from it
         auto geom = GEOM::Geometry::createFrom(geoms);
@@ -776,12 +776,12 @@ void ImageGallery::releaseAll_()
     vaoFrame_ = 0;
 }
 
-void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double time)
+void ImageGallery::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 {
     // -- lazy initializer --
 
-    if (paramImageGeom_->hasChanged(time, thread)
-      || paramFrameGeom_->hasChanged(time, thread))
+    if (paramImageGeom_->hasChanged(time)
+      || paramFrameGeom_->hasChanged(time))
     {
         doCreateVaos_ = true;
     }
@@ -811,22 +811,22 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
     if (uniformColor_)
     {
-        frameCol = frameColor(time, thread);
-        imageCol = imageColor(time, thread);
+        frameCol = frameColor(time);
+        imageCol = imageColor(time);
     }
 
     if (u_light_amt_)
     {
         imageLightAmt = Vec4(
-                    diffAmt_->value(time, thread),
-                    diffExp_->value(time, thread),
-                    specAmt_->value(time, thread),
-                    specExp_->value(time, thread));
+                    diffAmt_->value(time),
+                    diffExp_->value(time),
+                    specAmt_->value(time),
+                    specExp_->value(time));
         frameLightAmt = Vec4(
-                    diffAmtF_->value(time, thread),
-                    diffExpF_->value(time, thread),
-                    specAmtF_->value(time, thread),
-                    specExpF_->value(time, thread));
+                    diffAmtF_->value(time),
+                    diffExpF_->value(time),
+                    specAmtF_->value(time),
+                    specExpF_->value(time));
     }
 
     // ---- update shader uniforms -----
@@ -850,8 +850,8 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
         MO_CHECK_GL( glUniformMatrix4fv(uniformProj_->location(), 1, GL_FALSE,
                                         &rs.cameraSpace().projectionMatrix()[0][0]) );
 
-    if (uniformSceneTime_ && time >= 0.)
-        MO_CHECK_GL( glUniform1f(uniformSceneTime_->location(), time) );
+    if (uniformSceneTime_ && time.second() >= 0.)
+        MO_CHECK_GL( glUniform1f(uniformSceneTime_->location(), time.second()) );
 
     if (rs.lightSettings().count())
     {
@@ -874,7 +874,7 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
 
     // --- calc individual transformation ---
 
-    calcEntityTransform_(time, thread);
+    calcEntityTransform_(time);
 
     // render each entity
     for (auto v : entities_)
@@ -913,7 +913,7 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, uint thread, Double ti
                                                 &(trans * v->transformFrame)[0][0]) );
             // bind frame texture
             // (note: 'None' type binds a white picture)
-            frameTexSet_->bind(time, thread);
+            frameTexSet_->bind(time);
 
             // render frame
             vaoFrame_->drawElements();
@@ -1017,7 +1017,7 @@ namespace {
     }
 }
 
-void ImageGallery::calcEntityTransform_(Double time, uint thread)
+void ImageGallery::calcEntityTransform_(const RenderTime & time)
 {
     if (entities_.empty())
         return;
@@ -1025,8 +1025,8 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
     // get some parameter values
 
     const Float
-            spacing = spacing_->value(time, thread),
-            radius = radius_->value(time, thread);
+            spacing = spacing_->value(time),
+            radius = radius_->value(time);
     const int
             alignH = alignH_->baseValue(),
             alignV = alignV_->baseValue();
@@ -1038,22 +1038,22 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
     Float pickIndex=0.f, pickMix=0.f, pickRot=0.f;
     Vec3 pickPos, pickScale, pickRotAxis;
     if (doPickPos)
-        pickPos = Vec3(pickPosX_->value(time, thread),
-                       pickPosY_->value(time, thread),
-                       pickPosZ_->value(time, thread));
+        pickPos = Vec3(pickPosX_->value(time),
+                       pickPosY_->value(time),
+                       pickPosZ_->value(time));
     if (doPickScale)
-        pickScale = Vec3(pickScale_->value(time, thread));
+        pickScale = Vec3(pickScale_->value(time));
     if (doPickRot)
     {
-        pickRot = pickRot_->value(time, thread);
-        pickRotAxis = Vec3(pickRotX_->value(time, thread),
-                           pickRotY_->value(time, thread),
-                           pickRotZ_->value(time, thread));
+        pickRot = pickRot_->value(time);
+        pickRotAxis = Vec3(pickRotX_->value(time),
+                           pickRotY_->value(time),
+                           pickRotZ_->value(time));
     }
     if (doPickPos || doPickScale || doPickRot)
     {
-        pickIndex = pickIndex_->value(time, thread),
-        pickMix = pickMix_->value(time, thread);
+        pickIndex = pickIndex_->value(time),
+        pickMix = pickMix_->value(time);
     }
 
     switch (Arrangement(arrangement_->baseValue()))
@@ -1172,9 +1172,9 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
 
         case A_RANDOM_3D:
         {
-            const Vec4 sc = Vec4(radiusX_->value(time, thread),
-                                 radiusY_->value(time, thread),
-                                 radiusZ_->value(time, thread), 1);
+            const Vec4 sc = Vec4(radiusX_->value(time),
+                                 radiusY_->value(time),
+                                 radiusZ_->value(time), 1);
             for (auto v : entities_)
             {
                 Mat4 trans = v->transformRnd;
@@ -1188,11 +1188,11 @@ void ImageGallery::calcEntityTransform_(Double time, uint thread)
 
     // final transform
     const Vec3
-            scale = Vec3(scale_->value(time, thread)),
-            rotv = Vec3(rotX_->value(time, thread),
-                        rotY_->value(time, thread),
-                        rotZ_->value(time, thread));
-    const Float rota = rotation_->value(time, thread);
+            scale = Vec3(scale_->value(time)),
+            rotv = Vec3(rotX_->value(time),
+                        rotY_->value(time),
+                        rotZ_->value(time));
+    const Float rota = rotation_->value(time);
 
     if (!doPickRot && !doPickScale && !doPickPos)
     {

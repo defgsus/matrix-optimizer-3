@@ -26,7 +26,7 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
 
     virtual void applyTransformation(
-            Mat4& matrix, Double time, uint thread) const Q_DECL_OVERRIDE;
+            Mat4& matrix, const RenderTime& time) const Q_DECL_OVERRIDE;
 
 signals:
 

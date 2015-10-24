@@ -17,7 +17,7 @@
 #include <QMap>
 
 #include "object/object_fwd.h"
-#include "types/float.h"
+#include "types/time.h"
 
 
 namespace MO {
@@ -106,7 +106,7 @@ public:
     /** Pulling value change test.
         XXX Should be implemented for all Parameters i guess,
             only for textures right now. */
-    virtual bool hasChanged(Double time, uint thread) const { Q_UNUSED(time); Q_UNUSED(thread); return false; }
+    virtual bool hasChanged(const RenderTime& time) const { Q_UNUSED(time); return false; }
 
     // -------------- setter --------------------
 

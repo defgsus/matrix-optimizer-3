@@ -23,12 +23,11 @@ class DerivativeObjectFloat : public Object, public ValueFloatInterface
 public:
     MO_OBJECT_CONSTRUCTOR(DerivativeObjectFloat);
 
-    /** @todo create a general float object type ?? */
-    virtual Type type() const Q_DECL_OVERRIDE { return T_MODULATOR_OBJECT_FLOAT; }
+    virtual Type type() const Q_DECL_OVERRIDE { return T_CONTROL; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 
-    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
 signals:
 

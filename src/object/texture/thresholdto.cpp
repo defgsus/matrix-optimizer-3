@@ -33,7 +33,7 @@ struct ThresholdTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime & time);
 
     ThresholdTO * to;
 
@@ -91,9 +91,9 @@ void ThresholdTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void ThresholdTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void ThresholdTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -179,25 +179,25 @@ void ThresholdTO::Private::releaseGl()
 
 }
 
-void ThresholdTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void ThresholdTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     const Float
-            r = p_r->value(time, thread),
-            g = p_g->value(time, thread),
-            b = p_b->value(time, thread),
-            a = p_a->value(time, thread);
+            r = p_r->value(time),
+            g = p_g->value(time),
+            b = p_b->value(time),
+            a = p_a->value(time);
 
     if (u_color)
         u_color->setFloats( r, g, b, a );
 
     if (u_settings)
         u_settings->setFloats(
-                            p_thresh->value(time, thread) * (r + g + b + a)
+                            p_thresh->value(time) * (r + g + b + a)
                             );
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

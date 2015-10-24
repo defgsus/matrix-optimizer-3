@@ -103,7 +103,7 @@ void NoiseAO::setNumberThreads(uint num)
     p_->b_coeffs.resize(num);
     for(uint i=0;i<num;++i) {
         p_->last[i]     = 0.0;
-        p_->lastbeta[i] = p_->paramBeta->value(0,i);
+        p_->lastbeta[i] = p_->paramBeta->baseValue();
         p_->coeff[i]    = sqrt(1.0 - p_->last[i]*p_->lastbeta[i]);
         p_->ampmod[i]   = 0.785/(1.0+p_->lastbeta[i]);
         p_->b_coeffs[i].resize(7);
@@ -144,28 +144,28 @@ QString NoiseAO::getAudioInputName(uint channel) const
     return AudioObject::getAudioInputName(channel);
 }
 
-void NoiseAO::processWhiteNoise(uint, SamplePos pos, uint thread)
+void NoiseAO::processWhiteNoise(const RenderTime& rtime)
 {
     const QList<AUDIO::AudioBuffer*>&
-//            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+//            inputs  = audioInputs(rtime.thread()),
+            outputs = audioOutputs(rtime.thread());
 
     AUDIO::AudioBuffer
             * out    = outputs.isEmpty() ? 0 : outputs[0];
 
     if(!out) return;
 
+    RenderTime time(rtime);
     for(uint i=0;i<out->blockSize();++i) {
         Double
-                time   = sampleRateInv() * (pos + i),
-                beta   = p_->paramBeta->value(time, thread);
-        p_->lastbeta[thread] = beta;
+                beta   = p_->paramBeta->value(time);
+        p_->lastbeta[time.thread()] = beta;
 
         Double
-                coeff  = p_->coeff[thread]    = sqrt(1.0 - p_->lastbeta[thread] * p_->lastbeta[thread]),
-                ampmod = p_->ampmod[thread]   = 0.785/(1.0 + p_->lastbeta[thread]),
-                lastx  = p_->last[thread],
-                amp    = p_->paramAmp->value(time,thread);
+                coeff  = p_->coeff[time.thread()]    = sqrt(1.0 - p_->lastbeta[time.thread()] * p_->lastbeta[time.thread()]),
+                ampmod = p_->ampmod[time.thread()]   = 0.785/(1.0 + p_->lastbeta[time.thread()]),
+                lastx  = p_->last[time.thread()],
+                amp    = p_->paramAmp->value(time);
 
         Double
                 rnd = 2.0 * Double(p_->rand31()) / Double(2147483645) - 1.0;
@@ -173,34 +173,35 @@ void NoiseAO::processWhiteNoise(uint, SamplePos pos, uint thread)
         lastx = lastx * beta + coeff * rnd;
 
         out->write(i, lastx * ampmod * amp);
+        time += SamplePos(1);
     }
 }
 
-void NoiseAO::processPinkNoise(uint, SamplePos pos, uint thread)
+void NoiseAO::processPinkNoise(const RenderTime& rtime)
 {
     const QList<AUDIO::AudioBuffer*>&
-//            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+//            inputs  = audioInputs(rthread),
+            outputs = audioOutputs(rtime.thread());
 
     AUDIO::AudioBuffer
             * out    = outputs.isEmpty() ? 0 : outputs[0];
 
     std::vector<Double> c_coeffs(7);
     Double next_in, next_out;
-    std::copy(p_->b_coeffs[thread].begin(),
-              p_->b_coeffs[thread].end(),
+    std::copy(p_->b_coeffs[rtime.thread()].begin(),
+              p_->b_coeffs[rtime.thread()].end(),
               c_coeffs.begin());
+    RenderTime time(rtime);
     for(uint i=0;i<out->blockSize();++i) {
         Double
-                time = sampleRateInv() * (pos + i),
-                amp  = p_->paramAmp->value(time,thread),
-                beta   = p_->paramBeta->value(time, thread);
-        p_->lastbeta[thread] = beta;
+                amp  = p_->paramAmp->value(time),
+                beta   = p_->paramBeta->value(time);
+        p_->lastbeta[time.thread()] = beta;
 
         Double
-                coeff  = p_->coeff[thread]    = sqrt(1.0 - p_->lastbeta[thread] * p_->lastbeta[thread]),
-                ampmod = p_->ampmod[thread]   = 0.785/(1.0 + p_->lastbeta[thread]),
-                lastx  = p_->last[thread];
+                coeff  = p_->coeff[time.thread()]    = sqrt(1.0 - p_->lastbeta[time.thread()] * p_->lastbeta[time.thread()]),
+                ampmod = p_->ampmod[time.thread()]   = 0.785/(1.0 + p_->lastbeta[time.thread()]),
+                lastx  = p_->last[time.thread()];
 
         Double
                 rnd = 2.0 * Double(p_->rand31()) / Double(2147483645) - 1.0;
@@ -217,9 +218,8 @@ void NoiseAO::processPinkNoise(uint, SamplePos pos, uint thread)
         c_coeffs[4] = c_coeffs[4] * 0.55000 + next_in * 0.5329522;
         c_coeffs[5] = c_coeffs[5] * -0.7616 - next_in * 0.0168980;
         Double sum = 0;
-        std::for_each(c_coeffs.begin(),
-                      c_coeffs.end(),
-                      [&](int n){sum += n;});
+        for (auto & c : c_coeffs)
+            sum += c;
         next_out = sum + next_in * 0.5362;
 //        next_out = c_coeffs[0]
 //                + c_coeffs[1]
@@ -230,21 +230,22 @@ void NoiseAO::processPinkNoise(uint, SamplePos pos, uint thread)
 //                + c_coeffs[6] + next_in * 0.5362;
         out->write(i, next_out * 0.11 * amp);
         c_coeffs[6] = next_in * 0.115926;
+        time += SamplePos(1);
     }
     std::copy(c_coeffs.begin(),
               c_coeffs.end(),
-              p_->b_coeffs[thread].begin());
+              p_->b_coeffs[time.thread()].begin());
 }
 
-void NoiseAO::processAudio(uint i, SamplePos pos, uint thread)
+void NoiseAO::processAudio(const RenderTime& time)
 {
     switch(p_->mode()) {
     case Private::M_PINK:
-        processPinkNoise(i, pos, thread);
+        processPinkNoise(time);
         break;
     case Private::M_WHITE:
     default:
-        processWhiteNoise(i, pos, thread);
+        processWhiteNoise(time);
     }
 }
 

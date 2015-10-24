@@ -86,12 +86,12 @@ int ParameterInt::getModulatorTypes() const
         | Object::T_MODULATOR_OBJECT_FLOAT;
 }
 
-Int ParameterInt::getModulationValue(Double time, uint thread) const
+Int ParameterInt::getModulationValue(const RenderTime& time) const
 {
     Float mod = 0;
 
     for (auto m : modulators())
-        mod += static_cast<ModulatorFloat*>(m)->value(time, thread);
+        mod += static_cast<ModulatorFloat*>(m)->value(time);
 
     return (Int)mod;
 }

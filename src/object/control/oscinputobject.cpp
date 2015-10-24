@@ -253,18 +253,19 @@ void OscInputObject::Private::getValue(const QString& id)
         sm.set(ti, val);
 }
 
-Double OscInputObject::valueFloat(uint chan, Double time, uint thread) const
+Double OscInputObject::valueFloat(uint chan, const RenderTime& time) const
 {
     if ((int)chan >= p_->values.size())
         return 0.;
 
     if (p_->p_interpol->baseValue() == MATH::IT_NONE)
-        return p_->values[chan].smooth[thread].get();
+        return p_->values[chan].smooth[time.thread()].get();
 
     Private::Value & v = p_->values[chan];
-    const Double st = std::max(0.0001, p_->p_smoothTime->value(time, thread));
+    const Double st = std::max(0.0001, p_->p_smoothTime->value(time));
 
-    return v.smooth[thread].get(time, st, (MATH::InterpolationType)p_->p_interpol->baseValue());
+    return v.smooth[time.thread()].get(time.second(), st,
+                                (MATH::InterpolationType)p_->p_interpol->baseValue());
 }
 
 

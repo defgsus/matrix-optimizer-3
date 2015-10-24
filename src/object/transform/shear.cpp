@@ -53,15 +53,15 @@ void Shear::createParameters()
     params()->endParameterGroup();
 }
 
-void Shear::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void Shear::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     const Double
-        xy = xy_->value(time, thread),
-        xz = xz_->value(time, thread),
-        yx = yx_->value(time, thread),
-        yz = yz_->value(time, thread),
-        zx = zx_->value(time, thread),
-        zy = zy_->value(time, thread);
+        xy = xy_->value(time),
+        xz = xz_->value(time),
+        yx = yx_->value(time),
+        yz = yz_->value(time),
+        zx = zx_->value(time),
+        zy = zy_->value(time);
 
     Mat4 shear(1);
     shear[0][1] = xy;

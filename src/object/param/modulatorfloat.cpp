@@ -115,11 +115,12 @@ void ModulatorFloat::modulatorChanged_()
     }
 }
 
-Double ModulatorFloat::value(Double time, uint thread) const
+Double ModulatorFloat::value(const RenderTime& rtime) const
 {
-    time += timeOffset_;
+    RenderTime time(rtime);
+    time.setSecond( time.second() + timeOffset_ );
 
-    if (!modulator() || !modulator()->active(time, thread))
+    if (!modulator() || !modulator()->active(time))
         return 0.0;
 
     switch (sourceType_)
@@ -136,13 +137,14 @@ Double ModulatorFloat::value(Double time, uint thread) const
                 if (seq->parentClip() && !seq->parentClip()->isPlaying())
                     return 0.0;
             }
-            return amplitude_ * interface_->valueFloat(outputChannel(), time, thread);
+            return amplitude_ * interface_->valueFloat(outputChannel(), time);
         }
 
         case ST_AUDIO_OBJECT:
+            time.setThread(MO_AUDIO_THREAD);
             return amplitude_ *
                     static_cast<AudioObject*>(modulator())
-                        ->getAudioOutputAsFloat(outputChannel(), time, MO_AUDIO_THREAD);
+                        ->getAudioOutputAsFloat(outputChannel(), time);
     }
 
     return 0.0;

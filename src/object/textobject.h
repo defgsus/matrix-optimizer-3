@@ -30,7 +30,7 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
-    virtual QPair<QString, TextType> valueText(Double time, uint thread) const
+    virtual QPair<QString, TextType> valueText(uint channel, const RenderTime& time) const
                         Q_DECL_OVERRIDE;
 
     /** Sets the text content and type */

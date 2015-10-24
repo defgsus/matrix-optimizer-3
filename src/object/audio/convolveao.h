@@ -29,8 +29,7 @@ public:
     virtual void setSampleRate(uint samplerate) Q_DECL_OVERRIDE;
 protected:
 
-    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
-                                                            Q_DECL_OVERRIDE;
+    virtual void processAudio(const RenderTime& time) Q_DECL_OVERRIDE;
 private:
 
     struct Private;

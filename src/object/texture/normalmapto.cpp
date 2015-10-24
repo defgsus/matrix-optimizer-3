@@ -35,7 +35,7 @@ struct NormalMapTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     NormalMapTO * to;
 
@@ -98,9 +98,9 @@ void NormalMapTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void NormalMapTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void NormalMapTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -216,26 +216,26 @@ void NormalMapTO::Private::releaseGl()
 
 }
 
-void NormalMapTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void NormalMapTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_color)
     {
-        u_color->setFloats( p_r->value(time, thread),
-                            p_g->value(time, thread),
-                            p_b->value(time, thread),
-                            p_a->value(time, thread));
+        u_color->setFloats( p_r->value(time),
+                            p_g->value(time),
+                            p_b->value(time),
+                            p_a->value(time));
     }
 
     if (u_eps)
     {
-        Float eps = std::max(0.000001, std::pow(p_eps->value(time, thread), 2.) / 3. ),
-              eps2 = std::pow(p_eps2->value(time, thread), 2.);
+        Float eps = std::max(0.000001, std::pow(p_eps->value(time), 2.) / 3. ),
+              eps2 = std::pow(p_eps2->value(time), 2.);
         u_eps->setFloats( eps, eps * eps2 );
     }
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

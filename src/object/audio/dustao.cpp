@@ -144,11 +144,11 @@ QString DustAO::getAudioInputName(uint channel) const
 
 static const Double dv2_31 = 4.656612873077392578125e-10;
 
-void DustAO::processDust(uint, SamplePos pos, uint thread)
+void DustAO::processDust(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*> &
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
     AUDIO::AudioBuffer
             * out    = outputs.isEmpty() ? 0 : outputs[0],
@@ -157,44 +157,41 @@ void DustAO::processDust(uint, SamplePos pos, uint thread)
 
     if(!out) return;
 
-    Double  time   = sampleRateInv() * pos;
-
     Double
             thresh, scale,
-            dens0  = p_->density0[thread],
-            dens   = p_->paramDensity->value(time,thread);
+            dens0  = p_->density0[time.thread()],
+            dens   = p_->paramDensity->value(time);
 
     if(inDens)
         dens += inDens->read(0);
 
     if(dens != dens0) {
-        thresh = p_->threshold[thread] = dens * sampleRateInv();
-        scale  = p_->scale[thread] = (thresh > 0.0 ? 1.0/thresh : 0.0);
-        p_->density0[thread] = dens;
+        thresh = p_->threshold[time.thread()] = dens * sampleRateInv();
+        scale  = p_->scale[time.thread()] = (thresh > 0.0 ? 1.0/thresh : 0.0);
+        p_->density0[time.thread()] = dens;
     } else {
-        thresh = p_->threshold[thread];
-        scale  = p_->scale[thread];
+        thresh = p_->threshold[time.thread()];
+        scale  = p_->scale[time.thread()];
     }
 
     for(uint i=0; i<out->blockSize(); ++i) {
-        Double  time = sampleRateInv() * (pos + i);
-        Double  amp  = p_->paramAmp->value(time,thread);
+        Double  amp  = p_->paramAmp->value(time + SamplePos(i));
 
         if(inAmp)
             amp += inAmp->read(i);
 
-        p_->rand[thread] = rand();
-        Double r = p_->rand[thread] * dv2_31;
+        p_->rand[time.thread()] = rand();
+        Double r = p_->rand[time.thread()] * dv2_31;
 
         out->write(i, amp * ((r < thresh) ? r * scale : 0.0));
     }
 }
 
-void DustAO::processDust2(uint, SamplePos pos, uint thread)
+void DustAO::processDust2(const RenderTime & time)
 {
     const QList<AUDIO::AudioBuffer*> &
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
     AUDIO::AudioBuffer
             * out    = outputs.isEmpty() ? 0 : outputs[0],
@@ -203,49 +200,46 @@ void DustAO::processDust2(uint, SamplePos pos, uint thread)
 
     if(!out) return;
 
-    Double  time   = sampleRateInv() * pos;
-
     Double
             thresh, scale,
-            dens0  = p_->density0[thread],
-            dens   = p_->paramDensity->value(time,thread);
+            dens0  = p_->density0[time.thread()],
+            dens   = p_->paramDensity->value(time);
 
     if(inDens)
         dens += inDens->read(0);
 
     if(dens != dens0) {
-        thresh = p_->threshold[thread] = dens * sampleRateInv();
-        scale  = p_->scale[thread] = (thresh > 0.0 ? 2.0/thresh : 0.0);
-        p_->density0[thread] = dens;
+        thresh = p_->threshold[time.thread()] = dens * sampleRateInv();
+        scale  = p_->scale[time.thread()] = (thresh > 0.0 ? 2.0/thresh : 0.0);
+        p_->density0[time.thread()] = dens;
     } else {
-        thresh = p_->threshold[thread];
-        scale  = p_->scale[thread];
+        thresh = p_->threshold[time.thread()];
+        scale  = p_->scale[time.thread()];
     }
 
     for(uint i=0; i<out->blockSize(); ++i) {
-        Double  time = sampleRateInv() * (pos + i);
-        Double  amp  = p_->paramAmp->value(time,thread);
+        Double  amp  = p_->paramAmp->value(time + SamplePos(i));
 
         if(inAmp)
             amp += inAmp->read(i);
 
-        p_->rand[thread] = rand();
-        Double r = p_->rand[thread] * dv2_31;
+        p_->rand[time.thread()] = rand();
+        Double r = p_->rand[time.thread()] * dv2_31;
 
         out->write(i, amp * ((r < thresh) ? r * scale -1.0 : 0.0));
     }
 
 }
 
-void DustAO::processAudio(uint i, SamplePos pos, uint thread)
+void DustAO::processAudio(const RenderTime& time)
 {
     switch(p_->mode()) {
     case Private::M_DUST2:
-        processDust2(i, pos, thread);
+        processDust2(time);
         break;
     case Private::M_DUST:
     default:
-    processDust(i, pos, thread);
+    processDust(time);
     }
 }
 

@@ -80,31 +80,31 @@ void LightSource::createParameters()
     params()->endParameterGroup();
 }
 
-Vec4 LightSource::lightColor(Double time, uint thread) const
+Vec4 LightSource::lightColor(const RenderTime & time) const
 {
-    const Float all = all_->value(time, thread);
-    return Vec4(r_->value(time, thread) * all,
-                g_->value(time, thread) * all,
-                b_->value(time, thread) * all,
-                dist_->value(time, thread) * 0.001);
+    const Float all = all_->value(time);
+    return Vec4(r_->value(time) * all,
+                g_->value(time) * all,
+                b_->value(time) * all,
+                dist_->value(time) * 0.001);
 }
 
-void LightSource::getLightSettings(GL::LightSettings * l, uint i, Double time, uint thread)
+void LightSource::getLightSettings(GL::LightSettings * l, uint i, const RenderTime& time)
 {
     const Vec3 pos = position();
     l->setPosition(i, pos[0], pos[1], pos[2]);
 
-    const Vec4 col = lightColor(time, thread);
+    const Vec4 col = lightColor(time);
     l->setColor(i, col[0], col[1], col[2], col[3]);
 
-    l->setDiffuseExponent(i, diffuseExp_->value(time, thread));
+    l->setDiffuseExponent(i, diffuseExp_->value(time));
 
-    Float mix = directional_->value(time, thread),
+    Float mix = directional_->value(time),
             rmin = 0.f, rmax = 0.f;
     if (mix > 0.f)
     {
-        const Float ang = directionAngle_->value(time, thread);
-        rmax = directionRange_->value(time, thread) / 2.;
+        const Float ang = directionAngle_->value(time);
+        rmax = directionRange_->value(time) / 2.;
         rmin = ang - rmax;
         rmax = ang + rmax;
 

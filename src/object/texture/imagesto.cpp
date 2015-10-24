@@ -151,12 +151,12 @@ void ImagesTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * ImagesTO::valueTexture(uint chan, Double time, uint thread) const
+const GL::Texture * ImagesTO::valueTexture(uint chan, const RenderTime& time) const
 {
     if (tex_.isEmpty() || chan != 0)
         return 0;
 
-    int index = std::min(pIndex_->value(time, thread), tex_.count() - 1);
+    int index = std::min(pIndex_->value(time), tex_.count() - 1);
     return tex_[index];
 }
 

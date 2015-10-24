@@ -59,11 +59,11 @@ void SoundSourceAO::createParameters()
 
 void SoundSourceAO::calculateSoundSourceBuffer(
                             const QList<AUDIO::SpatialSoundSource *> snds,
-                            uint , SamplePos , uint thread)
+                            const RenderTime& time)
 {
     // simply copy input channel
-    if (!audioInputs(thread).isEmpty())
-        if (const auto in = audioInputs(thread)[0])
+    if (!audioInputs(time.thread()).isEmpty())
+        if (const auto in = audioInputs(time.thread())[0])
             snds[0]->signal()->writeBlock(in->readPointer());
 }
 

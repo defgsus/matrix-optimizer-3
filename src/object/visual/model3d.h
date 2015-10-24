@@ -45,20 +45,20 @@ public:
     void setGeometry(const GEOM::Geometry& );
 
     const GEOM::Geometry * geometry() const;
-    Vec4 modelColor(Double time, uint thread) const;
+    Vec4 modelColor(const RenderTime & time) const;
     /** Returns a copy of the shader code after replacements, includes, etc.. */
     GL::ShaderSource shaderSource() const;
 
     /** Geometry interface */
     const GEOM::Geometry * valueGeometry(
-            uint channel, Double time, uint thread) const Q_DECL_OVERRIDE
-    { Q_UNUSED(channel); Q_UNUSED(time); Q_UNUSED(thread); return geometry(); }
+            uint channel, const RenderTime& time) const Q_DECL_OVERRIDE
+    { Q_UNUSED(time); return channel == 0 ? geometry() : 0; }
 
 protected:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings& rs, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings& rs, const RenderTime& time) Q_DECL_OVERRIDE;
     virtual void numberLightSourcesChanged(uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;

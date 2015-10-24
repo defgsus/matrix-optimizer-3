@@ -164,16 +164,14 @@ void FilterAO::Private::updateFilters()
     }
 }
 
-void FilterAO::processAudio(uint , SamplePos pos, uint thread)
+void FilterAO::processAudio(const RenderTime& time)
 {
-    const Double time = sampleRateInv() * pos;
-
     // update filter
-    AUDIO::MultiFilter * filter = p_->filters[thread].get();
+    AUDIO::MultiFilter * filter = p_->filters[time.thread()].get();
 
-    Float   freq = p_->paramFreq->value(time, thread),
-            res = p_->paramReso->value(time, thread),
-            amp = p_->paramAmp->value(time, thread);
+    Float   freq = p_->paramFreq->value(time),
+            res = p_->paramReso->value(time),
+            amp = p_->paramAmp->value(time);
 
     // update filter settings
     // XXX Note that these are only updated at the beginning of one dsp block!
@@ -189,7 +187,7 @@ void FilterAO::processAudio(uint , SamplePos pos, uint thread)
     // does not need updateCoefficients()
     filter->setOutputAmplitude(amp);
 
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
     [filter](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
         filter->process(in->readPointer(), out->writePointer(), out->blockSize());

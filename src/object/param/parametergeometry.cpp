@@ -57,42 +57,42 @@ Modulator * ParameterGeometry::getModulator(const QString& id, const QString& ou
 }
 
 
-QList<const GEOM::Geometry*> ParameterGeometry::getGeometries(Double time, uint thread) const
+QList<const GEOM::Geometry*> ParameterGeometry::getGeometries(const RenderTime & time) const
 {
     QList<const GEOM::Geometry*> list;
 
     for (auto m : modulators())
-        if (auto g = static_cast<ModulatorGeometry*>(m)->value(time, thread))
+        if (auto g = static_cast<ModulatorGeometry*>(m)->value(time))
             list << g;
 
-    if ((int)thread >= lastGeoms_.size())
+    if ((int)time.thread() >= lastGeoms_.size())
     {
-        lastGeoms_.resize(thread+1);
-        lastHashes_.resize(thread+1);
+        lastGeoms_.resize(time.thread()+1);
+        lastHashes_.resize(time.thread()+1);
     }
-    lastGeoms_[thread] = list;
-    lastHashes_[thread].resize(list.size());
+    lastGeoms_[time.thread()] = list;
+    lastHashes_[time.thread()].resize(list.size());
     for (int i=0; i<list.size(); ++i)
-        lastHashes_[thread][i] = list[i]->hash();
+        lastHashes_[time.thread()][i] = list[i]->hash();
 
     return list;
 }
 
 
-bool ParameterGeometry::hasChanged(Double time, uint thread) const
+bool ParameterGeometry::hasChanged(const RenderTime& time) const
 {
-    if ((int)thread >= lastGeoms_.size())
+    if ((int)time.thread() >= lastGeoms_.size())
         return true;
 
     QList<const GEOM::Geometry*> list;
     for (auto m : modulators())
-        if (auto g = static_cast<ModulatorGeometry*>(m)->value(time, thread))
+        if (auto g = static_cast<ModulatorGeometry*>(m)->value(time))
             list << g;
-    if (list != lastGeoms_[thread])
+    if (list != lastGeoms_[time.thread()])
         return true;
 
     for (int i=0; i<list.size(); ++i)
-        if (list[i]->hash() != lastGeoms_[thread][i]->hash())
+        if (list[i]->hash() != lastGeoms_[time.thread()][i]->hash())
             return true;
 
     return false;

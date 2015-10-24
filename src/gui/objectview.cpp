@@ -217,7 +217,7 @@ void ObjectView::updateImage()
     // object has texture?
     if (auto ti = dynamic_cast<ValueTextureInterface*>(object_))
     {
-        if (auto tex = ti->valueTexture(channel, CurrentTime::time(), MO_GUI_THREAD))
+        if (auto tex = ti->valueTexture(channel, RenderTime(CurrentTime::time(), MO_GUI_THREAD)))
         {
             // create resampler
             if (!texRender_)

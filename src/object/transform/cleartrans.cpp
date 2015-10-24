@@ -67,12 +67,12 @@ void ClearTrans::createParameters()
 }
 
 
-void ClearTrans::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void ClearTrans::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     const bool
-            cPos = cPos_->value(time, thread),
-            cRot = cRot_->value(time, thread),
-            cScale = cScale_->value(time, thread);
+            cPos = cPos_->value(time),
+            cRot = cRot_->value(time),
+            cScale = cScale_->value(time);
 
     if (cPos)
     {

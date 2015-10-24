@@ -86,14 +86,14 @@ void LookAt::createParameters()
 }
 
 
-void LookAt::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void LookAt::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
-    Vec3 lookAt = Vec3(x_->value(time, thread),
-                       y_->value(time, thread),
-                       z_->value(time, thread));
-    Vec3 up = Vec3(upX_->value(time, thread),
-                   upY_->value(time, thread),
-                   upZ_->value(time, thread));
+    Vec3 lookAt = Vec3(x_->value(time),
+                       y_->value(time),
+                       z_->value(time));
+    Vec3 up = Vec3(upX_->value(time),
+                   upY_->value(time),
+                   upZ_->value(time));
 
     bool glook = lookMode_->baseValue() == LM_GLOBAL,
          gup = upMode_->baseValue() == LM_GLOBAL;

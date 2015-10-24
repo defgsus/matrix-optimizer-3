@@ -249,19 +249,21 @@ void ShaperAO::setAudioBuffers(uint thread, uint ,
     p_->updateEquations();
 }
 
-void ShaperAO::processAudio(uint bsize, SamplePos pos, uint thread)
+void ShaperAO::processAudio(const RenderTime& time)
 {
 #define MO__PROCESS(func__)                                                     \
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),      \
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()),                     \
+                                audioOutputs(time.thread()),                    \
     [=](uint channel, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)  \
     {                                                                           \
         Q_UNUSED(channel);                                                      \
-        for (SamplePos i=0; i<bsize; ++i)                                       \
+        RenderTime ti(time);                                                    \
+        for (SamplePos i=0; i<ti.bufferSize(); ++i)                             \
         {                                                                       \
-            const Double time = sampleRateInv() * (pos + i);                    \
-            const F32 inamp = p_->paramInAmp->value(time, thread);              \
-            const F32 outamp = p_->paramOutAmp->value(time, thread);            \
+            const F32 inamp = p_->paramInAmp->value(ti);                        \
+            const F32 outamp = p_->paramOutAmp->value(ti);                      \
             out->write(i, outamp * (func__(inamp * in->read(i))));              \
+            ti += SamplePos(1);                                                 \
         }                                                                       \
     });
 
@@ -270,7 +272,7 @@ void ShaperAO::processAudio(uint bsize, SamplePos pos, uint thread)
         case ST_TANH:       MO__PROCESS(tanh); break;
         case ST_TANH_CHEAP: MO__PROCESS(MATH::fast_tanh); break;
         case ST_CURVE:      MO__PROCESS(p_->paramCurve->timeline()->get); break;
-        case ST_EQUATION:   MO__PROCESS(p_->equations[thread][channel]); break;
+        case ST_EQUATION:   MO__PROCESS(p_->equations[time.thread()][channel]); break;
     }
 
 #undef MO__PROCESS

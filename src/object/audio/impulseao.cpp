@@ -124,11 +124,11 @@ QString ImpulseAO::getAudioInputName(uint channel) const
     return AudioObject::getAudioInputName(channel);
 }
 
-void ImpulseAO::processAudio(uint, SamplePos pos, uint thread)
+void ImpulseAO::processAudio(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
     AUDIO::AudioBuffer
             * out = outputs.isEmpty() ? 0 : outputs[0];
@@ -140,23 +140,23 @@ void ImpulseAO::processAudio(uint, SamplePos pos, uint thread)
     if(inputs.isEmpty()) {
         for(uint i=0;i<out->blockSize();++i,++write) {
             // time for parameter reads
-            Double time = sampleRateInv() * (pos + i);
+            RenderTime rtime = time + SamplePos(i);
 
             // update phase
-            p_->phase[thread] += sampleRateInv() * p_->paramFreq->value(time, thread);
+            p_->phase[time.thread()] += sampleRateInv() * p_->paramFreq->value(rtime);
 
             *write = 0.0;
 
             // keep in bounds
-            if (p_->phase[thread] > 1)
+            if (p_->phase[time.thread()] > 1)
             {
-                p_->phase[thread] -= 2;
-                *write = 1.0 * p_->paramAmp->value(time,thread);
+                p_->phase[time.thread()] -= 2;
+                *write = 1.0 * p_->paramAmp->value(rtime);
             }
             else
-            if (p_->phase[thread] < -1) {
-                p_->phase[thread] += 2;
-                *write = 1.0 * p_->paramAmp->value(time,thread);
+            if (p_->phase[time.thread()] < -1) {
+                p_->phase[time.thread()] += 2;
+                *write = 1.0 * p_->paramAmp->value(rtime);
             }
         }
     } else {
@@ -166,32 +166,32 @@ void ImpulseAO::processAudio(uint, SamplePos pos, uint thread)
                 * inFreq  = inputs.size() < 3 ? 0 : inputs[2],
                 * inPhase = inputs.size() < 4 ? 0 : inputs[3];
         for(uint i=0;i<out->blockSize(); ++i, ++write) {
-            Double time = sampleRateInv() * (pos + i);
+            RenderTime rtime = time + SamplePos(i);
 
             // read parameters and add audio signal
-            Double amp = p_->paramAmp->value(time,thread);
+            Double amp = p_->paramAmp->value(rtime);
             if(inAmp)
                 amp += inAmp->read(i);
-            Double freq = p_->paramFreq->value(time,thread);
+            Double freq = p_->paramFreq->value(rtime);
             if(inFreq)
                 freq += inFreq->read(i);
-            Double phase = p_->paramPhase->value(time,thread);
+            Double phase = p_->paramPhase->value(rtime);
             if(inPhase)
                 phase += inPhase->read(i);
 
-            p_->phase[thread] += sampleRateInv() * freq;
+            p_->phase[time.thread()] += sampleRateInv() * freq;
 
             *write = 0.0;
 
             // keep in bounds
-            if (p_->phase[thread] > 1)
+            if (p_->phase[time.thread()] > 1)
             {
-                p_->phase[thread] -= 2;
+                p_->phase[time.thread()] -= 2;
                 *write = 1.0 * amp;
             }
             else
-            if (p_->phase[thread] < -1) {
-                p_->phase[thread] += 2;
+            if (p_->phase[time.thread()] < -1) {
+                p_->phase[time.thread()] += 2;
                 *write = 1.0 * amp;
             }
         }

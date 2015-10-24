@@ -13,6 +13,7 @@
 
 #include "modulator.h"
 #include "types/vector.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -46,7 +47,7 @@ public:
     bool hasTimeOffset() const { return false; }
 
     /** Returns the modulation-value at given time */
-    Mat4 value(Double time, uint thread) const;
+    Mat4 value(const RenderTime& time) const;
 
     // ------------- setter ----------------
 

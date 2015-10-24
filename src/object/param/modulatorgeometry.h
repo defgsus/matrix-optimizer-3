@@ -12,8 +12,8 @@
 #define MOSRC_OBJECT_PARAM_MODULATORGEOMETRY_H
 
 #include "modulator.h"
-#include "types/float.h"
 #include "gl/opengl_fwd.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -42,7 +42,7 @@ public:
 
     /** Returns the modulation-value at given time,
         or NULL if there is no texture. */
-    const GEOM::Geometry* value(Double time, uint thread) const;
+    const GEOM::Geometry* value(const RenderTime & time) const;
 
     // ------------- setter ----------------
 

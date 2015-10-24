@@ -26,13 +26,13 @@ public:
     ~Oscillograph();
 
     const GEOM::Geometry * geometry() const;
-    Vec4 modelColor(Double time, uint thread) const;
+    Vec4 modelColor(const RenderTime & time) const;
 
 protected:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings& rs, uint, Double time) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings& rs, const RenderTime& time) Q_DECL_OVERRIDE;
 //    virtual void numberLightSourcesChanged(uint thread) Q_DECL_OVERRIDE;
 
     virtual void createParameters() Q_DECL_OVERRIDE;

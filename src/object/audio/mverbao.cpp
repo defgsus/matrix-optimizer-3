@@ -141,15 +141,15 @@ void MVerbAO::processAudio(uint bsize, SamplePos pos, uint thread)
     if (reverb->sampleRate() != sampleRate())
         reverb->setSampleRate(sampleRate());
 
-    reverb->setParameter(reverb->DAMPINGFREQ, p_->pDampingFreq->value(time, thread));
-    reverb->setParameter(reverb->DENSITY, p_->pDensity->value(time, thread));
-    reverb->setParameter(reverb->BANDWIDTHFREQ, p_->pBandwidthFreq->value(time, thread));
-    reverb->setParameter(reverb->DECAY, p_->pDecay->value(time, thread));
-    reverb->setParameter(reverb->PREDELAY, p_->pPreDelay->value(time, thread));
-    reverb->setParameter(reverb->SIZE, p_->pSize->value(time, thread));
-    reverb->setParameter(reverb->GAIN, p_->pGain->value(time, thread));
-    reverb->setParameter(reverb->MIX, p_->pMix->value(time, thread));
-    reverb->setParameter(reverb->EARLYMIX, p_->pEarlyMix->value(time, thread));
+    reverb->setParameter(reverb->DAMPINGFREQ, p_->pDampingFreq->value(time));
+    reverb->setParameter(reverb->DENSITY, p_->pDensity->value(time));
+    reverb->setParameter(reverb->BANDWIDTHFREQ, p_->pBandwidthFreq->value(time));
+    reverb->setParameter(reverb->DECAY, p_->pDecay->value(time));
+    reverb->setParameter(reverb->PREDELAY, p_->pPreDelay->value(time));
+    reverb->setParameter(reverb->SIZE, p_->pSize->value(time));
+    reverb->setParameter(reverb->GAIN, p_->pGain->value(time));
+    reverb->setParameter(reverb->MIX, p_->pMix->value(time));
+    reverb->setParameter(reverb->EARLYMIX, p_->pEarlyMix->value(time));
 
     const QList<AUDIO::AudioBuffer*>&
             inputs = audioInputs(thread),

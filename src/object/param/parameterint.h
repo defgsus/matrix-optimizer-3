@@ -12,8 +12,7 @@
 #define MOSRC_OBJECT_PARAM_PARAMETERINT_H
 
 #include "parameter.h"
-#include "types/int.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -41,8 +40,8 @@ public:
     Int maxValue() const { return maxValue_; }
     Int smallStep() const { return smallStep_; }
 
-    Int value(Double time, uint thread) const
-        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time, thread) )); }
+    Int value(const RenderTime& time) const
+        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time) )); }
     Int baseValue() const { return value_; }
 
     // ---------------- setter -----------------
@@ -64,7 +63,7 @@ public:
     int getModulatorTypes() const Q_DECL_OVERRIDE;
 
     /** Receives modulation value at time */
-    Int getModulationValue(Double time, uint thread) const;
+    Int getModulationValue(const MO::RenderTime& time) const;
 
     virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 

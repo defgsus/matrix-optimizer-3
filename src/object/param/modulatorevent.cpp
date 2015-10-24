@@ -130,14 +130,14 @@ const ModulatorEvent::Event * ModulatorEvent::getEvent(Double time) const
     return closestEvent;
 }
 
-Double ModulatorEvent::valueFloat(Double time, uint thread) const
+Double ModulatorEvent::valueFloat(const RenderTime& ti) const
 {
-    time += timeOffset_;
+    RenderTime time = ti + timeOffset_;
 
-    if (!modulator() || !modulator()->active(time, thread))
+    if (!modulator() || !modulator()->active(time))
         return 0.0;
 
-    return amplitude() * getEvent(time)->vfloat;
+    return amplitude() * getEvent(time.second())->vfloat;
 }
 
 

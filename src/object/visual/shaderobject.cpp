@@ -175,7 +175,7 @@ QSize ShaderObject::resolution() const
                 : QSize();
 }
 
-const GL::Texture * ShaderObject::valueTexture(uint chan, Double , uint ) const
+const GL::Texture * ShaderObject::valueTexture(uint chan, const RenderTime& ) const
 {
     return chan == 0 && fbo_ ? fbo_->colorTexture() : 0;
 }
@@ -338,7 +338,7 @@ void ShaderObject::releaseGl(uint)
     }
 }
 
-void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double time)
+void ShaderObject::renderGl(const GL::RenderSettings & , const RenderTime& time)
 {
     // --- prepare fbo ---
 
@@ -350,13 +350,13 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     // --- set shader uniforms ---
 
     if (u_time_)
-        u_time_->floats[0] = time;
+        u_time_->floats[0] = time.second();
 
     if (u_transformation_)
         u_transformation_->set(transformation());
 
     uint texSlot = 0, swapTexSlot = 0;
-    userUniforms_->updateUniforms(time, thread, texSlot);
+    userUniforms_->updateUniforms(time, texSlot);
 
     // exchange render target and bind previous frame
     if (u_fb_tex_)
@@ -384,7 +384,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
     MO_CHECK_GL( gl::glViewport(0, 0, w, h) );
     MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
 
-    int numPasses = p_passes_->value(time, thread);
+    int numPasses = p_passes_->value(time);
     for (int i=0; i<numPasses; ++i)
     {
         // swap texture for each pass
@@ -413,9 +413,9 @@ void ShaderObject::renderGl(const GL::RenderSettings & , uint thread, Double tim
 }
 
 
-void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int height)
+void ShaderObject::drawFramebuffer(const RenderTime & time, int width, int height)
 {
-    if (p_enableOut_->value(time, thread) == 0)
+    if (p_enableOut_->value(time) == 0)
         return;
 
     gl::glFinish();
@@ -424,10 +424,10 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
 
     if (u_out_color_)
         u_out_color_->setFloats(
-                    p_out_r_->value(time, thread),
-                    p_out_g_->value(time, thread),
-                    p_out_b_->value(time, thread),
-                    p_out_a_->value(time, thread));
+                    p_out_r_->value(time),
+                    p_out_g_->value(time),
+                    p_out_b_->value(time),
+                    p_out_a_->value(time));
 
     if (u_out_resolution_)
         u_out_resolution_->setFloats(width, height,
@@ -441,7 +441,7 @@ void ShaderObject::drawFramebuffer(uint thread, Double time, int width, int heig
     fbo_->colorTexture()->bind();
 
     // set blendmode
-    alphaBlend_.apply(time, thread);
+    alphaBlend_.apply(time);
 
     // set interpolation mode
     if (p_magInterpol_->baseValue())

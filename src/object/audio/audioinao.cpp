@@ -53,18 +53,18 @@ void AudioInAO::createParameters()
     params()->endParameterGroup();
 }
 
-void AudioInAO::processAudio(uint bsize, SamplePos pos, uint thread)
+void AudioInAO::processAudio(const RenderTime& time)
 {
     // simply copy inputs to outputs here and apply amplitude
 
     if (paramAmp_->isModulated())
     {
-        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
         [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
-            for (SamplePos i=0; i<bsize; ++i)
+            for (SamplePos i=0; i<time.bufferSize(); ++i)
             {
-                F32 amp = paramAmp_->value(sampleRateInv() * (pos + i), thread);
+                F32 amp = paramAmp_->value(time + i);
                 out->write(i, amp * in->read(i));
             }
         });
@@ -72,12 +72,12 @@ void AudioInAO::processAudio(uint bsize, SamplePos pos, uint thread)
     else
     {
         // buffer parameter value
-        const F32 amp = paramAmp_->value(sampleRateInv() * pos, thread);
+        const F32 amp = paramAmp_->value(time);
         // for easier loop
-        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
         [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
-            for (SamplePos i=0; i<bsize; ++i)
+            for (SamplePos i=0; i<time.bufferSize(); ++i)
                 out->write(i, amp * in->read(i));
         });
     }

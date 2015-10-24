@@ -1533,7 +1533,8 @@ void MainWidgetController::testSceneTransform_(bool newVersion)
         for (; i < num && e <= 1000;)
         {
             for (int j=0; j<1000; ++j, ++i)
-                scene_->calculateSceneTransform(MO_GFX_THREAD, scene_->sampleRateInv() * (i*1000+j));
+                scene_->calculateSceneTransform(
+                            RenderTime(scene_->sampleRateInv() * (i*1000+j), MO_GFX_THREAD));
 
             e = t.elapsed();
         }

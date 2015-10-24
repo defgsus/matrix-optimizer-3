@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_PARAM_PARAMETERTEXTURE_H
 
 #include "parameter.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 namespace GL { class Texture; }
@@ -37,10 +37,10 @@ public:
 
     // ---------------- getter -----------------
 
-    const GL::Texture* value(Double time, uint thread) const;
+    const GL::Texture* value(const RenderTime& time) const;
 
     /** Returns true when the texture is different since the last call to value() */
-    bool hasChanged(Double time, uint thread) const Q_DECL_OVERRIDE;
+    bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
     // ---------------- setter -----------------
 

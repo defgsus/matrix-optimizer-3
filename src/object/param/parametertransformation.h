@@ -39,7 +39,7 @@ public:
 
     const Mat4& defaultValue() const { return defaultValue_; }
 
-    Mat4 value(Double time, uint thread) const;
+    Mat4 value(const RenderTime& time) const;
 
     /* Writes @p number values starting at @p time into the pointer */
     //void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;

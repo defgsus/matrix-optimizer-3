@@ -217,10 +217,10 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 #endif
 
             draw_->setAmbientColor(
-                        cr_->value(time, thread),
-                        cg_->value(time, thread),
-                        cb_->value(time, thread),
-                        ca_->value(time, thread));
+                        cr_->value(time),
+                        cg_->value(time),
+                        cb_->value(time),
+                        ca_->value(time));
 
             draw_->renderShader(rs.cameraSpace().projectionMatrix(),
                                 cubeViewTrans, viewTrans, trans, &rs.lightSettings());

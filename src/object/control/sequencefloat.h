@@ -199,7 +199,7 @@ public:
     PPP_NAMESPACE::Parser * equation(uint thread);
     const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
-    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
 signals:
 
@@ -213,8 +213,8 @@ private:
     void updateWavetable_();
     void updatePhaseInDegree_();
 
-    Double value_(Double gtime, Double time, uint thread) const;
-    Double fade_(Double gtime, Double localTime, uint thread) const;
+    Double value_(const RenderTime& time) const;
+    Double fade_(const RenderTime& time) const;
 
     MATH::Timeline1d * timeline_;
     AUDIO::Wavetable<Double> * wavetable_;

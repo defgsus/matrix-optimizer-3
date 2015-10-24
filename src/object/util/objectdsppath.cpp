@@ -300,8 +300,9 @@ void ObjectDspPath::calcTransformations(SamplePos pos)
             // apply transform for one sample block
             for (SamplePos i = 0; i < p_->conf.bufferSize(); ++i)
                 b->object->calculateTransformation(b->calcMatrix.transformation(i),
-                                                   p_->conf.sampleRateInv() * (pos + i),
-                                                   p_->thread);
+                                                   RenderTime(
+                                                       p_->conf.sampleRateInv() * (pos + i),
+                                                        p_->thread));
         }
     }
 }
@@ -336,7 +337,9 @@ void ObjectDspPath::calcAudio(SamplePos pos)
             }
 
             // process AudioObject
-            ao->processAudioBase(p_->conf.bufferSize(), pos, p_->thread);
+            // ZZZ must pass seconds as well
+            ao->processAudioBase(
+                RenderTime(pos, p_->conf.sampleRate(), p_->conf.bufferSize(), p_->thread));
 
             // forward buffers
             for (AUDIO::AudioBuffer * buf : b->audioOutputs)
@@ -369,6 +372,10 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 
 
     // ---------- process virtual sound sources --------
+
+    // ZZZ add seconds!
+    RenderTime time(pos, config().sampleRate(), config().bufferSize(), p_->thread);
+
 #ifndef MO_DISABLE_SPATIAL
     for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
@@ -376,13 +383,11 @@ void ObjectDspPath::calcAudio(SamplePos pos)
         b->object->calculateSoundSourceTransformation(
                     b->matrix,
                     b->soundSources,
-                    config().bufferSize(),
-                    pos, p_->thread);
+                    time);
         // get audio signal per soundsource
         b->object->calculateSoundSourceBuffer(
                     b->soundSources,
-                    config().bufferSize(),
-                    pos, p_->thread);
+                    time);
         // forward buffers and fill delay-lines
         for (AUDIO::SpatialSoundSource * s : b->soundSources)
         {
@@ -399,15 +404,14 @@ void ObjectDspPath::calcAudio(SamplePos pos)
         b->object->calculateMicrophoneTransformation(
                     b->matrix,
                     b->microphones,
-                    config().bufferSize(),
-                    pos, p_->thread);
+                    time);
         // process each mic
         for (AUDIO::SpatialMicrophone * m : b->microphones)
         {
             // sample soundsources
             m->spatialize(b->microphoneInputSoundSources);
             // virtual interface
-            b->object->processMicrophoneBuffers(b->microphones, pos, p_->thread);
+            b->object->processMicrophoneBuffers(b->microphones, time);
             // forward buffer
             m->signal()->nextBlock();
         }

@@ -38,7 +38,7 @@ class BandFilterBankAO::Private
         { return (AUDIO::FixedFilter::FilterType)paramType->baseValue(); }
 
     void makeFilters(uint num);
-    void updateFilterCoeffs(Double time, uint thread);
+    void updateFilterCoeffs(const RenderTime& time);
 
     std::vector<ParameterFloat*>
         paramFreqStart,
@@ -199,17 +199,17 @@ void BandFilterBankAO::Private::makeFilters(uint num)
     }
 }
 
-void BandFilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
+void BandFilterBankAO::Private::updateFilterCoeffs(const RenderTime & time)
 {
-    int     order = paramOrder->value(time, thread);
+    int     order = paramOrder->value(time);
 
     // each filter per channel
-    for (uint k = 0; k < filters[thread].filters.size(); ++k)
+    for (uint k = 0; k < filters[time.thread()].filters.size(); ++k)
     {
-        AUDIO::FixedFilter * f = filters[thread].filters[k].get();
+        AUDIO::FixedFilter * f = filters[time.thread()].filters[k].get();
 
-        Double  freq = std::max(1., paramFreqStart[k]->value(time, thread)),
-                width = std::max(1., paramFreqWidth[k]->value(time, thread));
+        Double  freq = std::max(1., paramFreqStart[k]->value(time)),
+                width = std::max(1., paramFreqWidth[k]->value(time));
 
         // test for changes (to avoid updateCoefficients())
         if (
@@ -237,25 +237,25 @@ void BandFilterBankAO::setAudioBuffers(uint /*thread*/, uint /*bufferSize*/,
     p_->makeFilters(std::min(outputs.size(), (int)p_->maxChannels));
 }
 
-void BandFilterBankAO::processAudio(uint , SamplePos pos, uint thread)
+void BandFilterBankAO::processAudio(const RenderTime& time)
 {
     const Double
-            time = sampleRateInv() * pos,
-            metaamp = p_->paramMetaAmp->value(time, thread);
+            metaamp = p_->paramMetaAmp->value(time);
 
     // update filter
     // XXX Note: This is once per dsp-block,
-    p_->updateFilterCoeffs(time, thread);
+    p_->updateFilterCoeffs(time);
 
-    auto filters = &p_->filters[thread];
+    auto filters = &p_->filters[time.thread()];
 
     // process filter for each channel
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
     [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
         if (chan < p_->maxChannels)
-            filters->filters[chan].get()->process(in->readPointer(), out->writePointer(), out->blockSize(),
-                                              metaamp * p_->paramAmp[chan]->value(time, thread));
+            filters->filters[chan].get()->process(
+                        in->readPointer(), out->writePointer(), out->blockSize(),
+                        metaamp * p_->paramAmp[chan]->value(time));
     });
 }
 

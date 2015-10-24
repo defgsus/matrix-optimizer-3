@@ -29,10 +29,10 @@ public:
 
     /** Returns the color at given time.
         The fourth component is the distance attenuation factor. */
-    Vec4 lightColor(Double time, uint thread) const;
+    Vec4 lightColor(const RenderTime& time) const;
 
     /** fill the settings container with current values */
-    void getLightSettings(GL::LightSettings *, uint index, Double time, uint thread);
+    void getLightSettings(GL::LightSettings *, uint index, const RenderTime & time);
 
 signals:
 

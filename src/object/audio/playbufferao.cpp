@@ -192,11 +192,11 @@ QString PlayBufferAO::getAudioOutputName(uint channel) const
     return AudioObject::getAudioOutputName(channel);
 }
 
-void PlayBufferAO::processBuffer(uint, SamplePos pos, uint thread)
+void PlayBufferAO::processBuffer(const RenderTime& rtime)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(rtime.thread()),
+            outputs = audioOutputs(rtime.thread());
 
     AUDIO::AudioBuffer
             * inRead  = inputs.size() < 1  ? 0 : inputs[0],
@@ -208,11 +208,11 @@ void PlayBufferAO::processBuffer(uint, SamplePos pos, uint thread)
     Double length = p_->size * sampleRate();
     //Double reqSize = p_->paramSize->value(sampleRateInv()*pos,thread);
 
+    RenderTime time(rtime);
     for(uint i=0;i<out->blockSize();++i) {
         Double
-                time   = sampleRateInv() * (pos + i),
-                amp    = p_->paramAmp->value(time, thread),
-                rec    = (Double)p_->paramRec->value(time,thread),
+                amp    = p_->paramAmp->value(time),
+                rec    = (Double)p_->paramRec->value(time),
                 outval = 0.0;
         uint
                 readPtr  = p_->readPtr,
@@ -228,23 +228,24 @@ void PlayBufferAO::processBuffer(uint, SamplePos pos, uint thread)
         if(rec > 0.0)
             p_->buffer[writePtr] = in->read(i);
         out->write(i, outval * amp);
+        time += SamplePos(1);
     }
 }
 
-void PlayBufferAO::processFile(uint, SamplePos pos, uint thread)
+void PlayBufferAO::processFile(const RenderTime & rtime)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(rtime.thread()),
+            outputs = audioOutputs(rtime.thread());
 
     AUDIO::AudioBuffer
             * inRead  = inputs.size() < 2  ? 0 : inputs[1],
             * out     = outputs.size() < 1 ? 0 : outputs[0];
 
+    RenderTime time(rtime);
     for(uint i=0;i<out->blockSize();++i) {
         Double
-                time   = sampleRateInv() * (pos + i),
-                amp    = p_->paramAmp->value(time, thread),
+                amp    = p_->paramAmp->value(time),
                 outval = 0.0;
         uint
                 readPtr  = p_->readPtr;
@@ -253,18 +254,20 @@ void PlayBufferAO::processFile(uint, SamplePos pos, uint thread)
             readPtr += (uint)(inRead->read(i) * p_->sndfile->lengthSamples()) % p_->sndfile->lengthSamples();
         outval = p_->sndfile->value(readPtr);
         out->write(i, outval * amp);
+
+        time += SamplePos(1);
     }
 }
 
-void PlayBufferAO::processAudio(uint bufferSize, SamplePos pos, uint thread)
+void PlayBufferAO::processAudio(const RenderTime& time)
 {
     switch(p_->mode()) {
     case Private::M_FILE:
-        processFile(bufferSize, pos, thread);
+        processFile(time);
         break;
     case Private::M_BUFFER:
     default:
-        processBuffer(bufferSize, pos, thread);
+        processBuffer(time);
     }
 }
 

@@ -76,13 +76,13 @@ void ModulatorTexture::modulatorChanged_()
     }
 }
 
-const GL::Texture * ModulatorTexture::value(Double time, uint thread) const
+const GL::Texture * ModulatorTexture::value(const RenderTime& time) const
 {
-    if (!modulator() || !modulator()->active(time, thread))
+    if (!modulator() || !modulator()->active(time))
         return 0;
 
     if (texFace_)
-        return texFace_->valueTexture(outputChannel(), time, thread);
+        return texFace_->valueTexture(outputChannel(), time);
 
     return 0;
 }

@@ -44,10 +44,10 @@ public:
     virtual void calculateSoundSourceTransformation(
                                         const TransformationBuffer * objectTransformation,
                                         const QList<AUDIO::SpatialSoundSource*>&,
-                                        uint bufferSize, SamplePos pos, uint thread)
+                                        const RenderTime& time)
                                             Q_DECL_OVERRIDE;
     virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
-                                            uint bufferSize, SamplePos pos, uint thread)
+                                            const RenderTime& time)
                                             Q_DECL_OVERRIDE;
 
     void panic();

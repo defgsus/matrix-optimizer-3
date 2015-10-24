@@ -48,7 +48,7 @@ class WavePlayerAO::Private
 
     void updateFile();
     void close();
-    void processAudio(uint , SamplePos pos, uint thread);
+    void processAudio(const RenderTime & time );
 
     WavePlayerAO * ao;
     ParameterFloat
@@ -235,15 +235,15 @@ void WavePlayerAO::setAudioBuffers(uint , uint ,
 
 }
 
-void WavePlayerAO::processAudio(uint bsize, SamplePos pos, uint thread)
+void WavePlayerAO::processAudio(const RenderTime& time)
 {
-    p_->processAudio(bsize, pos, thread);
+    p_->processAudio(time);
 }
 
-void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
+void WavePlayerAO::Private::processAudio(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*>&
-            outputs = ao->audioOutputs(thread);
+            outputs = ao->audioOutputs(time.thread());
 
     // lazy exchange file
     if (newWave)
@@ -252,32 +252,31 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
         newWave = 0;
     }
 
-    Double  time = ao->sampleRateInv() * pos,
-            maxLength = paramLength->value(time, thread);
-    bool    doPlay = paramPlay->value(time, thread);
-    TimeMode mode = (TimeMode)paramMode->value(time, thread);
+    Double  maxLength = paramLength->value(time);
+    bool    doPlay = paramPlay->value(time);
+    TimeMode mode = (TimeMode)paramMode->value(time);
 
     // empty output
     if (!wave || !doPlay)
     {
-        ao->writeNullBlock(pos, thread);
+        ao->writeNullBlock(time.sample(), time.thread());
         return;
     }
 
-    bool    doLoop = paramLoop->value(time, thread);
-    Double  dtime = time, // playback time
-            blength = ao->sampleRateInv() * bsize; // bufferlength in seconds
+    bool    doLoop = paramLoop->value(time);
+    Double  dtime = time.second(), // playback time
+            blength = ao->sampleRateInv() * time.bufferSize(); // bufferlength in seconds
 
     // synced time
     if (mode == M_SYNCED)
     {
-        dtime += paramOffset->value(time, thread);
+        dtime += paramOffset->value(time);
 
         // loop playback time
         if (doLoop)
         {
-            Double  start = paramLoopStart->value(time, thread),
-                    length = paramLoopLength->value(time, thread);
+            Double  start = paramLoopStart->value(time),
+                    length = paramLoopLength->value(time);
             if (dtime >= start && length != 0.)
                 dtime = start + MATH::moduloSigned(dtime-start, length);
         }
@@ -287,9 +286,9 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
     else if (mode == M_FREE)
     {
         // retrigger
-        if (gate.input( paramGate->value(time, thread) ) > 0.)
+        if (gate.input( paramGate->value(time) ) > 0.)
         {
-            curTime = paramPlayPos->value(time, thread);
+            curTime = paramPlayPos->value(time);
             curTimeAll = 0.;
         }
 
@@ -298,7 +297,7 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
         // playing length exceeded?
         if (maxLength > 0. && curTimeAll > maxLength + blength)
         {
-            ao->writeNullBlock(pos, thread);
+            ao->writeNullBlock(time.sample(), time.thread());
             return;
         }
     }
@@ -314,7 +313,7 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
         wave->getResampled(outputs,
                        dtime * wave->sampleRate(),
                        ao->sampleRate(),
-                       paramAmp->value(time, thread));
+                       paramAmp->value(time));
     }
     // zero output when outside file length
     else
@@ -332,8 +331,8 @@ void WavePlayerAO::Private::processAudio(uint bsize, SamplePos pos, uint thread)
         // loop playback time
         if (doLoop)
         {
-            Double  start = paramLoopStart->value(time, thread),
-                    length = paramLoopLength->value(time, thread);
+            Double  start = paramLoopStart->value(time),
+                    length = paramLoopLength->value(time);
             if (length != 0. && curTime >= start)
             {
                 curTime = start + MATH::moduloSigned(curTime-start, length);

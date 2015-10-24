@@ -163,7 +163,7 @@ public:
 
     /** Calculates all transformation of all scene objects.
         @note Scene must be up-to-date with the tree! */
-    void calculateSceneTransform(uint thread, Double time);
+    void calculateSceneTransform(const RenderTime & time);
 
     /** Sets the options for the debug drawer.
         @p options can be an OR combination of DebugDrawOption enums */
@@ -328,7 +328,7 @@ public slots:
 
     /** Render the whole scene on the current context.
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
-    void renderScene(Double time, uint thread, bool paintToScreen = true);//, GL::FrameBufferObject * fbo = 0);
+    void renderScene(const RenderTime & time, bool paintToScreen = true);//, GL::FrameBufferObject * fbo = 0);
 
 private slots:
 
@@ -380,7 +380,7 @@ private:
     void unlock_();
 
     /** unlocked version */
-    void calculateSceneTransform_(uint thread, Double time);
+    void calculateSceneTransform_(const RenderTime & time);
 
     // ---------- opengl -----------------------
 
@@ -391,7 +391,7 @@ private:
     void resizeFbo_(uint thread);
 
     /** Fills the LightSettings class with info from the ready transformed tree */
-    void updateLightSettings_(uint thread, Double time);
+    void updateLightSettings_(const RenderTime& time);
 
     /** Emits renderRequest if scene is not already running. */
     void render_();

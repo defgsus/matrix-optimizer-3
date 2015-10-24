@@ -44,7 +44,7 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE { };
+    virtual void renderGl(const GL::RenderSettings&, const RenderTime& ) Q_DECL_OVERRIDE { };
 
     // ---------- camera specific stuff -----------
 
@@ -64,19 +64,19 @@ public:
 
     //GL::FrameBufferObject * getFrameBuffer(uint thread) const { return fbo_[thread]; }
 
-    /** Returns number of cubemap textures needed. */
-    uint numCubeTextures(uint thread, Double time) const;
+    /** Returns number of cubemap textures needed (from angle of view) */
+    uint numCubeTextures(const RenderTime& time) const;
 
     /** Starts rendering an openGl frame for this camera.
         Binds the framebuffer and clears it. */
-    void startGlFrame(uint thread, Double time, uint cubeMapIndex = 0);
+    void startGlFrame(const RenderTime& time, uint cubeMapIndex = 0);
 
     /** Finishes rendering an openGl frame for this camera.
         Only unbinds the framebuffer right now. */
-    void finishGlFrame(uint thread, Double time);
+    void finishGlFrame(const RenderTime& time);
 
     /** Initialize camera space with projection matrix */
-    void initCameraSpace(GL::CameraSpace& cam, uint thread, Double time) const;
+    void initCameraSpace(GL::CameraSpace& cam, const RenderTime& time) const;
 
     /** Returns the additional view transformation for the camera.
         Returns an identity matrix except for RM_FULLDOME_CUBE and RM_PROJECTOR_SLICE.
@@ -84,18 +84,18 @@ public:
     const Mat4& cameraViewMatrix(uint index) const;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad. */
-    void drawFramebuffer(uint thread, Double time);
+    void drawFramebuffer(const RenderTime& time);
 
     /** Returns the framebuffer on which the camera renders, or NULL */
     GL::FrameBufferObject * fbo() const;
 
     /** Texture output interface */
-    const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
     void setOverrideMatrix(const Mat4& m);
     void clearOverrideMatrix() { useOverrideMatrix_ = false; }
 
-    void calculateTransformation(Mat4& matrix, Double time, uint thread) const
+    void calculateTransformation(Mat4& matrix, const RenderTime& time) const
                                                                     Q_DECL_OVERRIDE;
 
 signals:

@@ -125,7 +125,7 @@ public:
     virtual void releaseGl(uint thread) = 0;
 
     /** Override to render your stuff */
-    virtual void renderGl(const GL::RenderSettings& rs, uint thread, Double time) = 0;
+    virtual void renderGl(const GL::RenderSettings& rs, const RenderTime& time) = 0;
 
     /** Called by Scene when the number of lights have changed.
         numberLightSources() will contain the new value.
@@ -165,7 +165,7 @@ private:
 
     void p_initGl_(uint thread);
     void p_releaseGl_(uint thread);
-    void p_renderGl_(const GL::RenderSettings& rs, uint thread, Double time);
+    void p_renderGl_(const GL::RenderSettings& rs, const RenderTime& time);
 
     std::vector<GL::Context*> p_glContext_;
     std::vector<int> p_needsInitGl_, p_isGlInitialized_;

@@ -50,10 +50,10 @@ void Translation::createParameters()
     params()->endParameterGroup();
 }
 
-void Translation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void Translation::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     matrix = glm::translate(matrix,
-                 Vec3(x_->value(time,thread), y_->value(time,thread), z_->value(time,thread)));
+                 Vec3(x_->value(time), y_->value(time), z_->value(time)));
 }
 
 

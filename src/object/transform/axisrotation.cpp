@@ -55,13 +55,13 @@ void AxisRotation::createParameters()
     params()->endParameterGroup();
 }
 
-void AxisRotation::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void AxisRotation::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     matrix = MATH::rotate(matrix,
-                (Mat4::value_type)angle_->value(time, thread),
-                 Vec3(x_->value(time, thread),
-                      y_->value(time, thread),
-                      z_->value(time, thread)));
+                (Mat4::value_type)angle_->value(time),
+                 Vec3(x_->value(time),
+                      y_->value(time),
+                      z_->value(time)));
 }
 
 

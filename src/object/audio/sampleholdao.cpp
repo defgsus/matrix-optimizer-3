@@ -106,19 +106,19 @@ QString SampleHoldAO::getAudioInputName(uint channel) const
 {
     switch(channel)
     {
-    case 0: return tr("in");
-    case 1: return tr("trigger");
+        case 0: return tr("in");
+        case 1: return tr("trigger");
     }
     return AudioObject::getAudioInputName(channel);
 }
 
 
 
-void SampleHoldAO::processAudio(uint, SamplePos pos, uint thread)
+void SampleHoldAO::processAudio(const RenderTime& rtime)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(rtime.thread()),
+            outputs = audioOutputs(rtime.thread());
 
     AUDIO::AudioBuffer
             * inTrig = inputs.size() < 2 ? 0 : inputs[1],
@@ -127,47 +127,57 @@ void SampleHoldAO::processAudio(uint, SamplePos pos, uint thread)
     if(!out) return;
 
     switch(p_->mode()) {
-    case Private::M_NEG_TRANSITION:
-        for(uint i=0;i<out->blockSize();++i) {
-            Double time = sampleRateInv() * (pos +i);
-            Double trigger = p_->paramTrigger->value(time, thread);
-            if(inTrig)
-                trigger += inTrig->read(i);
+        case Private::M_NEG_TRANSITION:
+        {
+            RenderTime time(rtime);
+            for(uint i=0;i<out->blockSize();++i) {
+                Double trigger = p_->paramTrigger->value(time);
+                if(inTrig)
+                    trigger += inTrig->read(i);
 
-            if(trigger <= 0.0 && p_->lastsample[thread] > 0.0)
-                p_->state[thread] = inputs[0]->read(i);
+                if(trigger <= 0.0 && p_->lastsample[time.thread()] > 0.0)
+                    p_->state[time.thread()] = inputs[0]->read(i);
 
-            out->write(i, p_->state[thread]);
-            p_->lastsample[thread] = trigger;
+                out->write(i, p_->state[time.thread()]);
+                p_->lastsample[time.thread()] = trigger;
+                time += SamplePos(1);
+            }
         }
         break;
-    case Private::M_TRANSITION:
-        for(uint i=0;i<out->blockSize();++i) {
-            Double time = sampleRateInv() * (pos +i);
-            Double trigger = p_->paramTrigger->value(time, thread);
-            if(inTrig)
-                trigger += inTrig->read(i);
 
-            if(trigger > 0.0 && p_->lastsample[thread] <= 0.0)
-                p_->state[thread] = inputs[0]->read(i);
+        case Private::M_TRANSITION:
+        {
+            RenderTime time(rtime);
+            for(uint i=0;i<out->blockSize();++i) {
+                Double trigger = p_->paramTrigger->value(time);
+                if(inTrig)
+                    trigger += inTrig->read(i);
 
-            out->write(i, p_->state[thread]);
-            p_->lastsample[thread] = trigger;
+                if(trigger > 0.0 && p_->lastsample[time.thread()] <= 0.0)
+                    p_->state[time.thread()] = inputs[0]->read(i);
+
+                out->write(i, p_->state[time.thread()]);
+                p_->lastsample[time.thread()] = trigger;
+                time += SamplePos(1);
+            }
         }
         break;
-    case Private::M_GATE:
-    default:
-        for(uint i=0;i<out->blockSize();++i) {
-            Double time = sampleRateInv() * (pos +i);
-            Double trigger = p_->paramTrigger->value(time, thread);
-            if(inTrig)
-                trigger += inTrig->read(i);
 
-            if(trigger > 0)
-                p_->state[thread] = inputs[0]->read(i);
+        case Private::M_GATE:
+        default:
+        {
+            RenderTime time(rtime);
+            for(uint i=0;i<out->blockSize();++i) {
+                Double trigger = p_->paramTrigger->value(time);
+                if(inTrig)
+                    trigger += inTrig->read(i);
 
-            out->write(i, p_->state[thread]);
+                if(trigger > 0)
+                    p_->state[time.thread()] = inputs[0]->read(i);
+
+                out->write(i, p_->state[time.thread()]);
+                time += SamplePos(1);
+            }
         }
     }
-}
-}
+}}

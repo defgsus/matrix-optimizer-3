@@ -128,11 +128,11 @@ void AlphaBlendSetting::disable()
     MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
 }
 
-void AlphaBlendSetting::apply(Double time, uint thread)
+void AlphaBlendSetting::apply(const RenderTime& time)
 {
     using namespace gl;
 
-    apply( (Mode)p_type_->value(time, thread) );
+    apply( (Mode)p_type_->value(time) );
 }
 
 void AlphaBlendSetting::apply(Mode mode)

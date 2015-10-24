@@ -23,9 +23,9 @@ public:
 
 protected:
 
-    void processDust(uint, SamplePos pos, uint thread);
-    void processDust2(uint, SamplePos pos, uint thread);
-    virtual void processAudio(uint, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+    void processDust(const RenderTime& time);
+    void processDust2(const RenderTime& time);
+    virtual void processAudio(const RenderTime& time) Q_DECL_OVERRIDE;
 
 private:
 

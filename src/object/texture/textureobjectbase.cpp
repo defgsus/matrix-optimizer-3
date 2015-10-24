@@ -56,8 +56,8 @@ struct TextureObjectBase::PrivateTO
     void releaseGl();
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
     void createFbo(const QSize& s, uint depth = 1);
-    void drawFramebuffer(uint thread, Double time, int width, int height);
-    void renderShaderQuad(uint index, Double time, uint thread, uint& texSlot);
+    void drawFramebuffer(const RenderTime& time, int width, int height);
+    void renderShaderQuad(uint index, const RenderTime& time, uint& texSlot);
     const QString& name() const { return to->name(); } // for debug
 
     /** A quad and shader with associated uniforms */
@@ -378,7 +378,7 @@ GL::ShaderSource TextureObjectBase::shaderSource(uint index) const
     return s ? *s->shader()->source() : GL::ShaderSource();
 }
 
-const GL::Texture * TextureObjectBase::valueTexture(uint chan, Double , uint ) const
+const GL::Texture * TextureObjectBase::valueTexture(uint chan, const RenderTime& ) const
 {
     if (chan != 0)
         return 0;
@@ -396,13 +396,13 @@ GL::ScreenQuad * TextureObjectBase::createShaderQuad(
     return p_to_->shaderQuads.back().quad;
 }
 
-void TextureObjectBase::drawFramebuffer(uint thread, Double time, int width, int height)
+void TextureObjectBase::drawFramebuffer(const RenderTime& time, int width, int height)
 {
-    p_to_->drawFramebuffer(thread, time, width, height);
+    p_to_->drawFramebuffer(time, width, height);
 }
-void TextureObjectBase::renderShaderQuad(uint index, Double time, uint thread, uint& texSlot)
+void TextureObjectBase::renderShaderQuad(uint index, const RenderTime& time, uint& texSlot)
 {
-    p_to_->renderShaderQuad(index, time, thread, texSlot);
+    p_to_->renderShaderQuad(index, time, texSlot);
 }
 
 void TextureObjectBase::PrivateTO::initGl()
@@ -532,11 +532,11 @@ GL::Texture * TextureObjectBase::createTexture() const
     return tex;
 }
 
-bool TextureObjectBase::hasInputTextureChanged(Double time, uint thread) const
+bool TextureObjectBase::hasInputTextureChanged(const RenderTime & time) const
 {
     for (const ParameterTexture * t : p_to_->p_textures)
     {
-        if (t->hasChanged(time, thread))
+        if (t->hasChanged(time))
             return true;
     }
     return false;
@@ -655,9 +655,9 @@ QSize TextureObjectBase::adjustResolution(const QSize& res) const
     }
 }
 
-void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uint thread, uint& texSlot)
+void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime& time, uint& texSlot)
 {
-    MO_TO_DEBUG("renderShaderQuad(" << index << ", " << time << ", " << thread << ", " << texSlot << ")");
+    MO_TO_DEBUG("renderShaderQuad(" << index << ", " << time << ", " << texSlot << ")");
 
     if (index >= (uint)shaderQuads.size())
         return;
@@ -672,7 +672,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
         // -- find input resolution --
         for (int i=0; i<p_textures.length(); ++i)
         {
-            const GL::Texture * tex = p_textures[i]->value(time, thread);
+            const GL::Texture * tex = p_textures[i]->value(time);
             if (tex)
             {
                 width = tex->width();
@@ -728,7 +728,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     // --- set shader uniforms ---
 
     if (quad.u_time)
-        quad.u_time->floats[0] = time;
+        quad.u_time->floats[0] = time.second();
     if (quad.u_resolution)
         quad.u_resolution->setFloats(res.width(), res.height(),
                                      1.f / res.width(), 1.f / res.height());
@@ -736,16 +736,16 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
     {
         if (quad.u_color_range_min)
             quad.u_color_range_min->setFloats(
-                        p_r_min->value(time, thread),
-                        p_g_min->value(time, thread),
-                        p_b_min->value(time, thread),
-                        p_a_min->value(time, thread));
+                        p_r_min->value(time),
+                        p_g_min->value(time),
+                        p_b_min->value(time),
+                        p_a_min->value(time));
         if (quad.u_color_range_max)
             quad.u_color_range_max->setFloats(
-                        p_r_max->value(time, thread),
-                        p_g_max->value(time, thread),
-                        p_b_max->value(time, thread),
-                        p_a_max->value(time, thread));
+                        p_r_max->value(time),
+                        p_g_max->value(time),
+                        p_b_max->value(time),
+                        p_a_max->value(time));
     }
 
     // --- bind textures ---
@@ -758,7 +758,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
         if (i == 0 && index > 0)
             tex = swapTex;
         else
-            tex = p_textures[i]->value(time, thread);
+            tex = p_textures[i]->value(time);
         if (tex)
         {
             // bind to slot x
@@ -792,15 +792,15 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, Double time, uin
 }
 
 
-void TextureObjectBase::PrivateTO::drawFramebuffer(uint thread, Double time, int width, int height)
+void TextureObjectBase::PrivateTO::drawFramebuffer(const RenderTime & time, int width, int height)
 {
-    if (p_enableOut->value(time, thread) == 0)
+    if (p_enableOut->value(time) == 0)
         return;
 
     gl::glFinish();
 
     // get output texture
-    auto tex = to->valueTexture(0, time, thread);
+    auto tex = to->valueTexture(0, time);
     if (!tex)
         return;
 
@@ -808,10 +808,10 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(uint thread, Double time, int
 
     if (u_out_color)
         u_out_color->setFloats(
-                    p_out_r->value(time, thread),
-                    p_out_g->value(time, thread),
-                    p_out_b->value(time, thread),
-                    p_out_a->value(time, thread));
+                    p_out_r->value(time),
+                    p_out_g->value(time),
+                    p_out_b->value(time),
+                    p_out_a->value(time));
 
     if (u_out_resolution)
         u_out_resolution->setFloats(width, height,
@@ -821,7 +821,7 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(uint thread, Double time, int
     // -- render fbo frame onto current context --
 
     // set blendmode
-    alphaBlend.apply(time, thread);
+    alphaBlend.apply(time);
 
     // bind the color texture from the fbo
 

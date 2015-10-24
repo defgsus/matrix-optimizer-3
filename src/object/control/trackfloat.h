@@ -33,13 +33,13 @@ public:
 
     virtual QList<Object*> getModulatingObjects() const;
 
-    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement, uint number, Double * ptr) const;
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(Double time, uint thread, Double timeIncrement, uint number, F32 * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement, uint number, F32 * ptr) const;
 
 signals:
 

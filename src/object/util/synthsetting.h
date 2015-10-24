@@ -16,7 +16,7 @@
 #include <QObject>
 
 #include "object/object_fwd.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 namespace AUDIO { class Synth; class SynthVoice; template <typename F> class FloatGate; }
@@ -66,19 +66,19 @@ public:
     // ------------ runtime --------------
 
     /** Feeds all parameters at the given time to the synthesizer. */
-    void updateSynthParameters(Double time, uint thread);
+    void updateSynthParameters(const MO::RenderTime & time);
 
     /** Feeds all parameters at the given time to the synthesizer and
         starts voices according to gate track.
         Subsequently AUDIO::Synth::process() can be called. */
-    void feedSynthOnce(Double time, uint thread);
+    void feedSynthOnce(const MO::RenderTime & time);
 
     /** Feeds all parameters at the given time to the synthesizer and
         starts voices according to gate track.
         The gate track is checked for the whole audio block.
         @p samplePos is translated into seconds with the samplerate of the parent object.
         Subsequently AUDIO::Synth::process() can be called. */
-    void feedSynth(SamplePos samplePos, uint thread, uint bufferSize);
+    void feedSynth(const MO::RenderTime & time);
 
 private:
 

@@ -568,10 +568,10 @@ void Object::p_passDownActivityScope_(ActivityScope parent_scope)
     }
 }
 
-bool Object::active(Double time, uint thread) const
+bool Object::active(const RenderTime& time) const
 {
     return (activityScope() & p_currentActivityScope_)
-            && (!p_paramActive_ || p_paramActive_->value(time, thread) > 0.);
+            && (!p_paramActive_ || p_paramActive_->value(time) > 0.);
 }
 
 bool Object::activeAtAll() const
@@ -1141,11 +1141,11 @@ void Object::p_collectTransformationObjects_()
             p_transformationObjects_.append(t);
 }
 
-void Object::calculateTransformation(Mat4 &matrix, Double time, uint thread) const
+void Object::calculateTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     for (auto t : p_transformationObjects_)
-        if (t->active(time, thread))
-            t->applyTransformation(matrix, time, thread);
+        if (t->active(time))
+            t->applyTransformation(matrix, time);
 }
 
 
@@ -1238,10 +1238,9 @@ void Object::setNumberMicrophones(uint num)
         emit e->audioConnectionsChanged();
 }
 
-void Object::calculateSoundSourceTransformation(
-        const TransformationBuffer * objectTransform,
+void Object::calculateSoundSourceTransformation(const TransformationBuffer * objectTransform,
         const QList<AUDIO::SpatialSoundSource*>& list,
-        uint , SamplePos , uint )
+        const RenderTime&)
 {
     MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
               << list.size() << "/" << numberSoundSources());
@@ -1250,10 +1249,9 @@ void Object::calculateSoundSourceTransformation(
         TransformationBuffer::copy(objectTransform, s->transformationBuffer());
 }
 
-void Object::calculateMicrophoneTransformation(
-        const TransformationBuffer * objectTransform,
+void Object::calculateMicrophoneTransformation(const TransformationBuffer * objectTransform,
         const QList<AUDIO::SpatialMicrophone*>& list,
-        uint , SamplePos , uint )
+        const RenderTime&)
 {
     MO_ASSERT(list.size() == (int)numberMicrophones(), "number of microphones does not match "
               << list.size() << "/" << numberMicrophones());

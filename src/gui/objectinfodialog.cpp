@@ -91,14 +91,14 @@ void ObjectInfoDialog::setObject(Object * o)
     if (auto fi = dynamic_cast<ValueFloatInterface*>(o))
     {
         s << "<p>float value at " << curTime << " sec: "
-          << fi->valueFloat(0, curTime, MO_GUI_THREAD) << "</p>\n";
+          << fi->valueFloat(0, RenderTime(curTime, MO_GUI_THREAD)) << "</p>\n";
     }
 
     // ---- geometry value -----
 
     if (auto gi = dynamic_cast<ValueGeometryInterface*>(o))
     {
-        auto geom = gi->valueGeometry(0, curTime, MO_GUI_THREAD);
+        auto geom = gi->valueGeometry(0, RenderTime(curTime, MO_GUI_THREAD));
         s << "<p>geometry value at " << curTime << " sec: ";
         if (!geom)
             s << "null";
@@ -155,7 +155,7 @@ void ObjectInfoDialog::setObject(Object * o)
         s << "<p>textures:<ul>";
         for (uint chan = 0; chan<32; ++chan)
         {
-            const GL::Texture * t = ti->valueTexture(chan, curTime, MO_GUI_THREAD);
+            const GL::Texture * t = ti->valueTexture(chan, RenderTime(curTime, MO_GUI_THREAD));
             if (t)
                 s << "<li>" << t->infoString() << "</li>";
         }
@@ -167,7 +167,7 @@ void ObjectInfoDialog::setObject(Object * o)
     if (Transformation * tran = qobject_cast<Transformation*>(o))
     {
         Mat4 mat(1.0);
-        tran->applyTransformation(mat, curTime, MO_GUI_THREAD);
+        tran->applyTransformation(mat, RenderTime(curTime, MO_GUI_THREAD));
         s << "<p>" << tr("applied transformation at %1").arg(curTime)
           << ":<br/>" << matrix2Html(mat) << "</p>";
     }

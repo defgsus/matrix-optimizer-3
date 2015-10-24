@@ -23,10 +23,10 @@ public:
     virtual QString getAudioOutputName(uint channel) const Q_DECL_OVERRIDE;
 
 protected:
-    void processBuffer(uint bufferSize, SamplePos pos, uint thread);
-    void processFile(uint bufferSize, SamplePos pos, uint thread);
+    void processBuffer(const RenderTime& time);
+    void processFile(const RenderTime& time);
 
-    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+    virtual void processAudio(const RenderTime& time) Q_DECL_OVERRIDE;
 
 private:
 

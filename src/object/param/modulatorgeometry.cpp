@@ -78,13 +78,13 @@ void ModulatorGeometry::modulatorChanged_()
     }
 }
 
-const GEOM::Geometry * ModulatorGeometry::value(Double time, uint thread) const
+const GEOM::Geometry * ModulatorGeometry::value(const RenderTime& time) const
 {
-    if (!modulator() || !modulator()->active(time, thread))
+    if (!modulator() || !modulator()->active(time))
         return 0;
 
     if (geomFace_)
-        return geomFace_->valueGeometry(outputChannel(), time, thread);
+        return geomFace_->valueGeometry(outputChannel(), time);
 
     return 0;
 }

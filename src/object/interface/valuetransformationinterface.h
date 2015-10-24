@@ -11,6 +11,7 @@
 #ifndef MOSRC_OBJECT_INTERFACE_VALUETRANSFORMATIONINTERFACE_H
 #define MOSRC_OBJECT_INTERFACE_VALUETRANSFORMATIONINTERFACE_H
 
+#include "types/time.h"
 #include "types/vector.h"
 
 namespace MO {
@@ -21,7 +22,7 @@ class ValueTransformationInterface
 public:
     virtual ~ValueTransformationInterface() { }
 
-    virtual Mat4 valueTransformation(uint channel, Double time, uint thread) const = 0;
+    virtual Mat4 valueTransformation(uint channel, const RenderTime& time) const = 0;
 
 };
 

@@ -107,17 +107,17 @@ protected:
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams();
 
-    bool hasInputTextureChanged(Double time, uint thread) const;
+    bool hasInputTextureChanged(const RenderTime& time) const;
 
     // ---------- opengl stuff -----------
 public:
 
     /** texture output interface */
-    virtual const GL::Texture * valueTexture(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad.
         @p width and @p height are the size of the viewport of the current context. */
-    void drawFramebuffer(uint thread, Double time, int width, int height);
+    void drawFramebuffer(const RenderTime & time, int width, int height);
 
     /** Returns the internal framebuffer on which the shader renders, or NULL */
     GL::FrameBufferObject * fbo() const;
@@ -148,11 +148,11 @@ protected:
     /** Draws the index'th quad.
         @p texSlot determines the first texture slot to bind the input textures to,
         and returns the next free slot. */
-    void renderShaderQuad(uint index, Double time, uint thread, uint& texSlot);
+    void renderShaderQuad(uint index, const RenderTime & time, uint& texSlot);
 
     /** Renders the first quad, starting at texture slot 0 */
-    void renderShaderQuad(Double time, uint thread)
-        { uint texSlot = 0; renderShaderQuad(0, time, thread, texSlot); }
+    void renderShaderQuad(const RenderTime& time)
+        { uint texSlot = 0; renderShaderQuad(0, time, texSlot); }
 
 private:
 

@@ -216,12 +216,12 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
     //const Mat4  viewTrans = rs.cameraSpace().viewMatrix() * trans;
 
-    const Float posInf = -pos_influence_->value(time, thread);
+    const Float posInf = -pos_influence_->value(time);
 
-    u_color_->setFloats(cr_->value(time, thread),
-                        cg_->value(time, thread),
-                        cb_->value(time, thread),
-                        ca_->value(time, thread));
+    u_color_->setFloats(cr_->value(time),
+                        cg_->value(time),
+                        cb_->value(time),
+                        ca_->value(time));
 
     if (actualPtype_ == PT_EQUIRECT || actualPtype_ == PT_FISHEYE)
     {

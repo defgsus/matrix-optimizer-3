@@ -737,20 +737,20 @@ void SequenceFloat::setSoundFilename(const QString & fn)
 }
 
 
-Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
+Double SequenceFloat::fade_(const RenderTime & time) const
 {
     // fade in/out
     Double fade = 1.0;
-    const Double fadein = p_fadeIn_->value(gtime, thread);
-    if (time >= 0 && time < fadein)
-        fade = time / fadein;
+    const Double fadein = p_fadeIn_->value(time);
+    if (time.second() >= 0 && time.second() < fadein)
+        fade = time.second() / fadein;
     // fadeout only for non-clip sequences
     if (!parentClip())
     {
-        const Double fadeout = p_fadeOut_->value(gtime, thread);
-        if (fadeout > 0 && time > (length() - fadeout)
-                && time <= length())
-            fade *= (length() - time) / fadeout;
+        const Double fadeout = p_fadeOut_->value(time);
+        if (fadeout > 0 && time.second() > (length() - fadeout)
+                && time.second() <= length())
+            fade *= (length() - time.second()) / fadeout;
     }
     // fade shape
     if (p_fadeMode_->baseValue())
@@ -759,17 +759,19 @@ Double SequenceFloat::fade_(Double gtime, Double time, uint thread) const
         return fade;
 }
 
-Double SequenceFloat::valueFloat(uint, Double gtime, uint thread) const
+Double SequenceFloat::valueFloat(uint, const RenderTime& gtime) const
 {
-    if (cacheTime_ == gtime)
+    if (cacheTime_ == gtime.second())
         return cacheValue_;
 
     Double timeNoLoop;
+    /*
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
+        // ZZZ all wrong
         const Double
-                time = getSequenceTime(gtime, thread, timeNoLoop),
-                fade = fade_(gtime, timeNoLoop, thread);
+                time = getSequenceTime(gtime, timeNoLoop),
+                fade = 1.;//fade_(gtime, timeNoLoop, thread);
         return fade * value_(gtime, time, thread);
     }
 
@@ -794,7 +796,7 @@ Double SequenceFloat::valueFloat(uint, Double gtime, uint thread) const
                 v = value_(gtime, time, thread),
                 v0 = value_(gtime, time + lLength, thread)
                     + p_loopOverlapOffset_->value(gtime, thread)
-                        * p_amplitude_->value(time, thread),
+                        * p_amplitude_->value(time),
                 t = (time - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
@@ -809,48 +811,50 @@ Double SequenceFloat::valueFloat(uint, Double gtime, uint thread) const
                 v = value_(gtime, time, thread),
                 v0 = value_(gtime, time - lLength, thread)
                     + p_loopOverlapOffset_->value(gtime, thread)
-                        * p_amplitude_->value(time, thread),
+                        * p_amplitude_->value(time),
                 t = (lLength - time + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
         return fade * ( (1.0 - ts) * v0 + ts * v );
     }
-
+    */
     MO_ASSERT(false, "unhandled loopOverlapMode " << p_loopOverlapMode_->baseValue()
                      << " in SequenceFloat '" << idNamePath() << "'");
     return 0.0;
 }
 
 
-Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
+Double SequenceFloat::value_(const RenderTime & gtime) const
 {
+    RenderTime time(gtime);
+
     if (typeUsesFrequency() || p_useFreq_->baseValue())
     {
-        time = time * p_frequency_->value(gtime, thread)
-                + p_phase_->value(gtime, thread) * phaseMult_;
+        time.setSecond( time.second() * p_frequency_->value(gtime)
+                + p_phase_->value(gtime) * phaseMult_ );
     }
 
     // return value
     switch ((SequenceType)p_mode_->baseValue())
     {
         case ST_CONSTANT:
-            return p_offset_->value(gtime, thread);
+            return p_offset_->value(gtime);
 
         case ST_OSCILLATOR:
-            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * AUDIO::Waveform::waveform(time,
+            return p_offset_->value(gtime) + p_amplitude_->value(gtime)
+                * AUDIO::Waveform::waveform(time.second(),
                             (AUDIO::Waveform::Type)p_oscMode_->baseValue(),
-                        AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime, thread)),
-                                                         p_smooth_->value(gtime, thread));
+                        AUDIO::Waveform::limitPulseWidth(p_pulseWidth_->value(gtime)),
+                                                         p_smooth_->value(gtime));
 
         case ST_ADD_OSC:
-            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * AUDIO::Waveform::spectralWave(time,
-                                    p_specNum_->value(gtime, thread),
-                                    p_specOct_->value(gtime, thread),
-                                    p_specPhase_->value(gtime, thread) * phaseMult_,
-                                    p_specPhaseShift_->value(gtime, thread) * phaseMult_,
-                                    p_specAmp_->value(gtime, thread)
+            return p_offset_->value(gtime) + p_amplitude_->value(gtime)
+                * AUDIO::Waveform::spectralWave(time.second(),
+                                    p_specNum_->value(gtime),
+                                    p_specOct_->value(gtime),
+                                    p_specPhase_->value(gtime) * phaseMult_,
+                                    p_specPhaseShift_->value(gtime) * phaseMult_,
+                                    p_specAmp_->value(gtime)
                         );
 
         case ST_EQUATION_WT:
@@ -858,35 +862,35 @@ Double SequenceFloat::value_(Double gtime, Double time, uint thread) const
         case ST_OSCILLATOR_WT:
         case ST_SPECTRAL_WT:
             MO_ASSERT(wavetable_, "SequenceFloat('" << idName() << "')::value() without wavetable");
-            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * wavetable_->value(time);
+            return p_offset_->value(gtime) + p_amplitude_->value(gtime)
+                * wavetable_->value(time.second());
 
         case ST_SOUNDFILE:
             MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
-            return p_offset_->value(gtime, thread) + p_amplitude_->value(gtime, thread)
-                * soundFile_->value(time,
-                                    std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime, thread)) );
+            return p_offset_->value(gtime) + p_amplitude_->value(gtime)
+                * soundFile_->value(time.second(),
+                                    std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime)) );
 
         case ST_EQUATION:
-            MO_ASSERT(equation_[thread], "SequenceFloat('" << idName() << "')::value() without equation "
+            MO_ASSERT(equation_[time.thread()], "SequenceFloat('" << idName() << "')::value() without equation "
                                          "(thread=" << thread << ")");
-            equation_[thread]->time = time;
-            equation_[thread]->rtime = time * TWO_PI;
-            equation_[thread]->freq = p_frequency_->value(gtime, thread);
-            equation_[thread]->phase = p_phase_->value(gtime, thread) * phaseMult_;
-            equation_[thread]->pw = AUDIO::Waveform::limitPulseWidth(
-                                        p_pulseWidth_->value(gtime, thread));
+            equation_[time.thread()]->time = time.second();
+            equation_[time.thread()]->rtime = time.second() * TWO_PI;
+            equation_[time.thread()]->freq = p_frequency_->value(gtime);
+            equation_[time.thread()]->phase = p_phase_->value(gtime) * phaseMult_;
+            equation_[time.thread()]->pw = AUDIO::Waveform::limitPulseWidth(
+                                        p_pulseWidth_->value(gtime));
             MO_EXTEND_EXCEPTION(
-                return p_offset_->value(gtime, thread)
-                    + p_amplitude_->value(gtime, thread) * equation_[thread]->equation->eval()
+                return p_offset_->value(gtime)
+                    + p_amplitude_->value(gtime) * equation_[time.thread()]->equation->eval()
                 ,
-                "in (thread=" << thread << ") call from SequenceFloat '"
+                "in (thread=" << time.thread() << ") call from SequenceFloat '"
                         << name() << "' (" << idNamePath() << ")"
             );
 
-        case ST_TIMELINE: return p_offset_->value(gtime, thread)
-                                + p_amplitude_->value(gtime, thread)
-                                    * timeline_->get(time);
+        case ST_TIMELINE: return p_offset_->value(gtime)
+                                + p_amplitude_->value(gtime)
+                                    * timeline_->get(time.second());
     }
 
     return 0.0;
@@ -931,14 +935,15 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
 
     Double time = localStart;
 
-    minValue = maxValue = valueFloat(0, time + start(), thread);
+    RenderTime tim(time + start(), thread);
+    minValue = maxValue = valueFloat(0, tim);
 
     std::mt19937 rnd(12345);
 
     while (time < localEnd)
     {
-        minValue = std::min(minValue, valueFloat(0, time + start(), thread));
-        maxValue = std::max(maxValue, valueFloat(0, time + start(), thread));
+        minValue = std::min(minValue, valueFloat(0, tim));
+        maxValue = std::max(maxValue, valueFloat(0, tim));
 
         time += step * (1.0 + (Double)rnd()/rnd.max());
     }

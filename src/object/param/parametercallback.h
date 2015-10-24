@@ -50,7 +50,7 @@ public:
     Modulator * getModulator(
             const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
     /** Calls fire() if input modulation > 0. */
-    void fireIfInput(Double time, uint thread);
+    void fireIfInput(const RenderTime & time);
 private:
 
     std::function<void()> p_func_;

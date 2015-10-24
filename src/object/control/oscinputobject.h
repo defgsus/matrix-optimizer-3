@@ -34,7 +34,7 @@ public:
 
     // ---- float interface ----
 
-    Double valueFloat(uint channel, Double time, uint thread) const Q_DECL_OVERRIDE;
+    Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
 signals:
 

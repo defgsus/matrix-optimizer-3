@@ -73,11 +73,11 @@ public:
 
     /** Loop start time (local) in seconds */
     Double loopStart() const { return p_loopStart_->baseValue(); }
-    Double loopStart(Double time, uint thread) const { return p_loopStart_->value(time, thread); }
+    Double loopStart(const RenderTime& time) const { return p_loopStart_->value(time); }
 
     /** Loop length in seconds */
     Double loopLength() const { return p_loopLength_->baseValue(); }
-    Double loopLength(Double time, uint thread) const { return p_loopLength_->value(time, thread); }
+    Double loopLength(const RenderTime& time) const { return p_loopLength_->value(time); }
 
     /** Loop end time (local) in seconds */
     Double loopEnd() const
@@ -85,7 +85,7 @@ public:
 
     /** Offset into the sequence data (local) in seconds. */
     Double timeOffset() const { return p_timeOffset_->baseValue(); }
-    Double timeOffset(Double time, uint thread) const { return p_timeOffset_->value(time, thread); }
+    Double timeOffset(const RenderTime& time) const { return p_timeOffset_->value(time); }
 
     /** Sequence internal speed */
     Double speed() const { return p_speed_->baseValue(); }
@@ -127,10 +127,40 @@ public:
         { p_speed_->setValue(std::max(minimumSpeed(), t)); }
 
     /** Translates global time to sequence-local time (with loop) */
-    Double getSequenceTime(Double global_time, uint thread, Double &timeWithoutLoop) const;
+    Double getSequenceTime(const RenderTime & global_time, Double &timeWithoutLoop) const
+    {
+        Double speed = p_speed_->value(global_time),
+               time = global_time.second();
+        RenderTime rtime(global_time);
+
+        if (parentClip_)
+        {
+            time -= parentClip_->timeStarted();
+            speed *= parentClip_->speed();
+        }
+
+        rtime.setSecond(time);
+        time = (time - p_start_->value(rtime)) * speed;
+        rtime.setSecond(time);
+        time += p_timeOffset_->value(rtime);
+
+        timeWithoutLoop = time;
+
+        if (p_looping_->baseValue())
+        {
+            const Double
+                    ls = p_loopStart_->value(rtime),
+                    ll = std::max(p_loopLength_->value(rtime), minimumLength());
+
+            if (time > ls + ll)
+                return MATH::moduloSigned(time - ls, ll) + ls;
+        }
+
+        return time;
+    }
     /** Translates global time to sequence-local time (with loop)
         and returns the current loop settings */
-    Double getSequenceTime(Double global_time, uint thread,
+    Double getSequenceTime(const RenderTime & global_time,
                            Double& loopStart, Double& loopLength, bool& isInLoop,
                            Double &timeWithoutLoop) const;
 
@@ -158,40 +188,15 @@ private:
 };
 
 
-inline Double Sequence::getSequenceTime(Double time, uint thread,
-                                        Double &timeWithoutLoop) const
-{
-    Double speed = p_speed_->value(time, thread);
 
-    if (parentClip_)
-    {
-        time -= parentClip_->timeStarted();
-        speed *= parentClip_->speed();
-    }
 
-    time = (time - p_start_->value(time, thread)) * speed;
-    time += p_timeOffset_->value(time, thread);
-
-    timeWithoutLoop = time;
-
-    if (p_looping_->baseValue())
-    {
-        const Double
-                ls = p_loopStart_->value(time, thread),
-                ll = std::max(p_loopLength_->value(time, thread), minimumLength());
-
-        if (time > ls + ll)
-            return MATH::moduloSigned(time - ls, ll) + ls;
-    }
-
-    return time;
-}
-
-inline Double Sequence::getSequenceTime(Double time, uint thread,
+inline Double Sequence::getSequenceTime(const RenderTime& in_time,
                                         Double& lStart, Double& lLength, bool& isInLoop,
                                         Double& timeWithoutLoop) const
 {
-    Double speed = p_speed_->value(time, thread);
+    Double speed = p_speed_->value(in_time),
+           time = in_time.second();
+    RenderTime rtime(in_time);
 
     if (parentClip_)
     {
@@ -199,15 +204,17 @@ inline Double Sequence::getSequenceTime(Double time, uint thread,
         speed *= parentClip_->speed();
     }
 
-    time = (time - p_start_->value(time, thread)) * speed;
-    time += p_timeOffset_->value(time, thread);
+    rtime.setSecond(time);
+    time = (time - p_start_->value(rtime)) * speed;
+    rtime.setSecond(time);
+    time += p_timeOffset_->value(rtime);
 
     timeWithoutLoop = time;
 
     if (p_looping_->baseValue())
     {
-        lStart = p_loopStart_->value(time, thread);
-        lLength = std::max(p_loopLength_->value(time, thread), minimumLength());
+        lStart = p_loopStart_->value(rtime);
+        lLength = std::max(p_loopLength_->value(rtime), minimumLength());
 
         isInLoop = time >= lStart;
 

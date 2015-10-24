@@ -183,7 +183,7 @@ QString ObjectGl::getGlslInclude(const QString &url, bool do_search)
     if (o->isText())
     {
         auto to = static_cast<TextObject*>(o);
-        auto tex = to->valueText(0, 0);
+        auto tex = to->valueText(0, RenderTime(0, MO_GUI_THREAD));
         if (tex.second == TT_GLSL)
         {
             if (sceneObject())
@@ -272,14 +272,14 @@ void ObjectGl::p_releaseGl_(uint thread)
     p_isGlInitialized_[thread] = false;
 }
 
-void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double time)
+void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, const RenderTime & time)
 {
     using namespace gl;
 
-    if (!p_glContext_[thread])
-        MO_GL_ERROR("no context["<<thread<<"] defined for object '" << idName() << "'");
-    if (!p_glContext_[thread]->isValid())
-        MO_GL_ERROR("context["<<thread<<"] not initialized for object '" << idName() << "'");
+    if (!p_glContext_[time.thread()])
+        MO_GL_ERROR("no context["<<time.thread()<<"] defined for object '" << idName() << "'");
+    if (!p_glContext_[time.thread()]->isValid())
+        MO_GL_ERROR("context["<<time.thread()<<"] not initialized for object '" << idName() << "'");
 
     // ---- set render modes/state -----
 
@@ -308,10 +308,10 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, uint thread, Double tim
 
     MO_EXTEND_EXCEPTION(
 
-        renderGl(rs, thread, time);
+        renderGl(rs, time);
         ++p_renderCount_;
 
-        , "in ObjectGl '" << idName() << "', thread=" << thread
+        , "in ObjectGl '" << idName() << "', thread=" << time.thread()
     );
 
 }

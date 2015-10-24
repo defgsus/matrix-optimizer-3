@@ -32,7 +32,7 @@ namespace {
         const SequenceFloat * sequence;
         Double value(Double time) const
         {
-            return sequence->valueFloat(0, sequence->realStart() + time, MO_GUI_THREAD);
+            return sequence->valueFloat(0, RenderTime(sequence->realStart() + time, MO_GUI_THREAD));
         }
     };
 
@@ -42,7 +42,7 @@ namespace {
     public:
         const ValueFloatInterface * iface;
         Double value(Double time) const
-            { return iface->valueFloat(0, time, MO_GUI_THREAD); }
+            { return iface->valueFloat(0, RenderTime(time, MO_GUI_THREAD)); }
     };
 
 }

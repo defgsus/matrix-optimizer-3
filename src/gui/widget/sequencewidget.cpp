@@ -29,7 +29,7 @@ namespace {
     public:
         const SequenceFloat * sequence;
         Double value(Double time) const
-            { return sequence->valueFloat(0, /*sequence->start() +*/ time, MO_GUI_THREAD); }
+            { return sequence->valueFloat(0, RenderTime(/*sequence->start() +*/ time, MO_GUI_THREAD)); }
     };
 }
 

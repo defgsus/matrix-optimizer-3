@@ -93,11 +93,11 @@ QString PhasorAO::getAudioInputName(uint channel) const
     }
 }
 
-void PhasorAO::processAudio(uint, SamplePos pos, uint thread)
+void PhasorAO::processAudio(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
     AUDIO::AudioBuffer
             * inFreq = inputs.size() < 1 ? 0 : inputs[0],
@@ -107,12 +107,12 @@ void PhasorAO::processAudio(uint, SamplePos pos, uint thread)
     if(!out) return;
 
     Double onedsr   = sampleRateInv();
-    Double phase    = p_->phase[thread];
+    Double phase    = p_->phase[time.thread()];
+    RenderTime ti(time);
     for(uint i=0;i<out->blockSize();++i) {
         Double
-                time = onedsr * (pos + i),
-                freq = p_->paramFreq->value(time, thread),
-                offs = p_->paramOffset->value(time,thread);
+                freq = p_->paramFreq->value(ti),
+                offs = p_->paramOffset->value(ti);
         if(inFreq)
             freq += inFreq->read(i);
         if(inOffs)
@@ -123,8 +123,9 @@ void PhasorAO::processAudio(uint, SamplePos pos, uint thread)
         phase += increment;
         if(phase > 1.0) phase -= 1.0;
         else if(phase < 0.0) phase += 1.0;
+        ti += SamplePos(1);
     }
-    p_->phase[thread] = phase;
+    p_->phase[time.thread()] = phase;
 }
 
 }

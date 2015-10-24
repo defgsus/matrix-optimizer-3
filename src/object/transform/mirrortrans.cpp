@@ -81,19 +81,19 @@ void MirrorTrans::updateParameterVisibility()
     z_->setVisible(mpos);
 }
 
-void MirrorTrans::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void MirrorTrans::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
     const bool
-            mPos = mPos_->value(time, thread),
-            mOri = mOri_->value(time, thread);
+            mPos = mPos_->value(time),
+            mOri = mOri_->value(time);
 
     if (!(mPos || mOri))
         return;
 
     // reflection vector
-    Vec3 v = MATH::normalize_safe(Vec3(ax_->value(time, thread),
-                                       ay_->value(time, thread),
-                                       az_->value(time, thread)));
+    Vec3 v = MATH::normalize_safe(Vec3(ax_->value(time),
+                                       ay_->value(time),
+                                       az_->value(time)));
     // orientation
     if (mOri)
     for (int i=0; i<3; ++i)
@@ -109,9 +109,9 @@ void MirrorTrans::applyTransformation(Mat4 &matrix, Double time, uint thread) co
     if (mPos)
     {
         // position
-        Vec3 pos = Vec3(x_->value(time, thread),
-                        y_->value(time, thread),
-                        z_->value(time, thread));
+        Vec3 pos = Vec3(x_->value(time),
+                        y_->value(time),
+                        z_->value(time));
 
         Vec3 p = glm::reflect( Vec3(matrix[3]) - pos, v ) + pos;
 

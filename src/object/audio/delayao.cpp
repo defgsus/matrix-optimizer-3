@@ -138,20 +138,18 @@ void DelayAO::Private::updateDelays()
     }
 }
 
-void DelayAO::processAudio(uint , SamplePos pos, uint thread)
+void DelayAO::processAudio(const RenderTime& time)
 {
-    const Double time = sampleRateInv() * pos;
-
     // update Delay
-    AUDIO::AudioDelay * delay = p_->delays[thread].get();
+    AUDIO::AudioDelay * delay = p_->delays[time.thread()].get();
 
     if (1) // parameter update per block
     {
         const F32
-                amp = p_->paramAmp->value(time, thread),
-                samplesBack = p_->paramTime->value(time, thread) * sampleRate();
+                amp = p_->paramAmp->value(time),
+                samplesBack = p_->paramTime->value(time) * sampleRate();
 
-        AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+        AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
         [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
             // write block into delay

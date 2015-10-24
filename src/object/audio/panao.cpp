@@ -122,11 +122,11 @@ QString PanAO::getAudioInputName(uint channel) const
 
 static const Double SQRT2 = sqrt(2.0);
 
-void PanAO::processAudio(uint, SamplePos pos, uint thread)
+void PanAO::processAudio(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*> &
-            inputs  = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs  = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
     AUDIO::AudioBuffer
             * in    = inputs.isEmpty()  ? 0 : inputs[0],
             * inPan = inputs.size() < 2 ? 0 : inputs[1],
@@ -143,9 +143,8 @@ void PanAO::processAudio(uint, SamplePos pos, uint thread)
         }
     } else {
         for(uint i=0;i<blockSize; ++i) {
-            Double time = sampleRateInv() * (pos + i);
 
-            Double pan = p_->paramPan->value(time,thread);
+            Double pan = p_->paramPan->value(time);
             if(inPan)
                 pan += inPan->read(i);
             if(pan < -1.0) pan = -1.0;

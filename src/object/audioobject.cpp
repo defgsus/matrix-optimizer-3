@@ -193,17 +193,17 @@ const QList<AUDIO::AudioBuffer*> & AudioObject::audioOutputs(uint thread) const
     return p_ao_->outputs[thread];
 }
 
-void AudioObject::processAudioBase(uint bufferSize, SamplePos pos, uint thread)
+void AudioObject::processAudioBase(const RenderTime & time)
 {
     const QList<AUDIO::AudioBuffer*>&
-            inputs = audioInputs(thread),
-            outputs = audioOutputs(thread);
+            inputs = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
 /*    MO_ASSERT(outputs.size() == (int)numAudioOutputs(), "output size mismatch "
                         << outputs.size() << "/" << numAudioOutputs());
 */
     // check activity
-    if (!active(sampleRateInv() * pos, thread))
+    if (!active(time))
     {
         AUDIO::AudioBuffer::bypass(inputs, outputs);
         return;
@@ -219,27 +219,28 @@ void AudioObject::processAudioBase(uint bufferSize, SamplePos pos, uint thread)
 #endif
 
     // call virtual function
-    processAudio(bufferSize, pos, thread);
+    processAudio(time);
 
-    p_ao_->lastOutputSamplePos[thread] = pos + bufferSize - 1;
+    p_ao_->lastOutputSamplePos[time.thread()] = time.sample() + time.bufferSize() - 1;
 }
 
-void AudioObject::clientFakeAudio(uint bufferSize, SamplePos pos, uint thread)
+void AudioObject::clientFakeAudio(const RenderTime& time)
 {
-    p_ao_->lastOutputSamplePos[thread] = pos + bufferSize - 1;
+    p_ao_->lastOutputSamplePos[time.thread()]
+            = time.sample() + time.bufferSize() - 1;
 }
 
 
-Double AudioObject::getAudioOutputAsFloat(uint channel, Double time, uint thread) const
+Double AudioObject::getAudioOutputAsFloat(uint channel, const RenderTime & time) const
 {
-    auto outs = audioOutputs(thread);
+    auto outs = audioOutputs(time.thread());
 
     if ((int)channel >= outs.size() || outs[channel] == 0)
         return 0;
 
     SamplePosDiff pos =
-              p_ao_->lastOutputSamplePos[thread]
-              - SamplePosDiff(time * sampleRate());
+              p_ao_->lastOutputSamplePos[time.thread()]
+              - SamplePosDiff(time.sample());
                  //- outs[channel]->blockSize() * (outs[channel]->numBlocks() - 1));
 
     // repeat first sample in current read block

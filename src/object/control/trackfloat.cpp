@@ -36,34 +36,36 @@ void TrackFloat::deserialize(IO::DataStream & io)
     io.readHeader("trkf", 1);
 }
 
-Double TrackFloat::valueFloat(uint ch, Double time, uint thread) const
+Double TrackFloat::valueFloat(uint ch, const RenderTime& time) const
 {
     Double v = 0.0;
     for (auto s : sequences_)
     {
-        if (time >= s->start() && time <= s->end()
-                && s->active(time, thread))
-                    v += s->valueFloat(ch, time, thread);
+        if (time.second() >= s->start() && time.second() <= s->end()
+                && s->active(time))
+                    v += s->valueFloat(ch, time);
     }
 
     return v;
 }
 
-void TrackFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, Double *ptr) const
+void TrackFloat::getValues(const RenderTime& time, Double timeIncrement, uint number, Double *ptr) const
 {
+    RenderTime t(time);
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = valueFloat(0, time, thread);
-        time += timeIncrement;
+        *ptr++ = valueFloat(0, t);
+        t.setSecond( t.second() + timeIncrement );
     }
 }
 
-void TrackFloat::getValues(Double time, uint thread, Double timeIncrement, uint number, F32 *ptr) const
+void TrackFloat::getValues(const RenderTime& time, Double timeIncrement, uint number, F32 *ptr) const
 {
+    RenderTime t(time);
     for (uint i=0; i<number; ++i)
     {
-        *ptr++ = valueFloat(0, time, thread);
-        time += timeIncrement;
+        *ptr++ = valueFloat(0, t);
+        t.setSecond( t.second() + timeIncrement );
     }
 }
 

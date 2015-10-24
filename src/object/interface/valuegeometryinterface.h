@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_INTERFACE_VALUEGEOMETRYINTERFACE_H
 #define MOSRC_OBJECT_INTERFACE_VALUEGEOMETRYINTERFACE_H
 
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 namespace GEOM { class Geometry; }
@@ -23,7 +23,7 @@ public:
     virtual ~ValueGeometryInterface() { }
 
     /** Return a GEOM::Geometry or NULL. */
-    virtual const GEOM::Geometry * valueGeometry(uint channel, Double time, uint thread) const = 0;
+    virtual const GEOM::Geometry * valueGeometry(uint channel, const RenderTime& time) const = 0;
 
 };
 

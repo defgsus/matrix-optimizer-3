@@ -30,7 +30,7 @@ public:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
-    virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
+    virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     /* texture output interface */
     //virtual const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;

@@ -137,29 +137,29 @@ void TextureMorphSetting::getUniforms(GL::Shader * shader, const QString& id_suf
     }
 }
 
-void TextureMorphSetting::updateUniforms(Double time, uint thread)
+void TextureMorphSetting::updateUniforms(const RenderTime& time)
 {
     if (isTransformEnabled() && u_tex_transform_)
     {
         u_tex_transform_->setFloats(
-                    pTransX_->value(time, thread),
-                    pTransY_->value(time, thread),
-                    pTransSX_->value(time, thread),
-                    pTransSY_->value(time, thread));
+                    pTransX_->value(time),
+                    pTransY_->value(time),
+                    pTransSX_->value(time),
+                    pTransSY_->value(time));
     }
 
     if (isSineMorphEnabled())
     {
         if (u_tex_morphx_)
             u_tex_morphx_->setFloats(
-                pSineMorphAmpX_->value(time, thread),
-                pSineMorphFreqX_->value(time, thread) * TWO_PI,
-                pSineMorphPhaseX_->value(time, thread) * TWO_PI, 0);
+                pSineMorphAmpX_->value(time),
+                pSineMorphFreqX_->value(time) * TWO_PI,
+                pSineMorphPhaseX_->value(time) * TWO_PI, 0);
         if (u_tex_morphy_)
             u_tex_morphy_->setFloats(
-                pSineMorphAmpY_->value(time, thread),
-                pSineMorphFreqY_->value(time, thread) * TWO_PI,
-                pSineMorphPhaseY_->value(time, thread) * TWO_PI, 0);
+                pSineMorphAmpY_->value(time),
+                pSineMorphFreqY_->value(time) * TWO_PI,
+                pSineMorphPhaseY_->value(time) * TWO_PI, 0);
     }
 }
 

@@ -349,8 +349,9 @@ void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread,
         m->trans->setTransformation(m->object->transformation(), 0);
         SamplePos pos = 0;
         // calc one sample of transformations
+        // ZZZ
         m->object->calculateMicrophoneTransformation(
-                    m->trans, m->mics, 1, pos, thread);
+                    m->trans, m->mics, RenderTime(pos, thread));
         for (const AUDIO::SpatialMicrophone * mic : m->mics)
         {
             const Mat4& trans = mic->transformationBuffer()->transformation(0);
@@ -368,8 +369,9 @@ void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread,
         s->trans->setTransformation(s->object->transformation(), 0);
         SamplePos pos = 0;
         // calc one sample of transformations
+        // ZZZ
         s->object->calculateSoundSourceTransformation(
-                    s->trans, s->snds, 1, pos, thread);
+                    s->trans, s->snds, RenderTime(pos, thread));
         // draw
         for (const AUDIO::SpatialSoundSource * snd : s->snds)
         {

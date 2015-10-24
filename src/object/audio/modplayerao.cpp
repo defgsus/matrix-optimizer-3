@@ -157,23 +157,22 @@ void ModPlayerAO::setAudioBuffers(uint , uint bufferSize,
     p_->updateTracker(bufferSize);
 }
 
-void ModPlayerAO::processAudio(uint , SamplePos pos, uint thread)
+void ModPlayerAO::processAudio(const RenderTime& time)
 {
     const QList<AUDIO::AudioBuffer*>&
-            outputs = audioOutputs(thread);
+            outputs = audioOutputs(time.thread());
 
     const Double
-            time = sampleRateInv() * pos,
-            gate = p_->gate.input(p_->paramPlayGate->value(time, thread));
+            gate = p_->gate.input(p_->paramPlayGate->value(time));
 
     // retrigger
     if (gate)
     {
         p_->dumb.setPosition(
-                    p_->paramPlayPos->value(time, thread));
+                    p_->paramPlayPos->value(time));
     }
 
-    p_->dumb.process(outputs, p_->paramAmp->value(time, thread));
+    p_->dumb.process(outputs, p_->paramAmp->value(time));
 }
 
 

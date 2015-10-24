@@ -36,7 +36,7 @@ struct LensDistTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     LensDistTO * to;
 
@@ -101,9 +101,9 @@ void LensDistTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void LensDistTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void LensDistTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -258,34 +258,34 @@ void LensDistTO::Private::releaseGl()
 
 }
 
-void LensDistTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void LensDistTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_lens)
-        u_lens->setFloats(  p_dist->value(time, thread),
-                            p_dist_chroma->value(time, thread),
-                            1.f / p_zoom->value(time, thread));
+        u_lens->setFloats(  p_dist->value(time),
+                            p_dist_chroma->value(time),
+                            1.f / p_zoom->value(time));
 
     if (u_lens_set)
         u_lens_set->setFloats(
-                            p_exp->value(time, thread),
-                            p_norm_radius->value(time, thread));
+                            p_exp->value(time),
+                            p_norm_radius->value(time));
 
     if (u_lens_center)
         u_lens_center->setFloats(
-                            p_center_x->value(time, thread),
-                            p_center_y->value(time, thread));
+                            p_center_x->value(time),
+                            p_center_y->value(time));
 
     if (u_spec)
-        u_spec->setFloats(  p_spec1->value(time, thread),
-                            p_spec2->value(time, thread),
-                            p_sat->value(time, thread));
+        u_spec->setFloats(  p_spec1->value(time),
+                            p_spec2->value(time),
+                            p_sat->value(time));
 
     if (u_num_samples)
-        u_num_samples->ints[0] = p_num->value(time, thread);
+        u_num_samples->ints[0] = p_num->value(time);
 
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

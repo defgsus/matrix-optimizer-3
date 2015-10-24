@@ -141,21 +141,19 @@ void EnvelopeFollowerAO::setAudioBuffers(uint thread, uint /*bufferSize*/,
     p_->envs[thread].resize(inputs.size());
 }
 
-void EnvelopeFollowerAO::processAudio(uint , SamplePos pos, uint thread)
+void EnvelopeFollowerAO::processAudio(const RenderTime& time)
 {
-    const Double time = sampleRateInv() * pos;
+    F32 fadeIn = p_->paramTimeUp->value(time),
+        fadeOut = p_->paramTimeDown->value(time),
+        ampIn = p_->paramInAmp->value(time),
+        ampOut = p_->paramOutAmp->value(time),
+        thres = p_->paramThreshold->value(time),
+        average = p_->paramAverage->value(time);
 
-    F32 fadeIn = p_->paramTimeUp->value(time, thread),
-        fadeOut = p_->paramTimeDown->value(time, thread),
-        ampIn = p_->paramInAmp->value(time, thread),
-        ampOut = p_->paramOutAmp->value(time, thread),
-        thres = p_->paramThreshold->value(time, thread),
-        average = p_->paramAverage->value(time, thread);
-
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
     [=](uint channel, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
-        AUDIO::EnvelopeFollower * env = &p_->envs[thread][channel];
+        AUDIO::EnvelopeFollower * env = &p_->envs[time.thread()][channel];
 
         // update envelope follower settings
         if (   env->fadeIn() != fadeIn

@@ -57,12 +57,16 @@ void SoundSource::createParameters()
 
 void SoundSource::calculateSoundSourceBuffer(
         const QList<AUDIO::SpatialSoundSource *> list,
-        uint bufferSize, SamplePos pos, uint thread)
+        const RenderTime& time)
 {
+    RenderTime t(time);
     // copy the float parameter into the soundsource buffer
-    for (SamplePos i = 0; i < bufferSize; ++i)
-        list[0]->signal()->write(i,
-                        audioTrack_->value(sampleRateInv() * (pos + i), thread));
+    for (SamplePos i = 0; i < time.bufferSize(); ++i)
+    {
+        t.setSample(time.sample() + i);
+        t.setSecond(sampleRateInv() * t.sample());
+        list[0]->signal()->write(i, audioTrack_->value(t));
+    }
 }
 
 } // namespace MO

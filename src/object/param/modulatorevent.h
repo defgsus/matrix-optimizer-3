@@ -12,8 +12,7 @@
 #define MOSRC_OBJECT_PARAM_MODULATOREVENT_H
 
 #include "modulator.h"
-#include "types/float.h"
-#include "types/int.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -87,7 +86,7 @@ public:
     void setValue(Double time, Double value);
 
     /** Returns the modulation-value since given time */
-    Double valueFloat(Double time, uint thread) const;
+    Double valueFloat(const RenderTime & time) const;
 
 protected:
 

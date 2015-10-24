@@ -103,7 +103,7 @@ void TextObject::updateParamType_()
     }*/
 }
 
-QPair<QString, TextType> TextObject::valueText(Double , uint ) const
+QPair<QString, TextType> TextObject::valueText(uint, const RenderTime& ) const
 {
     return qMakePair(pText_->value(), pText_->textType());
 }

@@ -221,17 +221,17 @@ void DistanceMapTO::Private::renderGl(const GL::RenderSettings& , uint thread, D
     // update uniforms
 
     const Float
-            r = p_r->value(time, thread),
-            g = p_g->value(time, thread),
-            b = p_b->value(time, thread),
-            a = p_a->value(time, thread);
+            r = p_r->value(time),
+            g = p_g->value(time),
+            b = p_b->value(time),
+            a = p_a->value(time);
 
     if (u_color)
         u_color->setFloats( r, g, b, a );
 
     if (u_settings)
         u_settings->setFloats(
-                            p_thresh->value(time, thread) * (r + g + b + a)
+                            p_thresh->value(time) * (r + g + b + a)
                             );
 
     uint texSlot = 0;

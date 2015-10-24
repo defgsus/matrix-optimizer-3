@@ -111,8 +111,8 @@ class Oscillograph::Private
     OsciMode osciMode() const { return (OsciMode)paramMode->baseValue(); }
     void updateEquations();
     void recompile();
-    void calcValueBuffer(Double time, uint thread);
-    void calcVaoBuffer(Double time, uint thread);
+    void calcValueBuffer(const RenderTime & time);
+    void calcVaoBuffer(const RenderTime & time);
 
     Oscillograph * obj;
     GL::Drawable * draw;
@@ -406,14 +406,14 @@ const GEOM::Geometry* Oscillograph::geometry() const
     return p_->draw ? p_->draw->geometry() : 0;
 }
 
-Vec4 Oscillograph::modelColor(Double time, uint thread) const
+Vec4 Oscillograph::modelColor(const RenderTime& time) const
 {
-    const auto b = p_->paramBright->value(time, thread);
+    const auto b = p_->paramBright->value(time);
     return Vec4(
-        p_->paramR->value(time, thread) * b,
-        p_->paramG->value(time, thread) * b,
-        p_->paramB->value(time, thread) * b,
-        p_->paramA->value(time, thread));
+        p_->paramR->value(time) * b,
+        p_->paramG->value(time) * b,
+        p_->paramB->value(time) * b,
+        p_->paramA->value(time));
 }
 
 void Oscillograph::initGl(uint thread)
@@ -526,35 +526,33 @@ void Oscillograph::releaseGl(uint /*thread*/)
     doRecompile_ = true;
 }*/
 
-void Oscillograph::Private::calcValueBuffer(Double time, uint thread)
+void Oscillograph::Private::calcValueBuffer(const RenderTime& time)
 {
     auto writep = &valueBuffer[0];
 
     if (sourceMode() == Private::S_AMPLITUDE)
     {
         const Double
-                timeSpan = paramTimeSpan->value(time, thread),
+                timeSpan = paramTimeSpan->value(time),
                 fac = 1.0 / (valueBuffer.size() - 1);
 
         for (uint j = 0; j < numChannels; ++j)
         for (uint i = 0; i < numPoints; ++i)
         {
             const Double t = Double(i) * fac;
-            *writep++ = paramValue[j]->value(time + (1.0-t) * timeSpan, thread);
+            *writep++ = paramValue[j]->value(time + (1.0-t) * timeSpan);
         }
     }
     else
     {
-        MATH::Fft<Float> * fft = &ffts[thread];
-
-        const SamplePos spos = obj->sampleRate() * time;
+        MATH::Fft<Float> * fft = &ffts[time.thread()];
 
         for (uint j = 0; j < numChannels; ++j)
         {
             // fill fft buffer
             for (uint i = 0; i < fft->size(); ++i)
-                fft->buffer()[i] = paramValue[j]->value(
-                            (spos - i) * obj->sampleRateInv(), thread);
+                fft->buffer()[i] =
+                        paramValue[j]->value(time - SamplePos(i));
 
             // perform it
             fft->fft();
@@ -570,18 +568,18 @@ void Oscillograph::Private::calcValueBuffer(Double time, uint thread)
     }
 }
 
-void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
+void Oscillograph::Private::calcVaoBuffer(const RenderTime& time)
 {
     const Double
             fac = 1.0 / (numPoints - 1),
-            amp = paramAmp->value(time, thread);
+            amp = paramAmp->value(time);
 
     // calculate osci positions
     switch (osciMode())
     {
         case O_1D:
         {
-            const gl::GLfloat scalex = paramWidth->value(time, thread);
+            const gl::GLfloat scalex = paramWidth->value(time);
 
             gl::GLfloat * pos = &vaoBuffer[0];
             for (uint i = 0; i < numPoints; ++i)
@@ -650,10 +648,10 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
 
         case O_EQUATION:
         {
-            Private::EquationObject * equ = &equs[thread];
+            Private::EquationObject * equ = &equs[time.thread()];
 
-            equ->time = time;
-            equ->rtime = time * TWO_PI;
+            equ->time = time.second();
+            equ->rtime = time.second() * TWO_PI;
 
             gl::GLfloat * pos = &vaoBuffer[0];
             for (uint i = 0; i < numPoints; ++i)
@@ -710,7 +708,7 @@ void Oscillograph::Private::calcVaoBuffer(Double time, uint thread)
 
 
 
-void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rtime)
+void Oscillograph::renderGl(const GL::RenderSettings& rs, const RenderTime& rtime)
 {
     const Mat4& trans = transformation();
     const Mat4  cubeViewTrans = rs.cameraSpace().cubeViewMatrix() * trans;
@@ -724,26 +722,27 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
 
     if (p_->draw->isReady())
     {
-        const int mbframes = p_->paramBlurFrames->value(rtime, thread) + 1;
+        const int mbframes = p_->paramBlurFrames->value(rtime) + 1;
         const Double mbtimefac = 1.0 / Double(std::max(1, mbframes - 1))
-                * p_->paramBlurWidth->value(rtime, thread);
+                * p_->paramBlurWidth->value(rtime);
 
-        p_->vaoUpdateTime = rtime + 1.;
+        p_->vaoUpdateTime = rtime.second() + 1.;
         for (int mb = 0; mb < mbframes; ++mb)
         {
-            Double time = rtime - Double(mb) * mbtimefac;
+            RenderTime time(rtime);
+            time -= Double(mb) * mbtimefac;
 
             // update geometry
-            if (p_->vaoUpdateTime != time)
+            if (p_->vaoUpdateTime != time.second())
             {
-                p_->vaoUpdateTime = time;
+                p_->vaoUpdateTime = time.second();
 
                 GL::BufferObject * buf = p_->draw->vao()->getAttributeBufferObject(
                             GL::VertexArrayObject::A_POSITION);
                 if (buf && p_->vaoBuffer.size() > 3)
                 {
-                    p_->calcValueBuffer(time, thread);
-                    p_->calcVaoBuffer(time, thread);
+                    p_->calcValueBuffer(time);
+                    p_->calcVaoBuffer(time);
 
                     // move to device
                     buf->bind();
@@ -753,23 +752,23 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
 
 
             // update uniforms
-            const auto bright = p_->paramBright->value(time, thread);
+            const auto bright = p_->paramBright->value(time);
             p_->draw->setAmbientColor(
-                        p_->paramR->value(time, thread) * bright,
-                        p_->paramG->value(time, thread) * bright,
-                        p_->paramB->value(time, thread) * bright,
-                        p_->paramA->value(time, thread));
+                        p_->paramR->value(time) * bright,
+                        p_->paramG->value(time) * bright,
+                        p_->paramB->value(time) * bright,
+                        p_->paramA->value(time));
 
             // -- render the thing --
 
-            p_->textureSet->bind(time, thread);
+            p_->textureSet->bind(time);
 
             switch (Private::DrawMode(p_->paramDrawMode->baseValue()))
             {
                 case Private::D_LINES:
                     p_->draw->setDrawType(gl::GL_LINE_STRIP);
-                    GL::Properties::staticInstance().setLineSmooth(p_->paramLineSmooth->value(time, thread) != 0);
-                    GL::Properties::staticInstance().setLineWidth(p_->paramLineWidth->value(time, thread));
+                    GL::Properties::staticInstance().setLineSmooth(p_->paramLineSmooth->value(time) != 0);
+                    GL::Properties::staticInstance().setLineWidth(p_->paramLineWidth->value(time));
                 break;
 
                 case Private::D_BARS:
@@ -778,7 +777,7 @@ void Oscillograph::renderGl(const GL::RenderSettings& rs, uint thread, Double rt
 
                 case Private::D_POINTS:
                     p_->draw->setDrawType(gl::GL_POINTS);
-                    GL::Properties::staticInstance().setPointSize(p_->paramPointSize->value(time, thread));
+                    GL::Properties::staticInstance().setPointSize(p_->paramPointSize->value(time));
                 break;
             }
 

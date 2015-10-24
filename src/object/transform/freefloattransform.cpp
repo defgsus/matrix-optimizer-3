@@ -26,7 +26,6 @@ FreeFloatTransform::FreeFloatTransform(QObject *parent)
     : Transformation    (parent)
     , freefloat_        (new FreeFloatCamera)
     , doReset_          (true)
-    , lastTime_         (0.)
 {
     setName("FreeFloat");
 
@@ -117,9 +116,9 @@ void FreeFloatTransform::updateParameterVisibility()
 
 }
 
-void FreeFloatTransform::applyTransformation(Mat4 &matrix, Double time, uint thread) const
+void FreeFloatTransform::applyTransformation(Mat4 &matrix, const RenderTime& time) const
 {
-    reset_->fireIfInput(time, thread);
+    reset_->fireIfInput(time);
 
     if (doReset_)
     {
@@ -128,12 +127,12 @@ void FreeFloatTransform::applyTransformation(Mat4 &matrix, Double time, uint thr
     }
 
     const Float
-            acc_x = acc_x_->value(time, thread),
-            acc_y = acc_y_->value(time, thread),
-            acc_z = acc_z_->value(time, thread),
-            rot_x = rx_->value(time, thread),
-            rot_y = ry_->value(time, thread),
-            rot_z = rz_->value(time, thread);
+            acc_x = acc_x_->value(time),
+            acc_y = acc_y_->value(time),
+            acc_z = acc_z_->value(time),
+            rot_x = rx_->value(time),
+            rot_y = ry_->value(time),
+            rot_z = rz_->value(time);
 
     freefloat_->moveX(acc_x);
     freefloat_->moveY(acc_y);
@@ -143,13 +142,9 @@ void FreeFloatTransform::applyTransformation(Mat4 &matrix, Double time, uint thr
     freefloat_->rotateY(-rot_y);
     freefloat_->rotateZ(rot_z);
 
-    // XXX Not threadsafe
-    Double delta = std::max(0., std::min(1., time - lastTime_));
-    lastTime_ = time;
-
-    freefloat_->applyVelocity(delta * vel_->value(time, thread),
-                              delta * velr_->value(time, thread));
-    freefloat_->applyDamping(delta * damp_->value(time, thread));
+    freefloat_->applyVelocity(time.delta() * vel_->value(time),
+                              time.delta() * velr_->value(time));
+    freefloat_->applyDamping(time.delta() * damp_->value(time));
 
     matrix *= freefloat_->getMatrix();
 }

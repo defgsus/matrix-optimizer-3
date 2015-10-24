@@ -51,17 +51,17 @@ int ParameterTexture::getModulatorTypes() const
     return Object::T_SHADER | Object::T_CAMERA | Object::T_TEXTURE;
 }
 
-const GL::Texture * ParameterTexture::value(Double time, uint thread) const
+const GL::Texture * ParameterTexture::value(const RenderTime& time) const
 {
     // take the first valid
     for (auto m : modulators())
-    if (auto t = static_cast<ModulatorTexture*>(m)->value(time, thread))
+    if (auto t = static_cast<ModulatorTexture*>(m)->value(time))
     {
         if (t)
         {
-            if (thread >= lastHash_.size())
-                lastHash_.resize(thread+1);
-            lastHash_[thread] = t->hash();
+            if (time.thread() >= lastHash_.size())
+                lastHash_.resize(time.thread()+1);
+            lastHash_[time.thread()] = t->hash();
         }
         return lastTex_ = t;
     }
@@ -69,20 +69,20 @@ const GL::Texture * ParameterTexture::value(Double time, uint thread) const
     return lastTex_ = 0;
 }
 
-bool ParameterTexture::hasChanged(Double time, uint thread) const
+bool ParameterTexture::hasChanged(const RenderTime& time) const
 {
-    if (thread >= lastHash_.size())
+    if (time.thread() >= lastHash_.size())
         return true;
 
     const GL::Texture * t = 0;
     for (auto m : modulators())
-        if ((t = static_cast<ModulatorTexture*>(m)->value(time, thread)))
+        if ((t = static_cast<ModulatorTexture*>(m)->value(time)))
             break;
 
     if (t != lastTex_)
         return true;
     if (t)
-        return t->hash() != lastHash_[thread];
+        return t->hash() != lastHash_[time.thread()];
     return false;
 }
 

@@ -87,14 +87,14 @@ void DerivativeObjectFloat::createParameters()
     params()->endParameterGroup();
 }
 
-Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
+Double DerivativeObjectFloat::valueFloat(uint, const RenderTime& time) const
 {
     DifferentiationMethod method = (DifferentiationMethod)p_method_->baseValue();
-    int method_order = method * 10 + p_order_->value(time, thread);
+    int method_order = method * 10 + p_order_->value(time);
 
     const Double
-            ti = time + p_offset_->value(time, thread),
-            amp = p_amp_->value(time, thread);
+            amp = p_amp_->value(time);
+    const RenderTime ti = time + p_offset_->value(time);
 
 
     switch (method_order)
@@ -103,10 +103,10 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 11:
         {
             const Double
-                    h = p_range_->value(time, thread),
+                    h = p_range_->value(time),
                     h2 = .5 * h,
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti + h2, thread);
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti + h2);
 
             return amp * (d2 - d1) / h;
         }
@@ -114,11 +114,11 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 12:
         {
             const Double
-                    h = p_range_->value(time, thread),
+                    h = p_range_->value(time),
                     h2 = .5 * h,
-                    d0 = p_value_->value(ti    , thread),
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti + h2, thread);
+                    d0 = p_value_->value(ti     ),
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti + h2);
 
             return amp * (d2 - 2. * d0 + d1) / (h * h);
         }
@@ -130,13 +130,13 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 21:
         {
             const Double
-                    r = p_range_->value(time, thread),
+                    r = p_range_->value(time),
                     h = .5 * r,
                     h2 = 2. * h,
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti - h , thread),
-                    d3 = p_value_->value(ti + h , thread),
-                    d4 = p_value_->value(ti + h2, thread);
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti - h ),
+                    d3 = p_value_->value(ti + h ),
+                    d4 = p_value_->value(ti + h2);
 
             return amp * ((-d4 + 8.*d3 - 8.*d2 + d1) / (12.*h)
                           // + r1*r1*r1*r1 / 30. * der5
@@ -146,14 +146,14 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 22:
         {
             const Double
-                    r = p_range_->value(time, thread),
+                    r = p_range_->value(time),
                     h = .5 * r,
                     h2 = 2. * h,
-                    d0 = p_value_->value(ti     , thread),
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti - h , thread),
-                    d3 = p_value_->value(ti + h , thread),
-                    d4 = p_value_->value(ti + h2, thread);
+                    d0 = p_value_->value(ti     ),
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti - h ),
+                    d3 = p_value_->value(ti + h ),
+                    d4 = p_value_->value(ti + h2);
 
             return amp * (-d4 + 16.*d3 - 30.*d0 + 16.*d2 - d1) / (12.*h*h);
         }
@@ -161,13 +161,13 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 23:
         {
             const Double
-                    r = p_range_->value(time, thread),
+                    r = p_range_->value(time),
                     h = .5 * r,
                     h2 = 2. * h,
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti - h , thread),
-                    d3 = p_value_->value(ti + h , thread),
-                    d4 = p_value_->value(ti + h2, thread);
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti - h ),
+                    d3 = p_value_->value(ti + h ),
+                    d4 = p_value_->value(ti + h2);
 
             return amp * (d4 - 2.*d3 + 2.*d2 - d1) / (2.*h*h*h);
         }
@@ -175,14 +175,14 @@ Double DerivativeObjectFloat::valueFloat(uint, Double time, uint thread) const
         case 24:
         {
             const Double
-                    r = p_range_->value(time, thread),
+                    r = p_range_->value(time),
                     h = .5 * r,
                     h2 = 2. * h,
-                    d0 = p_value_->value(ti     , thread),
-                    d1 = p_value_->value(ti - h2, thread),
-                    d2 = p_value_->value(ti - h , thread),
-                    d3 = p_value_->value(ti + h , thread),
-                    d4 = p_value_->value(ti + h2, thread);
+                    d0 = p_value_->value(ti     ),
+                    d1 = p_value_->value(ti - h2),
+                    d2 = p_value_->value(ti - h ),
+                    d3 = p_value_->value(ti + h ),
+                    d4 = p_value_->value(ti + h2);
 
             return amp * (d4 - 4.*d3 + 6.*d0 - 4.*d2 + d1) / (h*h*h*h);
         }

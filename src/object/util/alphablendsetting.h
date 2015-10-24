@@ -14,7 +14,7 @@
 #include <QString>
 
 #include "object/object_fwd.h"
-#include "types/float.h"
+#include "types/time.h"
 
 namespace MO {
 
@@ -75,7 +75,7 @@ public:
     bool hasAlpha() const;
 
     /** Sets the opengl state according to current parameter values */
-    void apply(Double time, uint thread);
+    void apply(const MO::RenderTime & time);
 
     /** Sets the opengl state, ignoring current parameters. */
     void apply(Mode mode);

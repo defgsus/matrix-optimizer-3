@@ -44,7 +44,7 @@ struct ShaderTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     ShaderTO * to;
 
@@ -107,9 +107,9 @@ void ShaderTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void ShaderTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void ShaderTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -239,19 +239,19 @@ void ShaderTO::Private::releaseGl()
 
 }
 
-void ShaderTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
     if (u_color)
         u_color->setFloats(
-            p_r->value(time, thread),
-            p_g->value(time, thread),
-            p_b->value(time, thread),
-            p_a->value(time, thread));
+            p_r->value(time),
+            p_g->value(time),
+            p_b->value(time),
+            p_a->value(time));
 
     if (u_time)
-        u_time->floats[0] = time;
+        u_time->floats[0] = time.second();
 
     if (u_res)
     {
@@ -265,7 +265,7 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double
         memset(&data, 0, 3*4*sizeof(gl::GLfloat));
         int k=0;
         for (const ParameterTexture * p : to->textureParams())
-        if (const GL::Texture * t = p->value(time, thread))
+        if (const GL::Texture * t = p->value(time))
         {
             data[k*3] = t->width();
             data[k*3+1] = t->height();
@@ -286,9 +286,9 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double
         u_samplerate->floats[0] = to->sampleRate();
 
     uint texSlot = 0;
-    uniformSetting->updateUniforms(time, thread, texSlot);
+    uniformSetting->updateUniforms(time, texSlot);
 
-    to->renderShaderQuad(0, time, thread, texSlot);
+    to->renderShaderQuad(0, time, texSlot);
 }
 
 

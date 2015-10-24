@@ -32,7 +32,7 @@ class FilterBankAO::Private
     FilterBankAO * ao;
 
     void makeFilters(uint num);
-    void updateFilterCoeffs(Double time, uint thread);
+    void updateFilterCoeffs(const RenderTime & time);
 
     ParameterFloat
         * paramFreqStart,
@@ -182,18 +182,18 @@ void FilterBankAO::Private::makeFilters(uint num)
     }
 }
 
-void FilterBankAO::Private::updateFilterCoeffs(Double time, uint thread)
+void FilterBankAO::Private::updateFilterCoeffs(const RenderTime& time)
 {
-    Float   freq = paramFreqStart->value(time, thread),
-            freqAdd = paramFreqAdd->value(time, thread),
-            freqMul = paramFreqMul->value(time, thread),
-            res = paramReso->value(time, thread),
-            amp = paramAmp->value(time, thread);
-    int     order = paramOrder->value(time, thread);
+    Float   freq = paramFreqStart->value(time),
+            freqAdd = paramFreqAdd->value(time),
+            freqMul = paramFreqMul->value(time),
+            res = paramReso->value(time),
+            amp = paramAmp->value(time);
+    int     order = paramOrder->value(time);
     auto    type = (AUDIO::MultiFilter::FilterType)paramType->baseValue();
 
     // each filter per channel
-    for (auto & fp : filters[thread].filters)
+    for (auto & fp : filters[time.thread()].filters)
     {
         auto f = fp.get();
 
@@ -231,22 +231,22 @@ void FilterBankAO::setAudioBuffers(uint /*thread*/, uint /*bufferSize*/,
     p_->makeFilters(outputs.size());
 }
 
-void FilterBankAO::processAudio(uint , SamplePos pos, uint thread)
+void FilterBankAO::processAudio(const RenderTime& time)
 {
-    const Double time = sampleRateInv() * pos;
-
     // update filter
     // XXX Note: This is once per dsp-block,
     // not ideal for modulation but much more cpu and cache friendly
-    p_->updateFilterCoeffs(time, thread);
+    p_->updateFilterCoeffs(time);
 
-    auto filters = &p_->filters[thread];
+    auto filters = &p_->filters[time.thread()];
 
     // process filter for each channel
-    AUDIO::AudioBuffer::process(audioInputs(thread), audioOutputs(thread),
+    AUDIO::AudioBuffer::process(audioInputs(time.thread()),
+                                audioOutputs(time.thread()),
     [filters](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
-        filters->filters[chan].get()->process(in->readPointer(), out->writePointer(), out->blockSize());
+        filters->filters[chan].get()->process(
+                    in->readPointer(), out->writePointer(), out->blockSize());
     });
 }
 

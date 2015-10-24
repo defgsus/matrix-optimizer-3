@@ -40,7 +40,7 @@ struct KeyTO::Private
     void createParameters();
     void initGl();
     void releaseGl();
-    void renderGl(const GL::RenderSettings&rset, uint thread, Double time);
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     KeyTO * to;
 
@@ -103,9 +103,9 @@ void KeyTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-void KeyTO::renderGl(const GL::RenderSettings& rset, uint thread, Double time)
+void KeyTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
 {
-    p_->renderGl(rset, thread, time);
+    p_->renderGl(rset, time);
 }
 
 
@@ -262,16 +262,16 @@ void KeyTO::Private::releaseGl()
 
 }
 
-void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double time)
+void KeyTO::Private::renderGl(const GL::RenderSettings&, const RenderTime& time)
 {
     // update uniforms
 
     Float r=1.f, g=0.f, b=0.f;
     if (p_mode->baseValue() == 0)
     {
-        r = p_r->value(time, thread);
-        g = p_g->value(time, thread);
-        b = p_b->value(time, thread);
+        r = p_r->value(time);
+        g = p_g->value(time);
+        b = p_b->value(time);
     }
 
     if (p_hsvComp->baseValue() == 0)
@@ -281,9 +281,9 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
         {
             /** @todo use same hsv/rgb conversion in c++ as in inc/color.glsl */
             auto c = QColor::fromHsvF(
-                                MATH::moduloSigned(p_h->value(time, thread), 1.),
-                                p_s->value(time, thread),
-                                p_v->value(time, thread));
+                                MATH::moduloSigned(p_h->value(time), 1.),
+                                p_s->value(time),
+                                p_v->value(time));
             if (u_color)
                 u_color->setFloats(c.redF(), c.greenF(), c.blueF());
         }
@@ -298,9 +298,9 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
         if (p_mode->baseValue() == 1)
         {
             if (u_color)
-            u_color->setFloats( p_h->value(time, thread),
-                                p_s->value(time, thread),
-                                p_v->value(time, thread));
+            u_color->setFloats( p_h->value(time),
+                                p_s->value(time),
+                                p_v->value(time));
         }
         // rgb -> hsv
         else
@@ -314,11 +314,11 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
     // depth compare ?
     if (p_mode->baseValue() == 2)
     {
-        Float   near = p_near->value(time, thread),
-                far = p_far->value(time, thread),
+        Float   near = p_near->value(time),
+                far = p_far->value(time),
                 len = std::max(0.0001f, far - near),
-                depth = p_dist->value(time, thread),
-                range = p_dist_range->value(time, thread),
+                depth = p_dist->value(time),
+                range = p_dist_range->value(time),
 
                 // convert ranges to z-buffer value
                 a = (far + near) / (2.f * len) + .5f,
@@ -327,7 +327,7 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
                 th = a + (1.f / depth) * b,
                 tol = th - (a + (1.f / (depth - range)) * b);
 
-        if (p_invert->value(time, thread))
+        if (p_invert->value(time))
             u_range->setFloats(0.f, tol, th);
         else
             u_range->setFloats(tol, 0.f, th);
@@ -335,20 +335,20 @@ void KeyTO::Private::renderGl(const GL::RenderSettings& , uint thread, Double ti
     // color compare
     else
     {
-        Float th = 1. - p_tolerance->value(time, thread),
-              s = p_invert->value(time, thread) ? -1.f : 1.f,
-              r = s * p_range->value(time, thread);
+        Float th = 1. - p_tolerance->value(time),
+              s = p_invert->value(time) ? -1.f : 1.f,
+              r = s * p_range->value(time);
 
         u_range->setFloats(  std::max(0.f, std::min(1.f, th - r)),
                              std::max(0.f, std::min(1.f, th + r)));
     }
 
-    u_mix->setFloats(           p_mix_alpha->value(time, thread),
-                                p_mix_white->value(time, thread),
-                                p_mix_black->value(time, thread));
+    u_mix->setFloats(           p_mix_alpha->value(time),
+                                p_mix_white->value(time),
+                                p_mix_black->value(time));
 
     //to->shaderQuad(0)->shader()->dumpUniforms();
-    to->renderShaderQuad(time, thread);
+    to->renderShaderQuad(time);
 }
 
 

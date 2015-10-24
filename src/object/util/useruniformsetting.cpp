@@ -261,7 +261,7 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
     uploadTime_ = -1.12341212;
 }
 
-void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot)
+void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
 {
 #if 0 // does not account for changes to incoming parameters
     if (uploadTime_ == time)
@@ -274,7 +274,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
     {
         if (u.isTextureInput())
         {
-            if (const GL::Texture * tex = u.p_tex->value(time, thread))
+            if (const GL::Texture * tex = u.p_tex->value(time))
             {
                 //MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
                 MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
@@ -294,7 +294,7 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
         {
             // copy single float value
             for (uint i=0; i<u.num_floats; ++i)
-                u.uniform->floats[i] = u.p_float[i]->value(time, thread);
+                u.uniform->floats[i] = u.p_float[i]->value(time);
         }
         else
         {
@@ -305,12 +305,13 @@ void UserUniformSetting::updateUniforms(Double time, uint thread, uint & texSlot
                 u.texBuf.resize(bsize);
 
             // sample inputs
-            const Double range = u.p_timerange->value(time, thread) / std::max(1, int(len)-1);
+            const Double range = u.p_timerange->value(time) / std::max(1, int(len)-1);
+            RenderTime ti(time);
             for (uint j=0; j<len; ++j)
             {
-                const Double ti = time - range * j;
                 for (uint i=0; i<u.num_floats; ++i)
-                    u.texBuf[j * u.num_floats + i] = u.p_float[i]->value(ti, thread);
+                    u.texBuf[j * u.num_floats + i] = u.p_float[i]->value(ti);
+                ti -= range * j;
             }
 
             MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
