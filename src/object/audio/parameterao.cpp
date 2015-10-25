@@ -26,7 +26,7 @@ ParameterAO::ParameterAO(QObject *parent)
       lastSample2_  (0.f),
       samplesWaited_(0)
 {
-    setName("Parameter");
+    setName("FloatToAudio");
     setNumberAudioInputs(0);
     setNumberAudioOutputs(1);
 }
@@ -55,6 +55,7 @@ void ParameterAO::createParameters()
         paramValue_ = params()->createFloatParameter("v", tr("value"),
                                                    tr("The input value"),
                                                    0.0, 0.05);
+        paramValue_->setVisibleGraph(true);
 
         paramResample_ = params()->createBooleanParameter("resample", tr("enable resampling"),
                                                    tr("Sample input with a different samplerate"),
@@ -95,9 +96,11 @@ void ParameterAO::processAudio(const RenderTime& time)
         // or copy per sample
         else if (paramResample_->baseValue() == 0)
         {
+            RenderTime ti(time);
             for (SamplePos i=0; i<out->blockSize(); ++i)
             {
-                out->write(i, paramValue_->value(time + i));
+                out->write(i, paramValue_->value(ti));
+                ti += SamplePos(1);
             }
         }
 
@@ -108,17 +111,20 @@ void ParameterAO::processAudio(const RenderTime& time)
             const SamplePos rate =
                     1.0 / paramRate_->value(time) * sampleRate();
 
+            RenderTime ti(time);
             for (SamplePos i=0; i<out->blockSize(); ++i)
             {
                 if (samplesWaited_++ >= rate)
                 {
                     samplesWaited_ = 0;
                     lastSample2_ = lastSample_;
-                    lastSample_ = paramValue_->value(time + i);
+                    lastSample_ = paramValue_->value(ti);
                 }
 
                 F32 f = F32(samplesWaited_) / rate;
                 out->write(i, lastSample2_ + f * (lastSample_ - lastSample2_));
+
+                ti += SamplePos(1);
             }
         }
     }

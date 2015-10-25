@@ -759,65 +759,75 @@ Double SequenceFloat::fade_(const RenderTime & time) const
         return fade;
 }
 
-Double SequenceFloat::valueFloat(uint, const RenderTime& gtime) const
+Double SequenceFloat::valueFloat(uint chan, const RenderTime& gtime) const
 {
+    if (chan != 0)
+        return 0.;
+
     if (cacheTime_ == gtime.second())
         return cacheValue_;
 
     Double timeNoLoop;
-    /*
+
+    // local time
+    RenderTime ltime(gtime);
+
     if (p_loopOverlapMode_->baseValue() == LOT_OFF)
     {
-        // ZZZ all wrong
-        const Double
-                time = getSequenceTime(gtime, timeNoLoop),
-                fade = 1.;//fade_(gtime, timeNoLoop, thread);
-        return fade * value_(gtime, time, thread);
+        RenderTime nlTime(ltime);
+        getSequenceTime(ltime, timeNoLoop);
+        nlTime.setSecond(timeNoLoop);
+        const Double fade = fade_(nlTime);
+        return fade * value_(ltime);
     }
 
     bool inLoop;
     Double lStart=0, lLength=0;
-    Double time = getSequenceTime(gtime, thread, lStart, lLength, inLoop, timeNoLoop);
+    getSequenceTime(ltime, lStart, lLength, inLoop, timeNoLoop);
 
-    const Double fade = fade_(gtime, timeNoLoop, thread);
+    const Double fade = fade_(gtime);
 
     // XXX strange: inLoop comes to late, e.g. after the loop end
     if (!inLoop && p_loopOverlapMode_->baseValue() == LOT_BEGIN)
-        return fade * value_(gtime, time, thread);
+        return fade * value_(ltime);
 
-    Double overlap = std::max(minimumLength(), p_loopOverlap_->value(gtime, thread));
+    Double overlap = std::max(minimumLength(), p_loopOverlap_->value(ltime));
 
+    /** @todo fix loop-overlap begin mode */
     if (p_loopOverlapMode_->baseValue() == LOT_BEGIN)
     {
-        if ((time - lStart) > overlap)
-            return fade * value_(gtime, time, thread);
+        if ((ltime.second() - lStart) > overlap)
+            return fade * value_(ltime);
+
+        RenderTime nlTime(ltime);
+        nlTime.setSecond(timeNoLoop);
 
         const Double
-                v = value_(gtime, time, thread),
-                v0 = value_(gtime, time + lLength, thread)
-                    + p_loopOverlapOffset_->value(gtime, thread)
-                        * p_amplitude_->value(time),
-                t = (time - lStart) / overlap,
+                v = value_(nlTime),
+                v0 = value_(ltime + lLength)
+                    + p_loopOverlapOffset_->value(ltime)
+                        * p_amplitude_->value(ltime),
+                t = (ltime.second() - lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
         return fade * ((1.0 - ts) * v0 + ts * v);
     }
     else if (p_loopOverlapMode_->baseValue() == LOT_END)
     {
-        if ((time - lStart) < lLength - overlap)
-            return fade * value_(gtime, time, thread);
+        if ((ltime.second() - lStart) < lLength - overlap)
+            return fade * value_(ltime);
 
         const Double
-                v = value_(gtime, time, thread),
-                v0 = value_(gtime, time - lLength, thread)
-                    + p_loopOverlapOffset_->value(gtime, thread)
-                        * p_amplitude_->value(time),
-                t = (lLength - time + lStart) / overlap,
+                v = value_(ltime),
+                v0 = value_(ltime - lLength)
+                    + p_loopOverlapOffset_->value(ltime)
+                        * p_amplitude_->value(ltime),
+                t = (lLength - ltime.second() + lStart) / overlap,
                 ts = t * t * (3.0 - 2.0 * t);
 
         return fade * ( (1.0 - ts) * v0 + ts * v );
     }
-    */
+
     MO_ASSERT(false, "unhandled loopOverlapMode " << p_loopOverlapMode_->baseValue()
                      << " in SequenceFloat '" << idNamePath() << "'");
     return 0.0;
@@ -872,8 +882,8 @@ Double SequenceFloat::value_(const RenderTime & gtime) const
                                     std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime)) );
 
         case ST_EQUATION:
-            MO_ASSERT(equation_[time.thread()], "SequenceFloat('" << idName() << "')::value() without equation "
-                                         "(thread=" << thread << ")");
+            MO_ASSERT(equation_[time.thread()], "SequenceFloat('" << idName()
+                        << "')::value() without equation @ " << time);
             equation_[time.thread()]->time = time.second();
             equation_[time.thread()]->rtime = time.second() * TWO_PI;
             equation_[time.thread()]->freq = p_frequency_->value(gtime);

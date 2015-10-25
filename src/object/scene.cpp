@@ -1384,7 +1384,7 @@ void Scene::kill()
 #if 1
     // kill now (The calling thread must be GUI thread!)
     glContext_->makeCurrent();
-    renderScene(RenderTime(0, MO_GFX_THREAD));
+    renderScene(RenderTime(sceneTime(), MO_GFX_THREAD));
     isShutDown_ = true;
 #else
     // move to later (Window must repaint!)

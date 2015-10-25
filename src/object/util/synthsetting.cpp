@@ -283,18 +283,17 @@ void SynthSetting::feedSynthOnce(const RenderTime& time)
     }
 }
 
-void SynthSetting::feedSynth(const RenderTime& time)
+void SynthSetting::feedSynth(const RenderTime& rtime)
 {
-    /* ZZZ
-    for (uint i=0; i<bufferSize; ++i)
+    RenderTime time(rtime);
+    for (uint i=0; i<rtime.bufferSize(); ++i)
     {
         const Double
-                time = Double(samplePos + i) * o_->sampleRateInv(),
                 gate = gate_->input(p_gate_->value(time));
 
         if (gate > 0)
         {
-            updateSynthParameters(time, thread);
+            updateSynthParameters(time);
 
             const int note = p_note_->value(time);
 
@@ -306,15 +305,16 @@ void SynthSetting::feedSynth(const RenderTime& time)
                           << voice->index() << "/" << voiceData_.size());
                 // attach VoiceData
                 auto data = &voiceData_[voice->index()];
-                data->timeStarted = time;
-                data->thread = thread;
+                data->timeStarted = time.second();
+                data->thread = time.thread();
                 voice->setUserData(data);
 
                 voice = voice->nextUnisonVoice();
             }
         }
+
+        time += SamplePos(1);
     }
-    */
 }
 
 } // namespace MO

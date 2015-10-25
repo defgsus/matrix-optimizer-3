@@ -75,7 +75,7 @@ private:
 
     std::function<Double()> timeFunc_;
 
-    Double renderSpeed_;
+    Double renderSpeed_, lastTime_;
 };
 
 

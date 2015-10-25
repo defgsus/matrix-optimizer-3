@@ -243,12 +243,12 @@ void OscillatorAO::processAudio(const RenderTime& rtime)
 
     F32 * write = out->writePointer();
 
+    // time for parameter reads
+    RenderTime time(rtime);
+
     if (inputs.isEmpty())
     for (uint i = 0; i < out->blockSize(); ++i, ++write)
     {
-        // time for parameter reads
-        RenderTime time = rtime + SamplePos(i);
-
         // update phase
         p_->phase[time.thread()] += sampleRateInv() * p_->paramFreq->value(time);
 
@@ -269,6 +269,8 @@ void OscillatorAO::processAudio(const RenderTime& rtime)
                         p_->wtable.value(
                                 p_->phase[time.thread()] + p_->paramPhase->value(time) )
                     );
+
+        time += SamplePos(1);
     }
 
     // version with audio input modulation
@@ -281,10 +283,10 @@ void OscillatorAO::processAudio(const RenderTime& rtime)
             * inPhase = inputs.size() < 4 ? 0 : inputs[3],
             * inSync = inputs.size() < 5 ? 0 : inputs[4];;
 
+        RenderTime time(rtime);
+
         for (uint i = 0; i < out->blockSize(); ++i, ++write)
         {
-            RenderTime time = rtime + SamplePos(i);
-
             // read parameters and add audio signal
             Double ofs = p_->paramOffset->value(time);
             if (inOfs)
@@ -321,11 +323,10 @@ void OscillatorAO::processAudio(const RenderTime& rtime)
                             p_->wtable.value( p_->phase[time.thread()] + phase )
                         );
 
+            time += SamplePos(1);
         }
     }
 }
-
-
 
 
 

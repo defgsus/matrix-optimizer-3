@@ -127,40 +127,11 @@ public:
         { p_speed_->setValue(std::max(minimumSpeed(), t)); }
 
     /** Translates global time to sequence-local time (with loop) */
-    Double getSequenceTime(const RenderTime & global_time, Double &timeWithoutLoop) const
-    {
-        Double speed = p_speed_->value(global_time),
-               time = global_time.second();
-        RenderTime rtime(global_time);
+    void getSequenceTime(RenderTime & inout_time, Double &timeWithoutLoop) const;
 
-        if (parentClip_)
-        {
-            time -= parentClip_->timeStarted();
-            speed *= parentClip_->speed();
-        }
-
-        rtime.setSecond(time);
-        time = (time - p_start_->value(rtime)) * speed;
-        rtime.setSecond(time);
-        time += p_timeOffset_->value(rtime);
-
-        timeWithoutLoop = time;
-
-        if (p_looping_->baseValue())
-        {
-            const Double
-                    ls = p_loopStart_->value(rtime),
-                    ll = std::max(p_loopLength_->value(rtime), minimumLength());
-
-            if (time > ls + ll)
-                return MATH::moduloSigned(time - ls, ll) + ls;
-        }
-
-        return time;
-    }
     /** Translates global time to sequence-local time (with loop)
         and returns the current loop settings */
-    Double getSequenceTime(const RenderTime & global_time,
+    void getSequenceTime(RenderTime & inout_time,
                            Double& loopStart, Double& loopLength, bool& isInLoop,
                            Double &timeWithoutLoop) const;
 
@@ -189,14 +160,44 @@ private:
 
 
 
+inline void Sequence::getSequenceTime(RenderTime & rtime, Double &timeWithoutLoop) const
+{
+    Double speed = p_speed_->value(rtime),
+           time = rtime.second();
 
-inline Double Sequence::getSequenceTime(const RenderTime& in_time,
+    if (parentClip_)
+    {
+        time -= parentClip_->timeStarted();
+        speed *= parentClip_->speed();
+    }
+
+    // XXX Mhhh, does not change sample position...
+    rtime.setSecond(time);
+    time = (time - p_start_->value(rtime)) * speed;
+    rtime.setSecond(time);
+    time += p_timeOffset_->value(rtime);
+
+    timeWithoutLoop = time;
+
+    if (p_looping_->baseValue())
+    {
+        const Double
+                ls = p_loopStart_->value(rtime),
+                ll = std::max(p_loopLength_->value(rtime), minimumLength());
+
+        if (time > ls + ll)
+            time = MATH::moduloSigned(time - ls, ll) + ls;
+    }
+
+    rtime.setSecond(time);
+}
+
+inline void Sequence::getSequenceTime(RenderTime& rtime,
                                         Double& lStart, Double& lLength, bool& isInLoop,
                                         Double& timeWithoutLoop) const
 {
-    Double speed = p_speed_->value(in_time),
-           time = in_time.second();
-    RenderTime rtime(in_time);
+    Double speed = p_speed_->value(rtime),
+           time = rtime.second();
 
     if (parentClip_)
     {
@@ -220,12 +221,12 @@ inline Double Sequence::getSequenceTime(const RenderTime& in_time,
 
         if (time > lStart + lLength)
         {
-            return MATH::moduloSigned(time - lStart, lLength) + lStart;
+            time = MATH::moduloSigned(time - lStart, lLength) + lStart;
         }
     }
 
     isInLoop = false;
-    return time;
+    rtime.setSecond(time);
 }
 
 } // namespace MO

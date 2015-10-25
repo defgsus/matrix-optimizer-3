@@ -243,7 +243,7 @@ void TextTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& time) const
+const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
 {
     if (chan != 0)
         return 0;

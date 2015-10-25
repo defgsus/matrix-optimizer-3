@@ -317,6 +317,14 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 
     // ----------- process audio dsp objects ---------------
 
+    RenderTime rtime(
+                pos * p_->conf.sampleRateInv(),
+                p_->conf.bufferSize() * p_->conf.sampleRateInv(),
+                pos,
+                p_->conf.sampleRate(),
+                p_->conf.bufferSize(),
+                p_->thread);
+
     // process audio objects
     for (Private::ObjectBuffer * b : p_->audioObjects)
     {
@@ -337,9 +345,7 @@ void ObjectDspPath::calcAudio(SamplePos pos)
             }
 
             // process AudioObject
-            // ZZZ must pass seconds as well
-            ao->processAudioBase(
-                RenderTime(pos, p_->conf.sampleRate(), p_->conf.bufferSize(), p_->thread));
+            ao->processAudioBase(rtime);
 
             // forward buffers
             for (AUDIO::AudioBuffer * buf : b->audioOutputs)

@@ -12,6 +12,7 @@
 #define MOSRC_TYPES_TIME_H
 
 
+#include <iostream>
 #include "float.h"
 #include "int.h"
 
@@ -20,6 +21,32 @@ namespace MO
 
     struct RenderTime
     {
+        // ########## CTOR ##########
+
+        explicit RenderTime()
+            : RenderTime(0., 0., 0, 0, 0, 0)
+        { }
+
+        explicit RenderTime(Double second, uint thread)
+            : RenderTime(second, 0., 0, 0, 0, thread)
+        { }
+
+        explicit RenderTime(Double second, Double delta, uint thread)
+            : RenderTime(second, delta, 0, 0, 0, thread)
+        { }
+
+        explicit RenderTime(SamplePos sample, uint sampleRate, uint bufferSize, uint thread)
+            : RenderTime(0., 0., sample, sampleRate, bufferSize, thread)
+        { }
+
+        explicit RenderTime(Double second, Double delta,
+                            SamplePos sample, uint sampleRate, uint bufferSize, uint thread)
+            : p_second_(second), p_delta_(delta)
+            , p_sampleRateInv_(sampleRate > 0 ? 1. / sampleRate : 0.)
+            , p_sample_(sample), p_sampleRate_(sampleRate), p_bufferSize_(bufferSize)
+            , p_thread_(thread)
+        { }
+
         // ######### getter #########
 
         // --- seconds ---
@@ -82,31 +109,15 @@ namespace MO
         RenderTime operator - (SamplePos sam) const
             { RenderTime t(*this); t -= sam; return t; }
 
-        // ########## CTOR ##########
+        // ######## stream out ########
 
-        explicit RenderTime()
-            : RenderTime(0., 0., 0, 0, 0, 0)
-        { }
-
-        explicit RenderTime(Double second, uint thread)
-            : RenderTime(second, 0., 0, 0, 0, thread)
-        { }
-
-        explicit RenderTime(Double second, Double delta, uint thread)
-            : RenderTime(second, delta, 0, 0, 0, thread)
-        { }
-
-        explicit RenderTime(SamplePos sample, uint sampleRate, uint bufferSize, uint thread)
-            : RenderTime(0., 0., sample, sampleRate, bufferSize, thread)
-        { }
-
-        explicit RenderTime(Double second, Double delta,
-                            SamplePos sample, uint sampleRate, uint bufferSize, uint thread)
-            : p_second_(second), p_delta_(delta)
-            , p_sampleRateInv_(sampleRate > 0 ? 1. / sampleRate : 0.)
-            , p_sample_(sample), p_sampleRate_(sampleRate), p_bufferSize_(bufferSize)
-            , p_thread_(thread)
-        { }
+        friend std::ostream& operator << (std::ostream& o, const RenderTime& t)
+        {
+            o << "Time(" << t.second() << "s, " << t.delta() << "d, "
+              << t.sample() << "sam, " << t.sampleRate() << "hz, bs="
+              << t.bufferSize() << ", thread=" << t.thread() << ")";
+            return o;
+        }
 
     private:
         Double p_second_, p_delta_, p_sampleRateInv_;

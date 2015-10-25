@@ -116,7 +116,7 @@ bool Window::event(QEvent * e)
     return QWindow::event(e);
 }
 
-void Window::resizeEvent(QResizeEvent * e)
+void Window::resizeEvent(QResizeEvent * )
 {
     if (renderer_)
         renderer_->setSize(size() * devicePixelRatio());
@@ -162,6 +162,9 @@ void Window::keyPressEvent(QKeyEvent * e)
 
 void Window::setFullscreen(bool f)
 {
+    if (f == isFullscreen())
+        return;
+
     if (!isFullscreen())
         oldWinRect_ = geometry();
 

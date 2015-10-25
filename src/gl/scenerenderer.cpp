@@ -62,6 +62,7 @@ QSurfaceFormat SceneRenderer::defaultFormat()
 void SceneRenderer::setScene(Scene *scene)
 {
     scene_ = scene;
+    lastTime_ = 0;
 
     if (context_)
         updateSceneGlContext_();
@@ -170,8 +171,16 @@ void SceneRenderer::render(bool renderToScreen)
     emit scene_->sceneTimeChanged(time);
 #endif
 
-    // ZZZ
-    scene_->renderScene(RenderTime(time, MO_GFX_THREAD), renderToScreen);
+    RenderTime rtime(
+                time,
+                std::max(0., std::min(1., time - lastTime_)),
+                time * scene_->sampleRate(),
+                scene_->sampleRate(),
+                256 /** @todo have correct buffer size here */,
+                MO_GFX_THREAD);
+    lastTime_ = time;
+
+    scene_->renderScene(rtime, renderToScreen);
 
     gl::glFlush();
     gl::glFinish();
