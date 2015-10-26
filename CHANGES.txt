@@ -1,19 +1,20 @@
 3.0.3.5
 
- - wider objects in scene graph in presence of outputs and/or child objects
- - Keyboard input object
- - OpenSoundControl input object and global OSC input view
- - FreeFloat transformation object
- - new texture objects: Text, Posterize, KaliSet
-
+ - display of output labels & wider objects in scene graph
+   in presence of outputs and/or child objects
+ - new objects:
+    - Keyboard input object
+    - OpenSoundControl input object and global OSC input view
+    - FreeFloat transformation object
+    - new texture objects: Text, Posterize, KaliSet
 
 3.0.3.4
 
- - Text extrusion in geometry editor (outline, 3d, rotated)
+ - text extrusion in geometry editor (outline, 3d, rotated)
  - framebuffer format & type selection for Camera
  - mip-mapping in all objects that load textures from files
- - Shader texture object, compatible with ShaderToy code
- - Load/Save hot-keys in all script editors
+ - shader texture object, compatible with ShaderToy code
+ - load/save hot-keys in all script editors
 
 3.0.3.3
 

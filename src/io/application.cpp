@@ -19,6 +19,9 @@
 #include <QDockWidget>
 #include <QMessageBox>
 #include <QFile>
+#include <QDialog>
+#include <QLayout>
+#include <QTextBrowser>
 
 #include "gui/mainwindow.h"
 #include "io/application.h"
@@ -166,13 +169,22 @@ void Application::aboutMO()
     QMessageBox::about(0, tr("Matrix Optimizer"), str);
 }
 
-void Application::showChanges()
+void Application::showChanges(QWidget * parent)
 {
     QFile f(":/CHANGES.txt");
     f.open(QFile::Text | QFile::ReadOnly);
     QString str = QString::fromUtf8(f.readAll());
 
-    QMessageBox::about(0, tr("Matrix Optimizer changes"), str);
+    auto diag = new QDialog(parent);
+    auto lv = new QVBoxLayout(diag);
+    auto text = new QTextBrowser(diag);
+    lv->addWidget(text);
+
+    text->setText(str);
+    diag->setWindowTitle(tr("%1 changes").arg(MO::applicationName()));
+    diag->setAttribute(Qt::WA_DeleteOnClose);
+    diag->setMinimumSize(480, 600);
+    diag->show();
 }
 
 } // namespace MO

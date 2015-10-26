@@ -57,7 +57,7 @@ public slots:
     /** About dialog */
     void aboutMO();
 
-    void showChanges();
+    void showChanges(QWidget * parent = 0);
 
 protected:
 

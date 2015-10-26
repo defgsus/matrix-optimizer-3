@@ -22,6 +22,7 @@
 #include "gl/shadersource.h"
 #include "gl/texture.h"
 #include "math/functions.h"
+#include "io/mousestate.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
@@ -60,6 +61,7 @@ struct ShaderTO::Private
             * u_chan_res,
             * u_time,
             * u_date,
+            * u_mouse,
             * u_samplerate;
 };
 
@@ -69,6 +71,7 @@ ShaderTO::ShaderTO(QObject *parent)
     , p_                (new Private(this))
 {
     setName("Shader");
+    initDefaultUpdateMode(UM_ALWAYS);
     initMaximumTextureInputs(4);
 }
 
@@ -121,14 +124,14 @@ void ShaderTO::Private::createParameters()
         p_glsl = to->params()->createTextParameter("glsl", tr("glsl source"),
                tr("A piece of glsl code to calculate the pixel output"),
                TT_GLSL,
-               "/* ShaderToy compatibile\n"
+               "/* ShaderToy compatible!\n"
                "\n"
                " uniforms:\n"
                "   vec3  iResolution;              // resolution of output texture in pixels\n"
                "   float iGlobalTime;              // scene time in seconds\n"
                "   float iChannelTime[4];          // playback of channel in seconds (not defined yet)\n"
                "   vec3  iChannelResolution[4];    // resolution per channel in pixels\n"
-               "   vec4  iMouse;                   // (not defined yet)\n"
+               "   vec4  iMouse;                   // xy=mouse position in pixels, zw = click\n"
                "   vec4  iDate;                    // year, month, day, time in seconds\n"
                "   float iSampleRate;              // sound sampling rate in Hertz\n"
                "   sampler2D iChannel0-3;          // input texture\n"
@@ -231,6 +234,7 @@ void ShaderTO::Private::initGl()
     u_chan_res = shader->getUniform("iChannelResolution[0]");
     u_date = shader->getUniform("iDate");
     u_samplerate = shader->getUniform("iSampleRate");
+    u_mouse = shader->getUniform("iMouse");
     uniformSetting->tieToShader(shader);
 }
 
@@ -273,6 +277,15 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
             ++k;
         }
         MO_CHECK_GL_THROW( gl::glUniform3fv(u_chan_res->location(), 4, &data[0]));
+    }
+
+    if (u_mouse)
+    {
+        u_mouse->setFloats(MouseState::globalInstance().dragPos().x(),
+                           MouseState::globalInstance().dragPos().y(),
+                           MouseState::globalInstance().isDown(Qt::LeftButton),
+                           MouseState::globalInstance().isDown(Qt::RightButton)
+                    );
     }
 
     if (u_date)

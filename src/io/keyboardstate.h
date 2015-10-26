@@ -8,8 +8,8 @@
     <p>created 10/20/2015</p>
 */
 
-#ifndef MOSRC_TOOL_KEYBOARDSTATE_H
-#define MOSRC_TOOL_KEYBOARDSTATE_H
+#ifndef MOSRC_IO_KEYBOARDSTATE_H
+#define MOSRC_IO_KEYBOARDSTATE_H
 
 #include <QSet>
 
@@ -28,6 +28,7 @@ public:
 
     bool isDown(int keycode) const;
 
+    /** Access to a global instance that is fed by MainWindow and GL::Window */
     static KeyboardState& globalInstance();
 
 private:
@@ -37,4 +38,4 @@ private:
 } // namespace MO
 
 
-#endif // MOSRC_TOOL_KEYBOARDSTATE_H
+#endif // MOSRC_IO_KEYBOARDSTATE_H

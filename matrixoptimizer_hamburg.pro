@@ -1,7 +1,7 @@
 
 #################### qt stuff #########################
 
-TARGET = matrixoptimizer_plah
+TARGET = matrixoptimizer
 
 !host_build:QMAKE_MAC_SDK = macosx10.10
 
@@ -16,13 +16,24 @@ CONFIG += c++11
 #QMAKE_CXXFLAGS_DEBUG += -pg
 
 QMAKE_CXXFLAGS_RELEASE += -DNDEBUG
+QMAKE_CXXFLAGS_DEBUG += -DOSCPKT_DEBUG
 
-# hamburg release switches
-DEFINES += MO_HAMBURG MO_DISABLE_EXP MO_DISABLE_SPATIAL
+# hamburg flags
+DEFINES += MO_HAMBURG MO_DISABLE_SPATIAL MO_DISABLE_EXP
+
 #DEFINES += MO_DISABLE_AUDIO
+
+#disable compatibility mode
+DEFINES += MO_USE_OPENGL_CORE
 
 #for glm version >= 0.9.5
 DEFINES += GLM_FORCE_RADIANS
+
+#deprecated OpenGL stuff (nice to have though...)
+DEFINES += MO_DISABLE_EDGEFLAG
+
+#disable control interface for now (it's currently broken)
+DEFINES += MO_DISABLE_FRONT
 
 #disable for production until it works ...
 DEFINES += MO_DISABLE_PROJECTOR_LENS_RADIUS
@@ -33,13 +44,30 @@ DEFINES += MO_DISABLE_GST
 #thought would be nice, but the dependencies are a bit broken for ubuntu 14
 DEFINES += MO_DISABLE_CGAL
 
+# dear macies, see for yourself if you need those features
+mac { DEFINES += \
 #require audio input and output devices to be separate devices
-mac { DEFINES += MO_REQUIRE_SEPARATE_AUDIO \
+                MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
-                MO_DISABLE_DUMB
+                # tracker player library
+                MO_DISABLE_DUMB \
+                # linux audio plugins
+                MO_DISABLE_LADSPA \
+                # neuro-imaging io library
+                MO_DISABLE_NIFTI \
+                # shapefiles
+                MO_DISABLE_SHP
 }
 
-# for optirun bug
+windows { DEFINES += \
+                MO_DISABLE_LADSPA \
+                MO_DISABLE_DUMB \
+                MO_DISABLE_NIFTI \
+                MO_DISABLE_SHP \
+                MO_DISABLE_GLU
+}
+
+# for optirun bug (XXX old and obsolete by now)
 unix: { DEFINES += MO_DISABLE_OBJECT_TREE_DRAG }
 
 ##################### libs ############################
@@ -57,19 +85,25 @@ LIBS += -L/opt/local/lib/ \
         -lglib-2.0        \
         -langelscript
 }
-else: unix: {
+
+unix {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
-        -langelscript \
-        -ldl
+        -ljpeg -langelscript \
+        -lshp -latomic \
+#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
+        -ldl    # dynamic linking
 #        -lCGAL \
-#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
-else: win32 {
+
+win32 {
 LIBS += -lkernel32 -lpsapi \
-        -lportaudio -lsndfile-1 \
-        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
+        -lopengl32 -lglu32 -lglbinding \
+        -lportaudio -lPortMidi -lsndfile-1 \
+        -ljpeg \
+        -langelscript
+        #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 
 ###################### files ##########################
@@ -94,6 +128,7 @@ include(src/common.pri)
 include(src/client.pri)
 include(src/tests/tests.pri)
 include(other_files.pri)
+include(src/3rd/3rd.pri)
 
 
 ####################### BISON PARSER #######################
@@ -104,6 +139,9 @@ include(other_files.pri)
 ##bison_comp.output = ./${QMAKE_FILE_BASE}.cc
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
+
+
+
 
 
 

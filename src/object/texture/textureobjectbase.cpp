@@ -54,6 +54,7 @@ struct TextureObjectBase::PrivateTO
     void createParameters();
     void initGl();
     void releaseGl();
+    void createScreenQuad();
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
     void createFbo(const QSize& s, uint depth = 1);
     void drawFramebuffer(const RenderTime& time, int width, int height);
@@ -416,38 +417,6 @@ void TextureObjectBase::PrivateTO::initGl()
 
     aspectRatio = (Float)width/std::max(1, height);
 
-    // screen-quad
-
-    int aa = p_aa->baseValue();
-    const bool doAa = aa > 1;
-
-    QString defines;
-    defines += QString("#define MO_USE_COLOR");
-    if (doAa)
-        defines += QString("\n#define MO_ANTIALIAS (%1)").arg(aa);
-
-    screenQuad = new GL::ScreenQuad(to->name() + "_outquad");
-    try
-    {
-        screenQuad->create(
-                    ":/shader/framebufferdraw.vert",
-                    ":/shader/framebufferdraw.frag",
-                    defines);
-    }
-    catch (Exception&)
-    {
-        releaseGl();
-        throw;
-    }
-
-    // uniforms
-
-    u_out_color = screenQuad->shader()->getUniform("u_color", true);
-    u_out_color->setFloats(1,1,1,1);
-    if (doAa)
-        u_out_resolution = screenQuad->shader()->getUniform("u_resolution", true);
-    else
-        u_out_resolution = 0;
 }
 
 void TextureObjectBase::PrivateTO::releaseGl()
@@ -473,6 +442,49 @@ void TextureObjectBase::PrivateTO::releaseGl()
     delete fbo;
     fbo = 0;
     outputTex = 0;
+}
+
+void TextureObjectBase::PrivateTO::createScreenQuad()
+{
+    MO_TO_DEBUG("createScreenQuad()");
+
+    if (screenQuad)
+        return;
+
+    // screen-quad
+
+    int aa = p_aa->baseValue();
+    const bool doAa = aa > 1;
+
+    QString defines;
+    defines += QString("#define MO_USE_COLOR");
+    if (doAa)
+        defines += QString("\n#define MO_ANTIALIAS (%1)").arg(aa);
+
+    screenQuad = new GL::ScreenQuad(to->name() + "_outquad");
+    try
+    {
+        screenQuad->create(
+                    ":/shader/framebufferdraw.vert",
+                    ":/shader/framebufferdraw.frag",
+                    defines);
+    }
+    catch (Exception& e)
+    {
+        delete screenQuad;
+        screenQuad = 0;
+        to->setErrorMessage(e.what());
+        throw;
+    }
+
+    // uniforms
+
+    u_out_color = screenQuad->shader()->getUniform("u_color", true);
+    u_out_color->setFloats(1,1,1,1);
+    if (doAa)
+        u_out_resolution = screenQuad->shader()->getUniform("u_resolution", true);
+    else
+        u_out_resolution = 0;
 }
 
 
@@ -803,6 +815,9 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(const RenderTime & time, int 
     auto tex = to->valueTexture(0, time);
     if (!tex)
         return;
+
+    if (!screenQuad)
+        createScreenQuad();
 
     // -- shader uniforms --
 

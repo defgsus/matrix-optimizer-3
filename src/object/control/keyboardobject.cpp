@@ -17,8 +17,8 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "tool/valuesmoother.h"
-#include "tool/keyboardstate.h"
 #include "tool/enumnames.h"
+#include "io/keyboardstate.h"
 #include "io/datastream.h"
 #include "io/currenttime.h"
 

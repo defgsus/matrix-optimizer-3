@@ -26,7 +26,8 @@
 #include "context.h"
 #include "geom/freecamera.h"
 #include "gl/scenerenderer.h"
-#include "tool/keyboardstate.h"
+#include "io/keyboardstate.h"
+#include "io/mousestate.h"
 #include "io/application.h"
 #include "io/version.h"
 #include "io/error.h"
@@ -240,12 +241,31 @@ void Window::renderNow()
 void Window::mousePressEvent(QMouseEvent * e)
 {
     lastMousePos_ = e->pos();
+    MouseState::globalInstance().keyDown(e->button());
+    MouseState::globalInstance().setDragPos(e->pos(), size());
+    renderLater();
+}
+
+void Window::mouseReleaseEvent(QMouseEvent * e)
+{
+    MouseState::globalInstance().keyUp(e->button());
+    renderLater();
 }
 
 void Window::mouseMoveEvent(QMouseEvent * e)
-{
+{    
+    MouseState::globalInstance().setPos(e->pos(), size());
+    if (e->buttons() != Qt::NoButton)
+        MouseState::globalInstance().setDragPos(e->pos(), size());
+
     if (!isFreeCamera_)
+    {
+        // request re-render because of mouse state changes
+        if (e->button())
+            renderLater();
+
         return;
+    }
 
     Float fac = e->modifiers() & Qt::SHIFT ?
                 10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
@@ -279,14 +299,9 @@ void Window::mouseMoveEvent(QMouseEvent * e)
     }
 }
 
-void Window::mouseReleaseEvent(QMouseEvent *)
-{
-
-}
-
 
 void Window::wheelEvent(QWheelEvent * e)
-{
+{  
     Float fac = e->modifiers() & Qt::SHIFT ?
                 10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
 

@@ -47,13 +47,14 @@ const QString& versionString()
 const QString& applicationName()
 {
     static const QString ret =
+#if defined(MO_VIOSO)
             "VIOSO Matrix "
-//            "Client "
-            + versionString()
-#ifdef MO_HAMBURG
-            + " (Planetarium Hamburg)"
+#elif defined(MO_HAMBURG)
+            "Matrix Optimizer (Pla. Hamburg) "
+#else
+            "Matrix Optimizer "
 #endif
-            ;
+            + versionString();
 
     return ret;
 }

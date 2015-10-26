@@ -19,9 +19,19 @@
 namespace MO {
 namespace GUI {
 
+namespace
+{
+    const QString splashFile_ =
+#if defined(MO_VIOSO)
+        ":/img/splashscreen_vioso.png"
+#else
+        ":/img/splashscreen.png"
+#endif
+        ;
+}
 
 SplashScreen::SplashScreen() :
-    QSplashScreen(QPixmap(":/img/splashscreen_vioso.png"), Qt::WindowStaysOnTopHint)
+    QSplashScreen(QPixmap(splashFile_), Qt::WindowStaysOnTopHint)
 {
     timer_ = new QTimer(this);
     timer_->setSingleShot(true);

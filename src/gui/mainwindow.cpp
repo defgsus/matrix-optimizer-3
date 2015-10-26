@@ -34,7 +34,7 @@
 #include "gui/widget/spacer.h"
 #include "gui/oscview.h"
 #include "object/scene.h"
-#include "tool/keyboardstate.h"
+#include "io/keyboardstate.h"
 #include "io/error.h"
 #include "io/log.h"
 
