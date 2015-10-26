@@ -50,13 +50,16 @@ public slots:
     /** Focuses the view on the object */
     void setFocusObject(Object * o);
 
+    /** Zoom in (true) or out (false) */
+    void zoom(bool in);
+
 private slots:
 
     void onShiftView_(const QPointF&);
 
 protected:
 
-    //void dragEnterEvent(QDragEnterEvent *) Q_DECL_OVERRIDE;
+    void keyPressEvent(QKeyEvent*);
 
 
 private:

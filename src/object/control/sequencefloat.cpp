@@ -353,7 +353,7 @@ void SequenceFloat::createParameters()
 
         p_loopOverlapMode_ = params()->createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
                 tr("Selects the loop overlapping mode, that is, if and how values are mixed at "
-                   "the edge of a loop"),
+                   "the boundaries of a loop"),
                 loopOverlapModeId,
                 loopOverlapModeName,
                 { tr("No overlap"),
@@ -776,7 +776,7 @@ Double SequenceFloat::valueFloat(uint chan, const RenderTime& gtime) const
     {
         RenderTime nlTime(ltime);
         getSequenceTime(ltime, timeNoLoop);
-        nlTime.setSecond(timeNoLoop);
+        nlTime += (ltime.second() - timeNoLoop);
         const Double fade = fade_(nlTime);
         return fade * value_(ltime);
     }
@@ -787,23 +787,23 @@ Double SequenceFloat::valueFloat(uint chan, const RenderTime& gtime) const
 
     const Double fade = fade_(gtime);
 
+    //MO_PRINT(lStart << " " << lLength << " " << inLoop << " " << ltime);
+
     // XXX strange: inLoop comes to late, e.g. after the loop end
     if (!inLoop && p_loopOverlapMode_->baseValue() == LOT_BEGIN)
         return fade * value_(ltime);
 
     Double overlap = std::max(minimumLength(), p_loopOverlap_->value(ltime));
 
-    /** @todo fix loop-overlap begin mode */
     if (p_loopOverlapMode_->baseValue() == LOT_BEGIN)
     {
         if ((ltime.second() - lStart) > overlap)
             return fade * value_(ltime);
 
         RenderTime nlTime(ltime);
-        nlTime.setSecond(timeNoLoop);
-
+        nlTime += (ltime.second() - timeNoLoop);
         const Double
-                v = value_(nlTime),
+                v = value_(ltime),
                 v0 = value_(ltime + lLength)
                     + p_loopOverlapOffset_->value(ltime)
                         * p_amplitude_->value(ltime),

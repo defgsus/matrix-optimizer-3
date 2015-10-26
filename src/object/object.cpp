@@ -1409,7 +1409,10 @@ QString Object::getSignalName(SignalType t)
 
 QString Object::getOutputName(SignalType t, uint channel) const
 {
-    return QString("%1 %2").arg(getSignalName(t)).arg(channel);
+    if (t == ST_TRANSFORMATION)
+        return QString("transf. %1").arg(channel);
+    else
+        return QString("%1 %2").arg(getSignalName(t)).arg(channel);
 }
 
 void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)

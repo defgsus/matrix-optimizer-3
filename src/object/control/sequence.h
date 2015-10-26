@@ -169,12 +169,14 @@ inline void Sequence::getSequenceTime(RenderTime & rtime, Double &timeWithoutLoo
     {
         time -= parentClip_->timeStarted();
         speed *= parentClip_->speed();
+
+        rtime.setSecond(time);
+        rtime.setSample(time * rtime.sampleRate());
     }
 
-    // XXX Mhhh, does not change sample position...
-    rtime.setSecond(time);
     time = (time - p_start_->value(rtime)) * speed;
     rtime.setSecond(time);
+    rtime.setSample(time * rtime.sampleRate());
     time += p_timeOffset_->value(rtime);
 
     timeWithoutLoop = time;
@@ -203,11 +205,14 @@ inline void Sequence::getSequenceTime(RenderTime& rtime,
     {
         time -= parentClip_->timeStarted();
         speed *= parentClip_->speed();
+
+        rtime.setSecond(time);
+        rtime.setSample(time * rtime.sampleRate());
     }
 
-    rtime.setSecond(time);
     time = (time - p_start_->value(rtime)) * speed;
     rtime.setSecond(time);
+    rtime.setSample(time * rtime.sampleRate());
     time += p_timeOffset_->value(rtime);
 
     timeWithoutLoop = time;
@@ -224,8 +229,9 @@ inline void Sequence::getSequenceTime(RenderTime& rtime,
             time = MATH::moduloSigned(time - lStart, lLength) + lStart;
         }
     }
+    else
+        isInLoop = false;
 
-    isInLoop = false;
     rtime.setSecond(time);
 }
 

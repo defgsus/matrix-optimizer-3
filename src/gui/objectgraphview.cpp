@@ -77,6 +77,21 @@ void ObjectGraphView::setRootObject(Object *root)
 {
     root_ = root;
     gscene_->setRootObject(root_);
+
+    // focus on new object
+    if (root_)
+    {
+        // root is typically the scene and does not have an item
+        auto o = root_;
+        // so use the first child
+        auto c = root_->childObjects();
+        if (!c.isEmpty())
+            o = c.first();
+        // get item and ensure visible
+        auto item = gscene_->itemForObject(o);
+        if (item)
+            gview_->ensureVisible(item);
+    }
 }
 
 void ObjectGraphView::onShiftView_(const QPointF & )
@@ -99,13 +114,28 @@ void ObjectGraphView::setFocusObject(Object * o)
         gview_->centerOn(i);
 }
 
-#if 0
-void ObjectGraphView::dragEnterEvent(QDragEnterEvent*e)
+
+void ObjectGraphView::keyPressEvent(QKeyEvent * e)
 {
-    qInfo() << "graphview" << e->mimeData()->formats();
-    e->accept();
+    if (Qt::Key_Plus == e->key() && (e->modifiers() & Qt::CTRL))
+    {
+        zoom(true);
+    }
+    if (Qt::Key_Minus == e->key() && (e->modifiers() & Qt::CTRL))
+    {
+        zoom(false);
+    }
 }
-#endif
+
+void ObjectGraphView::zoom(bool in)
+{
+    auto t = gview_->transform();
+    if (in)
+        t.scale(1.5, 1.5);
+    else
+        t.scale(.75, .75);
+    gview_->setTransform(t);
+}
 
 } // namespace GUI
 } // namespace MO

@@ -13,7 +13,7 @@
 
 /** @todo VIOSO Port
   *
-  * - anti-aliasing!
+  * - OK anti-aliasing!
   * - steuerung von aussen!
   * - demo: image slideshow / gallery
   * - demo: klassisch/nicht abstrakt, firmenbedürfnisse
