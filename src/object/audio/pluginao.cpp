@@ -330,8 +330,7 @@ void PluginAO::processAudio(const RenderTime& time)
         p_->usedPlugin->process(audioInputs(time.thread()), audioOutputs(time.thread()));
     }
 #else
-    Q_UNUSED(bsize);
-    writeNullBlock(pos, thread);
+    writeNullBlock(time.sample(), time.thread());
 #endif
 }
 
