@@ -36,14 +36,21 @@ public slots:
 
     /** Selects one of the short-cut directories */
     void selectDirectory(uint index);
-    /** Sets the directory of one of the short-cut buttons */
-    void setDirectory(uint index, const QString& dir);
+    /** Sets the directory of one of the short-cut buttons.
+        If @p updateHistory == true, the history stack will be modified. */
+    void setDirectory(uint index, const QString& dir, bool updateHistory = true);
 
     /** Sets a filter to apply to the displayed files */
     void setFilter(const QString&);
 
     /** Go up one directory and set as new default */
     void goUp();
+
+    /** Go to previous directory in history stack */
+    void goBack();
+
+    /** Go to next directory in history stack */
+    void goForward();
 
     /** Select/double-click action on an item in the browser */
     void doubleClick(const QModelIndex&);

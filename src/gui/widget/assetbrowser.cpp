@@ -7,7 +7,7 @@
 
     <p>created 7/5/2015</p>
 */
-
+#include <QDebug>
 #include <QTreeView>
 #include <QFileSystemModel>
 #include <QLayout>
@@ -55,6 +55,8 @@ struct AssetBrowser::Private
 
     void createWidgets();
     void updateModel();
+    void pushDir();
+    void updateButtons();
     void applyFilter(const QString&);
 
     AssetBrowser * widget;
@@ -63,9 +65,19 @@ struct AssetBrowser::Private
     AssetTreeView * treeView;
     QVector<QToolButton*> dirButtons;
     QLineEdit * filterEdit;
+    QLabel * dirLabel;
+    QToolButton * butBack, * butForward;
 
     QStringList directories;
     uint curDirIndex;
+
+    struct History
+    {
+        History() : index(0) { }
+        QVector<QString> dirs;
+        int index;
+    };
+    QVector<History> history;
 };
 
 AssetBrowser::AssetBrowser(QWidget *parent)
@@ -75,6 +87,10 @@ AssetBrowser::AssetBrowser(QWidget *parent)
     setObjectName("_AssetBrowser");
     p_->createWidgets();
     p_->updateModel();
+
+    p_->history.resize(p_->directories.size());
+    for (int i=0; i<p_->directories.size(); ++i)
+        p_->history[i].dirs << p_->directories[i];
 
     selectDirectory(settings()->getValue("AssetBrowser/curDirIndex", 0).toUInt());
 }
@@ -116,12 +132,42 @@ void AssetBrowser::Private::createWidgets()
             }
             lh->addStretch(1);
 
-
-
         lh = new QHBoxLayout();
         lv0->addLayout(lh);
 
+            // --- navigation ---
+
+            dirLabel = new QLabel(widget);
+            dirLabel->setToolTip(tr("Current directory"));
+            lh->addWidget(dirLabel);
+
+            // directory-up button
+            auto but = new QToolButton(widget);
+            but->setIcon(QIcon(":/icon/dir_up.png"));
+            but->setToolTip(tr("Go up one directory"));
+            connect(but, SIGNAL(clicked(bool)), widget, SLOT(goUp()));
+            lh->addWidget(but);
+
+            // backward button
+            but = butBack = new QToolButton(widget);
+            //but->setIcon(QIcon(":/icon/dir_up.png"));
+            but->setText("<");
+            but->setToolTip(tr("Go back to previous directory in history"));
+            connect(but, SIGNAL(clicked(bool)), widget, SLOT(goBack()));
+            lh->addWidget(but);
+
+            // forward button
+            but = butForward = new QToolButton(widget);
+            //but->setIcon(QIcon(":/icon/dir_up.png"));
+            but->setText(">");
+            but->setToolTip(tr("Go to next directory in history"));
+            connect(but, SIGNAL(clicked(bool)), widget, SLOT(goForward()));
+            lh->addWidget(but);
+
             // --- filter edit ---
+
+        lh = new QHBoxLayout();
+        lv0->addLayout(lh);
 
             lh->addWidget(new QLabel(tr("filter"), widget));
 
@@ -131,13 +177,6 @@ void AssetBrowser::Private::createWidgets()
                                         "use wildcard symbols '*' and '?'"));
             lh->addWidget(filterEdit);
             connect(filterEdit, &QLineEdit::textChanged, [=](const QString& f) { applyFilter(f); });
-
-            // directory-up button
-            auto but = new QToolButton(widget);
-            but->setIcon(QIcon(":/icon/dir_up.png"));
-            but->setToolTip(tr("Go up one directory"));
-            connect(but, SIGNAL(clicked(bool)), widget, SLOT(goUp()));
-            lh->addWidget(but);
 
         // --- tree view ---
 
@@ -180,6 +219,7 @@ void AssetBrowser::selectDirectory(uint index)
     p_->dirButtons[index]->setChecked(true);
 
     p_->treeView->setRootIndex(p_->fsmodel->index(p_->directories[index]));
+    p_->dirLabel->setText(p_->directories[p_->curDirIndex]);
 
     // store current index in settings
     settings()->setValue("AssetBrowser/curDirIndex", p_->curDirIndex);
@@ -188,10 +228,12 @@ void AssetBrowser::selectDirectory(uint index)
     const QString key = QString("AssetBrowser/Filter/%1").arg(index);
     setFilter(settings()->getValue(key, "").toString());
 
+    p_->updateButtons();
+
     /** @todo AssetBrowser: store/restore expanded-state of directories */
 }
 
-void AssetBrowser::setDirectory(uint index, const QString &dir)
+void AssetBrowser::setDirectory(uint index, const QString &dir, bool updateHistory)
 {
     if (index >= uint(p_->directories.size()))
         return;
@@ -200,11 +242,41 @@ void AssetBrowser::setDirectory(uint index, const QString &dir)
     p_->directories[index] = dir;
     p_->dirButtons[index]->setToolTip(dir);
     p_->dirButtons[index]->setStatusTip(tr("Click to show %1").arg(dir));
+    // update label
+    p_->dirLabel->setText(dir);
     // point file model there
     p_->treeView->setRootIndex(p_->fsmodel->index(dir));
     // store in app settings
     const QString key = QString("AssetBrowser/Directory/%1").arg(index);
     settings()->setValue(key, dir);
+
+    // update history
+    if (updateHistory)
+        p_->pushDir();
+}
+
+void AssetBrowser::Private::pushDir()
+{
+    if (curDirIndex >= uint(history.size()))
+        return;
+
+    History& h = history[curDirIndex];
+    h.dirs.resize(h.index+1);
+    h.dirs << directories[curDirIndex];
+    ++h.index;
+
+    updateButtons();
+}
+
+void AssetBrowser::Private::updateButtons()
+{
+    if (curDirIndex >= uint(history.size()))
+        return;
+
+    qInfo() << history[curDirIndex].dirs << history[curDirIndex].index;
+    butBack->setEnabled(history[curDirIndex].index > 0);
+    butForward->setEnabled(history[curDirIndex].index+1
+                           < history[curDirIndex].dirs.size());
 }
 
 void AssetBrowser::setFilter(const QString &f)
@@ -232,6 +304,8 @@ void AssetBrowser::Private::applyFilter(const QString& f)
 
 QString AssetBrowser::currentDirectory() const
 {
+    if (p_->curDirIndex >= (uint)p_->directories.size())
+        return QString();
     return QDir(p_->directories[p_->curDirIndex]).canonicalPath();
 }
 
@@ -239,7 +313,34 @@ void AssetBrowser::goUp()
 {
     QDir dir(currentDirectory());
     if (dir.cdUp())
+    {
         setDirectory(p_->curDirIndex, dir.canonicalPath());
+    }
+}
+
+void AssetBrowser::goBack()
+{
+    Private::History& h = p_->history[p_->curDirIndex];
+    if (h.index > 0)
+    {
+        --h.index;
+        if (h.index < h.dirs.size())
+        {
+            setDirectory(p_->curDirIndex, h.dirs[h.index], false);
+            p_->updateButtons();
+        }
+    }
+}
+
+void AssetBrowser::goForward()
+{
+    Private::History& h = p_->history[p_->curDirIndex];
+    if (h.index+1 < h.dirs.size())
+    {
+        ++h.index;
+        setDirectory(p_->curDirIndex, h.dirs[h.index], false);
+        p_->updateButtons();
+    }
 }
 
 void AssetTreeView::mouseDoubleClickEvent(QMouseEvent * e)
