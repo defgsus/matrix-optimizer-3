@@ -58,6 +58,7 @@ int renderToDisk()
 //#include "tests/testtesselator.h"
 //#include "tests/testcommandlineparser.h"
 //#include "tests/testdirectedgraph.h"
+#include "tests/testcsg.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -70,6 +71,7 @@ int main(int argc, char *argv[])
     MO::setCurrentThreadName("GUI");
 
     // tests without QApplication
+    MO::TestCsg t; return t.run();
     //TestXmlStream t; return t.run();
     //MO::TestEquation t; return t.run();
     //MO::TestTesselator t; return t.run();

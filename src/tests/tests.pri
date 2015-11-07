@@ -6,7 +6,8 @@ HEADERS += \
     src/tests/testequation.h \
     src/tests/testcommandlineparser.h \
     src/tests/testdirectedgraph.h \
-    src/tests/test_angelscript.h
+    src/tests/test_angelscript.h \
+    $$PWD/testcsg.h
 
 SOURCES += \
     src/tests/testtesselator.cpp \
@@ -16,4 +17,5 @@ SOURCES += \
     src/tests/testequation.cpp\
     src/tests/testcommandlineparser.cpp \
     src/tests/testdirectedgraph.cpp \
-    src/tests/test_angelscript.cpp
+    src/tests/test_angelscript.cpp \
+    $$PWD/testcsg.cpp

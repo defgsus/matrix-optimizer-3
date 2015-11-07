@@ -349,7 +349,11 @@ HEADERS += \
     $$PWD/object/param/parameterfont.h \
     $$PWD/io/keyboardstate.h \
     $$PWD/io/mousestate.h \
-    $$PWD/object/control/mouseobject.h
+    $$PWD/object/control/mouseobject.h \
+    $$PWD/math/csgbase.h \
+    $$PWD/math/csgprimitives.h \
+    $$PWD/math/csgcombine.h \
+    $$PWD/model/csgtreemodel.h
 
 
 SOURCES += \
@@ -653,4 +657,8 @@ SOURCES += \
     $$PWD/object/param/parameterfont.cpp \
     $$PWD/io/mousestate.cpp \
     $$PWD/io/keyboardstate.cpp \
-    $$PWD/object/control/mouseobject.cpp
+    $$PWD/object/control/mouseobject.cpp \
+    $$PWD/math/csgbase.cpp \
+    $$PWD/math/csgprimitives.cpp \
+    $$PWD/math/csgcombine.cpp \
+    $$PWD/model/csgtreemodel.cpp

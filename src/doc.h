@@ -70,6 +70,25 @@
   *
   */
 
+/** @page distance_field
+ *
+ *  Sphere (Primitive)
+ *    - translate (Transform)
+ *    - scale
+ *    - ...
+ *    - Torus
+ *       - rotate
+ *       - repeat
+ *  Difference
+ *    - Box
+ *    - Plane
+ *
+ *  Difference {
+ *      Sphere { radius=1.0 Translate { <1,2,3> } }
+ *      Union { Torus { 5, 1 } Plane { y, 1 } }
+ *  }
+ *
+ **/
 
 /** @page random_ideas
 
