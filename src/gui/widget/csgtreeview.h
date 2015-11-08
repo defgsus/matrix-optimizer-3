@@ -5,6 +5,8 @@
 
 
 namespace MO {
+class CsgBase;
+class CsgTreeModel;
 namespace GUI {
 
 
@@ -16,7 +18,17 @@ public:
 
 signals:
 
+    void nodeSelected(CsgBase *);
+
 public slots:
+
+    /** Call this instead of QTreeView::setModel()
+        to link with the derived class */
+    void setCsgModel(CsgTreeModel*);
+
+private:
+
+    CsgTreeModel * csgModel_;
 };
 
 } // namespace GUI

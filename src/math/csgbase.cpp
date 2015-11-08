@@ -48,7 +48,7 @@ CsgBase * CsgBase::parent() const
 QString CsgBase::name() const
 {
     const QString n = props().get("name").toString();
-    return n.isEmpty() ? className() : n;
+    return n.isEmpty() ? className().mid(3) : n;
 }
 
 const Properties& CsgBase::properties() const

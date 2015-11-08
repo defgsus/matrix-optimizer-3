@@ -273,7 +273,7 @@ void AssetBrowser::Private::updateButtons()
     if (curDirIndex >= uint(history.size()))
         return;
 
-    qInfo() << history[curDirIndex].dirs << history[curDirIndex].index;
+    //qInfo() << history[curDirIndex].dirs << history[curDirIndex].index;
     butBack->setEnabled(history[curDirIndex].index > 0);
     butForward->setEnabled(history[curDirIndex].index+1
                            < history[curDirIndex].dirs.size());

@@ -17,7 +17,7 @@ CsgTreeModel::CsgTreeModel(QObject *parent)
             << "name";
 }
 
-void CsgTreeModel::setRootObject(CsgBase* rootObject)
+void CsgTreeModel::setRootObject(CsgRoot* rootObject)
 {
     beginResetModel();
 
@@ -30,7 +30,7 @@ CsgBase * CsgTreeModel::nodeForIndex(const QModelIndex& idx) const
 {
     if (idx.isValid())
         return static_cast<CsgBase*>( idx.internalPointer() );
-    return 0;
+    return rootObject_;
 }
 
 QModelIndex CsgTreeModel::index(int row, int column, const QModelIndex &parent) const
@@ -102,15 +102,17 @@ QVariant CsgTreeModel::data(const QModelIndex &index, int role) const
 
     if (auto node = nodeForIndex(index))
     {
-        // return text
-        if (role == Qt::DisplayRole || role == Qt::EditRole)
+        // return edit name
+        if (role == Qt::EditRole)
+            return node->name();
+
+        // return display name
+        if (role == Qt::DisplayRole)
         {
-            switch (index.column())
-            {
-                case 0: return node->name();
-                //case 1: return wrap->valueName();
-                default: MO_LOGIC_ERROR("no DisplayRole defined for column " << index.column());
-            }
+            QString n = node->name();
+            if (node->canHaveChildren())
+                n += " { }";
+            return n;
         }
 
         // text alignment
@@ -129,13 +131,34 @@ QVariant CsgTreeModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+bool CsgTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+    if (!rootObject_ || !index.isValid() || index.column() < 0
+            || index.column() >= headerNames_.size())
+        return false;
+
+    CsgBase * node = nodeForIndex(index);
+    if (!node)
+        return false;
+
+    if (role == Qt::EditRole)
+    {
+        node->setName(value.toString());
+        emit dataChanged(index, index, QVector<int>() << role);
+        return true;
+    }
+
+    return false;
+}
+
 Qt::ItemFlags CsgTreeModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flag = QAbstractItemModel::flags(index);
 
     if (rootObject_ && index.isValid())
     {
-        flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+        flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled
+                | Qt::ItemIsEditable;
     }
     return flag;
 }

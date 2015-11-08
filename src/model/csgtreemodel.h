@@ -16,8 +16,8 @@ class CsgTreeModel : public QAbstractItemModel
 public:
     explicit CsgTreeModel(QObject *parent = 0);
 
-    void setRootObject(CsgBase * rootObject);
-    CsgBase* rootObject() const { return rootObject_; }
+    void setRootObject(CsgRoot* rootObject);
+    CsgRoot* rootObject() const { return rootObject_; }
 
     CsgBase* nodeForIndex(const QModelIndex&) const;
 
@@ -30,6 +30,7 @@ public:
 
     virtual QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     virtual QVariant data(const QModelIndex &index, int role) const;
+    virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
 signals:
@@ -38,7 +39,7 @@ public slots:
 
 private:
 
-    CsgBase * rootObject_;
+    CsgRoot * rootObject_;
     QStringList headerNames_;
 };
 

@@ -60,6 +60,7 @@
 #include "gui/widget/assetbrowser.h"
 #include "gui/widget/objectoutputview.h"
 #include "gui/imagelistdialog.h"
+#include "gui/csgdialog.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
 #   include "engine/serverengine.h"
@@ -710,6 +711,15 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         connect(a, &QAction::triggered, [=]()
         {
             auto win = new DistanceFieldImage(window_);
+            win->setAttribute(Qt::WA_DeleteOnClose, true);
+            win->show();
+        });
+
+        a = new QAction(tr("CSG Object Editor"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto win = new CsgDialog(window_);
             win->setAttribute(Qt::WA_DeleteOnClose, true);
             win->show();
         });
