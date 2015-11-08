@@ -29,6 +29,10 @@ signals:
 
 public slots:
 
+protected:
+
+    void closeEvent(QCloseEvent*) Q_DECL_OVERRIDE;
+
 private:
     struct Private;
     Private * p_;

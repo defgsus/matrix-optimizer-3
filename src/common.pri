@@ -353,7 +353,8 @@ HEADERS += \
     $$PWD/math/csgbase.h \
     $$PWD/math/csgprimitives.h \
     $$PWD/math/csgcombine.h \
-    $$PWD/model/csgtreemodel.h
+    $$PWD/model/csgtreemodel.h \
+    $$PWD/gl/csgshader.h
 
 
 SOURCES += \
@@ -661,4 +662,5 @@ SOURCES += \
     $$PWD/math/csgbase.cpp \
     $$PWD/math/csgprimitives.cpp \
     $$PWD/math/csgcombine.cpp \
-    $$PWD/model/csgtreemodel.cpp
+    $$PWD/model/csgtreemodel.cpp \
+    $$PWD/gl/csgshader.cpp

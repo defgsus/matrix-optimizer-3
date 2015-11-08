@@ -93,12 +93,22 @@ void ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
 
     quad_ = new GL::Drawable(name_);
     if (!geom)
-        GEOM::GeometryFactory::createQuad(quad_->geometry(), 2, 2.);
+        GEOM::GeometryFactory::createQuad(quad_->geometry(), 2.f, 2.f);
     else
         quad_->setGeometry(geom);
 
     quad_->setShaderSource(src);
-    quad_->createOpenGl();
+    try
+    {
+        quad_->createOpenGl();
+    }
+    catch (Exception&e)
+    {
+        quad_->releaseOpenGl();
+        delete quad_;
+        quad_ = 0;
+        throw;
+    }
 }
 
 

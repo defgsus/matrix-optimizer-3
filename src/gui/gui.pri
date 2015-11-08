@@ -125,7 +125,8 @@ HEADERS += \
     $$PWD/widget/blinklamp.h \
     $$PWD/widget/csgtreeview.h \
     $$PWD/widget/csgeditwidget.h \
-    $$PWD/csgdialog.h
+    $$PWD/csgdialog.h \
+    $$PWD/widget/csgrenderwidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -250,4 +251,5 @@ SOURCES += \
     $$PWD/widget/blinklamp.cpp \
     $$PWD/widget/csgtreeview.cpp \
     $$PWD/widget/csgeditwidget.cpp \
-    $$PWD/csgdialog.cpp
+    $$PWD/csgdialog.cpp \
+    $$PWD/widget/csgrenderwidget.cpp

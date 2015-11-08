@@ -231,7 +231,7 @@ void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     MO_CHECK_GL_THROW( glCompileShader(shadername) );
 
     // check compile status
-    //bool compiled = false;
+    bool compiled = false;
     GLint cc;
     MO_CHECK_GL_THROW( glGetShaderiv(shadername, GL_COMPILE_STATUS, &cc); )
     if (!cc)
@@ -241,7 +241,7 @@ void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     else
     {
         log_ += typeName + " compiled..\n";
-        //compiled = true;
+        compiled = true;
     }
 
     // get compiler log
@@ -257,6 +257,10 @@ void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
         log_ += "compiler log:\n" + log + "\n";
         MO_DEBUG(log_);
     }
+
+    if (!compiled)
+        MO_GL_ERROR("Error compiling shader '" << name_ << "'\n"
+                    << log_);
 
     // attach to programObject
     MO_CHECK_GL_THROW( glAttachShader(prog_, shadername) );

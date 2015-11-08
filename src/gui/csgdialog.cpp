@@ -9,10 +9,11 @@
 */
 
 #include <QLayout>
-
+#include <QCloseEvent>
 
 #include "csgdialog.h"
 #include "gui/widget/csgeditwidget.h"
+#include "gui/widget/csgrenderwidget.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -21,13 +22,16 @@ namespace GUI {
 struct CsgDialog::Private
 {
     Private(CsgDialog * win)
-        : win       (win)
+        : win           (win)
+        , closeRequest  (false)
     { }
 
     void createWidgets();
 
     CsgDialog * win;
     CsgEditWidget * csgEdit;
+    CsgRenderWidget * renderWidget;
+    bool closeRequest;
 };
 
 CsgDialog::CsgDialog(QWidget *parent)
@@ -47,12 +51,33 @@ CsgDialog::~CsgDialog()
     delete p_;
 }
 
+void CsgDialog::closeEvent(QCloseEvent*e)
+{
+    if (p_->renderWidget->isGlInitialized())
+    {
+        p_->renderWidget->shutDownGL();
+        p_->closeRequest = true;
+        e->ignore();
+    }
+    else QDialog::closeEvent(e);
+}
+
 void CsgDialog::Private::createWidgets()
 {
     auto lh = new QHBoxLayout(win);
 
         csgEdit = new CsgEditWidget(win);
         lh->addWidget(csgEdit);
+
+        renderWidget = new CsgRenderWidget(win);
+        lh->addWidget(renderWidget);
+        connect (renderWidget, &CsgRenderWidget::glReleased, [=]()
+        {
+            if (closeRequest)
+                win->close();
+        });
+
+        renderWidget->setRootObject(csgEdit->rootObject());
 }
 
 

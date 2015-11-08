@@ -16,6 +16,8 @@
         <file alias="shaderobject.vert">assets/shader/shaderobject.vert</file>
         <file alias="wavetracer.frag">assets/shader/wavetracer.frag</file>
         <file alias="wavetracer.vert">assets/shader/wavetracer.vert</file>
+        <file alias="csgshader.frag">assets/shader/csgshader.frag</file>
+        <file alias="csgshader.vert">assets/shader/csgshader.vert</file>
     </qresource>
     <qresource prefix="/shader/inc">
         <file alias="intersect">assets/shader/inc/intersect.glsl</file>
