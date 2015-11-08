@@ -98,17 +98,7 @@ void ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
         quad_->setGeometry(geom);
 
     quad_->setShaderSource(src);
-    try
-    {
-        quad_->createOpenGl();
-    }
-    catch (Exception&e)
-    {
-        quad_->releaseOpenGl();
-        delete quad_;
-        quad_ = 0;
-        throw;
-    }
+    quad_->createOpenGl();
 }
 
 
