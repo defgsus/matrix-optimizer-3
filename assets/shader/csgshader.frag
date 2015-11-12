@@ -13,7 +13,8 @@ out vec4 fragColor;             // color output
 
 uniform vec4  u_resolution;     // width, height, 1./width, 1./height
 uniform float u_time;           // scene time in seconds
-uniform mat4  u_transformation; // object's own transformation matrix
+uniform mat4  u_inverse_frustum;// projection
+uniform mat4  u_vtmatrix;       // view transform
 uniform vec2  u_max_trace_dist; // x = per ray / y = overall
 uniform float u_fudge;          // ray precision step (<1.0)
 uniform float u_epsilon;        // normal estimation distance
@@ -27,6 +28,7 @@ uniform float u_epsilon;        // normal estimation distance
 
 // dist func must be named 'DE_scene'
 //%dist_func%
+//float DE_scene(in vec3 pos) { return length(pos - vec3(0., 0., -2.))-1.; }
 
 /** Returns normal for any point in space */
 vec3 DE_normal(in vec3 p, float eps = 0.0001)
@@ -77,13 +79,15 @@ float DE_trace(in vec3 ro, in vec3 rd, in float len = 10., int steps = 100)
     {
         vec3 p = ro + t * rd;
         float d = DE_scene(p);
+        if (d < 0.001)
+            return t;
 
         t += d * u_fudge;
     }
     return t;
 }
 
-float distance_brightness(in float dist)
+float DE_brightness(in float dist)
 {
     return smoothstep(u_max_trace_dist.y, 0., dist);
 }
@@ -101,11 +105,12 @@ vec3 simple_cast(in vec3 ro, in vec3 rd)
     vec3 n = DE_normal(hit, u_epsilon);
     // object color from normal
     vec3 col = 0.13 + 0.1*n;
+    col *= smoothstep(0.01, 0., DE_scene(hit));
     // phong
     vec3 ln = normalize(vec3(1.));
     col += pow(max(0., dot(n, ln)), 2.);
 
-    col *= distance_brightness(t);
+    col *= DE_brightness(t);
 
     return clamp(col, 0., 1.);
 }
@@ -115,11 +120,29 @@ vec3 simple_cast(in vec3 ro, in vec3 rd)
 
 void main()
 {
+#if 0
+    vec2 st = v_pos;
+
+    vec4 pos = u_inverse_frustum * vec4(st.x, st.y, -0.01, 1);
+    pos /= pos.w;
+
+    vec4 dirf = u_inverse_frustum * vec4(st.x, st.y, -1000., 1);
+    dirf /= dirf.w;
+    dirf = normalize(dirf);
+
+    vec3 ro = (u_vtmatrix * pos).xyz,
+         rd = (u_vtmatrix * vec4(dirf.xyz, 0.)).xyz;
+#elif 0
     vec3 pos = vec3(0., 0., 0.);
-    vec3 dir = normalize(vec3(v_pos, -2.));
+    vec3 dir = normalize(vec3(v_pos, 2.));
 
-    pos = (u_transformation * vec4(pos,1.)).xyz;
-    dir = (mat3(u_transformation)) * dir;
+    pos = u_vtmatrix[3].xyz;
+    dir = (mat3(u_vtmatrix)) * dir;
+#else
+    vec3 ro = -u_vtmatrix[3].xyz;
+    vec3 rd = normalize(vec3(v_pos, -2.));
+    rd = (u_vtmatrix * vec4(rd, 0.)).xyz;
+#endif
 
-    fragColor = vec4(simple_cast(pos, dir), 1.);
+    fragColor = vec4(simple_cast(ro, rd), 1.);
 }

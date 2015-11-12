@@ -12,7 +12,7 @@ void main(void)
 {
     vec4 apos = u_viewTransform * a_position;
 
-    v_pos = apos.xy;
+    v_pos = a_position.xy;
     v_screen = apos.xy * u_resolution.xy;
 
     gl_Position = apos;

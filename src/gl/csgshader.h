@@ -45,7 +45,7 @@ public:
     void createGl();
     void releaseGl();
 
-    void render(const QSize& resolution, const Mat4& transform);
+    void render(const QSize& resolution, const Mat4& projection, const Mat4& transform);
 
 private:
     struct Private;

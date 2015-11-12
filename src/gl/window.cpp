@@ -254,9 +254,14 @@ void Window::mouseReleaseEvent(QMouseEvent * e)
 
 void Window::mouseMoveEvent(QMouseEvent * e)
 {    
+    // send mouse state
     MouseState::globalInstance().setPos(e->pos(), size());
     if (e->buttons() != Qt::NoButton)
+    {
         MouseState::globalInstance().setDragPos(e->pos(), size());
+        // rerender on click-drag
+        renderLater();
+    }
 
     if (!isFreeCamera_)
     {

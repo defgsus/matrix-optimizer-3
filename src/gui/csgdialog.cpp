@@ -14,6 +14,8 @@
 #include "csgdialog.h"
 #include "gui/widget/csgeditwidget.h"
 #include "gui/widget/csgrenderwidget.h"
+#include "gui/propertiesscrollview.h"
+#include "types/properties.h"
 #include "io/settings.h"
 
 namespace MO {
@@ -31,6 +33,7 @@ struct CsgDialog::Private
     CsgDialog * win;
     CsgEditWidget * csgEdit;
     CsgRenderWidget * renderWidget;
+    PropertiesScrollView * renderPropView;
     bool closeRequest;
 };
 
@@ -68,16 +71,32 @@ void CsgDialog::Private::createWidgets()
 
         csgEdit = new CsgEditWidget(win);
         lh->addWidget(csgEdit);
-
-        renderWidget = new CsgRenderWidget(win);
-        lh->addWidget(renderWidget);
-        connect (renderWidget, &CsgRenderWidget::glReleased, [=]()
+        connect(csgEdit, &CsgEditWidget::changed, [this]()
         {
-            if (closeRequest)
-                win->close();
+            renderWidget->setRootObject(csgEdit->rootObject());
         });
 
-        renderWidget->setRootObject(csgEdit->rootObject());
+        auto lv = new QVBoxLayout();
+        lv->setMargin(0);
+        lh->addLayout(lv);
+
+            renderWidget = new CsgRenderWidget(win);
+            lv->addWidget(renderWidget);
+            connect (renderWidget, &CsgRenderWidget::glReleased, [=]()
+            {
+                if (closeRequest)
+                    win->close();
+            });
+
+            renderWidget->setRootObject(csgEdit->rootObject());
+
+            renderPropView = new PropertiesScrollView(win);
+            renderPropView->setProperties(renderWidget->shaderProperties());
+            lv->addWidget(renderPropView);
+            connect(renderPropView, &PropertiesScrollView::propertyChanged, [this]()
+            {
+                renderWidget->setShaderProperties(renderPropView->properties());
+            });
 }
 
 

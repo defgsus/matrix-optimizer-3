@@ -33,7 +33,7 @@ struct CsgShader::Private
     void createShaderSource(GL::ShaderSource*) const;
     void initQuad();
     void releaseQuad();
-    void updateUniforms(const QSize& res, const Mat4& trans, Float time);
+    void updateUniforms(const QSize& res, const Mat4& proj, const Mat4& trans, Float time);
 
     CsgShader * p;
     MO::Properties props;
@@ -43,6 +43,7 @@ struct CsgShader::Private
 
     GL::Uniform * u_resolution,
                 * u_transformation,        // camera
+                * u_projection,
                 * u_fudge,                 // ray step precision
                 * u_epsilon,
                 * u_time,
@@ -53,7 +54,7 @@ struct CsgShader::Private
 CsgShader::CsgShader()
     : p_        (new Private(this))
 {
-
+    p_->createProps();
 }
 
 CsgShader::~CsgShader()
@@ -118,7 +119,7 @@ void CsgShader::Private::createShaderSource(GL::ShaderSource* src) const
     src->loadVertexSource(":/shader/csgshader.vert");
     src->loadFragmentSource(":/shader/csgshader.frag");
 
-    src->addDefine(QString("#define MAX_TRACE_STEPS %1").arg(props.get("max_trace_steps").toInt()));
+    src->addDefine(QString("#define MAX_TRACE_STEPS %1").arg(props.get("max_ray_steps").toInt()));
     src->addDefine(QString("#define MAX_REFLECTIONS %1").arg(props.get("max_reflections").toInt()));
 
     src->replace("//%dist_func%", code);
@@ -145,7 +146,10 @@ void CsgShader::Private::initQuad()
     // -- get uniforms --
 
     u_resolution = quad->shader()->getUniform("u_resolution");
-    u_transformation = quad->shader()->getUniform("u_transformation");
+    u_projection = quad->shader()->getUniform("u_inverse_frustum");
+    if (u_projection)
+        u_projection->setAutoSend(true);
+    u_transformation = quad->shader()->getUniform("u_vtmatrix");
     if (u_transformation)
         u_transformation->setAutoSend(true);
     u_fudge = quad->shader()->getUniform("u_fudge");
@@ -164,7 +168,7 @@ void CsgShader::Private::releaseQuad()
     quad = 0;
 }
 
-void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& trans, Float time)
+void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& proj, const Mat4& trans, Float time)
 {
     if (u_fudge)
         u_fudge->floats[0] = props.get("fudge").toFloat();
@@ -174,8 +178,8 @@ void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& trans, Flo
 
     if (u_max_trace_dist)
         u_max_trace_dist->setFloats(
-                    props.get("max_dist").toFloat(),
-                    props.get("max_ray_dist").toFloat());
+                    props.get("max_ray_dist").toFloat(),
+                    props.get("max_dist").toFloat() );
 
     if (u_resolution)
         u_resolution->setFloats(res.width(), res.height(),
@@ -184,12 +188,16 @@ void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& trans, Flo
 
     if (u_transformation)
         u_transformation->set(trans);
+    MO_PRINT(trans);
+
+    if (u_projection)
+        u_projection->set(glm::inverse(proj));
 
     if (u_time)
         u_time->floats[0] = time;
 }
 
-void CsgShader::render(const QSize &resolution, const Mat4 &transform)
+void CsgShader::render(const QSize &resolution, const Mat4& projection, const Mat4& transform)
 {
     if (p_->doRecompile)
         p_->initQuad();
@@ -197,7 +205,7 @@ void CsgShader::render(const QSize &resolution, const Mat4 &transform)
     if (!p_->quad)
         return;
 
-    p_->updateUniforms(resolution, transform, 0.f);
+    p_->updateUniforms(resolution, projection, transform, 0.f);
 
     p_->quad->draw(resolution.width(), resolution.height());
 }
@@ -205,6 +213,7 @@ void CsgShader::render(const QSize &resolution, const Mat4 &transform)
 void CsgShader::setRootObject(const CsgRoot* r)
 {
     p_->root = r;
+    p_->doRecompile = true;
 }
 
 GL::ShaderSource CsgShader::getShaderSource() const

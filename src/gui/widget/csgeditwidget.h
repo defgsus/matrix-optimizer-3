@@ -28,6 +28,8 @@ public:
 
 signals:
 
+    void changed() const;
+
 public slots:
 
     void setRootObject(CsgRoot *);

@@ -28,9 +28,11 @@ public:
     ~CsgRenderWidget();
 
     const GL::CsgShader& shader() const { return *p_shader_; }
+    const Properties& shaderProperties() const;
 
     void setShaderProperties(const Properties&);
     void setRootObject(CsgRoot*);
+
 signals:
 
 public slots:

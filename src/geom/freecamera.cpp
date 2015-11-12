@@ -65,7 +65,7 @@ void FreeCamera::move(const Vec3& steps)
 void FreeCamera::rotateX(Float degree)
 {
     if (inverse_)
-        matrix_ = glm::rotate(matrix_, degree, Vec3(1,0,0));
+        matrix_ = MATH::rotate(matrix_, degree, Vec3(1,0,0));
     else
         matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(1,0,0)) * matrix_;
 }
@@ -73,7 +73,7 @@ void FreeCamera::rotateX(Float degree)
 void FreeCamera::rotateY(Float degree)
 {
     if (inverse_)
-        matrix_ = glm::rotate(matrix_, degree, Vec3(0,1,0));
+        matrix_ = MATH::rotate(matrix_, degree, Vec3(0,1,0));
     else
         matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,1,0)) * matrix_;
 }
@@ -81,7 +81,7 @@ void FreeCamera::rotateY(Float degree)
 void FreeCamera::rotateZ(Float degree)
 {
     if (inverse_)
-        matrix_ = glm::rotate(matrix_, degree, Vec3(0,0,1));
+        matrix_ = MATH::rotate(matrix_, degree, Vec3(0,0,1));
     else
         matrix_ = MATH::rotate(Mat4(1.0), degree, Vec3(0,0,1)) * matrix_;
 }

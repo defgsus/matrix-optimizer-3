@@ -270,9 +270,9 @@ QString CsgRoot::toGlsl(const QString &dist_func_name) const
 CsgPositionBase::CsgPositionBase()
     : CsgBase()
 {
-    props().set("x", QObject::tr("x"), QObject::tr("Position on X axis"), 0.);
-    props().set("y", QObject::tr("y"), QObject::tr("Position on Y axis"), 0.);
-    props().set("z", QObject::tr("z"), QObject::tr("Position on Z axis"), 0.);
+    props().set("x", QObject::tr("x"), QObject::tr("Position on X axis"), 0., 0.1);
+    props().set("y", QObject::tr("y"), QObject::tr("Position on Y axis"), 0., 0.1);
+    props().set("z", QObject::tr("z"), QObject::tr("Position on Z axis"), 0., 0.1);
 }
 
 Vec3 CsgPositionBase::position() const
@@ -288,7 +288,7 @@ QString CsgPositionBase::positionGlsl() const
 
     const Vec3 p = position();
     if (p.x != 0 || p.y != 0 || p.z != 0)
-        s += " - " + toGlsl(p);
+        s = "(pos - " + toGlsl(p) + ")";
 
     return s;
 }

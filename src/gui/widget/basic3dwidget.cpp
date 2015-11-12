@@ -33,7 +33,7 @@ namespace
 {
     QGLFormat createFormat() {
         QGLFormat format;
-        format.setVersion(3, 3);
+        format.setVersion(3, 2);
 #ifdef MO_USE_OPENGL_CORE
         format.setProfile(QGLFormat::CoreProfile);
 #else
@@ -60,9 +60,7 @@ Basic3DWidget::Basic3DWidget(RenderMode mode, QWidget *parent) :
 {
     MO_DEBUG_GL("Basic3DWidget::Basic3DWidget()");
 
-    //if (mode == RM_DIRECT)
-    {
-    }
+    camera_->setInverse(cameraMode_ == CM_FREE_INVERSE);
 
     viewSet(VD_FRONT, 10);
 }
@@ -121,6 +119,7 @@ void Basic3DWidget::setCameraMode(CameraMode cm)
         return;
 
     cameraMode_ = cm;
+    camera_->setInverse(cameraMode_ == CM_FREE_INVERSE);
     update();
 }
 
@@ -195,7 +194,7 @@ void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
         break;
     }
 
-    if (cameraMode_ == CM_FREE)
+    if (cameraMode_ == CM_FREE || cameraMode_ == CM_FREE_INVERSE)
         camera_->setMatrix(mat);
     else
     if (cameraMode_ == CM_SET)
@@ -234,7 +233,7 @@ const Mat4& Basic3DWidget::projectionMatrix() const
 
 Mat4 Basic3DWidget::viewMatrix() const
 {
-    if (cameraMode_ == CM_FREE)
+    if (cameraMode_ == CM_FREE || cameraMode_ == CM_FREE_INVERSE)
         return camera_->getMatrix();
     else
     if (cameraMode_ == CM_CENTER)
@@ -294,7 +293,7 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
 void Basic3DWidget::wheelEvent(QWheelEvent * e)
 {
-    if (cameraMode_ != CM_FREE)
+    if (!(cameraMode_ == CM_FREE || cameraMode_ == CM_FREE_INVERSE))
         return;
 
     Float fac = e->modifiers() & Qt::SHIFT ?

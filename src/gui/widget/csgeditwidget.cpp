@@ -103,6 +103,7 @@ void CsgEditWidget::Private::createWidgets()
             connect(propView, &PropertiesView::propertyChanged, [this]()
             {
                 updateNodeProperties();
+                emit widget->changed();
             });
 
             lv->addStretch(2);

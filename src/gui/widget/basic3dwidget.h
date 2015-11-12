@@ -63,6 +63,7 @@ public:
         CM_CENTER,
         /** Camera can be freely adjusted */
         CM_FREE,
+        CM_FREE_INVERSE,
         /** Camera is defined by setProjectionMatrix() and setViewMatrix() */
         CM_SET
     };
