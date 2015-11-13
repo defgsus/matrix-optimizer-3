@@ -111,6 +111,7 @@ void CsgShader::Private::createShaderSource(GL::ShaderSource* src) const
     if (root)
     {
         code = root->toGlsl("DE_scene") + "\n";
+        MO_PRINT(code);
         code.replace("MAX_DIST", "u_max_trace_dist.y");
     }
     else
@@ -141,7 +142,16 @@ void CsgShader::Private::initQuad()
     if (quad->isCreated())
         quad->release();
 
-    quad->create(src);
+    try
+    {
+        quad->create(src);
+    }
+    catch (Exception&)
+    {
+        delete quad;
+        quad = 0;
+        throw;
+    }
 
     // -- get uniforms --
 
@@ -188,7 +198,6 @@ void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& proj, cons
 
     if (u_transformation)
         u_transformation->set(trans);
-    MO_PRINT(trans);
 
     if (u_projection)
         u_projection->set(glm::inverse(proj));

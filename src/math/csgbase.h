@@ -32,7 +32,8 @@ public:
     {
         T_ROOT,
         T_SOLID,
-        T_COMBINER
+        T_COMBINE,
+        T_DEFORM
     };
 
 
@@ -57,6 +58,16 @@ public:
 
     /** Read access to child nodes */
     const QList<CsgBase*>& children() const;
+
+    /** Returns the index of this node in it's parent's child list,
+        or -1 */
+    int indexInParent() const;
+
+    /** Returns true if the node can have at least one children */
+    bool canHaveChildren() const { return canHaveNumChildren() != 0; }
+
+    /** Returns true when this node can be replaced by @p other node */
+    bool canBeReplacedBy(const CsgBase* other) const;
 
     /** Returns a depth-first list of the whole tree */
     QList<CsgBase*> serialized() const;
@@ -101,8 +112,8 @@ public:
     virtual const QString& className() const = 0;
     /** Returns the type of the derived object */
     virtual Type type() const = 0;
-    /** Override to allow childrens */
-    virtual bool canHaveChildren() const { return false; }
+    /** Override to allow childrens, -1 for unlimited */
+    virtual int canHaveNumChildren() const { return 0; }
 
     /** Returns the glsl code for the distance function */
     virtual QString getGlsl() const = 0;
@@ -110,14 +121,31 @@ public:
         The function should work on existing variables 'float d' and 'vec3 pos'. */
     virtual QString getGlslFunctionBody() const { return QString(); }
 
+    /** Override to provide some global helper functions.
+        These will only be pasted once for every class. */
+    virtual QString globalFunctions() const { return QString(); }
+
     // ---- static interface -----
 
     /** Returns a new instance for the given className(), or NULL if unknown.
         Ownership is with caller. */
     static CsgBase * createClass(const QString& className);
 
+    /** Returns a list of all possible classes */
+    static QList<const CsgBase*> registeredClasses();
+
     /** Helper to register the className() */
     static bool registerCsgClass_(CsgBase*);
+
+    /** Replaces the @p node with a new class.
+        Returns new node if the node could be replaced, NULL otherwise */
+    static CsgBase* replace(CsgBase * node, const QString& className);
+    /** Puts @p node into a new class.
+        Returns the new node if possible, NULL otherwise */
+    static CsgBase* contain(CsgBase * node, const QString& className);
+
+    /** Deletes the node and removes it from the tree */
+    static void deleteNode(CsgBase * node);
 
     /** Converts a number to a 'x.y' string, always including the '.' */
     static QString toGlsl(double v);
@@ -133,6 +161,10 @@ protected:
     Properties& props();
 
 private:
+
+    /** disable copy */ CsgBase(const CsgBase&) = delete;
+    /** disable copy */ void operator=(const CsgBase&) = delete;
+
     struct PrivateCB;
     PrivateCB * p_cb_;
 };
@@ -141,7 +173,7 @@ class CsgRoot : public CsgBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgRoot, T_ROOT)
-    bool canHaveChildren() const override { return true; }
+    int canHaveNumChildren() const override { return -1; }
 
     /** Returns the full code for the glsl distance function */
     QString toGlsl(const QString& dist_func_name = QString("scene_d")) const;

@@ -68,12 +68,11 @@ CsgEditWidget::CsgEditWidget(QWidget *parent)
             c->addChildren(new CsgPlane);
             c->addChildren(new CsgSphere);
 
-            auto c1 = new CsgUnion;
+            auto c1 = new CsgIntersection;
             c->addChildren(c1);
 
-                c1->addChildren(new CsgPlane);
                 c1->addChildren(new CsgSphere);
-                c1->addChildren(new CsgSphere);
+                c1->addChildren(new CsgBox);
 
     setRootObject(root);
 }
@@ -94,6 +93,7 @@ void CsgEditWidget::Private::createWidgets()
         {
             setCurrentNode(n);
         });
+        connect(treeView, SIGNAL(treeChanged()), widget, SIGNAL(changed()));
 
         auto lv = new QVBoxLayout();
         lh->addLayout(lv);

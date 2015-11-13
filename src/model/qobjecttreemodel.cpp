@@ -54,7 +54,7 @@ QObject * QObjectTreeModel::itemForIndex(const QModelIndex &index) const
             return o;
         }
     }
-    // invalid index means root object (??)
+    // invalid index means root object
     return rootObject_;
 }
 

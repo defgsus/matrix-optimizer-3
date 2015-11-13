@@ -85,13 +85,14 @@ void ScreenQuad::create(const QString &vertexFile, const QString &fragmentFile,
 
 void ScreenQuad::create(ShaderSource * src, GEOM::Geometry * geom)
 {
-    MO_ASSERT(!quad_, "ScreenQuad::create() duplicate call");
-    if (quad_)
+    MO_ASSERT(!isCreated(), "ScreenQuad::create() duplicate call");
+    if (isCreated())
         return;
 
     // prepare geometry
 
-    quad_ = new GL::Drawable(name_);
+    if (!quad_)
+        quad_ = new GL::Drawable(name_);
     if (!geom)
         GEOM::GeometryFactory::createQuad(quad_->geometry(), 2.f, 2.f);
     else

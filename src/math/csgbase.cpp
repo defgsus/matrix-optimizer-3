@@ -4,6 +4,16 @@
 #include "csgbase.h"
 #include "types/properties.h"
 #include "io/error.h"
+#include "io/log.h"
+
+#if 0
+#   include <QDebug>
+#   define MO_DEBUG_CSG(arg__) qInfo() << "CsgBase(" << this << ")::" << arg__;
+#   define MO_DEBUG_CSGP(arg__) qInfo() << "CsgBase(" << p << ")::Private::" << arg__;
+#else
+#   define MO_DEBUG_CSG(unused__)
+#   define MO_DEBUG_CSGP(unused__)
+#endif
 
 namespace MO {
 
@@ -31,11 +41,13 @@ QMap<QString, CsgBase*>* CsgBase::PrivateCB::regMap = 0;
 CsgBase::CsgBase()
     : p_cb_     (new PrivateCB(this))
 {
-
+    MO_DEBUG_CSG("CsgBase()");
 }
 
 CsgBase::~CsgBase()
 {
+    MO_DEBUG_CSG("~CsgBase()");
+
     deleteChildren();
     delete p_cb_;
 }
@@ -76,6 +88,16 @@ const QList<CsgBase*>& CsgBase::children() const
     return p_cb_->childs;
 }
 
+int CsgBase::indexInParent() const
+{
+    // Note: QList::indexOf() returns -1 as well
+    // so it matches this interface,
+    // in the unlikely case that parent does not contain *this
+    return p_cb_->parent
+            ? p_cb_->parent->p_cb_->childs.indexOf(const_cast<CsgBase*>(this))
+            : -1;
+}
+
 QList<CsgBase*> CsgBase::serialized() const
 {
     QList<CsgBase*> list;
@@ -105,6 +127,8 @@ void CsgBase::setName(const QString &s)
 
 void CsgBase::addChildren(CsgBase* o, int index)
 {
+    MO_DEBUG_CSG("addChildren(" << o << ", " << index << ")");
+
     if (index < 0)
         p_cb_->childs.append(o);
     else
@@ -115,6 +139,8 @@ void CsgBase::addChildren(CsgBase* o, int index)
 
 void CsgBase::PrivateCB::setParentSafe(CsgBase *newParent)
 {
+    MO_DEBUG_CSGP("setParentSafe(" << newParent << ")");
+
     // remove from previous parent
     if (parent)
         parent->p_cb_->childs.removeOne(p);
@@ -126,6 +152,92 @@ void CsgBase::deleteChildren()
     for (auto c : p_cb_->childs)
         delete c;
     p_cb_->childs.clear();
+}
+
+bool CsgBase::canBeReplacedBy(const CsgBase *other) const
+{
+    // both have unlimited children?
+    if (canHaveNumChildren() < 0)
+        return other->canHaveNumChildren() < 0;
+    // other should have at least this possible children
+    return canHaveNumChildren() <= other->canHaveNumChildren();
+}
+
+CsgBase* CsgBase::replace(CsgBase *node, const QString &className)
+{
+    if (!node || !node->parent())
+        return 0;
+
+    // find class for className
+    auto i = PrivateCB::regMap->find(className);
+    if (i == PrivateCB::regMap->end())
+        return 0;
+
+    // check compatibility
+    if (!node->canBeReplacedBy(i.value()))
+        return 0;
+
+    // find index in parent's child list
+    auto parent = node->parent();
+    int idx = parent->p_cb_->childs.indexOf(node);
+    if (idx < 0)
+        return 0;
+
+    // create replacement node
+    auto newNode = i.value()->cloneClass();
+    // set new parent
+    newNode->p_cb_->setParentSafe(parent);
+    // add childs
+    for (auto n : node->children())
+        newNode->addChildren(n);
+
+    // insert in list
+    parent->p_cb_->childs.replace(idx, newNode);
+
+    // copy matching properties
+    // XXX
+
+    delete node;
+
+    return newNode;
+}
+
+CsgBase* CsgBase::contain(CsgBase *node, const QString &className)
+{
+    if (!node || node->type() == T_ROOT)
+        return 0;
+
+    // find class for className
+    auto i = PrivateCB::regMap->find(className);
+    if (i == PrivateCB::regMap->end())
+        return 0;
+
+    // check compatibility
+    if (!i.value()->canHaveChildren())
+        return 0;
+
+    // create new parent node
+    auto newNode = i.value()->cloneClass();
+
+    // install new node
+    int idx = -1;
+    if (node->parent())
+    {
+        idx = node->indexInParent();
+        node->parent()->addChildren(newNode, idx);
+    }
+    // add contained node
+    newNode->addChildren(node);
+
+    return newNode;
+}
+
+void CsgBase::deleteNode(CsgBase* node)
+{
+    if (node->parent())
+        node->parent()->p_cb_->childs.removeOne(node);
+
+    delete node;
 }
 
 CsgBase * CsgBase::createClass(const QString& className)
@@ -151,6 +263,16 @@ bool CsgBase::registerCsgClass_(CsgBase* o)
     PrivateCB::regMap->insert(o->className(), o);
     return true;
 }
+
+QList<const CsgBase*> CsgBase::registeredClasses()
+{
+    QList<const CsgBase*> list;
+    for (auto i : *PrivateCB::regMap)
+        list << i;
+    return list;
+}
+
+
 
 QString CsgBase::glslComment() const
 {
@@ -179,7 +301,11 @@ QString CsgBase::glslFunctionName() const
 QString CsgBase::glslCall() const
 {
     if (getGlslFunctionBody().isEmpty())
+    {
         return getGlsl();
+        //auto call = getGlsl();
+        //return call.isEmpty() ? "MAX_DIST" : call;
+    }
     return QString("%1(pos)").arg(glslFunctionName());
 }
 
@@ -214,13 +340,24 @@ QString CsgBase::glslFunctionDeclaration() const
         return body;
     const QString comment = glslComment();
 
-    return QString("%1float %2(in vec3 pos)\n{\n"
-                   "\tfloat d = MAX_DIST;\n"
-                   "%3"
-                   "\treturn d;\n}\n")
-                     .arg(comment.isEmpty() ? comment : comment + "\n")
-                     .arg(glslFunctionName())
-                     .arg(trailingNl(leadingTab(body)));
+    if (!body.contains("return"))
+    {
+        return QString("%1float %2(in vec3 pos)\n{\n"
+                       "\tfloat d = MAX_DIST;\n"
+                       "%3"
+                       "\treturn d;\n}\n")
+                         .arg(comment.isEmpty() ? comment : comment + "\n")
+                         .arg(glslFunctionName())
+                         .arg(trailingNl(leadingTab(body)));
+    }
+    else
+    {
+        return QString("%1float %2(in vec3 pos)\n{\n"
+                       "%3}\n")
+                         .arg(comment.isEmpty() ? comment : comment + "\n")
+                         .arg(glslFunctionName())
+                         .arg(trailingNl(leadingTab(body)));
+    }
 }
 
 // #################################### CsgRoot #############################
@@ -240,6 +377,18 @@ QString CsgRoot::toGlsl(const QString &dist_func_name) const
 
     auto list = serialized();
 
+    // class-specific functions
+    QMap<QString, QString> gmap;
+    for (auto n : list)
+    {
+        auto gf = n->globalFunctions();
+        if (!gf.isEmpty() && !gmap.contains(n->className()))
+            gmap.insert(n->className(), gf);
+    }
+    for (auto& i : gmap)
+        s += i + "\n";
+
+    // node-specific functions
     for (int i=0; i<list.size(); ++i)
     {
         auto func = list[list.size() - 1 - i]->glslFunctionDeclaration();
@@ -288,7 +437,7 @@ QString CsgPositionBase::positionGlsl() const
 
     const Vec3 p = position();
     if (p.x != 0 || p.y != 0 || p.z != 0)
-        s = "(pos - " + toGlsl(p) + ")";
+        s += " - " + toGlsl(p);
 
     return s;
 }

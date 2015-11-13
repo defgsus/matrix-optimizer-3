@@ -21,6 +21,8 @@ public:
 
     CsgBase* nodeForIndex(const QModelIndex&) const;
 
+    QList<QModelIndex> getAllIndices() const;
+
     // --- interface impl. ---
 
     virtual QModelIndex index(int row, int column, const QModelIndex &parent) const;
@@ -33,11 +35,14 @@ public:
     virtual bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual Qt::ItemFlags flags(const QModelIndex &index) const;
 
+
 signals:
 
 public slots:
 
 private:
+
+    void addIndices_(CsgBase* node, QList<QModelIndex>& list) const;
 
     CsgRoot * rootObject_;
     QStringList headerNames_;

@@ -4,6 +4,7 @@
 #include "csgtreemodel.h"
 #include "math/csgbase.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -33,6 +34,28 @@ CsgBase * CsgTreeModel::nodeForIndex(const QModelIndex& idx) const
     return rootObject_;
 }
 
+QList<QModelIndex> CsgTreeModel::getAllIndices() const
+{
+    QList<QModelIndex> list;
+    if (!rootObject_)
+        return list;
+
+    addIndices_(rootObject_, list);
+
+    return list;
+}
+
+void CsgTreeModel::addIndices_(CsgBase *node, QList<QModelIndex> &list) const
+{
+    for (size_t i=0; i<node->numChildren(); ++i)
+    {
+        list << createIndex(i, 0, node->children()[i]);
+    }
+
+    for (auto n : node->children())
+        addIndices_(n, list);
+}
+
 QModelIndex CsgTreeModel::index(int row, int column, const QModelIndex &parent) const
 {
     // sanity check
@@ -45,6 +68,7 @@ QModelIndex CsgTreeModel::index(int row, int column, const QModelIndex &parent) 
 
     if (pnode && row < (int)pnode->numChildren())
     {
+        //MO_PRINT("(void*)" << pnode->children()[row]);
         return createIndex(row, column, pnode->children()[row]);
     }
 
@@ -175,6 +199,8 @@ QVariant CsgTreeModel::headerData(int section, Qt::Orientation orientation, int 
 
     return QVariant();
 }
+
+
 
 
 

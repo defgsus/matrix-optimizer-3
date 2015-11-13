@@ -16,9 +16,14 @@ class CsgTreeView : public QTreeView
 public:
     explicit CsgTreeView(QWidget *parent = 0);
 
+    CsgBase * currentNode() const;
+
+    QMenu * createNodeMenu(const QModelIndex&);
+
 signals:
 
     void nodeSelected(CsgBase *);
+    void treeChanged();
 
 public slots:
 
@@ -26,7 +31,17 @@ public slots:
         to link with the derived class */
     void setCsgModel(CsgTreeModel*);
 
+    void updateModel(const QList<CsgBase*>& expandThese = QList<CsgBase*>(),
+                     CsgBase* selectThis = 0);
+    void updateModel(CsgBase * expandThis);
+
 private:
+
+    void popup_(const QModelIndex&);
+    QMenu * createReplacementMenu_(CsgBase*);
+    QMenu * createContainMenu_(CsgBase*);
+    QMenu * createAddMenu_(CsgBase*);
+    void addEditActions_(CsgBase*, QMenu*);
 
     CsgTreeModel * csgModel_;
 };
