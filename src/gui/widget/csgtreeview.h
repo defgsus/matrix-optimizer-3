@@ -31,9 +31,7 @@ public slots:
         to link with the derived class */
     void setCsgModel(CsgTreeModel*);
 
-    void updateModel(const QList<CsgBase*>& expandThese = QList<CsgBase*>(),
-                     CsgBase* selectThis = 0);
-    void updateModel(CsgBase * expandThis);
+    void updateModel(CsgBase * selectThis = 0);
 
 private:
 

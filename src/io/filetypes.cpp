@@ -38,7 +38,8 @@ namespace IO {
       "glsl",
       "angelscript",
       "equation",
-      "ssw"
+      "ssw",
+      "csg"
     };
 
     const QStringList fileTypeNames =
@@ -64,7 +65,8 @@ namespace IO {
       QObject::tr("Glsl"),
       QObject::tr("Angelscript"),
       QObject::tr("Equation"),
-      QObject::tr("SSW Project")
+      QObject::tr("SSW Project"),
+      QObject::tr("CSG Tree")
     };
 
     const QList<QStringList> fileTypeExtensions =
@@ -91,7 +93,8 @@ namespace IO {
         { "glsl", "vert", "frag", "txt", "asc" },
         { "as", "txt", "asc" },
         { "txt", "asc" },
-        { "uifm" }
+        { "uifm" },
+        { "xml-csg" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -138,6 +141,7 @@ namespace IO {
         { QObject::tr("equations") + " ( *.txt *.asc )",
           QObject::tr("all files (*)") },
         { QObject::tr("SSW-JSON-Project (*.uifm)") },
+        { QObject::tr("xml files ( *.xml *.xml-csg )") }
     };
 
 

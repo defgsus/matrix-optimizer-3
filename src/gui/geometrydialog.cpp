@@ -482,7 +482,7 @@ void GeometryDialog::setViewDirection(int dir)
     if (geometry_)
     {
         Vec3 mi,ma;
-        geometry_->getExtent(&ma, &ma);
+        geometry_->getExtent(&mi, &ma);
         distance = std::max(distance,
                             std::max(std::max(ma[0], ma[1]), std::max(ma[2],
                 std::max(std::max(std::abs(mi[0]),std::abs(mi[1])),std::abs(mi[2])))));

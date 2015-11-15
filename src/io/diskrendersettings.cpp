@@ -69,7 +69,7 @@ void DiskRenderSettings::p_setDefault_()
 /** @todo serialize/deserialize DiskRenderSettings */
 void DiskRenderSettings::serialize(IO::XmlStream& io) const
 {
-    io.newSection("disk-render-settings");
+    io.createSection("disk-render-settings");
 
         io.write("version", 1);
 

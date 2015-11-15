@@ -36,26 +36,26 @@ int TestXmlStream::test0()
 
         io.startWriting();
 
-        io.newSection("patch");
+        io.createSection("patch");
             io.write("version", "1");
-            io.newSection("module");
+            io.createSection("module");
                 io.write("class", "Math");
                 io.write("id", "Math1");
                 io.write("name", "Mathematik");
-                io.newSection("param");
+                io.createSection("param");
                     io.write("id", "num_in");
                     io.write("v", 2);
                 io.endSection();
             io.endSection();
-            io.newSection("connections");
-                io.newSection("c");
+            io.createSection("connections");
+                io.createSection("c");
                 io.write("fm", "Math1");
                 io.write("fc", "out1");
                 io.write("tm", "Math1");
                 io.write("tc", "in1");
                 io.endSection();
             io.endSection();
-            io.newSection("pair-test");
+            io.createSection("pair-test");
                 io << Pair("string", "A") << Pair("int", 23);
             io.endSection();
         io.endSection();

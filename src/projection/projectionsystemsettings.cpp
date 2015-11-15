@@ -56,7 +56,7 @@ void ProjectionSystemSettings::serialize(IO::XmlStream & io) const
 {
     MO_DEBUG_IO("ProjectionSystemSettings::serialize()");
 
-    io.newSection("blending");
+    io.createSection("blending");
 
         io.write("method", blendMethod_);
         io.write("margin", blendMargin_);

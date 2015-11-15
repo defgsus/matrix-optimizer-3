@@ -137,7 +137,7 @@ QString CsgDifference::getGlslFunctionBody() const
             continue;
 
         if (isFirst)
-            s += QString("d = max(d, %1);\n").arg(call);
+            s += QString("float d = %1;\n").arg(call);
         else
             s += QString("d = max(d, -(%1));\n").arg(call);
 

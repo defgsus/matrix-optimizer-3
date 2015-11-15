@@ -5,32 +5,32 @@
 
 namespace MO {
 
-class CsgPlane : public CsgPositionBase
+class CsgPlane : public CsgPositionSignedBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgPlane, T_SOLID)
 };
 
-class CsgSphere : public CsgPositionBase
+class CsgSphere : public CsgPositionSignedBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgSphere, T_SOLID)
 };
 
-class CsgCylinder : public CsgPositionBase
+class CsgCylinder : public CsgPositionSignedBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgCylinder, T_SOLID)
 };
 
-class CsgBox : public CsgPositionBase
+class CsgBox : public CsgPositionSignedBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgBox, T_SOLID)
-    QString getGlslFunctionBody() const override;
+    QString globalFunctions() const override;
 };
 
-class CsgTorus : public CsgPositionBase
+class CsgTorus : public CsgPositionSignedBase
 {
 public:
     MO_CSG_CONSTRUCTOR(CsgTorus, T_SOLID)

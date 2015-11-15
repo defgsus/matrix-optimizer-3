@@ -33,7 +33,7 @@ ProjectorSettings::ProjectorSettings()
 
 void ProjectorSettings::serialize(IO::XmlStream & io) const
 {
-    io.newSection("projector");
+    io.createSection("projector");
 
         io.write("version", 4);
 

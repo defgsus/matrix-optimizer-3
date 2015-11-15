@@ -139,4 +139,59 @@ QString CsgFan::getGlslFunctionBody() const
 QString CsgFan::getGlsl() const { return QString(); }
 
 
+
+
+// ############################ CsgKaliFold ################################
+
+MO_REGISTER_CSG(CsgKaliFold)
+
+CsgKaliFold::CsgKaliFold()
+    : CsgDeformBase()
+{
+    props().set("iterations", QObject::tr("iterations"), QObject::tr("Number of iterations"), 11u);
+    props().set("kali_x", QObject::tr("kali param X"), QObject::tr("X component of kali parameter"), 1., .01);
+    props().set("kali_y", QObject::tr("kali param Y"), QObject::tr("Y component of kali parameter"), 1., .01);
+    props().set("kali_z", QObject::tr("kali param Z"), QObject::tr("Z component of kali parameter"), 1., .01);
+    props().set("scale", QObject::tr("scale"), QObject::tr("Overall scale"), 1., .01);
+}
+
+QString CsgKaliFold::getGlsl() const { return QString(); }
+
+QString CsgKaliFold::getGlslFunctionBody() const
+{
+    if (numChildren() != 1)
+        return QString();
+    QString call = children().front()->glslCall();
+    if (call.isEmpty())
+        return QString();
+
+    QString scale = toGlsl(props().get("scale").toDouble());
+
+    call.replace("pos",
+                 QString("(pk.xyz / pk.w) * %1").arg(scale));
+
+    Vec3 kparam = Vec3(
+                props().get("kali_x").toFloat(),
+                props().get("kali_y").toFloat(),
+                props().get("kali_z").toFloat());
+
+    QString s = QString(
+            "float d = MAX_DIST;\n"
+            "vec4 pk = vec4(pos / %4, 1.);\n"
+            "for (int i=0; i<%1; ++i)\n"
+            "{\n"
+                "\tpk = abs(pk) / dot(pk.xyz, pk.xyz);\n"
+                "\td = min(d, %2);\n"
+                "\tpk.xyz -= %3;\n"
+            "}\n"
+            "return d;\n")
+            .arg(props().get("iterations").toUInt())
+            .arg(call)
+            .arg(toGlsl(kparam))
+            .arg(scale)
+            ;
+
+    return s;
+}
+
 } // namespace MO

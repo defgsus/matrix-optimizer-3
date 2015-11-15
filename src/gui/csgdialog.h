@@ -11,23 +11,34 @@
 #ifndef MOSRC_GUI_CSGDIALOG_H
 #define MOSRC_GUI_CSGDIALOG_H
 
-#include <QDialog>
+#include <QMainWindow>
 
 
 namespace MO {
+class CsgRoot;
 namespace GUI {
 
 
-class CsgDialog : public QDialog
+class CsgDialog : public QMainWindow
 {
     Q_OBJECT
 public:
     explicit CsgDialog(QWidget *parent = 0);
     ~CsgDialog();
 
+    bool isSaveToChange();
+
 signals:
 
 public slots:
+
+    void loadFile();
+    bool saveFile();
+    bool saveFileAs();
+    void loadFile(const QString& fn);
+    bool saveFile(const QString& fn);
+
+    void setRootObject(CsgRoot*);
 
 protected:
 

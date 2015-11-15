@@ -162,6 +162,45 @@ void Basic3DWidget::viewRotateY(Float d)
 void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
 {
     Mat4 mat(1);
+    if (cameraMode_ == CM_FREE_INVERSE)
+    {
+        switch (dir)
+        {
+            case VD_FRONT:
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+
+            case VD_BACK:
+                mat = MATH::rotate(mat, 180.f, Vec3(0,1,0));
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+
+            case VD_TOP:
+                mat = MATH::rotate(mat, -90.f, Vec3(1,0,0));
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+
+            case VD_BOTTOM:
+                mat = MATH::rotate(mat, 90.f, Vec3(1,0,0));
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+
+            case VD_LEFT:
+                mat = MATH::rotate(mat, -90.f, Vec3(0,1,0));
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+
+            case VD_RIGHT:
+                mat = MATH::rotate(mat, 90.f, Vec3(0,1,0));
+                mat = glm::translate(mat, Vec3(0,0,-distance));
+            break;
+        }
+
+        camera_->setMatrix(mat);
+        update();
+        return;
+    }
+
     switch (dir)
     {
         case VD_FRONT:
@@ -194,7 +233,7 @@ void Basic3DWidget::viewSet(ViewDirection dir, Float distance)
         break;
     }
 
-    if (cameraMode_ == CM_FREE || cameraMode_ == CM_FREE_INVERSE)
+    if (cameraMode_ == CM_FREE)
         camera_->setMatrix(mat);
     else
     if (cameraMode_ == CM_SET)
@@ -259,6 +298,7 @@ void Basic3DWidget::mouseMoveEvent(QMouseEvent * e)
 
     int dx = lastMousePos_.x() - e->x(),
         dy = lastMousePos_.y() - e->y();
+
     lastMousePos_ = e->pos();
 
     if (e->buttons() & Qt::LeftButton)

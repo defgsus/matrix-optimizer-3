@@ -27,6 +27,13 @@ public:
     virtual QString getGlslFunctionBody() const override;
 };
 
+class CsgKaliFold : public CsgDeformBase
+{
+public:
+    MO_CSG_CONSTRUCTOR(CsgKaliFold, T_DEFORM)
+    virtual QString getGlslFunctionBody() const override;
+};
+
 
 } // namespace MO
 

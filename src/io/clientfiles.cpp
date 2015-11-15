@@ -334,7 +334,7 @@ void ClientFiles::Private::saveCache()
 
         for (const Private::FileInfo& f : files)
         {
-            xml.newSection("file");
+            xml.createSection("file");
             xml.write("name", f.serverFilename);
             xml.write("time", f.serverTime);
             xml.write("local-name", f.clientFilename);

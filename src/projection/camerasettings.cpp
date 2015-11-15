@@ -31,7 +31,7 @@ CameraSettings::CameraSettings()
 
 void CameraSettings::serialize(IO::XmlStream & io) const
 {
-    io.newSection("camera");
+    io.createSection("camera");
 
         io.write("version", 1);
         io.write("width", width_);

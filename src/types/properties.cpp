@@ -309,13 +309,13 @@ void Properties::deserialize(IO::DataStream & io)
 
 void Properties::serialize(IO::XmlStream & io) const
 {
-    io.newSection("properties");
+    io.createSection("properties");
 
         io.write("version", 1);
 
         for (auto i = p_map_.begin(); i != p_map_.end(); ++i)
         {
-            io.newSection("property");
+            io.createSection("property");
 
                 io.write("id", i.key());
 

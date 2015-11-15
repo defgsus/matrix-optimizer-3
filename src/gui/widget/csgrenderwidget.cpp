@@ -22,7 +22,7 @@ CsgRenderWidget::CsgRenderWidget(QWidget *parent)
 {
     setCameraMode(CM_FREE_INVERSE);
 
-    setMinimumSize(320, 320);
+    //setMinimumSize(320, 320);
 }
 
 CsgRenderWidget::~CsgRenderWidget()

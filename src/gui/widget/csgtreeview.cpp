@@ -48,12 +48,7 @@ CsgBase* CsgTreeView::currentNode() const
             : csgModel_->nodeForIndex(currentIndex());
 }
 
-void CsgTreeView::updateModel(CsgBase *expandThis)
-{
-    updateModel(QList<CsgBase*>() << expandThis, expandThis);
-}
-
-void CsgTreeView::updateModel(const QList<CsgBase*>& expandThese, CsgBase* selectThis)
+void CsgTreeView::updateModel(CsgBase* selectThis)
 {
     if (!csgModel_)
         return;
@@ -61,15 +56,12 @@ void CsgTreeView::updateModel(const QList<CsgBase*>& expandThese, CsgBase* selec
     CsgBase * selNode =
             selectThis ? selectThis : currentNode();
 
-    // store expanded flags
+    // store not-expanded flags
     auto indices = csgModel_->getAllIndices();
     QSet<CsgBase*> exp;
     for (const auto& i : indices)
-        if (isExpanded(i))
+        if (!isExpanded(i))
             exp.insert(csgModel_->nodeForIndex(i));
-    // add user nodes
-    for (auto n : expandThese)
-        exp.insert(n);
 
     // reset model
     // XXX Sorry, but i spend and wasted months to properly
@@ -84,7 +76,7 @@ void CsgTreeView::updateModel(const QList<CsgBase*>& expandThese, CsgBase* selec
     for (const auto& i : indices)
     if (auto node = csgModel_->nodeForIndex(i))
     {
-        if (exp.contains(node))
+        if (!exp.contains(node))
             setExpanded(i, true);
         // find desired focus index
         if (node == selNode)

@@ -97,7 +97,7 @@ void XmlStream::startWriting(const QString & main_section)
     xmlw_->setAutoFormatting(true);
     xmlw_->writeStartDocument();
 
-    newSection(main_section);
+    createSection(main_section);
 }
 
 void XmlStream::stopWriting()
@@ -167,7 +167,7 @@ bool XmlStream::hasAttribute(const QString &name) const
 
 // ------------------ sections ------------------
 
-void XmlStream::newSection(const QString& name)
+void XmlStream::createSection(const QString& name)
 {
     if (!xmlw_)
         MO_IO_ERROR(WRITE, "XmlStream::newSection('"<<name<<"') on unitialized stream");

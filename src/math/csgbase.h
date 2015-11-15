@@ -7,20 +7,20 @@
 #include "types/vector.h"
 
 namespace MO {
+class Properties;
+namespace IO { class XmlStream; }
 
-
-#define MO_CSG_CONSTRUCTOR(Name__, type__)                                                          \
-    Name__();                                                                                       \
-    virtual Name__ * cloneClass() const override { return new Name__(); }                           \
-    virtual const QString& className() const override { static QString s(#Name__); return s; }      \
-    virtual QString getGlsl() const override;                                                       \
+#define MO_CSG_CONSTRUCTOR(Name__, type__)                                              \
+    Name__();                                                                           \
+    virtual Name__ * cloneClass() const override { return new Name__(); }               \
+    static const QString& staticClassName() { static QString s(#Name__); return s; }    \
+    virtual const QString& className() const override { return staticClassName(); }     \
+    virtual QString getGlsl() const override;                                           \
     virtual Type type() const override { return type__; }
 
 #define MO_REGISTER_CSG(Name__) \
     namespace { static bool reg##Name__##__ = ::MO::CsgBase::registerCsgClass_(new Name__()); }
 
-
-class Properties;
 
 /** Base class for Csg object (constructive solid geometry) */
 class CsgBase
@@ -41,6 +41,21 @@ public:
 
     CsgBase();
     virtual ~CsgBase();
+
+    // ------- io -----------
+
+    /** Writes this node and all of it's children.
+        Creates section "csg-node".
+        @throws IoException */
+    void serialize(IO::XmlStream& io) const;
+
+    /** Reads a node tree from stream.
+        Expects section "csg-node".
+        @throws IoException */
+    static CsgBase* deserialize(IO::XmlStream& io);
+
+    void saveXml(const QString& fn) const;
+    static CsgBase * loadXml(const QString& fn);
 
     // ------- getter -------
 
@@ -169,6 +184,7 @@ private:
     PrivateCB * p_cb_;
 };
 
+
 class CsgRoot : public CsgBase
 {
 public:
@@ -181,16 +197,27 @@ public:
 };
 
 
-class CsgPositionBase : public CsgBase
+class CsgSignedBase : public CsgBase
 {
 public:
-    CsgPositionBase();
+    CsgSignedBase();
+
+    bool isNegative() const;
+
+    /** Puts a -( ) around the code if negative is selected */
+    QString wrapInSign(const QString& code) const;
+};
+
+
+class CsgPositionSignedBase : public CsgSignedBase
+{
+public:
+    CsgPositionSignedBase();
 
     Vec3 position() const;
 
     QString positionGlsl() const;
 };
-
 
 } // namespace MO
 

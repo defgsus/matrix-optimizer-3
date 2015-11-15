@@ -40,7 +40,7 @@ void EquationPreset::serialize(XmlStream & io) const
 
     for (auto &e : equs_)
     {
-        io.newSection("equation");
+        io.createSection("equation");
             io.write("name", e.name);
             io.write("text", e.equ);
         io.endSection();

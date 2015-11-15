@@ -3,8 +3,11 @@
 
 #include "csgbase.h"
 #include "types/properties.h"
+#include "tool/deleter.h"
+#include "io/xmlstream.h"
 #include "io/error.h"
 #include "io/log.h"
+
 
 #if 0
 #   include <QDebug>
@@ -343,11 +346,12 @@ QString CsgBase::glslFunctionDeclaration() const
     if (!body.contains("return"))
     {
         return QString("%1float %2(in vec3 pos)\n{\n"
-                       "\tfloat d = MAX_DIST;\n"
                        "%3"
+                       "%4"
                        "\treturn d;\n}\n")
                          .arg(comment.isEmpty() ? comment : comment + "\n")
                          .arg(glslFunctionName())
+                         .arg(body.contains("float d") ? "" : "\tfloat d = MAX_DIST;\n")
                          .arg(trailingNl(leadingTab(body)));
     }
     else
@@ -359,6 +363,97 @@ QString CsgBase::glslFunctionDeclaration() const
                          .arg(trailingNl(leadingTab(body)));
     }
 }
+
+
+void CsgBase::serialize(IO::XmlStream &io) const
+{
+    io.createSection("csg-node");
+
+        // info per node
+        io.write("version", 1);
+        io.write("class", className());
+        // and it's properties
+        props().serialize(io);
+
+        // all children
+        for (auto n : children())
+            n->serialize(io);
+
+    io.endSection();
+}
+
+CsgBase* CsgBase::deserialize(IO::XmlStream &io)
+{
+    io.verifySection("csg-node");
+
+        /*int ver = */io.expectInt("version");
+        QString cname = io.expectString("class");
+
+        // create node
+        auto node = cname == CsgRoot::staticClassName()
+                ? new CsgRoot()
+                : createClass(cname);
+        if (!node)
+            MO_IO_ERROR(VERSION_MISMATCH, "Unknown class '" << cname << "' in stream");
+        ScopedDeleter<CsgBase> auto_remove(node);
+
+        while (io.nextSubSection())
+        {
+            // read properties
+            if (io.section() == "properties")
+                node->p_cb_->props.deserialize(io);
+            else
+            // read sub-nodes
+            if (io.section() == "csg-node")
+            {
+                auto cnode = deserialize(io);
+                node->addChildren(cnode);
+            }
+
+            io.leaveSection();
+        }
+
+        auto_remove.detach();
+        return node;
+}
+
+
+void CsgBase::saveXml(const QString &fn) const
+{
+    IO::XmlStream xml;
+    xml.startWriting("csg");
+    serialize(xml);
+    xml.stopWriting();
+    xml.save(fn);
+}
+
+CsgBase* CsgBase::loadXml(const QString &fn)
+{
+    CsgBase * node = 0;
+
+    IO::XmlStream xml;
+    xml.load(fn);
+    xml.startReading("csg");
+    while (xml.nextSubSection())
+    {
+        if (xml.section() == "csg-node")
+        {
+            node = deserialize(xml);
+            break;
+        }
+    }
+    xml.stopReading();
+
+    return node;
+}
+
+
+
+
+
+
+
+
 
 // #################################### CsgRoot #############################
 
@@ -414,24 +509,48 @@ QString CsgRoot::toGlsl(const QString &dist_func_name) const
 }
 
 
-// ############################# CsgPositionBase #############################
 
-CsgPositionBase::CsgPositionBase()
+
+// ############################# CsgSignedBase #############################
+
+CsgSignedBase::CsgSignedBase()
     : CsgBase()
+{
+    props().set("inverse", QObject::tr("inverse"), QObject::tr("Turn the inside outside"), false);
+}
+
+bool CsgSignedBase::isNegative() const
+{
+    return props().get("inverse").toBool();
+}
+
+QString CsgSignedBase::wrapInSign(const QString& code) const
+{
+    if (isNegative())
+        return QString("-(%1)").arg(code);
+    else
+        return code;
+}
+
+
+// ############################# CsgPositionSignedBase #############################
+
+CsgPositionSignedBase::CsgPositionSignedBase()
+    : CsgSignedBase()
 {
     props().set("x", QObject::tr("x"), QObject::tr("Position on X axis"), 0., 0.1);
     props().set("y", QObject::tr("y"), QObject::tr("Position on Y axis"), 0., 0.1);
     props().set("z", QObject::tr("z"), QObject::tr("Position on Z axis"), 0., 0.1);
 }
 
-Vec3 CsgPositionBase::position() const
+Vec3 CsgPositionSignedBase::position() const
 {
     return Vec3(props().get("x").toFloat(),
                 props().get("y").toFloat(),
                 props().get("z").toFloat());
 }
 
-QString CsgPositionBase::positionGlsl() const
+QString CsgPositionSignedBase::positionGlsl() const
 {
     QString s = "pos";
 
@@ -441,5 +560,7 @@ QString CsgPositionBase::positionGlsl() const
 
     return s;
 }
+
+
 
 } // namespace MO

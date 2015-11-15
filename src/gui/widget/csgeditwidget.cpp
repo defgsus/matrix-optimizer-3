@@ -53,26 +53,12 @@ CsgEditWidget::CsgEditWidget(QWidget *parent)
 {
     p_->createWidgets();
 
-
+    // build default tree
+    // XXX Memory leak
     auto root = new CsgRoot;
-
         auto c = new CsgUnion;
         root->addChildren(c);
-        c->setName("big union");
-
-            auto s = new CsgSphere;
-            auto props = s->properties();
-            props.set("x", 1);
-            s->setProperties(props);
-            c->addChildren(s);
-            c->addChildren(new CsgPlane);
             c->addChildren(new CsgSphere);
-
-            auto c1 = new CsgIntersection;
-            c->addChildren(c1);
-
-                c1->addChildren(new CsgSphere);
-                c1->addChildren(new CsgBox);
 
     setRootObject(root);
 }
@@ -96,9 +82,10 @@ void CsgEditWidget::Private::createWidgets()
         connect(treeView, SIGNAL(treeChanged()), widget, SIGNAL(changed()));
 
         auto lv = new QVBoxLayout();
-        lh->addLayout(lv);
+        lh->addLayout(lv, 2);
 
             propView = new PropertiesView(widget);
+            propView->setMinimumWidth(240);
             lv->addWidget(propView);
             connect(propView, &PropertiesView::propertyChanged, [this]()
             {

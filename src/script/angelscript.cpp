@@ -100,7 +100,7 @@ namespace {
                 decl = QString::fromUtf8(func->GetDeclaration(true, false, true)),
                 doc = "";
 
-        xml.newSection("function");
+        xml.createSection("function");
         xml.write("name", name);
         xml.write("decl", decl);
         xml.write("doc", doc);
@@ -147,7 +147,7 @@ void exportAngelScriptFunctions(const QString & filename)
                 name = QString::fromUtf8(obj->GetName()),
                 doc = "";
 
-        xml.newSection("object");
+        xml.createSection("object");
         xml.write("name", name);
         xml.write("doc", doc);
 
@@ -159,7 +159,7 @@ void exportAngelScriptFunctions(const QString & filename)
             decl = obj->GetPropertyDeclaration(j);
             const QString doc = "";
 
-            xml.newSection("property");
+            xml.createSection("property");
             xml.write("name", QString::fromUtf8(name));
             xml.write("decl", QString::fromUtf8(decl));
             xml.write("doc", doc);

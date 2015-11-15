@@ -144,14 +144,14 @@ void FrontPresets::serialize(IO::XmlStream& io,
 {
     MO_DEBUG_PRESETS("serialize(" << &io << ", " << section << ", " << preset_section << ") section = '" << io.section() << "'");
 
-    io.newSection(section);
+    io.createSection(section);
 
         io.write("version", 1);
         io.write("name", p_name_);
 
         for (auto i = p_map_.begin(); i != p_map_.end(); ++i)
         {
-            io.newSection(preset_section);
+            io.createSection(preset_section);
                 io.write("preset-id", i.key());
                 i.value()->serialize(io);
             io.endSection();

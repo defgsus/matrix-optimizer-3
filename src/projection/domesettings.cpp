@@ -24,7 +24,7 @@ DomeSettings::DomeSettings()
 
 void DomeSettings::serialize(IO::XmlStream & io) const
 {
-    io.newSection("dome");
+    io.createSection("dome");
 
         io.write("version", 1);
         io.write("name", name_);

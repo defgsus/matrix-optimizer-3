@@ -14,7 +14,7 @@ namespace MO {
 MO_REGISTER_CSG(CsgPlane)
 
 CsgPlane::CsgPlane()
-    : CsgPositionBase()
+    : CsgPositionSignedBase()
 {
     props().set("nx", QObject::tr("normal X"), QObject::tr("X vector of the plane normal"), 0.);
     props().set("ny", QObject::tr("normal Y"), QObject::tr("Y vector of the plane normal"), 1.);
@@ -28,11 +28,12 @@ QString CsgPlane::getGlsl() const
                 props().get("ny").toFloat(),
                 props().get("nz").toFloat()));
 
-    return QString("%1dot(%2, %3)")
+    return wrapInSign(
+            QString("%1dot(%2, %3)")
             .arg(glslComment())
             .arg(positionGlsl())
             .arg(toGlsl(n))
-            ;
+            );
 }
 
 
@@ -44,18 +45,19 @@ QString CsgPlane::getGlsl() const
 MO_REGISTER_CSG(CsgSphere)
 
 CsgSphere::CsgSphere()
-    : CsgPositionBase()
+    : CsgPositionSignedBase()
 {
     props().set("radius", QObject::tr("radius"), QObject::tr("The radius of the sphere"), 1., 0.1);
 }
 
 QString CsgSphere::getGlsl() const
 {
-    return QString("%1length(%2) - %3")
+    return wrapInSign(
+            QString("%1length(%2) - %3")
             .arg(glslComment())
             .arg(positionGlsl())
             .arg(toGlsl(props().get("radius").toDouble()))
-            ;
+            );
 }
 
 
@@ -65,7 +67,7 @@ QString CsgSphere::getGlsl() const
 MO_REGISTER_CSG(CsgCylinder)
 
 CsgCylinder::CsgCylinder()
-    : CsgPositionBase()
+    : CsgPositionSignedBase()
 {
     Properties::NamedValues axis;
     axis.set("x", QObject::tr("X axis"), QObject::tr("X axis"), 0);
@@ -85,12 +87,13 @@ QString CsgCylinder::getGlsl() const
     else if (axis == 2)
         swizz = "xy";
 
-    return QString("%1length((%2).%4) - %3")
+    return wrapInSign(
+            QString("%1length((%2).%4) - %3")
             .arg(glslComment())
             .arg(positionGlsl())
             .arg(toGlsl(props().get("radius").toDouble()))
             .arg(swizz)
-            ;
+           );
 }
 
 
@@ -100,7 +103,7 @@ QString CsgCylinder::getGlsl() const
 MO_REGISTER_CSG(CsgBox)
 
 CsgBox::CsgBox()
-    : CsgPositionBase()
+    : CsgPositionSignedBase()
 {
     props().set("sizex", QObject::tr("size X"), QObject::tr("extend on X axis"), 1., 0.1);
     props().set("sizey", QObject::tr("size Y"), QObject::tr("extend on Y axis"), 1., 0.1);
@@ -108,23 +111,28 @@ CsgBox::CsgBox()
 }
 
 
-QString CsgBox::getGlsl() const
+QString CsgBox::globalFunctions() const
 {
-    return QString();
+    return QString(
+                "float sd_Box(in vec3 pos, in vec3 ext)"
+                "{\n"
+                "\tvec3 b = abs(pos) - ext;\n"
+                "\treturn min(max(b.x, max(b.y, b.z)), 0.) + length(max(b, 0.));\n"
+                "}\n");
 }
 
-QString CsgBox::getGlslFunctionBody() const
+QString CsgBox::getGlsl() const
 {
     Vec3 ext(props().get("sizex").toFloat(),
              props().get("sizey").toFloat(),
              props().get("sizez").toFloat());
 
-    return
-    QString("vec3 b = abs(%1) - %2;\n"
-            "return min(max(b.x, max(b.y, b.z)), 0.0) + length(max(b, 0.0));")
+    return wrapInSign(
+            QString("%1sd_Box(%2, %3)")
+            .arg(glslComment())
             .arg(positionGlsl())
             .arg(toGlsl(ext))
-            ;
+           );
 }
 
 
@@ -137,7 +145,7 @@ QString CsgBox::getGlslFunctionBody() const
 MO_REGISTER_CSG(CsgTorus)
 
 CsgTorus::CsgTorus()
-    : CsgPositionBase()
+    : CsgPositionSignedBase()
 {
     Properties::NamedValues planes;
     planes.set("xy", QObject::tr("X-Y plane"), QObject::tr("X-Y plane"), 0);
@@ -167,14 +175,15 @@ QString CsgTorus::getGlsl() const
         ortho = "x";
     }
 
-    return
-    QString("%1length(vec2(length((%2).%3) - %5, (%2).%4)) - %6")
+    return wrapInSign(
+            QString("%1length(vec2(length((%2).%3) - %5, (%2).%4)) - %6")
             .arg(glslComment())
             .arg(positionGlsl())
             .arg(plane)
             .arg(ortho)
             .arg(props().get("radius").toDouble())
-            .arg(props().get("radius2").toDouble());
+            .arg(props().get("radius2").toDouble())
+           );
 }
 
 

@@ -43,7 +43,8 @@ namespace IO {
         FT_TEXT_GLSL,
         FT_TEXT_ANGELSCRIPT,
         FT_TEXT_EQUATION,
-        FT_SSW_PROJECT
+        FT_SSW_PROJECT,
+        FT_CSG_XML
     };
 
     extern const QStringList fileTypeIds;

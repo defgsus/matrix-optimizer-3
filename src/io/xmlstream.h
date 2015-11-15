@@ -95,7 +95,7 @@ public:
     // ------------------ sections ------------------
 
     /** WRITE, Create a new (sub-)section. */
-    void newSection(const QString& name);
+    void createSection(const QString& name);
 
     /** WRITE, Ends the current sub-section and goes to containing section. */
     void endSection();
