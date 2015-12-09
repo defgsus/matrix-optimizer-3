@@ -36,6 +36,7 @@ public:
         T_DEFORM
     };
 
+    static QString typeName(Type);
 
     // -------- ctor --------
 

@@ -26,12 +26,19 @@ namespace GL {
 class CsgShader
 {
 public:
+    enum RenderMode
+    {
+        RM_FLAT,
+        RM_SOLID
+    };
+
     CsgShader();
     ~CsgShader();
 
     // -------- getter --------
 
     const MO::Properties& properties() const;
+    RenderMode renderMode() const;
 
     GL::ShaderSource getShaderSource() const;
 

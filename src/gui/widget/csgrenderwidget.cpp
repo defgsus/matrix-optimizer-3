@@ -17,10 +17,11 @@ namespace MO {
 namespace GUI {
 
 CsgRenderWidget::CsgRenderWidget(QWidget *parent)
-    : Basic3DWidget (RM_FRAMEBUFFER, parent)
+    : Basic3DWidget (RM_DIRECT, parent)
     , p_shader_     (new GL::CsgShader)
 {
     setCameraMode(CM_FREE_INVERSE);
+    viewSet(VD_FRONT, 5.f);
 
     //setMinimumSize(320, 320);
 }

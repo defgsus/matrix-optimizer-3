@@ -125,6 +125,38 @@ QMenu * CsgTreeView::createNodeMenu(const QModelIndex& idx)
     return menu;
 }
 
+void CsgTreeView::addNodeMenus_(
+        QMenu* menu,
+        const QList<const CsgBase*>& list,
+        std::function<void(const CsgBase*)> func)
+{
+    QMap<CsgBase::Type, QMenu*> map;
+
+    // create sub-menus
+    for (auto n : list)
+    {
+        auto type = n->type();
+        if (!map.contains(type))
+        {
+            auto sub = menu->addMenu(CsgBase::typeName(type));
+            map.insert(type, sub);
+        }
+    }
+
+    if (map.size() == 1)
+        map.first()->deleteLater();
+
+    // create items
+    for (auto n : list)
+    {
+        // if only one group - don't use sub
+        auto sub = map.size() == 1 ? menu : map[n->type()];
+
+        auto a = sub->addAction(n->name());
+        connect(a, &QAction::triggered, [=]() { func(n); });
+    }
+}
+
 QMenu* CsgTreeView::createReplacementMenu_(CsgBase* node)
 {
     auto listAll = CsgBase::registeredClasses();
@@ -138,18 +170,15 @@ QMenu* CsgTreeView::createReplacementMenu_(CsgBase* node)
         return 0;
 
     auto menu = new QMenu(tr("replace"), this);
-    for (auto n : list)
+
+    addNodeMenus_(menu, list, [=](const CsgBase* n)
     {
-        auto a = menu->addAction(n->name());
-        connect(a, &QAction::triggered, [=]()
+        if (auto rep = CsgBase::replace(node, n->className()))
         {
-            if (auto rep = CsgBase::replace(node, n->className()))
-            {
-                updateModel(rep);
-                emit treeChanged();
-            }
-        });
-    }
+            updateModel(rep);
+            emit treeChanged();
+        }
+    });
 
     return menu;
 }
@@ -166,18 +195,14 @@ QMenu* CsgTreeView::createContainMenu_(CsgBase* node)
         return 0;
 
     auto menu = new QMenu(tr("contain"), this);
-    for (auto n : list)
+    addNodeMenus_(menu, list, [=](const CsgBase* n)
     {
-        auto a = menu->addAction(n->name());
-        connect(a, &QAction::triggered, [=]()
+        if (auto paren = CsgBase::contain(node, n->className()))
         {
-            if (auto paren = CsgBase::contain(node, n->className()))
-            {
-                updateModel(paren);
-                emit treeChanged();
-            }
-        });
-    }
+            updateModel(paren);
+            emit treeChanged();
+        }
+    });
 
     return menu;
 }
@@ -190,16 +215,12 @@ QMenu* CsgTreeView::createAddMenu_(CsgBase* node)
     auto list = CsgBase::registeredClasses();
 
     auto menu = new QMenu(tr("add children"), this);
-    for (auto n : list)
+    addNodeMenus_(menu, list, [=](const CsgBase* n)
     {
-        auto a = menu->addAction(n->name());
-        connect(a, &QAction::triggered, [=]()
-        {
-            node->addChildren(n->cloneClass());
-            updateModel();
-            emit treeChanged();
-        });
-    }
+        node->addChildren(n->cloneClass());
+        updateModel();
+        emit treeChanged();
+    });
 
     return menu;
 }

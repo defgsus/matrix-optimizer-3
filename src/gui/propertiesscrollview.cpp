@@ -88,26 +88,29 @@ void PropertiesScrollView::createWidgtes_()
 
     }
 
+    auto props = p_props_->getSortedList();
+
     // create one for each property
-    for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
+    for (auto p : props)
     {
-        auto widget = new QVariantWidget(i.key(), p_props_, p_container_);
+        auto widget = new QVariantWidget(p->id(), p_props_, p_container_);
         widget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
         // keep track
-        p_widgets_.insert(i.key(), widget);
+        p_widgets_.insert(p->id(), widget);
 
         // install in layout
         p_lv_->addWidget(widget);
 
         // connect signals
-        QString key = i.key();
+        QString key = p->id();
         connect(widget, &QVariantWidget::valueChanged, [=]()
         {
             // copy to internal properties
             p_props_->set(key, widget->value());
             // get change to visibilty
-            p_props_->callUpdateVisibility();
+            if (p_props_->callUpdateVisibility())
+                updateWidgetVis_();
             emit propertyChanged(key);
         });
     }
@@ -119,6 +122,17 @@ void PropertiesScrollView::createWidgtes_()
 
 
     setUpdatesEnabled(true);
+}
+
+void PropertiesScrollView::updateWidgetVis_()
+{
+//    MO_PRINT(p_props_->toString());
+    for (auto i = p_props_->begin(); i != p_props_->end(); ++i)
+    {
+        auto j = p_widgets_.find(i.key());
+        if (j != p_widgets_.end())
+            j.value()->setVisible( i.value().isVisible() );
+    }
 }
 
 

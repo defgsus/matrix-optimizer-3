@@ -13,16 +13,18 @@ out vec4 fragColor;             // color output
 
 uniform vec4  u_resolution;     // width, height, 1./width, 1./height
 uniform float u_time;           // scene time in seconds
-uniform mat4  u_inverse_frustum;// projection
 uniform mat4  u_vtmatrix;       // view transform
 uniform vec2  u_max_trace_dist; // x = per ray / y = overall
 uniform float u_fudge;          // ray precision step (<1.0)
 uniform float u_epsilon;        // normal estimation distance
+uniform float u_scale;          // slice scale in RENDER_MODE 0
+uniform float u_frequency;      // slice distance color frequency
 
 // -- expected defines --
 
 // #define MAX_TRACE_STEPS      // maximum number of ray steps
 // #define MAX_REFLECTIONS      // maximum number of reflections
+// #define RENDER_MODE          // 0-flat, 1-solid
 
 // -------------------- RAY MARCHER ---------------------
 
@@ -120,29 +122,33 @@ vec3 simple_cast(in vec3 ro, in vec3 rd)
 
 void main()
 {
-#if 0
-    vec2 st = v_pos;
+#if RENDER_MODE == 0
+    vec2 uv = v_pos * vec2(u_resolution.x/u_resolution.y, 1.) * u_scale;
+    vec3 pos = (u_vtmatrix * vec4(uv, 0., 0.)).xyz
+                - u_vtmatrix[3].xyz;
 
-    vec4 pos = u_inverse_frustum * vec4(st.x, st.y, -0.01, 1);
-    pos /= pos.w;
+    vec3 col = vec3(0.);
+    float sd = DE_scene(pos);
 
-    vec4 dirf = u_inverse_frustum * vec4(st.x, st.y, -1000., 1);
-    dirf /= dirf.w;
-    dirf = normalize(dirf);
+    // inside/outside color
+    float c = //smoothstep(0., 1., abs(sd)) *
+            (.5 + .4 * sin(sd*6.283185307 * u_frequency));
+    if (sd >= 0.)
+        col = vec3(0., c*.7, c*.3);
+    else
+        col = vec3(c*.7, c*.3, 0.);
+    // edge
+    col += smoothstep(0.01, 0., abs(sd));
 
-    vec3 ro = (u_vtmatrix * pos).xyz,
-         rd = (u_vtmatrix * vec4(dirf.xyz, 0.)).xyz;
-#elif 0
-    vec3 pos = vec3(0., 0., 0.);
-    vec3 dir = normalize(vec3(v_pos, 2.));
+    fragColor = vec4(clamp(col, 0., 1.), 1.);
 
-    pos = u_vtmatrix[3].xyz;
-    dir = (mat3(u_vtmatrix)) * dir;
-#else
+#elif RENDER_MODE == 1
+    vec2 uv = v_pos * vec2(u_resolution.x/u_resolution.y, 1.);
     vec3 ro = -u_vtmatrix[3].xyz;
-    vec3 rd = normalize(vec3(v_pos, -2.));
+    vec3 rd = normalize(vec3(uv, -2.));
     rd = (u_vtmatrix * vec4(rd, 0.)).xyz;
-#endif
 
     fragColor = vec4(simple_cast(ro, rd), 1.);
+#endif
+
 }

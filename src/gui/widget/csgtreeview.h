@@ -36,6 +36,8 @@ public slots:
 private:
 
     void popup_(const QModelIndex&);
+    void addNodeMenus_(QMenu*, const QList<const CsgBase*>& list,
+                       std::function<void(const CsgBase*)> func);
     QMenu * createReplacementMenu_(CsgBase*);
     QMenu * createContainMenu_(CsgBase*);
     QMenu * createAddMenu_(CsgBase*);

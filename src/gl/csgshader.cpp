@@ -43,11 +43,13 @@ struct CsgShader::Private
 
     GL::Uniform * u_resolution,
                 * u_transformation,        // camera
-                * u_projection,
+      //          * u_projection,
                 * u_fudge,                 // ray step precision
                 * u_epsilon,
                 * u_time,
-                * u_max_trace_dist;
+                * u_max_trace_dist,
+                * u_scale,
+                * u_frequency;
 
 };
 
@@ -67,14 +69,29 @@ const MO::Properties& CsgShader::properties() const
     return p_->props;
 }
 
+CsgShader::RenderMode CsgShader::renderMode() const
+{
+    return (RenderMode)p_->props.get("render_mode").toInt();
+}
+
 void CsgShader::setProperties(const MO::Properties& p)
 {
     p_->props = p;
+    // XXX Could be more selective
     p_->doRecompile = true;
 }
 
 void CsgShader::Private::createProps()
 {
+    MO::Properties::NamedValues rmodes;
+    rmodes.set("flat", QObject::tr("flat"),
+               QObject::tr("Slice through distance-field"), RM_FLAT);
+    rmodes.set("solid", QObject::tr("solid"),
+               QObject::tr("Solid non-transparent raymarching"), RM_SOLID);
+    props.set("render_mode", QObject::tr("render mode"),
+              QObject::tr("Selects one of different rendering modes"),
+              rmodes, (int)RM_SOLID);
+
     props.set("fudge", QObject::tr("fudge factor"),
               QObject::tr("The step multiplier of each ray step, range (0, 1]"),
               1., 0.0001, 1., 0.01);
@@ -103,6 +120,28 @@ void CsgShader::Private::createProps()
               QObject::tr(""),
               );
     */
+
+    props.set("scale", QObject::tr("slice scale"),
+              QObject::tr("Scale of the slice"),
+              5., .1);
+    props.set("frequency", QObject::tr("frequency"),
+              QObject::tr("Frequency of the distance color indicator"),
+              1., .1);
+
+    props.setUpdateVisibilityCallback([](MO::Properties& p)
+    {
+        const RenderMode rm = (RenderMode)p.get("render_mode").toInt();
+        const bool raym = (rm == RM_SOLID),
+                   flat = (rm == RM_FLAT);
+        p.setVisible("fudge", raym);
+        p.setVisible("epsilon", raym);
+        p.setVisible("max_dist", raym);
+        p.setVisible("max_ray_dist", raym);
+        p.setVisible("max_ray_steps", raym);
+        p.setVisible("max_reflect", raym);
+        p.setVisible("scale", flat);
+        p.setVisible("frequency", flat);
+    });
 }
 
 void CsgShader::Private::createShaderSource(GL::ShaderSource* src) const
@@ -122,6 +161,7 @@ void CsgShader::Private::createShaderSource(GL::ShaderSource* src) const
 
     src->addDefine(QString("#define MAX_TRACE_STEPS %1").arg(props.get("max_ray_steps").toInt()));
     src->addDefine(QString("#define MAX_REFLECTIONS %1").arg(props.get("max_reflections").toInt()));
+    src->addDefine(QString("#define RENDER_MODE %1").arg(props.get("render_mode").toInt()));
 
     src->replace("//%dist_func%", code);
 
@@ -156,9 +196,9 @@ void CsgShader::Private::initQuad()
     // -- get uniforms --
 
     u_resolution = quad->shader()->getUniform("u_resolution");
-    u_projection = quad->shader()->getUniform("u_inverse_frustum");
-    if (u_projection)
-        u_projection->setAutoSend(true);
+    //u_projection = quad->shader()->getUniform("u_inverse_frustum");
+    //if (u_projection)
+    //    u_projection->setAutoSend(true);
     u_transformation = quad->shader()->getUniform("u_vtmatrix");
     if (u_transformation)
         u_transformation->setAutoSend(true);
@@ -166,6 +206,8 @@ void CsgShader::Private::initQuad()
     u_epsilon = quad->shader()->getUniform("u_epsilon");
     u_time = quad->shader()->getUniform("u_time");
     u_max_trace_dist = quad->shader()->getUniform("u_max_trace_dist");
+    u_scale = quad->shader()->getUniform("u_scale");
+    u_frequency = quad->shader()->getUniform("u_frequency");
 
     doRecompile = false;
 }
@@ -178,8 +220,25 @@ void CsgShader::Private::releaseQuad()
     quad = 0;
 }
 
-void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& proj, const Mat4& trans, Float time)
+void CsgShader::Private::updateUniforms(const QSize& res,
+                                        const Mat4& /*proj*/, const Mat4& trans, Float time)
 {
+    //RenderMode rm = p->renderMode();
+
+    if (u_transformation)
+        u_transformation->set(trans);
+
+    if (u_resolution)
+        u_resolution->setFloats(res.width(), res.height(),
+                                1. / std::max(1, res.width()),
+                                1. / std::max(1, res.height()));
+
+    if (u_scale)
+        u_scale->floats[0] = props.get("scale").toFloat();
+
+    if (u_frequency)
+        u_frequency->floats[0] = props.get("frequency").toFloat();
+
     if (u_fudge)
         u_fudge->floats[0] = props.get("fudge").toFloat();
 
@@ -191,19 +250,12 @@ void CsgShader::Private::updateUniforms(const QSize& res, const Mat4& proj, cons
                     props.get("max_ray_dist").toFloat(),
                     props.get("max_dist").toFloat() );
 
-    if (u_resolution)
-        u_resolution->setFloats(res.width(), res.height(),
-                                1. / std::max(1, res.width()),
-                                1. / std::max(1, res.height()));
-
-    if (u_transformation)
-        u_transformation->set(trans);
-
-    if (u_projection)
-        u_projection->set(glm::inverse(proj));
+    //if (u_projection)
+    //    u_projection->set(glm::inverse(proj));
 
     if (u_time)
         u_time->floats[0] = time;
+
 }
 
 void CsgShader::render(const QSize &resolution, const Mat4& projection, const Mat4& transform)

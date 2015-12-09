@@ -109,6 +109,12 @@ CsgFan::CsgFan()
 {
     props().set("ang_start", QObject::tr("start angle"), QObject::tr("Starting angle in degree"), -15.);
     props().set("ang_end", QObject::tr("end angle"), QObject::tr("End angle in degree"), 15.);
+
+    Properties::NamedValues axis;
+    axis.set("x", QObject::tr("X axis"), QObject::tr("X axis"), 0);
+    axis.set("y", QObject::tr("Y axis"), QObject::tr("Y axis"), 1);
+    axis.set("z", QObject::tr("Z axis"), QObject::tr("Z axis"), 2);
+    props().set("axis", QObject::tr("axis"), QObject::tr("The axis around which the space is fanned"), axis, 2);
 }
 
 QString CsgFan::getGlslFunctionBody() const
@@ -120,20 +126,29 @@ QString CsgFan::getGlslFunctionBody() const
     if (call.isEmpty())
         return call;
 
+    QString swizz = "xy";
+    if (props().get("axis").toInt() == 0)
+        swizz = "yz";
+    else if (props().get("axis").toInt() == 1)
+        swizz = "xz";
+
     float start = DEG_TO_TWO_PI * props().get("ang_start").toDouble(),
           end = DEG_TO_TWO_PI * props().get("ang_end").toDouble(),
           len = end - start;
 
     return QString(
-        "float ang = atan(pos.x, pos.y), \n"
-        "      len = length(pos.xy);\n"
+        "float ang = atan(pos.%6, pos.%7), \n"
+        "      len = length(pos.%5);\n"
         "ang = mod(ang - %1, %2) - %3;\n"
-        "pos.xy = len * vec2(sin(ang), cos(ang));\n"
+        "pos.%5 = len * vec2(sin(ang), cos(ang));\n"
         "return %4;\n")
                     .arg(toGlsl(start))
                     .arg(toGlsl(len))
                     .arg(toGlsl(len/2.))
-                    .arg(call);
+                    .arg(call)
+                    .arg(swizz)
+                    .arg(swizz[0])
+                    .arg(swizz[1]);
 }
 
 QString CsgFan::getGlsl() const { return QString(); }

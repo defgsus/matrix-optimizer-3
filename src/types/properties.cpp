@@ -433,6 +433,18 @@ const Properties::Property& Properties::getProperty(const QString &id) const
         return i.value();
 }
 
+QList<Properties::Property*> Properties::getSortedList() const
+{
+    QList<Properties::Property*> list;
+    for (auto& p : *this)
+        list << const_cast<Property*>(&p);
+    qSort(list.begin(), list.end(), [](const Property* l, const Property* r)
+    {
+        return l->index() < r->index();
+    });
+    return list;
+}
+
 QVariant Properties::get(const QString &id, const QVariant& def) const
 {
     auto i = p_map_.find(id);
@@ -513,6 +525,7 @@ void Properties::set(const QString &id, const QVariant & v)
     { \
         p_map_.insert(id, Property()); \
         i = p_map_.find(id); \
+        i.value().p_id_ = id; \
         i.value().p_idx_ = p_map_.size()-1; \
     } \
 

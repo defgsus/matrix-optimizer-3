@@ -20,6 +20,18 @@
 
 namespace MO {
 
+QString CsgBase::typeName(Type t)
+{
+    switch (t)
+    {
+        default: return QObject::tr("*unknown*");
+        case T_ROOT: return QObject::tr("root");
+        case T_SOLID: return QObject::tr("solid");
+        case T_COMBINE: return QObject::tr("combination");
+        case T_DEFORM: return QObject::tr("deformation");
+    }
+}
+
 struct CsgBase::PrivateCB
 {
     PrivateCB(CsgBase*p)
@@ -319,6 +331,7 @@ namespace {
         return s.endsWith("\n") ? s : s + "\n";
     }
 
+    // XXX Doesn't work for loops and stuff
     QString leadingTab(const QString& s)
     {
         QString r;

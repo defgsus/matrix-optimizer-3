@@ -100,6 +100,7 @@ public:
         const QVariant& maximum() const { return p_max_; }
         const QVariant& step() const { return p_step_; }
 
+        const QString& id() const { return p_id_; }
         const QString& name() const { return p_name_; }
         const QString& tip() const { return p_tip_; }
 
@@ -130,6 +131,7 @@ public:
             p_max_,
             p_step_;
         QString
+            p_id_,
             p_name_,
             p_tip_;
         int p_subType_,
@@ -178,6 +180,9 @@ public:
 
     /** Returns the Property for the given id, or an invalid Property */
     const Property& getProperty(const QString& id) const;
+
+    /** Returns a list of all properties in creation order */
+    QList<Property*> getSortedList() const;
 
     /** Returns the given property, or an invalid QVariant */
     QVariant get(const QString& id) const;

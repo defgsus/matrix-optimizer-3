@@ -72,10 +72,16 @@ CsgDialog::~CsgDialog()
 
 void CsgDialog::closeEvent(QCloseEvent*e)
 {
+    if (!p_->closeRequest && !isSaveToChange())
+    {
+        e->ignore();
+        return;
+    }
+
     if (p_->renderWidget->isGlInitialized())
     {
-        p_->renderWidget->shutDownGL();
         p_->closeRequest = true;
+        p_->renderWidget->shutDownGL();
         e->ignore();
     }
     else QMainWindow::closeEvent(e);
@@ -99,7 +105,8 @@ void CsgDialog::Private::createWidgets()
 
         auto lv = new QVBoxLayout();
         lv->setMargin(0);
-        lh->addLayout(lv, 2);
+        lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
+        lh->addLayout(lv);
 
             renderWidget = new CsgRenderWidget(win);
             renderWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -170,7 +177,10 @@ void CsgDialog::Private::createWidgets()
 
 void CsgDialog::Private::setViewDirection(Basic3DWidget::ViewDirection d)
 {
-    renderWidget->viewSet(d, 5.);
+    float dist = 5.;
+    if (renderWidget->shaderProperties().get("render_mode").toInt() == 0)
+        dist = 0.;
+    renderWidget->viewSet(d, dist);
 }
 
 void CsgDialog::Private::createMenu()
