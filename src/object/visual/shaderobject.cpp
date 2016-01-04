@@ -15,6 +15,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "object/util/useruniformsetting.h"
+#include "object/util/objecteditor.h"
 #include "gl/context.h"
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
@@ -173,6 +174,25 @@ QSize ShaderObject::resolution() const
 {
     return fbo_ ? QSize(fbo_->width(), fbo_->height())
                 : QSize();
+}
+
+bool ShaderObject::isMasterOutputEnabled() const
+{
+    return p_enableOut_->baseValue();
+}
+
+void ShaderObject::setMasterOutputEnabled(bool enable, bool sendGui)
+{
+    if (sendGui)
+    {
+        if (auto e = editor())
+        {
+            e->setParameterValue(p_enableOut_, enable);
+            return;
+        }
+        MO_WARNING("Can't set master-out parameter via GUI as expected");
+    }
+    p_enableOut_->setValue(enable);
 }
 
 const GL::Texture * ShaderObject::valueTexture(uint chan, const RenderTime& ) const

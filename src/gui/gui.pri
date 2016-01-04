@@ -126,7 +126,8 @@ HEADERS += \
     $$PWD/widget/csgtreeview.h \
     $$PWD/widget/csgeditwidget.h \
     $$PWD/csgdialog.h \
-    $$PWD/widget/csgrenderwidget.h
+    $$PWD/widget/csgrenderwidget.h \
+    $$PWD/item/objectgraphcontrolitem.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -252,4 +253,5 @@ SOURCES += \
     $$PWD/widget/csgtreeview.cpp \
     $$PWD/widget/csgeditwidget.cpp \
     $$PWD/csgdialog.cpp \
-    $$PWD/widget/csgrenderwidget.cpp
+    $$PWD/widget/csgrenderwidget.cpp \
+    $$PWD/item/objectgraphcontrolitem.cpp

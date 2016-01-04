@@ -545,6 +545,26 @@ QColor Object::color() const
     return ObjectFactory::colorForObject(this);
 }
 
+void Object::setActivityScope(ActivityScope scope, bool sendGui)
+{
+    // XXX forgot what this is used for..
+    p_currentActivityScope_ = scope;
+
+    if (p_paramActiveScope_)
+    {
+        if (sendGui)
+        {
+            if (auto e = editor())
+            {
+                e->setParameterValue(p_paramActiveScope_, scope);
+                return;
+            }
+        }
+        p_paramActiveScope_->setValue(scope);
+    }
+
+    p_passDownActivityScope_(activityScope());
+}
 
 Object::ActivityScope Object::activityScope() const
 {

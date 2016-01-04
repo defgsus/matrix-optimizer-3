@@ -158,16 +158,23 @@ bool TextureObjectBase::hasTextureInput(uint index) const
     return p_to_->p_textures[index]->isModulated();
 }
 
-void TextureObjectBase::setEnableMasterOut(bool enable, bool sendGui)
+bool TextureObjectBase::isMasterOutputEnabled() const
+{
+    return p_to_->p_enableOut->baseValue();
+}
+
+void TextureObjectBase::setMasterOutputEnabled(bool enable, bool sendGui)
 {
     if (sendGui)
     {
-        auto e = editor();
-        MO_ASSERT(e, "can't set parameter");
-        e->setParameterValue(p_to_->p_enableOut, enable);
+        if (auto e = editor())
+        {
+            e->setParameterValue(p_to_->p_enableOut, enable);
+            return;
+        }
+        MO_WARNING("Can't set master-out parameter via GUI as expected");
     }
-    else
-        p_to_->p_enableOut->setValue(enable);
+    p_to_->p_enableOut->setValue(enable);
 }
 
 void TextureObjectBase::setResolutionMode(ResolutionMode mode, bool sendGui)

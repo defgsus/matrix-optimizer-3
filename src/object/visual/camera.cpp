@@ -23,6 +23,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametertext.h"
+#include "object/util/objecteditor.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
 #include "projection/projectionsystemsettings.h"
@@ -259,6 +260,25 @@ bool Camera::isMultiSampling() const
 {
     return p_multiSample_->baseValue() > 0
           && (renderMode() != RM_FULLDOME_CUBE);
+}
+
+bool Camera::isMasterOutputEnabled() const
+{
+    return p_enableOut_->baseValue();
+}
+
+void Camera::setMasterOutputEnabled(bool enable, bool sendGui)
+{
+    if (sendGui)
+    {
+        if (auto e = editor())
+        {
+            e->setParameterValue(p_enableOut_, enable);
+            return;
+        }
+        MO_WARNING("Can't set master-out parameter via GUI as expected");
+    }
+    p_enableOut_->setValue(enable);
 }
 
 void Camera::initGl(uint thread)

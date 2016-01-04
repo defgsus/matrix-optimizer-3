@@ -233,6 +233,8 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onConnectionsChanged_()));
             connect(p_->editor, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
                     this, SLOT(onParameterVisibilityChanged_(MO::Parameter*)));
+            connect(p_->editor, SIGNAL(parameterChanged(MO::Parameter*)),
+                    this, SLOT(onParameterChanged_(MO::Parameter*)));
 
         }
     }
@@ -1897,6 +1899,19 @@ void ObjectGraphScene::onConnectionsChanged_()
 void ObjectGraphScene::onParameterVisibilityChanged_(Parameter * )
 {
     p_->resolveLayout(true);
+}
+
+void ObjectGraphScene::onParameterChanged_(Parameter* p)
+{
+    auto obj = p->object();
+    auto it = itemForObject(obj);
+    if (it)
+    {
+        it->updateControlItems();
+        // and repaint the whole, in case paramter was activity
+        if (p->idName() == "_activescope")
+            it->update();
+    }
 }
 
 // ----------------------------------- editing -------------------------------------------

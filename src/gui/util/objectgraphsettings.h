@@ -37,6 +37,7 @@ public:
     static int connectorsPerGrid();
 
     static QSize expandItemSize();
+    static QSize controlItemSize();
 
     static QBrush brushBackground();
 

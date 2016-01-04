@@ -59,6 +59,11 @@ QSize ObjectGraphSettings::expandItemSize()
     return QSize(12, 12);
 }
 
+QSize ObjectGraphSettings::controlItemSize()
+{
+    return QSize(16, 16);
+}
+
 QBrush ObjectGraphSettings::brushBackground()
 {
     return QBrush(QColor(30, 30, 30));

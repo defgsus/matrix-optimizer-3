@@ -15,12 +15,16 @@
 
 #include "object/visual/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/masteroutinterface.h"
 #include "gl/shader.h"
 
 namespace MO {
 
 /** Base class for texture processors */
-class TextureObjectBase : public ObjectGl, public ValueTextureInterface
+class TextureObjectBase
+        : public ObjectGl
+        , public ValueTextureInterface
+        , public MasterOutInterface
 {
     Q_OBJECT
 public:
@@ -82,11 +86,15 @@ public:
         For all other modes, the resolution is scaled accordingly. */
     QSize adjustResolution(const QSize& s) const;
 
+    /** Returns the "master output" parameter setting */
+    bool isMasterOutputEnabled() const Q_DECL_OVERRIDE;
+
     // ---- setter -----
 
     /** Sets the master-out parameter.
         if @p sendGui, this will be done via ObjectEditor */
-    void setEnableMasterOut(bool enable, bool sendGui = false);
+    void setMasterOutputEnabled(bool enable, bool sendGui = false) Q_DECL_OVERRIDE;
+
     void setResolutionMode(ResolutionMode mode, bool sendGui = false);
 
     // ------ texture connections --------

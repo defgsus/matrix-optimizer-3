@@ -26,6 +26,7 @@
 #include "abstractobjectitem.h"
 #include "objectgraphexpanditem.h"
 #include "objectgraphconnectitem.h"
+#include "objectgraphcontrolitem.h"
 #include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/audioobject.h"
@@ -35,6 +36,7 @@
 #include "object/param/modulator.h"
 #include "object/param/modulatorfloat.h"
 #include "object/param/parameters.h"
+#include "object/interface/masteroutinterface.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectgraphscene.h"
 #include "gui/util/scenesettings.h"
@@ -69,7 +71,10 @@ public:
     { }
 
     void createConnectors();
+    void createControlItems();
     void updateConnectorPositions();
+    void updateControlItemPositions();
+    void updateControlItemPixmaps();
     void layoutChildItems();
     /** Helper to set the drag goal indicator from
         a LOCAL position */
@@ -89,17 +94,53 @@ public:
     QBrush brushBack, brushBackSel, brushDragIndicator;
     ObjectGraphExpandItem * itemExp;
     QGraphicsSimpleTextItem * itemName;
+    ObjectGraphControlItem
+        *itemMasterOut,
+        *itemActive;
     QList<ObjectGraphConnectItem*>
         inputItems,
         outputItems;
+    QList<ObjectGraphControlItem*> controlItems;
 
     bool isMouseDown,
          dragThresh;
     QPoint gridPosDown, dragThreshPos;
     QPointF posMouseDown;
+
 };
 
+namespace
+{
+    enum PixmapType
+    {
+        IMAGE_INVISIBLE,
+        IMAGE_VISIBLE,
+        IMAGE_ACTIVE,
+        IMAGE_INACTIVE
+    };
+    static QMap<PixmapType, QPixmap> staticPixmaps;
 
+    static QPixmap getPixmap(PixmapType img)
+    {
+        if (staticPixmaps.isEmpty())
+        {
+            QSize size = ObjectGraphSettings::controlItemSize();
+    #define MO__ADD(tag__, name__) \
+            staticPixmaps.insert(tag__, \
+                QPixmap::fromImage(QImage(name__).scaled(size, \
+                    Qt::IgnoreAspectRatio, Qt::SmoothTransformation)))
+
+            MO__ADD(IMAGE_INVISIBLE, ":/icon/ctrl_masterout_off.png");
+            MO__ADD(IMAGE_VISIBLE, ":/icon/ctrl_masterout_on.png");
+            MO__ADD(IMAGE_INACTIVE, ":/icon/ctrl_active_off.png");
+            MO__ADD(IMAGE_ACTIVE, ":/icon/ctrl_active_on.png");
+
+    #undef MO__ADD
+        }
+
+        return staticPixmaps.value(img);
+    }
+} // namespace
 
 // -------------------------- AbstractObjectItem ------------------------------
 
@@ -135,6 +176,8 @@ AbstractObjectItem::AbstractObjectItem(Object *object, QGraphicsItem * parent)
         p_oi_->expanded = p_oi_->object->isAudioObject();
 
     p_oi_->createConnectors();
+    p_oi_->createControlItems();
+    p_oi_->updateControlItemPixmaps();
     p_oi_->layoutChildItems();
 }
 
@@ -732,9 +775,40 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     updateConnectorPositions();
 }
 
+void AbstractObjectItem::PrivateOI::createControlItems()
+{
+    // RENDER TO MASTER OUT
+    if (auto mo = dynamic_cast<MasterOutInterface*>(object))
+    {
+        auto it = itemMasterOut = new ObjectGraphControlItem(item);
+        controlItems.append(it);
+
+        it->setToolTip(QObject::tr("Enable or disable rendering to master frame"));
+        it->setCallback([=](){
+            mo->setMasterOutputEnabled(!mo->isMasterOutputEnabled(), true);
+        });
+    }
+    else itemMasterOut = 0;
+
+    // ACTIVE
+    {
+        auto it = itemActive = new ObjectGraphControlItem(item);
+        controlItems.append(it);
+
+        it->setToolTip(QObject::tr("Activate or deactive the object"));
+        it->setCallback([=](){
+            if (object->activityScope() != Object::AS_ON)
+                object->setActivityScope(Object::AS_ON, true);
+            else
+                object->setActivityScope(Object::AS_OFF, true);
+        });
+    }
+}
+
 void AbstractObjectItem::PrivateOI::layoutChildItems()
 {
     updateConnectorPositions();
+    updateControlItemPositions();
 
     const int boarder = ObjectGraphSettings::penOutlineWidth() + 2;
     const auto
@@ -744,7 +818,6 @@ void AbstractObjectItem::PrivateOI::layoutChildItems()
                         r.top() + boarder,
                         r.right() - boarder,
                         r.bottom() - boarder);
-
 
     if (item->gridSize().width() > 1)
     {
@@ -779,6 +852,39 @@ void AbstractObjectItem::updateLabels()
 
     p_oi_->layoutChildItems();
 }
+
+void AbstractObjectItem::PrivateOI::updateControlItemPixmaps()
+{
+    itemActive->setPixmap(getPixmap(
+                              object->activeAtAll()
+                              ? IMAGE_ACTIVE : IMAGE_INACTIVE));
+    if (itemMasterOut)
+    {
+        bool enable = false;
+        if (auto mo = dynamic_cast<MasterOutInterface*>(object))
+            enable = mo->isMasterOutputEnabled();
+
+        itemMasterOut->setPixmap(getPixmap(enable
+                                ? IMAGE_VISIBLE : IMAGE_INVISIBLE));
+    }
+}
+
+void AbstractObjectItem::PrivateOI::updateControlItemPositions()
+{
+    QPointF pos(item->rect().right()
+                - ObjectGraphSettings::penOutlineWidth()
+                - ObjectGraphSettings::controlItemSize().width(),
+                ObjectGraphSettings::penOutlineWidth()
+                // XXX experimental
+                + ObjectGraphSettings::expandItemSize().height());
+
+    for (int i=0; i<controlItems.size(); ++i)
+    {
+        controlItems[controlItems.size()-1-i]->setPos(pos);
+        pos.rx() -= ObjectGraphSettings::controlItemSize().width();
+    }
+}
+
 
 void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 {
@@ -834,6 +940,11 @@ void AbstractObjectItem::updateConnectors()
 
     p_oi_->layoutChildItems();
     setLayoutDirty();
+}
+
+void AbstractObjectItem::updateControlItems()
+{
+    p_oi_->updateControlItemPixmaps();
 }
 
 

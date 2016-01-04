@@ -356,7 +356,8 @@ HEADERS += \
     $$PWD/model/csgtreemodel.h \
     $$PWD/gl/csgshader.h \
     $$PWD/math/csgdeform.h \
-    $$PWD/math/csgfractals.h
+    $$PWD/math/csgfractals.h \
+    $$PWD/object/interface/masteroutinterface.h
 
 
 SOURCES += \

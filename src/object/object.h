@@ -359,6 +359,9 @@ public:
     /** Returns the currently set scope for the tree */
     ActivityScope currentActivityScope() const { return p_currentActivityScope_; }
 
+    /** Changes the activity scope for the object */
+    void setActivityScope(ActivityScope, bool sendGui = false);
+
     /** Returns if the object is active at the given time */
     bool active(const RenderTime& time) const;
 
