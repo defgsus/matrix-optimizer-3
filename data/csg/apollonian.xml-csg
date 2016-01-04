@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<csg>
+    <csg-node version="1" class="CsgRoot">
+        <properties version="1"/>
+        <csg-node version="1" class="CsgIntersection">
+            <properties version="1"/>
+            <csg-node version="1" class="CsgApollonian">
+                <properties version="1">
+                    <property id="factor" v="double#1.6000000000000005"/>
+                    <property id="inverse" v="bool#false"/>
+                    <property id="iterations" v="uint#8"/>
+                    <property id="name" v="QString#Apollonian"/>
+                    <property id="x" v="double#0"/>
+                    <property id="y" v="double#0"/>
+                    <property id="z" v="double#0"/>
+                </properties>
+            </csg-node>
+            <csg-node version="1" class="CsgBox">
+                <properties version="1">
+                    <property id="inverse" v="bool#false"/>
+                    <property id="name" v="QString#Box"/>
+                    <property id="sizex" v="double#1"/>
+                    <property id="sizey" v="double#1"/>
+                    <property id="sizez" v="double#1"/>
+                    <property id="x" v="double#0"/>
+                    <property id="y" v="double#0.99999999999999989"/>
+                    <property id="z" v="double#0"/>
+                </properties>
+            </csg-node>
+        </csg-node>
+    </csg-node>
+</csg>
