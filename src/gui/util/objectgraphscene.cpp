@@ -46,9 +46,12 @@
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/interface/valuetextureinterface.h"
+#include "gl/texture.h"
 #include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
 #include "tool/actionlist.h"
+#include "io/files.h"
+#include "io/currenttime.h"
 #include "io/application.h"
 #include "io/log.h"
 
@@ -115,6 +118,7 @@ public:
     void createNewObjectMenu(ActionList& actions, Object * o);
     void createClipboardMenu(ActionList& actions, Object * parent, const QList<AbstractObjectItem*>& items);
     void createObjectEditMenu(ActionList& actions, Object * o);
+    void createSaveTextureMenu(ActionList& actions, Object * obj);
     //void createObjectGroupMenu(ActionList& actions, const QList<AbstractObjectItem*>& items);
     QMenu * createObjectsMenu(Object *parent, bool with_template, bool with_shortcuts,
                               bool childObjects = true, int groups = Object::TG_ALL);
@@ -123,6 +127,8 @@ public:
     void endConnection();
 
     void acceptDrag(QGraphicsSceneDragDropEvent*);
+
+    void saveTexture(const GL::Texture*);
 
     ObjectGraphScene * scene;
     Scene * root;
@@ -235,7 +241,6 @@ void ObjectGraphScene::setRootObject(Object *root)
                     this, SLOT(onParameterVisibilityChanged_(MO::Parameter*)));
             connect(p_->editor, SIGNAL(parameterChanged(MO::Parameter*)),
                     this, SLOT(onParameterChanged_(MO::Parameter*)));
-
         }
     }
 
@@ -1542,6 +1547,84 @@ void ObjectGraphScene::Private::createClipboardMenu(
     }
 }
 
+void ObjectGraphScene::Private::saveTexture(const GL::Texture* tex)
+{
+    auto fn = IO::Files::getSaveFileName(IO::FT_TEXTURE);
+    if (fn.isEmpty())
+        return;
+    try
+    {
+        tex->bind();
+        tex->saveImageFile(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(0, tr("saving image failed"), e.what() );
+    }
+}
+
+void ObjectGraphScene::Private::createSaveTextureMenu(ActionList& actions, Object * obj)
+{
+    ValueTextureInterface * iface = dynamic_cast<ValueTextureInterface*>(obj);
+    if (!iface)
+        return;
+
+    // XXX hacky in many regards
+    RenderTime rt(CurrentTime::time(), 1./60., MO_GUI_THREAD);
+
+    struct Tex
+    {
+        const GL::Texture* tex;
+        int index;
+    };
+
+    // collect texture outputs
+    std::vector<Tex> tex;
+    for (size_t i=0; ; ++i)
+    {
+        auto t = iface->valueTexture(i, rt);
+        if (!t || !t->isAllocated()
+            // XXX can't save cube textures atm.
+            || t->isCube())
+        {
+            if (i < 4)
+                continue;
+            else
+                break;
+        }
+        Tex x;
+        x.tex = t;
+        x.index = i;
+        tex.push_back(x);
+    }
+
+    if (tex.empty())
+        return;
+
+    QAction * a;
+
+    // single output
+    if (tex.size() == 1)
+    {
+        a = actions.addAction(QIcon(":/icon/disk.png"), tr("Save texture '%1'")
+                              .arg(obj->getOutputName(ST_TEXTURE, tex[0].index)), scene);
+        a->setStatusTip(tr("Saves the texture output to a file"));
+        connect(a, &QAction::triggered, [=]() { saveTexture(tex[0].tex); });
+    }
+    else
+    {
+        auto sub = new QMenu(tr("Save output texture"));
+        sub->setIcon(QIcon(":/icon/disk.png"));
+        a = actions.addMenu(sub, scene);
+        for (size_t i=0; i<tex.size(); ++i)
+        {
+            a = sub->addAction(obj->getOutputName(ST_TEXTURE, tex[i].index));
+            a->setStatusTip(tr("Saves the texture output to a file"));
+            connect(a, &QAction::triggered, [=]() { saveTexture(tex[i].tex); });
+        }
+    }
+}
+
 void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object * obj)
 {
     actions.addSeparator(scene);
@@ -1667,12 +1750,21 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         });
     }
 
-    a = actions.addAction(tr("Save as template ..."), scene);
+    actions.addSeparator(scene);
+
+    a = actions.addAction(QIcon(":/icon/disk.png"), tr("Save as template ..."), scene);
     a->setStatusTip(tr("Saves the object and it's sub-tree to a file for later reuse"));
     connect(a, &QAction::triggered, [=]()
     {
         ObjectFactory::storeObjectTemplate(obj);
     });
+
+    // save texture output
+    if (dynamic_cast<ValueTextureInterface*>(obj))
+    {
+        createSaveTextureMenu(actions, obj);
+    }
+
 }
 
 /*

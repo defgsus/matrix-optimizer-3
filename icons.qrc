@@ -76,5 +76,6 @@
         <file alias="ctrl_active_on.png">assets/icon/ctrl_active_on.png</file>
         <file alias="ctrl_masterout_off.png">assets/icon/ctrl_masterout_off.png</file>
         <file alias="ctrl_masterout_on.png">assets/icon/ctrl_masterout_on.png</file>
+        <file alias="disk.png">assets/icon/disk.png</file>
     </qresource>
 </RCC>

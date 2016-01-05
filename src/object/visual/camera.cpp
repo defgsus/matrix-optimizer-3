@@ -249,6 +249,18 @@ void Camera::updateParameterVisibility()
     p_multiSample_->setVisible( !iscube );
 }
 
+QString Camera::getOutputName(SignalType st, uint channel) const
+{
+    if (st == ST_TEXTURE)
+    {
+        if (channel == 0)
+            return tr("color");
+        if (channel == 1)
+            return tr("depth");
+    }
+    return ObjectGl::getOutputName(st, channel);
+}
+
 void Camera::setNumberThreads(uint num)
 {
     ObjectGl::setNumberThreads(num);

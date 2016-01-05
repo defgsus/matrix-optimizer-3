@@ -172,8 +172,8 @@
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.959798"
-     inkscape:cx="243.1346"
-     inkscape:cy="72.203777"
+     inkscape:cx="647.19562"
+     inkscape:cy="324.74191"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -3643,5 +3643,44 @@
        id="path4758"
        d="m 310.62529,959.15025 9.28572,16.07143 -12.5,-0.35714 10.71428,19.28571 -9.64286,0 12.5,13.57145 11.78572,-13.39287 -8.57143,-0.17858 -3.92857,-12.5 10.35714,0 -4.28571,-22.5 z"
        style="fill:#0fff0f;fill-opacity:1;stroke:#000000;stroke-width:2.20000004999999987;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/disk.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-658.87372"
+       x="698.04944"
+       height="68.188736"
+       width="68.188736"
+       id="rect4928-5"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <rect
+       style="fill:#8694f4;fill-opacity:1;stroke:#000000;stroke-width:2.05514622000000013;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect4932-7"
+       width="34.867199"
+       height="34.967388"
+       x="607.63245"
+       y="714.52612"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/disk.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       style="fill:#e9ebfd;fill-opacity:1;stroke:#000000;stroke-width:2.20000004999999987;stroke-linecap:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect4781"
+       width="17.677673"
+       height="13.005689"
+       x="616.69812"
+       y="714.59247"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/disk.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:#e9ebfd;fill-opacity:1;stroke:#000000;stroke-width:2.20000000000000018;stroke-linecap:square;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;stroke-dashoffset:0"
+       d="m 629.4513,718.3805 0,5.42957"
+       id="path4783"
+       inkscape:connector-curvature="0"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/disk.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
   </g>
 </svg>

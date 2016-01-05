@@ -734,7 +734,8 @@ void AbstractObjectItem::PrivateOI::createConnectors()
                 continue;
 
             outputItems.append(
-                new ObjectGraphConnectItem(false, it.key(), i, object->getOutputName(it.key(), i), item) );
+                new ObjectGraphConnectItem(false, it.key(), i,
+                                           object->getOutputName(it.key(), i), item) );
         }
     }
 
@@ -910,7 +911,7 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 
     for (int i=0; i<outputItems.size(); ++i)
     {
-        outputItems[i]->setPos(r.right(), top + (i + 0.5) * heightfac);
+        outputItems[i]->setPos(r.right(), top + (i + 0.3) * heightfac);
         outputItems[i]->setVisible(vis);
     }
 

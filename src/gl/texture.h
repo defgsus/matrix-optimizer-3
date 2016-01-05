@@ -222,6 +222,11 @@ public:
         @throws GlException */
     QImage toQImage() const;
 
+    /** Saves the texture to a file, using toQImage().
+        @note The texture must be bound!
+        @throws GlException or IoException */
+    void saveImageFile(const QString& fn) const;
+
 private:
 
     Texture(const Texture&);

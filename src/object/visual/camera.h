@@ -46,6 +46,8 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
+    virtual QString getOutputName(SignalType, uint channel) const Q_DECL_OVERRIDE;
+
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& ) Q_DECL_OVERRIDE { };

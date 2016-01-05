@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <QImage>
+#include <QImageWriter>
 
 #include "texture.h"
 #include "io/imagereader.h"
@@ -845,7 +846,14 @@ QImage Texture::toQImage() const
     return img;
 }
 
-
+void Texture::saveImageFile(const QString &fn) const
+{
+    auto img = toQImage();
+    QImageWriter w(fn);
+    if (!w.write(img))
+        MO_IO_ERROR(WRITE, "Failed to save image '" << fn << "',\n"
+                    << w.errorString());
+}
 
 // ------------------------ static ----------------------------
 
