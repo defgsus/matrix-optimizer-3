@@ -79,4 +79,6 @@ DISTFILES += \
     $$PWD/assets/shader/to/posterize.frag \
     $$PWD/assets/shader/to/kaliset.frag \
     $$PWD/assets/shader/csgshader.vert \
-    $$PWD/assets/shader/csgshader.frag
+    $$PWD/assets/shader/csgshader.frag \
+    $$PWD/assets/shader/neuro.frag \
+    $$PWD/assets/shader/neuro.vert

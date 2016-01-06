@@ -857,6 +857,10 @@ void Texture::saveImageFile(const QString &fn) const
 
 // ------------------------ static ----------------------------
 
+void Texture::setActiveTexture(GLuint slot)
+{
+    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + slot) );
+}
 
 Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, uint mipmap_levels)
 {

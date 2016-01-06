@@ -109,6 +109,43 @@ gl::GLuint channelSize(gl::GLenum channel_format)
     }
 }
 
+gl::GLenum inputFormat(gl::GLenum fmt)
+{
+    using namespace gl;
+
+    switch (fmt)
+    {
+        case GL_R:
+        case GL_RED:
+        case GL_R16:
+        case GL_R16F:
+        case GL_R32F:
+            return GL_RED;
+        break;
+
+        case GL_RG:
+        case GL_RG16:
+        case GL_RG16F:
+        case GL_RG32F:
+            return GL_RG;
+        break;
+
+        case GL_RGB:
+        case GL_RGB16:
+        case GL_RGB16F:
+        case GL_RGB32F:
+            return GL_RGB;
+        break;
+
+        case GL_RGBA:
+        case GL_RGBA16:
+        case GL_RGBA16F:
+        case GL_RGBA32F:
+        default:
+            return GL_RGBA;
+        break;
+    }
+}
 
 } // namespace GL
 } // namespace MO

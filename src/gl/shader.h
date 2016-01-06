@@ -229,7 +229,7 @@ public:
         Previous contents will be overwritten.
         The attribute names of the ShaderSource object are expected
         to match the ones in the source. */
-    void setSource(const ShaderSource *);
+    void setSource(const ShaderSource&);
 
     /** Tries to compile the shader.
         Any previous program will be destroyed but the values of uniforms are kept.

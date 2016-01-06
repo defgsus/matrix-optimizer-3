@@ -176,6 +176,9 @@ namespace GL {
         returns 0, if type is not known! */
     gl::GLuint channelSize(gl::GLenum channel_format);
 
+    /** Returns e.g. GL_RGBA for GL_RGBAF32 and all it's variants */
+    gl::GLenum inputFormat(gl::GLenum);
+
 } // namespace GL
 } // namespace MO
 

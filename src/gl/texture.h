@@ -55,6 +55,10 @@ public:
 
     // -------------- static ----------------------
 
+    /** Equal to glActiveTexture(GL_TEXTURE0 + slot).
+        @throws GlException */
+    static void setActiveTexture(gl::GLuint slot);
+
     /* Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */

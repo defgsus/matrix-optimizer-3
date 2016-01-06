@@ -16,7 +16,7 @@
 
 namespace MO {
 
-/** An image to texture loader */
+/** A texture generator using system fonts */
 class TextTO : public TextureObjectBase
 {
     Q_OBJECT

@@ -74,13 +74,16 @@ bool ParameterTexture::hasChanged(const RenderTime& time) const
     if (time.thread() >= lastHash_.size())
         return true;
 
+    // get the connected texture
     const GL::Texture * t = 0;
     for (auto m : modulators())
         if ((t = static_cast<ModulatorTexture*>(m)->value(time)))
             break;
 
+    // different pointer
     if (t != lastTex_)
         return true;
+    // same pointer, but changed
     if (t)
         return t->hash() != lastHash_[time.thread()];
     return false;

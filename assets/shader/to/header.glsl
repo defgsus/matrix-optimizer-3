@@ -13,12 +13,14 @@ uniform     vec4        u_color_range_max;
     in          vec4        a_texCoord;
 
     out         vec2        v_texCoord;
+    out         vec2        v_pixelCoord;
 
 #endif
 
 #ifdef MO_FRAGMENT
 
     in          vec2        v_texCoord;
+    in          vec2        v_pixelCoord;
 
     out         vec4        fragColor;
 

@@ -609,7 +609,7 @@ void ImageGallery::setupShader_()
 
     if (!shader_)
         shader_ = new GL::Shader(name());
-    shader_->setSource(src);
+    shader_->setSource(*src);
 
     try
     {

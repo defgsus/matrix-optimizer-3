@@ -40,6 +40,11 @@ ShaderSource::ShaderSource()
 {
 }
 
+bool ShaderSource::operator == (const ShaderSource& rhs) const
+{
+    return vert_ == rhs.vert_ && frag_ == rhs.frag_;
+}
+
 int ShaderSource::findLineNumber(const QString& src, const QString& text)
 {
     int idx = src.indexOf(text);

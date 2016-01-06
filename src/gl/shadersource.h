@@ -38,6 +38,9 @@ public:
     const QString& vertexSource() const { return vert_; }
     const QString& fragmentSource() const { return frag_; }
 
+    bool operator == (const ShaderSource& rhs) const;
+    bool operator != (const ShaderSource& rhs) const { return !(*this == rhs); }
+
     // standard uniform names
 
     const QString& uniformNameSceneTime() const { return unSceneTime_; }

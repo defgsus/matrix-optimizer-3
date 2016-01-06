@@ -206,7 +206,8 @@ public:
                 const QString& id, const QString& name, const QString& statusTip,
                 int minChan = 1, int maxChan = 4);
     ParameterSelect * createTextureTypeParameter(
-                const QString& id, const QString& name, const QString& statusTip);
+                const QString& id, const QString& name, const QString& statusTip,
+                int defaultBitsize = 8);
     /** Combines the two values from texture format and type parameters and
         returns the correct format GLenum. */
     static int getTexFormat(int format, int type);

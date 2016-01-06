@@ -357,7 +357,9 @@ HEADERS += \
     $$PWD/gl/csgshader.h \
     $$PWD/math/csgdeform.h \
     $$PWD/math/csgfractals.h \
-    $$PWD/object/interface/masteroutinterface.h
+    $$PWD/object/interface/masteroutinterface.h \
+    $$PWD/object/texture/neuroto.h \
+    $$PWD/gl/neurogl.h
 
 
 SOURCES += \
@@ -668,4 +670,6 @@ SOURCES += \
     $$PWD/model/csgtreemodel.cpp \
     $$PWD/gl/csgshader.cpp \
     $$PWD/math/csgdeform.cpp \
-    $$PWD/math/csgfractals.cpp
+    $$PWD/math/csgfractals.cpp \
+    $$PWD/object/texture/neuroto.cpp \
+    $$PWD/gl/neurogl.cpp

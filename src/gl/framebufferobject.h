@@ -76,6 +76,8 @@ public:
     uint numColorTextures() const { return colorTex_.size(); }
 
     gl::GLint handle() const { return fbo_; }
+    gl::GLenum type() const;
+    gl::GLenum format() const;
 
     /** Returns the associated color texture */
     const Texture * colorTexture(uint index = 0) const { return colorTex_[index]; }
