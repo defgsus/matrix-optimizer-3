@@ -76,13 +76,26 @@ gl::GLuint channelSize(gl::GLenum channel_format)
 
     switch (channel_format)
     {
+        case GL_R:
+        case GL_R8:
+        case GL_R16:
+        case GL_R16F:
+        case GL_R32F:
         case GL_RED:
         case GL_GREEN:
         case GL_BLUE:
         case GL_LUMINANCE:
-        case GL_ALPHA: 		return 1;
+        case GL_ALPHA:
+            return 1;
 
-        case GL_LUMINANCE_ALPHA: return 2;
+        case GL_RG:
+        case GL_RG_INTEGER:
+        case GL_RG8:
+        case GL_RG16:
+        case GL_RG16F:
+        case GL_RG32F:
+        case GL_LUMINANCE_ALPHA:
+            return 2;
 
         case GL_RGB:
         case GL_R3_G3_B2:
@@ -91,7 +104,10 @@ gl::GLuint channelSize(gl::GLenum channel_format)
         case GL_RGB8:
         case GL_RGB10:
         case GL_RGB12:
-        case GL_RGB16:		return 3;
+        case GL_RGB16:
+        case GL_RGB16F:
+        case GL_RGB32F:
+            return 3;
 
         case GL_RGBA:
         case GL_RGBA2:

@@ -929,6 +929,13 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(const RenderTime & time, int 
     // get output texture
     auto tex = to->valueTexture(0, time);
     if (!tex)
+    {
+        int num = to->getNumberOutputs(ST_TEXTURE),
+              i = 1;
+        while (tex == 0 && i < num)
+            tex = to->valueTexture(i++, time);
+    }
+    if (!tex)
         return;
 
     if (!screenQuad)

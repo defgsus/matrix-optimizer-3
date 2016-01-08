@@ -26,7 +26,8 @@ public:
     {
         MODE_BYPASS = 0,
         MODE_FPROP,
-        MODE_BPROP
+        MODE_BPROP,
+        MODE_WEIGHT_INIT
     };
 
     enum Slot
@@ -34,6 +35,7 @@ public:
         SLOT_INPUT = 0,
         SLOT_WEIGHT,
         SLOT_ERROR,
+        SLOT_PREV_OUT
     };
 
     // -------- ctor -----------
@@ -46,14 +48,24 @@ public:
     Mode mode() const;
 
     float learnrate() const;
+    int randomSeed() const;
+    float weightInitAmp() const;
+    float weightInitOffset() const;
+    float weightInitLocalAmp() const;
+    float weightInitLocalPow() const;
 
     const QSize& inputRes() const;
     const QSize& outputRes() const;
     const QSize& weightRes() const;
+
     int outputFormat() const;
+    /** Dimension of cell state [1,4] (float or vecX) */
+    int typeDimension() const;
 
     bool isInputSigned() const;
     bool isOutputSigned() const;
+    /** Should alpha channel always be clamped to 1.0 */
+    bool isClampAlpha() const;
 
     QString infoString() const;
 
@@ -62,6 +74,11 @@ public:
     void setMode(Mode m);
 
     void setLearnrate(float lr);
+    void setRandomSeed(int s);
+    void setWeightInitAmp(float);
+    void setWeightInitOffset(float);
+    void setWeightInitLocalAmp(float);
+    void setWeightInitLocalPow(float);
 
     void setInputRes(const QSize& si);
     void setOutputRes(const QSize& si);
@@ -70,10 +87,13 @@ public:
     void setInputTexture(const GL::Texture*);
     void setWeightTexture(const GL::Texture*);
     void setErrorTexture(const GL::Texture*);
+
     void setOutputFormat(int glenum);
+    void setTypeDimension(int);
 
     void setInputSigned(bool);
     void setOutputSigned(bool);
+    void setClampAlpha(bool);
 
     // ------ opengl ------------
 

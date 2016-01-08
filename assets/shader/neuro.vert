@@ -8,7 +8,7 @@ out vec2 v_pixelCoord;
 
 void main()
 {
-    v_pixelCoord = a_position.xy * u_resolution.xy;
+    v_pixelCoord = (a_position.xy * .5 + .5) * u_resolution.xy;
     gl_Position = a_position;
 }
 

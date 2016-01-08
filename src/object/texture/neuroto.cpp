@@ -52,10 +52,19 @@ struct NeuroTO::Private
 
     NeuroGl * neurogl;
 
-    ParameterFloat* p_learnrate;
-    ParameterInt * p_out_width, *p_out_height;
-    ParameterSelect* p_mode, *p_signed_input, *p_signed_output;
-    ParameterSelect* p_tex_format_out, *p_tex_type_out;
+    ParameterFloat
+            *p_learnrate,
+            *p_weight_amp, *p_weight_offset,
+            *p_weight_local_amp, *p_weight_local_pow;
+    ParameterInt
+            *p_in_width, *p_in_height,
+            *p_out_width, *p_out_height,
+            *p_weight_width, *p_weight_height,
+            *p_randomSeed;
+    ParameterSelect
+            *p_mode, *p_signed_input, *p_signed_output,
+            *p_clamp_alpha,
+            *p_tex_format_out, *p_tex_type_out;
 };
 
 NeuroTO::NeuroTO(QObject *parent)
@@ -95,29 +104,18 @@ void NeuroTO::createParameters()
         p_->p_mode = params()->createSelectParameter(
                     "nn_mode", tr("mode"),
                     tr("Component mode / functionality"),
-        { "bypass", "fprop", "brop"
+        { "bypass", "fprop", "brop", "weightinit"
                     },
-        { tr("bypass"), tr("forward propagation network"), tr("back propagation network")
-                    },
+        { tr("bypass"), tr("forward propagation network"), tr("back propagation network"),
+          tr("weight init") },
         { tr("copies states from input to output"),
           tr("A complex input->output processor with fixed weights"),
-          tr("A complex input->output processor with expected input and learning ability")
+          tr("A complex input->output processor with expected input and learning ability"),
+          tr("Initializes weights for a specific input/output architecture")
                     },
-        { M_BYPASS, M_FPROP, M_FULL_BP
+        { M_BYPASS, M_FPROP, M_FULL_BP, M_WEIGHT_INIT
                     },
           getNeuroMode(), true, false);
-
-        p_->p_out_width = params()->createIntParameter(
-                    "tex_width_out", tr("output width"),
-                    tr("Width of the output texture"),
-                    16, true, false);
-        p_->p_out_width->setMinValue(1);
-
-        p_->p_out_height = params()->createIntParameter(
-                    "tex_height_out", tr("output height"),
-                    tr("Height of the output texture"),
-                    16, true, false);
-        p_->p_out_height->setMinValue(1);
 
         p_->p_tex_format_out = params()->createTextureFormatParameter(
                         "tex_format_out", tr("output format"),
@@ -125,12 +123,6 @@ void NeuroTO::createParameters()
         p_->p_tex_type_out = params()->createTextureTypeParameter(
                         "tex_type_out", tr("output type"),
                         tr("The precision of the output texture"), 32);
-
-        p_->p_learnrate = params()->createFloatParameter(
-                    "learnrate", tr("learnrate"),
-                    tr("The amount of change to the weights per iteration"),
-                    0.01, 0., 1.,
-                    0.001);
 
         p_->p_signed_input = params()->createBooleanParameter(
                     "signed_input", tr("signed input texture"),
@@ -145,6 +137,86 @@ void NeuroTO::createParameters()
                     tr("Unsigned values in the range [0,1], where 0.5 is actually zero"),
                     tr("Signed values, range dependend on texture format, typically [-1,1]"),
                     true, true, false);
+
+        p_->p_clamp_alpha = params()->createBooleanParameter(
+                    "clamp_alpha", tr("clamp alpha channel"),
+                    tr("Should alpha channel be clamped"),
+                    tr("Alpha channel is zero, or a normal value in case of RGBA format"),
+                    tr("Alpha channel is clamped to 1"),
+                    false, true, false);
+
+        p_->p_in_width = params()->createIntParameter(
+                    "tex_width_in", tr("input width"),
+                    tr("Width of the input texture"),
+                    16, true, false);
+        p_->p_in_width->setMinValue(1);
+
+        p_->p_in_height = params()->createIntParameter(
+                    "tex_height_in", tr("input height"),
+                    tr("Height of the input texture"),
+                    16, true, false);
+        p_->p_in_height->setMinValue(1);
+
+        p_->p_out_width = params()->createIntParameter(
+                    "tex_width_out", tr("output width"),
+                    tr("Width of the output texture"),
+                    16, true, false);
+        p_->p_out_width->setMinValue(1);
+
+        p_->p_out_height = params()->createIntParameter(
+                    "tex_height_out", tr("output height"),
+                    tr("Height of the output texture"),
+                    16, true, false);
+        p_->p_out_height->setMinValue(1);
+
+        p_->p_weight_width = params()->createIntParameter(
+                    "tex_width_weight", tr("weights width"),
+                    tr("Width of the weight texture"),
+                    16, true, false);
+        p_->p_weight_width->setMinValue(1);
+
+        p_->p_weight_height = params()->createIntParameter(
+                    "tex_height_weight", tr("weights height"),
+                    tr("Height of the weight texture"),
+                    16, true, false);
+        p_->p_weight_height->setMinValue(1);
+
+        p_->p_randomSeed = params()->createIntParameter(
+                    "random_seed", tr("random seed"),
+                    tr("Random variation seed"),
+                    0, true, true);
+
+        p_->p_learnrate = params()->createFloatParameter(
+                    "learnrate", tr("learnrate"),
+                    tr("The amount of change to the weights per iteration"),
+                    0.01, 0., 1.,
+                    0.001);
+
+        p_->p_weight_amp = params()->createFloatParameter(
+                    "weight_amp", tr("weight deviation"),
+                    tr("The amount of random deviation to the weights"),
+                    0.5, 0., 100.,
+                    0.01);
+
+        p_->p_weight_offset = params()->createFloatParameter(
+                    "weight_offset", tr("weight mean"),
+                    tr("The offset of the weight values"),
+                    0.0, -100., 100.,
+                    0.01);
+
+        p_->p_weight_local_amp = params()->createFloatParameter(
+                    "weight_local_amp", tr("weight localize amplitude"),
+                    tr("The amount of local reception fields on the weights - "
+                       "mapping an 2D input area to the respective output area"),
+                    0.0, -100., 100.,
+                    0.01);
+
+        p_->p_weight_local_pow = params()->createFloatParameter(
+                    "weight_local_pow", tr("weight localize exponent"),
+                    tr("The exponent of the local reception field curve, "
+                       "the higher, the more localized"),
+                    1.0, 0.00001, 100000.,
+                    0.1);
 
     params()->endParameterGroup();
 
@@ -180,15 +252,24 @@ void NeuroTO::updateParameterVisibility()
     const bool
             bypass = mode == M_BYPASS,
             fprop = mode == M_FPROP,
-            fullbp = mode == M_FULL_BP;
+            fullbp = mode == M_FULL_BP,
+            weighti = mode == M_WEIGHT_INIT,
+            hasInp = bypass || fprop || fullbp;
 
-    p_->p_out_width->setVisible(bypass);
-    p_->p_out_height->setVisible(bypass);
+    p_->p_signed_input->setVisible(hasInp);
+    p_->p_in_width->setVisible(weighti);
+    p_->p_in_height->setVisible(weighti);
+    p_->p_out_width->setVisible(bypass || fprop || weighti);
+    p_->p_out_height->setVisible(bypass || fprop || weighti);
+    p_->p_learnrate->setVisible(fullbp);
+    p_->p_weight_width->setVisible(weighti);
+    p_->p_weight_height->setVisible(weighti);
+    p_->p_weight_local_amp->setVisible(weighti);
+    p_->p_weight_local_pow->setVisible(weighti);
 
     textureParams()[NeuroGl::SLOT_INPUT]->setVisible(  bypass || fprop || fullbp );
     textureParams()[NeuroGl::SLOT_WEIGHT]->setVisible( fprop || fullbp );
     textureParams()[NeuroGl::SLOT_ERROR]->setVisible(  fullbp );
-
 }
 
 QString NeuroTO::getOutputName(SignalType st, uint channel) const
@@ -255,19 +336,20 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
 
     auto texIn = to->inputTexture(NeuroGl::SLOT_INPUT, rt);
 
-    neurogl->setInputTexture(texIn);
     neurogl->setOutputFormat((int)glformat);
+    neurogl->setTypeDimension(GL::channelSize(glformat));
+    std::cout << GL::channelSize(glformat) << std::endl;
     neurogl->setInputSigned(p_signed_input->baseValue());
     neurogl->setOutputSigned(p_signed_output->baseValue());
+    neurogl->setClampAlpha(p_clamp_alpha->baseValue());
 
-    if (!texIn)
-        return;
 
     switch (to->getNeuroMode())
     {
         case M_BYPASS:
         {
             neurogl->setMode(NeuroGl::MODE_BYPASS);
+            neurogl->setInputTexture(texIn);
             neurogl->setOutputRes(QSize(p_out_width->baseValue(),
                                         p_out_height->baseValue()));
         }
@@ -278,7 +360,10 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
             auto texWeight = to->inputTexture(NeuroGl::SLOT_WEIGHT, rt);
 
             neurogl->setMode(NeuroGl::MODE_FPROP);
+            neurogl->setInputTexture(texIn);
             neurogl->setWeightTexture(texWeight);
+            neurogl->setOutputRes(QSize(p_out_width->baseValue(),
+                                        p_out_height->baseValue()));
         }
         break;
 
@@ -288,9 +373,27 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
             auto texError = to->inputTexture(NeuroGl::SLOT_ERROR, rt);
 
             neurogl->setMode(NeuroGl::MODE_BPROP);
+            neurogl->setInputTexture(texIn);
             neurogl->setWeightTexture(texWeight);
             neurogl->setErrorTexture(texError);
             neurogl->setLearnrate(p_learnrate->value(rt));
+        }
+        break;
+
+        case M_WEIGHT_INIT:
+        {
+            neurogl->setMode(NeuroGl::MODE_WEIGHT_INIT);
+            neurogl->setInputRes(QSize(p_in_width->baseValue(),
+                                        p_in_height->baseValue()));
+            neurogl->setOutputRes(QSize(p_out_width->baseValue(),
+                                        p_out_height->baseValue()));
+            neurogl->setWeightRes(QSize(p_weight_width->baseValue(),
+                                        p_weight_height->baseValue()));
+            neurogl->setRandomSeed(p_randomSeed->value(rt));
+            neurogl->setWeightInitAmp(p_weight_amp->value(rt));
+            neurogl->setWeightInitOffset(p_weight_offset->value(rt));
+            neurogl->setWeightInitLocalAmp(p_weight_local_amp->value(rt));
+            neurogl->setWeightInitLocalPow(p_weight_local_pow->value(rt));
         }
         break;
     }
@@ -299,7 +402,9 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
 void NeuroTO::renderGl(const GL::RenderSettings&, const RenderTime& time)
 {
     p_->updateNeuro(time);
-    p_->neurogl->step(1);
+    MO_EXTEND_EXCEPTION(
+                p_->neurogl->step(1);
+    , "in NeuroGl of object '" << name() << "'");
 }
 
 } // namespace MO

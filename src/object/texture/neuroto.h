@@ -26,7 +26,8 @@ public:
         M_BYPASS,
         M_FPROP,
         /** Full input->output processor with back-prop */
-        M_FULL_BP
+        M_FULL_BP,
+        M_WEIGHT_INIT
     };
 
     MO_OBJECT_CONSTRUCTOR(NeuroTO);

@@ -38,9 +38,10 @@ struct NeuroGl::Private
         GL::FrameBufferObject* fbo;
         GL::Shader* shader;
         GL::VertexArrayObject* quad;
-        GL::Attribute *u_position;
         GL::Uniform *u_resolution,
-                    *u_learnrate;
+                    *u_learnrate,
+                    *u_rseed,
+                    *u_weight_init;
     };
 
     Private(NeuroGl* p)
@@ -48,11 +49,19 @@ struct NeuroGl::Private
         , texIn         (0)
         , texWeight     (0)
         , texError      (0)
+        , outputFormat  (gl::GL_RGBA32F)
+        , typeDimension (4)
         , doRecompile   (true)
         , mode          (MODE_BYPASS)
         , learnrate     (0.1)
+        , weightInitAmp (.5)
+        , weightInitOffset(0.)
+        , weightInitLocal(0.)
+        , weightInitLocalPow(1.)
         , isInputSigned (true)
         , isOutputSigned(true)
+        , isClampAlpha  (false)
+        , randomSeed    (0)
     {
         stages.resize(2);
     }
@@ -65,6 +74,10 @@ struct NeuroGl::Private
     void updateBypassStage(const QSize& resIn, const QSize& resOut, Stage*) const;
     void updateFPropStage(const QSize& resIn, const QSize& resOut,
                           const QSize& resWeight, Stage*) const;
+    void updateWeightInitStage(const QSize& resIn, const QSize& resOut,
+                          const QSize& resWeight, Stage*) const;
+    void clearStage(Stage*);
+    bool checkStageReady(Stage*) const;
     void releaseGl();
     void bindInput();
     void bindWeight();
@@ -78,12 +91,16 @@ struct NeuroGl::Private
 
     const GL::Texture* texIn, *texWeight, *texError;
     gl::GLenum outputFormat;
+    int typeDimension;
     bool doRecompile;
 
     Mode mode;
-    float learnrate;
+    float learnrate,
+        weightInitAmp, weightInitOffset,
+        weightInitLocal, weightInitLocalPow;
     QSize inputRes, outputRes, weightRes;
-    bool isInputSigned, isOutputSigned;
+    bool isInputSigned, isOutputSigned, isClampAlpha;
+    int randomSeed;
 };
 
 
@@ -145,38 +162,57 @@ QString NeuroGl::infoString() const
 NeuroGl::Mode NeuroGl::mode() const { return p_->mode; }
 
 float NeuroGl::learnrate() const { return p_->learnrate; }
+int NeuroGl::randomSeed() const { return p_->randomSeed; }
+float NeuroGl::weightInitAmp() const { return p_->weightInitAmp; }
+float NeuroGl::weightInitOffset() const { return p_->weightInitOffset; }
+float NeuroGl::weightInitLocalAmp() const { return p_->weightInitLocal; }
+float NeuroGl::weightInitLocalPow() const { return p_->weightInitLocalPow; }
 
 const QSize& NeuroGl::inputRes() const { return p_->inputRes; }
 const QSize& NeuroGl::outputRes() const { return p_->outputRes; }
 const QSize& NeuroGl::weightRes() const { return p_->weightRes; }
 
 int NeuroGl::outputFormat() const { return (int)p_->outputFormat; }
+int NeuroGl::typeDimension() const { return p_->typeDimension; }
 
 bool NeuroGl::isInputSigned() const { return p_->isInputSigned; }
 bool NeuroGl::isOutputSigned() const { return p_->isOutputSigned; }
+bool NeuroGl::isClampAlpha() const { return p_->isClampAlpha; }
 
 // ------ setter ------------
 
-void NeuroGl::setMode(Mode m) { p_->doRecompile = p_->mode != m; p_->mode = m; }
+void NeuroGl::setMode(Mode m)
+    { p_->doRecompile |= p_->mode != m; p_->mode = m; }
 
 void NeuroGl::setLearnrate(float lr) { p_->learnrate = lr; }
+void NeuroGl::setRandomSeed(int s) { p_->randomSeed = s; }
+void NeuroGl::setWeightInitAmp(float w) { p_->weightInitAmp = w; }
+void NeuroGl::setWeightInitOffset(float w) { p_->weightInitOffset = w; }
+void NeuroGl::setWeightInitLocalAmp(float w) { p_->weightInitLocal = w; }
+void NeuroGl::setWeightInitLocalPow(float w) { p_->weightInitLocalPow = w; }
 
 void NeuroGl::setInputRes(const QSize& si)
-    { p_->doRecompile = p_->inputRes != si; p_->inputRes = si; }
+    { p_->doRecompile |= p_->inputRes != si; p_->inputRes = si; }
 void NeuroGl::setOutputRes(const QSize& si)
-    { p_->doRecompile = p_->outputRes != si; p_->outputRes = si; }
+    { p_->doRecompile |= p_->outputRes != si; p_->outputRes = si; }
 void NeuroGl::setWeightRes(const QSize& si)
-    { p_->doRecompile = p_->weightRes != si; p_->weightRes = si; }
+    { p_->doRecompile |= p_->weightRes != si; p_->weightRes = si; }
 
 void NeuroGl::setInputTexture(const GL::Texture* t) { p_->texIn = t; }
 void NeuroGl::setWeightTexture(const GL::Texture* t) { p_->texWeight = t; }
 void NeuroGl::setErrorTexture(const GL::Texture* t) { p_->texError = t; }
-void NeuroGl::setOutputFormat(int glenum) { p_->outputFormat = (gl::GLenum)glenum; }
+void NeuroGl::setOutputFormat(int glenum)
+    { p_->doRecompile |= p_->outputFormat != (gl::GLenum)glenum;
+        p_->outputFormat = (gl::GLenum)glenum; }
+void NeuroGl::setTypeDimension(int d)
+    { p_->doRecompile |= p_->typeDimension != d; p_->typeDimension = d; }
 
 void NeuroGl::setInputSigned(bool b)
-    { p_->doRecompile = p_->isInputSigned != b; p_->isInputSigned = b; }
+    { p_->doRecompile |= p_->isInputSigned != b; p_->isInputSigned = b; }
 void NeuroGl::setOutputSigned(bool b)
-    { p_->doRecompile = p_->isOutputSigned != b; p_->isOutputSigned = b; }
+    { p_->doRecompile |= p_->isOutputSigned != b; p_->isOutputSigned = b; }
+void NeuroGl::setClampAlpha(bool b)
+    { p_->doRecompile |= p_->isClampAlpha != b; p_->isClampAlpha = b; }
 
 // ----- opengl ------------
 
@@ -262,14 +298,29 @@ void NeuroGl::Private::updateShader(
         if (s->shader->isReady() && *s->shader->source() != src)
         {
             s->shader->releaseGL();
-            s->shader = 0;
         }
+        delete s->shader;
+        s->shader = 0;
     }
     if (!s->shader)
     {
         s->shader = new GL::Shader(name);
         s->shader->setSource(src);
         s->shader->compile();
+
+        auto u_tex = s->shader->getUniform("u_tex_input");
+        if (u_tex) u_tex->ints[0] = SLOT_INPUT;
+        u_tex = s->shader->getUniform("u_tex_weight");
+        if (u_tex) u_tex->ints[0] = SLOT_WEIGHT;
+        u_tex = s->shader->getUniform("u_tex_error");
+        if (u_tex) u_tex->ints[0] = SLOT_ERROR;
+        u_tex = s->shader->getUniform("u_tex_prev_out");
+        if (u_tex) u_tex->ints[0] = SLOT_PREV_OUT;
+
+        s->u_learnrate = s->shader->getUniform("u_learnrate");
+        s->u_resolution = s->shader->getUniform("u_resolution");
+        s->u_rseed = s->shader->getUniform("u_rseed");
+        s->u_weight_init = s->shader->getUniform("u_weight_init");
     }
 }
 
@@ -290,14 +341,15 @@ void NeuroGl::Private::updateQuad(Stage* s, const QString& name) const
         auto g = new GEOM::Geometry();
         try
         {
-            GEOM::GeometryFactory::createQuad(g, 1, 1);
+            GEOM::GeometryFactory::createQuad(g, 2, 2);
             g->getVertexArrayObject(s->quad, s->shader);
         }
-        catch (...)
+        catch (Exception& e)
         {
             g->releaseRef();
             delete s->quad;
             s->quad = 0;
+            e << "\nwhen creating shader quad for NeuroGl stage";
             throw;
         }
         g->releaseRef();
@@ -321,12 +373,14 @@ GL::ShaderSource NeuroGl::Private::getDefaultSource(
                 "#define SIGNED_INPUT   %2\n"
                 "#define SIGNED_OUTPUT  %3\n"
                 "#define SIGNED_WEIGHTS %4\n"
-                "#define LABEL_INPUT    %5\n\n"
+                "#define CLAMP_ALPHA_1  %5\n\n"
+                "#define LABEL_INPUT    %6\n\n"
                 "// --- resolutions --\n\n")
-            .arg(1)
+            .arg(typeDimension)
             .arg(isInputSigned ? 1 : 0)
             .arg(isOutputSigned ? 1 : 0)
             .arg(isInputSigned ? 1 : 0)
+            .arg(isClampAlpha ? 1 : 0)
             .arg(0)
             ;
 
@@ -359,20 +413,23 @@ GL::ShaderSource NeuroGl::Private::getDefaultSource(
         defines += "const int NUM_IN = INPUT_RES.x * INPUT_RES.y;\n";
     if (!resOut.isEmpty())
         defines += "const int NUM_OUT = OUTPUT_RES.x * OUTPUT_RES.y;\n";
+    if (!resWeight.isEmpty())
+        defines += "const int NUM_WEIGHT = WEIGHT_RES.x * WEIGHT_RES.y;\n";
 
     src.addDefine(defines);
 
+    //std::cout << defines << std::endl;
     //std::cout << src.fragmentSource() << std::endl;
     return src;
 }
 
 void NeuroGl::Private::updateGl()
 {
-    MO_NEURO_DEBUG("updateGl()\n");
+    MO_NEURO_DEBUG("updateGl() doRecompile=" << doRecompile);
 
     // input resolution
     QSize resIn = inputRes;
-    if (texIn)
+    if (mode != MODE_WEIGHT_INIT && texIn)
     {
         QSize s(texIn->width(), texIn->height());
         doRecompile |= resIn != s;
@@ -381,7 +438,7 @@ void NeuroGl::Private::updateGl()
 
     // output resolution
     QSize resOut = outputRes;
-    if (texError)
+    if (mode == MODE_BPROP && texError)
     {
         QSize s(texError->width(), texError->height());
         doRecompile |= resOut != s;
@@ -390,7 +447,7 @@ void NeuroGl::Private::updateGl()
 
     // weight resolution
     QSize resWeight = weightRes;
-    if (texWeight)
+    if (mode != MODE_WEIGHT_INIT && texWeight)
     {
         QSize s(texWeight->width(), texWeight->height());
         doRecompile |= resWeight != s;
@@ -405,18 +462,27 @@ void NeuroGl::Private::updateGl()
             inputRes = resIn;
             outputRes = resOut;
             updateBypassStage(resIn, resOut, &stages[0]);
+            clearStage(&stages[1]);
         break;
         case MODE_FPROP:
             inputRes = resIn;
             outputRes = resOut;
             weightRes = resWeight;
             updateFPropStage(resIn, resOut, resWeight, &stages[0]);
+            clearStage(&stages[1]);
         break;
         case MODE_BPROP:
             inputRes = resIn;
             outputRes = resOut;
             weightRes = resWeight;
             updateFPropStage(resIn, resOut, resWeight, &stages[0]);
+        break;
+        case MODE_WEIGHT_INIT:
+            inputRes = resIn;
+            outputRes = resOut;
+            weightRes = resWeight;
+            clearStage(&stages[0]);
+            updateWeightInitStage(resIn, resOut, resWeight, &stages[1]);
         break;
     }
 
@@ -427,35 +493,40 @@ void NeuroGl::Private::releaseGl()
 {
     // release each stage
     for (Stage& stage : stages)
+        clearStage(&stage);
+}
+
+void NeuroGl::Private::clearStage(Stage* s)
+{
+    if (s->fbo)
     {
-        if (stage.fbo)
-        {
-            if (stage.fbo->isCreated())
-                stage.fbo->release();
-            delete stage.fbo;
-            stage.fbo = 0;
-        }
-        if (stage.shader)
-        {
-            if (stage.shader->isReady())
-                stage.shader->releaseGL();
-            delete stage.shader;
-            stage.shader = 0;
-        }
-        if (stage.quad)
-        {
-            if (stage.quad->isCreated())
-                stage.quad->release();
-            delete stage.quad;
-            stage.quad = 0;
-        }
+        if (s->fbo->isCreated())
+            s->fbo->release();
+        delete s->fbo;
+        s->fbo = 0;
+    }
+    if (s->shader)
+    {
+        if (s->shader->isReady())
+            s->shader->releaseGL();
+        delete s->shader;
+        s->shader = 0;
+    }
+    if (s->quad)
+    {
+        if (s->quad->isCreated())
+            s->quad->release();
+        delete s->quad;
+        s->quad = 0;
     }
 }
+
 
 void NeuroGl::Private::updateBypassStage(
         const QSize& resIn, const QSize& resOut, Stage* s) const
 {
-    MO_NEURO_DEBUG("updateBypassStage(" << resIn << ", " << resOut << ", " << s);
+    MO_NEURO_DEBUG("updateBypassStage(" << resIn << ", " << resOut << ", " << s << ")"
+                   " doRecompile=" << doRecompile);
 
     if (resIn.isEmpty() || resOut.isEmpty())
         return;
@@ -488,28 +559,45 @@ void NeuroGl::Private::updateFPropStage(
     }
 }
 
+
+void NeuroGl::Private::updateWeightInitStage(
+        const QSize& resIn, const QSize& resOut, const QSize& resWeight, Stage* s) const
+{
+    if (resIn.isEmpty() || resOut.isEmpty() || resWeight.isEmpty())
+        return;
+
+    updateFbo(s->fbo, resWeight);
+
+    if (doRecompile)
+    {
+        GL::ShaderSource src = getDefaultSource(resIn, resOut, resWeight);
+        src.addDefine("#define MODE M_WEIGHT_INIT");
+        updateShader(s, src, "weight");
+        updateQuad(s, "weight");
+    }
+}
+
+bool NeuroGl::Private::checkStageReady(Stage* s) const
+{
+    return (s->fbo && s->fbo->isCreated()
+         && s->shader && s->shader->isReady()
+         && s->quad && s->quad->isCreated());
+}
+
 void NeuroGl::Private::step()
 {
-    // require input
-    if (!texIn)
-        return;
-
     updateGl();
-
-    // something went wrong?
-    if (!stages[0].fbo || !stages[0].fbo->isCreated()
-        || !stages[0].shader || !stages[0].shader->isReady()
-        || !stages[0].quad || !stages[0].quad->isCreated())
-    {
-        MO_GL_WARNING("NeuroGl not initialized\n"
-                      << p->infoString());
-        return;
-    }
 
     switch (mode)
     {
         case MODE_BYPASS:
         {
+            if (!checkStageReady(&stages[0]))
+            {
+                MO_GL_WARNING("NeuroGl not initialized\n" << p->infoString());
+                return;
+            }
+
             bindInput();
             renderStage(&stages[0]);
         }
@@ -517,8 +605,11 @@ void NeuroGl::Private::step()
 
         case MODE_FPROP:
         {
-            if (!texWeight)
+            if (!checkStageReady(&stages[0]))
+            {
+                MO_GL_WARNING("NeuroGl not initialized\n" << p->infoString());
                 return;
+            }
 
             bindInput();
             bindWeight();
@@ -529,8 +620,12 @@ void NeuroGl::Private::step()
 
         case MODE_BPROP:
         {
-            if (!texWeight)
+            if (!checkStageReady(&stages[0])
+              || !checkStageReady(&stages[1]))
+            {
+                MO_GL_WARNING("NeuroGl not initialized\n" << p->infoString());
                 return;
+            }
 
             bindInput();
             bindWeight();
@@ -539,17 +634,44 @@ void NeuroGl::Private::step()
             renderStage(&stages[0]);
         }
         break;
+
+        case MODE_WEIGHT_INIT:
+        {
+            if (!checkStageReady(&stages[1]))
+            {
+                MO_GL_WARNING("NeuroGl not initialized\n" << p->infoString());
+                return;
+            }
+            renderStage(&stages[1]);
+        }
+        break;
     }
 
 }
 
 void NeuroGl::Private::renderStage(Stage* s)
 {
+    MO_NEURO_DEBUG("renderStage(" << s << ")");
+
     s->fbo->bind();
+    s->fbo->setViewport();
+    MO_CHECK_GL_THROW( gl::glClearColor(0, 0, 0, 0) );
+    MO_CHECK_GL_THROW( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
     s->shader->activate();
+    if (s->u_learnrate)
+        s->u_learnrate->floats[0] = learnrate;
+    if (s->u_resolution)
+        s->u_resolution->setFloats(s->fbo->width(), s->fbo->height());
+    if (s->u_rseed)
+        s->u_rseed->ints[0] = randomSeed;
+    if (s->u_weight_init)
+        s->u_weight_init->setFloats(weightInitOffset, weightInitAmp,
+                                    weightInitLocal, weightInitLocalPow);
+    s->shader->sendUniforms();
     s->quad->drawElements();
     s->shader->deactivate();
     s->fbo->unbind();
+    s->fbo->setChanged();
 }
 
 } // namespace MO

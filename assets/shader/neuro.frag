@@ -4,7 +4,9 @@ uniform sampler2D   u_tex_input;
 uniform sampler2D   u_tex_weight;
 uniform sampler2D   u_tex_error;
 uniform sampler2D   u_tex_prev_out;
-uniform float       u_learnRate;
+uniform float       u_learnrate;
+uniform int         u_rseed;
+uniform vec4        u_weight_init;
 
 in vec2 v_pixelCoord;
 
@@ -15,24 +17,37 @@ out vec4 fragColor;
 #define M_BYPASS 0
 #define M_FPROP 1
 #define M_BPROP 2
+#define M_WEIGHT_INIT 3
 
 #if TYPE_DIMENSION == 1
-#	define TYPE float
-#	define TYPE_SWIZZLE x
+#   define TYPE float
+#   define TYPE_SWIZZLE x
 #   define TYPE_TO_4(x) vec4(x, 0., 0., 0.)
+#   define TYPE_HASH(x) hash1(x)
 #elif TYPE_DIMENSION == 2
-#	define TYPE vec2
-#	define TYPE_SWIZZLE xy
+#   define TYPE vec2
+#   define TYPE_SWIZZLE xy
 #   define TYPE_TO_4(x) vec4(x, 0., 0.)
+#   define TYPE_HASH(x) hash2(x)
 #elif TYPE_DIMENSION == 3
-#	define TYPE vec3
-#	define TYPE_SWIZZLE xyz
+#   define TYPE vec3
+#   define TYPE_SWIZZLE xyz
 #   define TYPE_TO_4(x) vec4(x, 0.)
+#   define TYPE_HASH(x) hash3(x)
 #elif TYPE_DIMENSION == 4
-#	define TYPE vec4
-#	define TYPE_SWIZZLE xyzw
+#   define TYPE vec4
+#   define TYPE_SWIZZLE xyzw
 #   define TYPE_TO_4(x) x
+#   define TYPE_HASH(x) vec4(hash3(x), hash1((x)*1.1618005))
 #endif
+
+#if MODE == M_WEIGHT_INIT
+    #include <dh/hash>
+    // random number between -1, 1
+    TYPE random(int seedx, int seedy)
+        { return TYPE_HASH(vec2(float(seedx), float(seedy))) * 2. - 1.; }
+#endif
+
 
 float activation_func(in float x) { return tanh(x); }
 float derivative_func(in float e, in float x) { return e * (1. - x * x); }
@@ -126,7 +141,7 @@ TYPE bprop_weight(in int i, in int o, in TYPE e)
     TYPE inp = input_state(i);
     TYPE w = weight(i, o);
     TYPE d = derivative_func(e, output_state(o));
-    return w + u_learnRate * inp * d;
+    return w + u_learnrate * inp * d;
 }
 #endif
 
@@ -150,14 +165,34 @@ void main()
     int o = x / NUM_IN; 			// output cell
     float err = error_state(o);			// error at output
     TYPE val = bprop_weight(i, o, err);
+
+#elif MODE == M_WEIGHT_INIT
+    int x = pix.y * WEIGHT_RES.x + pix.x; 	// weight index
+    int i = x % NUM_IN; 			// input cell
+    int o = x / NUM_IN; 			// output cell
+    // respective input/output vectors [-1,1]
+    vec2 iv = vec2(float(i % INPUT_RES.x), float(i / INPUT_RES.x))
+                            / vec2(float(INPUT_RES.x), float(INPUT_RES.y));
+    vec2 ov = vec2(float(o % OUTPUT_RES.x), float(o / OUTPUT_RES.x))
+                            / vec2(float(OUTPUT_RES.x), float(OUTPUT_RES.y));
+    // distance based receptive field
+    float d = distance(iv, ov) / sqrt(2.);
+          d = pow(max(0., 1. - d), u_weight_init.w);
+    // noise
+    TYPE n = random(i + u_rseed, o + u_rseed * NUM_IN)
+                * u_weight_init.y + u_weight_init.x;
+    TYPE val = n + u_weight_init.z * d;
 #endif
 
 
 #if SIGNED_OUTPUT
     fragColor = TYPE_TO_4(val);
 #else
-    fragColor = TYPE_TO_4(val) * .5 + .5;
+    fragColor = clamp(TYPE_TO_4(val) * .5 + .5, 0., 1.);
 #endif
 
+#if CLAMP_ALPHA_1
+    fragColor.a = 1.;
+#endif
 }
 
