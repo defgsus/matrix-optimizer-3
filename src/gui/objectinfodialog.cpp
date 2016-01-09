@@ -109,7 +109,7 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ----- modulators -----
 
-    auto mods = o->params()->getModulatingObjects(false);
+    auto mods = o->params()->getModulatingObjectsList(false);
     if (!mods.isEmpty())
     {
         s << "<p>modulators:";

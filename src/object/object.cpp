@@ -23,6 +23,7 @@
 #include "audio/spatial/spatialmicrophone.h"
 #include "util/objecteditor.h"
 #include "util/audioobjectconnections.h"
+#include "util/objectconnectiongraph.h"
 #include "math/transformationbuffer.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -739,15 +740,10 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
             }
 
     // test for modulation loops
-    QList<Object*> mods = o->getFutureModulatingObjects(sceneObject());
+    ObjectConnectionGraph graph;
+    o->getFutureModulatingObjects(graph, const_cast<Scene*>(sceneObject()), true);
 
-#ifdef MO_DO_DEBUG_MOD
-    MO_DEBUG_MOD("--- " << mods.size() << " modulators for " << o->idName());
-    for (auto m : mods)
-        MO_DEBUG_MOD(m->idName());
-#endif
-
-    if (mods.contains((Object*)this))
+    if (graph.hasObject(const_cast<Object*>(this)))
     {
         error = tr("Adding '%1' as a child to '%2' would cause an infinite "
                    "modulation loop!").arg(o->name()).arg(name());
@@ -1362,27 +1358,35 @@ QList<Modulator*> Object::getModulators(bool recursive) const
     return mods;
 }
 
-QList<Object*> Object::getModulatingObjects() const
+void Object::getModulatingObjects(ObjectConnectionGraph& graph, bool recursive) const
 {
-    QList<Object*> list;
-
     for (auto p : params()->parameters())
-    {
-        list.append(p->getModulatingObjects());
-    }
+        p->getModulatingObjects(graph, recursive);
+}
 
+QList<Object*> Object::getModulatingObjectsList(bool recursive) const
+{
+    ObjectConnectionGraph graph;
+    getModulatingObjects(graph, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(const_cast<Object*>(this));
     return list;
 }
 
-QList<Object*> Object::getFutureModulatingObjects(const Scene *scene) const
+void Object::getFutureModulatingObjects(
+        ObjectConnectionGraph& graph, const Scene *scene, bool recursive) const
 {
-    QList<Object*> list;
-
     for (auto p : params()->parameters())
-    {
-        list.append(p->getFutureModulatingObjects(scene));
-    }
+        p->getFutureModulatingObjects(graph, scene, recursive);
+}
 
+QList<Object*> Object::getFutureModulatingObjectsList(
+            const Scene *scene, bool recursive) const
+{
+    ObjectConnectionGraph graph;
+    getFutureModulatingObjects(graph, scene, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(const_cast<Object*>(this));
     return list;
 }
 
@@ -1392,7 +1396,7 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
 
     for (auto p : params()->parameters())
     {
-        const QList<Object*> list = p->getModulatingObjects();
+        const QList<Object*> list = p->getModulatingObjectsList(false);
 
         for (auto o : list)
             pairs.append(qMakePair(p, o));

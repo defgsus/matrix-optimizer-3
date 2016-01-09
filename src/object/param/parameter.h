@@ -184,12 +184,21 @@ public:
     /** Returns a list of all modulator ids. */
     QList<QString> getModulatorIds() const;
 
-    /** Returns a list of all modulator objects (valid after collectModulators()) */
-    QList<Object*> getModulatingObjects(bool recursive = true) const;
+    /** Adds all modulator objects to the graph (valid after collectModulators()) */
+    void getModulatingObjects(ObjectConnectionGraph&, bool recursive) const;
 
     /** Returns the list of objects that will be modulating objects when
         this object gets added to @p scene. */
-    QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
+    void getFutureModulatingObjects(
+            ObjectConnectionGraph&, const Scene * scene, bool recursive) const;
+
+    /** Calls getModulatingObjects() and returns the linear list without this
+        Parameter's object */
+    QList<Object*> getModulatingObjectsList(bool recursive) const;
+
+    /** Calls getFutureModulatingObjects() and returns the linear list without this
+        Parameter's object */
+    QList<Object*> getFutureModulatingObjectsList(const Scene *scene, bool recursive) const;
 
 protected:
 

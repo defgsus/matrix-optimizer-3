@@ -292,13 +292,14 @@ void Scene::getNeededFiles_(Object * o, IO::FileList & files)
         getNeededFiles_(c, files);
 }
 
+/** @todo Super inefficient (and not used currently) */
 QSet<Object*> Scene::getAllModulators() const
 {
     QSet<Object*> set;
 
     for (auto o : allObjects_)
     {
-        QList<Object*> list = o->getModulatingObjects();
+        QList<Object*> list = o->getModulatingObjectsList(true);
         for (auto mod : list)
             set.insert(mod);
     }

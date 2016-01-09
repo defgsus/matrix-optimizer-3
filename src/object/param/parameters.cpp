@@ -24,6 +24,7 @@
 #include "parametertexture.h"
 #include "parametertransformation.h"
 #include "object/object.h"
+#include "object/util/objectconnectiongraph.h"
 #include "gl/opengl.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -154,21 +155,19 @@ QMap<QString, QList<Parameter*>> Parameters::getParameterGroups() const
     return map;
 }
 
-QList<Object*> Parameters::getModulatingObjects(bool recursive) const
+QList<Object*> Parameters::getModulatingObjectsList(bool recursive) const
 {
-    QSet<Object*> set;
-    getModulatingObjects(set, recursive);
-    return set.toList();
+    ObjectConnectionGraph graph;
+    getModulatingObjects(graph, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(object());
+    return list;
 }
 
-void Parameters::getModulatingObjects(QSet<Object*>& set, bool recursive) const
+void Parameters::getModulatingObjects(ObjectConnectionGraph& graph, bool recursive) const
 {
     for (auto p : parameters_)
-    {
-        auto l = p->getModulatingObjects(recursive);
-        for (auto o : l)
-            set.insert(o);
-    }
+        p->getModulatingObjects(graph, recursive);
 }
 
 QList<QString> Parameters::getModulatorIds() const

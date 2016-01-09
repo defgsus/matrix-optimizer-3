@@ -117,6 +117,7 @@ namespace MO {
     class ObjectFilter;
 
     class ObjectEditor;
+    class ObjectConnectionGraph;
     class ObjectDspPath;
     class ObjectTreeMimeData;
 

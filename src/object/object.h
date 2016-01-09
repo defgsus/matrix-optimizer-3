@@ -618,17 +618,30 @@ public:
         If @p recursive is true, all childs will add their Modulators too. */
     QList<Modulator*> getModulators(bool recursive = false) const;
 
-    /** Returns a list of objects that modulate this object. */
-    virtual QList<Object*> getModulatingObjects() const;
+    /** Adds all connections of objects that modulate this object to the graph.
+        If @p recursive is true, all connections from other modulators to the
+        modulators of this object are traced recursively.
+        Essentially call Parameter::getModulatingObjects() for each parameter. */
+    virtual void getModulatingObjects(ObjectConnectionGraph&, bool recursive) const;
+
+    /** Calls getModulatingObjects() and returns the ObjectConnectionGraph::makeLinear()
+        list without this object itself. */
+    QList<Object*> getModulatingObjectsList(bool recursive) const;
 
     /** Returns the list of all Parameters that are modulated.
         Each entry is a pair of the Parameter and the modulating object.
         Multiple modulations on the same Parameter have multiply entries in the list. */
     virtual QList<QPair<Parameter*, Object*>> getModulationPairs() const;
 
+    /** Adds all connections from all objects + the objects in @p scene that would
+        modulate any of this object's parameters, if the object was added to the scene. */
+    virtual void getFutureModulatingObjects(
+            ObjectConnectionGraph& graph, const Scene * scene, bool recursive) const;
+
     /** Returns a list of objects that will modulate this object
         when it gets added to the scene. */
-    virtual QList<Object*> getFutureModulatingObjects(const Scene * scene) const;
+    virtual QList<Object*> getFutureModulatingObjectsList(
+            const Scene * scene, bool recursive) const;
 
     // ------------ modulator outputs ----------------
 

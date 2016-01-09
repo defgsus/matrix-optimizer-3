@@ -24,7 +24,9 @@ public:
     enum Mode
     {
         M_BYPASS,
+        M_ERROR,
         M_FPROP,
+        M_BPROP,
         /** Full input->output processor with back-prop */
         M_FULL_BP,
         M_WEIGHT_INIT

@@ -60,10 +60,10 @@ struct NeuroTO::Private
             *p_in_width, *p_in_height,
             *p_out_width, *p_out_height,
             *p_weight_width, *p_weight_height,
-            *p_randomSeed;
+            *p_random_seed;
     ParameterSelect
             *p_mode, *p_signed_input, *p_signed_output,
-            *p_clamp_alpha,
+            *p_clamp_alpha, *p_error_is_label,
             *p_tex_format_out, *p_tex_type_out;
 };
 
@@ -104,16 +104,19 @@ void NeuroTO::createParameters()
         p_->p_mode = params()->createSelectParameter(
                     "nn_mode", tr("mode"),
                     tr("Component mode / functionality"),
-        { "bypass", "fprop", "brop", "weightinit"
+        { "bypass", "fpbp", "fprop", "bprop", "weightinit", "error"
                     },
-        { tr("bypass"), tr("forward propagation network"), tr("back propagation network"),
-          tr("weight init") },
+        { tr("bypass"), tr("perceptron network"),
+          tr("forward propagation"), tr("weight back propagation"),
+          tr("weight init"), tr("get error") },
         { tr("copies states from input to output"),
-          tr("A complex input->output processor with fixed weights"),
-          tr("A complex input->output processor with expected input and learning ability"),
-          tr("Initializes weights for a specific input/output architecture")
+          tr("A full input->output processor with trainable weights"),
+          tr("An input->output processor with fixed weights"),
+          tr("Back propagation step for the weights of an input->output processor"),
+          tr("Initializes a weight texture for a specific input->output architecture"),
+          tr("Calculates the difference between two inputs")
                     },
-        { M_BYPASS, M_FPROP, M_FULL_BP, M_WEIGHT_INIT
+        { M_BYPASS, M_FULL_BP, M_FPROP, M_BPROP, M_WEIGHT_INIT, M_ERROR
                     },
           getNeuroMode(), true, false);
 
@@ -144,6 +147,13 @@ void NeuroTO::createParameters()
                     tr("Alpha channel is zero, or a normal value in case of RGBA format"),
                     tr("Alpha channel is clamped to 1"),
                     false, true, false);
+
+        p_->p_error_is_label = params()->createBooleanParameter(
+                    "error_is_label", tr("error / label"),
+                    tr("Switch between error (off) or label (on) input"),
+                    tr("Input is expected to be the error between desired and output"),
+                    tr("Input is the desired output, e.g. the 'label' of the input data"),
+                    true, true, false);
 
         p_->p_in_width = params()->createIntParameter(
                     "tex_width_in", tr("input width"),
@@ -181,7 +191,7 @@ void NeuroTO::createParameters()
                     16, true, false);
         p_->p_weight_height->setMinValue(1);
 
-        p_->p_randomSeed = params()->createIntParameter(
+        p_->p_random_seed = params()->createIntParameter(
                     "random_seed", tr("random seed"),
                     tr("Random variation seed"),
                     0, true, true);
@@ -222,7 +232,7 @@ void NeuroTO::createParameters()
 
     textureParams()[NeuroGl::SLOT_INPUT]->setName(tr("input"));
     textureParams()[NeuroGl::SLOT_WEIGHT]->setName(tr("weights"));
-    textureParams()[NeuroGl::SLOT_ERROR]->setName(tr("label"));
+    textureParams()[NeuroGl::SLOT_ERROR]->setName(tr("error"));
 }
 
 void NeuroTO::onParameterChanged(Parameter * p)
@@ -253,23 +263,32 @@ void NeuroTO::updateParameterVisibility()
             bypass = mode == M_BYPASS,
             fprop = mode == M_FPROP,
             fullbp = mode == M_FULL_BP,
+            bprop = fullbp || mode == M_BPROP,
             weighti = mode == M_WEIGHT_INIT,
-            hasInp = bypass || fprop || fullbp;
+            err = mode == M_ERROR,
+            hasInp = bypass || fprop || bprop || err;
 
-    p_->p_signed_input->setVisible(hasInp);
-    p_->p_in_width->setVisible(weighti);
-    p_->p_in_height->setVisible(weighti);
-    p_->p_out_width->setVisible(bypass || fprop || weighti);
-    p_->p_out_height->setVisible(bypass || fprop || weighti);
-    p_->p_learnrate->setVisible(fullbp);
-    p_->p_weight_width->setVisible(weighti);
-    p_->p_weight_height->setVisible(weighti);
-    p_->p_weight_local_amp->setVisible(weighti);
-    p_->p_weight_local_pow->setVisible(weighti);
+    p_->p_signed_input->setVisible(     hasInp);
+    p_->p_in_width->setVisible(         weighti);
+    p_->p_in_height->setVisible(        weighti);
+    p_->p_out_width->setVisible(        bypass || fprop || weighti);
+    p_->p_out_height->setVisible(       bypass || fprop || weighti);
+    p_->p_learnrate->setVisible(        bprop);
+    p_->p_weight_width->setVisible(     weighti);
+    p_->p_weight_height->setVisible(    weighti);
+    p_->p_random_seed->setVisible(      weighti);
+    p_->p_weight_amp->setVisible(       weighti);
+    p_->p_weight_offset->setVisible(    weighti);
+    p_->p_weight_local_amp->setVisible( weighti);
+    p_->p_weight_local_pow->setVisible( weighti);
+    p_->p_error_is_label->setVisible(   fullbp);
+    p_->p_error_is_label->setName(      (fullbp && p_->p_error_is_label->baseValue())
+                                        || err
+                                        ? tr("error") : tr("label"));
 
-    textureParams()[NeuroGl::SLOT_INPUT]->setVisible(  bypass || fprop || fullbp );
-    textureParams()[NeuroGl::SLOT_WEIGHT]->setVisible( fprop || fullbp );
-    textureParams()[NeuroGl::SLOT_ERROR]->setVisible(  fullbp );
+    textureParams()[NeuroGl::SLOT_INPUT]->setVisible(  bypass || fprop || bprop || err );
+    textureParams()[NeuroGl::SLOT_WEIGHT]->setVisible( fprop || bprop );
+    textureParams()[NeuroGl::SLOT_ERROR]->setVisible(  bprop || err);
 }
 
 QString NeuroTO::getOutputName(SignalType st, uint channel) const
@@ -290,7 +309,7 @@ QString NeuroTO::getOutputName(SignalType st, uint channel) const
 NeuroTO::Mode NeuroTO::getNeuroMode() const
 {
     if (!p_->p_mode)
-        return M_FULL_BP;
+        return M_FPROP;
 
     return (Mode)p_->p_mode->baseValue();
 }
@@ -318,11 +337,11 @@ const GL::Texture * NeuroTO::valueTexture(uint chan, const RenderTime& ) const
             { auto t = p_->neurogl->outputTexture(); if (t && t->isAllocated()) return t; }
         break;
         case NeuroGl::SLOT_WEIGHT:
-            { auto t = p_->neurogl->weightTexture(); if (t && t->isAllocated()) return t; }
+            { auto t = p_->neurogl->weightOutputTexture(); if (t && t->isAllocated()) return t; }
         break;
-        //case NeuroGl::SLOT_ERROR:
-        //    { auto t = p_->neurogl->; if (t->isAllocated()) return t; }
-        //break;
+        case NeuroGl::SLOT_ERROR:
+            { auto t = p_->neurogl->errorOutputTexture(); if (t && t->isAllocated()) return t; }
+        break;
     }
     return 0;
 }
@@ -336,13 +355,16 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
 
     auto texIn = to->inputTexture(NeuroGl::SLOT_INPUT, rt);
 
+    // -- set common parameters --
+
     neurogl->setOutputFormat((int)glformat);
     neurogl->setTypeDimension(GL::channelSize(glformat));
-    std::cout << GL::channelSize(glformat) << std::endl;
+
     neurogl->setInputSigned(p_signed_input->baseValue());
     neurogl->setOutputSigned(p_signed_output->baseValue());
     neurogl->setClampAlpha(p_clamp_alpha->baseValue());
 
+    // -- set mode specific things --
 
     switch (to->getNeuroMode())
     {
@@ -352,6 +374,16 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
             neurogl->setInputTexture(texIn);
             neurogl->setOutputRes(QSize(p_out_width->baseValue(),
                                         p_out_height->baseValue()));
+        }
+        break;
+
+        case M_ERROR:
+        {
+            auto texError = to->inputTexture(NeuroGl::SLOT_ERROR, rt);
+
+            neurogl->setMode(NeuroGl::MODE_ERROR);
+            neurogl->setInputTexture(texIn);
+            neurogl->setErrorTexture(texError);
         }
         break;
 
@@ -367,6 +399,22 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
         }
         break;
 
+        case M_BPROP:
+        {
+            auto texWeight = to->inputTexture(NeuroGl::SLOT_WEIGHT, rt);
+            auto texError = to->inputTexture(NeuroGl::SLOT_ERROR, rt);
+
+            neurogl->setMode(NeuroGl::MODE_BPROP);
+            neurogl->setInputTexture(texIn);
+            neurogl->setWeightTexture(texWeight);
+            neurogl->setErrorTexture(texError);
+            neurogl->setOutputRes(QSize(p_out_width->baseValue(),
+                                        p_out_height->baseValue()));
+            neurogl->setLearnrate(p_learnrate->value(rt));
+            neurogl->setErrorIsLabel(p_error_is_label->baseValue());
+        }
+        break;
+
         case M_FULL_BP:
         {
             auto texWeight = to->inputTexture(NeuroGl::SLOT_WEIGHT, rt);
@@ -377,6 +425,7 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
             neurogl->setWeightTexture(texWeight);
             neurogl->setErrorTexture(texError);
             neurogl->setLearnrate(p_learnrate->value(rt));
+            neurogl->setErrorIsLabel(p_error_is_label->baseValue());
         }
         break;
 
@@ -389,7 +438,7 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
                                         p_out_height->baseValue()));
             neurogl->setWeightRes(QSize(p_weight_width->baseValue(),
                                         p_weight_height->baseValue()));
-            neurogl->setRandomSeed(p_randomSeed->value(rt));
+            neurogl->setRandomSeed(p_random_seed->value(rt));
             neurogl->setWeightInitAmp(p_weight_amp->value(rt));
             neurogl->setWeightInitOffset(p_weight_offset->value(rt));
             neurogl->setWeightInitLocalAmp(p_weight_local_amp->value(rt));
@@ -402,9 +451,15 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
 void NeuroTO::renderGl(const GL::RenderSettings&, const RenderTime& time)
 {
     p_->updateNeuro(time);
-    MO_EXTEND_EXCEPTION(
-                p_->neurogl->step(1);
-    , "in NeuroGl of object '" << name() << "'");
+    try
+    {
+        p_->neurogl->step(1);
+    }
+    catch (Exception& e)
+    {
+        setErrorMessage(e.what());
+        e << "\nin NeuroGl of object '" << name() << "'";
+    }
 }
 
 } // namespace MO

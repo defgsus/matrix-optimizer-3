@@ -295,8 +295,9 @@ void TrackView::getFilteredTracks_(QList<Track *> &list)
         allObjects_ = list;
 
         if (filterAddModulatingObjects_)
-            for (auto o : list)
-                allObjects_.append( o->getModulatingObjects() );
+        {
+            allObjects_ << o->getModulatingObjectsList(true);
+        }
 
     }
     else
@@ -493,7 +494,7 @@ void TrackView::assignModulatingWidgets_()
     for (auto w : sequenceWidgets_)
     {
         // find objects that influence 'w'
-        QList<Object*> mods = w->sequence()->getModulatingObjects();
+        QList<Object*> mods = w->sequence()->getModulatingObjectsList(true);
         for (auto m : mods)
             // if it's a sequence ..
             if (auto seq = qobject_cast<Sequence*>(m))

@@ -105,7 +105,7 @@ QList<Clip*> Clip::getAssociatedClips(Object *o)
 {
     QSet<Clip*> clips;
 
-    auto mod = o->getModulatingObjects();
+    auto mod = o->getModulatingObjectsList(true);
     for (auto m : mod)
         if (m->parentObject() && m->parentObject()->isClip())
             clips.insert(static_cast<Clip*>(m->parentObject()));
@@ -145,7 +145,7 @@ QList<Clip*> Clip::getAssociatedClips(Parameter * p, int parentMask)
 
     // get all objects modulating this parameter
     if (!obj)
-        mods << p->getModulatingObjects();
+        mods << p->getModulatingObjectsList(true);
 
     // get all objects around and inclusive parameter
     else

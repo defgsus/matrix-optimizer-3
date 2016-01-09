@@ -27,7 +27,9 @@ public:
         MODE_BYPASS = 0,
         MODE_FPROP,
         MODE_BPROP,
-        MODE_WEIGHT_INIT
+        MODE_WEIGHT_INIT,
+        /** Take previous output & expected output and convert to error */
+        MODE_ERROR
     };
 
     enum Slot
@@ -64,6 +66,8 @@ public:
 
     bool isInputSigned() const;
     bool isOutputSigned() const;
+    /** Is error input actually a label input? */
+    bool isErrorIsLabel() const;
     /** Should alpha channel always be clamped to 1.0 */
     bool isClampAlpha() const;
 
@@ -93,6 +97,7 @@ public:
 
     void setInputSigned(bool);
     void setOutputSigned(bool);
+    void setErrorIsLabel(bool);
     void setClampAlpha(bool);
 
     // ------ opengl ------------
@@ -102,7 +107,9 @@ public:
     /** Get processed output, or NULL */
     const GL::Texture* outputTexture() const;
     /** Get processed weights, or NULL */
-    const GL::Texture* weightTexture() const;
+    const GL::Texture* weightOutputTexture() const;
+    /** Get error output, bypass error input, or return NULL */
+    const GL::Texture* errorOutputTexture() const;
 
     /** Lazily initialize all resources that have changed */
     void updateGl();

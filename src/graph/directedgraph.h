@@ -238,7 +238,7 @@ DirectedGraph<T>::addNode(T object)
 template <class T>
 bool DirectedGraph<T>::isConnected(T from, T to) const
 {
-    Node * nf = node(from);
+    auto nf = node(from);
     return nf && nf->hasOutput(to);
 }
 

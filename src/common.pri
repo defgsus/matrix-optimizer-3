@@ -359,7 +359,8 @@ HEADERS += \
     $$PWD/math/csgfractals.h \
     $$PWD/object/interface/masteroutinterface.h \
     $$PWD/object/texture/neuroto.h \
-    $$PWD/gl/neurogl.h
+    $$PWD/gl/neurogl.h \
+    $$PWD/object/util/objectconnectiongraph.h
 
 
 SOURCES += \
@@ -672,4 +673,5 @@ SOURCES += \
     $$PWD/math/csgdeform.cpp \
     $$PWD/math/csgfractals.cpp \
     $$PWD/object/texture/neuroto.cpp \
-    $$PWD/gl/neurogl.cpp
+    $$PWD/gl/neurogl.cpp \
+    $$PWD/object/util/objectconnectiongraph.cpp

@@ -15,9 +15,10 @@ out vec4 fragColor;
 // ----
 
 #define M_BYPASS 0
-#define M_FPROP 1
-#define M_BPROP 2
-#define M_WEIGHT_INIT 3
+#define M_ERROR 1
+#define M_FPROP 2
+#define M_BPROP 3
+#define M_WEIGHT_INIT 4
 
 #if TYPE_DIMENSION == 1
 #   define TYPE float
@@ -108,6 +109,15 @@ TYPE error_state(in int i)
 }
 #endif
 
+#if defined(ERROR_RES) && (LABEL_INPUT)
+TYPE label_state(in int i)
+{
+    ivec2 pix = ivec2(i % ERROR_RES.x, i / ERROR_RES.x);
+    TYPE inp = texelFetch(u_tex_error, pix, 0).TYPE_SWIZZLE;
+    return inp;
+}
+#endif
+
 #ifdef WEIGHT_RES
 TYPE weight(in int i, in int j)
 {
@@ -155,6 +165,10 @@ void main()
     int i = pix.y * OUTPUT_RES.x + pix.x;
     TYPE val = input_state(i);
 
+#elif MODE == M_ERROR
+    int i = pix.y * OUTPUT_RES.x + pix.x;
+    TYPE val = input_state(i) - label_state(i);
+
 #elif MODE == M_FPROP
     int o = pix.y * OUTPUT_RES.x + pix.x;
     TYPE val = fprop(o);
@@ -163,7 +177,7 @@ void main()
     int x = pix.y * WEIGHT_RES.x + pix.x; 	// weight index
     int i = x % NUM_IN; 			// input cell
     int o = x / NUM_IN; 			// output cell
-    float err = error_state(o);			// error at output
+    TYPE err = error_state(o);			// error at output
     TYPE val = bprop_weight(i, o, err);
 
 #elif MODE == M_WEIGHT_INIT

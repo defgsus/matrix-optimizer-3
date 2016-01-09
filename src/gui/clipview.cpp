@@ -417,7 +417,7 @@ void ClipView::selectObject(Object *o)
 
     // -- select all clips connected to object --
 
-    auto list = o->getModulatingObjects();
+    auto list = o->getModulatingObjectsList(true);
     if (!list.isEmpty())
     {
         clearSelection_();
