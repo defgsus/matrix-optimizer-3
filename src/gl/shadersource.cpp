@@ -289,5 +289,25 @@ void ShaderSource::p_addDefine_(QString &src, const QString &def_line, bool addB
 }
 
 
+QString ShaderSource::addLineNumbers(const QString &s)
+{
+    QString out;
+    bool newLine = true;
+    int lineNum = 0;
+    for (const auto& c : s)
+    {
+        if (newLine)
+        {
+            out += QString("/* %1 */ ").arg(lineNum++);
+            newLine = false;
+        }
+        if (c == '\n')
+            newLine = true;
+        out += c;
+    }
+
+    return out;
+}
+
 } // namespace GL
 } // namespace MO

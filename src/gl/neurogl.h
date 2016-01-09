@@ -14,6 +14,7 @@
 #include <QSize>
 
 #include "gl/opengl_fwd.h"
+#include "gl/shadersource.h"
 
 namespace MO {
 
@@ -32,6 +33,15 @@ public:
         MODE_ERROR
     };
 
+    /** Activation function
+        (Needs to match values in fragment shader! */
+    enum Activation
+    {
+        A_LINEAR = 0,
+        A_TANH,
+        A_LOGISTIC
+    };
+
     enum Slot
     {
         SLOT_INPUT = 0,
@@ -48,6 +58,7 @@ public:
     // ------- getter ----------
 
     Mode mode() const;
+    Activation activation() const;
 
     float learnrate() const;
     int randomSeed() const;
@@ -65,7 +76,12 @@ public:
     int typeDimension() const;
 
     bool isInputSigned() const;
+    bool isInputWeightSigned() const;
+    bool isInputErrorSigned() const;
     bool isOutputSigned() const;
+    bool isOutputWeightSigned() const;
+    bool isOutputErrorSigned() const;
+
     /** Is error input actually a label input? */
     bool isErrorIsLabel() const;
     /** Should alpha channel always be clamped to 1.0 */
@@ -73,9 +89,14 @@ public:
 
     QString infoString() const;
 
+    /** Return the current source for the given stage,
+        or empty source */
+    GL::ShaderSource shaderSource(size_t stage);
+
     // ------ setter ------------
 
     void setMode(Mode m);
+    void setActivation(Activation);
 
     void setLearnrate(float lr);
     void setRandomSeed(int s);
@@ -96,7 +117,11 @@ public:
     void setTypeDimension(int);
 
     void setInputSigned(bool);
+    void setInputWeightSigned(bool);
+    void setInputErrorSigned(bool);
     void setOutputSigned(bool);
+    void setOutputWeightSigned(bool);
+    void setOutputErrorSigned(bool);
     void setErrorIsLabel(bool);
     void setClampAlpha(bool);
 

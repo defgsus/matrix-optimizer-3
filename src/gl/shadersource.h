@@ -30,6 +30,9 @@ public:
     static int findLineNumber(const QString& src, const QString& text);
     static void replaceWithLineNumber(QString& src, const QString& before, const QString& after);
 
+    /** Adds the line number to the beginning of each line */
+    static QString addLineNumbers(const QString& s);
+
     // ---------- getter --------------
 
     /** Returns true when all of the sources are empty. */

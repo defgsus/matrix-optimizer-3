@@ -146,8 +146,10 @@ public:
     GL::FrameBufferObject * fbo() const;
 
     /** Returns a copy of the source for the @p index'th shaderquad, or
-        empty source if not defined/compiled. */
-    GL::ShaderSource shaderSource(uint index) const;
+        empty source if not defined/compiled.
+        Override to return source of your internal shaders not compiled with
+        createShaderQuad(). */
+    virtual GL::ShaderSource shaderSource(uint index) const;
 
 protected:
 
