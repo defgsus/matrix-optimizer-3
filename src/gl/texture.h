@@ -128,7 +128,7 @@ public:
     // -------- openGL interface ---------------
 
     /** Sets a change to the texture. Will change the number returned in hash() */
-    void setChanged() { ++hash_; }
+    void setChanged();
 
     /** Binds the texture handle to the current slot */
     void bind() const;

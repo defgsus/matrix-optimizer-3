@@ -160,6 +160,9 @@ public:
 
     // ----------- query ---------------------
 
+    /** Returns the given name (for debugging and such) */
+    const QString name() const { return name_; }
+
     /** Return the log from the last compilation */
     const QString& log() const { return log_; }
 

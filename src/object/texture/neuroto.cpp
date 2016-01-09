@@ -15,6 +15,7 @@
 #include "object/param/parameterint.h"
 #include "object/param/parametertexture.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametercallback.h"
 #include "gl/neurogl.h"
 #include "gl/texture.h"
 #include "io/filemanager.h"
@@ -32,6 +33,7 @@ struct NeuroTO::Private
     Private(NeuroTO * to)
         : to            (to)
         , neurogl       (new NeuroGl())
+        , doResetWeights(false)
         , p_mode        (0)
     {
     }
@@ -52,6 +54,8 @@ struct NeuroTO::Private
 
     NeuroGl * neurogl;
 
+    bool doResetWeights;
+
     ParameterFloat
             *p_learnrate,
             *p_weight_amp, *p_weight_offset,
@@ -68,6 +72,8 @@ struct NeuroTO::Private
             *p_clamp_alpha, *p_error_is_label,
             *p_tex_format_out, *p_tex_type_out,
             *p_activation;
+    ParameterCallback
+            *p_reset_weights;
 };
 
 NeuroTO::NeuroTO(QObject *parent)
@@ -246,6 +252,10 @@ void NeuroTO::createParameters()
                     0.01, 0., 1.,
                     0.001);
 
+        p_->p_reset_weights = params()->createCallbackParameter(
+                    "reset_weights", tr("reset weights"),
+                    tr("Resets the currently learned weights to the given input weights"),
+                    [=](){ p_->doResetWeights = true; }, true);
 
         p_->p_random_seed = params()->createIntParameter(
                     "random_seed", tr("random seed"),
@@ -335,6 +345,7 @@ void NeuroTO::updateParameterVisibility()
     p_->p_weight_local_amp->setVisible(         weighti);
     p_->p_weight_local_pow->setVisible(         weighti);
     p_->p_error_is_label->setVisible(           fullbp);
+    p_->p_reset_weights->setVisible(            fullbp);
 
     textureParams()[NeuroGl::SLOT_INPUT]->setVisible(  hasInp );
     textureParams()[NeuroGl::SLOT_WEIGHT]->setVisible( fprop || bprop );
@@ -488,7 +499,7 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
             auto texWeight = to->inputTexture(NeuroGl::SLOT_WEIGHT, rt);
             auto texError = to->inputTexture(NeuroGl::SLOT_ERROR, rt);
 
-            neurogl->setMode(NeuroGl::MODE_BPROP);
+            neurogl->setMode(NeuroGl::MODE_FULL_BP);
             neurogl->setInputTexture(texIn);
             neurogl->setWeightTexture(texWeight);
             neurogl->setErrorTexture(texError);
@@ -518,7 +529,15 @@ void NeuroTO::Private::updateNeuro(const RenderTime& rt)
 
 void NeuroTO::renderGl(const GL::RenderSettings&, const RenderTime& time)
 {
+    clearError();
     p_->updateNeuro(time);
+
+    if (p_->doResetWeights)
+    {
+        p_->neurogl->setResetWeights(true);
+        p_->doResetWeights = false;
+    }
+
     try
     {
         p_->neurogl->step(1);

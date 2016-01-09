@@ -30,7 +30,9 @@ public:
         MODE_BPROP,
         MODE_WEIGHT_INIT,
         /** Take previous output & expected output and convert to error */
-        MODE_ERROR
+        MODE_ERROR,
+        /** fprop, error, bprop stages */
+        MODE_FULL_BP
     };
 
     /** Activation function
@@ -124,6 +126,10 @@ public:
     void setOutputErrorSigned(bool);
     void setErrorIsLabel(bool);
     void setClampAlpha(bool);
+
+    /** Set to true in MODE_FULL_BP to reset
+        to the input weights for one iteration */
+    void setResetWeights(bool);
 
     // ------ opengl ------------
 

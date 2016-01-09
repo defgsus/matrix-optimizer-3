@@ -139,9 +139,23 @@ void TextureObjectBase::deserialize(IO::DataStream & io)
 
 QSize TextureObjectBase::resolution() const
 {
-    return p_to_->fbo
-            ? QSize(p_to_->fbo->width(), p_to_->fbo->height())
-            : getDesiredResolution();
+    // determine from input texture
+    // XXX hacky because of the RenderTime(0)
+    if (p_to_->p_resMode->baseValue() != RM_CUSTOM)
+    if (auto tex = valueTexture(0, RenderTime(0, MO_GFX_THREAD)))
+    {
+        //std::cout << "TEX " << tex->isAllocated() << std::endl;
+        if (tex->isAllocated())
+            return adjustResolution(QSize(tex->width(), tex->height()));
+    }
+
+    if (p_to_->fbo)
+        return QSize(p_to_->fbo->width(), p_to_->fbo->height());
+
+    if (p_to_->p_resMode->baseValue() == RM_CUSTOM)
+        return getDesiredResolution();
+
+    return getDesiredResolution();
     /*return QSize(p_to_->p_width->baseValue(),
                  p_to_->p_height->baseValue());*/
 }
@@ -433,6 +447,8 @@ void TextureObjectBase::renderShaderQuad(uint index, const RenderTime& time, uin
 void TextureObjectBase::PrivateTO::initGl()
 {
     MO_TO_DEBUG("initGl()");
+
+    to->clearError();
 
     // size of frame
     if (hasInternalFbo)
@@ -830,7 +846,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
         if (tex)
         {
             // bind to slot x
-            MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
+            GL::Texture::setActiveTexture(texSlot);
             tex->bind();
             // tell shader
             if (i < quad.u_tex.length() && quad.u_tex[i])

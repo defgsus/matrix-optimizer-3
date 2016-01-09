@@ -59,8 +59,9 @@ const GL::Texture * ParameterTexture::value(const RenderTime& time) const
     {
         if (t)
         {
+//            std::cout << "get tex '" << t->name() << "', hash=" << t->hash() << std::endl;
             if (time.thread() >= lastHash_.size())
-                lastHash_.resize(time.thread()+1);
+                lastHash_.resize(time.thread()+1, -1);
             lastHash_[time.thread()] = t->hash();
         }
         return lastTex_ = t;
@@ -85,7 +86,11 @@ bool ParameterTexture::hasChanged(const RenderTime& time) const
         return true;
     // same pointer, but changed
     if (t)
+    {
+//        std::cout << t->name() << ":" << t->hash()
+//                  << ", last " << lastHash_[time.thread()] << std::endl;
         return t->hash() != lastHash_[time.thread()];
+    }
     return false;
 }
 
