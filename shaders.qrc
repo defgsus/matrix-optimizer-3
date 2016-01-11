@@ -55,6 +55,7 @@
         <file alias="shader.frag">assets/shader/to/shader.frag</file>
         <file alias="posterize.frag">assets/shader/to/posterize.frag</file>
         <file alias="kaliset.frag">assets/shader/to/kaliset.frag</file>
+        <file alias="crop.frag">assets/shader/to/crop.frag</file>
     </qresource>
     <qresource prefix="/shader/inc/to">
         <file alias="header">assets/shader/to/header.glsl</file>

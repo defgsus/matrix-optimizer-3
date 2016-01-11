@@ -81,4 +81,5 @@ DISTFILES += \
     $$PWD/assets/shader/csgshader.vert \
     $$PWD/assets/shader/csgshader.frag \
     $$PWD/assets/shader/neuro.frag \
-    $$PWD/assets/shader/neuro.vert
+    $$PWD/assets/shader/neuro.vert \
+    $$PWD/assets/shader/to/crop.frag

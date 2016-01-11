@@ -360,7 +360,8 @@ HEADERS += \
     $$PWD/object/interface/masteroutinterface.h \
     $$PWD/object/texture/neuroto.h \
     $$PWD/gl/neurogl.h \
-    $$PWD/object/util/objectconnectiongraph.h
+    $$PWD/object/util/objectconnectiongraph.h \
+    $$PWD/object/texture/cropto.h
 
 
 SOURCES += \
@@ -674,4 +675,5 @@ SOURCES += \
     $$PWD/math/csgfractals.cpp \
     $$PWD/object/texture/neuroto.cpp \
     $$PWD/gl/neurogl.cpp \
-    $$PWD/object/util/objectconnectiongraph.cpp
+    $$PWD/object/util/objectconnectiongraph.cpp \
+    $$PWD/object/texture/cropto.cpp

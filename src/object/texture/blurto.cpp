@@ -266,7 +266,7 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& tim
     {
         if (p_sizeIsPixels->value(time))
         {
-            std::cout << res.width() << "x" << res.height() << std::endl;
+            //std::cout << res.width() << "x" << res.height() << std::endl;
             auto ma = std::max(res.width(), res.height());
             six = siy = 1.f / ma;
         }

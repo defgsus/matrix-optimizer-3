@@ -47,14 +47,14 @@ struct NeuroGl::Private
     struct StageConfig
     {
         StageConfig()
-            : isInputSigned (true)
-            , isInputWeightSigned (true)
-            , isInputErrorSigned (true)
-            , isOutputSigned(true)
-            , isOutputWeightSigned(true)
-            , isOutputErrorSigned(true)
-            , isErrorIsLabel(false)
-            , isClampAlpha  (false)
+            : isInputSigned         (true)
+            , isInputWeightSigned   (true)
+            , isInputErrorSigned    (true)
+            , isOutputSigned        (true)
+            , isOutputWeightSigned  (true)
+            , isOutputErrorSigned   (true)
+            , isErrorIsLabel        (false)
+            , isClampAlpha          (false)
         { }
 
         bool isInputSigned, isInputWeightSigned, isInputErrorSigned,
@@ -63,23 +63,23 @@ struct NeuroGl::Private
     };
 
     Private(NeuroGl* p)
-        : p             (p)
-        , texIn         (0)
-        , texWeight     (0)
-        , texError      (0)
-        , texPrevWeight (0)
-        , outputFormat  (gl::GL_RGBA32F)
-        , typeDimension (4)
-        , doRecompile   (true)
-        , doResetWeights(true)
-        , mode          (MODE_BYPASS)
-        , activation    (A_LINEAR)
-        , learnrate     (0.1)
-        , weightInitAmp (.5)
-        , weightInitOffset(0.)
-        , weightInitLocal(0.)
-        , weightInitLocalPow(1.)
-        , randomSeed    (0)
+        : p                     (p)
+        , texIn                 (0)
+        , texWeight             (0)
+        , texError              (0)
+        , texPrevWeight         (0)
+        , outputFormat          (gl::GL_RGBA32F)
+        , typeDimension         (4)
+        , doRecompile           (true)
+        , doResetWeights        (true)
+        , mode                  (MODE_BYPASS)
+        , activation            (A_LINEAR)
+        , learnrate             (0.1)
+        , weightInitAmp         (.5)
+        , weightInitOffset      (0.)
+        , weightInitLocal       (0.)
+        , weightInitLocalPow    (1.)
+        , randomSeed            (0)
     {
         stages.resize(3);
     }
