@@ -41,7 +41,7 @@ float sdCylinder( vec3 p, vec3 c )
     return length(p.xz - c.xy) - c.z;
 }
 
-/** Distance to a cone with normalize radus and length in @p c */
+/** Distance to a cone with normalize radius and length in @p c */
 float sdCone( vec3 p, vec2 c )
 {
     // c must be normalized
@@ -49,21 +49,21 @@ float sdCone( vec3 p, vec2 c )
     return dot(c, vec2(q, p.z));
 }
 
-/** Distance to a plane at with normal @p n.xyz and offset @p n.w */
+/** Distance to a plane with normal @p n.xyz and offset @p n.w */
 float sdPlane( vec3 p, vec4 n )
 {
   // n must be normalized
   return dot(p,n.xyz) + n.w;
 }
 
-/** Distance to triangular prism. */
+/** Distance to triangular prism, size and length along z in @p h */
 float sdTriPrism( vec3 p, vec2 h )
 {
     vec3 q = abs(p);
     return max(q.z-h.y,max(q.x*0.866025+p.y*0.5,-p.y)-h.x*0.5);
 }
 
-/** Distance to hexagonal prism */
+/** Distance to hexagonal prism, size and length along z in @p h */
 float sdHexPrism( vec3 p, vec2 h )
 {
     vec3 q = abs(p);
@@ -84,6 +84,7 @@ float sdCappedCylinder( vec3 p, vec2 h )
     vec2 d = abs(vec2(length(p.xz),p.y)) - h;
     return min(max(d.x,d.y),0.0) + length(max(d,0.0));
 }
+
 
 
 float _dot2( in vec3 v ) { return dot(v,v); }
@@ -133,3 +134,57 @@ float udQuad( vec3 p, vec3 a, vec3 b, vec3 c, vec3 d )
      :
      dot(nor,pa)*dot(nor,pa)/_dot2(nor) );
 }
+
+
+// -- from https://www.shadertoy.com/view/4dKGWm --
+// Created by inigo quilez - iq/2016
+// License Creative Commons Attribution-NonCommercial-ShareAlike 3.0
+
+
+/** Ellipsoid at position @p c, radius in @p r */
+float sdEllipsoid( in vec3 p, in vec3 c, in vec3 r )
+{
+    return (length( (p-c)/r ) - 1.0) * min(min(r.x,r.y),r.z);
+}
+
+// http://research.microsoft.com/en-us/um/people/hoppe/ravg.pdf
+float _det( vec2 a, vec2 b ) { return a.x*b.y-b.x*a.y; }
+vec3 _getClosest( vec2 b0, vec2 b1, vec2 b2 )
+{
+
+  float a =     _det(b0,b2);
+  float b = 2.0*_det(b1,b0);
+  float d = 2.0*_det(b2,b1);
+  float f = b*d - a*a;
+  vec2  d21 = b2-b1;
+  vec2  d10 = b1-b0;
+  vec2  d20 = b2-b0;
+  vec2  gf = 2.0*(b*d21+d*d10+a*d20);
+        gf = vec2(gf.y,-gf.x);
+  vec2  pp = -f*gf/dot(gf,gf);
+  vec2  d0p = b0-pp;
+  float ap = _det(d0p,d20);
+  float bp = 2.0*_det(d10,d0p);
+  float t = clamp( (ap+bp)/(2.0*a+b+d), 0.0 ,1.0 );
+  return vec3( mix(mix(b0,b1,t), mix(b1,b2,t),t), t );
+}
+
+/** XXX */
+vec2 sdBezier( vec3 a, vec3 b, vec3 c, vec3 p, out vec2 pos )
+{
+    vec3 w = normalize( cross( c-b, a-b ) );
+    vec3 u = normalize( c-b );
+    vec3 v = normalize( cross( w, u ) );
+
+    vec2 a2 = vec2( dot(a-b,u), dot(a-b,v) );
+    vec2 b2 = vec2( 0.0 );
+    vec2 c2 = vec2( dot(c-b,u), dot(c-b,v) );
+    vec3 p3 = vec3( dot(p-b,u), dot(p-b,v), dot(p-b,w) );
+
+    vec3 cp = _getClosest( a2-p3.xy, b2-p3.xy, c2-p3.xy );
+
+    pos = cp.xy;
+
+    return vec2( sqrt(dot(cp.xy,cp.xy)+p3.z*p3.z), cp.z );
+}
+

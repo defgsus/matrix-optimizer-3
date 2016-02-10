@@ -17,6 +17,7 @@
 #include "gl/shadersource.h"
 
 namespace MO {
+namespace GUI { class GeometryDialog; }
 
 class TextureMorphSetting;
 class UserUniformSetting;
@@ -43,6 +44,9 @@ public:
 
     /** Overwrite current geometry */
     void setGeometry(const GEOM::Geometry& );
+
+    void setAttachedDialog(GUI::GeometryDialog*d) { attachedDialog_ = d; }
+    GUI::GeometryDialog* attachedDialog() const { return attachedDialog_; }
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(const RenderTime & time) const;
@@ -87,6 +91,8 @@ private:
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryFactorySettings * geomSettings_;
     GEOM::Geometry * nextGeometry_;
+
+    GUI::GeometryDialog * attachedDialog_;
 
     TextureSetting * texture_, *textureBump_,
                     * textureEnv_;

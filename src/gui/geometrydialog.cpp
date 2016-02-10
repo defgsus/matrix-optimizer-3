@@ -43,6 +43,9 @@
 #include "io/settings.h"
 #include "geometryexportdialog.h"
 #include "gl/lightsettings.h"
+#include "object/visual/model3d.h"
+#include "object/scene.h"
+#include "object/util/objecteditor.h"
 
 namespace MO {
 namespace GUI {
@@ -91,6 +94,47 @@ GeometryDialog::~GeometryDialog()
     settings()->storeGeometry(this);
     delete settings_;
 }
+
+GeometryDialog* GeometryDialog::openForModel(Model3d* model)
+{
+    if (auto diag = model->attachedDialog())
+    {
+        diag->show();
+        return diag;
+    }
+
+    auto diag = new GeometryDialog(&model->geometrySettings());
+    diag->setAttribute(Qt::WA_DeleteOnClose);
+    diag->setWindowTitle(model->name() + " " + tr("geometry"));
+    model->setAttachedDialog(diag);
+
+    connect(diag, &GeometryDialog::destroyed, [=]()
+    {
+        model->setAttachedDialog(0);
+    });
+    connect(diag, &GeometryDialog::apply, [=]()
+    {
+        if (diag->getGeometrySettings() == model->geometrySettings())
+            return;
+
+        auto root = model->sceneObject();
+        auto editor = model->editor();
+        if (root)
+        {
+            ScopedObjectChange lock(root, model);
+            model->setGeometrySettings(diag->getGeometrySettings());
+        }
+        else
+            model->setGeometrySettings(diag->getGeometrySettings());
+        if (editor)
+            editor->emitObjectChanged(model);
+    });
+
+    diag->show();
+
+    return diag;
+}
+
 
 bool GeometryDialog::event(QEvent * e)
 {
@@ -391,7 +435,15 @@ void GeometryDialog::createMainWidgets_()
                         connect(but, &QPushButton::clicked, [=]()
                         {
                             setResult(Accepted);
+                            apply();
                             close();
+                        });
+
+                        but = new QPushButton(tr("Apply"), this);
+                        lh2->addWidget(but);
+                        connect(but, &QPushButton::clicked, [=]()
+                        {
+                            emit apply();
                         });
                     }
 

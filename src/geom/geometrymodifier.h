@@ -47,6 +47,11 @@ public:
     GeometryModifier(const QString& className, const QString& guiName);
     virtual ~GeometryModifier() { }
 
+    /** Default compares properties */
+    virtual bool operator != (const GeometryModifier& o) const;
+    /** Based on operator!=() */
+    bool operator == (const GeometryModifier& o) const { return !((*this) != o); }
+
     // ------------- getter ------------------
 
     const QString& className() const { return p_className_; }

@@ -127,7 +127,7 @@ void DumbFile::Private::open(const QString &filename)
     QFile file(filename);
     if (!file.open(QFile::ReadOnly))
     {
-        MO_IO_ERROR(READ, "Can't open dumbfile '" << filename << "'\n"
+        MO_IO_ERROR(READ, "Can't open tracker file '" << filename << "'\n"
                     << file.errorString());
     }
 

@@ -112,11 +112,13 @@ Object::~Object()
 
 void Object::addRef()
 {
+    //MO_PRINT("Object(" << name() << ")::addRef() ref_count == " << p_ref_);
     p_ref_++;
 }
 
 void Object::releaseRef()
 {
+    //MO_PRINT("Object(" << name() << ")::releaseRef() ref_count == " << p_ref_);
     if (--p_ref_ == 0)
         delete this;
 }
@@ -833,6 +835,7 @@ bool Object::p_takeChild_(Object *child)
 {
     if (p_childObjects_.removeOne(child))
     {
+        child->releaseRef();
         return p_childrenHaveChanged_ = true;
     }
     return false;

@@ -52,6 +52,12 @@ GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifier
     return *this;
 }
 
+bool GeometryModifierChain::operator != (const GeometryModifierChain& o) const
+{
+    return modifiers_ != o.modifiers_;
+}
+
+
 void GeometryModifierChain::clear()
 {
     MO_DEBUG_GEOM("GeometryModifierChain::clear()");

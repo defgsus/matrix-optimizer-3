@@ -1657,14 +1657,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
         connect(a, &QAction::triggered, [=]()
         {
-            GeometryDialog diag(&model->geometrySettings());
-
-            if (diag.exec() == QDialog::Accepted)
-            {
-                ScopedObjectChange lock(root, model);
-                model->setGeometrySettings(diag.getGeometrySettings());
-                editor->emitObjectChanged(model);
-            }
+            GeometryDialog::openForModel(model);
         });
 
         // show source code

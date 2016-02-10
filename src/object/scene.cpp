@@ -859,8 +859,12 @@ void Scene::endObjectChange()
 
 void Scene::destroyDeletedObjects_(bool releaseGl)
 {
+    //MO_PRINT("Scene::destroyDeletedObjects_(" << releaseGl <<")");
+
     for (Object * o : deletedObjects_)
     {
+        //MO_PRINT(":" << o->namePath());
+
         // unmake the QObject tree structure so we can
         // destroy each object safely
         o->setParent(0);

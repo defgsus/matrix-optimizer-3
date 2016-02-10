@@ -34,6 +34,9 @@ public:
     GeometryFactorySettings(const GeometryFactorySettings& other);
     GeometryFactorySettings& operator=(const GeometryFactorySettings& other);
 
+    bool operator != (const GeometryFactorySettings& o) const;
+    bool operator == (const GeometryFactorySettings& o) const { return !((*this) != o); }
+
     // ---------- io ---------
 
     void serialize(IO::DataStream&) const;

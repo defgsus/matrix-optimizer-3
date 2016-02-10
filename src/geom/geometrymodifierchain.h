@@ -33,6 +33,9 @@ public:
     GeometryModifierChain(const GeometryModifierChain& other);
     GeometryModifierChain& operator = (const GeometryModifierChain& other);
 
+    bool operator != (const GeometryModifierChain& o) const;
+    bool operator == (const GeometryModifierChain& o) const { return !((*this) != o); }
+
     // ---------------- io ----------------
 
     void serialize(IO::DataStream& io) const;

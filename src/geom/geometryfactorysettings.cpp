@@ -44,6 +44,11 @@ GeometryFactorySettings::GeometryFactorySettings(Object * o)
     modifierChain_->addModifier(new GeometryModifierNormals());
 }
 
+bool GeometryFactorySettings::operator != (const GeometryFactorySettings& o) const
+{
+    return *modifierChain_ != *o.modifierChain_;
+}
+
 void GeometryFactorySettings::getNeededFiles(IO::FileList &files)
 {
     modifierChain_->getNeededFiles(files);

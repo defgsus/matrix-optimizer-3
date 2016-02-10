@@ -31,6 +31,10 @@ GeometryModifier::GeometryModifier(const QString &className, const QString &guiN
 
 }
 
+bool GeometryModifier::operator != (const GeometryModifier& o) const
+{
+    return properties() != o.properties();
+}
 
 void GeometryModifier::serialize(IO::DataStream &io) const
 {

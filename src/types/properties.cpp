@@ -150,6 +150,11 @@ void Properties::swap(Properties &other)
     std::swap(p_cb_vis_, other.p_cb_vis_);
 }
 
+bool Properties::operator != (const Properties& o) const
+{
+    return p_map_ != o.p_map_;
+}
+
 void Properties::clear()
 {
     p_map_.clear();

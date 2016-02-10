@@ -31,6 +31,7 @@
 #include "object/util/colorpostprocessingsetting.h"
 #include "object/util/texturemorphsetting.h"
 #include "object/util/useruniformsetting.h"
+#include "gui/geometrydialog.h"
 #include "io/log.h"
 
 #if 0
@@ -49,6 +50,7 @@ Model3d::Model3d(QObject * parent)
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings(this)),
       nextGeometry_ (0),
+      attachedDialog_(0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
       textureEnv_  (new TextureSetting(this)),
@@ -69,6 +71,9 @@ Model3d::Model3d(QObject * parent)
 
 Model3d::~Model3d()
 {
+    if (attachedDialog_)
+        attachedDialog_->close();
+
     resetCreator_();
 }
 
@@ -697,6 +702,7 @@ void Model3d::resetCreator_()
     {
         if (creator_->isRunning())
         {
+            //creator_->setParent(0);
             connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
             creator_->discard();
         }

@@ -179,6 +179,7 @@ void ModPlayerAO::processAudio(const RenderTime& time)
 
 void ModPlayerAO::Private::updateTrackerFile()
 {
+    ao->clearError();
     if (paramFilename->value().isEmpty())
         dumb.close();
     else
@@ -190,6 +191,7 @@ void ModPlayerAO::Private::updateTrackerFile()
         }
         catch (const Exception& e)
         {
+            ao->setErrorMessage(e.what());
             MO_WARNING("ModPlayerAO: on loading dumb file:\n" << e.what());
         }
     }

@@ -2067,6 +2067,7 @@ bool MainWidgetController::loadScene_(const QString &fn)
         try
         {
             scene = ObjectFactory::loadScene(fn);
+            //scene->setLazyFlag(true);
             recentFiles_->addFilename(fn);
         }
         catch (Exception& e)

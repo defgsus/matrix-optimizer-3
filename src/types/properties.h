@@ -34,7 +34,6 @@ namespace IO { class DataStream; class XmlStream; }
     Contra: No default values, no tranlated name, etc...
             (but can be added via methods in this class)
             UPDATE: Have been added now...
-            @todo NamedStates is still a bit hacky..
 */
 class Properties
 {
@@ -91,6 +90,11 @@ public:
     struct Property
     {
         Property() : p_subType_(-1), p_idx_(0), p_vis_(true) { }
+
+        /** Only compares value! */
+        bool operator != (const Property& o) const { return p_val_ != o.p_val_; }
+        /** Only compares value! */
+        bool operator == (const Property& o) const { return !((*this) != o); }
 
         bool isValid() const { return !p_val_.isNull(); }
 
@@ -150,6 +154,9 @@ public:
     Properties();
 
     void swap(Properties& other);
+
+    bool operator != (const Properties& o) const;
+    bool operator == (const Properties& o) const { return !((*this) != o); }
 
     // ------------------ io --------------------
 
