@@ -1,6 +1,8 @@
 #ifndef MOSRC_GUI_WIDGET_CSGTREEVIEW_H
 #define MOSRC_GUI_WIDGET_CSGTREEVIEW_H
 
+#include <functional>
+
 #include <QTreeView>
 
 
