@@ -14,6 +14,7 @@
 #include <QWidget>
 
 #include "types/float.h"
+#include "types/time.h"
 
 class QLabel;
 class QToolButton;

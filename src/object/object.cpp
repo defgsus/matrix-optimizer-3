@@ -93,6 +93,8 @@ Object::Object(QObject *parent)
 
 Object::~Object()
 {
+    MO_DEBUG("Object(\"" << namePath() << "\")::~Object()");
+
     delete p_aoCons_;
 
     // release references on childs
@@ -1251,7 +1253,7 @@ void Object::setNumberSoundSources(uint num)
 
 void Object::setNumberMicrophones(uint num)
 {
-    /* @todo update audio dsp path on soundSource/microphone change. */
+    /** @todo update audio dsp path on soundSource/microphone change. */
     p_numberMicrophones_ = num;
     if (auto e = editor())
         emit e->audioConnectionsChanged();

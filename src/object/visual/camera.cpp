@@ -679,7 +679,7 @@ void Camera::finishGlFrame(const RenderTime &)
     fbo_->unbind();
 }
 
-/** @todo this is interface is to be removed in favour for valueTexture() */
+/** @todo this interface is to be removed in favour for valueTexture() */
 GL::FrameBufferObject * Camera::fbo() const
 {
     if (!fbo_)

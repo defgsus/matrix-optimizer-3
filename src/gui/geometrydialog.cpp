@@ -43,7 +43,7 @@
 #include "io/settings.h"
 #include "geometryexportdialog.h"
 #include "gl/lightsettings.h"
-#include "object/visual/model3d.h"
+#include "object/interface/geometryeditinterface.h"
 #include "object/scene.h"
 #include "object/util/objecteditor.h"
 
@@ -95,39 +95,42 @@ GeometryDialog::~GeometryDialog()
     delete settings_;
 }
 
-GeometryDialog* GeometryDialog::openForModel(Model3d* model)
+GeometryDialog* GeometryDialog::openForInterface(GeometryEditInterface* iface)
 {
-    if (auto diag = model->attachedDialog())
+    if (auto diag = iface->getAttachedGeometryDialog())
     {
         diag->show();
         return diag;
     }
 
-    auto diag = new GeometryDialog(&model->geometrySettings());
+    auto diag = new GeometryDialog(&iface->getGeometrySettings());
     diag->setAttribute(Qt::WA_DeleteOnClose);
-    diag->setWindowTitle(model->name() + " " + tr("geometry"));
-    model->setAttachedDialog(diag);
+
+    auto obj = dynamic_cast<Object*>(iface);
+        diag->setWindowTitle(obj->namePath() + " " + tr("geometry"));
+
+    iface->setAttachedGeometryDialog(diag);
 
     connect(diag, &GeometryDialog::destroyed, [=]()
     {
-        model->setAttachedDialog(0);
+        iface->setAttachedGeometryDialog(0);
     });
     connect(diag, &GeometryDialog::apply, [=]()
     {
-        if (diag->getGeometrySettings() == model->geometrySettings())
+        if (diag->getGeometrySettings() == iface->getGeometrySettings())
             return;
 
-        auto root = model->sceneObject();
-        auto editor = model->editor();
+        auto root = obj? obj->sceneObject() : 0;
+        auto editor = obj? obj->editor() : 0;
         if (root)
         {
-            ScopedObjectChange lock(root, model);
-            model->setGeometrySettings(diag->getGeometrySettings());
+            ScopedObjectChange lock(root, obj);
+            iface->setGeometrySettings(diag->getGeometrySettings());
         }
         else
-            model->setGeometrySettings(diag->getGeometrySettings());
+            iface->setGeometrySettings(diag->getGeometrySettings());
         if (editor)
-            editor->emitObjectChanged(model);
+            editor->emitObjectChanged(obj);
     });
 
     diag->show();

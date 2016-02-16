@@ -101,7 +101,7 @@ const GEOM::Geometry* GeometryObject::geometry() const
     return geometry_;
 }
 
-const GEOM::GeometryFactorySettings& GeometryObject::geometrySettings() const
+const GEOM::GeometryFactorySettings& GeometryObject::getGeometrySettings() const
 {
     geomSettings_->setObject(const_cast<GeometryObject*>(this));
     return *geomSettings_;

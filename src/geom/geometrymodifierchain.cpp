@@ -54,7 +54,13 @@ GeometryModifierChain& GeometryModifierChain::operator = (const GeometryModifier
 
 bool GeometryModifierChain::operator != (const GeometryModifierChain& o) const
 {
-    return modifiers_ != o.modifiers_;
+    if (modifiers_.size() != o.modifiers_.size())
+        return true;
+
+    for (int i=0; i<modifiers_.size(); ++i)
+        if (*modifiers_[i] != *o.modifiers_[i])
+            return true;
+    return false;
 }
 
 

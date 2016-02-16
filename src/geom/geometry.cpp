@@ -864,6 +864,9 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
                     other.texcoord_[ot3 * other.numTextureCoordComponents()],
                     other.texcoord_[ot3 * other.numTextureCoordComponents() + 1]);
 
+        //for (auto a : other.attributes_)
+        //    setAttribute();
+
         addTriangle(t1, t2, t3
 #ifndef MO_DISABLE_EDGEFLAG
                     , other.edgeFlags_[i*3]

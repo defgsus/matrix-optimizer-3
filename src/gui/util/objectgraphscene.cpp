@@ -46,6 +46,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/geometryeditinterface.h"
 #include "gl/texture.h"
 #include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
@@ -1649,17 +1650,21 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         editor->setObjectHue(obj, hue);
     });
 
+    // GeometryDialog
+    if (GeometryEditInterface * geom = dynamic_cast<GeometryEditInterface*>(obj))
+    {
+        // edit geometry
+        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit geometry"), scene);
+        a->setStatusTip(tr("Opens a dialog for editing the attached geometry data"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            GeometryDialog::openForInterface(geom);
+        });
+    }
+
     // Model3d specific
     if (Model3d * model = qobject_cast<Model3d*>(obj))
     {
-        // edit geometry
-        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit model geometry"), scene);
-        a->setStatusTip(tr("Opens a dialog for editing the model geometry"));
-        connect(a, &QAction::triggered, [=]()
-        {
-            GeometryDialog::openForModel(model);
-        });
-
         // show source code
         auto sub = new QMenu(tr("Show shader source"));
         a = actions.addMenu(sub, scene);
@@ -1710,25 +1715,6 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
             diag->show();
         });
 
-    }
-
-    // GeometryObject specific
-    if (GeometryObject * geom = qobject_cast<GeometryObject*>(obj))
-    {
-        // edit geometry
-        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit geometry"), scene);
-        a->setStatusTip(tr("Opens a dialog for editing the geometry"));
-        connect(a, &QAction::triggered, [=]()
-        {
-            GeometryDialog diag(&geom->geometrySettings());
-
-            if (diag.exec() == QDialog::Accepted)
-            {
-                ScopedObjectChange lock(root, geom);
-                geom->setGeometrySettings(diag.getGeometrySettings());
-                editor->emitObjectChanged(geom);
-            }
-        });
     }
 
     // wrap float sequence in float track

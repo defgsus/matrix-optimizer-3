@@ -14,7 +14,7 @@
 /** @todo VIOSO Port
   *
   * - OK anti-aliasing!
-  * - steuerung von aussen!
+  * - OK (osc) steuerung von aussen!
   * - demo: image slideshow / gallery
   * - demo: klassisch/nicht abstrakt, firmenbedürfnisse
   * - sequencing/tracks!

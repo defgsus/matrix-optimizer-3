@@ -27,7 +27,7 @@ class QVBoxLayout;
 class QScrollArea;
 
 namespace MO {
-class Model3d;
+class GeometryEditInterface;
 namespace GUI {
 
 class SpinBox;
@@ -47,7 +47,7 @@ public:
 
     /** Creates and returns a Geometry edit dialog for the given object.
         The dialog is attached and reused and killed properly. */
-    static GeometryDialog* openForModel(Model3d*);
+    static GeometryDialog* openForInterface(GeometryEditInterface*);
 
 signals:
 

@@ -50,7 +50,6 @@ Model3d::Model3d(QObject * parent)
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings(this)),
       nextGeometry_ (0),
-      attachedDialog_(0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
       textureEnv_  (new TextureSetting(this)),
@@ -71,9 +70,6 @@ Model3d::Model3d(QObject * parent)
 
 Model3d::~Model3d()
 {
-    if (attachedDialog_)
-        attachedDialog_->close();
-
     resetCreator_();
 }
 
@@ -628,7 +624,7 @@ Vec4 Model3d::modelColor(const RenderTime& time) const
         ca_->value(time));
 }
 
-const GEOM::GeometryFactorySettings& Model3d::geometrySettings() const
+const GEOM::GeometryFactorySettings& Model3d::getGeometrySettings() const
 {
     geomSettings_->setObject(const_cast<Model3d*>(this));
     return *geomSettings_;

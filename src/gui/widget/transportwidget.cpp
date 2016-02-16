@@ -99,7 +99,7 @@ void TransportWidget::setSceneTime(Double time, Double fps)
     labelTime_->setText(time_to_string(time, true));
     labelTime2_->setText(tr("%2s %3f (%4fps)")
                         .arg(long(time))
-                        .arg(long(time * 30))
+                        .arg(long(time * 60.))
                         .arg(int(fps))
                         );
 }

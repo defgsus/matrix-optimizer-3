@@ -13,7 +13,7 @@
 
 #include "object/object.h"
 #include "object/interface/valuegeometryinterface.h"
-
+#include "object/interface/geometryeditinterface.h"
 
 namespace MO {
 namespace GEOM
@@ -24,7 +24,10 @@ namespace GEOM
 }
 
 /** A simple container for Geometry */
-class GeometryObject : public Object, public ValueGeometryInterface
+class GeometryObject
+        : public Object
+        , public ValueGeometryInterface
+        , public GeometryEditInterface
 {
     Q_OBJECT
 public:
@@ -36,10 +39,10 @@ public:
     virtual bool isGeometry() const Q_DECL_OVERRIDE { return true; }
 
     /** Returns the current geometry settings. */
-    const GEOM::GeometryFactorySettings& geometrySettings() const;
+    const GEOM::GeometryFactorySettings& getGeometrySettings() const override;
 
     /** Sets new geometry settings and creates the geometry on next render */
-    void setGeometrySettings(const GEOM::GeometryFactorySettings&);
+    void setGeometrySettings(const GEOM::GeometryFactorySettings&) override;
 
     /** Overwrite current geometry */
     void setGeometry(const GEOM::Geometry& );
