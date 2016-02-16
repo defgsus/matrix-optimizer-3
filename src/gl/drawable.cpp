@@ -193,7 +193,7 @@ void Drawable::compileShader_()
     // --- compile shader ---
 
     shaderSource_->finalize();
-    shader_->setSource(shaderSource_);
+    shader_->setSource(*shaderSource_);
     MO_EXTEND_EXCEPTION(
                 shader_->compile(),
                 "in Drawable('" << name_ << "'), shader log = {\n"

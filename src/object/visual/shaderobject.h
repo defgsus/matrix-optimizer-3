@@ -13,13 +13,17 @@
 
 #include "objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/masteroutinterface.h"
 
 namespace MO {
 
 class UserUniformSetting;
 
 /** A free editable GLSL shader object with position in space. */
-class ShaderObject : public ObjectGl, public ValueTextureInterface
+class ShaderObject
+        : public ObjectGl
+        , public ValueTextureInterface
+        , public MasterOutInterface
 {
     Q_OBJECT
 public:
@@ -42,8 +46,15 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
+    // ------- ValueTextureInterface --------
+
     /** texture output interface */
     virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
+
+    // ------- MasterOutInterfacce ----------
+
+    virtual bool isMasterOutputEnabled() const Q_DECL_OVERRIDE;
+    virtual void setMasterOutputEnabled(bool enable, bool sendGui = false) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
 

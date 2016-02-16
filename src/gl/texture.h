@@ -55,6 +55,10 @@ public:
 
     // -------------- static ----------------------
 
+    /** Equal to glActiveTexture(GL_TEXTURE0 + slot).
+        @throws GlException */
+    static void setActiveTexture(gl::GLuint slot);
+
     /* Creates a new Texture from an image.
         Returns NULL on fail, or throws exception.
         OpenGL context must be present of course. */
@@ -124,7 +128,7 @@ public:
     // -------- openGL interface ---------------
 
     /** Sets a change to the texture. Will change the number returned in hash() */
-    void setChanged() { ++hash_; }
+    void setChanged();
 
     /** Binds the texture handle to the current slot */
     void bind() const;
@@ -221,6 +225,11 @@ public:
         @note The texture must be bound!
         @throws GlException */
     QImage toQImage() const;
+
+    /** Saves the texture to a file, using toQImage().
+        @note The texture must be bound!
+        @throws GlException or IoException */
+    void saveImageFile(const QString& fn) const;
 
 private:
 

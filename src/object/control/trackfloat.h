@@ -31,7 +31,9 @@ public:
 
     virtual void collectModulators();
 
-    virtual QList<Object*> getModulatingObjects() const;
+    /** Also adds contained Sequences */
+    virtual void getModulatingObjects(ObjectConnectionGraph&, bool recursive)
+                                                            const Q_DECL_OVERRIDE;
 
     Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 

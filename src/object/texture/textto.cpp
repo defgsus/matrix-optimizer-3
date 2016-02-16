@@ -232,6 +232,8 @@ void TextTO::getNeededFiles(IO::FileList & files)
 void TextTO::initGl(uint thread)
 {
     TextureObjectBase::initGl(thread);
+
+    doRenderText_ = true;
 }
 
 void TextTO::releaseGl(uint thread)
@@ -363,7 +365,7 @@ const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
 
     }
 
-    return tex_->isAllocated() ? tex_ : 0;
+    return tex_ && tex_->isAllocated() ? tex_ : 0;
 }
 
 

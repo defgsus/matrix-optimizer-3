@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<csg>
+    <csg-node version="1" class="CsgRoot">
+        <properties version="1"/>
+        <csg-node version="1" class="CsgUnion">
+            <properties version="1"/>
+            <csg-node version="1" class="CsgKaliFold">
+                <properties version="1">
+                    <property id="iterations" v="uint#11"/>
+                    <property id="kali_x" v="double#1"/>
+                    <property id="kali_y" v="double#1"/>
+                    <property id="kali_z" v="double#1"/>
+                    <property id="name" v="QString#KaliFold"/>
+                </properties>
+                <csg-node version="1" class="CsgCylinder">
+                    <properties version="1">
+                        <property id="axis" nv="y"/>
+                        <property id="inverse" v="bool#false"/>
+                        <property id="name" v="QString#Cylinder"/>
+                        <property id="radius" v="double#0.021000000000000001"/>
+                        <property id="x" v="double#0"/>
+                        <property id="y" v="double#0"/>
+                        <property id="z" v="double#0"/>
+                    </properties>
+                </csg-node>
+            </csg-node>
+        </csg-node>
+    </csg-node>
+</csg>

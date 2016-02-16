@@ -152,6 +152,9 @@ public:
     /** Re-creates all connection items */
     void updateConnectors();
 
+    /** Sets the pixmaps of the control items */
+    void updateControlItems();
+
     /** Expands the grid size of the item by moving the top-left
         corner. All parent items will be expanded if necessary. */
     void expandTopLeft(int x, int y);

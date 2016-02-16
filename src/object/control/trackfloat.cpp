@@ -9,6 +9,7 @@
 */
 
 #include "trackfloat.h"
+#include "object/util/objectconnectiongraph.h"
 #include "io/datastream.h"
 #include "io/log.h"
 #include "sequencefloat.h"
@@ -76,17 +77,17 @@ void TrackFloat::collectModulators()
     sequences_ = findChildObjects<SequenceFloat>();
 }
 
-QList<Object*> TrackFloat::getModulatingObjects() const
+void TrackFloat::getModulatingObjects(ObjectConnectionGraph& graph, bool rec) const
 {
-    QList<Object*> list(Object::getModulatingObjects());
+    Object::getModulatingObjects(graph, rec);
 
     for (auto s : sequences_)
-        list.append(s);
-
-    for (auto s : sequences_)
-        list.append(s->getModulatingObjects());
-
-    return list;
+    if (!graph.hasObject(s))
+    {
+        graph.addConnection(s, const_cast<TrackFloat*>(this));
+        if (rec)
+            s->getModulatingObjects(graph, true);
+    }
 }
 
 } // namespace MO

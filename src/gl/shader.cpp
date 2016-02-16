@@ -83,15 +83,16 @@ Shader::~Shader()
     MO_DEBUG_GL("Shader(" << name_ << ")::~Shader()");
 
     if (isReady())
-        MO_WARNING("delete of shader object with bound resources - OpenGL resource leak");
+        MO_WARNING("delete of shader object '"
+                   << name() << "' with bound resources - OpenGL resource leak");
 }
 
-void Shader::setSource(const ShaderSource * s)
+void Shader::setSource(const ShaderSource& s)
 {
-    if (s->isEmpty())
+    if (s.isEmpty())
         MO_GL_ERROR( "Shader(" << name_ << ")::setSource() with empty source" );
 
-    *source_ = *s;
+    *source_ = s;
     sourceChanged_ = true;
 }
 

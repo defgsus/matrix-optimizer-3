@@ -40,6 +40,11 @@ ShaderSource::ShaderSource()
 {
 }
 
+bool ShaderSource::operator == (const ShaderSource& rhs) const
+{
+    return vert_ == rhs.vert_ && frag_ == rhs.frag_;
+}
+
 int ShaderSource::findLineNumber(const QString& src, const QString& text)
 {
     int idx = src.indexOf(text);
@@ -283,6 +288,26 @@ void ShaderSource::p_addDefine_(QString &src, const QString &def_line, bool addB
     src.prepend(line);
 }
 
+
+QString ShaderSource::addLineNumbers(const QString &s)
+{
+    QString out;
+    bool newLine = true;
+    int lineNum = 0;
+    for (const auto& c : s)
+    {
+        if (newLine)
+        {
+            out += QString("/* %1 */ ").arg(lineNum++);
+            newLine = false;
+        }
+        if (c == '\n')
+            newLine = true;
+        out += c;
+    }
+
+    return out;
+}
 
 } // namespace GL
 } // namespace MO

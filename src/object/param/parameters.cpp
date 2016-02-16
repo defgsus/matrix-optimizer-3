@@ -24,6 +24,7 @@
 #include "parametertexture.h"
 #include "parametertransformation.h"
 #include "object/object.h"
+#include "object/util/objectconnectiongraph.h"
 #include "gl/opengl.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -154,21 +155,19 @@ QMap<QString, QList<Parameter*>> Parameters::getParameterGroups() const
     return map;
 }
 
-QList<Object*> Parameters::getModulatingObjects(bool recursive) const
+QList<Object*> Parameters::getModulatingObjectsList(bool recursive) const
 {
-    QSet<Object*> set;
-    getModulatingObjects(set, recursive);
-    return set.toList();
+    ObjectConnectionGraph graph;
+    getModulatingObjects(graph, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(object());
+    return list;
 }
 
-void Parameters::getModulatingObjects(QSet<Object*>& set, bool recursive) const
+void Parameters::getModulatingObjects(ObjectConnectionGraph& graph, bool recursive) const
 {
     for (auto p : parameters_)
-    {
-        auto l = p->getModulatingObjects(recursive);
-        for (auto o : l)
-            set.insert(o);
-    }
+        p->getModulatingObjects(graph, recursive);
 }
 
 QList<QString> Parameters::getModulatorIds() const
@@ -877,6 +876,7 @@ int Parameters::getTexFormat(int format, int type)
         case gl::GL_RG:
             switch (gl::GLenum(type))
             {
+                case gl::GL_RGBA: return (int)gl::GL_RG8;
                 case gl::GL_RGBA16F: return (int)gl::GL_RG16F;
                 case gl::GL_RGBA32F: return (int)gl::GL_RG32F;
                 default: break;
@@ -886,6 +886,7 @@ int Parameters::getTexFormat(int format, int type)
         case gl::GL_RGB:
             switch (gl::GLenum(type))
             {
+                case gl::GL_RGBA: return (int)gl::GL_RGB8;
                 case gl::GL_RGBA16F: return (int)gl::GL_RGB16F;
                 case gl::GL_RGBA32F: return (int)gl::GL_RGB32F;
                 default: break;
@@ -895,6 +896,7 @@ int Parameters::getTexFormat(int format, int type)
         case gl::GL_RGBA:
             switch (gl::GLenum(type))
             {
+                case gl::GL_RGBA: return (int)gl::GL_RGBA8;
                 case gl::GL_RGBA16F: return (int)gl::GL_RGBA16F;
                 case gl::GL_RGBA32F: return (int)gl::GL_RGBA32F;
                 default: break;
@@ -946,15 +948,15 @@ ParameterSelect * Parameters::createTextureFormatParameter(
 
 
 ParameterSelect * Parameters::createTextureTypeParameter(
-        const QString& id, const QString& name, const QString& statusTip)
+        const QString& id, const QString& name, const QString& statusTip, int def)
 {
     return createSelectParameter(id, name, statusTip,
-                { "8f", "16f", "32f" },
-                { "8 bit float", "16 bit float", "32 bit float" },
-                { "8 bit float", "16 bit float", "32 bit float" },
-                { (int)gl::GL_RGBA, (int)gl::GL_RGBA16F, (int)gl::GL_RGBA32F },
-                (int)gl::GL_RGBA,
-                true, false);
+            { "8f", "16f", "32f" },
+            { "8 bit float", "16 bit float", "32 bit float" },
+            { "8 bit float", "16 bit float", "32 bit float" },
+            { (int)gl::GL_RGBA, (int)gl::GL_RGBA16F, (int)gl::GL_RGBA32F },
+            (int)( def >= 32 ? gl::GL_RGBA32F : def >= 16 ? gl::GL_RGBA16F : gl::GL_RGBA ),
+            true, false);
 
 }
 

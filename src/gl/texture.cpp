@@ -12,6 +12,7 @@
 #include <memory>
 
 #include <QImage>
+#include <QImageWriter>
 
 #include "texture.h"
 #include "io/imagereader.h"
@@ -27,7 +28,12 @@ namespace GL {
 
 long int Texture::memory_used_ = 0;
 
-namespace { static std::atomic_uint_fast64_t tex_count_(0); }
+
+namespace
+{
+    static std::atomic_uint_fast64_t tex_count_(0);
+    std::atomic_uint_fast64_t init_hash_(0);
+}
 
 Texture::Texture()
     :   ptr_			(0),
@@ -49,7 +55,7 @@ Texture::Texture()
         format_			(GL_NONE),
         input_format_	(GL_NONE),
         type_			(GL_NONE),
-        hash_           (-1)
+        hash_           (++init_hash_)
 {
     MO_DEBUG_IMG("Texture::Texture()");
     name_ = QString("tex%1").arg(tex_count_++);
@@ -79,7 +85,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       format_           (format),
       input_format_     (input_format),
       type_             (type),
-      hash_             (-1)
+      hash_             (++init_hash_)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height
                 << ", " << format << ", " << input_format
@@ -109,7 +115,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
       format_		(format),
       input_format_	(input_format),
       type_			(type),
-      hash_           (-1)
+      hash_           (++init_hash_)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height << "x" << depth
                 << ", " << format << ", " << input_format
@@ -142,7 +148,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       format_		(format),
       input_format_	(input_format),
       type_			(type),
-      hash_           (-1)
+      hash_         (++init_hash_)
 {
     MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format
@@ -401,6 +407,11 @@ void Texture::releaseTexture_()
 
 
 // ---------------------- public interface ------------------------
+
+void Texture::setChanged()
+{
+    hash_ = ++init_hash_;
+}
 
 void Texture::bind() const
 {
@@ -845,10 +856,21 @@ QImage Texture::toQImage() const
     return img;
 }
 
-
+void Texture::saveImageFile(const QString &fn) const
+{
+    auto img = toQImage();
+    QImageWriter w(fn);
+    if (!w.write(img))
+        MO_IO_ERROR(WRITE, "Failed to save image '" << fn << "',\n"
+                    << w.errorString());
+}
 
 // ------------------------ static ----------------------------
 
+void Texture::setActiveTexture(GLuint slot)
+{
+    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + slot) );
+}
 
 Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, uint mipmap_levels)
 {

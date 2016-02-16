@@ -15,12 +15,16 @@
 
 #include "object/visual/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/masteroutinterface.h"
 #include "gl/shader.h"
 
 namespace MO {
 
 /** Base class for texture processors */
-class TextureObjectBase : public ObjectGl, public ValueTextureInterface
+class TextureObjectBase
+        : public ObjectGl
+        , public ValueTextureInterface
+        , public MasterOutInterface
 {
     Q_OBJECT
 public:
@@ -54,7 +58,8 @@ public:
     // -------- TextureObject ------------
     // --- getter ----
 
-    /** Returns the resolution of the internal Framebuffer, or an invalid QSize */
+    /** Returns the resolution of the internal Framebuffer,
+        or, if not present, the getDesiredResolution() */
     QSize resolution() const;
 
     /** Returns aspect ratio of the internal Framebuffer */
@@ -82,11 +87,13 @@ public:
         For all other modes, the resolution is scaled accordingly. */
     QSize adjustResolution(const QSize& s) const;
 
+    // ---- MasterOutInterface ----
+
+    bool isMasterOutputEnabled() const Q_DECL_OVERRIDE;
+    void setMasterOutputEnabled(bool enable, bool sendGui = false) Q_DECL_OVERRIDE;
+
     // ---- setter -----
 
-    /** Sets the master-out parameter.
-        if @p sendGui, this will be done via ObjectEditor */
-    void setEnableMasterOut(bool enable, bool sendGui = false);
     void setResolutionMode(ResolutionMode mode, bool sendGui = false);
 
     // ------ texture connections --------
@@ -97,16 +104,28 @@ protected:
         of texture inputs. Default is 0 */
     void initMaximumTextureInputs(uint num);
     void initMaximumTextureInputs(const QStringList& names);
+
+    /** Call in constructor to disable internal fbo creation and respective parameters.
+        Used with renderShaderQuad(GL::FrameBufferObject*, ...).
+        Default is true. */
+    void initInternalFbo(bool);
+
     /** Call this in constructor to get the color range parameters.
         Default is false. */
     void initEnableColorRange(bool);
+
     /** Call this in constructor to set the framebuffer color-texture to
         a 3d texture. Default is 1 (2d texture). */
     void init3dFramebuffer(uint depth);
 
     /** Returns the texture parameters (e.g. to change names and visibility) */
-    const QList<ParameterTexture*>& textureParams();
+    const QList<ParameterTexture*>& textureParams() const;
 
+    /** Returns the index'th texture from the texture inputs, or NULL */
+    const GL::Texture* inputTexture(uint index, const RenderTime& rt) const;
+
+    /** Returns true if any of the input textures has changed since their
+        respective last calls to ParameterTexture::value() */
     bool hasInputTextureChanged(const RenderTime& time) const;
 
     // ---------- opengl stuff -----------
@@ -116,21 +135,28 @@ public:
     virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
     /** Draws the contents of the framebuffer on a [-1,1] quad.
-        @p width and @p height are the size of the viewport of the current context. */
-    void drawFramebuffer(const RenderTime & time, int width, int height);
+        @p width and @p height are the size of the viewport of the current context.
+        Used for master output by scene renderer.
+        Override to draw your own output.
+        By default the first valueTexture() will be rendered with settings defined
+        in the 'master output' section of the parameters. */
+    virtual void drawFramebuffer(const RenderTime & time, int width, int height);
 
     /** Returns the internal framebuffer on which the shader renders, or NULL */
     GL::FrameBufferObject * fbo() const;
 
     /** Returns a copy of the source for the @p index'th shaderquad, or
-        empty source if not defined/compiled. */
-    GL::ShaderSource shaderSource(uint index) const;
+        empty source if not defined/compiled.
+        Override to return source of your internal shaders not compiled with
+        createShaderQuad(). */
+    virtual GL::ShaderSource shaderSource(uint index) const;
 
 protected:
 
     /** Creates a texture with common-parameter specified settings.
         Ownership is on caller. The texture is only created, not opengl initialized.
-        Use a form of GL::Texture::create() afterwards. */
+        Use a variant of GL::Texture::create() afterwards.
+        @note Returns NULL when initInternalFbo(false) */
     GL::Texture * createTexture() const;
 
     /** Creates a new quad with attached shader.
@@ -146,14 +172,24 @@ protected:
     GL::ScreenQuad * shaderQuad(uint index) const;
 
     /** Draws the index'th quad.
+        Input textures are automatically bound.
         @p texSlot determines the first texture slot to bind the input textures to,
-        and returns the next free slot. */
+        and returns the next free slot.
+        @note does nothing if initInternalFbo(false) */
     void renderShaderQuad(uint index, const RenderTime & time, uint& texSlot);
 
-    /** Renders the first quad, starting at texture slot 0 */
+    /** Renders the first quad, starting at texture slot 0.
+        @note does nothing if initInternalFbo(false) */
     void renderShaderQuad(const RenderTime& time)
         { uint texSlot = 0; renderShaderQuad(0, time, texSlot); }
 
+    /** Render the index'th quad onto the given framebuffer.
+        u_time, u_resolution and other uniforms are updated.
+        Otherwise OpenGL state is not really touched
+        @note Fbo and input textures must be bound! */
+    void renderShaderQuad(GL::FrameBufferObject* fbo,
+                          uint index, const RenderTime& time,
+                          bool doClear = true) const;
 private:
 
     struct PrivateTO;

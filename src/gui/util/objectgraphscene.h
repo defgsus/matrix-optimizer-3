@@ -171,6 +171,7 @@ private slots:
     void onModulatorDeleted_();
     void onConnectionsChanged_();
     void onParameterVisibilityChanged_(MO::Parameter*);
+    void onParameterChanged_(MO::Parameter*);
 
 protected:
 

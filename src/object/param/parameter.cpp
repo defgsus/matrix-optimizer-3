@@ -13,6 +13,7 @@
 #include "parameter.h"
 #include "modulator.h"
 #include "object/scene.h"
+#include "object/util/objectconnectiongraph.h"
 #include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -337,20 +338,16 @@ Modulator * Parameter::findModulator(const QString& id) const
     return 0;
 }
 
-QList<Object*> Parameter::getModulatingObjects(bool recursive) const
+void Parameter::getModulatingObjects(ObjectConnectionGraph& graph, bool recursive) const
 {
-    QList<Object*> list;
-
     for (auto m : modulators_)
-        if (m->modulator())
-            list.append(m->modulator());
+    if (m->modulator() && !graph.hasObject(m->modulator()))
+    {
+        graph.addConnection(m->modulator(), object());
 
-    if (recursive)
-        for (auto m : modulators_)
-            if (m->modulator())
-                list.append(m->modulator()->getModulatingObjects());
-
-    return list;
+        if (recursive)
+            m->modulator()->getModulatingObjects(graph, true);
+    }
 }
 
 
@@ -417,25 +414,41 @@ void Parameter::clearNullModulators()
     modulators_.swap(tmp);
 }
 
-QList<Object*> Parameter::getFutureModulatingObjects(const Scene *scene) const
+void Parameter::getFutureModulatingObjects(
+        ObjectConnectionGraph& graph, const Scene *scene, bool recursive) const
 {
-    QList<Object*> mods, list;
-
+    // get ids
     auto ids = modulatorIds();
-
+    // and pull objects from given scene
     for (const auto &id : ids)
     {
         if (Object * o = scene->findChildObject(id.first, true))
-            mods.append(o);
+        if (!graph.hasObject(o))
+        {
+            graph.addConnection(o, object());
+            if (recursive)
+                o->getModulatingObjects(graph, true);
+        }
     }
+}
 
-    list = mods;
-
-    for (auto m : mods)
-        list.append(m->getModulatingObjects());
-
+QList<Object*> Parameter::getModulatingObjectsList(bool recursive) const
+{
+    ObjectConnectionGraph graph;
+    getModulatingObjects(graph, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(object());
     return list;
 }
 
+QList<Object*> Parameter::getFutureModulatingObjectsList(
+        const Scene *scene, bool recursive) const
+{
+    ObjectConnectionGraph graph;
+    getFutureModulatingObjects(graph, scene, recursive);
+    auto list = graph.makeLinear();
+    list.removeOne(object());
+    return list;
+}
 
 } // namespace MO

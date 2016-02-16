@@ -13,10 +13,14 @@
 
 #include "objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/masteroutinterface.h"
 
 namespace MO {
 
-class Camera : public ObjectGl, public ValueTextureInterface
+class Camera
+        : public ObjectGl
+        , public ValueTextureInterface
+        , public MasterOutInterface
 {
     Q_OBJECT
 public:
@@ -42,9 +46,16 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
+    virtual QString getOutputName(SignalType, uint channel) const Q_DECL_OVERRIDE;
+
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& ) Q_DECL_OVERRIDE { };
+
+    // ------- MasterOutInterfacce ----------
+
+    virtual bool isMasterOutputEnabled() const Q_DECL_OVERRIDE;
+    virtual void setMasterOutputEnabled(bool enable, bool sendGui = false) Q_DECL_OVERRIDE;
 
     // ---------- camera specific stuff -----------
 

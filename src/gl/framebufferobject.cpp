@@ -28,7 +28,7 @@ namespace { static std::atomic_uint_fast64_t fbo_count_(0); }
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
             bool cubemap, GLsizei multiSample)
-    : FrameBufferObject(width, height, 1, format, format, type, 0, cubemap, multiSample)
+    : FrameBufferObject(width, height, 1, format, GL::inputFormat(format), type, 0, cubemap, multiSample)
 {
 
 }
@@ -44,7 +44,7 @@ FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
 FrameBufferObject::FrameBufferObject(gl::GLsizei width, gl::GLsizei height,
             gl::GLenum format, gl::GLenum type,
             int attachmentMask, bool cubemap, GLsizei multiSample)
-    : FrameBufferObject(width, height, 1, format, format, type, attachmentMask, cubemap, multiSample)
+    : FrameBufferObject(width, height, 1, format, GL::inputFormat(format), type, attachmentMask, cubemap, multiSample)
 {
 
 }
@@ -69,7 +69,7 @@ FrameBufferObject::FrameBufferObject(
     , rbo_              (invalidGl)
     , attachments_      (attachmentMask)
     , isCubemap_        (cubemap)
-    , multiSamples_      (multiSample)
+    , multiSamples_     (multiSample)
 {
     MO_DEBUG_GL("FrameBufferObject::FrameBufferObject("
                 << width << "x" << height << "x" << depth
@@ -167,11 +167,22 @@ uint FrameBufferObject::height() const
             ? colorTex_[0]->height() : 0;
 }
 
-
 uint FrameBufferObject::depth() const
 {
     return !colorTex_.empty() && colorTex_[0] && colorTex_[0]->is3d()
             ? colorTex_[0]->depth() : 1;
+}
+
+GLenum FrameBufferObject::type() const
+{
+    return !colorTex_.empty() && colorTex_[0]
+            ? colorTex_[0]->type() : GL_FLOAT;
+}
+
+GLenum FrameBufferObject::format() const
+{
+    return !colorTex_.empty() && colorTex_[0]
+            ? colorTex_[0]->format() : GL_RGBA;
 }
 
 void FrameBufferObject::setViewport() const
@@ -344,6 +355,9 @@ void FrameBufferObject::attachCubeTexture(gl::GLenum target, uint i)
 
 void FrameBufferObject::downloadColorTexture(void *ptr, uint index)
 {
+    if (index >= colorTex_.size()
+            || !colorTex_[index])
+        MO_GL_ERROR("invalid texture download for '" << name() << "'");
     colorTex_[index]->download(ptr);
 }
 
@@ -370,6 +384,8 @@ Texture * FrameBufferObject::takeColorTexture(uint index)
 
 void FrameBufferObject::downloadDepthTexture(void *ptr)
 {
+    if (!depthTex_)
+        MO_GL_ERROR("invalid texture download for '" << name() << "'");
     depthTex_->download(ptr);
 }
 

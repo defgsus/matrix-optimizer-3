@@ -126,9 +126,11 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
             MO_WARNING("In ObjectOutputView: " << e.what());
         }
 
-        // set black
+        // set black / XXX should say error or something
         label->setPixmap(QPixmap(imgSize_));
     }
+    else
+        label->clear();
 }
 
 

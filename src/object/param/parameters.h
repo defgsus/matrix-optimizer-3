@@ -68,12 +68,12 @@ public:
     /** Returns a list of all objects that modulate any of the parameters.
         If @p recursive is true, the whole modulation chain will be resolved.
         This functions only works after modulator objects are resolved. */
-    QList<Object*> getModulatingObjects(bool recursive) const;
+    QList<Object*> getModulatingObjectsList(bool recursive) const;
 
-    /** Adds all objects to the set, that modulate any of the parameters.
+    /** Adds all objects connections, that modulate any of the parameters.
         If @p recursive is true, the whole modulation chain will be resolved.
         This functions only works after modulator objects are resolved. */
-    void getModulatingObjects(QSet<Object*>&, bool recursive) const;
+    void getModulatingObjects(ObjectConnectionGraph&, bool recursive) const;
 
     /** Returns a list of all ids that modulate any of the parameters.
         This functions works also before modulator objects are resolved. */
@@ -206,7 +206,8 @@ public:
                 const QString& id, const QString& name, const QString& statusTip,
                 int minChan = 1, int maxChan = 4);
     ParameterSelect * createTextureTypeParameter(
-                const QString& id, const QString& name, const QString& statusTip);
+                const QString& id, const QString& name, const QString& statusTip,
+                int defaultBitsize = 8);
     /** Combines the two values from texture format and type parameters and
         returns the correct format GLenum. */
     static int getTexFormat(int format, int type);

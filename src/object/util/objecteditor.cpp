@@ -430,14 +430,14 @@ void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int
     bool doMasterOut = false;
     if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(newObject))
     {
-        to->setEnableMasterOut(doMasterOut = true);
+        to->setMasterOutputEnabled(doMasterOut = true);
         to->setResolutionMode(TextureObjectBase::RM_INPUT);
     }
     // disable output in source module
     if (doMasterOut)
     {
         if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(object))
-            to->setEnableMasterOut(false, true);
+            to->setMasterOutputEnabled(false, true);
     }
 
     // find correct parent

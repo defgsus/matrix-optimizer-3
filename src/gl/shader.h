@@ -160,6 +160,9 @@ public:
 
     // ----------- query ---------------------
 
+    /** Returns the given name (for debugging and such) */
+    const QString name() const { return name_; }
+
     /** Return the log from the last compilation */
     const QString& log() const { return log_; }
 
@@ -229,7 +232,7 @@ public:
         Previous contents will be overwritten.
         The attribute names of the ShaderSource object are expected
         to match the ones in the source. */
-    void setSource(const ShaderSource *);
+    void setSource(const ShaderSource&);
 
     /** Tries to compile the shader.
         Any previous program will be destroyed but the values of uniforms are kept.

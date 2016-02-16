@@ -247,13 +247,32 @@ void BlurTO::Private::releaseGl()
 
 void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
+    auto texIn = to->inputTexture(0, time);
+    if (!texIn)
+        return;
+
     // Determine size
-    Float six = 1. / 1000., siy = six * to->aspectRatio();
-    if (p_sizeIsPixels->value(time))
+    Float six = 1. / 1000.,
+          siy = six;
+
+    /** XXX @bug Bug in TextureObjectBase::resolution()
+        for RM_INPUT mode. First call to resolution() returns
+        custom resolution... */
+    auto res = //to->adjustResolution(
+                QSize(texIn->width(), texIn->height());
+                //to->resolution();
+
+    if (!res.isEmpty())
     {
-        auto res = to->resolution();
-        six = 1.f / std::max(1, res.width());
-        siy = 1.f / std::max(1, res.width());
+        if (p_sizeIsPixels->value(time))
+        {
+            std::cout << res.width() << "x" << res.height() << std::endl;
+            auto ma = std::max(res.width(), res.height());
+            six = siy = 1.f / ma;
+        }
+
+        // aspect
+        siy = siy * res.width() / res.height();
     }
 
     // scale size by samples
@@ -272,9 +291,6 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& tim
     // for each stage
     for (const Stage & s : stages)
     {
-//        MO_PRINT("SRAGE " << s.index);
-//        s.u_alpha->shader()->dumpUniforms();
-
         // update uniforms
         s.u_size_sigma->setFloats( size, sigma );
         s.u_num->setFloats( numSam );
@@ -282,6 +298,9 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& tim
         s.u_alpha->setFloats( alpha );
         if (s.u_mask_range)
             s.u_mask_range->setFloats(maskmin, maskmax, maskthresh);
+
+        //MO_PRINT("STAGE " << s.index);
+        //s.u_alpha->shader()->dumpUniforms();
 
         uint texSlot = 0;
         to->renderShaderQuad(s.index, time, texSlot);

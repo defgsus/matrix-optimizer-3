@@ -16,6 +16,7 @@
 #include <QModelIndex>
 #include <QColor>
 #include <QRect>
+#include <QSize>
 
 /** std::ostream << QString */
 template <typename T>
@@ -30,6 +31,14 @@ template <typename T>
 std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QRect& r)
 {
     o << "QRect(" << r.x() << ", " << r.y() << ", " << r.width() << ", " << r.height() << ")";
+    return o;
+}
+
+/** std::ostream << QRect */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QSize& s)
+{
+    o << "QSize(" << s.width() << ", " << s.height() << ")";
     return o;
 }
 
