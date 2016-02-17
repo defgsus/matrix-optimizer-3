@@ -362,7 +362,8 @@ HEADERS += \
     $$PWD/gl/neurogl.h \
     $$PWD/object/util/objectconnectiongraph.h \
     $$PWD/object/texture/cropto.h \
-    $$PWD/object/interface/geometryeditinterface.h
+    $$PWD/object/interface/geometryeditinterface.h \
+    $$PWD/tool/evolutionbase.h
 
 
 SOURCES += \
@@ -678,4 +679,5 @@ SOURCES += \
     $$PWD/gl/neurogl.cpp \
     $$PWD/object/util/objectconnectiongraph.cpp \
     $$PWD/object/texture/cropto.cpp \
-    $$PWD/object/interface/geometryeditinterface.cpp
+    $$PWD/object/interface/geometryeditinterface.cpp \
+    $$PWD/tool/evolutionbase.cpp

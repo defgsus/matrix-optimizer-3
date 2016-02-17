@@ -61,6 +61,7 @@
 #include "gui/widget/objectoutputview.h"
 #include "gui/imagelistdialog.h"
 #include "gui/csgdialog.h"
+#include "gui/evolutiondialog.h"
 #ifndef MO_DISABLE_SERVER
 #   include "gui/serverview.h"
 #   include "engine/serverengine.h"
@@ -720,6 +721,15 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         connect(a, &QAction::triggered, [=]()
         {
             auto win = new CsgDialog(window_);
+            win->setAttribute(Qt::WA_DeleteOnClose, true);
+            win->show();
+        });
+
+        a = new QAction(tr("Evolution test"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto win = new EvolutionDialog(window_);
             win->setAttribute(Qt::WA_DeleteOnClose, true);
             win->show();
         });
