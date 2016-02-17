@@ -15,7 +15,6 @@
 
 namespace MO {
 class EvolutionBase;
-class MutationSettings;
 class EvolutionPool;
 namespace GUI {
 

@@ -19,7 +19,7 @@ class QImage;
 namespace MO {
 
 class EvolutionBase;
-struct MutationSettings;
+class Properties;
 
 class EvolutionPool
 {
@@ -30,11 +30,13 @@ public:
 
     size_t size() const;
     EvolutionBase* baseType() const;
+    Properties properties() const;
+
     /** Returns new random instance of baseType(),
         or NULL if baseType() is NULL */
     EvolutionBase* createSpecimen() const;
 
-    void setMutationSettings(const MutationSettings&, bool keepSeed = true);
+    void setProperties(const Properties&, bool keepSeed = true);
     void setBaseType(EvolutionBase* base);
     /** Adds reference */
     void setSpecimen(size_t idx, EvolutionBase* base);

@@ -18,6 +18,9 @@ class QImage;
 
 namespace MO {
 
+class Properties;
+
+/*
 struct MutationSettings
 {
     MutationSettings(double prob = 0.1, double amt = 0.1, uint32_t seed = 42)
@@ -34,40 +37,56 @@ struct MutationSettings
 
     uint32_t seed;
 };
+*/
 
 /** Base class for evolutionary framework */
 class EvolutionBase : public RefCounted
 {
 public:
-    EvolutionBase() : RefCounted() { }
+    EvolutionBase();
+    ~EvolutionBase();
 
     /** Create a new instance, as complete copy. */
     virtual EvolutionBase * createClone() const = 0;
-    virtual void copyFrom(const EvolutionBase*) = 0;
+    virtual void copyFrom(const EvolutionBase*);
 
-    virtual void randomize(const MutationSettings*) = 0;
-    virtual void mutate(const MutationSettings*) = 0;
-    virtual bool mate(const MutationSettings*, const EvolutionBase* other) = 0;
+    virtual void randomize() = 0;
+    virtual void mutate() = 0;
+    virtual bool mate(const EvolutionBase* other) = 0;
 
     virtual void getImage(QImage& img) const = 0;
+
+    const Properties& properties() const { return *p_props_; }
+    Properties& properties() { return *p_props_; }
+
+private:
+    Properties* p_props_;
 };
 
-/** Base class with std::vector<double>. */
+/** Base class with std::vector<double>.
+    Properties are
+    seed (uint)
+    mutation_amount,
+    mutation_prob,
+    init_mean,
+    init_dev (all double)
+    */
 class EvolutionVectorBase : public EvolutionBase
 {
 public:
-    EvolutionVectorBase(size_t size) : p_vec_(size) { }
+    EvolutionVectorBase(size_t size);
     virtual EvolutionVectorBase * createClone() const
         { auto e = new EvolutionVectorBase(0); e->copyFrom(this); return e; }
     virtual void copyFrom(const EvolutionBase* o) override
     {
+        EvolutionBase::copyFrom(o);
         if (auto e = dynamic_cast<const EvolutionVectorBase*>(o))
             p_vec_ = e->p_vec_;
     }
 
-    virtual void randomize(const MutationSettings*) override;
-    virtual void mutate(const MutationSettings*) override;
-    virtual bool mate(const MutationSettings*, const EvolutionBase* other) override;
+    virtual void randomize() override;
+    virtual void mutate() override;
+    virtual bool mate(const EvolutionBase* other) override;
 
     /** Base impl. renders the values */
     virtual void getImage(QImage& img) const override;

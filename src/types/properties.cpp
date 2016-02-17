@@ -650,6 +650,16 @@ void Properties::unify(const Properties &other)
     }
 }
 
+void Properties::updateFrom(const Properties &other)
+{
+    for (auto i = other.p_map_.begin(); i != other.p_map_.end(); ++i)
+    {
+        auto j = p_map_.find(i.key());
+        if (j != p_map_.end())
+            j.value().p_val_ = i.value().p_val_;
+    }
+}
+
 bool Properties::isVisible(const QString &id) const
 {
     auto i = p_map_.find(id);

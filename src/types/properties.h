@@ -327,6 +327,8 @@ public:
     /** Copy all values from @p other.
         This creates or overwrites values for each value contained in @p other. */
     void unify(const Properties& other);
+    /** Copy values from @p other that are already present in this. */
+    void updateFrom(const Properties& other);
 
     /** Create a union of this and @p other,
         while prefering other's values over own. */

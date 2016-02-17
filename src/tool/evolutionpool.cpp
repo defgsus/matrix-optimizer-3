@@ -15,6 +15,7 @@
 #include "evolutionpool.h"
 #include "evolutionbase.h"
 #include "math/random.h"
+#include "types/properties.h"
 
 namespace MO {
 
@@ -62,9 +63,9 @@ struct EvolutionPool::Private
     EvolutionPool* p;
     std::vector<Tile> tiles;
     EvolutionBase* base;
-    MutationSettings set;
     MATH::Twister rnd;
     QSize imgRes;
+    Properties props;
 };
 
 EvolutionPool::EvolutionPool(size_t num)
@@ -81,6 +82,7 @@ EvolutionPool::~EvolutionPool()
 
 size_t EvolutionPool::size() const { return p_->tiles.size(); }
 EvolutionBase* EvolutionPool::baseType() const { return p_->base; }
+
 EvolutionBase* EvolutionPool::specimen(size_t idx) const
 {
     return p_->tiles[idx].instance;
@@ -88,6 +90,14 @@ EvolutionBase* EvolutionPool::specimen(size_t idx) const
 const QImage& EvolutionPool::image(size_t idx) const
 {
     return p_->tiles[idx].image;
+}
+
+Properties EvolutionPool::properties() const
+{
+    Properties p;
+    for (auto& t : p_->tiles)
+        p.unify(t.instance->properties());
+    return p;
 }
 
 void EvolutionPool::setBaseType(EvolutionBase* base)
@@ -107,14 +117,20 @@ void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
     evo->addRef();
 }
 
-void EvolutionPool::setMutationSettings(const MutationSettings& m, bool keepSeed)
+void EvolutionPool::setProperties(const Properties& m, bool keepSeed)
 {
-    auto pseed = p_->set.seed;
-    p_->set = m;
+    auto pseed = p_->props.get("seed").toUInt();
+    p_->props = m;
     if (!keepSeed)
-        p_->rnd.setSeed(p_->set.seed);
+        p_->rnd.setSeed(m.get("seed").toUInt());
     else
-        p_->set.seed = pseed;
+        p_->props.set("seed", pseed);
+
+    /*
+    for (auto& t : p_->tiles)
+        if (t.instance)
+            t.instance->properties().updateFrom(p_->props);
+            */
 }
 
 void EvolutionPool::renderTiles() { p_->renderTiles(); }
@@ -127,7 +143,7 @@ void EvolutionPool::setImageResolution(const QSize &res)
 
 void EvolutionPool::Private::rndSeed()
 {
-    set.seed = rnd.getUInt32();
+    props.set("seed", rnd.getUInt32());
 }
 
 EvolutionBase* EvolutionPool::createSpecimen() const
@@ -135,8 +151,9 @@ EvolutionBase* EvolutionPool::createSpecimen() const
     if (!p_->base)
         return nullptr;
     p_->rndSeed();
+    p_->base->properties().updateFrom(p_->props);
     auto c = p_->base->createClone();
-    c->randomize(&p_->set);
+    c->randomize();
     return c;
 }
 
@@ -171,7 +188,8 @@ void EvolutionPool::randomize()
         }
 
         p_->rndSeed();
-        t.instance->randomize(&p_->set);
+        t.instance->properties().updateFrom(p_->props);
+        t.instance->randomize();
         t.dirty = true;
     }
 }
@@ -182,6 +200,9 @@ void EvolutionPool::repopulateFrom(size_t idx)
     if (!src)
         return;
 
+    src->properties().unify(p_->props);
+
+
     for (auto& e : p_->tiles)
     if (src != e.instance)
     {
@@ -190,7 +211,8 @@ void EvolutionPool::repopulateFrom(size_t idx)
 
         e.instance = src->createClone();
         p_->rndSeed();
-        e.instance->mutate(&p_->set);
+        e.instance->properties().updateFrom(p_->props);
+        e.instance->mutate();
         e.dirty = true;
     }
 }

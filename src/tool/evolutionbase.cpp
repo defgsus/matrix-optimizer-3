@@ -13,33 +13,80 @@
 
 #include "evolutionbase.h"
 #include "math/random.h"
+#include "types/properties.h"
 
 namespace MO {
 
-
-
-void EvolutionVectorBase::randomize(const MutationSettings* ms)
+void EvolutionBase::copyFrom(const EvolutionBase* o)
 {
-    MATH::Twister rnd(ms->seed);
-    for (auto& v : vector())
-        v = ms->mean + ms->deviation * (rnd() - rnd());
+    *p_props_ = *o->p_props_;
 }
 
-void EvolutionVectorBase::mutate(const MutationSettings* ms)
+EvolutionBase::EvolutionBase()
+    : RefCounted    ()
+    , p_props_      (new Properties())
 {
-    MATH::Twister rnd(ms->seed);
-    for (auto& v : vector())
-        if (rnd() < ms->probability)
-            v += ms->amount * (rnd() - rnd());
 }
 
-bool EvolutionVectorBase::mate(const MutationSettings* ms, const EvolutionBase* otherBase)
+EvolutionBase::~EvolutionBase()
+{
+    delete p_props_;
+}
+
+
+
+EvolutionVectorBase::EvolutionVectorBase(size_t size)
+    : p_vec_    (size)
+{
+    properties().set("seed",
+              QObject::tr("seed"),
+              QObject::tr("Random initial seed"),
+              42u);
+    properties().set("mutation_amount",
+              QObject::tr("mutation amount"),
+              QObject::tr("Maximum change per mutation"),
+              0.1, 0.01);
+    properties().set("mutation_prob",
+              QObject::tr("mutation probability"),
+              QObject::tr("Probability of a random change"),
+              0.1, 0., 1., 0.01);
+
+    properties().set("init_mean",
+              QObject::tr("random mean"),
+              QObject::tr("Mean value of random initialization"),
+              0.0, 0.1);
+    properties().set("init_dev",
+              QObject::tr("random deviation"),
+              QObject::tr("Range of random initialization"),
+              1., 0.1);
+}
+
+void EvolutionVectorBase::randomize()
+{
+    MATH::Twister rnd(properties().get("seed").toUInt());
+    double  mean = properties().get("init_mean").toDouble(),
+            dev = properties().get("init_dev").toDouble();
+    for (auto& v : vector())
+        v = mean + dev * (rnd() - rnd());
+}
+
+void EvolutionVectorBase::mutate()
+{
+    MATH::Twister rnd(properties().get("seed").toUInt());
+    double  amt = properties().get("mutation_amount").toDouble(),
+            prob = properties().get("mutation_prob").toDouble();
+    for (auto& v : vector())
+        if (rnd() < prob)
+            v += amt * (rnd() - rnd());
+}
+
+bool EvolutionVectorBase::mate(const EvolutionBase* otherBase)
 {
     auto other = dynamic_cast<const EvolutionVectorBase*>(otherBase);
     if (!other)
         return false;
 
-    MATH::Twister rnd(ms->seed);
+    MATH::Twister rnd(properties().get("seed").toUInt());
     double range = rnd(1., 50.),
            phase = rnd(0., 6.28),
            amp = rnd(1.);
