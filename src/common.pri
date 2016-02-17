@@ -363,7 +363,8 @@ HEADERS += \
     $$PWD/object/util/objectconnectiongraph.h \
     $$PWD/object/texture/cropto.h \
     $$PWD/object/interface/geometryeditinterface.h \
-    $$PWD/tool/evolutionbase.h
+    $$PWD/tool/evolutionbase.h \
+    $$PWD/tool/evolutionpool.h
 
 
 SOURCES += \
@@ -680,4 +681,5 @@ SOURCES += \
     $$PWD/object/util/objectconnectiongraph.cpp \
     $$PWD/object/texture/cropto.cpp \
     $$PWD/object/interface/geometryeditinterface.cpp \
-    $$PWD/tool/evolutionbase.cpp
+    $$PWD/tool/evolutionbase.cpp \
+    $$PWD/tool/evolutionpool.cpp

@@ -32,7 +32,13 @@ public:
     /** Resolution of each tile */
     const QSize& tileResolution() const;
 
+    unsigned tileIndexAt(unsigned widgetX, unsigned widgetY) const;
+
+    int selectedIndex() const;
 signals:
+
+    /** A tile was clicked */
+    void selected(unsigned index);
 
 public slots:
 
@@ -42,10 +48,13 @@ public slots:
     /** Sets or replaces a tile, adds reference to @p evo */
     void setTile(unsigned tileIdx, EvolutionBase* evo);
 
+    void repopulateFrom(unsigned tileIdx);
+
 protected:
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;
     void mouseReleaseEvent(QMouseEvent*) override;
+    void mouseDoubleClickEvent(QMouseEvent*) override;
     void dropEvent(QDropEvent*) override;
     void resizeEvent(QResizeEvent*) override;
     void paintEvent(QPaintEvent*) override;

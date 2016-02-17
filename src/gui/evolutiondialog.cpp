@@ -13,7 +13,8 @@
 
 #include "evolutiondialog.h"
 #include "widget/evolutionarea.h"
-
+#include "tool/evolutionbase.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -38,11 +39,21 @@ EvolutionDialog::EvolutionDialog(QWidget* parent)
 {
     setObjectName("EvolutionDialog");
     setMinimumSize(320, 240);
+
+    settings()->restoreGeometry(this);
+
     p_->createWidgets();
+
+    /*auto t = new EvolutionVectorBase(20);
+    p_->area->setTile(0, t);
+    t->releaseRef();
+    */
 }
 
 EvolutionDialog::~EvolutionDialog()
 {
+    settings()->storeGeometry(this);
+
     delete p_;
 }
 

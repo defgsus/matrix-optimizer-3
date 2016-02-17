@@ -18,6 +18,7 @@
 
 #include "evolutionarea.h"
 #include "tool/evolutionbase.h"
+#include "tool/evolutionpool.h"
 #include "io/log.h"
 
 namespace MO {
@@ -27,18 +28,14 @@ struct EvolutionArea::Private
 {
     Private(EvolutionArea * w)
         : widget    (w)
+        , selTile   (-1)
     {
         resize(5);
+        auto e = new EvolutionVectorBase(20);
+        pool.setBaseType(e);
+        e->releaseRef();
+        pool.randomize();
     }
-
-    struct Tile
-    {
-        Tile() : instance(0) { }
-        ~Tile() { if (instance) instance->releaseRef(); }
-
-        EvolutionBase* instance;
-        QImage image;
-    };
 
     void resize(unsigned numY);
     QPoint tilePos(unsigned idx) const
@@ -49,13 +46,13 @@ struct EvolutionArea::Private
     QRect tileRect(unsigned idx) const
         { return QRect(tilePos(idx), tileRes); }
     void paint(QPainter&, const QRect&) const;
-    void renderTile(Tile*) const;
 
     EvolutionArea * widget;
     QSize tileRes, numTiles;
     QPoint paintOffs;
 
-    std::vector<Tile> tiles;
+    EvolutionPool pool;
+    int64_t selTile;
 };
 
 EvolutionArea::EvolutionArea(QWidget *parent)
@@ -64,6 +61,7 @@ EvolutionArea::EvolutionArea(QWidget *parent)
 {
     setMouseTracking(true);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
 }
 
 EvolutionArea::~EvolutionArea()
@@ -71,15 +69,40 @@ EvolutionArea::~EvolutionArea()
     delete p_;
 }
 
-unsigned EvolutionArea::numTiles() const { return p_->tiles.size(); }
+unsigned EvolutionArea::numTiles() const { return p_->pool.size(); }
 unsigned EvolutionArea::numTilesX() const { return p_->numTiles.width(); }
 unsigned EvolutionArea::numTilesY() const { return p_->numTiles.height(); }
+int EvolutionArea::selectedIndex() const { return p_->selTile; }
 
 void EvolutionArea::setNumTilesY(unsigned n) { p_->resize(n); update(); }
 void EvolutionArea::updateTile(unsigned tileIdx) { update(p_->tileRect(tileIdx)); }
 
+unsigned EvolutionArea::tileIndexAt(unsigned x, unsigned y) const
+{
+    x -= p_->paintOffs.x();
+    y -= p_->paintOffs.y();
+    if (p_->tileRes.isNull())
+        return x * numTilesY() + y;
+    return x / p_->tileRes.width() * numTilesY() + y / p_->tileRes.height();
+}
+
 void EvolutionArea::mousePressEvent(QMouseEvent* e)
 {
+    size_t sel = tileIndexAt(e->x(), e->y());
+
+    // select tile
+    if ((e->buttons() & Qt::LeftButton)
+        && sel < p_->pool.size())
+    {
+        if (p_->selTile)
+            updateTile(p_->selTile);
+        p_->selTile = sel;
+        updateTile(p_->selTile);
+        emit selected(p_->selTile);
+        e->accept();
+        return;
+    }
+
     QWidget::mousePressEvent(e);
 }
 
@@ -95,6 +118,18 @@ void EvolutionArea::mouseReleaseEvent(QMouseEvent* e)
     QWidget::mouseReleaseEvent(e);
 }
 
+void EvolutionArea::mouseDoubleClickEvent(QMouseEvent* e)
+{
+    size_t sel = tileIndexAt(e->x(), e->y());
+
+    // mutate
+    if ((e->buttons() & Qt::LeftButton)
+        && sel < p_->pool.size())
+    {
+        repopulateFrom(sel);
+        update();
+    }
+}
 
 void EvolutionArea::dropEvent(QDropEvent* e)
 {
@@ -120,60 +155,64 @@ void EvolutionArea::Private::resize(unsigned newNumY)
     int newRes = s.height() / newNumY,
         newNumX = s.width() / newRes;
     QSize fitRes = QSize(newNumX * newRes, newNumY * newRes);
-    paintOffs = QPoint((s.width() - fitRes.width()) / 2,
-                       (s.height() - fitRes.height()) / 2);
 
-    tiles.resize(newNumY * newNumX);
+    // assign
+    pool.resize(newNumX * newNumY);
     numTiles = QSize(newNumX, newNumY);
     tileRes = QSize(newRes, newRes);
+    paintOffs = QPoint((s.width() - fitRes.width()) / 2,
+                       (s.height() - fitRes.height()) / 2);
+    pool.setImageResolution(tileRes);
 
-    for (auto& t : tiles)
-        renderTile(&t);
+    // keep selection in range
+    if (selTile > 0 && size_t(selTile) >= pool.size())
+        selTile = int64_t(pool.size()) - 1;
+
 }
 
 void EvolutionArea::setTile(unsigned tileIdx, EvolutionBase *evo)
 {
-    if (tileIdx >= p_->tiles.size())
+    if (tileIdx >= p_->pool.size())
         return;
 
-    if (p_->tiles[tileIdx].instance)
-        p_->tiles[tileIdx].instance->releaseRef();
-    p_->tiles[tileIdx].instance = evo;
-    evo->addRef();
+    p_->pool.setSpecimen(tileIdx, evo);
 
     updateTile(tileIdx);
+}
+
+void EvolutionArea::repopulateFrom(unsigned tileIdx)
+{
+    if (tileIdx < p_->pool.size())
+        p_->pool.repopulateFrom(tileIdx);
 }
 
 void EvolutionArea::Private::paint(QPainter& p, const QRect& rect) const
 {
     p.fillRect(rect, Qt::black);
 
-    for (size_t i=0; i<tiles.size(); ++i)
+    for (size_t i=0; i<pool.size(); ++i)
     {
         auto trect = tileRect(i);
         if (!trect.intersects(rect))
             continue;
 
-        p.drawImage(trect.topLeft(), tiles[i].image);
+        p.drawImage(trect.topLeft(), pool.image(i));
+
+
+        // --- border ---
+
+        trect.adjust(0,0,-1,-1);
 
         p.setBrush(Qt::NoBrush);
-        p.setPen(QPen(QColor(40, 40, 40)));
+        if (selTile == int64_t(i))
+            p.setPen(QPen(QColor(140, 240, 140)));
+        else
+            p.setPen(QPen(QColor(40, 40, 40)));
 
         p.drawRect(trect);
     }
 }
 
-void EvolutionArea::Private::renderTile(Tile* tile) const
-{
-    if (tile->image.size() != tileRes)
-    {
-        tile->image = QImage(tileRes, QImage::Format_ARGB32_Premultiplied);
-        tile->image.fill(Qt::red);
-    }
-
-    if (tile->instance)
-        tile->instance->getImage(tile->image);
-}
 
 
 } // namespace GUI

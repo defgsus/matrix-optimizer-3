@@ -72,7 +72,6 @@ class Random
 class Twister
 {
     std::mt19937 twister;
-    int ref;
 
     Twister(const Twister&);
     void operator = (Twister&);
@@ -85,10 +84,13 @@ public:
 
     void setSeed(uint32_t s) { twister.seed(s); }
 
+    uint32_t getUInt32() { return twister(); }
+
     // [0,1]
     float operator()() { return float(twister()) / twister.max(); }
     //float operator()() { return *(float*)&(twister() >> 9) | 0x3f800000); }
     float operator()(float r) { return float(twister()) / twister.max() * r; }
+    float operator()(float mi, float ma) { return float(twister()) / twister.max() * (ma-mi)+mi; }
 };
 
 } // namespace MATH
