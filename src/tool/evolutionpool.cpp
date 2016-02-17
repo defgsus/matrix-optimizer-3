@@ -34,8 +34,21 @@ struct EvolutionPool::Private
 
     struct Tile
     {
-        Tile(EvolutionBase*i=0) : instance(i), dirty(true) { }
+        Tile(EvolutionBase*i=nullptr) : instance(i), dirty(true) { }
         ~Tile() { if (instance) instance->releaseRef(); }
+        Tile(const Tile& o) : Tile(nullptr) { *this = o; }
+        Tile& operator=(const Tile& o)
+        {
+            if (o.instance)
+                o.instance->addRef();
+            if (instance)
+                instance->releaseRef();
+            instance = o.instance;
+            dirty = o.dirty;
+            if (!dirty)
+                image = o.image;
+            return *this;
+        }
 
         EvolutionBase* instance;
         QImage image;
@@ -94,18 +107,22 @@ void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
     evo->addRef();
 }
 
-void EvolutionPool::setMutationSettings(const MutationSettings& m)
+void EvolutionPool::setMutationSettings(const MutationSettings& m, bool keepSeed)
 {
+    auto pseed = p_->set.seed;
     p_->set = m;
-    p_->rnd.setSeed(p_->set.seed);
+    if (!keepSeed)
+        p_->rnd.setSeed(p_->set.seed);
+    else
+        p_->set.seed = pseed;
 }
 
+void EvolutionPool::renderTiles() { p_->renderTiles(); }
 void EvolutionPool::setImageResolution(const QSize &res)
 {
     if (p_->imgRes == res)
         return;
     p_->imgRes = res;
-    p_->renderTiles();
 }
 
 void EvolutionPool::Private::rndSeed()
@@ -117,6 +134,7 @@ EvolutionBase* EvolutionPool::createSpecimen() const
 {
     if (!p_->base)
         return nullptr;
+    p_->rndSeed();
     auto c = p_->base->createClone();
     c->randomize(&p_->set);
     return c;
@@ -137,11 +155,8 @@ void EvolutionPool::resize(size_t num)
     while (num > p_->tiles.size())
     {
         auto c = createSpecimen();
-        p_->tiles.push_back(Private::Tile(0));
-        p_->tiles.back().instance = c;
+        p_->tiles.push_back(Private::Tile(c));
     }
-
-    p_->renderTiles();
 }
 
 void EvolutionPool::randomize()
@@ -149,9 +164,11 @@ void EvolutionPool::randomize()
     for (Private::Tile& t : p_->tiles)
     {
         if (t.instance == 0)
+        {
             t.instance = createSpecimen();
-        if (!t.instance)
+            t.dirty = true;
             continue;
+        }
 
         p_->rndSeed();
         t.instance->randomize(&p_->set);
@@ -176,8 +193,6 @@ void EvolutionPool::repopulateFrom(size_t idx)
         e.instance->mutate(&p_->set);
         e.dirty = true;
     }
-
-    p_->renderTiles();
 }
 
 void EvolutionPool::Private::renderTile(Tile& tile)
@@ -185,7 +200,6 @@ void EvolutionPool::Private::renderTile(Tile& tile)
     if (tile.image.size() != imgRes)
     {
         tile.image = QImage(imgRes, QImage::Format_ARGB32_Premultiplied);
-        tile.image.fill(Qt::red);
     }
 
     if (tile.instance)
@@ -193,6 +207,8 @@ void EvolutionPool::Private::renderTile(Tile& tile)
         tile.instance->getImage(tile.image);
         tile.dirty = false;
     }
+    else
+        tile.image.fill(Qt::red);
 }
 
 void EvolutionPool::Private::renderTiles()

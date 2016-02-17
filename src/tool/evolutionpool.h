@@ -34,7 +34,7 @@ public:
         or NULL if baseType() is NULL */
     EvolutionBase* createSpecimen() const;
 
-    void setMutationSettings(const MutationSettings&);
+    void setMutationSettings(const MutationSettings&, bool keepSeed = true);
     void setBaseType(EvolutionBase* base);
     /** Adds reference */
     void setSpecimen(size_t idx, EvolutionBase* base);
@@ -44,9 +44,13 @@ public:
     void randomize();
     void repopulateFrom(size_t idx);
 
+    /** Access to each instance */
+    EvolutionBase* specimen(size_t idx) const;
+
+    /** Updates changed tiles */
+    void renderTiles();
     void setImageResolution(const QSize& res);
     const QImage& image(size_t idx) const;
-    EvolutionBase* specimen(size_t idx) const;
 
 private:
 

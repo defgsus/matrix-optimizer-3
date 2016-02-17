@@ -45,7 +45,7 @@ struct EvolutionArea::Private
                 : QPoint(0, 0);  }
     QRect tileRect(unsigned idx) const
         { return QRect(tilePos(idx), tileRes); }
-    void paint(QPainter&, const QRect&) const;
+    void paint(QPainter&, const QRect&);
 
     EvolutionArea * widget;
     QSize tileRes, numTiles;
@@ -73,10 +73,12 @@ unsigned EvolutionArea::numTiles() const { return p_->pool.size(); }
 unsigned EvolutionArea::numTilesX() const { return p_->numTiles.width(); }
 unsigned EvolutionArea::numTilesY() const { return p_->numTiles.height(); }
 int EvolutionArea::selectedIndex() const { return p_->selTile; }
+const EvolutionPool& EvolutionArea::pool() const { return p_->pool; }
+EvolutionPool& EvolutionArea::pool() { return p_->pool; }
 
-void EvolutionArea::setNumTilesY(unsigned n) { p_->resize(n); update(); }
+void EvolutionArea::setNumTilesY(unsigned n)
+    { if (n != numTilesY()) { p_->resize(n); update(); } }
 void EvolutionArea::updateTile(unsigned tileIdx) { update(p_->tileRect(tileIdx)); }
-
 unsigned EvolutionArea::tileIndexAt(unsigned x, unsigned y) const
 {
     x -= p_->paintOffs.x();
@@ -126,7 +128,7 @@ void EvolutionArea::mouseDoubleClickEvent(QMouseEvent* e)
     if ((e->buttons() & Qt::LeftButton)
         && sel < p_->pool.size())
     {
-        repopulateFrom(sel);
+        p_->pool.repopulateFrom(sel);
         update();
     }
 }
@@ -139,7 +141,7 @@ void EvolutionArea::dropEvent(QDropEvent* e)
 void EvolutionArea::resizeEvent(QResizeEvent*)
 {
     if (numTilesY())
-        setNumTilesY(numTilesY());
+        p_->resize(numTilesY());
 }
 
 void EvolutionArea::paintEvent(QPaintEvent* e)
@@ -150,7 +152,7 @@ void EvolutionArea::paintEvent(QPaintEvent* e)
 
 
 void EvolutionArea::Private::resize(unsigned newNumY)
-{
+{    
     QSize s = widget->size();
     int newRes = s.height() / newNumY,
         newNumX = s.width() / newRes;
@@ -170,24 +172,10 @@ void EvolutionArea::Private::resize(unsigned newNumY)
 
 }
 
-void EvolutionArea::setTile(unsigned tileIdx, EvolutionBase *evo)
+void EvolutionArea::Private::paint(QPainter& p, const QRect& rect)
 {
-    if (tileIdx >= p_->pool.size())
-        return;
+    pool.renderTiles();
 
-    p_->pool.setSpecimen(tileIdx, evo);
-
-    updateTile(tileIdx);
-}
-
-void EvolutionArea::repopulateFrom(unsigned tileIdx)
-{
-    if (tileIdx < p_->pool.size())
-        p_->pool.repopulateFrom(tileIdx);
-}
-
-void EvolutionArea::Private::paint(QPainter& p, const QRect& rect) const
-{
     p.fillRect(rect, Qt::black);
 
     for (size_t i=0; i<pool.size(); ++i)

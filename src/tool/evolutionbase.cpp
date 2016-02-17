@@ -22,7 +22,7 @@ void EvolutionVectorBase::randomize(const MutationSettings* ms)
 {
     MATH::Twister rnd(ms->seed);
     for (auto& v : vector())
-        v = ms->deviation * (rnd() - rnd());
+        v = ms->mean + ms->deviation * (rnd() - rnd());
 }
 
 void EvolutionVectorBase::mutate(const MutationSettings* ms)

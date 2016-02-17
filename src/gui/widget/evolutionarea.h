@@ -15,6 +15,8 @@
 
 namespace MO {
 class EvolutionBase;
+class MutationSettings;
+class EvolutionPool;
 namespace GUI {
 
 /** Tile renderer */
@@ -35,6 +37,10 @@ public:
     unsigned tileIndexAt(unsigned widgetX, unsigned widgetY) const;
 
     int selectedIndex() const;
+
+    const EvolutionPool& pool() const;
+    EvolutionPool& pool();
+
 signals:
 
     /** A tile was clicked */
@@ -44,11 +50,6 @@ public slots:
 
     /** Sets number of tiles that must fit on y-axis */
     void setNumTilesY(unsigned tilesY);
-
-    /** Sets or replaces a tile, adds reference to @p evo */
-    void setTile(unsigned tileIdx, EvolutionBase* evo);
-
-    void repopulateFrom(unsigned tileIdx);
 
 protected:
     void mousePressEvent(QMouseEvent*) override;
