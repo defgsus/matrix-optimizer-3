@@ -93,7 +93,7 @@ public:
 
     // --- getter ---
     const std::vector<double>& vector() const { return p_vec_; }
-    double vector(size_t idx) const { return p_vec_[idx]; }
+    double vector(size_t idx) const { return idx < p_vec_.size() ? p_vec_[idx] : 0.; }
 protected:
     // --- setter ---
     std::vector<double>& vector() { return p_vec_; }
@@ -102,6 +102,22 @@ protected:
 private:
     std::vector<double> p_vec_;
 };
+
+
+/** Some test */
+class EvolutionKaliCpu : public EvolutionVectorBase
+{
+public:
+
+    EvolutionKaliCpu();
+    virtual EvolutionKaliCpu * createClone() const
+        { auto e = new EvolutionKaliCpu(); e->copyFrom(this); return e; }
+
+    virtual void getImage(QImage& img) const override;
+
+    void getRgb(double u, double v, double* r, double* g, double* b) const;
+};
+
 
 } // namespace MO
 

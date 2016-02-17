@@ -45,19 +45,24 @@ EvolutionVectorBase::EvolutionVectorBase(size_t size)
     properties().set("mutation_amount",
               QObject::tr("mutation amount"),
               QObject::tr("Maximum change per mutation"),
-              0.1, 0.01);
+              0.3, 0.025);
     properties().set("mutation_prob",
               QObject::tr("mutation probability"),
               QObject::tr("Probability of a random change"),
-              0.1, 0., 1., 0.01);
+              0.1, 0., 1., 0.025);
 
     properties().set("init_mean",
-              QObject::tr("random mean"),
+              QObject::tr("init mean"),
               QObject::tr("Mean value of random initialization"),
               0.0, 0.1);
-    properties().set("init_dev",
-              QObject::tr("random deviation"),
+    properties().set("init_var",
+              QObject::tr("init variance"),
               QObject::tr("Range of random initialization"),
+              1., 0.1);
+    properties().set("init_dev",
+              QObject::tr("init deviation"),
+              QObject::tr("Distribution of random initialization, "
+                          "close to mean (<1) or +/- variance (>1)"),
               1., 0.1);
 }
 
@@ -65,9 +70,14 @@ void EvolutionVectorBase::randomize()
 {
     MATH::Twister rnd(properties().get("seed").toUInt());
     double  mean = properties().get("init_mean").toDouble(),
-            dev = properties().get("init_dev").toDouble();
+            var = properties().get("init_var").toDouble(),
+            dev = 1./properties().get("init_dev").toDouble();
     for (auto& v : vector())
-        v = mean + dev * (rnd() - rnd());
+    {
+        double r = rnd() - rnd();
+        r = std::pow(std::abs(r), dev) * (r > 0. ? 1. : -1.);
+        v = mean + var * r;
+    }
 }
 
 void EvolutionVectorBase::mutate()
@@ -134,6 +144,94 @@ void EvolutionVectorBase::getImage(QImage &img) const
     p.end();
 }
 
+
+
+EvolutionKaliCpu::EvolutionKaliCpu()
+    : EvolutionVectorBase(50)
+{
+
+}
+
+void EvolutionKaliCpu::getImage(QImage &img) const
+{
+    for (int j=0; j<img.height(); ++j)
+    {
+        double v = double(j) / (img.height()-1) * 2. - 1.;
+        for (int i=0; i<img.width(); ++i)
+        {
+            double u = double(i) / (img.width()-1) * 2. - 1.;
+            double r,g,b;
+            getRgb(u, v, &r, &g, &b);
+            img.setPixel(i, j, qRgb(
+                         255 * std::max(0.,std::min(1., r)),
+                         255 * std::max(0.,std::min(1., g)),
+                         255 * std::max(0.,std::min(1., b))
+                         ));
+        }
+    }
+}
+
+void EvolutionKaliCpu::getRgb(double u, double v, double *r, double *g, double *b) const
+{
+    size_t P = 0;
+    double  colAccX = vector(P++),
+            colAccY = vector(P++),
+            colAccZ = vector(P++),
+            minAccX = vector(P++),
+            minAccY = vector(P++),
+            minAccZ = vector(P++),
+            colX = 0., colY = 0., colZ = 0.,
+            scale = std::pow(vector(P++), 2.),
+    // start pos + random scale and offset
+            poX = vector(P++) + u * scale,
+            poY = vector(P++) + v * scale,
+            poZ = vector(P++),
+            md = 1000.;
+
+    const int numIter = 13;
+    for (int i=0; i<numIter; ++i)
+    {
+        // kali set (first half)
+        double dot = poX * poX + poY * poY + poZ * poZ;
+        poX = std::abs(poX) / dot;
+        poY = std::abs(poY) / dot;
+        poZ = std::abs(poZ) / dot;
+
+        // accumulate some values
+        colX += colAccX * poX;
+        colY += colAccY * poY;
+        colZ += colAccZ * poZ;
+        dot = minAccX * poX + minAccY * poY + minAccZ * poZ;
+        md = std::min(md, std::abs(dot));
+
+        // kali set (second half)
+        if (i != numIter - 1)
+        {
+            // (a different magic param for each iteration step!)
+            poX -= std::abs(vector(P++));
+            poY -= std::abs(vector(P++));
+            poZ -= std::abs(vector(P++));
+        }
+    }
+    // average color
+    colX = std::abs(colX) / double(numIter);
+    colY = std::abs(colY) / double(numIter);
+    colZ = std::abs(colZ) / double(numIter);
+
+    // "min-distance stripes" or "orbit traps"
+    md = std::pow(1. - md, 20. * std::abs(vector(P++)));
+    colX += vector(P++) * md;
+    colY += vector(P++) * md;
+    colZ += vector(P++) * md;
+
+    // mix-in color from last iteration step
+    //vec3 col2 = po * abs(dot(po, parameter().xyz));
+    //col += (col2 - col) * 0.2 * abs(parameter().x);
+
+    *r = colX;
+    *g = colY;
+    *b = colZ;
+}
 
 } // namespace MO
 

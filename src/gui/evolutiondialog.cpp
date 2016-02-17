@@ -34,7 +34,7 @@ struct EvolutionDialog::Private
 
     EvolutionDialog * win;
 
-    Properties props, props2;
+    Properties props;
 
     EvolutionArea * area;
     PropertiesScrollView *propView;//, *prop2View;
@@ -107,6 +107,7 @@ void EvolutionDialog::Private::createWidgets()
 void EvolutionDialog::Private::createProps()
 {
     props = area->pool().properties();
+    props.clear("seed");
 
     props.set("num_y", tr("num tiles"), tr("Number of tiles per screen height"),
               area->numTilesY(), 1u, 50u);

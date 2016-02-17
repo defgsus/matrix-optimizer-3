@@ -31,10 +31,12 @@ struct EvolutionArea::Private
         , selTile   (-1)
     {
         resize(5);
-        auto e = new EvolutionVectorBase(20);
+
+        auto e = new EvolutionKaliCpu();
         pool.setBaseType(e);
         e->releaseRef();
         pool.randomize();
+
     }
 
     void resize(unsigned numY);
