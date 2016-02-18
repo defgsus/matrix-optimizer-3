@@ -312,16 +312,16 @@ void EvolutionVectorBase::mate(const EvolutionBase* otherBase)
         return;
 
     MATH::Twister rnd(properties().get("seed").toUInt());
-    double range = rnd(1., 50.),
+    double range = std::pow(rnd(0.01, 1.), 1.36) * 2. * vector().size(),
            phase = rnd(0., 6.28),
-           amp = rnd(1.);
+           amp = rnd() * rnd();
     size_t num = std::min(vector().size(), other->vector().size());
 
     for (size_t i=0; i<num; ++i)
     {
         double v1 = vector(i),
                v2 = other->vector(i),
-               mx = amp * std::sin(double(i)/num * 3.14159265 * range + phase);
+               mx = amp * std::cos(double(i)/num * 3.14159265 * range + phase);
 
         p_vec_[i] = v1 + mx * (v2 - v1);
     }

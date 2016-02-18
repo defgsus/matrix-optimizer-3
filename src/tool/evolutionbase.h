@@ -127,8 +127,8 @@ public:
 
     // -- io --
 
-    virtual void serialize(QJsonObject&) const;
-    virtual void deserialize(const QJsonObject&);
+    virtual void serialize(QJsonObject&) const override;
+    virtual void deserialize(const QJsonObject&) override;
 
     // -- mutation --
 

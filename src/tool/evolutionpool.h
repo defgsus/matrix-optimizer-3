@@ -25,6 +25,8 @@ namespace MO {
 class EvolutionBase;
 class Properties;
 
+
+/** A pool working on/with EvolutionBase* instances */
 class EvolutionPool
 {
 public:
@@ -46,44 +48,67 @@ public:
 
     // ------ getter --------
 
+    /** Number of slots in pool */
     size_t size() const;
+
     /** Constructs a union of all species */
     Properties properties() const;
 
+    /** Is the given slot locked */
     bool isLocked(size_t idx) const;
 
-    /** Returns new random instance of baseType(),
-        or NULL if baseType() is NULL */
+    /** Access to each instance */
+    EvolutionBase* specimen(size_t idx) const;
+
+    /** Returns a vector of all non-NULL specimen */
+    std::vector<EvolutionBase*> getSpecies() const;
+
+    // ------- setter -------
+
+    /** Sets the properties. Unifies with all instances */
+    void setProperties(const Properties&, bool keepSeed = true);
+
+    /** Sets a specimen, adds reference to @p base */
+    void setSpecimen(size_t idx, EvolutionBase* base);
+    /** Sets a specimen by creating a new random instance of @p className */
+    void setSpecimen(size_t idx, const QString& className);
+    /** Sets the specimen locked or vogelfrei */
+    void setLocked(size_t idx, bool locked);
+
+    /** Resizes the pool.
+        If @p doClear is true, clears the whole pool to NULL entries,
+        If @p doClear is false and @p num > size(), the new free cells
+        are populated with random instances, if there are any. */
+    void resize(size_t num, bool doClear = false);
+
+    // ------- mutation ---------
+
+    /** Returns new random instance cloned from one of the pool species,
+        or NULL if no instances in pool */
     EvolutionBase* createSpecimen();
     /** Returns a new random instance of one of the specimen in @p vec */
     EvolutionBase* createSpecimen(const std::vector<EvolutionBase*>& vec);
     /** Returns a random instance, or NULL if no instances in pool */
     EvolutionBase* getRandomSpecimen();
-    /** Returns a vector of all non-NULL specimen */
-    std::vector<EvolutionBase*> getSpecies() const;
 
-    void setProperties(const Properties&, bool keepSeed = true);
-
-    /** Adds reference */
-    void setSpecimen(size_t idx, EvolutionBase* base);
-    void setSpecimen(size_t idx, const QString& className);
-    void setLocked(size_t idx, bool locked);
-
-    void resize(size_t num, bool doClear = false);
-    /** Fills pool with random base types */
+    /** Fills pool with new random instances of randomly cloned current content */
     void repopulate();
+    /** Fills the pool with new random instances cloned from slot @p idx */
     void repopulateFrom(size_t idx);
     /** Mates all locked tiles */
     void crossBreed();
-    /** Creates an offspring from the potential parents */
+    /** Creates an offspring from two randomly selected parents.
+        Returns NULL, if impossible. */
     EvolutionBase* createOffspring(const std::vector<EvolutionBase*>& parents);
 
-    /** Access to each instance */
-    EvolutionBase* specimen(size_t idx) const;
+    // ------ rendering ---------
 
-    /** Updates changed tiles */
+    /** Lazily renders tiles that need an update */
     void renderTiles();
+    /** Sets a new resolution for rendered images */
     void setImageResolution(const QSize& res);
+    /** Returns the image for the given slot.
+        Call renderTiles() to update images before this function */
     const QImage& image(size_t idx) const;
 
 private:
