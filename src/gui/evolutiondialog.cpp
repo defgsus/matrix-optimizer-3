@@ -13,11 +13,15 @@
 
 #include "evolutiondialog.h"
 #include "widget/evolutionarea.h"
+#include "gui/propertiesscrollview.h"
 #include "tool/evolutionbase.h"
 #include "tool/evolutionpool.h"
-#include "io/settings.h"
 #include "types/properties.h"
-#include "gui/propertiesscrollview.h"
+#include "object/interface/evolutioneditinterface.h"
+#include "object/object.h"
+#include "object/util/objecteditor.h"
+#include "object/scenelock_p.h"
+#include "io/settings.h"
 
 namespace MO {
 namespace GUI {
@@ -27,9 +31,11 @@ struct EvolutionDialog::Private
     Private(EvolutionDialog* win)
         : win       (win)
         , propView  (0)
+        , isEdit    (false)
     { }
 
     void updateProps();
+    void updateButtons();
     void createWidgets();
     void applyProps();
 
@@ -39,7 +45,8 @@ struct EvolutionDialog::Private
 
     EvolutionArea * area;
     PropertiesScrollView *propView;
-    QPushButton * butLeft, *butRight;
+    QPushButton * butLeft, *butRight, *butOk, *butApply;
+    bool isEdit;
 };
 
 EvolutionDialog::EvolutionDialog(QWidget* parent)
@@ -71,6 +78,7 @@ void EvolutionDialog::Private::createWidgets()
 
         area = new EvolutionArea(win);
         lh->addWidget(area, 3);
+        connect(area, &EvolutionArea::selected, [=]() { updateButtons(); });
         connect(area, &EvolutionArea::propertiesChanged, [=]() { updateProps(); });
         connect(area, &EvolutionArea::historyChanged, [=]()
         {
@@ -117,6 +125,20 @@ void EvolutionDialog::Private::createWidgets()
                 applyProps();
             });
 
+            lh1 = new QHBoxLayout;
+            lv->addLayout(lh1);
+
+                butOk = new QPushButton("Ok", win);
+                lh1->addWidget(butOk);
+                connect(butOk, &QPushButton::clicked, [=]()
+                    { if (area->selectedSpecimen()) emit win->apply(); win->accept(); });
+
+                butApply = new QPushButton("Apply", win);
+                lh1->addWidget(butApply);
+                connect(butApply, &QPushButton::clicked, [=]()
+                    { if (area->selectedSpecimen()) emit win->apply(); });
+
+                updateButtons();
 }
 
 void EvolutionDialog::Private::updateProps()
@@ -139,6 +161,77 @@ void EvolutionDialog::Private::applyProps()
     area->setNumTilesY(props.get("num_y").toUInt());
 
     area->pool().setProperties(props);
+}
+
+void EvolutionDialog::Private::updateButtons()
+{
+    butOk->setVisible(isEdit);
+    butApply->setVisible(isEdit);
+    bool en = area->selectedSpecimen() != nullptr;
+    butOk->setEnabled(en);
+    butApply->setEnabled(en);
+}
+
+EvolutionBase* EvolutionDialog::selectedSpecimen() const
+{
+    return p_->area->selectedSpecimen();
+}
+
+void EvolutionDialog::setEditSpecimen(const EvolutionBase* evo)
+{
+    p_->isEdit = evo != nullptr;
+    if (evo)
+    {
+        auto s = evo->createClone();
+        p_->area->pool().setSpecimen(0, s);
+        s->releaseRef();
+        p_->area->pool().repopulateFrom(0);
+    }
+    p_->area->update();
+    p_->updateButtons();
+}
+
+EvolutionDialog* EvolutionDialog::openForInterface(
+        EvolutionEditInterface* iface, const QString& key)
+{
+    if (auto diag = iface->getAttachedEvolutionDialog(key))
+    {
+        diag->show();
+        return diag;
+    }
+
+    auto diag = new EvolutionDialog();
+    diag->setAttribute(Qt::WA_DeleteOnClose);
+
+    auto obj = dynamic_cast<Object*>(iface);
+        diag->setWindowTitle(obj->namePath() + " " + tr("evolution"));
+
+    iface->setAttachedEvolutionDialog(key, diag);
+    diag->setEditSpecimen(iface->getEvolution(key));
+
+    connect(diag, &EvolutionDialog::destroyed, [=]()
+    {
+        iface->setAttachedEvolutionDialog(key, 0);
+    });
+    connect(diag, &EvolutionDialog::apply, [=]()
+    {
+        auto root = obj? obj->sceneObject() : 0;
+        auto editor = obj? obj->editor() : 0;
+        if (root)
+        {
+            ScopedObjectChange lock(root, obj);
+            iface->setEvolution(key, diag->selectedSpecimen());
+        }
+        else
+            iface->setEvolution(key, diag->selectedSpecimen());
+        if (editor)
+            editor->emitObjectChanged(obj);
+    });
+
+    diag->show();
+
+    return diag;
+
 }
 
 } // namespace GUI

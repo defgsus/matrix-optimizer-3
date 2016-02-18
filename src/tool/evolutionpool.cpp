@@ -257,6 +257,20 @@ EvolutionBase* EvolutionPool::createSpecimen(const std::vector<EvolutionBase*>& 
     c->randomize();
     return c;
 }
+EvolutionBase* EvolutionPool::createSpecimen(const std::vector<const EvolutionBase*>& vec)
+{
+    if (vec.empty())
+        return nullptr;
+    auto base = vec[p_->rnd.getUInt32() % vec.size()];
+    if (!base)
+        return nullptr;
+    auto c = base->createClone();
+    c->properties().updateFrom(p_->props);
+
+    p_->rndSeed(c);
+    c->randomize();
+    return c;
+}
 
 EvolutionBase* EvolutionPool::getRandomSpecimen()
 {
@@ -329,6 +343,27 @@ void EvolutionPool::repopulate()
 
     for (auto v : vec)
         v->releaseRef();
+}
+
+void EvolutionPool::repopulate(const EvolutionBase* base)
+{
+    if (!base)
+    {
+        for (size_t i=0; i<size(); ++i)
+            if (!isLocked(i))
+                setSpecimen(i, 0);
+        return;
+    }
+
+    std::vector<const EvolutionBase*> vec;
+    vec.push_back(base);
+
+    for (size_t i=0; i<size(); ++i)
+    if (!isLocked(i))
+    {
+        auto evo = createSpecimen(vec);
+        setSpecimen(i, evo);
+    }
 }
 
 void EvolutionPool::crossBreed()

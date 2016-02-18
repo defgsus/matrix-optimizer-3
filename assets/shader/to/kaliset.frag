@@ -7,6 +7,7 @@
 //#define COL_MODE 3
 //#define NUM_DIM 2,3,4
 //#define MONOCHROME 0,1
+//#define CALC_MODE basic,evo
 
 uniform vec4    u_kali_param;
 uniform vec4    u_offset;
@@ -27,45 +28,52 @@ uniform float   u_freq;
 #endif
 
 
+//%KaliSet%
+
 vec3 kali_color(in vec2 pos)
 {
-#if NUM_DIM == 2
-    vec2 p = pos * u_scale + u_offset.xy;
-#elif NUM_DIM == 3
-    vec3 p = vec3(pos * u_scale, 0.) + u_offset.xyz;
-#elif NUM_DIM == 4
-    vec4 p = vec4(pos * u_scale, 0., 0.) + u_offset;
-#endif
-
-
-#if COL_MODE == 3
-    VEC av = VEC(1.);
+#if CALC_MODE == 1
+    vec3 r = evolvedKaliSet(pos);
 #else
-    VEC av = VEC(0.);
-#endif
+    #if NUM_DIM == 2
+        vec2 p = pos * u_scale + u_offset.xy;
+    #elif NUM_DIM == 3
+        vec3 p = vec3(pos * u_scale, 0.) + u_offset.xyz;
+    #elif NUM_DIM == 4
+        vec4 p = vec4(pos * u_scale, 0., 0.) + u_offset;
+    #endif
 
-    for (int i=0; i<NUM_ITER; ++i)
-    {
-        p = abs(p) / dot(p, p);
 
-#if COL_MODE == 1
-        av += p;
-#elif COL_MODE == 2
-        av = max(av, p);
-#elif COL_MODE == 3
-        av = min(av, p);
-#endif
+    #if COL_MODE == 3
+        VEC av = VEC(1.);
+    #else
+        VEC av = VEC(0.);
+    #endif
 
-        if (i < NUM_ITER - 1)
-                p -= VEC(u_kali_param);
-    }
+        for (int i=0; i<NUM_ITER; ++i)
+        {
+            p = abs(p) / dot(p, p);
 
-#if COL_MODE == 0
-    vec3 r = toVec3(p);
-#elif COL_MODE == 1
-    vec3 r = toVec3(av) / float(NUM_ITER);
-#elif COL_MODE == 2 || COL_MODE == 3
-    vec3 r = toVec3(av);
+    #if COL_MODE == 1
+            av += p;
+    #elif COL_MODE == 2
+            av = max(av, p);
+    #elif COL_MODE == 3
+            av = min(av, p);
+    #endif
+
+            if (i < NUM_ITER - 1)
+                    p -= VEC(u_kali_param);
+        }
+
+    #if COL_MODE == 0
+        vec3 r = toVec3(p);
+    #elif COL_MODE == 1
+        vec3 r = toVec3(av) / float(NUM_ITER);
+    #elif COL_MODE == 2 || COL_MODE == 3
+        vec3 r = toVec3(av);
+    #endif
+
 #endif
 
 #if SINE_OUT

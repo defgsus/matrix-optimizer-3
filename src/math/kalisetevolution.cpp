@@ -155,8 +155,13 @@ QString KaliSetEvolution::toString() const
     s <<"\t}\n\t// average color\n"
         "\tcol = abs(col) / float(numIter);\n"
         "\n\t// 'min-distance stripes' or 'orbit traps'\n"
-        "\tmd = pow(1. - md, minExp);\n";
-    s <<"\tcol += md * minCol;\n"
+        "\tmd = pow(1. - md, minExp);\n"
+        "\n"
+        "\t// mix-in color from last iteration step\n"
+        "\tcol += po * vec3("
+             << pAmtX() << ", " << pAmtY() << ", " << pAmtZ() << ");\n"
+        "\n"
+        "\tcol += md * minCol;\n"
         "\n\treturn col;\n"
         "}\n";
     return str;

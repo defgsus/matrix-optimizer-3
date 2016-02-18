@@ -12,11 +12,14 @@
 #define MOSRC_OBJECT_TEXTURE_KALISETTO_H
 
 #include "textureobjectbase.h"
+#include "object/interface/evolutioneditinterface.h"
 
 namespace MO {
 
 /** The infamous Kali-Set 2d texture */
-class KaliSetTO : public TextureObjectBase
+class KaliSetTO
+        : public TextureObjectBase
+        , public EvolutionEditInterface
 {
     Q_OBJECT
 public:
@@ -32,6 +35,11 @@ public:
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
+
+    // ---- EvolutionEditInterface ---------
+
+    virtual const EvolutionBase* getEvolution(const QString& key) const override;
+    virtual void setEvolution(const QString& key, const EvolutionBase*) override;
 
     // ---------- specific stuff -----------
 

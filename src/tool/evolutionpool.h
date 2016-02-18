@@ -88,11 +88,15 @@ public:
     EvolutionBase* createSpecimen();
     /** Returns a new random instance of one of the specimen in @p vec */
     EvolutionBase* createSpecimen(const std::vector<EvolutionBase*>& vec);
+    /** Returns a new random instance of one of the specimen in @p vec */
+    EvolutionBase* createSpecimen(const std::vector<const EvolutionBase*>& vec);
     /** Returns a random instance, or NULL if no instances in pool */
     EvolutionBase* getRandomSpecimen();
 
     /** Fills pool with new random instances of randomly cloned current content */
     void repopulate();
+    /** Fills pool with new random instances cloned from @p base */
+    void repopulate(const EvolutionBase* base);
     /** Fills the pool with new random instances cloned from slot @p idx */
     void repopulateFrom(size_t idx);
     /** Mates all locked tiles */

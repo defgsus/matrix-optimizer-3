@@ -14,6 +14,8 @@
 #include <QDialog>
 
 namespace MO {
+class EvolutionEditInterface;
+class EvolutionBase;
 namespace GUI {
 
 
@@ -24,7 +26,17 @@ public:
     explicit EvolutionDialog(QWidget* parent = 0);
     ~EvolutionDialog();
 
+    /** Returns the currently selected specimen for which Ok or Apply was clicked */
+    EvolutionBase* selectedSpecimen() const;
+
+    void setEditSpecimen(const EvolutionBase*);
+
+    static EvolutionDialog* openForInterface(EvolutionEditInterface*, const QString& key);
+
 signals:
+
+    /** Emitted on Ok and Apply */
+    void apply();
 
 public slots:
 

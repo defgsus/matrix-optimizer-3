@@ -20,7 +20,7 @@ class GeometryEditInterface
 public:
 
     GeometryEditInterface() : p_gei_diag_(0) { }
-    ~GeometryEditInterface();
+    virtual ~GeometryEditInterface();
 
     GUI::GeometryDialog * getAttachedGeometryDialog() const { return p_gei_diag_; }
     void setAttachedGeometryDialog(GUI::GeometryDialog* d);

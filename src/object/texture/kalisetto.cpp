@@ -8,14 +8,18 @@
     <p>created 10/9/2015</p>
 */
 
+#include <QTextStream>
+
 #include "kalisetto.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/util/objecteditor.h"
 #include "gl/screenquad.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
+#include "math/kalisetevolution.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
@@ -29,14 +33,18 @@ struct KaliSetTO::Private
 {
     Private(KaliSetTO * to)
         : to            (to)
+        , evo           (0)
     { }
 
     void createParameters();
+    QString createEvoShader(KaliSetEvolution*) const;
     void initGl();
     void releaseGl();
     void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
 
     KaliSetTO * to;
+
+    KaliSetEvolution * evo;
 
     ParameterFloat
             *p_paramX, *p_paramY, *p_paramZ, *p_paramW,
@@ -46,7 +54,7 @@ struct KaliSetTO::Private
     ParameterInt
             *p_numIter, *p_AntiAlias_;
     ParameterSelect
-            *p_numDim, *p_colMode, *p_outMode, *p_mono;
+            *p_numDim, *p_calcMode, *p_colMode, *p_outMode, *p_mono;
     GL::Uniform
             * u_kali_param,
             * u_offset,
@@ -62,23 +70,48 @@ KaliSetTO::KaliSetTO(QObject *parent)
 {
     setName("KaliSet");
     initMaximumTextureInputs(0);
+    addEvolutionKey("kaliset");
 }
 
 KaliSetTO::~KaliSetTO()
 {
+    if (p_->evo)
+        p_->evo->releaseRef();
     delete p_;
 }
 
 void KaliSetTO::serialize(IO::DataStream & io) const
 {
     TextureObjectBase::serialize(io);
-    io.writeHeader("texkali", 1);
+    io.writeHeader("texkali", 2);
+
+    // v2
+    if (p_->evo)
+        io << true << p_->evo->toJsonString();
+    else
+        io << false;
 }
 
 void KaliSetTO::deserialize(IO::DataStream & io)
 {
     TextureObjectBase::deserialize(io);
-    io.readHeader("texkali", 1);
+    const int ver = io.readHeader("texkali", 2);
+
+    if (ver >= 2)
+    {
+        KaliSetEvolution* evo = 0;
+        bool isEvo;
+        io >> isEvo;
+        if (isEvo)
+        {
+            QString s;
+            io >> s;
+            evo = dynamic_cast<KaliSetEvolution*>( EvolutionBase::fromJsonString(s) );
+        }
+        if (p_->evo)
+            p_->evo->releaseRef();
+        p_->evo = evo;
+    }
 }
 
 void KaliSetTO::createParameters()
@@ -110,6 +143,15 @@ void KaliSetTO::Private::createParameters()
     to->params()->beginParameterGroup("kali", tr("kali set"));
     to->initParameterGroupExpanded("kali");
 
+        p_calcMode = to->params()->createSelectParameter(
+                    "calc_mode", tr("mode"),
+                    tr("The calculation mode"),
+        { "basic", "evolved" },
+        { tr("basic"), tr("evolved") },
+        { tr("Basic flexible kali renderer"),
+          tr("Renderer based on interactive evolution") },
+        { 0, 1 },
+                    0, true, false);
         p_numDim = to->params()->createSelectParameter(
                     "num_dim", tr("dimensions"),
                     tr("The number of dimensions to use in the formula"),
@@ -231,14 +273,14 @@ void KaliSetTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    if (p == p_->p_colMode
+    if (p == p_->p_calcMode
+        || p == p_->p_colMode
         || p == p_->p_numIter
         || p == p_->p_numDim
         || p == p_->p_outMode
         || p == p_->p_mono
         || p == p_->p_AntiAlias_)
         requestReinitGl();
-
 }
 
 void KaliSetTO::onParametersLoaded()
@@ -251,7 +293,9 @@ void KaliSetTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
 
-    int dim = p_->p_numDim->baseValue();
+    bool evo = p_->p_calcMode->baseValue() == 1;
+
+    int dim = evo ? 3 : p_->p_numDim->baseValue();
 
     p_->p_paramZ->setVisible(dim >= 3);
     p_->p_paramW->setVisible(dim >= 4);
@@ -260,9 +304,62 @@ void KaliSetTO::updateParameterVisibility()
 
     p_->p_freq->setVisible( p_->p_outMode->baseValue() != 0);
 
+    p_->p_numDim->setVisible(!evo);
+    p_->p_numIter->setVisible(!evo);
+    p_->p_colMode->setVisible(!evo);
 }
 
 
+QString KaliSetTO::Private::createEvoShader(KaliSetEvolution* evo) const
+{
+    QString str;
+    QTextStream s(&str);
+
+    s <<"/* uv is in [-1, 1] */\n"
+        "vec3 evolvedKaliSet(in vec2 uv)\n"
+        "{\n"
+        "\tconst vec3 colAcc = vec3("
+            << evo->pColAccX() << ", " << evo->pColAccY() << ", " << evo->pColAccZ() << ");\n"
+        "\tconst vec3 minAcc = vec3("
+            << evo->pMinAccX() << ", " << evo->pMinAccY() << ", " << evo->pMinAccZ() << ");\n"
+        "\tconst vec3 minCol = vec3("
+            << evo->pMinAmtX() << ", " << evo->pMinAmtY() << ", " << evo->pMinAmtZ() << ");\n"
+        "\tconst float minExp = " << evo->pMinExp() << ";\n"
+        "\n\t// start pos + random scale and offset\n"
+        "\tvec3 po = vec3(uv * u_scale, 0.) + u_offset.xyz;\n"
+        "\n\tvec3 col = vec3(0.);\n"
+        "\tfloat md = 1000.;\n"
+        "\tconst int numIter = " << evo->pNumIter() << ";\n"
+        "\n\tfor (int i=0; i<numIter; ++i)\n"
+        "\t{\n"
+        "\t\t// kali set (first half)\n"
+        "\t\tpo = abs(po.xyz) / dot(po, po);\n"
+        "\n"
+        "\t\t// accumulate some values\n"
+        "\t\tcol += colAcc * po;\n"
+        "\t\tmd = min(md, abs(dot(minAcc, po)));\n"
+        "\n"
+        "\t\t// kali set (second half)\n"
+        "\t\tpo -= u_kali_param.xyz;\n";
+    for (int i=0; i<evo->pNumIter()-1; ++i)
+    {
+        s << "\t\tif (i == " << i << ") po -= vec3("
+          << evo->pMagicX(i) << ", " << evo->pMagicY(i) << ", " << evo->pMagicZ(i) << ");\n";
+    }
+    s <<"\t}\n\t// average color\n"
+        "\tcol = abs(col) / float(numIter);\n"
+        "\n\t// 'min-distance stripes' or 'orbit traps'\n"
+        "\n"
+        "\t// mix-in color from last iteration step\n"
+        "\tcol += po * vec3("
+             << evo->pAmtX() << ", " << evo->pAmtY() << ", " << evo->pAmtZ() << ");\n"
+        "\n"
+        "\tmd = pow(1. - md, minExp);\n"
+        "\tcol += md * minCol;\n"
+        "\n\treturn col;\n"
+        "}\n";
+    return str;
+}
 
 void KaliSetTO::Private::initGl()
 {
@@ -275,12 +372,27 @@ void KaliSetTO::Private::initGl()
         src.loadFragmentSource(":/shader/to/kaliset.frag");
         src.pasteDefaultIncludes();
 
-        src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
+        src.addDefine(QString("#define CALC_MODE %1").arg(p_calcMode->baseValue()), false);
         src.addDefine(QString("#define NUM_DIM %1").arg(p_numDim->baseValue()), false);
-        src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
         src.addDefine(QString("#define SINE_OUT %1").arg(p_outMode->baseValue()), false);
         src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()), false);
         src.addDefine(QString("#define AA %1").arg(p_AntiAlias_->baseValue()), false);
+        if (p_calcMode->baseValue() != 1)
+        {
+            src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
+            src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
+        }
+        else
+        {
+            if (!evo)
+            {
+                evo = new KaliSetEvolution();
+                evo->randomize();
+            }
+            src.replace("//%KaliSet%", createEvoShader(evo));
+        }
+
+
     }
     catch (Exception& e)
     {
@@ -348,6 +460,40 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
     }
 
     to->renderShaderQuad(time);
+}
+
+
+const EvolutionBase* KaliSetTO::getEvolution(const QString& key) const
+{
+    return (key == "kaliset") ? p_->evo : nullptr;
+}
+
+void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
+{
+    if (key != "kaliset")
+        return;
+    if (p_->evo)
+        p_->evo->releaseRef();
+    auto k = dynamic_cast<const KaliSetEvolution*>(evo);
+    p_->evo = k ? k->createClone() : nullptr;
+
+    if (p_->p_calcMode->baseValue() == 1)
+    {
+        if (k)
+        {
+            p_->p_paramZ->setValue(0.);
+            p_->p_offsetX->setValue(k->pPosX());
+            p_->p_offsetY->setValue(k->pPosY());
+            p_->p_offsetZ->setValue(k->pPosZ());
+            p_->p_scale->setValue(k->pScale());
+            p_->p_scaleX->setValue(1.);
+            p_->p_scaleY->setValue(1.);
+        }
+        if (editor())
+            emit editor()->parametersChanged();
+
+        requestReinitGl();
+    }
 }
 
 

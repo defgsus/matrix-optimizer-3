@@ -28,6 +28,7 @@
 #include "gui/geometrydialog.h"
 #include "gui/modulatordialog.h"
 #include "gui/texteditdialog.h"
+#include "gui/evolutiondialog.h"
 #include "gui/util/objectgraphsettings.h"
 #include "gui/util/objectmenu.h"
 #include "gui/util/appicons.h"
@@ -47,6 +48,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "object/interface/valuetextureinterface.h"
 #include "object/interface/geometryeditinterface.h"
+#include "object/interface/evolutioneditinterface.h"
 #include "gl/texture.h"
 #include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
@@ -1727,6 +1729,20 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         {
             editor->wrapIntoTrack(seq);
         });
+    }
+
+    // EvolutionDialog
+    if (EvolutionEditInterface * evo = dynamic_cast<EvolutionEditInterface*>(obj))
+    {
+        if (evo->evolutionKeys().size() == 1)
+        {
+            a = actions.addAction(tr("Evolve %1").arg(evo->evolutionKeys()[0]), scene);
+            a->setStatusTip(tr("Opens the evolution dialog for editing the specimen"));
+            connect(a, &QAction::triggered, [=]()
+            {
+                EvolutionDialog::openForInterface(evo, evo->evolutionKeys()[0]);
+            });
+        }
     }
 
     actions.addSeparator(scene);
