@@ -32,6 +32,8 @@ public:
     EvolutionBase* baseType() const;
     Properties properties() const;
 
+    bool isLocked(size_t idx) const;
+
     /** Returns new random instance of baseType(),
         or NULL if baseType() is NULL */
     EvolutionBase* createSpecimen() const;
@@ -40,6 +42,7 @@ public:
     void setBaseType(EvolutionBase* base);
     /** Adds reference */
     void setSpecimen(size_t idx, EvolutionBase* base);
+    void setLocked(size_t idx, bool locked);
 
     void resize(size_t num);
     /** Fills pool with random base types */

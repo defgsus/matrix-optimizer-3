@@ -15,10 +15,22 @@
 #include <QPaintEvent>
 #include <QMouseEvent>
 #include <QDropEvent>
+#include <QMenu>
+#include <QAction>
+#include <QCursor>
+#include <QClipboard>
+#include <QApplication>
+#include <QMessageBox>
 
 #include "evolutionarea.h"
+#include "gui/evolutionbaseviewer.h"
+#include "gui/texteditdialog.h"
 #include "tool/evolutionbase.h"
 #include "tool/evolutionpool.h"
+#include "model/evolutionmimedata.h"
+#include "tool/commonresolutions.h"
+#include "io/files.h"
+#include "io/error.h"
 #include "io/log.h"
 
 namespace MO {
@@ -32,7 +44,7 @@ struct EvolutionArea::Private
     {
         resize(5);
 
-        auto e = new EvolutionKaliCpu();
+        auto e = new KaliSetEvolution();
         pool.setBaseType(e);
         e->releaseRef();
         pool.randomize();
@@ -75,6 +87,8 @@ unsigned EvolutionArea::numTiles() const { return p_->pool.size(); }
 unsigned EvolutionArea::numTilesX() const { return p_->numTiles.width(); }
 unsigned EvolutionArea::numTilesY() const { return p_->numTiles.height(); }
 int EvolutionArea::selectedIndex() const { return p_->selTile; }
+EvolutionBase* EvolutionArea::selectedSpecimen() const
+    { return p_->selTile > 0 && (size_t)p_->selTile < p_->pool.size() ? p_->pool.specimen(p_->selTile) : nullptr; }
 const EvolutionPool& EvolutionArea::pool() const { return p_->pool; }
 EvolutionPool& EvolutionArea::pool() { return p_->pool; }
 
@@ -95,7 +109,7 @@ void EvolutionArea::mousePressEvent(QMouseEvent* e)
     size_t sel = tileIndexAt(e->x(), e->y());
 
     // select tile
-    if ((e->buttons() & Qt::LeftButton)
+    if ((e->buttons() & (Qt::LeftButton | Qt::RightButton))
         && sel < p_->pool.size())
     {
         if (p_->selTile)
@@ -103,6 +117,15 @@ void EvolutionArea::mousePressEvent(QMouseEvent* e)
         p_->selTile = sel;
         updateTile(p_->selTile);
         emit selected(p_->selTile);
+
+        // right-click popup
+        if (e->buttons() & Qt::RightButton)
+        {
+            auto menu = createMenu(sel);
+            if (menu)
+                menu->popup(QCursor::pos());
+        }
+
         e->accept();
         return;
     }
@@ -194,16 +217,182 @@ void EvolutionArea::Private::paint(QPainter& p, const QRect& rect)
         trect.adjust(0,0,-1,-1);
 
         p.setBrush(Qt::NoBrush);
+        QPen pen;
         if (selTile == int64_t(i))
-            p.setPen(QPen(QColor(140, 240, 140)));
+            pen.setColor(QColor(140, 240, 140));
         else
-            p.setPen(QPen(QColor(40, 40, 40)));
+            pen.setColor(QColor(40, 40, 40));
+        if (pool.isLocked(i))
+        {
+            pen.setColor(pen.color().lighter(200));
+            pen.setWidth(3);
+        }
 
-        p.drawRect(trect);
+        p.setPen(pen);
+        p.drawRect(trect.adjusted(pen.width()/2,pen.width()/2,-pen.width()/2,-pen.width()/2));
     }
 }
 
+QMenu* EvolutionArea::createMenu(unsigned idx)
+{
+    if (idx >= p_->pool.size())
+        return nullptr;
 
+    auto menu = new QMenu(this);
+    QAction* a;
+    if (p_->pool.isLocked(idx))
+    {
+        a = menu->addAction(tr("Unlock"));
+        connect(a, &QAction::triggered, [=](){ p_->pool.setLocked(idx, false); updateTile(idx); });
+        a->setCheckable(true);
+        a->setChecked(true);
+    }
+    else
+    {
+        a = menu->addAction(tr("Lock"));
+        connect(a, &QAction::triggered, [=](){ p_->pool.setLocked(idx, true); updateTile(idx); });
+    }
+
+    menu->addSeparator();
+
+    a = menu->addAction(tr("Show big"));
+    connect(a, &QAction::triggered, [=](){ showBig(idx); });
+
+    a = menu->addAction(tr("Show text"));
+    connect(a, &QAction::triggered, [=](){ showText(idx); });
+
+    menu->addSeparator();
+
+    // copy
+    a = menu->addAction(tr("Copy"));
+    a->setShortcut(Qt::CTRL + Qt::Key_C);
+    connect(a, &QAction::triggered, [=]()
+    {
+        if (auto evo = selectedSpecimen())
+        {
+            auto md = new EvolutionMimeData();
+            md->setSpecimen(evo);
+            QApplication::clipboard()->setMimeData(md);
+        }
+    });
+
+    // paste
+    if (EvolutionMimeData::isInClipboard())
+    {
+        a = menu->addAction(tr("Paste"));
+        a->setShortcut(Qt::CTRL + Qt::Key_V);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto md = EvolutionMimeData::evolutionMimeData(
+                        QApplication::clipboard()->mimeData());
+            try
+            {
+                if (auto evo = md->createSpecimen())
+                {
+                    p_->pool.setSpecimen(idx, evo);
+                    evo->releaseRef();
+                    updateTile(idx);
+                }
+            }
+            catch (const Exception& e)
+            {
+                QMessageBox::critical(this, tr("paste evolution error"),
+                                      e.what());
+            }
+        });
+    }
+
+    menu->addSeparator();
+
+    a = menu->addAction(tr("Save json"));
+    connect(a, &QAction::triggered, [=](){ saveJson(idx); });
+
+    auto sub = menu->addMenu(tr("Save image"));
+    CommonResolutions::addResolutionActions(sub);
+    connect(sub, &QMenu::triggered, [=](QAction* a)
+    {
+        saveImage(idx, CommonResolutions::resolutions[a->data().toInt()].size());
+    });
+
+
+
+    return menu;
+}
+
+void EvolutionArea::showBig(unsigned idx)
+{
+    if (idx >= p_->pool.size()
+        || p_->pool.specimen(idx) == nullptr)
+        return;
+
+    auto win = new EvolutionBaseViewer(this);
+    win->setAttribute(Qt::WA_DeleteOnClose);
+
+    win->setSpecimen(p_->pool.specimen(idx));
+
+    win->show();
+}
+
+void EvolutionArea::showText(unsigned idx)
+{
+    if (idx >= p_->pool.size()
+        || p_->pool.specimen(idx) == nullptr)
+        return;
+
+    auto win = new TextEditDialog(TT_PLAIN_TEXT, this);
+    win->setAttribute(Qt::WA_DeleteOnClose);
+
+    win->setReadOnly(true);
+    win->setText(p_->pool.specimen(idx)->toString());
+
+    win->show();
+}
+
+void EvolutionArea::saveJson(unsigned idx)
+{
+    auto fn = IO::Files::getSaveFileName(IO::FT_EVOLUTION, this);
+    if (!fn.isEmpty())
+        saveJson(idx, fn);
+}
+
+void EvolutionArea::saveImage(unsigned idx, const QSize& s)
+{
+    auto fn = IO::Files::getSaveFileName(IO::FT_TEXTURE, this);
+    if (!fn.isEmpty())
+        saveImage(idx, s, fn);
+}
+
+void EvolutionArea::saveJson(unsigned idx, const QString& fn)
+{
+    if (idx >= p_->pool.size() || p_->pool.specimen(idx) == nullptr)
+        return;
+
+    try
+    {
+        p_->pool.specimen(idx)->saveJsonFile(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("saving json failed"), e.what());
+    }
+}
+
+void EvolutionArea::saveImage(unsigned idx, const QSize& s, const QString& fn)
+{
+    if (idx >= p_->pool.size() || p_->pool.specimen(idx) == nullptr)
+        return;
+
+    try
+    {
+        QImage img(s, QImage::Format_ARGB32_Premultiplied);
+        p_->pool.specimen(idx)->getImage(img);
+        p_->pool.specimen(idx)->saveImage(fn, img);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("saving image failed"), e.what());
+    }
+}
 
 } // namespace GUI
 } // namespace MO

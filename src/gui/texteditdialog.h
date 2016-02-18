@@ -39,6 +39,8 @@ public:
 
     // ------------ setter ---------------
 
+    void setReadOnly(bool readOnly);
+
     /** Sets the text that is currently edited.
         When the Dialog is cancelled, this text will be restored */
     void setText(const QString&, bool send_signal = false);

@@ -129,7 +129,8 @@ HEADERS += \
     $$PWD/widget/csgrenderwidget.h \
     $$PWD/item/objectgraphcontrolitem.h \
     $$PWD/widget/evolutionarea.h \
-    $$PWD/evolutiondialog.h
+    $$PWD/evolutiondialog.h \
+    $$PWD/evolutionbaseviewer.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -258,4 +259,5 @@ SOURCES += \
     $$PWD/widget/csgrenderwidget.cpp \
     $$PWD/item/objectgraphcontrolitem.cpp \
     $$PWD/widget/evolutionarea.cpp \
-    $$PWD/evolutiondialog.cpp
+    $$PWD/evolutiondialog.cpp \
+    $$PWD/evolutionbaseviewer.cpp

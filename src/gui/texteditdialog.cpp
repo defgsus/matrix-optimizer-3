@@ -55,7 +55,8 @@ public:
           plainText     (0),
           equEdit       (0),
           scriptEdit    (0),
-          rejected      (false)
+          rejected      (false),
+          readOnly      (false)
     {
         // wait before text-changed
         timer.setInterval(350);
@@ -78,7 +79,7 @@ public:
     QTimer timer;
     QCheckBox * cbAlways;
 
-    bool rejected;
+    bool rejected, readOnly;
 };
 
 TextEditDialog::TextEditDialog(TextType textType, QWidget *parent) :
@@ -111,6 +112,19 @@ TextEditDialog::~TextEditDialog()
 {
     settings()->storeGeometry(this);
     delete p_;
+}
+
+void TextEditDialog::setReadOnly(bool readOnly)
+{
+    p_->readOnly = readOnly;
+    if (p_->plainText)
+        p_->plainText->setReadOnly(readOnly);
+    if (p_->equEdit)
+        p_->equEdit->setReadOnly(readOnly);
+    /*
+    if (p_->scriptEdit)
+        p_->scriptEdit->setReadOnly(readOnly);
+        */
 }
 
 TextType TextEditDialog::getTextType() const
@@ -186,6 +200,7 @@ void TextEditDialog::Private::createWidgets()
             case TT_PLAIN_TEXT:
                 plainText = new QTextEdit(dialog);
                 plainText->setTabChangesFocus(false);
+                plainText->setReadOnly(readOnly);
                 lv->addWidget(plainText);
                 connect(plainText, &QTextEdit::textChanged, [=]()
                 {
@@ -202,6 +217,7 @@ void TextEditDialog::Private::createWidgets()
             case TT_EQUATION:
                 equEdit = new EquationEditor(dialog);
                 equEdit->setTabChangesFocus(false);
+                equEdit->setReadOnly(readOnly);
                 lv->addWidget(equEdit);
                 connect(equEdit, &EquationEditor::equationChanged, [=]()
                 {
@@ -214,6 +230,7 @@ void TextEditDialog::Private::createWidgets()
                 auto glsl = new GlslWidget(dialog);
                 lv->addWidget(glsl);
                 scriptEdit = glsl;
+                //scriptEdit->setReadOnly(readOnly);
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
                     emit dialog->textChanged();
@@ -229,6 +246,7 @@ void TextEditDialog::Private::createWidgets()
                 registerAngelScript_object( as->scriptEngine(), 0, true, true);
                 registerAngelScript_image( as->scriptEngine(), 0, true);
                 scriptEdit = as;
+                //scriptEdit->setReadOnly(readOnly);
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
                     emit dialog->textChanged();

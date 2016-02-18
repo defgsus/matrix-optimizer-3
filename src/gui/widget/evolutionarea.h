@@ -13,6 +13,7 @@
 
 #include <QWidget>
 
+class QMenu;
 namespace MO {
 class EvolutionBase;
 class EvolutionPool;
@@ -36,9 +37,13 @@ public:
     unsigned tileIndexAt(unsigned widgetX, unsigned widgetY) const;
 
     int selectedIndex() const;
+    EvolutionBase* selectedSpecimen() const;
 
     const EvolutionPool& pool() const;
     EvolutionPool& pool();
+
+    /** Creates an edit menu for the given tile */
+    QMenu* createMenu(unsigned tileIndex);
 
 signals:
 
@@ -49,6 +54,14 @@ public slots:
 
     /** Sets number of tiles that must fit on y-axis */
     void setNumTilesY(unsigned tilesY);
+
+    /** Open a window to render the given tile */
+    void showBig(unsigned idx);
+    void showText(unsigned idx);
+    void saveJson(unsigned idx);
+    void saveJson(unsigned idx, const QString& fn);
+    void saveImage(unsigned idx, const QSize& res);
+    void saveImage(unsigned idx, const QSize& res, const QString& fn);
 
 protected:
     void mousePressEvent(QMouseEvent*) override;

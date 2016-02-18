@@ -35,7 +35,7 @@ struct EvolutionPool::Private
 
     struct Tile
     {
-        Tile(EvolutionBase*i=nullptr) : instance(i), dirty(true) { }
+        Tile(EvolutionBase*i=nullptr) : instance(i), dirty(true), isLocked(false) { }
         ~Tile() { if (instance) instance->releaseRef(); }
         Tile(const Tile& o) : Tile(nullptr) { *this = o; }
         Tile& operator=(const Tile& o)
@@ -48,12 +48,13 @@ struct EvolutionPool::Private
             dirty = o.dirty;
             if (!dirty)
                 image = o.image;
+            isLocked = o.isLocked;
             return *this;
         }
 
         EvolutionBase* instance;
         QImage image;
-        bool dirty;
+        bool dirty, isLocked;
     };
 
     void rndSeed();
@@ -82,6 +83,8 @@ EvolutionPool::~EvolutionPool()
 
 size_t EvolutionPool::size() const { return p_->tiles.size(); }
 EvolutionBase* EvolutionPool::baseType() const { return p_->base; }
+bool EvolutionPool::isLocked(size_t idx) const
+    { return idx < p_->tiles.size() ? p_->tiles[idx].isLocked : false; }
 
 EvolutionBase* EvolutionPool::specimen(size_t idx) const
 {
@@ -114,7 +117,13 @@ void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
     if (p_->tiles[idx].instance)
         p_->tiles[idx].instance->releaseRef();
     p_->tiles[idx].instance = evo;
+    p_->tiles[idx].dirty = true;
     evo->addRef();
+}
+void EvolutionPool::setLocked(size_t idx, bool locked)
+{
+    if (idx < p_->tiles.size())
+        p_->tiles[idx].isLocked = locked;
 }
 
 void EvolutionPool::setProperties(const Properties& m, bool keepSeed)
@@ -179,6 +188,7 @@ void EvolutionPool::resize(size_t num)
 void EvolutionPool::randomize()
 {
     for (Private::Tile& t : p_->tiles)
+    if (!t.isLocked)
     {
         if (t.instance == 0)
         {
@@ -204,7 +214,7 @@ void EvolutionPool::repopulateFrom(size_t idx)
 
 
     for (auto& e : p_->tiles)
-    if (src != e.instance)
+    if (src != e.instance && !e.isLocked)
     {
         if (e.instance)
             e.instance->releaseRef();

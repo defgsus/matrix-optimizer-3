@@ -38,8 +38,8 @@ public:
     /** Returns the users name for this session */
     const QString& userName() const { return userName_; }
 
-    /** Returns the session id, made from the user name,
-        valid for filenames, or empty string if no user name. */
+    /** Returns the session id, made from the user name
+        (in valid filename characters), or empty string if no user name. */
     const QString& sessionId() const { return sessionId_; }
 signals:
 

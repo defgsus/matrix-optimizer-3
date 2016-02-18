@@ -364,7 +364,8 @@ HEADERS += \
     $$PWD/object/texture/cropto.h \
     $$PWD/object/interface/geometryeditinterface.h \
     $$PWD/tool/evolutionbase.h \
-    $$PWD/tool/evolutionpool.h
+    $$PWD/tool/evolutionpool.h \
+    $$PWD/model/evolutionmimedata.h
 
 
 SOURCES += \
@@ -682,4 +683,5 @@ SOURCES += \
     $$PWD/object/texture/cropto.cpp \
     $$PWD/object/interface/geometryeditinterface.cpp \
     $$PWD/tool/evolutionbase.cpp \
-    $$PWD/tool/evolutionpool.cpp
+    $$PWD/tool/evolutionpool.cpp \
+    $$PWD/model/evolutionmimedata.cpp

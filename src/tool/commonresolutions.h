@@ -44,7 +44,7 @@ public:
 
     /** Adds an action for each resolution to the given menu.
         Action::data() will contain the index into the resolutions list. */
-    static void addResolutionActions(QMenu *, bool checkable);
+    static void addResolutionActions(QMenu *, bool checkable = false);
 
     /** Returns the pointer to the matching Resolution struct, or NULL */
     static const Resolution * findResolution(const QSize&);
