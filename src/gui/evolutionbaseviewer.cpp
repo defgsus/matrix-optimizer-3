@@ -35,6 +35,7 @@ EvolutionBaseViewer::EvolutionBaseViewer(QWidget *parent)
     , doRender_ (true)
 {
     setObjectName("EvolutionBaseViewer");
+    setWindowTitle(tr("Evolution viewer"));
     settings()->restoreGeometry(this);
 
     setMinimumSize(320, 320);

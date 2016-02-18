@@ -27,8 +27,8 @@
 #include "gui/texteditdialog.h"
 #include "tool/evolutionbase.h"
 #include "tool/evolutionpool.h"
-#include "model/evolutionmimedata.h"
 #include "tool/commonresolutions.h"
+#include "model/evolutionmimedata.h"
 #include "io/files.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -41,14 +41,9 @@ struct EvolutionArea::Private
     Private(EvolutionArea * w)
         : widget    (w)
         , selTile   (-1)
+        , historyPointer    (0)
     {
         resize(5);
-
-        auto e = new KaliSetEvolution();
-        pool.setBaseType(e);
-        e->releaseRef();
-        pool.randomize();
-
     }
 
     void resize(unsigned numY);
@@ -60,6 +55,7 @@ struct EvolutionArea::Private
     QRect tileRect(unsigned idx) const
         { return QRect(tilePos(idx), tileRes); }
     void paint(QPainter&, const QRect&);
+    void saveHistory();
 
     EvolutionArea * widget;
     QSize tileRes, numTiles;
@@ -67,6 +63,9 @@ struct EvolutionArea::Private
 
     EvolutionPool pool;
     int64_t selTile;
+
+    QVector<QString> history;
+    int historyPointer;
 };
 
 EvolutionArea::EvolutionArea(QWidget *parent)
@@ -92,6 +91,11 @@ EvolutionBase* EvolutionArea::selectedSpecimen() const
 const EvolutionPool& EvolutionArea::pool() const { return p_->pool; }
 EvolutionPool& EvolutionArea::pool() { return p_->pool; }
 
+bool EvolutionArea::hasHistory() const
+    { return p_->historyPointer > 0 && p_->historyPointer < p_->history.size(); }
+bool EvolutionArea::hasFuture() const
+    { return p_->historyPointer+1 < p_->history.size(); }
+
 void EvolutionArea::setNumTilesY(unsigned n)
     { if (n != numTilesY()) { p_->resize(n); update(); } }
 void EvolutionArea::updateTile(unsigned tileIdx) { update(p_->tileRect(tileIdx)); }
@@ -102,6 +106,49 @@ unsigned EvolutionArea::tileIndexAt(unsigned x, unsigned y) const
     if (p_->tileRes.isNull())
         return x * numTilesY() + y;
     return x / p_->tileRes.width() * numTilesY() + y / p_->tileRes.height();
+}
+
+void EvolutionArea::saveHistory() { p_->saveHistory(); }
+
+void EvolutionArea::Private::saveHistory()
+{
+    try
+    {
+        QString s = pool.toJsonString();
+
+        history.resize(historyPointer+1);
+        history << s;
+        ++historyPointer;
+
+        emit widget->historyChanged();
+    }
+    catch (const Exception& e) { MO_WARNING(e.what()); }
+}
+
+void EvolutionArea::setHistory(int offset)
+{
+    if (offset < 0 && p_->historyPointer > 0)
+    {
+        p_->historyPointer = std::max(0, p_->historyPointer + offset);
+    }
+    else if (offset > 0 && p_->historyPointer+1 < p_->history.size())
+    {
+        p_->historyPointer =
+                std::min(p_->historyPointer + offset, p_->history.size());
+    }
+    else return;
+
+    if (p_->historyPointer >= p_->history.size())
+        return;
+
+    try
+    {
+        p_->pool.loadJsonString(p_->history[p_->historyPointer]);
+        update();
+        emit historyChanged();
+
+    }
+    catch (const Exception& e) { MO_WARNING(e.what()); }
 }
 
 void EvolutionArea::mousePressEvent(QMouseEvent* e)
@@ -154,6 +201,7 @@ void EvolutionArea::mouseDoubleClickEvent(QMouseEvent* e)
         && sel < p_->pool.size())
     {
         p_->pool.repopulateFrom(sel);
+        saveHistory();
         update();
     }
 }
@@ -177,7 +225,7 @@ void EvolutionArea::paintEvent(QPaintEvent* e)
 
 
 void EvolutionArea::Private::resize(unsigned newNumY)
-{    
+{
     QSize s = widget->size();
     int newRes = s.height() / newNumY,
         newNumX = s.width() / newRes;
@@ -194,6 +242,9 @@ void EvolutionArea::Private::resize(unsigned newNumY)
     // keep selection in range
     if (selTile > 0 && size_t(selTile) >= pool.size())
         selTile = int64_t(pool.size()) - 1;
+
+    if (!tileRes.isNull())
+        saveHistory();
 
 }
 
@@ -291,7 +342,9 @@ QMenu* EvolutionArea::createMenu(unsigned idx)
                 {
                     p_->pool.setSpecimen(idx, evo);
                     evo->releaseRef();
+                    saveHistory();
                     updateTile(idx);
+                    emit propertiesChanged();
                 }
             }
             catch (const Exception& e)
@@ -304,17 +357,44 @@ QMenu* EvolutionArea::createMenu(unsigned idx)
 
     menu->addSeparator();
 
-    a = menu->addAction(tr("Save json"));
+    a = menu->addAction(tr("Load specimen"));
+    connect(a, &QAction::triggered, [=](){ loadJson(idx); });
+
+    a = menu->addAction(tr("Save specimen"));
     connect(a, &QAction::triggered, [=](){ saveJson(idx); });
 
-    auto sub = menu->addMenu(tr("Save image"));
+    auto sub = menu->addMenu(tr("Save image ..."));
     CommonResolutions::addResolutionActions(sub);
     connect(sub, &QMenu::triggered, [=](QAction* a)
     {
         saveImage(idx, CommonResolutions::resolutions[a->data().toInt()].size());
     });
 
+    menu->addSeparator();
 
+    // new
+    auto list = EvolutionBase::registeredClassNames();
+    if (!list.isEmpty())
+    {
+        sub = menu->addMenu(tr("New specimen ..."));
+        for (auto& s : list)
+            sub->addAction(s)->setData(s);
+        connect(sub, &QMenu::triggered, [=](QAction*a)
+        {
+            p_->pool.setSpecimen(idx, a->data().toString());
+            saveHistory();
+            updateTile(idx);
+            emit propertiesChanged();
+        });
+    }
+
+    menu->addSeparator();
+
+    a = menu->addAction(tr("Save pool"));
+    connect(a, &QAction::triggered, [=](){ savePool(); });
+
+    a = menu->addAction(tr("Load pool"));
+    connect(a, &QAction::triggered, [=](){ loadPool(); });
 
     return menu;
 }
@@ -348,8 +428,38 @@ void EvolutionArea::showText(unsigned idx)
     win->show();
 }
 
+void EvolutionArea::loadJson(unsigned idx)
+{
+    if (idx >= p_->pool.size())
+        return;
+    auto fn = IO::Files::getOpenFileName(IO::FT_EVOLUTION, this);
+    if (!fn.isEmpty())
+        loadJson(idx, fn);
+}
+
+void EvolutionArea::loadJson(unsigned idx, const QString& fn)
+{
+    if (idx >= p_->pool.size())
+        return;
+
+    try
+    {
+        auto evo = EvolutionBase::fromJsonFile(fn);
+        p_->pool.setSpecimen(idx, evo);
+        saveHistory();
+        updateTile(idx);
+        emit propertiesChanged();
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("loading json failed"), e.what());
+    }
+}
+
 void EvolutionArea::saveJson(unsigned idx)
 {
+    if (idx >= p_->pool.size())
+        return;
     auto fn = IO::Files::getSaveFileName(IO::FT_EVOLUTION, this);
     if (!fn.isEmpty())
         saveJson(idx, fn);
@@ -357,6 +467,8 @@ void EvolutionArea::saveJson(unsigned idx)
 
 void EvolutionArea::saveImage(unsigned idx, const QSize& s)
 {
+    if (idx >= p_->pool.size())
+        return;
     auto fn = IO::Files::getSaveFileName(IO::FT_TEXTURE, this);
     if (!fn.isEmpty())
         saveImage(idx, s, fn);
@@ -391,6 +503,47 @@ void EvolutionArea::saveImage(unsigned idx, const QSize& s, const QString& fn)
     catch (const Exception& e)
     {
         QMessageBox::critical(this, tr("saving image failed"), e.what());
+    }
+}
+
+void EvolutionArea::savePool()
+{
+    auto fn = IO::Files::getSaveFileName(IO::FT_EVOLUTION, this);
+    if (!fn.isEmpty())
+        savePool(fn);
+}
+
+void EvolutionArea::savePool(const QString& fn)
+{
+    try
+    {
+        p_->pool.saveJsonFile(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("saving pool failed"), e.what());
+    }
+}
+
+void EvolutionArea::loadPool()
+{
+    auto fn = IO::Files::getOpenFileName(IO::FT_EVOLUTION, this);
+    if (!fn.isEmpty())
+        loadPool(fn);
+}
+
+void EvolutionArea::loadPool(const QString& fn)
+{
+    try
+    {
+        p_->pool.loadJsonFile(fn);
+        saveHistory();
+        update();
+        emit propertiesChanged();
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("loading pool failed"), e.what());
     }
 }
 

@@ -12,9 +12,13 @@
 #define MOSRC_TOOL_EVOLUTIONPOOL_H
 
 #include <cstddef>
+#include <vector>
+
+#include <QString>
 
 class QSize;
 class QImage;
+class QJsonObject;
 
 namespace MO {
 
@@ -28,26 +32,51 @@ public:
     EvolutionPool(size_t num = 0);
     ~EvolutionPool();
 
+    // --------- io ---------
+
+    void serialize(QJsonObject&) const;
+    void deserialize(const QJsonObject&);
+
+    QString toJsonString() const;
+    void loadJsonString(const QString& str);
+
+    void saveJsonFile(const QString& fn) const;
+    void loadJsonFile(const QString& fn);
+
+
+    // ------ getter --------
+
     size_t size() const;
-    EvolutionBase* baseType() const;
+    /** Constructs a union of all species */
     Properties properties() const;
 
     bool isLocked(size_t idx) const;
 
     /** Returns new random instance of baseType(),
         or NULL if baseType() is NULL */
-    EvolutionBase* createSpecimen() const;
+    EvolutionBase* createSpecimen();
+    /** Returns a new random instance of one of the specimen in @p vec */
+    EvolutionBase* createSpecimen(const std::vector<EvolutionBase*>& vec);
+    /** Returns a random instance, or NULL if no instances in pool */
+    EvolutionBase* getRandomSpecimen();
+    /** Returns a vector of all non-NULL specimen */
+    std::vector<EvolutionBase*> getSpecies() const;
 
     void setProperties(const Properties&, bool keepSeed = true);
-    void setBaseType(EvolutionBase* base);
+
     /** Adds reference */
     void setSpecimen(size_t idx, EvolutionBase* base);
+    void setSpecimen(size_t idx, const QString& className);
     void setLocked(size_t idx, bool locked);
 
-    void resize(size_t num);
+    void resize(size_t num, bool doClear = false);
     /** Fills pool with random base types */
-    void randomize();
+    void repopulate();
     void repopulateFrom(size_t idx);
+    /** Mates all locked tiles */
+    void crossBreed();
+    /** Creates an offspring from the potential parents */
+    EvolutionBase* createOffspring(const std::vector<EvolutionBase*>& parents);
 
     /** Access to each instance */
     EvolutionBase* specimen(size_t idx) const;

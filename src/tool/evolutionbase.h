@@ -13,7 +13,9 @@
 
 #include <vector>
 #include <map>
-#include <QString>
+
+#include <QStringList>
+
 #include "types/refcounted.h"
 
 class QImage;
@@ -24,24 +26,6 @@ namespace MO {
 
 class Properties;
 
-/*
-struct MutationSettings
-{
-    MutationSettings(double prob = 0.1, double amt = 0.1, uint32_t seed = 42)
-        : probability(prob), amount(amt)
-        , mean(0.), deviation(1.)
-        , seed(seed)
-    { }
-
-    double
-        probability,
-        amount,
-        mean,
-        deviation;
-
-    uint32_t seed;
-};
-*/
 
 #define MO_REGISTER_EVOLUTION(Class__) \
     namespace { static bool success_register_##Class__##_ = EvolutionBase::registerClass(new Class__); }
@@ -60,19 +44,22 @@ public:
     virtual const QString& className() const = 0;
     /** Default impl copies parameters() */
     virtual void copyFrom(const EvolutionBase*);
+    /** Returns true when copyFrom() and mate() work with @p other */
+    virtual bool isCompatible(const EvolutionBase* other) const = 0;
 
     // -- io --
 
     virtual void serialize(QJsonObject&) const = 0;
     virtual void deserialize(const QJsonObject&) = 0;
 
-    void toJson(QJsonDocument& doc) const;
-    static EvolutionBase* fromJson(const QJsonDocument&);
+    /** Puts an object with key className() into @p obj */
+    void toJson(QJsonObject& obj) const;
+    static EvolutionBase* fromJson(const QJsonObject&obj);
     QString toJsonString() const;
     static EvolutionBase* fromJsonString(const QString&);
 
-    void saveJsonFile(const QString& fn);
-    static EvolutionBase* loadJsonFile(const QString& fn);
+    void saveJsonFile(const QString& fn) const;
+    static EvolutionBase* fromJsonFile(const QString& fn);
 
     /** Saves the image with attached json code */
     void saveImage(const QString& fn, const QImage& img);
@@ -82,7 +69,6 @@ public:
     virtual void randomize() = 0;
     virtual void mutate() = 0;
     virtual void mate(const EvolutionBase* other) = 0;
-    virtual bool canMate(const EvolutionBase* other) const = 0;
 
     const Properties& properties() const { return *p_props_; }
     Properties& properties() { return *p_props_; }
@@ -97,6 +83,7 @@ public:
     // --- factory ---
 
     static bool registerClass(EvolutionBase*);
+    static QStringList registeredClassNames();
     static EvolutionBase* createClass(const QString& className);
 
 private:
@@ -108,18 +95,23 @@ private:
 
 /** Base class with std::vector<double>.
     Properties are
-    seed (uint)
-    mutation_amount,
-    mutation_prob,
-    init_mean,
-    init_dev (all double)
+    @li seed (uint)
+    @li mutation_amount
+    @li mutation_prob
+    @li grow_prob
+    @li shrink_prob
+    @li init_mean
+    @li init_var
+    @li init_dev (all double)
     */
 class EvolutionVectorBase : public EvolutionBase
 {
 public:
     // -- ctor --
 
-    EvolutionVectorBase(size_t size = 10);
+    /** If @p resizeable is true, properties for grow and shrink are created */
+    EvolutionVectorBase(size_t size = 10, bool resizeable = false);
+
     virtual const QString& className() const override
         { static const QString s("EvolutionVectorBase"); return s; }
     virtual EvolutionVectorBase * createClone() const override
@@ -131,6 +123,8 @@ public:
             p_vec_ = e->p_vec_;
     }
 
+    virtual bool isCompatible(const EvolutionBase* other) const override;
+
     // -- io --
 
     virtual void serialize(QJsonObject&) const;
@@ -141,7 +135,6 @@ public:
     virtual void randomize() override;
     virtual void mutate() override;
     virtual void mate(const EvolutionBase* other) override;
-    virtual bool canMate(const EvolutionBase* other) const override;
 
     // -- render --
 
@@ -163,23 +156,6 @@ private:
 };
 
 
-/** Some test */
-class KaliSetEvolution : public EvolutionVectorBase
-{
-public:
-
-    virtual const QString& className() const override
-        { static const QString s("KaliSetEvolution"); return s; }
-    KaliSetEvolution();
-    virtual KaliSetEvolution * createClone() const
-        { auto e = new KaliSetEvolution(); e->copyFrom(this); return e; }
-
-    virtual QString toString() const override;
-    virtual void getImage(QImage& img) const override;
-
-    int numIter() const;
-    void getRgb(double u, double v, double* r, double* g, double* b) const;
-};
 
 
 } // namespace MO

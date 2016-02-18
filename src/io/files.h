@@ -27,6 +27,9 @@ public:
     /** Replaces '/' on Windows */
     static void fixDirectoryString(QString&);
 
+    /** Adds '/' or '\' if not present */
+    static void trailingSeparator(QString&);
+
     /** Returns directory for given filetype */
     static QString directory(FileType, bool returnCurrentPathIfNotDefined = true);
 

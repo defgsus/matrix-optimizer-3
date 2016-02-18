@@ -25,10 +25,11 @@ namespace GUI {
 struct EvolutionDialog::Private
 {
     Private(EvolutionDialog* win)
-        : win   (win)
+        : win       (win)
+        , propView  (0)
     { }
 
-    void createProps();
+    void updateProps();
     void createWidgets();
     void applyProps();
 
@@ -37,7 +38,8 @@ struct EvolutionDialog::Private
     Properties props;
 
     EvolutionArea * area;
-    PropertiesScrollView *propView;//, *prop2View;
+    PropertiesScrollView *propView;
+    QPushButton * butLeft, *butRight;
 };
 
 EvolutionDialog::EvolutionDialog(QWidget* parent)
@@ -45,19 +47,15 @@ EvolutionDialog::EvolutionDialog(QWidget* parent)
     , p_        (new Private(this))
 {
     setObjectName("EvolutionDialog");
+    setWindowTitle(tr("Evolution"));
     setMinimumSize(320, 240);
 
     settings()->restoreGeometry(this);
 
     p_->createWidgets();
-    p_->createProps();
+    p_->updateProps();
     p_->propView->setProperties(p_->props);
-    //p_->prop2View->setProperties(p_->props2);
 
-    /*auto t = new EvolutionVectorBase(20);
-    p_->area->setTile(0, t);
-    t->releaseRef();
-    */
 }
 
 EvolutionDialog::~EvolutionDialog()
@@ -73,9 +71,43 @@ void EvolutionDialog::Private::createWidgets()
 
         area = new EvolutionArea(win);
         lh->addWidget(area, 3);
+        connect(area, &EvolutionArea::propertiesChanged, [=]() { updateProps(); });
+        connect(area, &EvolutionArea::historyChanged, [=]()
+        {
+            butLeft->setEnabled(area->hasHistory());
+            butRight->setEnabled(area->hasFuture());
+        });
 
         auto lv = new QVBoxLayout();
         lh->addLayout(lv, 1);
+
+            // history buttons
+            auto lh1 = new QHBoxLayout;
+            lv->addLayout(lh1);
+
+                butLeft = new QPushButton("<", win);
+                lh1->addWidget(butLeft);
+                connect(butLeft, &QPushButton::clicked, [=]() { area->setHistory(-1); });
+
+                butRight = new QPushButton(">", win);
+                lh1->addWidget(butRight);
+                connect(butRight, &QPushButton::clicked, [=]() { area->setHistory(1); });
+
+            auto but = new QPushButton(tr("repopulate"), win);
+            lv->addWidget(but);
+            connect(but, &QPushButton::pressed, [=]()
+            {
+                area->pool().repopulate();
+                area->update();
+            });
+
+            but = new QPushButton(tr("cross-breed"), win);
+            lv->addWidget(but);
+            connect(but, &QPushButton::pressed, [=]()
+            {
+                area->pool().crossBreed();
+                area->update();
+            });
 
             propView = new PropertiesScrollView(win);
             lv->addWidget(propView, 3);
@@ -85,32 +117,21 @@ void EvolutionDialog::Private::createWidgets()
                 applyProps();
             });
 
-            auto but = new QPushButton(tr("reset"), win);
-            lv->addWidget(but);
-            connect(but, &QPushButton::pressed, [=]()
-            {
-                //props2.unify(prop2View->properties());
-                //applyProps();
-                area->pool().randomize();
-                area->update();
-            });
-            /*
-            prop2View = new PropertiesScrollView(win);
-            lv->addWidget(prop2View, 1);
-            connect(propView, &PropertiesScrollView::propertyChanged, [=]()
-            {
-
-            });
-            */
 }
 
-void EvolutionDialog::Private::createProps()
+void EvolutionDialog::Private::updateProps()
 {
     props = area->pool().properties();
     props.clear("seed");
 
     props.set("num_y", tr("num tiles"), tr("Number of tiles per screen height"),
               area->numTilesY(), 1u, 50u);
+
+    if (propView)
+    {
+        props.updateFrom(propView->properties());
+        propView->setProperties(props);
+    }
 }
 
 void EvolutionDialog::Private::applyProps()

@@ -11,11 +11,15 @@
 #include <vector>
 
 #include <QImage>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QFile>
 
 #include "evolutionpool.h"
 #include "evolutionbase.h"
 #include "math/random.h"
 #include "types/properties.h"
+#include "io/error.h"
 
 namespace MO {
 
@@ -23,14 +27,11 @@ struct EvolutionPool::Private
 {
     Private(EvolutionPool* p)
         : p          (p)
-        , base       (0)
         , imgRes     (32, 32)
     { }
 
     ~Private()
     {
-        if (base)
-            base->releaseRef();
     }
 
     struct Tile
@@ -57,13 +58,12 @@ struct EvolutionPool::Private
         bool dirty, isLocked;
     };
 
-    void rndSeed();
+    void rndSeed(EvolutionBase* evo);
     void renderTile(Tile&);
     void renderTiles();
 
     EvolutionPool* p;
     std::vector<Tile> tiles;
-    EvolutionBase* base;
     MATH::Twister rnd;
     QSize imgRes;
     Properties props;
@@ -81,8 +81,81 @@ EvolutionPool::~EvolutionPool()
     delete p_;
 }
 
+void EvolutionPool::serialize(QJsonObject& obj) const
+{
+    obj.insert("pool_size", QJsonValue((int)size()));
+    for (size_t i=0; i<p_->tiles.size(); ++i)
+    if (auto evo = p_->tiles[i].instance)
+    {
+        QJsonObject evoObj;
+        evoObj.insert("locked", p_->tiles[i].isLocked);
+        evo->toJson(evoObj);
+
+        obj.insert(QString::number(i), evoObj);
+    }
+}
+
+void EvolutionPool::deserialize(const QJsonObject& obj)
+{
+    if (!obj.contains("pool_size"))
+        MO_IO_ERROR(READ, "'pool_size' not found in json");
+    resize(obj.value("pool_size").toInt(), true);
+    for (size_t i=0; i<size(); ++i)
+    {
+        auto evoVal = obj.value(QString::number(i));
+        if (evoVal.isObject())
+        {
+            auto evoObj = evoVal.toObject();
+            auto evo = EvolutionBase::fromJson(evoObj);
+            setSpecimen(i, evo);
+            setLocked(i, evoObj.value("locked").toBool());
+            if (evo)
+                evo->releaseRef();
+        }
+    }
+}
+
+QString EvolutionPool::toJsonString() const
+{
+    QJsonObject obj;
+    serialize(obj);
+    return QString::fromUtf8(QJsonDocument(obj).toJson());
+}
+
+void EvolutionPool::loadJsonString(const QString &str)
+{
+    QJsonObject obj = QJsonDocument::fromJson(str.toUtf8()).object();
+    deserialize(obj);
+}
+
+void EvolutionPool::loadJsonFile(const QString &fn)
+{
+    QFile file(fn);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+        MO_IO_ERROR(READ, "Could not open json file\n'"
+                    << fn << "'\n" << file.errorString());
+
+    auto doc = QJsonDocument::fromJson(file.readAll());
+    deserialize(doc.object());
+}
+
+void EvolutionPool::saveJsonFile(const QString& fn) const
+{
+    QFile file(fn);
+    if (!file.open(QFile::WriteOnly | QFile::Text))
+        MO_IO_ERROR(WRITE, "Could not open json file for saving\n'"
+                    << fn << "'\n" << file.errorString());
+
+    QJsonObject obj;
+    serialize(obj);
+
+    auto data = QJsonDocument(obj).toJson();
+    if (file.write(data.constData(), data.size()) != data.size())
+        MO_IO_ERROR(WRITE, "Could not write to json file\n'"
+                    << fn << "'\n" << file.errorString());
+}
+
 size_t EvolutionPool::size() const { return p_->tiles.size(); }
-EvolutionBase* EvolutionPool::baseType() const { return p_->base; }
 bool EvolutionPool::isLocked(size_t idx) const
     { return idx < p_->tiles.size() ? p_->tiles[idx].isLocked : false; }
 
@@ -99,17 +172,9 @@ Properties EvolutionPool::properties() const
 {
     Properties p;
     for (auto& t : p_->tiles)
-        p.unify(t.instance->properties());
+        if (t.instance)
+            p.unify(t.instance->properties());
     return p;
-}
-
-void EvolutionPool::setBaseType(EvolutionBase* base)
-{
-    if (p_->base)
-        p_->base->releaseRef();
-    p_->base = base;
-    if (p_->base)
-        p_->base->addRef();
 }
 
 void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
@@ -118,8 +183,21 @@ void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
         p_->tiles[idx].instance->releaseRef();
     p_->tiles[idx].instance = evo;
     p_->tiles[idx].dirty = true;
-    evo->addRef();
+    if (p_->tiles[idx].instance)
+        p_->tiles[idx].instance->addRef();
 }
+
+void EvolutionPool::setSpecimen(size_t idx, const QString& className)
+{
+    auto evo = EvolutionBase::createClass(className);
+    if (evo)
+    {
+        p_->rndSeed(evo);
+        evo->randomize();
+    }
+    setSpecimen(idx, evo);
+}
+
 void EvolutionPool::setLocked(size_t idx, bool locked)
 {
     if (idx < p_->tiles.size())
@@ -135,11 +213,10 @@ void EvolutionPool::setProperties(const Properties& m, bool keepSeed)
     else
         p_->props.set("seed", pseed);
 
-    /*
+    // overwrite all properties
     for (auto& t : p_->tiles)
         if (t.instance)
             t.instance->properties().updateFrom(p_->props);
-            */
 }
 
 void EvolutionPool::renderTiles() { p_->renderTiles(); }
@@ -150,24 +227,73 @@ void EvolutionPool::setImageResolution(const QSize &res)
     p_->imgRes = res;
 }
 
-void EvolutionPool::Private::rndSeed()
+void EvolutionPool::Private::rndSeed(EvolutionBase* evo)
 {
     props.set("seed", rnd.getUInt32());
+    evo->properties().set("seed", props.get("seed"));
 }
 
-EvolutionBase* EvolutionPool::createSpecimen() const
+EvolutionBase* EvolutionPool::createSpecimen()
 {
-    if (!p_->base)
+    auto base = getRandomSpecimen();
+    if (!base)
         return nullptr;
-    p_->rndSeed();
-    p_->base->properties().updateFrom(p_->props);
-    auto c = p_->base->createClone();
+    std::vector<EvolutionBase*> vec;
+    vec.push_back(base);
+    return createSpecimen(vec);
+}
+
+EvolutionBase* EvolutionPool::createSpecimen(const std::vector<EvolutionBase*>& vec)
+{
+    if (vec.empty())
+        return nullptr;
+    auto base = vec[p_->rnd.getUInt32() % vec.size()];
+    if (!base)
+        return nullptr;
+    auto c = base->createClone();
+    c->properties().updateFrom(p_->props);
+
+    p_->rndSeed(c);
     c->randomize();
     return c;
 }
 
-void EvolutionPool::resize(size_t num)
+EvolutionBase* EvolutionPool::getRandomSpecimen()
 {
+    std::vector<EvolutionBase*> all;
+    for (auto& t : p_->tiles)
+        if (t.instance)
+            all.push_back(t.instance);
+    if (all.empty())
+        return nullptr;
+    size_t idx = p_->rnd.getUInt32() % all.size();
+    return all[idx];
+}
+
+std::vector<EvolutionBase*> EvolutionPool::getSpecies() const
+{
+    std::vector<EvolutionBase*> v;
+    for (auto& t : p_->tiles)
+        if (t.instance)
+            v.push_back(t.instance);
+    return v;
+}
+
+void EvolutionPool::resize(size_t num, bool doClear)
+{
+    if (doClear)
+    {
+        for (auto& t : p_->tiles)
+        if (t.instance)
+        {
+            t.instance->releaseRef();
+            t.instance = 0;
+            t.dirty = true;
+        }
+        p_->tiles.resize(num);
+        return;
+    }
+
     if (num == p_->tiles.size())
         return;
 
@@ -185,23 +311,46 @@ void EvolutionPool::resize(size_t num)
     }
 }
 
-void EvolutionPool::randomize()
+void EvolutionPool::repopulate()
 {
-    for (Private::Tile& t : p_->tiles)
+    auto vec = getSpecies();
+    if (vec.empty())
+        return;
+
+    for (auto v : vec)
+        v->addRef();
+
+    for (size_t i=0; i<size(); ++i)
+    if (!isLocked(i))
+    {
+        auto evo = createSpecimen(vec);
+        setSpecimen(i, evo);
+    }
+
+    for (auto v : vec)
+        v->releaseRef();
+}
+
+void EvolutionPool::crossBreed()
+{
+    std::vector<EvolutionBase*> parents;
+    for (auto& t : p_->tiles)
+    if (t.instance && t.isLocked)
+    {
+        parents.push_back(t.instance);
+        t.instance->addRef();
+    }
+
+    for (auto& t : p_->tiles)
     if (!t.isLocked)
     {
-        if (t.instance == 0)
-        {
-            t.instance = createSpecimen();
-            t.dirty = true;
-            continue;
-        }
-
-        p_->rndSeed();
-        t.instance->properties().updateFrom(p_->props);
-        t.instance->randomize();
+        auto evo = createOffspring(parents);
+        t.instance = evo;
         t.dirty = true;
     }
+
+    for (auto v : parents)
+        v->releaseRef();
 }
 
 void EvolutionPool::repopulateFrom(size_t idx)
@@ -220,12 +369,43 @@ void EvolutionPool::repopulateFrom(size_t idx)
             e.instance->releaseRef();
 
         e.instance = src->createClone();
-        p_->rndSeed();
-        e.instance->properties().updateFrom(p_->props);
+        p_->rndSeed(e.instance);
         e.instance->mutate();
         e.dirty = true;
     }
 }
+
+EvolutionBase* EvolutionPool::createOffspring(const std::vector<EvolutionBase*>& parents)
+{
+    if (parents.size() < 2)
+        return nullptr;
+
+    // choose one
+    auto evo = specimen(p_->rnd.getUInt32() % parents.size());
+    if (!evo)
+        return nullptr;
+
+    // find possible mates
+    std::vector<EvolutionBase*> vec;
+    for (auto v : parents)
+        if (v && v != evo && evo->isCompatible(v))
+            vec.push_back(v);
+    if (vec.empty())
+        return nullptr;
+
+    // choose mate
+    auto mate = vec[p_->rnd.getUInt32() % vec.size()];
+
+    if (p_->rnd() < .5)
+        std::swap(evo, mate);
+
+    auto child = evo->createClone();
+    p_->rndSeed(child);
+    child->mate(mate);
+
+    return child;
+}
+
 
 void EvolutionPool::Private::renderTile(Tile& tile)
 {

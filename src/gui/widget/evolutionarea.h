@@ -42,6 +42,9 @@ public:
     const EvolutionPool& pool() const;
     EvolutionPool& pool();
 
+    bool hasHistory() const;
+    bool hasFuture() const;
+
     /** Creates an edit menu for the given tile */
     QMenu* createMenu(unsigned tileIndex);
 
@@ -49,6 +52,12 @@ signals:
 
     /** A tile was clicked */
     void selected(unsigned index);
+
+    /** The pool might have new Properties */
+    void propertiesChanged();
+
+    /** Any change to the pool */
+    void historyChanged();
 
 public slots:
 
@@ -58,11 +67,24 @@ public slots:
     /** Open a window to render the given tile */
     void showBig(unsigned idx);
     void showText(unsigned idx);
+
+    void loadJson(unsigned idx);
+    void loadJson(unsigned idx, const QString& fn);
+
     void saveJson(unsigned idx);
     void saveJson(unsigned idx, const QString& fn);
     void saveImage(unsigned idx, const QSize& res);
     void saveImage(unsigned idx, const QSize& res, const QString& fn);
 
+    void savePool();
+    void savePool(const QString& fn);
+    void loadPool();
+    void loadPool(const QString& fn);
+
+    /** Move forward/backward in history */
+    void setHistory(int offset);
+
+    void saveHistory();
 protected:
     void mousePressEvent(QMouseEvent*) override;
     void mouseMoveEvent(QMouseEvent*) override;
