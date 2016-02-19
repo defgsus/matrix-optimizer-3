@@ -367,7 +367,9 @@ HEADERS += \
     $$PWD/tool/evolutionpool.h \
     $$PWD/model/evolutionmimedata.h \
     $$PWD/math/kalisetevolution.h \
-    $$PWD/object/interface/evolutioneditinterface.h
+    $$PWD/object/interface/evolutioneditinterface.h \
+    $$PWD/tool/brainf.h \
+    $$PWD/object/util/parameterevolution.h
 
 
 SOURCES += \
@@ -688,4 +690,5 @@ SOURCES += \
     $$PWD/tool/evolutionpool.cpp \
     $$PWD/model/evolutionmimedata.cpp \
     $$PWD/math/kalisetevolution.cpp \
-    $$PWD/object/interface/evolutioneditinterface.cpp
+    $$PWD/object/interface/evolutioneditinterface.cpp \
+    $$PWD/object/util/parameterevolution.cpp

@@ -65,6 +65,9 @@ public:
 
     // ------- setter -------
 
+    /** Sets a random random seed */
+    void setRandomSeed();
+
     /** Sets the properties. Unifies with all instances */
     void setProperties(const Properties&, bool keepSeed = true);
 

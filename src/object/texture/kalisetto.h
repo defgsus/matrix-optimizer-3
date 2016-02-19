@@ -19,7 +19,6 @@ namespace MO {
 /** The infamous Kali-Set 2d texture */
 class KaliSetTO
         : public TextureObjectBase
-        , public EvolutionEditInterface
 {
     Q_OBJECT
 public:

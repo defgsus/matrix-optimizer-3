@@ -121,6 +121,9 @@ namespace MO {
     class ObjectDspPath;
     class ObjectTreeMimeData;
 
+    class EvolutionBase;
+    class ParameterEvolution;
+
 } // namespace MO
 
 #endif // OBJECT_FWD_H

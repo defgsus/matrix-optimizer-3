@@ -31,6 +31,7 @@ Parameter::Parameter(Object * object, const QString& id, const QString& name)
     , isVisibleGraph_   (false)
     , isVisibleInterface_(false)
     , isZombie_         (false)
+    , isEvolve_         (true)
     , p_specFlag_       (SF_NONE)
     //iProps_     (new Properties)
 {

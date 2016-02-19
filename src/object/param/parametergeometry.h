@@ -33,6 +33,9 @@ public:
     const QString& typeName() const { static QString s("geometry"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_GEOMETRY; }
 
+    QString baseValueString(bool ) const override { return "XXX"; }
+    QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
+
     // ---------------- getter -----------------
 
     /** Returns true when any of the Geometries have changed since the last call to ... */

@@ -58,7 +58,7 @@ public:
         or to add documentation for select states. */
     virtual QString getDocValues() const;
 
-    /** Returns the statusTip().
+    /** Base returns the statusTip().
         Reimplement to add whatever. */
     virtual QString getDocDesc() const;
 
@@ -78,6 +78,10 @@ public:
     /** Returns a string in the form of 'RealObjectId/SubObjectId.parameterId'.
         Goes up the branch until the first Object::TG_REAL_OBJECT */
     QString infoIdName() const;
+
+    /** Return the baseValue() as string */
+    virtual QString baseValueString(bool inShort) const = 0;
+    virtual QString valueString(const RenderTime& t, bool inShort) const = 0;
 
     const QString& groupId() const { return groupId_; }
     const QString& groupName() const { return groupName_; }
@@ -100,6 +104,10 @@ public:
     /** When true, the parameter is neither visible nor saved in a serialization stream */
     bool isZombie() const { return isZombie_; }
 
+    /** Include in ParameterEvolution by default. Only a hint!
+        True by default. */
+    bool isEvolvable() const { return isEvolve_; }
+
     /* Read access to the interface settings */
     //const Properties& interfaceProperties() const { return *iProps_; }
 
@@ -115,6 +123,7 @@ public:
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
     void setZombie(bool enable) { isZombie_ = enable; }
+    void setEvolvable(bool enable) { isEvolve_ = enable; }
     /** Sets a specific flag/type for the gui widget initialization */
     void setSpecificFlag(SpecificFlag sf) { p_specFlag_ = sf; }
 
@@ -217,7 +226,7 @@ private:
 
     bool isEditable_, isModulateable_,
          isVisible_, isVisibleGraph_, isVisibleInterface_,
-         isZombie_;
+         isZombie_, isEvolve_;
     SpecificFlag
         p_specFlag_;
     //QList<QString> modulatorIds_;

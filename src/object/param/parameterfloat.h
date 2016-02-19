@@ -35,6 +35,9 @@ public:
 
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 
+    QString baseValueString(bool ) const override { return QString::number(baseValue()); }
+    QString valueString(const RenderTime& t, bool ) const override { return QString::number(value(t)); }
+
     // ---------------- getter -----------------
 
     Double defaultValue() const { return defaultValue_; }

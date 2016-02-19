@@ -32,7 +32,9 @@
 namespace MO {
 
 Parameters::Parameters(Object * o)
-    :   object_ (o)
+    : object_           (o)
+    , isEvolve_         (true)
+    , isEvolveGroup_    (false)
 {
 }
 
@@ -278,6 +280,24 @@ void Parameters::endParameterGroup()
     curGroupName_.clear();
 }
 
+void Parameters::beginEvolveGroup(bool evolvable)
+{
+    isEvolve_ = evolvable;
+    isEvolveGroup_ = true;
+}
+
+void Parameters::endEvolveGroup()
+{
+    isEvolveGroup_ = false;
+}
+
+void Parameters::p_finishParam_(Parameter* param) const
+{
+    param->setGroup(curGroupId_, curGroupName_);
+    if (isEvolveGroup_)
+        param->setEvolvable(isEvolve_);
+}
+
 ParameterFloat * Parameters::createFloatParameter(
         const QString& id, const QString& name, const QString& statusTip,
         Double defaultValue, bool editable, bool modulateable)
@@ -339,7 +359,7 @@ ParameterFloat * Parameters::createFloatParameter(
     param->setEditable(editable);
     param->setModulateable(modulateable);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -408,7 +428,7 @@ ParameterInt * Parameters::createIntParameter(
     param->setEditable(editable);
     param->setModulateable(modulateable);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -498,7 +518,7 @@ ParameterSelect * Parameters::createSelectParameter(
     param->setStatusTips(statusTips);
     param->setDefaultValue(defaultValue);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -554,7 +574,7 @@ ParameterText * Parameters::createTextParameter(
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -600,7 +620,7 @@ ParameterFilename * Parameters::createFilenameParameter(
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -645,7 +665,8 @@ ParameterImageList* Parameters::createImageListParameter(
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
+
     return param;
 }
 
@@ -688,7 +709,7 @@ ParameterCallback * Parameters::createCallbackParameter(
     param->setStatusTip(statusTip);
     param->setCallback(callback);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -729,7 +750,8 @@ ParameterTexture * Parameters::createTextureParameter(
     param->setEditable(false);
     param->setStatusTip(statusTip);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
+
     return param;
 }
 
@@ -769,7 +791,8 @@ ParameterGeometry * Parameters::createGeometryParameter(
     param->setEditable(false);
     param->setStatusTip(statusTip);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
+
     return param;
 }
 
@@ -848,7 +871,7 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
     param->setStatusTip(statusTip);
     param->setEditable(editable);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -998,7 +1021,7 @@ ParameterTransformation * Parameters::createTransformationParameter(
     param->setModulateable(true);
     param->setEditable(false);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }
@@ -1041,7 +1064,7 @@ ParameterFont * Parameters::createFontParameter(
     param->setModulateable(false);
     param->setEditable(false);
 
-    param->setGroup(curGroupId_, curGroupName_);
+    p_finishParam_(param);
 
     return param;
 }

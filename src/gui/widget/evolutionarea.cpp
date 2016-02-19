@@ -87,7 +87,7 @@ unsigned EvolutionArea::numTilesX() const { return p_->numTiles.width(); }
 unsigned EvolutionArea::numTilesY() const { return p_->numTiles.height(); }
 int EvolutionArea::selectedIndex() const { return p_->selTile; }
 EvolutionBase* EvolutionArea::selectedSpecimen() const
-    { return p_->selTile > 0 && (size_t)p_->selTile < p_->pool.size() ? p_->pool.specimen(p_->selTile) : nullptr; }
+    { return p_->selTile >= 0 && (size_t)p_->selTile < p_->pool.size() ? p_->pool.specimen(p_->selTile) : nullptr; }
 const EvolutionPool& EvolutionArea::pool() const { return p_->pool; }
 EvolutionPool& EvolutionArea::pool() { return p_->pool; }
 
@@ -159,7 +159,7 @@ void EvolutionArea::mousePressEvent(QMouseEvent* e)
     if ((e->buttons() & (Qt::LeftButton | Qt::RightButton))
         && sel < p_->pool.size())
     {
-        if (p_->selTile)
+        if (p_->selTile >= 0)
             updateTile(p_->selTile);
         p_->selTile = sel;
         updateTile(p_->selTile);
@@ -240,7 +240,7 @@ void EvolutionArea::Private::resize(unsigned newNumY)
     pool.setImageResolution(tileRes);
 
     // keep selection in range
-    if (selTile > 0 && size_t(selTile) >= pool.size())
+    if (selTile >= 0 && size_t(selTile) >= pool.size())
         selTile = int64_t(pool.size()) - 1;
 
     if (!tileRes.isNull())
@@ -256,12 +256,12 @@ void EvolutionArea::Private::paint(QPainter& p, const QRect& rect)
 
     for (size_t i=0; i<pool.size(); ++i)
     {
+
         auto trect = tileRect(i);
         if (!trect.intersects(rect))
             continue;
 
         p.drawImage(trect.topLeft(), pool.image(i));
-
 
         // --- border ---
 
@@ -276,11 +276,12 @@ void EvolutionArea::Private::paint(QPainter& p, const QRect& rect)
         if (pool.isLocked(i))
         {
             pen.setColor(pen.color().lighter(200));
-            pen.setWidth(3);
+            pen.setWidth(5);
         }
 
         p.setPen(pen);
-        p.drawRect(trect.adjusted(pen.width()/2,pen.width()/2,-pen.width()/2,-pen.width()/2));
+        p.drawRect(trect.adjusted(pen.width()/2,pen.width()/2,
+                                 -pen.width()/2,-pen.width()/2));
     }
 }
 

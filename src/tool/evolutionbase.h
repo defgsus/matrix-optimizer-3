@@ -66,6 +66,8 @@ public:
 
     // --- mutation ---
 
+    /** Create completely random specimen.
+        Should be independent of any previous state except the Properties. */
     virtual void randomize() = 0;
     virtual void mutate() = 0;
     virtual void mate(const EvolutionBase* other) = 0;
@@ -110,7 +112,8 @@ public:
     // -- ctor --
 
     /** If @p resizeable is true, properties for grow and shrink are created */
-    EvolutionVectorBase(size_t size = 10, bool resizeable = false);
+    EvolutionVectorBase(size_t size = 10, bool resizeable = true,
+                        size_t minSize = 1, size_t maxSize = 0);
 
     virtual const QString& className() const override
         { static const QString s("EvolutionVectorBase"); return s; }
@@ -145,6 +148,7 @@ public:
 
     const std::vector<double>& vector() const { return p_vec_; }
     double vector(size_t idx) const { return idx < p_vec_.size() ? p_vec_[idx] : 0.; }
+    uint8_t vectorByte(size_t idx) const;
 protected:
     // --- setter ---
 
@@ -153,6 +157,7 @@ protected:
 
 private:
     std::vector<double> p_vec_;
+    size_t p_initSize_, p_minSize_, p_maxSize_;
 };
 
 

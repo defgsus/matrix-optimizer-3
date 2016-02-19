@@ -18,7 +18,7 @@
 
 namespace MO {
 
-/** Could be usefull, aber kein bock grad... */
+/** Could be useful, aber kein bock grad... */
 class ParameterTransformation : public Parameter
 {
 public:
@@ -34,6 +34,9 @@ public:
     //virtual QString getDocType() const Q_DECL_OVERRIDE;
 
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
+
+    QString baseValueString(bool ) const override { return "XXX"; }
+    QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
 
     // ---------------- getter -----------------
 

@@ -15,13 +15,14 @@
 #include <QVector>
 
 #include "object/object_fwd.h"
+#include "object/interface/evolutioneditinterface.h"
 #include "types/time.h"
-
 
 namespace MO {
 namespace GL { class Shader; class Uniform; class Texture; }
 
-class UserUniformSetting : public QObject
+class UserUniformSetting
+        : public QObject
 {
     Q_OBJECT
 public:

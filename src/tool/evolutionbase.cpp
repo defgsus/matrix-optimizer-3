@@ -19,6 +19,7 @@
 
 #include "evolutionbase.h"
 #include "math/random.h"
+#include "math/functions.h"
 #include "types/properties.h"
 #include "io/error.h"
 #include "io/version.h"
@@ -168,10 +169,20 @@ QStringList EvolutionBase::registeredClassNames()
     return list;
 }
 
+
+
+
+
+// ------------------------------ EvolutionVectorBase ------------------------------
+
 MO_REGISTER_EVOLUTION(EvolutionVectorBase)
 
-EvolutionVectorBase::EvolutionVectorBase(size_t size, bool resizeable)
+EvolutionVectorBase::EvolutionVectorBase(
+        size_t size, bool resizeable, size_t minSize, size_t maxSize)
     : p_vec_    (size)
+    , p_initSize_(size)
+    , p_minSize_(minSize)
+    , p_maxSize_(maxSize)
 {
     properties().set("seed",
               QObject::tr("seed"),
@@ -196,6 +207,13 @@ EvolutionVectorBase::EvolutionVectorBase(size_t size, bool resizeable)
               QObject::tr("shrink probability"),
               QObject::tr("Probability of a random deletion"),
               0.01, 0., 1., 0.01);
+        properties().set("init_length",
+              QObject::tr("init length"),
+              QObject::tr("The length of the sequence on creation"),
+              (unsigned)size);
+        properties().setMin("init_length", (unsigned)minSize);
+        if (maxSize > 0)
+            properties().setMax("init_length", (unsigned)maxSize);
     }
 
     properties().set("init_mean",
@@ -213,6 +231,14 @@ EvolutionVectorBase::EvolutionVectorBase(size_t size, bool resizeable)
                           "close to mean (<1) or +/- variance (>1)"),
               1., 0.1);
     properties().setMin("init_dev", 0.0001);
+}
+
+uint8_t EvolutionVectorBase::vectorByte(size_t idx) const
+{
+    if (idx >= vector().size())
+        return 0;
+
+    return int(MATH::moduloSigned(p_vec_[idx], 1.) * 256.);
 }
 
 void EvolutionVectorBase::serialize(QJsonObject& obj) const
@@ -242,9 +268,12 @@ void EvolutionVectorBase::randomize()
     MATH::Twister rnd(properties().get("seed").toUInt());
     double  mean = properties().get("init_mean").toDouble(),
             var = properties().get("init_var").toDouble(),
-            dev = 1./properties().get("init_dev").toDouble(),
-            grow = properties().get("grow_prob").toDouble(),
-            shrink = properties().get("shrink_prob").toDouble();
+            dev = 1./properties().get("init_dev").toDouble();
+
+    if (properties().has("init_length"))
+        vector().resize(properties().get("init_length").toUInt());
+    else
+        vector().resize(p_initSize_);
 
     for (auto& v : vector())
     {
@@ -253,20 +282,6 @@ void EvolutionVectorBase::randomize()
         v = mean + var * r;
     }
 
-    // grow
-    for (size_t i=0; i<vector().size(); ++i)
-    if (rnd() < grow)
-    {
-        double r = rnd() - rnd();
-        r = std::pow(std::abs(r), dev) * (r > 0. ? 1. : -1.);
-        r = mean + var * r;
-
-        vector().insert(vector().begin() + i, r);
-    }
-    // shrink
-    for (size_t i=0; i<vector().size(); ++i)
-    if (rnd() < shrink)
-        vector().erase(vector().begin() + i);
 }
 
 void EvolutionVectorBase::mutate()
@@ -285,7 +300,9 @@ void EvolutionVectorBase::mutate()
             v += amt * (rnd() - rnd());
 
     // grow
-    for (size_t i=0; i<vector().size(); ++i)
+    for (size_t i=0; i<vector().size()
+                     && (p_maxSize_ == 0 || vector().size() < p_maxSize_);
+         ++i)
     if (rnd() < grow)
     {
         double r = rnd() - rnd();
@@ -295,7 +312,7 @@ void EvolutionVectorBase::mutate()
         vector().insert(vector().begin() + i, r);
     }
     // shrink
-    for (size_t i=0; i<vector().size(); ++i)
+    for (size_t i=0; i<vector().size() && vector().size() > p_minSize_; ++i)
     if (rnd() < shrink)
         vector().erase(vector().begin() + i);
 }

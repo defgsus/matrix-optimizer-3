@@ -31,6 +31,9 @@ public:
     const QString& typeName() const Q_DECL_OVERRIDE { static QString s("callback"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_CALLBACK; }
 
+    QString baseValueString(bool ) const override { return QString(); }
+    QString valueString(const RenderTime& , bool ) const override { return QString(); }
+
     // ---------------- getter -----------------
 
     std::function<void()> getCallback() const { return p_func_; }

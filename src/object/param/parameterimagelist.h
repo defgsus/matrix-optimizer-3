@@ -33,6 +33,9 @@ public:
     const QString& typeName() const { static QString s("imagelist"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_TEXT; }
 
+    QString baseValueString(bool ) const override { return "XXX"; }
+    QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
+
     Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
 
     // ---------------- getter -----------------

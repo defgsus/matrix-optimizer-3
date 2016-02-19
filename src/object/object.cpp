@@ -24,6 +24,7 @@
 #include "util/objecteditor.h"
 #include "util/audioobjectconnections.h"
 #include "util/objectconnectiongraph.h"
+#include "util/parameterevolution.h"
 #include "math/transformationbuffer.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -63,6 +64,7 @@ void ObjectPrivate::deleteChildren(Object* o)
 Object::Object(QObject *parent)
     : QObject                   (parent)
     , p_parameters_             (0)
+    , p_paramEvo_               (0)
     , p_paramActiveScope_       (0)
     , p_paramActive_            (0)
     , p_canBeDeleted_           (true)
@@ -89,12 +91,15 @@ Object::Object(QObject *parent)
     {
         setParentObject_(o);
     }
+
+    addEvolutionKey(tr("Parameters"));
 }
 
 Object::~Object()
 {
     MO_DEBUG("Object(\"" << namePath() << "\")::~Object()");
 
+    delete p_paramEvo_;
     delete p_aoCons_;
 
     // release references on childs
@@ -1192,8 +1197,8 @@ void Object::createParameters()
 
     params()->beginParameterGroup("active", tr("activity"));
 
-    p_paramActiveScope_ =
-        params()->createSelectParameter("_activescope", tr("activity scope"),
+        p_paramActiveScope_ =
+            params()->createSelectParameter("_activescope", tr("activity scope"),
                             strTip,
                             { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
                               "prev1r", "prev2r", "prev3r" },
@@ -1206,12 +1211,14 @@ void Object::createParameters()
                               AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
                               AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                               AS_ON, true, false );
+        p_paramActiveScope_->setEvolvable(false);
 
         /// @todo live activity parameter should apply to children as well!
         p_paramActive_ = params()->createFloatParameter("_active_f", tr("active"),
                             tr("A value greater than 0.0 makes the object active"
                                " - this does CURRENTLY NOT apply to child objects"),
                             1., 1.);
+        p_paramActive_->setEvolvable(false);
 
     params()->endParameterGroup();
 }
@@ -1478,5 +1485,37 @@ void Object::setErrorMessage(const QString &errorString) const
     p_errorStr_.append(errorString);
 }
 
+
+const EvolutionBase* Object::getEvolution(const QString& key) const
+{
+    if (key == tr("Parameters"))
+    {
+        if (!p_paramEvo_)
+            p_paramEvo_ = new ParameterEvolution(const_cast<Object*>(this));
+        return p_paramEvo_;
+    }
+    return nullptr;
+}
+
+/** Sets new specimen */
+void Object::setEvolution(const QString& key, const EvolutionBase* evobase)
+{
+    if (key == tr("Parameters"))
+    {
+        auto evo = dynamic_cast<const ParameterEvolution*>(evobase);
+        if (!evo)
+            return;
+        MO_ASSERT(evo->object() == this, "Wrong ParameterEvolution given to Object::setEvolution()");
+        if (evo->object() != this)
+            return;
+
+        if (!p_paramEvo_)
+            p_paramEvo_ = evo->createClone();
+        else
+            p_paramEvo_->copyFrom(evo);
+
+        evo->applyParametersToObject(true);
+    }
+}
 
 } // namespace MO

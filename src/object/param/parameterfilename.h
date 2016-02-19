@@ -35,6 +35,12 @@ public:
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 
+    QString baseValueString(bool inShort) const override
+        { auto s = baseValue(); if (inShort && s.size()>25) { s.resize(23); s += ".."; }
+          return s; }
+    QString valueString(const RenderTime& , bool inShort) const override
+        { return baseValueString(inShort); }
+
     // ---------------- getter -----------------
 
     QString value() const { return value_; }

@@ -20,6 +20,7 @@
 #include "math/random.h"
 #include "types/properties.h"
 #include "io/error.h"
+#include "io/time.h"
 
 namespace MO {
 
@@ -202,6 +203,11 @@ void EvolutionPool::setLocked(size_t idx, bool locked)
 {
     if (idx < p_->tiles.size())
         p_->tiles[idx].isLocked = locked;
+}
+
+void EvolutionPool::setRandomSeed()
+{
+    p_->rnd.setSeed(long(systemTime()) % 0xffff);
 }
 
 void EvolutionPool::setProperties(const Properties& m, bool keepSeed)

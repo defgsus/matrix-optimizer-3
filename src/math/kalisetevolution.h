@@ -75,6 +75,11 @@ public:
     double pMagicX(size_t i) const { return std::abs(vector(17+i*3)); }
     double pMagicY(size_t i) const { return std::abs(vector(18+i*3)); }
     double pMagicZ(size_t i) const { return std::abs(vector(19+i*3)); }
+
+    void setPScale(double v) { vector(13) = v; }
+    void setPPosX(double v) { vector(14) = v; }
+    void setPPosY(double v) { vector(15) = v; }
+    void setPPosZ(double v) { vector(16) = v; }
 };
 
 

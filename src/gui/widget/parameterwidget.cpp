@@ -528,7 +528,7 @@ void ParameterWidget::createWidgets_()
         connect(butedit, &QToolButton::clicked, [=]()
         {
 #if 1
-            ptxt->openEditDialog( application()->mainWindow() );
+            ptxt->openEditDialog();// application()->mainWindow() );
 #else
             // XXX works but is not fully integrated yet
             auto w = ptxt->createEditWidget( application()->mainWindow() );

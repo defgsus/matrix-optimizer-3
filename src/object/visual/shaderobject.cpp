@@ -70,6 +70,7 @@ void ShaderObject::createParameters()
     ObjectGl::createParameters();
 
     params()->beginParameterGroup("res", tr("resolution and format"));
+    params()->beginEvolveGroup(false);
 
         p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
                                       1024, 16, 4096*4, 16, true, false);
@@ -85,7 +86,8 @@ void ShaderObject::createParameters()
         p_texType_ = params()->createTextureTypeParameter("texture_type", tr("texture type"),
                                                     tr("The type-per-channel of the output texture"));
 
-        params()->endParameterGroup();
+    params()->endEvolveGroup();
+    params()->endParameterGroup();
 
     params()->beginParameterGroup("shader", tr("shader"));
     initParameterGroupExpanded("shader");
@@ -102,6 +104,8 @@ void ShaderObject::createParameters()
         p_passes_ = params()->createIntParameter("passes", tr("number of passes"),
                                     tr("Runs the shader multiple times, reusing the previous output as input for each pass"),
                                     1,  1, 4096,  1, true, true);
+        p_passes_->setEvolvable(false);
+
     params()->endParameterGroup();
 
 
@@ -113,6 +117,7 @@ void ShaderObject::createParameters()
 
 
     params()->beginParameterGroup("output", tr("output"));
+    params()->beginEvolveGroup(false);
 
         p_enableOut_ = params()->createBooleanParameter("master_out", tr("enable"),
                            tr("Enables or disables sampling the output to the main framebuffer"),
@@ -142,6 +147,7 @@ void ShaderObject::createParameters()
                       1,
                       1, 16, 1, true, false);
 
+    params()->endEvolveGroup();
     params()->endParameterGroup();
 }
 

@@ -37,6 +37,9 @@ public:
 
     virtual Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 
+    QString baseValueString(bool ) const override { return "XXX"; }
+    QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
+
     // ---------------- getter -----------------
 
     Double minValue() const { return minValue_; }

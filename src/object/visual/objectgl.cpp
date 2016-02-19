@@ -86,6 +86,7 @@ void ObjectGl::createParameters()
             { UM_ALWAYS, UM_ON_CHANGE },
             p_defaultUpdateMode_, true, false);
         p_paramUpdateMode_->setVisible(p_updateModeVisible_);
+        p_paramUpdateMode_->setEvolvable(false);
 
     params()->endParameterGroup();
 
@@ -93,6 +94,7 @@ void ObjectGl::createParameters()
     if (p_enableCreateRenderSettings_)
     {
         params()->beginParameterGroup("renderset", tr("render settings"));
+        params()->beginEvolveGroup(false);
 
             p_paramDepthTest_ = params()->createSelectParameter("rendset_dtm", tr("depth testing"),
                 tr("Selects whether a test against the depth-map should be performed"),
@@ -129,6 +131,7 @@ void ObjectGl::createParameters()
                 CM_PARENT,
                 true, false);
 
+        params()->endEvolveGroup();
         params()->endParameterGroup();
     }
 }

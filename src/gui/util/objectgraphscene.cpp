@@ -58,6 +58,8 @@
 #include "io/application.h"
 #include "io/log.h"
 
+#include "object/util/parameterevolution.h"
+
 namespace MO {
 namespace GUI {
 
@@ -1744,6 +1746,25 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
             });
         }
     }
+
+    /*
+//#ifndef MO_DISABLE_EXP
+    // XXX Hack EvolutionDialog
+    if (dynamic_cast<ValueTextureInterface*>(obj))
+    {
+        a = actions.addAction(tr("Evolve parameters"), scene);
+        a->setStatusTip(tr("Opens the evolution dialog for editing the specimen"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new EvolutionDialog();
+            auto evo = new ParameterEvolution(obj);
+
+            diag->setEditSpecimen(evo);
+            diag->show();
+        });
+    }
+//#endif
+    */
 
     actions.addSeparator(scene);
 

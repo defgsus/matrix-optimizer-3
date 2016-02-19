@@ -211,8 +211,9 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(objectsDeleted(QList<MO::Object*>)), this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     connect(objectEditor_, SIGNAL(sequenceChanged(MO::Sequence*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(valueFloatChanged(MO::ValueFloatInterface*)), this, SLOT(onValueFloatChanged_()));
-    connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onParamChanged_()));
+    connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(parametersChanged()), this, SLOT(onSceneChanged_()));
     connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
     {

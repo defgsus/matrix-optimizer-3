@@ -70,7 +70,8 @@ KaliSetTO::KaliSetTO(QObject *parent)
 {
     setName("KaliSet");
     initMaximumTextureInputs(0);
-    addEvolutionKey("kaliset");
+
+    addEvolutionKey(tr("Kali-Set"));
 }
 
 KaliSetTO::~KaliSetTO()
@@ -465,7 +466,13 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
 
 const EvolutionBase* KaliSetTO::getEvolution(const QString& key) const
 {
-    return (key == "kaliset") ? p_->evo : nullptr;
+    if (key != "kaliset" || !p_->evo)
+        return Object::getEvolution(key);
+    p_->evo->setPScale(p_->p_scale->baseValue());
+    p_->evo->setPPosX(p_->p_offsetX->baseValue());
+    p_->evo->setPPosY(p_->p_offsetY->baseValue());
+    p_->evo->setPPosZ(p_->p_offsetZ->baseValue());
+    return p_->evo;
 }
 
 void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
@@ -477,18 +484,16 @@ void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
     auto k = dynamic_cast<const KaliSetEvolution*>(evo);
     p_->evo = k ? k->createClone() : nullptr;
 
-    if (p_->p_calcMode->baseValue() == 1)
+    if (p_->p_calcMode->baseValue() == 1 && k)
     {
-        if (k)
-        {
-            p_->p_paramZ->setValue(0.);
-            p_->p_offsetX->setValue(k->pPosX());
-            p_->p_offsetY->setValue(k->pPosY());
-            p_->p_offsetZ->setValue(k->pPosZ());
-            p_->p_scale->setValue(k->pScale());
-            p_->p_scaleX->setValue(1.);
-            p_->p_scaleY->setValue(1.);
-        }
+        p_->p_paramZ->setValue(0.);
+        p_->p_offsetX->setValue(k->pPosX());
+        p_->p_offsetY->setValue(k->pPosY());
+        p_->p_offsetZ->setValue(k->pPosZ());
+        p_->p_scale->setValue(k->pScale());
+        p_->p_scaleX->setValue(1.);
+        p_->p_scaleY->setValue(1.);
+
         if (editor())
             emit editor()->parametersChanged();
 

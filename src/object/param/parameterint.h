@@ -33,6 +33,11 @@ public:
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 
+    QString baseValueString(bool ) const override
+        { return QString::number(baseValue()); }
+    QString valueString(const RenderTime& t, bool ) const override
+        { return QString::number(value(t)); }
+
     // ---------------- getter -----------------
 
     Int defaultValue() const { return defaultValue_; }

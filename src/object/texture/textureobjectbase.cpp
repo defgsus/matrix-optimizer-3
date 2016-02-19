@@ -251,6 +251,7 @@ void TextureObjectBase::PrivateTO::createParameters()
     if (hasInternalFbo)
     {
         to->params()->beginParameterGroup("to_res", tr("resolution and format"));
+        to->params()->beginEvolveGroup(false);
 
             p_resMode  = to->params()->createSelectParameter("to_res_mode", tr("resolution"),
                         tr("Selects how the resolution is defined"),
@@ -289,6 +290,7 @@ void TextureObjectBase::PrivateTO::createParameters()
             /** @todo fix split/segmentation in TextureObjectBase */
             p_split->setZombie(true);
 
+        to->params()->endEvolveGroup();
         to->params()->endParameterGroup();
     }
 
@@ -333,6 +335,7 @@ void TextureObjectBase::PrivateTO::createParameters()
     }
 
     to->params()->beginParameterGroup("to_output", tr("master output"));
+    to->params()->beginEvolveGroup(false);
 
         p_enableOut = to->params()->createBooleanParameter("to_master_out", tr("enable"),
                            tr("Enables or disables rendering the output to the main framebuffer"),
@@ -362,6 +365,7 @@ void TextureObjectBase::PrivateTO::createParameters()
                       1,
                       1, 16, 1, true, false);
 
+    to->params()->endEvolveGroup();
     to->params()->endParameterGroup();
 }
 

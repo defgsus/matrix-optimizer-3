@@ -102,6 +102,11 @@ public:
     /** Ends the current Parameter group */
     void endParameterGroup();
 
+    /** Any following created parameter will have set it's Parameter::isEvolvable() setting */
+    void beginEvolveGroup(bool evolvable);
+    /** Any following created parameter's Parameter::isEvolvable() setting is left alone */
+    void endEvolveGroup();
+
     /** Creates the desired parameter,
         or returns an already created parameter object.
         When the Parameter was present before, all it's settings are still overwritten.
@@ -220,10 +225,13 @@ public:
             const QString& id, const QString& name, const QString& statusTip);
 private:
 
+    void p_finishParam_(Parameter*) const;
+
     Object * object_;
     QList<Parameter*> parameters_;
     QString curGroupId_,
             curGroupName_;
+    bool isEvolve_, isEvolveGroup_;
 };
 
 } // namespace MO

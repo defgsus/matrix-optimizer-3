@@ -10,6 +10,8 @@
 
 #include <QLayout>
 #include <QPushButton>
+#include <QPlainTextEdit>
+#include <QMessageBox>
 
 #include "evolutiondialog.h"
 #include "widget/evolutionarea.h"
@@ -38,6 +40,7 @@ struct EvolutionDialog::Private
     void updateButtons();
     void createWidgets();
     void applyProps();
+    void onSelected();
 
     EvolutionDialog * win;
 
@@ -45,6 +48,7 @@ struct EvolutionDialog::Private
 
     EvolutionArea * area;
     PropertiesScrollView *propView;
+    QPlainTextEdit * textView;
     QPushButton * butLeft, *butRight, *butOk, *butApply;
     bool isEdit;
 };
@@ -78,13 +82,14 @@ void EvolutionDialog::Private::createWidgets()
 
         area = new EvolutionArea(win);
         lh->addWidget(area, 3);
-        connect(area, &EvolutionArea::selected, [=]() { updateButtons(); });
+        connect(area, &EvolutionArea::selected, [=]() { onSelected(); });
         connect(area, &EvolutionArea::propertiesChanged, [=]() { updateProps(); });
         connect(area, &EvolutionArea::historyChanged, [=]()
         {
             butLeft->setEnabled(area->hasHistory());
             butRight->setEnabled(area->hasFuture());
         });
+        area->pool().setRandomSeed();
 
         auto lv = new QVBoxLayout();
         lh->addLayout(lv, 1);
@@ -109,7 +114,7 @@ void EvolutionDialog::Private::createWidgets()
                 area->update();
             });
 
-            but = new QPushButton(tr("cross-breed"), win);
+            but = new QPushButton(tr("cross-mate"), win);
             lv->addWidget(but);
             connect(but, &QPushButton::pressed, [=]()
             {
@@ -125,18 +130,25 @@ void EvolutionDialog::Private::createWidgets()
                 applyProps();
             });
 
+            // text view
+            textView = new QPlainTextEdit(win);
+            lv->addWidget(textView);
+            textView->setReadOnly(true);
+
+            // dialog buttons
             lh1 = new QHBoxLayout;
             lv->addLayout(lh1);
-
-                butOk = new QPushButton("Ok", win);
-                lh1->addWidget(butOk);
-                connect(butOk, &QPushButton::clicked, [=]()
-                    { if (area->selectedSpecimen()) emit win->apply(); win->accept(); });
 
                 butApply = new QPushButton("Apply", win);
                 lh1->addWidget(butApply);
                 connect(butApply, &QPushButton::clicked, [=]()
                     { if (area->selectedSpecimen()) emit win->apply(); });
+
+                butOk = new QPushButton("Ok && Close", win);
+                butOk->setDefault(true);
+                lh1->addWidget(butOk);
+                connect(butOk, &QPushButton::clicked, [=]()
+                    { if (area->selectedSpecimen()) emit win->apply(); win->accept(); });
 
                 updateButtons();
 }
@@ -167,11 +179,24 @@ void EvolutionDialog::Private::updateButtons()
 {
     butOk->setVisible(isEdit);
     butApply->setVisible(isEdit);
-    bool en = area->selectedSpecimen() != nullptr;
-    butOk->setEnabled(en);
-    butApply->setEnabled(en);
+    bool isSel = area->selectedSpecimen() != nullptr;
+    butOk->setEnabled(isSel);
+    butApply->setEnabled(isSel);
 }
 
+void EvolutionDialog::Private::onSelected()
+{
+    updateButtons();
+    auto evo = area->selectedSpecimen();
+    if (!evo)
+    {
+        textView->clear();
+    }
+    else
+    {
+        textView->setPlainText(evo->toString());
+    }
+}
 EvolutionBase* EvolutionDialog::selectedSpecimen() const
 {
     return p_->area->selectedSpecimen();
@@ -186,6 +211,7 @@ void EvolutionDialog::setEditSpecimen(const EvolutionBase* evo)
         p_->area->pool().setSpecimen(0, s);
         s->releaseRef();
         p_->area->pool().repopulateFrom(0);
+        p_->updateProps();
     }
     p_->area->update();
     p_->updateButtons();
@@ -194,12 +220,24 @@ void EvolutionDialog::setEditSpecimen(const EvolutionBase* evo)
 EvolutionDialog* EvolutionDialog::openForInterface(
         EvolutionEditInterface* iface, const QString& key)
 {
+    // put existing to front
     if (auto diag = iface->getAttachedEvolutionDialog(key))
     {
         diag->show();
+        diag->raise();
         return diag;
     }
 
+    // get specimen
+    auto evo = iface->getEvolution(key);
+    if (!evo)
+    {
+        QMessageBox::critical(0, tr("evolution"),
+                    tr("The '%1' set can not be retrieved for evolution").arg(key));
+        return nullptr;
+    }
+
+    // create new
     auto diag = new EvolutionDialog();
     diag->setAttribute(Qt::WA_DeleteOnClose);
 
@@ -207,7 +245,7 @@ EvolutionDialog* EvolutionDialog::openForInterface(
         diag->setWindowTitle(obj->namePath() + " " + tr("evolution"));
 
     iface->setAttachedEvolutionDialog(key, diag);
-    diag->setEditSpecimen(iface->getEvolution(key));
+    diag->setEditSpecimen(evo);
 
     connect(diag, &EvolutionDialog::destroyed, [=]()
     {
@@ -233,6 +271,7 @@ EvolutionDialog* EvolutionDialog::openForInterface(
     return diag;
 
 }
+
 
 } // namespace GUI
 } // namespace MO

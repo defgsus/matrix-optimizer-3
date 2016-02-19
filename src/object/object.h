@@ -22,6 +22,7 @@
 
 #include "object_fwd.h"
 #include "interface/valuetransformationinterface.h"
+#include "interface/evolutioneditinterface.h"
 #include "types/int.h"
 #include "types/vector.h"
 #include "types/time.h"
@@ -92,8 +93,9 @@ public:
 /** Abstract base of all Objects in MO
 
 */
-class Object : public QObject,
-               public ValueTransformationInterface
+class Object : public QObject
+             , public ValueTransformationInterface
+             , public EvolutionEditInterface
 {
     Q_OBJECT
 
@@ -821,6 +823,11 @@ public:
         Always call the ancestor's method before your derived code. */
     virtual void getNeededFiles(IO::FileList & files) { Q_UNUSED(files); }
 
+    // -------------- EvolutionEditInterface ---------
+
+    virtual const EvolutionBase* getEvolution(const QString& key) const override;
+    virtual void setEvolution(const QString& key, const EvolutionBase*) override;
+
 signals:
 
 public slots:
@@ -853,6 +860,7 @@ private:
     // ---------- parameter s-----------------
 
     Parameters * p_parameters_;
+    mutable ParameterEvolution* p_paramEvo_;
 
     void p_passDownActivityScope_(ActivityScope parent_scope);
 

@@ -19,7 +19,7 @@ namespace MO {
 MO_REGISTER_EVOLUTION(KaliSetEvolution)
 
 KaliSetEvolution::KaliSetEvolution()
-    : EvolutionVectorBase(50, true)
+    : EvolutionVectorBase(50, true, 20)
 {
 
 }

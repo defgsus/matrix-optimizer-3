@@ -33,6 +33,10 @@ public:
     virtual QString getDocType() const Q_DECL_OVERRIDE;
     virtual QString getDocValues() const Q_DECL_OVERRIDE;
 
+    QString baseValueString(bool ) const override { return valueName(); }
+    QString valueString(const RenderTime& , bool ) const override
+        { return valueName() + "XXX"; }
+
     // ------------- getter ---------------
 
     /** Only has two values and should be displayed as checkbox */
