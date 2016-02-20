@@ -125,6 +125,7 @@ void Camera::createParameters()
                                             tr("Far plane of camera frustum - everything farther away can not be drawn"),
                                             1000.0,
                                             0.00002, 100000.0, 1.0);
+        params()->beginEvolveGroup(false);
 
         p_tex_format_ = params()->createTextureFormatParameter("fbo_format", tr("framebuffer format"),
                                                     tr("The channel format of the framebuffer"));
@@ -143,6 +144,7 @@ void Camera::createParameters()
                                   tr("Number of multi-samples in framebuffer to avoid aliasing"),
                                   0, 0, 16, 1,
                                   true, false);
+        params()->endEvolveGroup();
     params()->endParameterGroup();
 
     params()->beginParameterGroup("camobjects", tr("rendered objects"));
@@ -173,10 +175,12 @@ void Camera::createParameters()
         p_backA_ = params()->createFloatParameter("cambacka", tr("alpha"),
                                       tr("Alpha amount of background color"),
                                       1.0, 0.0, 1.0, 0.1);
+        p_backA_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 
     params()->beginParameterGroup("output", tr("master output"));
+    params()->beginEvolveGroup(false);
 
         p_enableOut_ = params()->createBooleanParameter("master_out", tr("enable"),
                        tr("Enables or disables sampling the output to the main framebuffer"),
@@ -197,6 +201,7 @@ void Camera::createParameters()
                                                 tr("Linear interpolation"),
                                                 true,
                                                 true, false);
+    params()->endEvolveGroup();
     params()->endParameterGroup();
 }
 

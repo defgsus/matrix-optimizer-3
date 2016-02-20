@@ -78,6 +78,7 @@ void Sprite::createParameters()
         cg_ = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
         cb_ = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
         ca_ = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+        ca_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 

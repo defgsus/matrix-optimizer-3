@@ -122,6 +122,7 @@ void ColorTO::Private::createParameters()
                     tr("Defines the opaqueness/transparency of the output [0,1]"),
                     1.0,
                     0.0, 1.0, 0.05);
+        p_a->setDefaultEvolvable(false);
 
         p_sat = to->params()->createFloatParameter(
                     "saturation", tr("saturation"), tr("Saturation"), 1.0,  0.0, 1.,  0.1);

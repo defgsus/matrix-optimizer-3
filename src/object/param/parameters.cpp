@@ -295,7 +295,7 @@ void Parameters::p_finishParam_(Parameter* param) const
 {
     param->setGroup(curGroupId_, curGroupName_);
     if (isEvolveGroup_)
-        param->setEvolvable(isEvolve_);
+        param->setDefaultEvolvable(isEvolve_);
 }
 
 ParameterFloat * Parameters::createFloatParameter(
@@ -619,6 +619,7 @@ ParameterFilename * Parameters::createFilenameParameter(
     param->setFileType(fileType);
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
+    param->setDefaultEvolvable(false);
 
     p_finishParam_(param);
 
@@ -664,6 +665,7 @@ ParameterImageList* Parameters::createImageListParameter(
     param->setEditable(editable);
     param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
+    param->setDefaultEvolvable(false);
 
     p_finishParam_(param);
 
@@ -708,6 +710,7 @@ ParameterCallback * Parameters::createCallbackParameter(
     param->setEditable(false);
     param->setStatusTip(statusTip);
     param->setCallback(callback);
+    param->setDefaultEvolvable(false);
 
     p_finishParam_(param);
 
@@ -749,6 +752,7 @@ ParameterTexture * Parameters::createTextureParameter(
     param->setModulateable(true);
     param->setEditable(false);
     param->setStatusTip(statusTip);
+    param->setDefaultEvolvable(false);
 
     p_finishParam_(param);
 
@@ -790,6 +794,7 @@ ParameterGeometry * Parameters::createGeometryParameter(
     param->setModulateable(true);
     param->setEditable(false);
     param->setStatusTip(statusTip);
+    param->setDefaultEvolvable(false);
 
     p_finishParam_(param);
 

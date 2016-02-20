@@ -45,6 +45,9 @@ public:
     Double maxValue() const { return maxValue_; }
     Double smallStep() const { return smallStep_; }
 
+    bool isMinLimit() const;
+    bool isMaxLimit() const;
+
     Double value(const RenderTime& time) const
         { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time) )); }
     Double baseValue() const { return value_; }

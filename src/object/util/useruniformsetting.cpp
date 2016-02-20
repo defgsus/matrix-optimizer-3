@@ -88,6 +88,7 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
             { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_TEX, UT_TEX_C, UT_T1, UT_T2, UT_T3, UT_T4 },
             0,
             true, false);
+        u.p_type->setDefaultEvolvable(false);
 
         u.p_name = params->createTextParameter(("uniformname%1_" + id_suffix).arg(i),
                                                tr("uniform%1 name").arg(i + 1),
@@ -95,12 +96,14 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
                                                TT_PLAIN_TEXT,
                                                "",
                                                true, false);
+        u.p_name->setDefaultEvolvable(false);
 
         u.p_length = params->createIntParameter(("uniformtexlen%1_" + id_suffix).arg(i),
                                                 tr("uniform%1 length").arg(i + 1),
                                                 tr("The length of the array / texture width"),
                                                 1024, 16, 16384,
                                                 16, true, false);
+        u.p_length->setDefaultEvolvable(false);
 
         u.p_timerange = params->createFloatParameter(
                                                 ("uniformtextime%1_" + id_suffix).arg(i),

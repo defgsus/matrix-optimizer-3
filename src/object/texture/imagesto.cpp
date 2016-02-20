@@ -68,6 +68,7 @@ void ImagesTO::createParameters()
                        "0 means no mip-maps"),
                     0, true, false);
         pMipmaps_->setMinValue(0);
+        pMipmaps_->setDefaultEvolvable(false);
 
         pIndex_ = params()->createIntParameter(
                     "index", tr("image index"),

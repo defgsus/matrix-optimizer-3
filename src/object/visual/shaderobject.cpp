@@ -104,7 +104,7 @@ void ShaderObject::createParameters()
         p_passes_ = params()->createIntParameter("passes", tr("number of passes"),
                                     tr("Runs the shader multiple times, reusing the previous output as input for each pass"),
                                     1,  1, 4096,  1, true, true);
-        p_passes_->setEvolvable(false);
+        p_passes_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 
@@ -132,6 +132,7 @@ void ShaderObject::createParameters()
                       tr("Defines the opaqueness/transparency of the output [0,1]"),
                       1.0,
                       0.0, 1.0, 0.05);
+        p_out_a_->setDefaultEvolvable(false);
 
         alphaBlend_.createParameters(AlphaBlendSetting::M_MIX, false, "_", "_out");
 

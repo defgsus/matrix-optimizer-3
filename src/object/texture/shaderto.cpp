@@ -155,6 +155,7 @@ void ShaderTO::Private::createParameters()
         p_g = to->params()->createFloatParameter("green", tr("green"), tr("Green amount of output"), 1.0,  0.,1.,  0.025);
         p_b = to->params()->createFloatParameter("blue", tr("blue"), tr("Blue amount of output"), 1.0,  0.,1.,  0.025);
         p_a = to->params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of output"), 1.0,  0.,1.,  0.025);
+        p_a->setDefaultEvolvable(false);
 
     to->params()->endParameterGroup();
 

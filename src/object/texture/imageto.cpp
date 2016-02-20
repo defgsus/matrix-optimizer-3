@@ -70,6 +70,7 @@ void ImageTO::createParameters()
                        "0 means no mip-maps"),
                     0, true, false);
         pMipmaps_->setMinValue(0);
+        pMipmaps_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 }

@@ -1211,14 +1211,14 @@ void Object::createParameters()
                               AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
                               AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                               AS_ON, true, false );
-        p_paramActiveScope_->setEvolvable(false);
+        p_paramActiveScope_->setDefaultEvolvable(false);
 
         /// @todo live activity parameter should apply to children as well!
         p_paramActive_ = params()->createFloatParameter("_active_f", tr("active"),
                             tr("A value greater than 0.0 makes the object active"
                                " - this does CURRENTLY NOT apply to child objects"),
                             1., 1.);
-        p_paramActive_->setEvolvable(false);
+        p_paramActive_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 }
@@ -1492,6 +1492,8 @@ const EvolutionBase* Object::getEvolution(const QString& key) const
     {
         if (!p_paramEvo_)
             p_paramEvo_ = new ParameterEvolution(const_cast<Object*>(this));
+        else
+            p_paramEvo_->updateFromObject();
         return p_paramEvo_;
     }
     return nullptr;

@@ -132,6 +132,7 @@ void NormalMapTO::Private::createParameters()
         p_g = to->params()->createFloatParameter("green", tr("green"), tr("Green contribution to bump value"), 1.0, 0.1);
         p_b = to->params()->createFloatParameter("blue", tr("blue"), tr("Blue contribution to bump value"), 1.0, 0.1);
         p_a = to->params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha contribution to bump value"), 1.0, 0.1);
+        p_a->setDefaultEvolvable(false);
 
         m_mul_alpha = to->params()->createBooleanParameter(
                     "mul_alpha", tr("multiply alpha"),

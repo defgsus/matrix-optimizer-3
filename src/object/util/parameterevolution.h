@@ -61,6 +61,7 @@ public:
     /** Creates/Overwrites an evolution entry for the Parameter */
     void setParameter(Parameter*);
 
+    void updateFromObject();
     void applyParametersToObject(bool updateGui) const;
 
 private:

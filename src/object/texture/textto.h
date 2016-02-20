@@ -54,7 +54,7 @@ private:
     ParameterInt * pMipmaps_;
     ParameterFloat * pSize_, *pR_, *pG_, *pB_, *pA_,
         *pbR_, *pbG_, *pbB_, *pbA_,
-        *pBorderSize_, *pCornerRad_;
+        *pBorderSize_, *pCornerRad_, *pPadX_, *pPadY_;
     ParameterSelect * pAlignH_, *pAlignV_, *pFit_,
         *pJoinStyle_, *pBackAlpha_;
     ParameterFont * pFont_;

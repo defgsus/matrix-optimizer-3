@@ -123,7 +123,7 @@ public:
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
     void setZombie(bool enable) { isZombie_ = enable; }
-    void setEvolvable(bool enable) { isEvolve_ = enable; }
+    void setDefaultEvolvable(bool enable) { isEvolve_ = enable; }
     /** Sets a specific flag/type for the gui widget initialization */
     void setSpecificFlag(SpecificFlag sf) { p_specFlag_ = sf; }
 

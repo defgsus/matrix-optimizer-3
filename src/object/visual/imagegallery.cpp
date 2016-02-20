@@ -118,6 +118,7 @@ void ImageGallery::createParameters()
                        "where each level is half the size of the previous level - 0 means no mip-mapping"),
                     0, true, false);
         mipmaps_->setMinValue(0);
+        mipmaps_->setDefaultEvolvable(false);
 
         paramMag_ = params()->createSelectParameter(
                     "image_mag", tr("magnification"),

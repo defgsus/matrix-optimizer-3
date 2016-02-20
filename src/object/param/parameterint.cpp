@@ -58,6 +58,8 @@ void ParameterInt::deserialize(IO::DataStream &io)
     value_ = v;
 }
 
+bool ParameterInt::isMinLimit() const { return minValue() > -infinity; }
+bool ParameterInt::isMaxLimit() const { return maxValue() < infinity; }
 
 QString ParameterInt::getDocType() const
 {

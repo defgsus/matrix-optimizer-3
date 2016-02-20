@@ -153,6 +153,8 @@ void KaliSetTO::Private::createParameters()
           tr("Renderer based on interactive evolution") },
         { 0, 1 },
                     0, true, false);
+        p_calcMode->setDefaultEvolvable(false);
+
         p_numDim = to->params()->createSelectParameter(
                     "num_dim", tr("dimensions"),
                     tr("The number of dimensions to use in the formula"),
@@ -225,6 +227,7 @@ void KaliSetTO::Private::createParameters()
                     tr("Square root of the number of multi-samples"),
                     0, true, false);
         p_AntiAlias_->setMinValue(0);
+        p_AntiAlias_->setDefaultEvolvable(false);
 
         p_colMode = to->params()->createSelectParameter(
             "color_mode", tr("color mode"),
@@ -466,7 +469,7 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
 
 const EvolutionBase* KaliSetTO::getEvolution(const QString& key) const
 {
-    if (key != "kaliset" || !p_->evo)
+    if (key != tr("Kali-Set") || !p_->evo)
         return Object::getEvolution(key);
     p_->evo->setPScale(p_->p_scale->baseValue());
     p_->evo->setPPosX(p_->p_offsetX->baseValue());
@@ -477,8 +480,12 @@ const EvolutionBase* KaliSetTO::getEvolution(const QString& key) const
 
 void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
 {
-    if (key != "kaliset")
+    if (key != tr("Kali-Set"))
+    {
+        Object::setEvolution(key, evo);
         return;
+    }
+
     if (p_->evo)
         p_->evo->releaseRef();
     auto k = dynamic_cast<const KaliSetEvolution*>(evo);

@@ -185,6 +185,7 @@ void Oscillograph::createParameters()
         p_->paramG = params()->createFloatParameter("green", "green", tr("Green amount of ambient color"), 1.0, 0.1);
         p_->paramB = params()->createFloatParameter("blue", "blue", tr("Blue amount of ambient color"), 1.0, 0.1);
         p_->paramA = params()->createFloatParameter("alpha", "alpha", tr("Alpha amount of ambient color"), 1.0, 0.1);
+        p_->paramA->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 

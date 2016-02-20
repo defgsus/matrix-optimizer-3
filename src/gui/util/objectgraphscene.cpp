@@ -1736,35 +1736,17 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     // EvolutionDialog
     if (EvolutionEditInterface * evo = dynamic_cast<EvolutionEditInterface*>(obj))
     {
-        if (evo->evolutionKeys().size() == 1)
+        for (int i=0; i<evo->evolutionKeys().size(); ++i)
         {
-            a = actions.addAction(tr("Evolve %1").arg(evo->evolutionKeys()[0]), scene);
+            a = actions.addAction(tr("Evolve %1").arg(evo->evolutionKeys()[i]), scene);
             a->setStatusTip(tr("Opens the evolution dialog for editing the specimen"));
             connect(a, &QAction::triggered, [=]()
             {
-                EvolutionDialog::openForInterface(evo, evo->evolutionKeys()[0]);
+                EvolutionDialog::openForInterface(evo, evo->evolutionKeys()[i]);
             });
         }
     }
 
-    /*
-//#ifndef MO_DISABLE_EXP
-    // XXX Hack EvolutionDialog
-    if (dynamic_cast<ValueTextureInterface*>(obj))
-    {
-        a = actions.addAction(tr("Evolve parameters"), scene);
-        a->setStatusTip(tr("Opens the evolution dialog for editing the specimen"));
-        connect(a, &QAction::triggered, [=]()
-        {
-            auto diag = new EvolutionDialog();
-            auto evo = new ParameterEvolution(obj);
-
-            diag->setEditSpecimen(evo);
-            diag->show();
-        });
-    }
-//#endif
-    */
 
     actions.addSeparator(scene);
 

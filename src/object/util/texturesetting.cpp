@@ -74,6 +74,8 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
 {
     auto params = object_->params();
 
+    params->beginEvolveGroup(false);
+
     paramType_ = params->createSelectParameter(
             "_imgtype" + id_suffix, tr("image source"), tr("Type or source of the image data"),
             { "none", "param", "file", "master", "masterd" },
@@ -157,6 +159,7 @@ void TextureSetting::createParameters(const QString &id_suffix, TextureType defa
             { WM_CLAMP, WM_REPEAT, WM_MIRROR },
             WM_REPEAT, true, false);
 
+    params->endEvolveGroup();
 }
 
 bool TextureSetting::needsReinit(Parameter *p) const

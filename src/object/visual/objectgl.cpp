@@ -86,7 +86,7 @@ void ObjectGl::createParameters()
             { UM_ALWAYS, UM_ON_CHANGE },
             p_defaultUpdateMode_, true, false);
         p_paramUpdateMode_->setVisible(p_updateModeVisible_);
-        p_paramUpdateMode_->setEvolvable(false);
+        p_paramUpdateMode_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 

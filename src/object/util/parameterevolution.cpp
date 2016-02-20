@@ -20,6 +20,8 @@
 #include "object/interface/valuetextureinterface.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterint.h"
+#include "object/param/parameterselect.h"
 #include "object/util/objecteditor.h"
 #include "types/properties.h"
 #include "math/random.h"
@@ -44,7 +46,9 @@ struct ParameterEvolution::Private
     struct Param
     {
         Parameter* param;
-        Double valueFloat;
+        Double valueFloat, variance;
+        Int valueInt;
+        int valueSelect;
     };
 
     void getObjectParam(const Parameter*, Param*);
@@ -75,12 +79,12 @@ ParameterEvolution::ParameterEvolution(Object* obj)
     properties().set("mutation_prob",
               QObject::tr("mutation probability"),
               QObject::tr("Probability of a random change to a parameter"),
-              0.1, 0., 1., 0.025);
+              0.3, 0., 1., 0.025);
 
     properties().set("mutation_amount",
               QObject::tr("mutation amount"),
               QObject::tr("Maximum change per mutation"),
-              0.3, 0.025);
+              0.4, 0.025);
     properties().setMin("mutation_amount", 0.);
 
     properties().set("init_mean",
@@ -130,6 +134,13 @@ void ParameterEvolution::serialize(QJsonObject& o) const
         Private::Param* param = &it.second;
         if (dynamic_cast<ParameterFloat*>(param->param))
             ar.insert(param->param->idName(), param->valueFloat);
+        else if (dynamic_cast<ParameterInt*>(param->param))
+            ar.insert(param->param->idName(), param->valueInt);
+        else if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
+        {
+            if (param->valueSelect >= 0 && param->valueSelect < ps->valueIds().size())
+                ar.insert(param->param->idName(), ps->valueIds()[param->valueSelect]);
+        }
     }
     o.insert("parameter", ar);
 }
@@ -148,6 +159,14 @@ void ParameterEvolution::deserialize(const QJsonObject& o)
     {
         if (dynamic_cast<ParameterFloat*>(param->param))
             param->valueFloat = obj.value(key).toDouble();
+        else if (dynamic_cast<ParameterInt*>(param->param))
+            param->valueInt = obj.value(key).toInt();
+        else if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
+        {
+            int i = ps->valueIds().indexOf( obj.value(key).toString() );
+            if (i>=0)
+                ps->setValue(i);
+        }
     }
 }
 
@@ -158,13 +177,35 @@ Object* ParameterEvolution::object() const { return p_->object; }
 void ParameterEvolution::Private::getObjectParam(const Parameter* opar, Param* par)
 {
     if (auto pf = dynamic_cast<const ParameterFloat*>(opar))
+    {
         par->valueFloat = pf->baseValue();
+        Double beg = pf->isMinLimit() ? pf->minValue() : 0.;
+        par->variance = .5 * std::max(2., pf->defaultValue() - beg);
+    }
+    else if (auto pi = dynamic_cast<const ParameterInt*>(opar))
+    {
+        par->valueInt = pi->baseValue();
+        Int beg = pi->minValue() > -pi->infinity ? pi->minValue() : 0;
+        par->variance = .5 * std::max(2, pi->defaultValue() - beg);
+    }
+    else if (auto ps = dynamic_cast<const ParameterSelect*>(opar))
+    {
+        par->valueSelect = ps->baseValue();
+        par->variance = (ps->valueList().size() - .3) * .618;
+    }
 }
 
 void ParameterEvolution::Private::setObjectParam(Parameter* opar, const Param* par)
 {
     if (auto pf = dynamic_cast<ParameterFloat*>(opar))
         pf->setValue(par->valueFloat);
+    else if (auto pi = dynamic_cast<ParameterInt*>(opar))
+        pi->setValue(par->valueInt);
+    else if (auto ps = dynamic_cast<ParameterSelect*>(opar))
+        ps->setValue(par->valueSelect);
+
+    if (object)
+        object->onParameterChanged(par->param);
 }
 
 void ParameterEvolution::setParameter(Parameter* p)
@@ -184,7 +225,6 @@ void ParameterEvolution::setParameter(Parameter* p)
                          param->param->isEvolvable());
     }
 
-    // assign
     p_->getObjectParam(param->param, param);
 }
 
@@ -195,7 +235,10 @@ void ParameterEvolution::Private::getObjectParams()
         return;
     for (auto par : object->params()->parameters())
         if (par->isVisible()
-                && dynamic_cast<ParameterFloat*>(par)
+                && (   dynamic_cast<ParameterFloat*>(par)
+                    || dynamic_cast<ParameterInt*>(par)
+                    || dynamic_cast<ParameterSelect*>(par)
+                    )
                 )
             p->setParameter(par);
 }
@@ -207,6 +250,7 @@ void ParameterEvolution::Private::setObjectParams()
 
     for (auto objPar : object->params()->parameters())
     if (auto param = getParam(objPar->idName()))
+    if (p->properties().get("_param_" + param->param->idName()).toBool())
     {
         setObjectParam(objPar, param);
     }
@@ -216,6 +260,11 @@ void ParameterEvolution::Private::updateGui()
 {
     if (object && object->editor())
         emit object->editor()->parametersChanged();
+}
+
+void ParameterEvolution::updateFromObject()
+{
+    p_->getObjectParams();
 }
 
 void ParameterEvolution::applyParametersToObject(bool updateGui) const
@@ -264,6 +313,7 @@ void ParameterEvolution::getImage(QImage &img) const
                     }
                     render.releaseGl();
     #else
+                    tex->bind();
                     img = tex->toQImage().scaled(img.size());
                     valid = true;
     #endif
@@ -305,7 +355,9 @@ QString ParameterEvolution::toString() const
 
         s << param->param->name()
           << ": " << param->param->baseValueString(true)
-          << " (" << param->param->getDocType() << ")"
+          << " (" << param->param->getDocType()
+          << ", var. " << param->variance
+          << ")"
           << "\n";
 
         p_->setObjectParam(param->param, &backup);
@@ -325,16 +377,33 @@ void ParameterEvolution::randomize()
     {
         Private::Param* param = &it->second;
 
-        if (!properties().get("_param_" + param->param->idName()).toBool())
-            continue;
+        bool doEvo = properties().get("_param_" + param->param->idName()).toBool();
 
         if (auto pf = dynamic_cast<ParameterFloat*>(param->param))
         {
             Double r = rnd() - rnd();
             r = std::pow(std::abs(r), dev) * (r > 0. ? 1. : -1.);
-            r = (mean + var * r);
+            r = mean + var * r * param->variance;
             r += pf->defaultValue();
-            param->valueFloat = std::max(pf->minValue(), std::min(pf->maxValue(), r ));
+            param->valueFloat = !doEvo ? pf->defaultValue() :
+                std::max(pf->minValue(), std::min(pf->maxValue(), r ));
+        }
+        if (auto pi = dynamic_cast<ParameterInt*>(param->param))
+        {
+            Double r = rnd() - rnd();
+            r = std::pow(std::abs(r), dev) * (r > 0. ? 1. : -1.);
+            r = mean + var * r * param->variance;
+            r += pi->defaultValue();
+            param->valueInt = !doEvo ? pi->defaultValue() :
+                std::max(pi->minValue(), std::min(pi->maxValue(), int(r) ));
+        }
+        if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
+        {
+            if (ps->valueList().size())
+            {
+                size_t idx = rnd.getUInt32() % ps->valueList().size();
+                param->valueSelect = !doEvo ? ps->defaultValue() : ps->valueList()[idx];
+            }
         }
     }
 
@@ -356,11 +425,27 @@ void ParameterEvolution::mutate()
 
         if (auto pf = dynamic_cast<ParameterFloat*>(param->param))
         {
-            Double val = mut_amt * (rnd() - rnd());
+            Double val = mut_amt * param->variance * (rnd() - rnd());
 
             param->valueFloat = std::max(pf->minValue(), std::min(pf->maxValue(),
                                     param->valueFloat + val ));
         }
+        if (auto pi = dynamic_cast<ParameterInt*>(param->param))
+        {
+            Int val = mut_amt * param->variance * (rnd() - rnd());
+
+            param->valueInt = std::max(pi->minValue(), std::min(pi->maxValue(),
+                                       param->valueInt + val ));
+        }
+        if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
+        {
+            if (ps->valueList().size())
+            {
+                size_t idx = rnd.getUInt32() % ps->valueList().size();
+                param->valueSelect = ps->valueList()[idx];
+            }
+        }
+
     }
 }
 

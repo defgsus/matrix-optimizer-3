@@ -106,6 +106,16 @@ void TextTO::createParameters()
                 { Qt::AlignTop, Qt::AlignBottom, Qt::AlignVCenter },
                 Qt::AlignVCenter, true, false);
 
+        pPadX_ = params()->createFloatParameter(
+                    "pad_x", tr("padding x"),
+                    tr("Distance to left or right border"),
+                    0.05,  -1., 1.,
+                    0.01, true, false);
+        pPadY_ = params()->createFloatParameter(
+                    "pad_y", tr("padding y"),
+                    tr("Distance to top or bottom border"),
+                    0.05,  -1., 1.,
+                    0.01, true, false);
         pMipmaps_ = params()->createIntParameter(
                     "mipmaps", tr("mip-map levels"),
                     tr("The maximum number of mip-map levels to create, "
@@ -113,6 +123,7 @@ void TextTO::createParameters()
                        "0 means no mip-maps"),
                     0, true, false);
         pMipmaps_->setMinValue(0);
+        pMipmaps_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 
@@ -131,6 +142,7 @@ void TextTO::createParameters()
         pA_ = params()->createFloatParameter(
                     "alpha", tr("alpha"), tr("Alpha amount of text color"),
                     1., 0.0, 1.0, 0.1, true, false);
+        pA_->setDefaultEvolvable(false);
 
         pbR_ = params()->createFloatParameter(
                     "back_red", tr("backg. red"), tr("Red amount of background color"),
@@ -192,6 +204,8 @@ void TextTO::onParameterChanged(Parameter * p)
             || p == pMipmaps_
             || p == pAlignH_
             || p == pAlignV_
+            || p == pPadX_
+            || p == pPadY_
             || p == pSize_
             || p == pFont_
             || p == pFit_
@@ -215,6 +229,9 @@ void TextTO::updateParameterVisibility()
 
     pCornerRad_->setVisible( pJoinStyle_->baseValue() == Qt::RoundJoin );
     pBackAlpha_->setVisible( pJoinStyle_->baseValue() != Qt::MiterJoin );
+
+    pPadX_->setVisible( pAlignH_->baseValue() != Qt::AlignHCenter);
+    pPadY_->setVisible( pAlignV_->baseValue() != Qt::AlignVCenter);
 }
 
 void TextTO::setText(const QString &text)
@@ -267,8 +284,19 @@ const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
         const int flags = pAlignH_->baseValue() | pAlignV_->baseValue();
         const int msize = std::min(img.width(), img.height());
         const qreal border = msize * .5 * pBorderSize_->baseValue(),
-                    hborder = .5 * border;
+                    hborder = .5 * border,
+                    padX = pPadX_->baseValue() * (img.width() - border),
+                    padY = pPadY_->baseValue() * (img.height() - border);
         const QRectF irect = QRectF(img.rect().adjusted(border, border, -border, -border));
+        QRectF frect = irect;
+        if (flags & Qt::AlignLeft)
+            frect.moveLeft(frect.left() + padX);
+        if (flags & Qt::AlignRight)
+            frect.moveRight(frect.right() - padX);
+        if (flags & Qt::AlignTop)
+            frect.moveTop(frect.top() + padY);
+        if (flags & Qt::AlignBottom)
+            frect.moveBottom(frect.bottom() - padY);
 
         // init background
         const QColor fillColor = QColor(std::max(0, std::min(255, int(255 * pbR_->baseValue()))),
@@ -345,7 +373,7 @@ const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
 
         // text
         p.setPen(txtpen);
-        p.drawText(irect,
+        p.drawText(frect,
                    flags,
                    pText_->baseValue());
 

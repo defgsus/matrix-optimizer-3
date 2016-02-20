@@ -106,6 +106,7 @@ void TextureOverlay::createParameters()
         cb_->setMinValue(0.0);
         ca_ = params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of color multiplier"), 1.0, 0.1);
         ca_->setMinValue(0.0);
+        ca_->setDefaultEvolvable(false);
 
    params()-> endParameterGroup();
 

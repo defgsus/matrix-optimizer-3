@@ -24,7 +24,7 @@ namespace { static int register_param = qMetaTypeId<MO::ParameterFloat*>(); }
 
 namespace MO {
 
-Double ParameterFloat::infinity = 1e100;
+Double ParameterFloat::infinity = 1e50;
 
 ParameterFloat::ParameterFloat(Object * object, const QString& id, const QString& name)
     :   Parameter(object, id, name),
@@ -56,13 +56,16 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+bool ParameterFloat::isMinLimit() const { return minValue()+10. > -infinity; }
+bool ParameterFloat::isMaxLimit() const { return maxValue()-10. < infinity; }
+
 QString ParameterFloat::getDocType() const
 {
     QString str = typeName();
 
     // get range string
-    bool limmin = minValue() > -infinity,
-         limmax = maxValue() < infinity;
+    bool limmin = isMinLimit(),
+         limmax = isMaxLimit();
     if (limmin || limmax)
     {
         if (limmin && limmax)
