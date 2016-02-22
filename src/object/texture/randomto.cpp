@@ -46,14 +46,17 @@ struct RandomTO::Private
             * p_amp_mul,
             * p_rnd_rot,
             * p_voro_cell,
-            * p_voro_smooth,
+            * p_smooth,
             * p_range_min,
             * p_range_max,
             * p_thresh,
             * p_recursive_x,
             * p_recursive_y,
             * p_recursive_z,
-            * p_recursive_w;
+            * p_recursive_w,
+            * p_shapeSize,
+            * p_rndShapePos,
+            * p_rndShapeSize;
     ParameterInt
             * p_seed,
             * p_steps;
@@ -73,9 +76,11 @@ struct RandomTO::Private
             * u_amp,
             * u_rnd_rotate,
             * u_voro,
+            * u_smooth,
             * u_mask,
             * u_max_steps,
-            * u_recursive;
+            * u_recursive,
+            * u_shape;
 
 };
 
@@ -137,13 +142,15 @@ void RandomTO::Private::createParameters()
         m_noise = to->params()->createSelectParameter(
                     "noise_type", tr("noise type"),
                     tr("The type of basis noise function"),
-                    { "0", "1", "2" },
-                    { tr("rectangular"), tr("rectangular noise"), tr("voronoi noise") },
+                    { "rect", "perlin", "iqvoronoise", "circle" },
+                    { tr("rectangular"), tr("rectangular noise"), tr("voronoi noise"),
+                      tr("circles") },
                     { tr("Hard-edged rectangular sections"),
                       tr("A typical Perlin-like noise function"),
-                      tr("Voronoi noise by Iñigo Quilez") },
-                    { 0, 1, 2 },
-                    1,
+                      tr("Voronoi noise by Iñigo Quilez"),
+                      tr("Randomly displaced circles") },
+                    { P_RECT, P_PERLIN, P_VORONOISE, P_CIRCLE },
+                    P_PERLIN,
                     true, false);
 
         p_seed = to->params()->createIntParameter(
@@ -154,16 +161,29 @@ void RandomTO::Private::createParameters()
                     "voro_cell", tr("voronoicity"),
                     tr("Mix between rectangular and voronoi shapes"), 1.0,  0.0, 1.,  0.05);
 
-        p_voro_smooth = to->params()->createFloatParameter(
-                    "voro_smooth", tr("smoothness"),
+        p_smooth = to->params()->createFloatParameter(
+                    "smoothness", tr("smoothness"),
                     tr("Mix between sharp-edged and smooth"), 1.0,  0.0, 1.,  0.05);
+        p_smooth->addSynonymId("voro_smooth");
 
+        p_shapeSize = to->params()->createFloatParameter(
+                    "shape_size", tr("shape size"),
+                    tr("Size (multiplier) of the shape"),
+                    1., 0., 1., 0.05);
+        p_rndShapeSize = to->params()->createFloatParameter(
+                    "rnd_shape_size", tr("random shape size"),
+                    tr("Randomness of the shape size"),
+                    .5, 0., 1., 0.05);
+        p_rndShapePos = to->params()->createFloatParameter(
+                    "rnd_shape_pos", tr("random shape position"),
+                    tr("Randomness of the shape position"),
+                    .5, 0., 1., 0.05);
 
         m_fractal = to->params()->createSelectParameter(
                     "fractal_type", tr("combination type"),
                     tr("The way the different noise layers are combined"),
                     { "0", "avg", "max", "rec" },//, "rnd" },
-                    { tr("off"), tr("weighted average"), tr("maximum"), tr("recursive") },//, tr("random") },
+                    { tr("off"), tr("average"), tr("maximum"), tr("recursive") },//, tr("random") },
                     { tr("One noise layer is produced"),
                       tr("Serveral layers of noise are combined by averaging"),
                       tr("The maximum value of all noise layers is used"),
@@ -308,8 +328,8 @@ void RandomTO::updateParameterVisibility()
     int fmode = p_->m_fractal->baseValue();
     bool mask = p_->m_mask->baseValue();
 
-    p_->p_voro_cell->setVisible(nmode == 2);
-    p_->p_voro_smooth->setVisible(nmode == 2);
+    p_->p_voro_cell->setVisible(nmode == P_VORONOISE);
+    p_->p_smooth->setVisible(nmode == P_VORONOISE || nmode == P_CIRCLE);
     p_->p_rnd_rot->setVisible(p_->m_rotate->baseValue());
     p_->p_amp_mul->setVisible(fmode == FM_AVERAGE || fmode == FM_MAX);
     p_->p_size_add->setVisible(fmode > 0 && fmode != FM_RANDOM);
@@ -322,6 +342,9 @@ void RandomTO::updateParameterVisibility()
     p_->p_recursive_y->setVisible(fmoder);
     p_->p_recursive_z->setVisible(fmoder);
     p_->p_recursive_w->setVisible(fmoder);
+    p_->p_shapeSize->setVisible(nmode == P_CIRCLE);
+    p_->p_rndShapeSize->setVisible(nmode == P_CIRCLE);
+    p_->p_rndShapePos->setVisible(nmode == P_CIRCLE);
 }
 
 
@@ -364,6 +387,8 @@ void RandomTO::Private::initGl()
     u_amp = shader->getUniform("u_amp", false);
     u_rnd_rotate = shader->getUniform("u_rnd_rotate", false);
     u_voro = shader->getUniform("u_voro", false);
+    u_smooth = shader->getUniform("u_smooth", false);
+    u_shape = shader->getUniform("u_shape", false);
     u_mask = shader->getUniform("u_mask", false);
     u_max_steps = shader->getUniform("u_max_steps", false);
     u_recursive = shader->getUniform("u_recursive", false);
@@ -415,8 +440,13 @@ void RandomTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
     if (u_rnd_rotate)
         u_rnd_rotate->setFloats(p_rnd_rot->value(time) / 180. * PI);
     if (u_voro)
-        u_voro->setFloats(p_voro_cell->value(time),
-                          p_voro_smooth->value(time));
+        u_voro->setFloats(p_voro_cell->value(time));
+    if (u_smooth)
+        u_smooth->setFloats(p_smooth->value(time));
+    if (u_shape)
+        u_shape->setFloats(p_shapeSize->value(time),
+                           p_rndShapeSize->value(time),
+                           p_rndShapePos->value(time));
     if (u_mask)
         u_mask->setFloats(p_range_min->value(time),
                           p_range_max->value(time),

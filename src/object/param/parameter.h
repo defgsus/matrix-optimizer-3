@@ -15,6 +15,7 @@
 #include <QList>
 #include <QPair>
 #include <QMap>
+#include <QSet>
 
 #include "object/object_fwd.h"
 #include "types/time.h"
@@ -71,6 +72,8 @@ public:
     const QString& name() const { return name_; }
     const QString& statusTip() const { return statusTip_; }
     SpecificFlag specificFlag() const { return p_specFlag_; }
+
+    bool hasSynonymId(const QString& id) const;
 
     /** Returns a string in the form of 'RealObject/SubObject.parameterId'.
         Goes up the branch until the first Object::TG_REAL_OBJECT */
@@ -138,6 +141,9 @@ public:
 
     /* Sets the interface properties. Initially empty */
     //void setInterfaceProperties(const Properties& p);
+
+    /** Sets an alias id for backward compatibility of Parameters::deserialize() */
+    void addSynonymId(const QString& id);
 
     // ------------ modulators ------------------
 
@@ -232,7 +238,7 @@ private:
     //QList<QString> modulatorIds_;
 
     QList<Modulator*> modulators_;
-
+    QSet<QString> synonymIds_;
 //    Properties * iProps_;
 };
 

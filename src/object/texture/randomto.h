@@ -20,6 +20,14 @@ class RandomTO : public TextureObjectBase
 {
 public:
 
+    enum Pattern
+    {
+        P_RECT,
+        P_PERLIN,
+        P_VORONOISE,
+        P_CIRCLE
+    };
+
     enum FractalMode
     {
         FM_SINGLE = 0,

@@ -251,8 +251,10 @@ void ParameterEvolution::Private::getObjectParams()
     if (!object)
         return;
     for (auto par : object->params()->parameters())
-        if (//par->isVisible()
-                 (   dynamic_cast<ParameterFloat*>(par)
+        if ((//par->isVisible()
+            !par->isZombie()
+             )
+               && (   dynamic_cast<ParameterFloat*>(par)
                     || dynamic_cast<ParameterInt*>(par)
                     || dynamic_cast<ParameterSelect*>(par)
                     || dynamic_cast<ParameterFont*>(par)
@@ -438,16 +440,19 @@ void ParameterEvolution::randomize()
         }
         if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
         {
+            if (!doEvo)
+                param->valueSelect = ps->defaultValue();
+            else
             if (ps->valueList().size())
             {
                 size_t idx = rnd.getUInt32() % ps->valueList().size();
-                param->valueSelect = !doEvo ? ps->defaultValue() : ps->valueList()[idx];
+                param->valueSelect = ps->valueList()[idx];
             }
         }
         if (auto pf = dynamic_cast<ParameterFont*>(param->param))
         {
             if (!doEvo)
-                param->valueFont = pf->baseValue();
+                param->valueFont = pf->defaultValue();
             else
             {
                 QFontDatabase db;

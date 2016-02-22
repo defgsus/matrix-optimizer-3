@@ -201,6 +201,16 @@ bool Parameter::setVisible(bool visible)
 //    *iProps_ = p;
 //}
 
+void Parameter::addSynonymId(const QString &id)
+{
+    synonymIds_.insert(id);
+}
+
+bool Parameter::hasSynonymId(const QString &id) const
+{
+    return synonymIds_.contains(id);
+}
+
 void Parameter::idNamesChanged(const QMap<QString, QString> & map)
 {
     // adjust modulator ids

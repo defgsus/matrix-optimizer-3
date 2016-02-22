@@ -131,6 +131,11 @@ Parameter * Parameters::findParameter(const QString &id)
         if (p->idName() == id)
             return p;
 
+    // check synonyms
+    for (auto p : parameters_)
+        if (p->hasSynonymId(id))
+            return p;
+
     return 0;
 }
 
