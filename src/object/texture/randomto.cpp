@@ -49,7 +49,11 @@ struct RandomTO::Private
             * p_voro_smooth,
             * p_range_min,
             * p_range_max,
-            * p_thresh;
+            * p_thresh,
+            * p_recursive_x,
+            * p_recursive_y,
+            * p_recursive_z,
+            * p_recursive_w;
     ParameterInt
             * p_seed,
             * p_steps;
@@ -70,7 +74,8 @@ struct RandomTO::Private
             * u_rnd_rotate,
             * u_voro,
             * u_mask,
-            * u_max_steps;
+            * u_max_steps,
+            * u_recursive;
 
 };
 
@@ -155,20 +160,21 @@ void RandomTO::Private::createParameters()
 
 
         m_fractal = to->params()->createSelectParameter(
-                    "fractal_type", tr("fractal type"),
-                    tr("The type of multi-sampling function"),
-                    { "0", "1", "2", "3" },
-                    { tr("off"), tr("weighted average"), tr("maximum"), tr("recursive") },
+                    "fractal_type", tr("combination type"),
+                    tr("The way the different noise layers are combined"),
+                    { "0", "avg", "max", "rec" },//, "rnd" },
+                    { tr("off"), tr("weighted average"), tr("maximum"), tr("recursive") },//, tr("random") },
                     { tr("One noise layer is produced"),
                       tr("Serveral layers of noise are combined by averaging"),
                       tr("The maximum value of all noise layers is used"),
-                      tr("Each noise layer uses the previous noise as position modifier") },
-                    { 0, 1, 2, 3 },
-                    1,
+                      tr("Each noise layer uses the previous noise as position modifier")
+                        }, //tr("The position is randomly modified in each layer") },
+                    { FM_SINGLE, FM_AVERAGE, FM_MAX, FM_RECURSIVE },//, FM_RANDOM },
+                    FM_AVERAGE,
                     true, false);
 
         p_steps = to->params()->createIntParameter(
-                    "steps", tr("number steps"),
+                    "steps", tr("number layers"),
                     tr("The maximum number of noise layers to combine"), 4, true, true);
         p_steps->setMinValue(1);
 
@@ -194,9 +200,21 @@ void RandomTO::Private::createParameters()
                     "rotation", tr("rotation amount"),
                     tr("Amount of random rotation per layer in degree"), 45.0,  9.);
 
+        p_recursive_w = to->params()->createFloatParameter(
+                    "recursive_w", tr("recursion"),
+                    tr("Influence of all noise values to the next layer's position"), 1.,  0.05);
+        p_recursive_x = to->params()->createFloatParameter(
+                    "recursive_x", tr("recursion x"),
+                    tr("Influence of x value to the next layer's position"), 1.,  0.05);
+        p_recursive_y = to->params()->createFloatParameter(
+                    "recursive_y", tr("recursion y"),
+                    tr("Influence of y value to the next layer's position"), 1.,  0.05);
+        p_recursive_z = to->params()->createFloatParameter(
+                    "recursive_z", tr("recursion z"),
+                    tr("Influence of z value to the next layer's position"), 1.,  0.05);
 
         m_mask = to->params()->createBooleanParameter(
-                    "mask", tr("mask values"),
+                    "mask", tr("value range"),
                     tr("Enables the selection of a specific value range"),
                     tr("Off"), tr("On"),
                     false,
@@ -293,12 +311,17 @@ void RandomTO::updateParameterVisibility()
     p_->p_voro_cell->setVisible(nmode == 2);
     p_->p_voro_smooth->setVisible(nmode == 2);
     p_->p_rnd_rot->setVisible(p_->m_rotate->baseValue());
-    p_->p_amp_mul->setVisible(fmode == 1 || fmode == 2);
-    p_->p_size_add->setVisible(fmode > 0);
+    p_->p_amp_mul->setVisible(fmode == FM_AVERAGE || fmode == FM_MAX);
+    p_->p_size_add->setVisible(fmode > 0 && fmode != FM_RANDOM);
     p_->p_steps->setVisible(fmode > 0);
     p_->p_range_min->setVisible(mask);
     p_->p_range_max->setVisible(mask);
     p_->p_thresh->setVisible(mask);
+    bool fmoder = fmode == FM_RECURSIVE || fmode == FM_RANDOM;
+    p_->p_recursive_x->setVisible(fmoder);
+    p_->p_recursive_y->setVisible(fmoder);
+    p_->p_recursive_z->setVisible(fmoder);
+    p_->p_recursive_w->setVisible(fmoder);
 }
 
 
@@ -343,7 +366,7 @@ void RandomTO::Private::initGl()
     u_voro = shader->getUniform("u_voro", false);
     u_mask = shader->getUniform("u_mask", false);
     u_max_steps = shader->getUniform("u_max_steps", false);
-
+    u_recursive = shader->getUniform("u_recursive", false);
 }
 
 void RandomTO::Private::releaseGl()
@@ -401,6 +424,11 @@ void RandomTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
     if (u_max_steps)
         u_max_steps->ints[0] = p_steps->value(time);
 
+    if (u_recursive)
+        u_recursive->setFloats(p_recursive_x->value(time),
+                               p_recursive_y->value(time),
+                               p_recursive_z->value(time),
+                               p_recursive_w->value(time));
     to->renderShaderQuad(time);
 }
 

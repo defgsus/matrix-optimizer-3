@@ -31,6 +31,7 @@
 #include "gl/context.h"
 #include "gl/texture.h"
 #include "gl/texturerenderer.h"
+#include "tool/generalimage.h"
 #include "io/currenttime.h"
 #include "io/error.h"
 
@@ -295,6 +296,12 @@ void ParameterEvolution::applyParametersToObject(bool updateGui) const
 
 void ParameterEvolution::getImage(QImage &img) const
 {
+    if (!p_->object)
+    {
+        GeneralImage::getErrorImage(img, QObject::tr("No\nobject\nassigned"));
+        return;
+    }
+
     bool valid = false;
 
     auto backup = new ParameterEvolution(p_->object);
@@ -338,17 +345,28 @@ void ParameterEvolution::getImage(QImage &img) const
                     valid = true;
     #endif
                 }
+                else
+                {
+                    GeneralImage::getErrorImage(img, QObject::tr("No\ntexture\noutput"));
+                    valid = true;
+                }
+            }
+            else
+            {
+                GeneralImage::getErrorImage(img, QObject::tr("No\nscene\nobject"));
+                valid = true;
             }
         }
         catch (const Exception& e)
         {
             MO_WARNING("In ParameterEvolution: " << e.what());
+            GeneralImage::getErrorImage(img, QObject::tr("Error on\nrendering"));
+            valid = true;
         }
     }
 
-    // set black / XXX should say error or something
     if (!valid)
-        img.fill(QColor(40,0,0));
+        GeneralImage::getErrorImage(img, QObject::tr("No\ngraphic\noutput"));
 
     if (backup)
         backup->p_->setObjectParams();

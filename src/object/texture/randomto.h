@@ -20,6 +20,15 @@ class RandomTO : public TextureObjectBase
 {
 public:
 
+    enum FractalMode
+    {
+        FM_SINGLE = 0,
+        FM_AVERAGE,
+        FM_MAX,
+        FM_RECURSIVE,
+        FM_RANDOM
+    };
+
     MO_OBJECT_CONSTRUCTOR(RandomTO);
     ~RandomTO();
 

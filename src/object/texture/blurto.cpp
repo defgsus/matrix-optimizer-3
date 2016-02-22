@@ -139,8 +139,9 @@ void BlurTO::Private::createParameters()
         p_sigma->setMinValue(0.);
 
         p_num = to->params()->createFloatParameter(
-                    "num", tr("num samples"), tr("Size of the blur kernel - there will be (width*2+1)*2 samples"),
+                    "num", tr("num samples"), tr("Size of the blur kernel - there will be (num*2+1)*2 samples"),
                     10.0,  1., 1000.,  1.);
+        p_num->setDefaultEvolvable(false);
 
         m_mask = to->params()->createBooleanParameter(
                     "use_mask", tr("use blur mask"),

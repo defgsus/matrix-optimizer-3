@@ -10,7 +10,13 @@
 //define NOISE_FUNC 0,1,2
 //define MASK 0,1
 //define USE_ALPHA 0,1
-//define FRACTAL_MODE 0,1,2,3
+//define FRACTAL_MODE one of FMODE_.. below
+
+#define FMODE_SINGLE 0
+#define FMODE_AVERAGE 1
+#define FMODE_MAX 2
+#define FMODE_RECURSIVE 3
+#define FMODE_RANDOM 4
 
 uniform vec4        u_color;
 uniform vec3        u_hsv;
@@ -22,6 +28,7 @@ uniform float       u_rnd_rotate;
 uniform vec2        u_voro;
 uniform vec3        u_mask;
 uniform int         u_max_steps;
+uniform vec4        u_recursive; // xyz=dot, w=amt
 
 
 // random stepper
@@ -33,7 +40,7 @@ vec3 rnd3() { rseed += 1.01; return hash3(rseed); }
 // one layer of noise
 vec4 NOISE(in vec3 p, in float level)
 {
-    p = mod(p, 1.)+.5;
+    //p = mod(p, 1.)+.5;
 
 #if RANDOM_ROTATE == 1
     p = rotateAxis(p, rnd3(), rnd1() * u_rnd_rotate);
@@ -80,11 +87,11 @@ vec4 mainFunc(in vec2 uv)
     rseed = u_start_seed;
 
     // fractal noise
-#if FRACTAL_MODE == 0
+#if FRACTAL_MODE == FMODE_SINGLE
     return NOISE(vec3(uv, 0.), 0.);
 
     // weighted average
-#elif FRACTAL_MODE == 1
+#elif FRACTAL_MODE == FMODE_AVERAGE
 
     vec4 col = vec4(0.);
 
@@ -100,7 +107,7 @@ vec4 mainFunc(in vec2 uv)
     return col / sum;
 
     // maximum
-#elif FRACTAL_MODE == 2
+#elif FRACTAL_MODE == FMODE_MAX
 
     vec4 col = vec4(0.,0.,0.,0.);
 
@@ -115,14 +122,26 @@ vec4 mainFunc(in vec2 uv)
     return col;
 
     // recursive
-#elif FRACTAL_MODE == 3
+#elif FRACTAL_MODE == FMODE_RECURSIVE
 
     vec4 col = vec4(0.);
 
     for (int i = 0; i < u_max_steps; ++i)
-        col = NOISE(vec3(uv, 0.) + col.xyz, float(i));
+        col = NOISE(vec3(uv, 0.)
+                    + u_recursive.w * dot(u_recursive.xyz, col.xyz),
+                    float(i));
 
     return col;
+
+    // random recursive
+#elif FRACTAL_MODE == FMODE_RANDOM
+    // XXX NOT MAKING SENSE YET
+    vec3 pos = vec3(uv, 0.) + u_start_seed;
+    for (int i = 0; i < u_max_steps; ++i)
+        pos = u_recursive.w * (u_recursive.xyz, NOISE(pos, float(i)).xyz);
+    pos += vec3(uv, 0.);
+
+    return NOISE(pos, float(u_max_steps-1));
 
 #endif
 
