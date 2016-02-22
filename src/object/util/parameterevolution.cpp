@@ -13,6 +13,8 @@
 #include <QTextStream>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QFont>
+#include <QFontDatabase>
 
 #include "parameterevolution.h"
 #include "object/visual/objectgl.h"
@@ -22,6 +24,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parameterfont.h"
 #include "object/util/objecteditor.h"
 #include "types/properties.h"
 #include "math/random.h"
@@ -49,6 +52,7 @@ struct ParameterEvolution::Private
         Double valueFloat, variance;
         Int valueInt;
         int valueSelect;
+        QFont valueFont;
     };
 
     void getObjectParam(const Parameter*, Param*);
@@ -141,6 +145,8 @@ void ParameterEvolution::serialize(QJsonObject& o) const
             if (param->valueSelect >= 0 && param->valueSelect < ps->valueIds().size())
                 ar.insert(param->param->idName(), ps->valueIds()[param->valueSelect]);
         }
+        else if (dynamic_cast<ParameterFont*>(param->param))
+            ar.insert(param->param->idName(), param->valueFont.toString());
     }
     o.insert("parameter", ar);
 }
@@ -167,6 +173,9 @@ void ParameterEvolution::deserialize(const QJsonObject& o)
             if (i>=0)
                 ps->setValue(i);
         }
+        else if (dynamic_cast<ParameterFont*>(param->param))
+            param->valueFont.fromString( obj.value(key).toString() );
+
     }
 }
 
@@ -182,16 +191,21 @@ void ParameterEvolution::Private::getObjectParam(const Parameter* opar, Param* p
         Double beg = pf->isMinLimit() ? pf->minValue() : 0.;
         par->variance = .5 * std::max(2., pf->defaultValue() - beg);
     }
-    else if (auto pi = dynamic_cast<const ParameterInt*>(opar))
+    if (auto pi = dynamic_cast<const ParameterInt*>(opar))
     {
         par->valueInt = pi->baseValue();
         Int beg = pi->minValue() > -pi->infinity ? pi->minValue() : 0;
         par->variance = .5 * std::max(2, pi->defaultValue() - beg);
     }
-    else if (auto ps = dynamic_cast<const ParameterSelect*>(opar))
+    if (auto ps = dynamic_cast<const ParameterSelect*>(opar))
     {
         par->valueSelect = ps->baseValue();
-        par->variance = (ps->valueList().size() - .3) * .618;
+        par->variance = 0.;//(ps->valueList().size() - .3) * .618;
+    }
+    if (auto pf = dynamic_cast<const ParameterFont*>(opar))
+    {
+        par->valueFont = pf->baseValue();
+        par->variance = 0.;
     }
 }
 
@@ -199,10 +213,12 @@ void ParameterEvolution::Private::setObjectParam(Parameter* opar, const Param* p
 {
     if (auto pf = dynamic_cast<ParameterFloat*>(opar))
         pf->setValue(par->valueFloat);
-    else if (auto pi = dynamic_cast<ParameterInt*>(opar))
+    if (auto pi = dynamic_cast<ParameterInt*>(opar))
         pi->setValue(par->valueInt);
-    else if (auto ps = dynamic_cast<ParameterSelect*>(opar))
+    if (auto ps = dynamic_cast<ParameterSelect*>(opar))
         ps->setValue(par->valueSelect);
+    if (auto pf = dynamic_cast<ParameterFont*>(opar))
+        pf->setValue(par->valueFont);
 
     if (object)
         object->onParameterChanged(par->param);
@@ -234,10 +250,11 @@ void ParameterEvolution::Private::getObjectParams()
     if (!object)
         return;
     for (auto par : object->params()->parameters())
-        if (par->isVisible()
-                && (   dynamic_cast<ParameterFloat*>(par)
+        if (//par->isVisible()
+                 (   dynamic_cast<ParameterFloat*>(par)
                     || dynamic_cast<ParameterInt*>(par)
                     || dynamic_cast<ParameterSelect*>(par)
+                    || dynamic_cast<ParameterFont*>(par)
                     )
                 )
             p->setParameter(par);
@@ -298,10 +315,13 @@ void ParameterEvolution::getImage(QImage &img) const
                 if (auto tex = valtex->valueTexture(0, time))
                 {
     #if 0
+                    // XXX NOT WORKING CURRENTLY ???
+
                     // create resampler
                     auto render = GL::TextureRenderer(img.width(), img.height() );
 
                     // gl-resize
+                    tex->bind();
                     render.render(tex, true);
                     // download image
                     if (auto stex = render.texture())
@@ -355,9 +375,10 @@ QString ParameterEvolution::toString() const
 
         s << param->param->name()
           << ": " << param->param->baseValueString(true)
-          << " (" << param->param->getDocType()
-          << ", var. " << param->variance
-          << ")"
+          << " (" << param->param->getDocType();
+        if (param->variance > 0.)
+            s << ", var. " << param->variance;
+        s << ")"
           << "\n";
 
         p_->setObjectParam(param->param, &backup);
@@ -405,6 +426,25 @@ void ParameterEvolution::randomize()
                 param->valueSelect = !doEvo ? ps->defaultValue() : ps->valueList()[idx];
             }
         }
+        if (auto pf = dynamic_cast<ParameterFont*>(param->param))
+        {
+            if (!doEvo)
+                param->valueFont = pf->baseValue();
+            else
+            {
+                QFontDatabase db;
+                auto fams = db.families(QFontDatabase::Any);
+                if (!fams.empty())
+                {
+                    param->valueFont.setFamily(fams[rnd.getUInt32() % fams.size()]);
+                    param->valueFont.setBold(rnd() < .3);
+                    param->valueFont.setItalic(rnd() < .2);
+                    param->valueFont.setUnderline(rnd() < .2);
+                    param->valueFont.setOverline(rnd() < .1);
+                    param->valueFont.setFixedPitch(rnd() < .1);
+                }
+            }
+        }
     }
 
 }
@@ -444,6 +484,26 @@ void ParameterEvolution::mutate()
                 size_t idx = rnd.getUInt32() % ps->valueList().size();
                 param->valueSelect = ps->valueList()[idx];
             }
+        }
+        if (/*auto pf = */dynamic_cast<ParameterFont*>(param->param))
+        {
+            if (rnd() < .3)
+            {
+                QFontDatabase db;
+                auto fams = db.families(QFontDatabase::Any);
+                if (!fams.empty())
+                    param->valueFont.setFamily(fams[rnd.getUInt32() % fams.size()]);
+            }
+            if (rnd() < .3)
+                param->valueFont.setBold(!param->valueFont.bold());
+            if (rnd() < .2)
+                param->valueFont.setItalic(!param->valueFont.italic());
+            if (rnd() < .2)
+                param->valueFont.setUnderline(!param->valueFont.underline());
+            if (rnd() < .1)
+                param->valueFont.setOverline(!param->valueFont.overline());
+            if (rnd() < .1)
+                param->valueFont.setFixedPitch(!param->valueFont.fixedPitch());
         }
 
     }
