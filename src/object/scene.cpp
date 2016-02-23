@@ -61,6 +61,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Scene)
 
+Scene* Scene::currentScene_ = 0;
+
 Scene::Scene(QObject *parent) :
     Object              (parent),
     editor_             (0),
@@ -179,6 +181,16 @@ void Scene::setObjectEditor(ObjectEditor * editor)
 {
     editor_ = editor;
     editor_->setScene(this);
+}
+
+void Scene::setCurrentScene(Scene* s)
+{
+    currentScene_ = s;
+}
+
+Scene* Scene::currentScene()
+{
+    return currentScene_;
 }
 
 void Scene::findObjects_()

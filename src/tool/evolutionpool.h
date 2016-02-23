@@ -56,6 +56,8 @@ public:
 
     /** Is the given slot locked */
     bool isLocked(size_t idx) const;
+    /** Number of locked specimen */
+    size_t numLocked() const;
 
     /** Access to each instance */
     EvolutionBase* specimen(size_t idx) const;
@@ -102,8 +104,11 @@ public:
     void repopulate(const EvolutionBase* base);
     /** Fills the pool with new random instances cloned from slot @p idx */
     void repopulateFrom(size_t idx);
-    /** Mates all locked tiles */
+    /** Mates all locked specimen */
     void crossBreed();
+    /** Mates all locked specimen with idx */
+    void crossBreed(size_t idx);
+
     /** Creates an offspring from two randomly selected parents.
         Returns NULL, if impossible. */
     EvolutionBase* createOffspring(const std::vector<EvolutionBase*>& parents);

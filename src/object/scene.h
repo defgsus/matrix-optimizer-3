@@ -83,6 +83,9 @@ public:
     bool lazyFlag() const { return p_lazyFlag_; }
     void setLazyFlag(bool lazy) { p_lazyFlag_ = lazy; }
 
+    static Scene* currentScene();
+    static void setCurrentScene(Scene*);
+
     // ------------- child objects -------------
 
     const QList<Camera*> cameras() const { return cameras_; }
@@ -401,6 +404,7 @@ private:
     ObjectEditor * editor_;
     GUI::FrontScene * frontScene_;
     QString frontSceneXml_;
+    static Scene* currentScene_;
 
     // ------------------ desc -----------------
 

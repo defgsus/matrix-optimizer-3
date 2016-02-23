@@ -960,6 +960,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     scene_->setParent(this);
 
     scene_->setObjectEditor(objectEditor_);
+    scene_->setCurrentScene(scene_);
 
     /** @todo When to run startup scripts? */
     scene_->runScripts();

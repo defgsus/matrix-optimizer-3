@@ -32,6 +32,7 @@
 #include "object/control/sequencefloat.h"
 #include "object/control/clip.h"
 #include "object/util/objecteditor.h"
+#include "object/visual/objectgl.h"
 #include "object/param/parametercallback.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterimagelist.h"
@@ -591,9 +592,11 @@ void ParameterWidget::createWidgets_()
 
     else
     // --- texture parameter ---
-    if (/*ParameterTexture * pt = */dynamic_cast<ParameterTexture*>(param_))
+    if (ParameterTexture* pt = dynamic_cast<ParameterTexture*>(param_))
     {
-
+        l->addStretch(1);
+        addTexParamButtons_(pt, l);
+        l->addStretch(1);
     }
     else
     // --- geometry parameter ---
@@ -615,6 +618,88 @@ void ParameterWidget::createWidgets_()
     updateButtons();
 }
 
+namespace
+{
+    template <class ENUM>
+    void texParamPopup_(QWidget* parent,
+                        ParameterTexture* param,
+                        const QStringList& names,
+                        const QList<ENUM>& values,
+                        ENUM curValue,
+                        std::function<void(ENUM)> func)
+    {
+        auto pop = new QMenu(parent);
+        pop->setAttribute(Qt::WA_DeleteOnClose);
+        for (int i=0; i<values.size(); ++i)
+        {
+            auto a = pop->addAction(names[i]);
+            a->setData(i);
+            if (values[i] == curValue)
+                { a->setCheckable(true); a->setChecked(true); }
+            ParameterWidget::connect(a, &QAction::triggered, [=]()
+            {
+                func(values[i]);
+
+                if (ObjectGl* gl = dynamic_cast<ObjectGl*>(param->object()))
+                    gl->requestRender();
+            });
+        }
+        pop->exec(QCursor::pos());
+    }
+}
+
+void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* l)
+{
+    auto but = new QToolButton(this);
+    but->setText("mag");
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::MagMode>(this, param,
+                       ParameterTexture::magModeNames,
+                       ParameterTexture::magModeValues,
+                       param->magMode(),
+                       [=](ParameterTexture::MagMode m) { param->setMagMode(m);} );
+    });
+
+    but = new QToolButton(this);
+    but->setText("min");
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::MinMode>(this, param,
+                       ParameterTexture::minModeNames,
+                       ParameterTexture::minModeValues,
+                       param->minMode(),
+                       [=](ParameterTexture::MinMode m) { param->setMinMode(m);} );
+    });
+
+    but = new QToolButton(this);
+    but->setText("x");
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::WrapMode>(this, param,
+                       ParameterTexture::wrapModeNames,
+                       ParameterTexture::wrapModeValues,
+                       param->wrapModeX(),
+                       [=](ParameterTexture::WrapMode m) { param->setWrapModeX(m);} );
+    });
+
+
+    but = new QToolButton(this);
+    but->setText("y");
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::WrapMode>(this, param,
+                       ParameterTexture::wrapModeNames,
+                       ParameterTexture::wrapModeValues,
+                       param->wrapModeY(),
+                       [=](ParameterTexture::WrapMode m) { param->setWrapModeY(m);} );
+    });
+
+}
 
 void ParameterWidget::updateButtons()
 {

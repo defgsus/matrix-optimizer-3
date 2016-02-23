@@ -430,6 +430,8 @@ void TextureSetting::bind(const RenderTime& time, uint slot)
     if (!tex)
         MO_GL_ERROR("No texture defined for TextureSetting::bind()");
 
+    // ---- bind ----
+
     // set active slot
     slot += (uint)GL_TEXTURE0;
     GLint act;
@@ -439,6 +441,11 @@ void TextureSetting::bind(const RenderTime& time, uint slot)
 
     tex->bind();
 
+    // ---- set texture params ----
+
+    if (paramType_->baseValue() == TEX_PARAM)
+        paramTex_->setTextureParam(tex);
+    else
     if (!tex->isMultiSample())
     {
         // set mag. interpolation mode

@@ -53,6 +53,13 @@ struct EvolutionPool::Private
             isLocked = o.isLocked;
             return *this;
         }
+        void setInstance(EvolutionBase*evo)
+        {
+            if (instance)
+                instance->releaseRef();
+            instance = evo;
+            dirty = true;
+        }
 
         EvolutionBase* instance;
         QImage image;
@@ -159,7 +166,14 @@ void EvolutionPool::saveJsonFile(const QString& fn) const
 size_t EvolutionPool::size() const { return p_->tiles.size(); }
 bool EvolutionPool::isLocked(size_t idx) const
     { return idx < p_->tiles.size() ? p_->tiles[idx].isLocked : false; }
-
+size_t EvolutionPool::numLocked() const
+{
+    size_t n = 0;
+    for (auto& t : p_->tiles)
+        if (t.isLocked)
+            ++n;
+    return n;
+}
 EvolutionBase* EvolutionPool::specimen(size_t idx) const
 {
     return p_->tiles[idx].instance;
@@ -180,10 +194,7 @@ Properties EvolutionPool::properties() const
 
 void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
 {
-    if (p_->tiles[idx].instance)
-        p_->tiles[idx].instance->releaseRef();
-    p_->tiles[idx].instance = evo;
-    p_->tiles[idx].dirty = true;
+    p_->tiles[idx].setInstance(evo);
     if (p_->tiles[idx].instance)
         p_->tiles[idx].instance->addRef();
 }
@@ -386,10 +397,40 @@ void EvolutionPool::crossBreed()
     if (!t.isLocked)
     {
         auto evo = createOffspring(parents);
-        t.instance = evo;
-        t.dirty = true;
+        t.setInstance(evo);
     }
 
+    for (auto v : parents)
+        v->releaseRef();
+}
+
+void EvolutionPool::crossBreed(size_t idx)
+{
+    if (idx >= p_->tiles.size())
+        return;
+    auto& jovani = p_->tiles[idx];
+
+    std::vector<EvolutionBase*> parents;
+    for (auto& t : p_->tiles)
+    if (t.instance && t.instance != jovani.instance && t.isLocked)
+    {
+        parents.push_back(t.instance);
+        t.instance->addRef();
+    }
+
+    if (parents.size() > 0)
+    {
+        size_t k=0;
+        for (auto& t : p_->tiles)
+        if (k++ != idx && !t.isLocked)
+        {
+            std::vector<EvolutionBase*> twoParents;
+            twoParents.push_back(jovani.instance);
+            twoParents.push_back(parents[p_->rnd.getUInt32() % parents.size()]);
+            auto evo = createOffspring(twoParents);
+            t.setInstance(evo);
+        }
+    }
     for (auto v : parents)
         v->releaseRef();
 }
@@ -402,14 +443,10 @@ void EvolutionPool::repopulateFrom(size_t idx)
 
     src->properties().unify(p_->props);
 
-
     for (auto& e : p_->tiles)
     if (src != e.instance && !e.isLocked)
     {
-        if (e.instance)
-            e.instance->releaseRef();
-
-        e.instance = src->createClone();
+        e.setInstance( src->createClone() );
         p_->rndSeed(e.instance);
         e.instance->mutate();
         e.dirty = true;

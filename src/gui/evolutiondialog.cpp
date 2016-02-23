@@ -49,7 +49,7 @@ struct EvolutionDialog::Private
     EvolutionArea * area;
     PropertiesScrollView *propView;
     QPlainTextEdit * textView;
-    QPushButton * butLeft, *butRight, *butOk, *butApply;
+    QPushButton *butCross, *butLeft, *butRight, *butOk, *butApply;
     bool isEdit;
 };
 
@@ -114,7 +114,7 @@ void EvolutionDialog::Private::createWidgets()
                 area->update();
             });
 
-            but = new QPushButton(tr("cross-mate"), win);
+            but = butCross = new QPushButton(tr("cross-mate"), win);
             lv->addWidget(but);
             connect(but, &QPushButton::pressed, [=]()
             {
@@ -182,6 +182,7 @@ void EvolutionDialog::Private::updateButtons()
     bool isSel = area->selectedSpecimen() != nullptr;
     butOk->setEnabled(isSel);
     butApply->setEnabled(isSel);
+    butCross->setEnabled(area->numLockedTiles() >= 2);
 }
 
 void EvolutionDialog::Private::onSelected()

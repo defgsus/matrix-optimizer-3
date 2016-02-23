@@ -611,7 +611,11 @@ const GL::Texture* TextureObjectBase::inputTexture(uint index, const RenderTime&
 {
     if ((int)index >= textureParams().size())
         return 0;
-    return textureParams()[index]->value(rt);
+    auto tex = textureParams()[index]->value(rt);
+    // XXX texture would need to be bound
+    //if (tex)
+    //    textureParams()[index]->setTextureParam(tex);
+    return tex;
 }
 
 GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index) const
@@ -836,7 +840,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
                         p_a_max->value(time));
     }
 
-    // --- bind textures ---
+    // --- bind input textures ---
 
     for (int i=0; i<p_textures.length(); ++i)
     {
@@ -852,6 +856,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
             // bind to slot x
             GL::Texture::setActiveTexture(texSlot);
             tex->bind();
+            p_textures[i]->setTextureParam(tex);
             // tell shader
             if (i < quad.u_tex.length() && quad.u_tex[i])
                 quad.u_tex[i]->ints[0] = texSlot;

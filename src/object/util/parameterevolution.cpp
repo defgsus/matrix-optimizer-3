@@ -150,6 +150,11 @@ void ParameterEvolution::serialize(QJsonObject& o) const
             ar.insert(param->param->idName(), param->valueFont.toString());
     }
     o.insert("parameter", ar);
+    if (p_->object)
+    {
+        o.insert("object", p_->object->idName());
+        o.insert("object_class", p_->object->className());
+    }
 }
 
 void ParameterEvolution::deserialize(const QJsonObject& o)
@@ -159,24 +164,44 @@ void ParameterEvolution::deserialize(const QJsonObject& o)
         MO_IO_ERROR(VERSION_MISMATCH, "Missing 'parameter' in json evolution");
     if (!ar->isObject())
         MO_IO_ERROR(VERSION_MISMATCH, "'parameter' of wrong type in json evolution");
-    auto obj = (*ar).toObject();
-    auto list = obj.keys();
+
+    // associate Object from current scene
+    if (!p_->object && Scene::currentScene())
+    {
+        QString id = o.value("object").toString();
+        if (!id.isEmpty())
+        {
+            QString classN = o.value("object_class").toString();
+            if (!classN.isEmpty())
+            if (auto obj = Scene::currentScene()->findChildObject(id, true))
+            {
+                if (obj->className() == classN)
+                {
+                    p_->object = obj;
+                    p_->getObjectParams();
+                    //MO_DEBUG("assigned '" << id << "' to ParameterEvolution");
+                }
+            }
+        }
+    }
+
+    auto data = (*ar).toObject();
+    auto list = data.keys();
     for (auto key : list)
     if (auto param = p_->getParam(key))
     {
         if (dynamic_cast<ParameterFloat*>(param->param))
-            param->valueFloat = obj.value(key).toDouble();
+            param->valueFloat = data.value(key).toDouble();
         else if (dynamic_cast<ParameterInt*>(param->param))
-            param->valueInt = obj.value(key).toInt();
+            param->valueInt = data.value(key).toInt();
         else if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
         {
-            int i = ps->valueIds().indexOf( obj.value(key).toString() );
+            int i = ps->valueIds().indexOf( data.value(key).toString() );
             if (i>=0)
                 ps->setValue(i);
         }
         else if (dynamic_cast<ParameterFont*>(param->param))
-            param->valueFont.fromString( obj.value(key).toString() );
-
+            param->valueFont.fromString( data.value(key).toString() );
     }
 }
 
@@ -539,26 +564,25 @@ bool ParameterEvolution::isCompatible(const EvolutionBase* o) const
 
 void ParameterEvolution::mate(const EvolutionBase* otherBase)
 {
-    /*
     auto other = dynamic_cast<const ParameterEvolution*>(otherBase);
     if (!other)
         return;
 
     MATH::Twister rnd(properties().get("seed").toUInt());
-    double range = std::pow(rnd(0.01, 1.), 1.36) * 2. * vector().size(),
-           phase = rnd(0., 6.28),
-           amp = rnd() * rnd();
-    size_t num = std::min(vector().size(), other->vector().size());
+    double prob = rnd(.3, .7);
 
-    for (size_t i=0; i<num; ++i)
+    for (auto it = p_->paramMap.begin(); it != p_->paramMap.end(); ++it)
+    if (rnd() < prob)
     {
-        double v1 = vector(i),
-               v2 = other->vector(i),
-               mx = amp * std::cos(double(i)/num * 3.14159265 * range + phase);
+        Private::Param* param = &it->second;
 
-        p_vec_[i] = v1 + mx * (v2 - v1);
+        if (!properties().get("_param_" + param->param->idName()).toBool())
+            continue;
+
+        auto otherParam = other->p_->getParam(param->param->idName());
+        // XXX Also copies Parameter pointer
+        *param = *otherParam;
     }
-    */
 }
 
 

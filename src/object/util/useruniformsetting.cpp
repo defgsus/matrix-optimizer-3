@@ -282,6 +282,7 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
                 //MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
                 MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
                 tex->bind();
+                u.p_tex->setTextureParam(tex);
                 u.uniform->ints[0] = texSlot;
                 ++texSlot;
                 /// @todo generalize texture read parameters for texture inputs

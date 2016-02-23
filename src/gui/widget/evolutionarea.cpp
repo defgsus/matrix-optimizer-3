@@ -85,6 +85,7 @@ EvolutionArea::~EvolutionArea()
 unsigned EvolutionArea::numTiles() const { return p_->pool.size(); }
 unsigned EvolutionArea::numTilesX() const { return p_->numTiles.width(); }
 unsigned EvolutionArea::numTilesY() const { return p_->numTiles.height(); }
+unsigned EvolutionArea::numLockedTiles() const { return p_->pool.numLocked(); }
 int EvolutionArea::selectedIndex() const { return p_->selTile; }
 EvolutionBase* EvolutionArea::selectedSpecimen() const
     { return p_->selTile >= 0 && (size_t)p_->selTile < p_->pool.size() ? p_->pool.specimen(p_->selTile) : nullptr; }
@@ -302,7 +303,13 @@ QMenu* EvolutionArea::createMenu(unsigned idx)
     else
     {
         a = menu->addAction(tr("Lock"));
-        connect(a, &QAction::triggered, [=](){ p_->pool.setLocked(idx, true); updateTile(idx); });
+        connect(a, &QAction::triggered, [=]()
+        {
+            p_->pool.setLocked(idx, true);
+            updateTile(idx);
+            // XXX to update buttons in EvolutionDialog
+            emit selected(idx);
+        });
     }
 
     menu->addSeparator();
@@ -372,6 +379,20 @@ QMenu* EvolutionArea::createMenu(unsigned idx)
     });
 
     menu->addSeparator();
+
+    // cross-mate
+    if (numLockedTiles() >= 1)
+    {
+        a = menu->addAction(tr("Cross-mate with locked"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            p_->pool.crossBreed(idx);
+            saveHistory();
+            update();
+            emit propertiesChanged();
+        });
+
+    }
 
     // new
     auto list = EvolutionBase::registeredClassNames();

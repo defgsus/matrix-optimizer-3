@@ -30,6 +30,7 @@ public:
     unsigned numTiles() const;
     unsigned numTilesX() const;
     unsigned numTilesY() const;
+    unsigned numLockedTiles() const;
 
     /** Resolution of each tile */
     const QSize& tileResolution() const;

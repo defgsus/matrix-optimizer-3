@@ -18,10 +18,12 @@ class QMenu;
 class QComboBox;
 class QCheckBox;
 class QLineEdit;
+class QHBoxLayout;
 
 namespace MO {
 
 class Parameter;
+class ParameterTexture;
 class Object;
 class ObjectEditor;
 
@@ -62,6 +64,7 @@ private:
     void emitStatusTipChanged_(const QString&);
 
     void createWidgets_();
+    void addTexParamButtons_(ParameterTexture*, QHBoxLayout*);
     void addRemoveModMenu_(QMenu *, Parameter *);
     void addLinkModMenu_(QMenu *, Parameter *, int objectTypeFlags);
     void addEditModMenu_(QMenu *, Parameter *);

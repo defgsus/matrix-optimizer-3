@@ -62,6 +62,20 @@ void TextTO::createParameters()
 {
     TextureObjectBase::createParameters();
 
+    params()->beginParameterGroup("to_res", tr("resolution and format"));
+
+        pMipmaps_ = params()->createIntParameter(
+                    "mipmaps", tr("mip-map levels"),
+                    tr("The maximum number of mip-map levels to create, "
+                       "where each level is half the size of the previous level, "
+                       "0 means no mip-maps"),
+                    0, true, false);
+        pMipmaps_->setMinValue(0);
+        pMipmaps_->setDefaultEvolvable(false);
+
+    params()->endParameterGroup();
+
+
     params()->beginParameterGroup("text", tr("text"));
     initParameterGroupExpanded("text");
 
@@ -116,14 +130,6 @@ void TextTO::createParameters()
                     tr("Distance to top or bottom border"),
                     0.05,  -1., 1.,
                     0.01, true, false);
-        pMipmaps_ = params()->createIntParameter(
-                    "mipmaps", tr("mip-map levels"),
-                    tr("The maximum number of mip-map levels to create, "
-                       "where each level is half the size of the previous level, "
-                       "0 means no mip-maps"),
-                    0, true, false);
-        pMipmaps_->setMinValue(0);
-        pMipmaps_->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 
