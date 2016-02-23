@@ -11,6 +11,7 @@
 //define MASK 0,1
 //define USE_ALPHA 0,1
 //define FRACTAL_MODE one of FMODE_.. below
+//define NUM_TURB_STEPS
 
 #define NF_RECT 0
 #define NF_PERLIN 1
@@ -36,6 +37,7 @@ uniform vec3        u_mask;
 uniform int         u_max_steps;
 uniform vec4        u_recursive; // xyz=dot, w=amt
 uniform vec3        u_shape; // rad, rndRad, rndPos
+uniform vec3        u_turb;
 
 // random stepper
 vec3 rseed;
@@ -83,7 +85,8 @@ vec4 NOISE(in vec3 p, in float level)
 #endif
     p = p * (u_scale.x + u_scale.y * level);
 
-    p += rnd3();
+    // random offset per layer
+    p += rnd3() * 5.;
 
 #if USE_ALPHA == 1
             vec4 col =
@@ -120,11 +123,27 @@ vec4 NOISE(in vec3 p, in float level)
 #endif
 }
 
+vec2 turbulence(in vec2 p, in float lambda, in float omega)
+{
+    float l = lambda, o = omega;
+    for (int i=0; i<NUM_TURB_STEPS; ++i)
+    {
+        if (l<0.0001)
+            break;
+        p += l * (-1.+2.*noise2(vec3(o * p, 3.5)));
+        l *= lambda;
+        o *= omega;
+    }
+    return p;
+}
 
 // one pixel of noise mixture
 vec4 mainFunc(in vec2 uv)
 {
     rseed = u_start_seed;
+
+    // turbulence
+    uv = turbulence(uv, u_turb.x, u_turb.y * u_scale.x);
 
     // single noise layer
 #if FRACTAL_MODE == FMODE_SINGLE

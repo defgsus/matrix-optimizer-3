@@ -56,10 +56,14 @@ struct RandomTO::Private
             * p_recursive_w,
             * p_shapeSize,
             * p_rndShapePos,
-            * p_rndShapeSize;
+            * p_rndShapeSize,
+            * p_turb_x,
+            * p_turb_y
+            ;
     ParameterInt
             * p_seed,
-            * p_steps;
+            * p_steps,
+            * p_turbSteps;
     ParameterSelect
             * m_rotate,
             * m_noise,
@@ -80,7 +84,8 @@ struct RandomTO::Private
             * u_mask,
             * u_max_steps,
             * u_recursive,
-            * u_shape;
+            * u_shape,
+            * u_turb;
 
 };
 
@@ -138,6 +143,17 @@ void RandomTO::Private::createParameters()
 {
     to->params()->beginParameterGroup("noise", tr("noise"));
     to->initParameterGroupExpanded("noise");
+
+        p_turbSteps = to->params()->createIntParameter(
+            "turbulence_steps", tr("turbulence steps"),
+            tr("Number of iterations of perturbations of coordinate, 0 = off"),
+            0, 0, 30, 1, true, false);
+        p_turb_x = to->params()->createFloatParameter(
+                "turbulence_x", tr("turbulence amount"),
+                tr("Perturbation of coordinate per iteration"), 0.1,  0.01);
+        p_turb_y = to->params()->createFloatParameter(
+                "turbulence_y", tr("turbulence scale"),
+                tr("Scale of perturbation of coordinate per iteration"), 3.,  0.1);
 
         m_noise = to->params()->createSelectParameter(
                     "noise_type", tr("noise type"),
@@ -203,9 +219,9 @@ void RandomTO::Private::createParameters()
                     tr("Multiplier of the amplitude per layer"), 0.8,  0.05);
 
         p_size = to->params()->createFloatParameter(
-                    "size", tr("size"), tr("The zoom-out factor"), 1.0,  0.1);
+                    "size", tr("scale"), tr("The zoom-out factor"), 10.0,  0.1);
         p_size_add = to->params()->createFloatParameter(
-                    "size_add", tr("size per layer"),
+                    "size_add", tr("scale per layer"),
                     tr("Increase of the zoom-out factor per noise layer"), 2.0,  0.1);
 
 
@@ -306,6 +322,7 @@ void RandomTO::onParameterChanged(Parameter * p)
     TextureObjectBase::onParameterChanged(p);
 
     if (p == p_->m_alpha
+        || p == p_->p_turbSteps
         || p == p_->m_fractal
         || p == p_->m_mask
         || p == p_->m_noise
@@ -327,7 +344,10 @@ void RandomTO::updateParameterVisibility()
     int nmode = p_->m_noise->baseValue();
     int fmode = p_->m_fractal->baseValue();
     bool mask = p_->m_mask->baseValue();
+    bool turb = p_->p_turbSteps->baseValue() > 0;
 
+    p_->p_turb_x->setVisible(turb);
+    p_->p_turb_y->setVisible(turb);
     p_->p_voro_cell->setVisible(nmode == P_VORONOISE);
     p_->p_smooth->setVisible(nmode == P_VORONOISE || nmode == P_CIRCLE);
     p_->p_rnd_rot->setVisible(p_->m_rotate->baseValue());
@@ -367,6 +387,7 @@ void RandomTO::Private::initGl()
         src.addDefine(QString("#define MASK %1").arg(m_mask->baseValue()));
         src.addDefine(QString("#define USE_ALPHA %1").arg(m_alpha->baseValue()));
         src.addDefine(QString("#define FRACTAL_MODE %1").arg(m_fractal->baseValue()));
+        src.addDefine(QString("#define NUM_TURB_STEPS %1").arg(p_turbSteps->baseValue()));
     }
     catch (Exception& )
     {
@@ -392,6 +413,7 @@ void RandomTO::Private::initGl()
     u_mask = shader->getUniform("u_mask", false);
     u_max_steps = shader->getUniform("u_max_steps", false);
     u_recursive = shader->getUniform("u_recursive", false);
+    u_turb = shader->getUniform("u_turb", false);
 }
 
 void RandomTO::Private::releaseGl()
@@ -459,6 +481,10 @@ void RandomTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
                                p_recursive_y->value(time),
                                p_recursive_z->value(time),
                                p_recursive_w->value(time));
+    if (u_turb)
+        u_turb->setFloats(p_turb_x->value(time),
+                          p_turb_y->value(time));
+
     to->renderShaderQuad(time);
 }
 
