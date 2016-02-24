@@ -75,6 +75,6 @@ QImage GeneralImage::getErrorImage(const QString &text,
 void GeneralImage::getErrorImage(QImage &img, const QString &text)
 {
     getTextImage(img, text,
-                 QColor(255, 255, 255),
+                 QColor(255, 128, 128),
                  QColor(128, 0, 0));
 }

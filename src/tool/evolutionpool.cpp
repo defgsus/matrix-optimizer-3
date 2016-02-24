@@ -19,6 +19,7 @@
 #include "evolutionbase.h"
 #include "math/random.h"
 #include "types/properties.h"
+#include "tool/generalimage.h"
 #include "io/error.h"
 #include "io/time.h"
 
@@ -397,7 +398,8 @@ void EvolutionPool::crossBreed()
     if (!t.isLocked)
     {
         auto evo = createOffspring(parents);
-        t.setInstance(evo);
+        if (evo)
+            t.setInstance(evo);
     }
 
     for (auto v : parents)
@@ -459,7 +461,7 @@ EvolutionBase* EvolutionPool::createOffspring(const std::vector<EvolutionBase*>&
         return nullptr;
 
     // choose one
-    auto evo = specimen(p_->rnd.getUInt32() % parents.size());
+    auto evo = parents[p_->rnd.getUInt32() % parents.size()];
     if (!evo)
         return nullptr;
 
@@ -498,7 +500,8 @@ void EvolutionPool::Private::renderTile(Tile& tile)
         tile.dirty = false;
     }
     else
-        tile.image.fill(Qt::red);
+        GeneralImage::getTextImage(tile.image, QObject::tr("empty"),
+                                   QColor(255,255,255), QColor(50,50,50));
 }
 
 void EvolutionPool::Private::renderTiles()

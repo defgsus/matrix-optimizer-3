@@ -13,6 +13,7 @@
 
 #include <QImage>
 #include <QString>
+#include <QColor>
 
 /** An image generator for commonly used images */
 class GeneralImage
