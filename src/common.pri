@@ -694,4 +694,4 @@ SOURCES += \
     $$PWD/object/interface/evolutioneditinterface.cpp \
     $$PWD/object/util/parameterevolution.cpp \
     $$PWD/tool/generalimage.cpp \
-    $$PWD/object/interface/valuefloatinterfacce.cpp
+    $$PWD/object/interface/valuefloatinterface.cpp

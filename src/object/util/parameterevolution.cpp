@@ -458,12 +458,15 @@ bool ParameterEvolution::Private::getImage(
         grid.setViewSpace(viewSpace);
         grid.setOptions(GUI::PAINTER::Grid::O_DrawX
                         | GUI::PAINTER::Grid::O_DrawY
-                        | GUI::PAINTER::Grid::O_DrawTextY);
+                        | GUI::PAINTER::Grid::O_DrawTextX
+                        | GUI::PAINTER::Grid::O_DrawTextY
+                        );
         grid.paint(p);
 
         FloatCurveData fdata;
         fdata.seq = seq;
         fdata.startTime = rtime;
+        fdata.startTime -= rtime.second();
         GUI::PAINTER::ValueCurve curve;
         curve.setViewSpace(viewSpace);
         curve.setCurveData(&fdata);
