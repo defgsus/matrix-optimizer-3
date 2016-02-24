@@ -165,8 +165,9 @@ void ParameterEvolution::serialize(QJsonObject& o) const
             ar.insert(param->param->idName(), param->valueInt);
         else if (auto ps = dynamic_cast<ParameterSelect*>(param->param))
         {
-            if (param->valueSelect >= 0 && param->valueSelect < ps->valueIds().size())
-                ar.insert(param->param->idName(), ps->valueIds()[param->valueSelect]);
+            auto idx = ps->valueList().indexOf(param->valueSelect);
+            if (idx >= 0 && idx < ps->valueIds().size())
+                ar.insert(param->param->idName(), ps->valueIds()[idx]);
         }
         else if (dynamic_cast<ParameterFont*>(param->param))
             ar.insert(param->param->idName(), param->valueFont.toString());
@@ -186,6 +187,8 @@ void ParameterEvolution::deserialize(const QJsonObject& o)
         MO_IO_ERROR(VERSION_MISMATCH, "Missing 'parameter' in json evolution");
     if (!ar->isObject())
         MO_IO_ERROR(VERSION_MISMATCH, "'parameter' of wrong type in json evolution");
+
+    p_->paramMap.clear();
 
     // associate Object from current scene
     if (!p_->object && Scene::currentScene())
@@ -220,12 +223,13 @@ void ParameterEvolution::deserialize(const QJsonObject& o)
         {
             int i = ps->valueIds().indexOf( data.value(key).toString() );
             if (i>=0)
-                ps->setValue(i);
+                param->valueSelect = ps->valueList()[i];
         }
         else if (dynamic_cast<ParameterFont*>(param->param))
             param->valueFont.fromString( data.value(key).toString() );
     }
 }
+
 
 
 Object* ParameterEvolution::object() const { return p_->object; }
@@ -272,7 +276,7 @@ void ParameterEvolution::Private::setObjectParam(Parameter* opar, const Param* p
         object->onParameterChanged(par->param);
 }
 
-void ParameterEvolution::setParameter(Parameter* p)
+void ParameterEvolution::addParameter(Parameter* p)
 {
     // find or create entry
     Private::Param* param;
@@ -281,33 +285,32 @@ void ParameterEvolution::setParameter(Parameter* p)
         Private::Param tmp;
         tmp.param = p;
         p_->paramMap.insert(std::make_pair(p->idName(), tmp));
-        param = &(p_->paramMap.find(p->idName())->second);
 
-        properties().set("_param_" + p->idName(),
-                         QObject::tr("\"%1\"").arg(p->name()),
-                         QObject::tr("Enables mutation of specific parameter"),
-                         param->param->isEvolvable());
+        param = &(p_->paramMap.find(p->idName())->second);
     }
+
+    properties().set("_param_" + p->idName(),
+                     QObject::tr("\"%1\"").arg(p->name()),
+                     QObject::tr("Enables mutation of specific parameter"),
+                     param->param->isEvolvable());
 
     p_->getObjectParam(param->param, param);
 }
 
 void ParameterEvolution::Private::getObjectParams()
 {
-    paramMap.clear();
     if (!object)
         return;
     for (auto par : object->params()->parameters())
         if ((//par->isVisible()
             !par->isZombie()
-             )
-               && (   dynamic_cast<ParameterFloat*>(par)
+             ) && (    dynamic_cast<ParameterFloat*>(par)
                     || dynamic_cast<ParameterInt*>(par)
                     || dynamic_cast<ParameterSelect*>(par)
                     || dynamic_cast<ParameterFont*>(par)
                     )
                 )
-            p->setParameter(par);
+            p->addParameter(par);
 }
 
 void ParameterEvolution::Private::setObjectParams()
@@ -364,12 +367,16 @@ void ParameterEvolution::getImage(QImage &img) const
     auto backup = new ParameterEvolution(p_->object);
     p_->setObjectParams();
 
-    RenderTime time(CurrentTime::time(), 1./60., MO_GFX_THREAD);
-
     if (auto val = dynamic_cast<ValueTextureInterface*>(p_->object))
+    {
+        RenderTime time(CurrentTime::time(), 1./60., MO_GFX_THREAD);
         valid = p_->getImage(img, time, val);
+    }
     else if (auto val = dynamic_cast<ValueFloatInterface*>(p_->object))
+    {
+        RenderTime time(CurrentTime::time(), 1./60., MO_GUI_THREAD);
         valid = p_->getImage(img, time, val);
+    }
 
 
     if (!valid)
@@ -521,6 +528,8 @@ void ParameterEvolution::randomize()
         Private::Param* param = &it->second;
 
         bool doEvo = properties().get("_param_" + param->param->idName()).toBool();
+        //if (!doEvo)
+        //    continue;
 
         if (auto pf = dynamic_cast<ParameterFloat*>(param->param))
         {
@@ -657,8 +666,10 @@ void ParameterEvolution::mate(const EvolutionBase* otherBase)
             continue;
 
         auto otherParam = other->p_->getParam(param->param->idName());
-        // XXX Also copies Parameter pointer
+        // Keep Parameter pointer
+        auto par = param->param;
         *param = *otherParam;
+        param->param = par;
     }
 }
 
