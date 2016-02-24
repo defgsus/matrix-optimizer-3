@@ -98,7 +98,7 @@ signals:
     void parameterVisibilityChanged(MO::Parameter*);
 
     /** All parameter widgets should be recreated */
-    void parametersChanged();
+    void parametersChanged(MO::Object*);
 
     /** A sequence has been changed somehow */
     void sequenceChanged(MO::Sequence*);

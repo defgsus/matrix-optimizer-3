@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_SEQUENCEFLOAT_H
 #define MOSRC_OBJECT_SEQUENCEFLOAT_H
 
+#include <mutex>
+
 #include <QStringList>
 
 #include "sequence.h"
@@ -136,9 +138,6 @@ public:
     bool useFrequency() const { return p_useFreq_->baseValue(); }
     bool phaseInDegree() const { return p_doPhaseDegree_->baseValue(); }
 
-    /** Returns the minimum and maximum values across the time range (local) */
-    void getMinMaxValue(Double localStart, Double localEnd,
-                        Double& minValue, Double& maxValue, uint thread) const;
 #if 0
     /** Returns access to the wavetable generator, or NULL if not initialized */
     AUDIO::WavetableGenerator * wavetableGenerator() const { return wavetableGen_; }
@@ -199,7 +198,13 @@ public:
     PPP_NAMESPACE::Parser * equation(uint thread);
     const PPP_NAMESPACE::Parser * equation(uint thread) const;
 
+    // ------- ValueFloatInterface --------
+
     Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
+    /** Returns the minimum and maximum values across the time range (local) */
+    void getValueFloatRange(
+                uint channel, const RenderTime& time, Double length,
+                Double* minimum, Double* maximum) const override;
 
 signals:
 
@@ -230,8 +235,9 @@ private:
 
     Double phaseMult_;
 
+    mutable std::mutex cacheMutex_;
     mutable std::vector<Double>
-        lastMinMaxStart_, lastMinMaxEnd_,
+        lastMinMaxStart_, lastMinMaxLength_,
         lastMinValue_, lastMaxValue_;
 
     ParameterFloat

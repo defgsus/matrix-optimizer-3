@@ -185,7 +185,7 @@ void PluginAO::Private::updateParameters(bool setDefaults)
     }
 
     if (ao->editor())
-        emit ao->editor()->parametersChanged();
+        emit ao->editor()->parametersChanged(ao);
 #else
     Q_UNUSED(setDefaults);
 #endif

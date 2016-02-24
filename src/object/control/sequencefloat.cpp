@@ -215,6 +215,7 @@ void SequenceFloat::createParameters()
                       tr("Selects which channel to play from the sound file"),
                       0, true, true);
         p_soundFileChannel_->setMinValue(0);
+        p_soundFileChannel_->setDefaultEvolvable(false);
 
         p_wtSize_ = params()->createSelectParameter("wtsize", tr("wavetable size"),
                    tr("Number of samples in the wavetable"),
@@ -223,6 +224,7 @@ void SequenceFloat::createParameters()
         { "", "", "", "", "", "", "", "", "", "", "", "", "" },
         { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         1024, true, false);
+        p_wtSize_->setDefaultEvolvable(false);
 
         p_oscWtSize_ = params()->createSelectParameter("oscwtsize", tr("wavetable size"),
                    tr("Number of samples in the wavetable"),
@@ -231,6 +233,7 @@ void SequenceFloat::createParameters()
         { "", "", "", "", "", "", "", "", "", "" },
         { 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         4096, true, false);
+        p_oscWtSize_->setDefaultEvolvable(false);
 
         p_wtFreqs_ = params()->createTimeline1DParameter("wtfreqs", tr("frequency spectrum"),
                     tr("Editable curve for the amplitude of each frequency band"),
@@ -269,6 +272,7 @@ void SequenceFloat::createParameters()
                   tr("Phase is in the range of [0,1]"),
                   tr("Phase is in the range of [0,360]"),
                   false, true, false);
+        p_doPhaseDegree_->setDefaultEvolvable(false);
 
         p_pulseWidth_ = params()->createFloatParameter("pulsewidth", tr("pulse width"),
                    tr("Pulsewidth of the waveform, describes the width of the positive edge"),
@@ -291,7 +295,7 @@ void SequenceFloat::createParameters()
 
         p_specNum_ = params()->createFloatParameter("specnum", tr("partial voices"),
                    tr("Number of partial voices of the spectral oscillator. Does not have to be an integer"),
-                   1.0);
+                   8.0);
         p_specNum_->setMinValue(1.0);
         p_specNum_->setMaxValue(64.0);
 
@@ -320,10 +324,11 @@ void SequenceFloat::createParameters()
         { "", "", "", "", "", "", "", "", "", "", "", "", "" },
         { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
         1024, true, false);
+        p_wtSpecSize_->setDefaultEvolvable(false);
 
         p_wtSpecNum_ = params()->createIntParameter("wtspecnum", tr("partial voices"),
                    tr("Number of partial voices of the spectral oscillator"),
-                   1, 1, 128, 1, true, false);
+                   8, 1, 128, 1, true, false);
 
         p_wtSpecOct_ = params()->createIntParameter("wtspecoct", tr("base octave"),
                    tr("The fundamental octave of the voice"),
@@ -350,6 +355,7 @@ void SequenceFloat::createParameters()
     // ----- loop overlap ------
 
     params()->beginParameterGroup("loop", tr("looping"));
+    params()->beginEvolveGroup(false);
 
         p_loopOverlapMode_ = params()->createSelectParameter("loopoverlapmode", tr("loop overlap mode"),
                 tr("Selects the loop overlapping mode, that is, if and how values are mixed at "
@@ -370,6 +376,7 @@ void SequenceFloat::createParameters()
                    tr("A value that is added to the blended value in the transition window"),
                    0.0);
 
+    params()->endEvolveGroup();
     params()->endParameterGroup();
 }
 
@@ -377,11 +384,14 @@ void SequenceFloat::onParameterChanged(Parameter *p)
 {
     Sequence::onParameterChanged(p);
 
+    updateValueObjects_();
+    /*
     if (p == p_mode_)
         updateValueObjects_();
 
     if (p == p_soundFile_)
         updateValueObjects_();
+    */
 
     if (p == p_doPhaseDegree_)
         updatePhaseInDegree_();
@@ -649,6 +659,8 @@ void SequenceFloat::updateValueObjects_()
         if (!timeline_)
             timeline_ = new MATH::Timeline1d;
     }
+    // ^ don't delete
+    // user may want to keep the timeline
 
     // update equation parser
     if (sequenceType() == ST_EQUATION)
@@ -670,23 +682,25 @@ void SequenceFloat::updateValueObjects_()
     }
 
     // update soundfile
-    if (sequenceType() == ST_SOUNDFILE)
+    if (sequenceType() == ST_SOUNDFILE && !p_soundFile_->value().isEmpty())
     {
-        // release previous, if filename changed
-        if (soundFile_ && soundFile_->filename() != p_soundFile_->value())
-            AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
+        // remember previous for releasing
+        auto oldsf = soundFile_;
         // get new
         soundFile_ = AUDIO::SoundFileManager::getSoundFile(p_soundFile_->value());
         setErrorMessage(soundFile_->errorString());
         // update loop-length default value
         if (soundFile_->isOk())
             setDefaultLoopLength(soundFile_->lengthSeconds());
+        // release previous
+        if (oldsf)
+            oldsf->release();
     }
     else
     {
         // get rid of soundfile
         if (soundFile_)
-            AUDIO::SoundFileManager::releaseSoundFile(soundFile_);
+            soundFile_->release();
         soundFile_ = 0;
     }
 }
@@ -876,10 +890,12 @@ Double SequenceFloat::value_(const RenderTime & gtime) const
                 * wavetable_->value(time.second());
 
         case ST_SOUNDFILE:
-            MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
+            //MO_ASSERT(soundFile_, "SequenceFloat('" << idName() << "')::value() without soundfile");
+            if (soundFile_)
             return p_offset_->value(gtime) + p_amplitude_->value(gtime)
                 * soundFile_->value(time.second(),
                                     std::min(soundFile_->numberChannels(), (uint)p_soundFileChannel_->value(gtime)) );
+            else return 0.;
 
         case ST_EQUATION:
             MO_ASSERT(equation_[time.thread()], "SequenceFloat('" << idName()
@@ -907,41 +923,47 @@ Double SequenceFloat::value_(const RenderTime & gtime) const
 }
 
 
-void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
-                    Double& minValue, Double& maxValue, uint thread) const
+void SequenceFloat::getValueFloatRange(
+        uint channel, const RenderTime& time, Double length,
+        Double* minValue, Double* maxValue) const
 {
     /** @todo need to check for changes of sequence content */
 #if 1
     bool docalc = false;
 
-    if (thread >= lastMinMaxStart_.size())
+    if (time.thread() >= lastMinMaxStart_.size())
     {
-        lastMinMaxStart_.resize(thread+1);
-        lastMinMaxEnd_.resize(thread+1);
-        lastMinValue_.resize(thread+1);
-        lastMaxValue_.resize(thread+1);
+        std::lock_guard<std::mutex> lock(cacheMutex_);
+        lastMinMaxStart_.resize(time.thread()+3);
+        lastMinMaxLength_.resize(time.thread()+3);
+        lastMinValue_.resize(time.thread()+3);
+        lastMaxValue_.resize(time.thread()+3);
         docalc = true;
     }
     else
-    if (lastMinMaxStart_[thread] != localStart
-            || lastMinMaxEnd_[thread] != localEnd)
+    if (lastMinMaxStart_[time.thread()] != time.second()
+            || lastMinMaxLength_[time.thread()] != length)
     {
-        lastMinMaxStart_[thread] = localStart;
-        lastMinMaxEnd_[thread] = localEnd;
+        lastMinMaxStart_[time.thread()] = time.second();
+        lastMinMaxLength_[time.thread()] = length;
         docalc = true;
     }
 
     if (!docalc)
     {
-        minValue = lastMinValue_[thread];
-        maxValue = lastMaxValue_[thread];
+        *minValue = lastMinValue_[time.thread()];
+        *maxValue = lastMaxValue_[time.thread()];
         return;
     }
 #endif
 
+    ValueFloatInterface::getValueFloatRange(
+                channel, time, length, minValue, maxValue);
+
+    /*
     const Double
-        len = localEnd - localStart,
-        step = std::max(0.1, len / 5000.0);
+        step = std::max(0.1, length / 5000.0);
+
 
     Double time = localStart;
 
@@ -960,14 +982,17 @@ void SequenceFloat::getMinMaxValue(Double localStart, Double localEnd,
 
     // minimum size
     if (maxValue - minValue < 0.1)
-        maxValue += 0.1;
+        maxValue += 0.001;
+    */
 
-    lastMinValue_[thread] = minValue;
-    lastMaxValue_[thread] = maxValue;
+    lastMinValue_[time.thread()] = *minValue;
+    lastMaxValue_[time.thread()] = *maxValue;
 }
 
 void SequenceFloat::updateWavetable_()
 {
+    if (!wavetable_)
+        abort();
     MO_ASSERT(wavetable_, "updateWavetable() without wavetable");
 
     if (sequenceType() == ST_OSCILLATOR_WT)

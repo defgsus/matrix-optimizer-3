@@ -693,4 +693,5 @@ SOURCES += \
     $$PWD/math/kalisetevolution.cpp \
     $$PWD/object/interface/evolutioneditinterface.cpp \
     $$PWD/object/util/parameterevolution.cpp \
-    $$PWD/tool/generalimage.cpp
+    $$PWD/tool/generalimage.cpp \
+    $$PWD/object/interface/valuefloatinterfacce.cpp

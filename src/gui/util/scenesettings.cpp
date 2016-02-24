@@ -205,12 +205,15 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
         space.setScaleY(2.4);
     }
 
-    if (const SequenceFloat * seqf = qobject_cast<const SequenceFloat*>(obj))
+    if (const ValueFloatInterface * fl = dynamic_cast<const ValueFloatInterface*>(obj))
     {
+        /** @todo This is not using a specific time range */
         Double minv, maxv;
-        seqf->getMinMaxValue(0, 10/*seqf->length()*/, minv, maxv, MO_GUI_THREAD);
-        space.setY(minv-0.2);
-        space.setScaleY(maxv-minv+0.4);
+        fl->getValueFloatRange(0, RenderTime(0., MO_GUI_THREAD), 10., &minv, &maxv);
+        maxv += 0.1; minv -= 0.1;
+        Double delta = (maxv - minv) / 50.;
+        space.setY(minv-delta);
+        space.setScaleY(maxv-minv+delta*2.);
     }
 
     return space;

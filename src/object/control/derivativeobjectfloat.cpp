@@ -51,6 +51,7 @@ void DerivativeObjectFloat::createParameters()
                                        tr("Input float value from which the derivative is calculated"),
                                        0.0, 1.0);
         p_value_->setVisibleGraph(true);
+        p_value_->setDefaultEvolvable(false);
 
         p_order_ = params()->createIntParameter("order", tr("order"),
                                         tr("Selects the order of differentiation"),

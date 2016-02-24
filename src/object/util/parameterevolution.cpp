@@ -19,7 +19,9 @@
 #include "parameterevolution.h"
 #include "object/visual/objectgl.h"
 #include "object/scene.h"
+//#include "object/control/sequencefloat.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/valuefloatinterface.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -32,11 +34,29 @@
 #include "gl/texture.h"
 #include "gl/texturerenderer.h"
 #include "tool/generalimage.h"
+#include "gui/painter/grid.h"
+#include "gui/painter/valuecurve.h"
 #include "io/currenttime.h"
 #include "io/error.h"
 
 #include "io/log.h"
 namespace MO {
+
+namespace {
+
+    /** wrapper for ValueFloatInterface */
+    class FloatCurveData : public GUI::PAINTER::ValueCurveData
+    {
+    public:
+        const ValueFloatInterface * seq;
+        RenderTime startTime;
+        Double value(Double time) const
+            { return seq->valueFloat(0, startTime + time); }
+    };
+
+}
+
+
 
 MO_REGISTER_EVOLUTION(ParameterEvolution)
 
@@ -61,6 +81,8 @@ struct ParameterEvolution::Private
     void getObjectParams();
     void setObjectParams();
     void updateGui();
+    bool getImage(QImage& img, const RenderTime& time, ValueTextureInterface* val);
+    bool getImage(QImage& img, const RenderTime& time, ValueFloatInterface* val);
 
     Param* getParam(const QString& id)
     { auto i = paramMap.find(id); return i==paramMap.end() ? nullptr : &(i->second); }
@@ -303,8 +325,16 @@ void ParameterEvolution::Private::setObjectParams()
 
 void ParameterEvolution::Private::updateGui()
 {
-    if (object && object->editor())
-        emit object->editor()->parametersChanged();
+    if (object)
+    {
+        object->updateParameterVisibility();
+        if (auto edit = object->editor())
+        {
+            emit edit->parametersChanged(object);
+            //if (auto seq = dynamic_cast<SequenceFloat*>(object))
+            //    emit edit->sequenceChanged(seq);
+        }
+    }
 }
 
 void ParameterEvolution::updateFromObject()
@@ -334,71 +364,115 @@ void ParameterEvolution::getImage(QImage &img) const
     auto backup = new ParameterEvolution(p_->object);
     p_->setObjectParams();
 
-    if (auto valtex = dynamic_cast<ValueTextureInterface*>(p_->object))
-    {
-        RenderTime time(CurrentTime::time(), 1./60., MO_GFX_THREAD);
+    RenderTime time(CurrentTime::time(), 1./60., MO_GFX_THREAD);
 
-        try
-        {
-            auto scene = p_->object->sceneObject();
-            if (scene)
-            {
-                scene->glContext()->makeCurrent();
-                scene->renderScene(time, true);
+    if (auto val = dynamic_cast<ValueTextureInterface*>(p_->object))
+        valid = p_->getImage(img, time, val);
+    else if (auto val = dynamic_cast<ValueFloatInterface*>(p_->object))
+        valid = p_->getImage(img, time, val);
 
-                if (auto tex = valtex->valueTexture(0, time))
-                {
-    #if 0
-                    // XXX NOT WORKING CURRENTLY ???
-
-                    // create resampler
-                    auto render = GL::TextureRenderer(img.width(), img.height() );
-
-                    // gl-resize
-                    tex->bind();
-                    render.render(tex, true);
-                    // download image
-                    if (auto stex = render.texture())
-                    {
-                        stex->bind();
-                        QImage img = stex->toQImage();
-                        render.releaseGl();
-                        valid = true;
-                    }
-                    render.releaseGl();
-    #else
-                    tex->bind();
-                    img = tex->toQImage().scaled(img.size());
-                    valid = true;
-    #endif
-                }
-                else
-                {
-                    GeneralImage::getErrorImage(img, QObject::tr("No\ntexture\noutput"));
-                    valid = true;
-                }
-            }
-            else
-            {
-                GeneralImage::getErrorImage(img, QObject::tr("No\nscene\nobject"));
-                valid = true;
-            }
-        }
-        catch (const Exception& e)
-        {
-            MO_WARNING("In ParameterEvolution: " << e.what());
-            GeneralImage::getErrorImage(img, QObject::tr("Error on\nrendering"));
-            valid = true;
-        }
-    }
 
     if (!valid)
-        GeneralImage::getErrorImage(img, QObject::tr("No\ngraphic\noutput"));
+        GeneralImage::getErrorImage(img, QObject::tr("No graphic output\nfrom '%1'")
+                                                .arg(p_->object->name()) );
 
     if (backup)
         backup->p_->setObjectParams();
 }
 
+bool ParameterEvolution::Private::getImage(
+        QImage& img, const RenderTime& time, ValueTextureInterface* valtex)
+{
+    try
+    {
+        auto scene = object->sceneObject();
+        if (scene)
+        {
+            scene->glContext()->makeCurrent();
+            scene->renderScene(time, true);
+
+            if (auto tex = valtex->valueTexture(0, time))
+            {
+#if 0
+                // XXX NOT WORKING CURRENTLY ???
+
+                // create resampler
+                auto render = GL::TextureRenderer(img.width(), img.height() );
+
+                // gl-resize
+                tex->bind();
+                render.render(tex, true);
+                // download image
+                if (auto stex = render.texture())
+                {
+                    stex->bind();
+                    QImage img = stex->toQImage();
+                    render.releaseGl();
+                    valid = true;
+                }
+                render.releaseGl();
+                return true;
+#else
+                tex->bind();
+                img = tex->toQImage().scaled(img.size());
+                return true;
+#endif
+            }
+            else
+            {
+                GeneralImage::getErrorImage(img, QObject::tr("No\ntexture\noutput"));
+                return true;
+            }
+        }
+        else
+        {
+            GeneralImage::getErrorImage(img, QObject::tr("No\nscene\nobject"));
+            return true;
+        }
+    }
+    catch (const Exception& e)
+    {
+        MO_WARNING("In ParameterEvolution: " << e.what());
+        GeneralImage::getErrorImage(img, QObject::tr("Error on\nrendering"));
+        return true;
+    }
+}
+
+bool ParameterEvolution::Private::getImage(
+        QImage& img, const RenderTime& rtime, ValueFloatInterface* seq)
+{
+    Double length = 10., minV, maxV;
+    seq->getValueFloatRange(0, rtime, length, &minV, &maxV);
+    Double delta = std::max(0.1, (maxV - minV) / 50.);
+    minV -= delta;
+    maxV += delta;
+    GUI::UTIL::ViewSpace viewSpace(rtime.second(), minV, length, maxV-minV);
+
+    img.fill(Qt::black);
+
+    QPainter p;
+    p.begin(&img);
+    p.setRenderHint(QPainter::Antialiasing, true);
+
+        GUI::PAINTER::Grid grid;
+        grid.setViewSpace(viewSpace);
+        grid.setOptions(GUI::PAINTER::Grid::O_DrawX
+                        | GUI::PAINTER::Grid::O_DrawY
+                        | GUI::PAINTER::Grid::O_DrawTextY);
+        grid.paint(p);
+
+        FloatCurveData fdata;
+        fdata.seq = seq;
+        fdata.startTime = rtime;
+        GUI::PAINTER::ValueCurve curve;
+        curve.setViewSpace(viewSpace);
+        curve.setCurveData(&fdata);
+
+        curve.paint(p);
+
+    p.end();
+    return true;
+}
 
 QString ParameterEvolution::toString() const
 {

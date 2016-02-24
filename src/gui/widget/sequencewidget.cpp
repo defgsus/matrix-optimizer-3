@@ -92,8 +92,10 @@ void SequenceWidget::updateValueRange()
 {
     if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(sequence_))
     {
-        seqf->getMinMaxValue(0.0, seqf->end() - seqf->start(), minValue_, maxValue_,
-                             MO_GUI_THREAD);
+        seqf->getValueFloatRange(
+                    0, RenderTime(seqf->start(), MO_GUI_THREAD),
+                    seqf->end() - seqf->start(), &minValue_, &maxValue_);
+        maxValue_ += 0.1; minValue_ -= 0.1;
         auto delta = (maxValue_ - minValue_) / 50;
         maxValue_ += delta;
         minValue_ -= delta;

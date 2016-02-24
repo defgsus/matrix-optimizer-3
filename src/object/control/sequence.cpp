@@ -82,6 +82,7 @@ void Sequence::createParameters()
     Object::createParameters();
 
     params()->beginParameterGroup("time", tr("time"));
+    params()->beginEvolveGroup(false);
 
         p_start_ = params()->createFloatParameter("start", tr("sequence start"),
                                           tr("Global start time of the sequence in seconds"),
@@ -102,9 +103,11 @@ void Sequence::createParameters()
                                           1.0);
         p_speed_->setMinValue(minimumSpeed());
 
+    params()->endEvolveGroup();
     params()->endParameterGroup();
 
     params()->beginParameterGroup("loop", "looping");
+    params()->beginEvolveGroup(false);
 
         p_looping_ = params()->createBooleanParameter("looping", tr("looping"),
                                           tr("Enables an internal loop for the sequence"),
@@ -120,6 +123,7 @@ void Sequence::createParameters()
                                            1.0);
         p_loopLength_->setMinValue(minimumLength());
 
+    params()->endEvolveGroup();
     params()->endParameterGroup();
 }
 

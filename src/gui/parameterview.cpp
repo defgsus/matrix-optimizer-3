@@ -84,7 +84,7 @@ void ParameterView::setObject(Object *object)
         editor_ = scene_->editor();
         connect(editor_, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(updateWidgetValue_(MO::Parameter*)));
-        connect(editor_, SIGNAL(parametersChanged()),
+        connect(editor_, SIGNAL(parametersChanged(MO::Object*)),
                 this, SLOT(updateParameters()));
         connect(editor_, SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged(MO::Sequence*)));

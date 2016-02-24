@@ -24,6 +24,9 @@ public:
 
     virtual Double valueFloat(uint channel, const RenderTime& time) const = 0;
 
+    /** Default implementation uses brute-force approach */
+    virtual void getValueFloatRange(uint channel, const RenderTime& time, Double length,
+                            Double* minimum, Double* maximum) const;
 };
 
 } // namespace MO

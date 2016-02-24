@@ -502,7 +502,7 @@ void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
         p_->p_scaleY->setValue(1.);
 
         if (editor())
-            emit editor()->parametersChanged();
+            emit editor()->parametersChanged(this);
 
         requestReinitGl();
     }

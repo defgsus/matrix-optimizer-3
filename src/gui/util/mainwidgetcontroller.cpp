@@ -213,7 +213,7 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(valueFloatChanged(MO::ValueFloatInterface*)), this, SLOT(onValueFloatChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onParamChanged_()));
     connect(objectEditor_, SIGNAL(parameterChanged(MO::Parameter*)), this, SLOT(onSceneChanged_()));
-    connect(objectEditor_, SIGNAL(parametersChanged()), this, SLOT(onSceneChanged_()));
+    connect(objectEditor_, SIGNAL(parametersChanged(MO::Object*)), this, SLOT(onParamsChanged_(MO::Object*)));
     connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
     {
@@ -1498,6 +1498,15 @@ void MainWidgetController::onParamChanged_()
 
     objectOutputView()->updateObject();
 }
+
+void MainWidgetController::onParamsChanged_(Object*o)
+{
+    if (dynamic_cast<ValueFloatInterface*>(o))
+        onValueFloatChanged_();
+    objectOutputView()->updateObject();
+}
+
+
 
 void MainWidgetController::onSceneChanged_()
 {

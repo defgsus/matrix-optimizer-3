@@ -131,8 +131,8 @@ void SequenceView::setScene(Scene *scene)
         scene_ = scene;
         connect(scene_->editor(), SIGNAL(sequenceChanged(MO::Sequence*)),
                 this, SLOT(onSequenceChanged_(MO::Sequence*)));
-        connect(scene_->editor(), SIGNAL(parameterChanged(MO::Parameter*)),
-                this, SLOT(onParameterChanged_(MO::Parameter*)));
+        connect(scene_->editor(), SIGNAL(parametersChanged(MO::Object*)),
+                this, SLOT(onParametersChanged_(MO::Object*)));
     }
 }
 
@@ -297,13 +297,18 @@ void SequenceView::adjustViewspaceVertically()
         v.setScaleY(2.);
     }
 
-    if (auto sf = dynamic_cast<SequenceFloat*>(sequence_))
+    auto sf = dynamic_cast<ValueFloatInterface*>(sequence_);
+    if (!sf)
+        sf = dynamic_cast<ValueFloatInterface*>(valueFloat_);
+    if (sf)
     {
-        Double mi, ma, range;
-        sf->getMinMaxValue(v.mapXTo(0.), v.mapXTo(1.), mi, ma, MO_GUI_THREAD);
-        range = ma - mi;
-        v.setY(mi - range * 0.05);
-        v.setScaleY(range * 1.1);
+        Double mi, ma,
+               start = v.mapXTo(0.), end = v.mapXTo(1.);
+        sf->getValueFloatRange(0, RenderTime(start, MO_GUI_THREAD), end - start, &mi, &ma);
+        ma += 0.1; mi -= 0.1;
+        Double delta = (ma - mi) / 50.;
+        v.setY(mi - delta);
+        v.setScaleY(ma - mi + delta * 2.);
     }
 
     setViewSpace(v);
@@ -351,9 +356,9 @@ void SequenceView::rulerXClicked_(Double time)
 
 
 
-void SequenceView::onParameterChanged_(Parameter * p)
+void SequenceView::onParametersChanged_(Object* o)
 {
-    if (p->object() == sequence_)
+    if (o == sequence_ || (void*)o == (void*)valueFloat_)
         onSequenceChanged_(sequence_);
 }
 

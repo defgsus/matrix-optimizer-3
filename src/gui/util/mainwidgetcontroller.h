@@ -180,6 +180,7 @@ private slots:
     void onObjectsDeleted_(const QList<MO::Object*>&);
     void onParamVisChanged_();
     void onParamChanged_();
+    void onParamsChanged_(MO::Object*);
     void onValueFloatChanged_();
     /** To trigger sceneNotSaved_ */
     void onSceneChanged_();

@@ -87,8 +87,8 @@ private slots:
     /** updates the Rulers to the viewspace. */
     void updateViewSpace_(const UTIL::ViewSpace&);
 
-    void onSequenceChanged_(MO::Sequence *);
-    void onParameterChanged_(MO::Parameter *);
+    void onSequenceChanged_(MO::Sequence*);
+    void onParametersChanged_(MO::Object*);
 
     void rulerXClicked_(Double);
 
