@@ -290,6 +290,8 @@ void Drawable::renderShader(const Mat4 &proj,
     //MO_ASSERT(uniformT_ != invalidGl, "no transformation matrix in shader");
 
     checkGeometryChanged_();
+    if (doRecompile_)
+        compileShader_();
 
     shader_->activate();
 

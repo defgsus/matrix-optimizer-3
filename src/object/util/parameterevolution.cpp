@@ -528,8 +528,6 @@ void ParameterEvolution::randomize()
         Private::Param* param = &it->second;
 
         bool doEvo = properties().get("_param_" + param->param->idName()).toBool();
-        //if (!doEvo)
-        //    continue;
 
         if (auto pf = dynamic_cast<ParameterFloat*>(param->param))
         {

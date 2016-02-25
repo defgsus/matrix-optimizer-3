@@ -83,6 +83,9 @@ public:
     /** Sets the visibility of the parameters according to current settings. */
     void updateParameterVisibility();
 
+    /** Access to the input texture parameter */
+    ParameterTexture* textureParam() const { return paramTex_; }
+
     // ------------ getter ---------------
 
     /** Returns true when type != TT_NONE */

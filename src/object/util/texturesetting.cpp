@@ -173,10 +173,17 @@ bool TextureSetting::needsReinit(Parameter *p) const
 
 void TextureSetting::updateParameterVisibility()
 {
-    paramTex_->setVisible( paramType_->baseValue() == TEX_PARAM );
+    bool isTexParam = paramType_->baseValue() == TEX_PARAM;
+    paramTex_->setVisible( isTexParam );
+    // these are now replicated in paramTex_
+    paramInterpol_->setVisible( !isTexParam );
+    paramMinify_->setVisible( !isTexParam );
+    paramWrapX_->setVisible( !isTexParam );
+    paramWrapY_->setVisible( !isTexParam );
+
     paramFilename_->setVisible( paramType_->baseValue() == TEX_FILE );
 
-    paramMipmaps_->setVisible( isMipmap() );
+    paramMipmaps_->setVisible( isMipmap() && !isTexParam );
 
     //paramAngelScript_->setVisible(paramType_->baseValue() == TEX_ANGELSCRIPT);
 }
@@ -292,7 +299,7 @@ void TextureSetting::releaseGl()
     Scene * scene = object_->sceneObject();
     if (scene)
     {
-        connect(scene, SIGNAL(sceneFboChanged()),
+        disconnect(scene, SIGNAL(sceneFboChanged()),
                 this, SLOT(updateSceneFbo_()));
     }
 

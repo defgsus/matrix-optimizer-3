@@ -534,6 +534,7 @@ void Model3d::createParameters()
 
 void Model3d::onParametersLoaded()
 {
+    ObjectGl::onParametersLoaded();
     updateCodeVersion_();
 }
 
@@ -955,6 +956,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
         // skybox (clear position from matrices)
 
         trans[3] = Vec4(0., 0., 0., 1.);
+
         Mat4 vm = rs.cameraSpace().cubeViewMatrix();
         vm[3] = Vec4(0., 0., 0, 1.);
         cubeViewTrans = vm * trans;

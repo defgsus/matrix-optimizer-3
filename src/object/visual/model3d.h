@@ -18,7 +18,6 @@
 #include "gl/shadersource.h"
 
 namespace MO {
-namespace GUI { class GeometryDialog; }
 
 class TextureMorphSetting;
 class UserUniformSetting;
