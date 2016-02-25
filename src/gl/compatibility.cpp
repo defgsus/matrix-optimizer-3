@@ -98,6 +98,7 @@ void Properties::getProperties()
     // texture
     MO_CHECK_GL( glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_TEXTURE_UNITS, &maxTextureUnits) );
+    MO_CHECK_GL( glGetIntegerv(GL_MAX_SAMPLES, &maxMultisamples) );
 
     // uniforms
     MO_CHECK_GL( glGetIntegerv(GL_MAX_UNIFORM_LOCATIONS, &maxUniformLocations) );
@@ -105,6 +106,7 @@ void Properties::getProperties()
     MO_CHECK_GL( glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_BLOCKS, &maxUniformBlocksFragment) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_GEOMETRY_UNIFORM_BLOCKS, &maxUniformBlocksGeometry) );
     MO_CHECK_GL( glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &maxUniformBlockBytes) );
+
 
     // ------- empirical tests ---------
 
@@ -128,6 +130,7 @@ QString Properties::toString() const
 
         << "texture size:              " << maxTextureSize << "\n"
         << "texture units:             " << maxTextureUnits << "\n"
+        << "multi-samples:             " << maxMultisamples << "\n"
 
         << "uniform locations:         " << maxUniformLocations << "\n"
         << "uniform blocks per shader: vert: " << maxUniformBlocksFragment

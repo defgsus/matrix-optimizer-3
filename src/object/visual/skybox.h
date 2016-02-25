@@ -44,12 +44,22 @@ public:
         A_NEG_Z
     };
 
+    enum PolyType
+    {
+        POLY_BOX,
+        POLY_ICO
+    };
+
     MO_OBJECT_CONSTRUCTOR(Skybox);
     ~Skybox();
 
     /** Returns a copy of the shader code after replacements, includes, etc.. */
     GL::ShaderSource shaderSource() const;
 
+    ContentMode contentMode() const;
+    ShapeMode shapeMode() const;
+    Axis axis() const;
+    PolyType polyType() const;
 protected:
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;

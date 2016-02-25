@@ -140,6 +140,7 @@ public:
     void initDefaultDepthTestMode(DepthTestMode m) { p_defaultDepthTestMode_ = m; }
     void initDefaultDepthWriteMode(DepthWriteMode m) { p_defaultDepthWriteMode_ = m; }
     void initDefaultAlphaBlendMode(AlphaBlendSetting::Mode m) { p_defaultAlphaBlendMode_ = m; }
+    void initDefaultCullingMode(CullingMode m) { p_defaultCullingMode_ = m; }
     void initDefaultUpdateMode(UpdateMode m, bool visible = true)
         { p_defaultUpdateMode_ = m; p_updateModeVisible_ = visible; }
 
@@ -183,7 +184,7 @@ private:
     DepthWriteMode p_defaultDepthWriteMode_, p_curDepthWriteMode_;
     AlphaBlendSetting::Mode p_defaultAlphaBlendMode_, p_curAlphaBlendMode_;
     UpdateMode p_defaultUpdateMode_;
-    CullingMode p_curCullingMode_;
+    CullingMode p_defaultCullingMode_, p_curCullingMode_;
 
     bool p_enableCreateRenderSettings_,
          p_updateModeVisible_,

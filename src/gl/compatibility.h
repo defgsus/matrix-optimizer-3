@@ -62,6 +62,7 @@ public:
             maxTextureSize,
     /** Maximum bindable texture units */
             maxTextureUnits,
+            maxMultisamples,
     /** The number of explicitly assignable uniform locations */
             maxUniformLocations,
     /** Maximum number of uniform buffer objects per shader*/

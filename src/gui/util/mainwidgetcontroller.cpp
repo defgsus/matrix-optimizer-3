@@ -1056,7 +1056,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
     objectGraphView_->setRootObject(scene_);
-    objectView_->setObject(0);
+    objectView_->setObject(scene_);
     objectOutputView()->setObject(0);
 
     seqView_->setScene(scene_);

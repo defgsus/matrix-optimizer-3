@@ -53,8 +53,8 @@ void ObjectListWidget::setParentObject(Object *parent)
     if (parent)
     {
         // XXX For now, always show/select parent
-        if (/*parent->childObjects().isEmpty()
-            &&*/ parent->parentObject())
+        if (parent->childObjects().isEmpty()
+            && parent->parentObject())
         {
             sel = parent; //< select the original object
             parent = parent->parentObject();

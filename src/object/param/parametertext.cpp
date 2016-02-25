@@ -39,7 +39,15 @@ ParameterText::ParameterText(
 ParameterText::~ParameterText()
 {
     if (diag_)
-        diag_->deleteLater();
+    {
+        diag_->close();
+        /*
+        if (diag_->parent())
+            diag_->deleteLater();
+        else
+            delete diag_;
+            */
+    }
     if (editor_)
         emit editor_->closeRequest();
 }
@@ -116,15 +124,16 @@ GUI::TextEditDialog* ParameterText::openEditDialog(QWidget *parent)
         diag_->setText(value_);
 
     diag_->show();
+    diag_->raise();
 
     return diag_;
 }
 
 GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
 {
-    MO_ASSERT(object(), "no object for ParameterText::openFileDialog()");
-    MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openFileDialog()");
-    MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterText::openFileDialog()");
+    MO_ASSERT(object(), "no object for ParameterText::openEditWidget()");
+    MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openEditWidget()");
+    MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterText::openEditWidget()");
 
 //    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
 //        return 0;

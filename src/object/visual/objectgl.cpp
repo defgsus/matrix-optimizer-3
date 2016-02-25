@@ -42,6 +42,7 @@ ObjectGl::ObjectGl(QObject *parent)
       p_defaultDepthWriteMode_  (DWM_PARENT),
       p_defaultAlphaBlendMode_  (AlphaBlendSetting::M_PARENT),
       p_defaultUpdateMode_      (UM_ALWAYS),
+      p_defaultCullingMode_     (CM_PARENT),
       p_enableCreateRenderSettings_(true),
       p_updateModeVisible_      (true),
       p_updateRequest_          (true),
@@ -128,7 +129,7 @@ void ObjectGl::createParameters()
                   tr("Polygons facing towards the camera are not drawn"),
                   tr("Polygons facing away from the camera are not drawn") },
                 { CM_PARENT, CM_NONE, CM_FRONT, CM_BACK },
-                CM_PARENT,
+                p_defaultCullingMode_,
                 true, false);
 
         params()->endEvolveGroup();

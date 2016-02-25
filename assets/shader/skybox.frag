@@ -35,7 +35,8 @@ uniform mat4 u_viewTransform;               // view * transform
 uniform mat4 u_transform;                   // transformation only
 
 uniform vec4 u_distance;
-uniform vec4 u_fade_dist;
+uniform vec4 u_fade_dist;                   // x=min, y=max, z=exp
+uniform vec4 u_offset_scale;                // xy=offset, zw=scale
 
 #if MO_NUM_LIGHTS
     uniform vec4 u_light_amt;
@@ -99,23 +100,23 @@ vec2 skybox_plane_uv(in vec3 dir)
 {
     vec3 pos = skybox_plane_xyz(SKYBOX_AXIS_VEC, dir);
 #if SKYBOX_AXIS == SKYBOX_AXIS_X_P
-    return pos.zy;
+    return pos.zy - .5;
 #elif SKYBOX_AXIS == SKYBOX_AXIS_X_N
-    return pos.zy * vec2(-1., 1.);
+    return pos.zy * vec2(-1., 1.) - .5;
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_P
-    return pos.xz;
+    return pos.xz - .5;
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_N
-    return pos.xz * vec2(1., -1.);
+    return pos.xz * vec2(1., -1.) - .5;
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_P
-    return pos.xy * vec2(-1., 1.);
+    return pos.xy * vec2(-1., 1.) - .5;
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_N
-    return pos.xy;
+    return pos.xy - .5;
 #endif
 }
 
 // -------------- CYLINDER -------------------
 
-/** Adopted from
+/** Implementation from
     http://www.geometrictools.com/GTEngine/Include/GteIntrLine3Cylinder3.h
 
         This is general purpose,
@@ -141,7 +142,7 @@ vec3 skybox_cylinder_xyz(in vec3 axis, in vec3 dir)
     float a1 = P[0] * D[0] + P[1] * D[1];
     float a2 = D[0] * D[0] + D[1] * D[1];
     float dr = a1 * a1 - a0 * a2;
-        float r = sqrt(dr);
+    float r = sqrt(dr);
     float T = a0 > 0. ? (-a1 - r) / a2 : (-a1 + r) / a2;
 
     return T * dir;
@@ -149,19 +150,19 @@ vec3 skybox_cylinder_xyz(in vec3 axis, in vec3 dir)
 
 vec2 skybox_cylinder_uv(in vec3 dir)
 {
-        vec3 pos = skybox_cylinder_xyz(SKYBOX_AXIS_VEC, dir);
+    vec3 pos = skybox_cylinder_xyz(SKYBOX_AXIS_VEC, dir);
 #if SKYBOX_AXIS == SKYBOX_AXIS_X_P
-        return vec2(atan(-pos.y, -pos.z)/6.283185307+.5, pos.x);
+    return vec2(atan(-pos.y, -pos.z)/6.283185307+.5,  pos.x - .5);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_X_N
-        return vec2(atan(pos.y, -pos.z)/6.283185307+.5, -pos.x);
+    return vec2(atan( pos.y, -pos.z)/6.283185307+.5, -pos.x + .5);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_P
-        return vec2(atan(pos.x, -pos.z)/6.283185307+.5, pos.y);
+    return vec2(atan( pos.x, -pos.z)/6.283185307+.5,  pos.y - .5);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_N
-        return vec2(atan(-pos.x, -pos.z)/6.283185307+.5, -pos.y);
+    return vec2(atan(-pos.x, -pos.z)/6.283185307+.5, -pos.y + .5);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_P
-        return vec2(atan(pos.x, pos.y)/6.283185307+.5, pos.z);
+    return vec2(atan( pos.x,  pos.y)/6.283185307+.5,  pos.z - .5);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_N
-        return vec2(atan(-pos.x, pos.y)/6.283185307+.5, -pos.z);
+    return vec2(atan(-pos.x,  pos.y)/6.283185307+.5, -pos.z + .5);
 #endif
 }
 
@@ -173,9 +174,9 @@ vec3 skybox_sphere_xyz(in vec3 dir)
     float oc2 = dot(oc, oc);
     float closest = dot(oc, dir);
     float radius2 = u_distance.x * u_distance.x;
-    //if (oc2 >= radius2 && closest < EPSILON) return -1.;
+    if (oc2 >= radius2 && closest < 0.000001) discard;
     float halfc2 = radius2 - oc2 + closest * closest;
-    //if (halfc2 < EPSILON) return -1.;
+    if (halfc2 < 0.000001) discard;
     float halfc = sqrt(halfc2);
     float T = oc2 < radius2 ? closest + halfc : closest - halfc;
         return T * dir;
@@ -183,19 +184,19 @@ vec3 skybox_sphere_xyz(in vec3 dir)
 
 vec2 skybox_sphere_uv(in vec3 dir)
 {
-        vec3 pos = skybox_sphere_xyz(dir);
+    vec3 pos = skybox_sphere_xyz(dir) / u_distance.x;
 #if SKYBOX_AXIS == SKYBOX_AXIS_X_P
-        return vec2(atan(-pos.y, -pos.z)/6.283185307+.5, pos.x*.5-.5);
+    return vec2(atan(-pos.y, -pos.z)/6.283185307+.5, acos(-pos.x)/3.14159265);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_X_N
-        return vec2(atan(pos.y, -pos.z)/6.283185307+.5, -pos.x*.5+.5);
+    return vec2(atan( pos.y, -pos.z)/6.283185307+.5, acos( pos.x)/3.14159265);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_P
-        return vec2(atan(pos.x, -pos.z)/6.283185307+.5, pos.y*.5-.5);
+    return vec2(atan( pos.x, -pos.z)/6.283185307+.5, acos(-pos.y)/3.14159265);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Y_N
-        return vec2(atan(-pos.x, -pos.z)/6.283185307+.5, -pos.y*.5+.5);
+    return vec2(atan(-pos.x, -pos.z)/6.283185307+.5, acos( pos.y)/3.14159265);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_P
-        return vec2(atan(pos.x, pos.y)/6.283185307+.5, pos.z*.5-.5);
+    return vec2(atan( pos.x,  pos.y)/6.283185307+.5, acos(-pos.z)/3.14159265);
 #elif SKYBOX_AXIS == SKYBOX_AXIS_Z_N
-        return vec2(atan(-pos.x, pos.y)/6.283185307+.5, -pos.z*.5+.5);
+    return vec2(atan(-pos.x,  pos.y)/6.283185307+.5, acos( pos.z)/3.14159265);
 #endif
 }
 
@@ -215,12 +216,13 @@ vec3 skybox_xyz(in vec3 dir)
 vec2 skybox_uv(in vec3 dir)
 {
 #if SKYBOX_SHAPE == SKYBOX_SHAPE_PLANE
-    return skybox_plane_uv(dir);
+    vec2 uv = skybox_plane_uv(dir);
 #elif SKYBOX_SHAPE == SKYBOX_SHAPE_CYLINDER
-    return skybox_cylinder_uv(dir);
+    vec2 uv = skybox_cylinder_uv(dir);
 #else
-    return skybox_sphere_uv(dir);
+    vec2 uv = skybox_sphere_uv(dir);
 #endif
+    return uv * u_offset_scale.zw + u_offset_scale.xy;
 }
 
 // ----- texture handling -----
@@ -263,9 +265,11 @@ void main()
         o_out_color = skybox_texturePlane(uv);
     #endif
 
-//#if SKYBOX_SHAPE != SKYBOX_SHAPE_SPHERE
+#ifdef SKYBOX_ENABLE_FADE
     // distance fade-out
     float d = length(pos);
-    o_out_color.a *= smoothstep(u_fade_dist.y, u_fade_dist.x, d);
-//#endif
+    o_out_color.a *= pow(smoothstep(u_fade_dist.y, u_fade_dist.x, d), u_fade_dist.z);
+#endif
+
+    o_out_color *= v_ambient_color;
 }

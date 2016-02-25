@@ -55,19 +55,24 @@ struct Skybox::Private
     bool doRecompile;
     ParameterFloat
         *paramR, *paramG, *paramB, *paramA, *paramBright,
-        *paramDistance, *paramFadeMin, *paramFadeMax;
+        *paramDistance, *paramFadeMin, *paramFadeMax, *paramFadeExp,
+        *paramOffsetX, *paramOffsetY,
+        *paramScaleX, *paramScaleY,
+        *paramPolySize;
     ParameterSelect
         *paramContentMode,
         *paramShapeMode,
-        *paramAxis;
+        *paramAxis,
+        *paramFade,
+        *paramPoly;
     ParameterText
-        *paramGlsl,
-        *paramGlsl2;
+        *paramGlsl;
 
     GL::Uniform
         *u_cam_pos,
         *u_tex_color,
         *u_distance,
+        *u_offset_scale,
         *u_fade_dist;
 };
 
@@ -78,6 +83,8 @@ Skybox::Skybox(QObject *parent)
 {
     setName("Skybox");
     initDefaultUpdateMode(UM_ALWAYS, false);
+    initDefaultDepthWriteMode(DWM_OFF);
+    initDefaultCullingMode(CM_NONE);
 }
 
 Skybox::~Skybox()
@@ -117,7 +124,29 @@ void Skybox::createParameters()
 
     params()->endParameterGroup();
 
+    params()->beginParameterGroup("geometry", tr("geometry"));
+
+        p_->paramPoly = params()->createSelectParameter(
+                "poly_type", tr("polygon"),
+                tr("The polygon to use for drawing the skybox"),
+                { "box", "ico" },
+                { tr("box"), tr("icosahedron") },
+                { tr("A classic cube"), tr("An icosahedron as fast approximation to a sphere") },
+                { POLY_BOX, POLY_ICO },
+                POLY_ICO, true, false);
+        p_->paramPoly->setDefaultEvolvable(false);
+
+        p_->paramPolySize = params()->createFloatParameter(
+                    "poly_size", tr("size"),
+                    tr("Expansion of the skybox polygon in scene units"),
+                    200., 10.);
+        p_->paramPolySize->setMinValue(1.);
+        p_->paramPolySize->setDefaultEvolvable(false);
+
+    params()->endParameterGroup();
+
     params()->beginParameterGroup("content", tr("content"));
+    initParameterGroupExpanded("content");
 
         p_->paramShapeMode = params()->createSelectParameter(
                 "shape_mode", tr("shape"),
@@ -130,19 +159,21 @@ void Skybox::createParameters()
                 { SM_SPHERE, SM_PLANE, SM_CYLINDER },
                 SM_SPHERE, true, false);
 
-        p_->paramDistance = params()->createFloatParameter(
-                    "shape_distance", tr("distance"),
-                    tr("Distance to shape"), 1.0, 0.1);
-        p_->paramDistance->setMinValue(0.);
-
         p_->paramAxis = params()->createSelectParameter(
                 "axis", tr("axis"),
                 tr("Selects the axis to which the shape is parallel or othogonal"),
                 { "x+", "x-", "y+", "y-", "z+", "z-" },
-                { tr("+X"), tr("-X"), tr("+Y"), tr("-Y"), tr("+Z"), tr("-Z") },
+                { tr("+X (right)"), tr("-X (left)"),
+                  tr("+Y (up)"), tr("-Y (down)"),
+                  tr("+Z (back)"), tr("-Z (front)") },
                 { tr("Left"), tr("Right"), tr("Up"), tr("Down"), tr("Backward"), tr("Forward") },
                 { A_POS_X, A_NEG_X, A_POS_Y, A_NEG_Y, A_POS_Z, A_NEG_Z },
                 A_POS_Y, true, false);
+
+        p_->paramDistance = params()->createFloatParameter(
+                    "shape_distance", tr("distance"),
+                    tr("Distance to shape"), 1.0, 0.1);
+        p_->paramDistance->setMinValue(0.);
 
         p_->paramContentMode = params()->createSelectParameter(
                 "content_mode", tr("content"),
@@ -158,21 +189,31 @@ void Skybox::createParameters()
                     tr("A user-defined glsl function to generate the output color"),
                     TT_GLSL,
                     "// -- uniforms --\n"
-                    "void mainImage(out vec4 fragColor, in vec3 direction)\n"
+                    "// -- write to fragColor --\n"
+                    "// dir = normalized camera ray\n"
+                    "// pos = position on virtual shape surface\n"
+                    "// uv = 2d texture coordinates on surface\n"
+                    "void mainImage(out vec4 fragColor, in vec3 dir, in vec3 pos, in vec2 uv)\n"
                     "{\n"
-                    "\tfragColor = vec4(0.2, 0.5, 1., 1.);\n"
+                    "\tfragColor = vec4(0.2, 1.-.5*dir.y, 1., 1.);\n"
                     "}\n");
 
-        p_->paramGlsl2 = params()->createTextParameter(
-                    "glsl_code_2", tr("glsl code"),
-                    tr("A user-defined glsl function to generate the output color"),
-                    TT_GLSL,
-                    "// -- uniforms --\n"
-                    "void mainImage(out vec4 fragColor, in vec2 uv, in vec3 direction)\n"
-                    "{\n"
-                    "\tfragColor = vec4(mod(uv.x, 1.), mod(uv.y, 1.), 0., 1.);\n"
-                    "}\n");
-
+        p_->paramOffsetX = params()->createFloatParameter(
+                    "offset_x", tr("offset x"),
+                    tr("Offsets the content on the x axis"),
+                    0.0, 0.01, true, true);
+        p_->paramOffsetY = params()->createFloatParameter(
+                    "offset_y", tr("offset y"),
+                    tr("Offsets the content on the y axis"),
+                    0.0, 0.01, true, true);
+        p_->paramScaleX = params()->createFloatParameter(
+                    "scale_x", tr("scale x"),
+                    tr("Scales the content on the x axis"),
+                    1.0, 0.1, true, true);
+        p_->paramScaleY = params()->createFloatParameter(
+                    "scale_y", tr("scale y"),
+                    tr("Scales the content on the y axis"),
+                    1.0, 0.1, true, true);
 
         p_->textureSetting.createParameters("col", TextureSetting::TEX_NONE, true);
         p_->textureSetting.textureParam()->setWrapMode(ParameterTexture::WM_REPEAT);
@@ -184,24 +225,39 @@ void Skybox::createParameters()
     params()->beginParameterGroup("color", tr("color"));
     initParameterGroupExpanded("color");
 
+        p_->paramFade = params()->createBooleanParameter(
+                    "fade_dist", tr("fade distance"),
+                    tr("Enables fade-out of alpha channel with distance to virtual shape"),
+                    tr("No fading"),
+                    tr("Alpha channel is adjusted according to the distance to the virtual shape"),
+                    true, true, false);
+
+        p_->paramFadeMin = params()->createFloatParameter(
+                    "fade_dist_min", tr("fade distance visible"),
+                    tr("Distance to the virtual shape within the alpha channel remains unchanged"),
+                    1.0, 0.1);
+        p_->paramFadeMin->setMinValue(0.);
+
+        p_->paramFadeMax = params()->createFloatParameter(
+                    "fade_dist_max", tr("fade distance invisible"),
+                    tr("Distance to the virtual shape after which alpha channel is cleared"),
+                    30.0, .5);
+        p_->paramFadeMax->setMinValue(0.);
+
+        p_->paramFadeExp = params()->createFloatParameter(
+                    "fade_dist_exp", tr("fade distance exponent"),
+                    tr("Exponent of the transition between visible and invisible, "
+                       "< 1 more visible, > 1 less visible"),
+                    1.0, .1);
+        p_->paramFadeExp->setMinValue(0.);
+
+
         p_->paramBright = params()->createFloatParameter("bright", tr("bright"), tr("Overall brightness of the color"), 1.0, 0.1);
         p_->paramR = params()->createFloatParameter("red", tr("red"), tr("Red amount of ambient color"), 1.0, 0.1);
         p_->paramG = params()->createFloatParameter("green", tr("green"), tr("Green amount of ambient color"), 1.0, 0.1);
         p_->paramB = params()->createFloatParameter("blue", tr("blue"), tr("Blue amount of ambient color"), 1.0, 0.1);
         p_->paramA = params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of ambient color"), 1.0, 0.1);
         p_->paramA->setDefaultEvolvable(false);
-
-        p_->paramFadeMin = params()->createFloatParameter(
-                    "fade_min_dist", tr("fade distance visible"),
-                    tr("Distance to the virtual shape within the alpha channel remains unchanged"),
-                    1.0, 0.1);
-        p_->paramFadeMin->setMinValue(0.);
-
-        p_->paramFadeMax = params()->createFloatParameter(
-                    "fade_max_dist", tr("fade distance invisible"),
-                    tr("Distance to the virtual shape after which alpha channel is cleared"),
-                    30.0, .5);
-        p_->paramFadeMax->setMinValue(0.);
 
     params()->endParameterGroup();
 
@@ -222,6 +278,9 @@ void Skybox::onParameterChanged(Parameter *p)
             || p == p_->paramContentMode
             || p == p_->paramShapeMode
             || p == p_->paramAxis
+            || p == p_->paramFade
+            || p == p_->paramPoly
+            || p == p_->paramPolySize
             || p_->textureSetting.needsReinit(p)
             || p_->uniformSetting.needsReinit(p) )
     {
@@ -236,6 +295,13 @@ void Skybox::updateParameterVisibility()
 
     p_->textureSetting.updateParameterVisibility();
     p_->uniformSetting.updateParameterVisibility();
+
+    p_->paramGlsl->setVisible(contentMode() == CM_GLSL);
+
+    bool fade = p_->paramFade->baseValue();
+    p_->paramFadeMin->setVisible(fade);
+    p_->paramFadeMax->setVisible(fade);
+    p_->paramFadeExp->setVisible(fade);
 }
 
 void Skybox::getNeededFiles(IO::FileList &files)
@@ -245,6 +311,11 @@ void Skybox::getNeededFiles(IO::FileList &files)
     p_->textureSetting.getNeededFiles(files, IO::FT_TEXTURE);
 }
 
+
+Skybox::ContentMode Skybox::contentMode() const { return (ContentMode)p_->paramContentMode->baseValue(); }
+Skybox::ShapeMode Skybox::shapeMode() const { return (ShapeMode)p_->paramShapeMode->baseValue(); }
+Skybox::Axis Skybox::axis() const { return (Axis)p_->paramAxis->baseValue(); }
+Skybox::PolyType Skybox::polyType() const { return (PolyType)p_->paramPoly->baseValue(); }
 
 void Skybox::initGl(uint /*thread*/)
 {
@@ -284,23 +355,22 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         QString decl = QString("uniform %1 u_tex_color;")
                 .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
         src.replace("//%mo_user_uniforms%", uniformSetting.getDeclarations() + "\n" + decl);
-        src.replace("//%mo_user_function%", paramGlsl->baseValue(), true);
 
         decl = "#define SKYBOX_CONTENT SKYBOX_CONTENT_";
-        switch (paramContentMode->baseValue())
+        switch (p->contentMode())
         {
             case CM_TEXTURE: decl += "TEXTURE"; break;
             case CM_GLSL: decl += "GLSL"; break;
         }
         decl += "\n#define SKYBOX_SHAPE SKYBOX_SHAPE_";
-        switch (paramShapeMode->baseValue())
+        switch (p->shapeMode())
         {
             case SM_SPHERE: decl += "SPHERE"; break;
             case SM_PLANE: decl += "PLANE"; break;
             case SM_CYLINDER: decl += "CYLINDER"; break;
         }
         decl += "\n#define SKYBOX_AXIS SKYBOX_AXIS_";
-        switch (paramAxis->baseValue())
+        switch (p->axis())
         {
             case A_POS_X: decl += "X_P"; break;
             case A_NEG_X: decl += "X_N"; break;
@@ -310,14 +380,19 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
             case A_NEG_Z: decl += "Z_N"; break;
         }
         decl += "\n";
+        if (paramFade->baseValue())
+            decl += "#define SKYBOX_ENABLE_FADE\n";
         src.replace("//%mo_config_defines%", decl);
 
+        // user code
+        src.replace("//%mo_user_function%", paramGlsl->baseValue(), true);
 
-        // resolve includes
+        // resolve all includes
         src.replaceIncludes([this](const QString& url, bool do_search)
         {
             return p->getGlslInclude(url, do_search);
         });
+
 
         return src;
     }
@@ -350,9 +425,13 @@ bool Skybox::Private::updateGl()
 
     try
     {
+        Float size = paramPolySize->baseValue();
         auto geom = new GEOM::Geometry();
-        GEOM::GeometryFactory::createIcosahedron(geom, 100.f);
-
+        switch (p->polyType())
+        {
+            case POLY_BOX: GEOM::GeometryFactory::createCube(geom, size); break;
+            case POLY_ICO: GEOM::GeometryFactory::createIcosahedron(geom, size); break;
+        }
         drawable->setShaderSource(getShaderSource());
         drawable->setGeometry(geom);
 
@@ -364,6 +443,7 @@ bool Skybox::Private::updateGl()
         u_tex_color = drawable->shader()->getUniform("u_tex_color");
         u_distance = drawable->shader()->getUniform("u_distance");
         u_fade_dist = drawable->shader()->getUniform("u_fade_dist");
+        u_offset_scale = drawable->shader()->getUniform("u_offset_scale");
 
         uniformSetting.tieToShader(drawable->shader());
 
@@ -437,7 +517,15 @@ void Skybox::renderGl(const GL::RenderSettings &rs, const RenderTime &time)
     if (p_->u_fade_dist)
         p_->u_fade_dist->setFloats(
                     p_->paramFadeMin->value(time),
-                    p_->paramFadeMax->value(time));
+                    p_->paramFadeMax->value(time),
+                    p_->paramFadeExp->value(time));
+
+    if (p_->u_offset_scale)
+        p_->u_offset_scale->setFloats(
+                    p_->paramOffsetX->value(time),
+                    p_->paramOffsetY->value(time),
+                    p_->paramScaleX->value(time),
+                    p_->paramScaleY->value(time));
 
     // --- bind textures ---
 

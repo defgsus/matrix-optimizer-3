@@ -173,17 +173,18 @@ bool TextureSetting::needsReinit(Parameter *p) const
 
 void TextureSetting::updateParameterVisibility()
 {
+    bool isActive = paramType_->baseValue() != TEX_NONE;
     bool isTexParam = paramType_->baseValue() == TEX_PARAM;
     paramTex_->setVisible( isTexParam );
     // these are now replicated in paramTex_
-    paramInterpol_->setVisible( !isTexParam );
-    paramMinify_->setVisible( !isTexParam );
-    paramWrapX_->setVisible( !isTexParam );
-    paramWrapY_->setVisible( !isTexParam );
+    paramInterpol_->setVisible( !isTexParam && isActive);
+    paramMinify_->setVisible( !isTexParam && isActive);
+    paramWrapX_->setVisible( !isTexParam && isActive);
+    paramWrapY_->setVisible( !isTexParam && isActive);
 
     paramFilename_->setVisible( paramType_->baseValue() == TEX_FILE );
 
-    paramMipmaps_->setVisible( isMipmap() && !isTexParam );
+    paramMipmaps_->setVisible( isMipmap() && !isTexParam && isActive);
 
     //paramAngelScript_->setVisible(paramType_->baseValue() == TEX_ANGELSCRIPT);
 }

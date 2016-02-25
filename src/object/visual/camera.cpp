@@ -140,9 +140,9 @@ void Camera::createParameters()
                                       1024, 16, 4096*4, 16, true, false);
 
         p_multiSample_ = params()->createIntParameter("fbo_msaa",
-                                  tr("ms anti-aliasing"),
+                                  tr("anti-aliasing (multi-sampling)"),
                                   tr("Number of multi-samples in framebuffer to avoid aliasing"),
-                                  0, 0, 16, 1,
+                                  0, 0, 64, 1,
                                   true, false);
         params()->endEvolveGroup();
     params()->endParameterGroup();
