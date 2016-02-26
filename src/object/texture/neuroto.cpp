@@ -397,7 +397,7 @@ void NeuroTO::releaseGl(uint thread)
     TextureObjectBase::releaseGl(thread);
 }
 
-GL::ShaderSource NeuroTO::shaderSource(uint index) const
+GL::ShaderSource NeuroTO::valueShaderSource(uint index) const
 {
     // XXX index is actually not the stage index....
     return p_->neurogl->shaderSource(index);

@@ -415,7 +415,7 @@ GL::FrameBufferObject * TextureObjectBase::fbo() const
     return p_to_->fbo;
 }
 
-GL::ShaderSource TextureObjectBase::shaderSource(uint index) const
+GL::ShaderSource TextureObjectBase::valueShaderSource(uint index) const
 {
     auto s = shaderQuad(index);
     return s ? *s->shader()->source() : GL::ShaderSource();

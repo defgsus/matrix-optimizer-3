@@ -12,11 +12,13 @@
 #define MOSRC_OBJECT_VISUAL_SKYBOX_H
 
 #include "objectgl.h"
+#include "object/interface/valueshadersourceinterface.h"
 
 namespace MO {
 
 class Skybox
         : public ObjectGl
+        , public ValueShaderSourceInterface
 {
     Q_OBJECT
 public:
@@ -54,7 +56,7 @@ public:
     ~Skybox();
 
     /** Returns a copy of the shader code after replacements, includes, etc.. */
-    GL::ShaderSource shaderSource() const;
+    GL::ShaderSource valueShaderSource(uint index) const override;
 
     ContentMode contentMode() const;
     ShapeMode shapeMode() const;

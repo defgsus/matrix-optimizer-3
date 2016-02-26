@@ -189,14 +189,29 @@ void Skybox::createParameters()
                     tr("A user-defined glsl function to generate the output color"),
                     TT_GLSL,
                     "// -- uniforms --\n"
+                    "// float u_time                // scene time in seconds\n"
+                    "// mat4 u_projection;          // projection matrix\n"
+                    "// mat4 u_cubeViewTransform;   // cube-map * view * transform\n"
+                    "// mat4 u_viewTransform;       // view * transform\n"
+                    "// mat4 u_transform;           // transformation only\n"
+                    "// vec3 u_cam_pos       		// world position of camera\n"
+                    "\n"
                     "// -- write to fragColor --\n"
                     "// dir = normalized camera ray\n"
                     "// pos = position on virtual shape surface\n"
                     "// uv = 2d texture coordinates on surface\n"
                     "void mainImage(out vec4 fragColor, in vec3 dir, in vec3 pos, in vec2 uv)\n"
                     "{\n"
-                    "\tfragColor = vec4(0.2, 1.-.5*dir.y, 1., 1.);\n"
-                    "}\n");
+                    "    // use uv for painting grid lines\n"
+                    "    vec2 griduv = mod(uv * 4., 1.);\n"
+                    "    vec2 grid = vec2(\n"
+                    "            smoothstep(.05, .0, min(abs(griduv.x), abs(griduv.x-1.))),\n"
+                    "            smoothstep(.05, .0, min(abs(griduv.y), abs(griduv.y-1.))) );\n"
+                    "    vec3 col = vec3(1., .5, 0.) * grid.x\n"
+                    "             + vec3(.3, .5, 1.) * grid.y;\n"
+                    "    fragColor = vec4(col, 1.);\n"
+                    "}\n"
+                    );
 
         p_->paramOffsetX = params()->createFloatParameter(
                     "offset_x", tr("offset x"),
@@ -339,7 +354,7 @@ void Skybox::numberLightSourcesChanged(uint /*thread*/)
 }
 
 
-GL::ShaderSource Skybox::shaderSource() const
+GL::ShaderSource Skybox::valueShaderSource(uint /*index*/) const
 {
     return p_->getShaderSource();
 }
@@ -382,6 +397,7 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         decl += "\n";
         if (paramFade->baseValue())
             decl += "#define SKYBOX_ENABLE_FADE\n";
+        decl += QString("#define MO_NUM_LIGHTS %1\n").arg(p->numberLightSources());
         src.replace("//%mo_config_defines%", decl);
 
         // user code

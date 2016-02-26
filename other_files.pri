@@ -70,10 +70,8 @@ OTHER_FILES += $$BISON_FILES \
     assets/shader/to/lens.frag \
     assets/shader/to/gen3d.frag \
     assets/shader/to/distancemap.frag \
-    assets/shader/to/derivative.frag
-    assets/help/en/object/model3d.html
-
-DISTFILES += \
+    assets/shader/to/derivative.frag \
+    assets/help/en/object/model3d.html \
     $$PWD/assets/shader/to/threshold.frag \
     $$PWD/assets/shader/to/shader.frag \
     $$PWD/assets/shader/to/posterize.frag \
@@ -82,4 +80,5 @@ DISTFILES += \
     $$PWD/assets/shader/csgshader.frag \
     $$PWD/assets/shader/neuro.frag \
     $$PWD/assets/shader/neuro.vert \
-    $$PWD/assets/shader/to/crop.frag
+    $$PWD/assets/shader/to/crop.frag \
+    $$PWD/assets/shader/skybox.frag

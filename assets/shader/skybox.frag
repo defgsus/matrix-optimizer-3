@@ -1,5 +1,10 @@
 #version 330
 
+// -------- config defines ---------
+
+//%mo_config_defines%
+
+
 // --- input from vertex shader ---
 
 in vec3 v_instance;
@@ -14,11 +19,6 @@ in vec4 v_ambient_color;
 in vec2 v_texCoord;
 in mat3 v_normal_space;
 
-#if MO_NUM_LIGHTS
-    #ifndef MO_FRAGMENT_LIGHTING
-        in vec4 v_light_dir[MO_NUM_LIGHTS];
-    #endif
-#endif
 
 // --- output to rasterizer ---
 
@@ -38,22 +38,19 @@ uniform vec4 u_distance;
 uniform vec4 u_fade_dist;                   // x=min, y=max, z=exp
 uniform vec4 u_offset_scale;                // xy=offset, zw=scale
 
-#if MO_NUM_LIGHTS
+
+#if MO_NUM_LIGHTS > 0
     uniform vec4 u_light_amt;
     uniform float u_light_diffuse_exp[MO_NUM_LIGHTS];
     uniform vec4 u_light_color[MO_NUM_LIGHTS];
     uniform vec3 u_light_pos[MO_NUM_LIGHTS];
-    #ifdef MO_FRAGMENT_LIGHTING
-        uniform vec3 u_light_direction[MO_NUM_LIGHTS];
-        uniform vec3 u_light_direction_param[MO_NUM_LIGHTS]; // range min, range max, mix
-    #endif
+    uniform vec3 u_light_direction[MO_NUM_LIGHTS];
+    uniform vec3 u_light_direction_param[MO_NUM_LIGHTS]; // range min, range max, mix
 #endif
 
 //%mo_user_uniforms%
 
-// ------------------- defines --------------------------
-
-//%mo_config_defines%
+// ------------------- auto defines --------------------------
 
 #define SKYBOX_AXIS_X_P 0 // positive x
 #define SKYBOX_AXIS_X_N 1 // negative x
@@ -236,7 +233,11 @@ vec4 skybox_texturePlane(in vec2 uv) { return texture(u_tex_color, uv); }
 
 void main()
 {
+    // skybox geoemtry -> unit sphere surface
     vec3 direction = normalize(v_pos_world);
+
+    // apply object's own transformation
+    direction = (inverse(u_transform) * vec4(direction, 0.)).xyz;
 
     // clipping for plane
 #if SKYBOX_SHAPE == SKYBOX_SHAPE_PLANE

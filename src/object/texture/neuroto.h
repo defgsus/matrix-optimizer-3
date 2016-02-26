@@ -45,7 +45,7 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime&) Q_DECL_OVERRIDE;
 
-    virtual GL::ShaderSource shaderSource(uint index) const Q_DECL_OVERRIDE;
+    virtual GL::ShaderSource valueShaderSource(uint index) const Q_DECL_OVERRIDE;
 
     /* texture output interface */
     virtual const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;

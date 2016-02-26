@@ -82,9 +82,16 @@ void ObjectInfoDialog::setObject(Object * o)
     s << "<html><b>" << o->infoName() << "</b><br/>"
       << o->idNamePath() << "<br/>";
 
+    // ----- error -----
+
+    if (!o->errorString().isEmpty())
+    {
+        s << "<p>" << tr("Error: ") << o->errorString() << "</p>\n";
+    }
+
     // ----- children -----
 
-    s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>";
+    s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>\n";
 
     // ---- float value -----
 

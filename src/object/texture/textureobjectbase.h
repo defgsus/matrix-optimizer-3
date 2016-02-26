@@ -15,6 +15,7 @@
 
 #include "object/visual/objectgl.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/valueshadersourceinterface.h"
 #include "object/interface/masteroutinterface.h"
 #include "gl/shader.h"
 
@@ -24,6 +25,7 @@ namespace MO {
 class TextureObjectBase
         : public ObjectGl
         , public ValueTextureInterface
+        , public ValueShaderSourceInterface
         , public MasterOutInterface
 {
     Q_OBJECT
@@ -149,7 +151,7 @@ public:
         empty source if not defined/compiled.
         Override to return source of your internal shaders not compiled with
         createShaderQuad(). */
-    virtual GL::ShaderSource shaderSource(uint index) const;
+    virtual GL::ShaderSource valueShaderSource(uint index) const override;
 
 protected:
 

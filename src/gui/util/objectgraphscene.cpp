@@ -47,6 +47,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/interface/valuetextureinterface.h"
+#include "object/interface/valueshadersourceinterface.h"
 #include "object/interface/geometryeditinterface.h"
 #include "object/interface/evolutioneditinterface.h"
 #include "gl/texture.h"
@@ -1639,7 +1640,10 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     // display error
     if (obj->hasError())
     {
-        a = actions.addAction(tr("Error: %1").arg(obj->errorString()), scene);
+        QString err = obj->errorString();
+        if (err.size() > 100)
+            err = "..." + err.right(100);
+        a = actions.addAction(tr("Error: %1").arg(err), scene);
         // XXX make it visible as error!
         // a->setIcon();
     }
@@ -1694,7 +1698,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     }
 
     // TextureObject specific
-    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(obj))
+    if (ValueShaderSourceInterface* ssrc = dynamic_cast<ValueShaderSourceInterface*>(obj))
     {
         // show source code
         auto sub = new QMenu(tr("Show shader source"));
@@ -1711,8 +1715,8 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             QString src = a->data().toInt() == 0
-                    ? to->shaderSource(0).vertexSource()
-                    : to->shaderSource(0).fragmentSource();
+                    ? ssrc->valueShaderSource(0).vertexSource()
+                    : ssrc->valueShaderSource(0).fragmentSource();
 
             auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
             diag->setAttribute(Qt::WA_DeleteOnClose, true);

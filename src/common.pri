@@ -371,7 +371,8 @@ HEADERS += \
     $$PWD/tool/brainf.h \
     $$PWD/object/util/parameterevolution.h \
     $$PWD/tool/generalimage.h \
-    $$PWD/object/visual/skybox.h
+    $$PWD/object/visual/skybox.h \
+    $$PWD/object/interface/valueshadersourceinterface.h
 
 
 SOURCES += \
@@ -698,5 +699,3 @@ SOURCES += \
     $$PWD/object/interface/valuefloatinterface.cpp \
     $$PWD/object/visual/skybox.cpp
 
-DISTFILES += \
-    $$PWD/../assets/shader/skybox.frag
