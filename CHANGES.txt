@@ -1,6 +1,12 @@
 3.0.3.6
- - new objects:
- ...
+
+ - new objects
+    - Skybox for projecting textures or glsl code to virtual shapes around the scene
+    - texture crop object
+ - Interactive Evolution for object parameters
+ - "save texture output" for all texture objects
+ - dynamic geometry edit dialog, with apply
+ - min/mag/wrap settings in texture input parameter
 
 3.0.3.5
 
@@ -8,7 +14,7 @@
     - Keyboard and Mouse input objects
     - OpenSoundControl input object and global OSC input view
     - FreeFloat transformation object
-    - new texture objects: Text, Posterize, KaliSet
+    - new texture objects: Text, Posterize, KaliSet, Shader
  - display of output labels & wider objects in scene graph
    in presence of outputs and/or child objects
  - zoom in/out in scene graph with CTRL +/-
@@ -24,7 +30,10 @@
 3.0.3.3
 
  - environment mapping in Model3d
- - ImageGallery object
+ - new visual objects:
+    - ImageGallery
+    - GeometryObject
+ - Geometry connection type
 
 3.0.3.2
 
