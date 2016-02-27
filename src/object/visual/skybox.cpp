@@ -367,9 +367,14 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         src.loadVertexSource(":/shader/default.vert");
         src.loadFragmentSource(":/shader/skybox.frag");
 
-        QString decl = QString("uniform %1 u_tex_color;")
+        QString decl;
+
+        decl = QString("uniform %1 u_tex_color;")
                 .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
-        src.replace("//%mo_user_uniforms%", uniformSetting.getDeclarations() + "\n" + decl);
+        decl += QString("uniform %1 iChannel0;")
+                .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
+        src.replace("//%mo_user_uniforms%",
+                    uniformSetting.getDeclarations() + "\n" + decl);
 
         decl = "#define SKYBOX_CONTENT SKYBOX_CONTENT_";
         switch (p->contentMode())
