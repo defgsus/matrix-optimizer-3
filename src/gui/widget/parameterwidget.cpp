@@ -923,7 +923,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 emitObjectSelected_(o);
             }
         });
-        /** @todo newobj
+
         // in existing clip
         auto list = Clip::getAssociatedClips(param,
                 Object::TG_REAL_OBJECT | Object::TG_SEQUENCE
@@ -933,12 +933,12 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
         for (Clip * clip : list)
         {
             sub->addAction( a = new QAction(tr("clip %1 (%2)").arg(clip->name()).arg(clip->idName()), sub) );
-            a->setData(QVariant::fromValue(clip));
+            a->setData(QVariant::fromValue((void*)clip));
         }
 
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
-            if (Clip * parent = a->data().value<Clip*>())
+            if (Clip * parent = (Clip*)a->data().value<void*>())
             if (Object * o = editor_->createInClip(param, "SequenceFloat", parent))
             {
                 // modulate
@@ -949,7 +949,6 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             }
 
         });
-        */
 
 }
 

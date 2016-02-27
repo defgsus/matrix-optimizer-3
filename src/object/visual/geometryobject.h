@@ -62,15 +62,7 @@ protected:
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
-    /** @todo newobj
-signals:
-
-    ** Emitted when the Geometry has been changed or removed.
-        Call geometry() to receive it. *
-    void geometryChanged();
-
-private slots:
-*/
+private:
 
     void createGeometry_();
 
@@ -80,7 +72,6 @@ private slots:
     /** Discards the current thread, if any, and sets creator_=0. */
     void resetCreator_();
 
-private:
 
     GEOM::GeometryCreator * creator_;
     GEOM::GeometryFactorySettings * geomSettings_;

@@ -229,7 +229,6 @@ void ObjectInfoDialog::setObject(Object * o)
         s  << "</ul></p>";
     }
 
-/** @todo newobj
     // ------- clip container -------------
 
     if (ClipController * clipcon = dynamic_cast<ClipController*>(o))
@@ -253,7 +252,6 @@ void ObjectInfoDialog::setObject(Object * o)
             s << "no";
         s << "</p>";
     }
-*/
 
 
     s << "</html>";

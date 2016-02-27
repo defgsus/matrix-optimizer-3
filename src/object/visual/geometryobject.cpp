@@ -127,15 +127,15 @@ void GeometryObject::createGeometry_()
         resetCreator_();
         /** @todo crash when GeometryCreator is attached as child and
             object is moved!! */
-        /** @todo newobj
-        creator_ = new GEOM::GeometryCreator(/*this*);
-        connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
-        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_(QString)));
+        creator_ = new GEOM::GeometryCreator(/*this*/);
+        QObject::connect(creator_, &GEOM::GeometryCreator::succeeded,
+                         [=](){ geometryCreated_(); });
+        QObject::connect(creator_, &GEOM::GeometryCreator::failed,
+                         [=](const QString& e){ geometryFailed_(e); });
 
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
         creator_->start();
-        */
     }
 }
 
@@ -145,9 +145,8 @@ void GeometryObject::resetCreator_()
     {
         if (creator_->isRunning())
         {
-            /** @todo newobj
-            connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
-            */
+            QObject::connect(creator_, SIGNAL(finished()),
+                             creator_, SLOT(deleteLater()));
             creator_->discard();
         }
         else
@@ -166,7 +165,7 @@ void GeometryObject::geometryCreated_()
     creator_->deleteLater();
     creator_ = 0;
 
-    /** @todo newobj emit geometryChanged(); */
+    /* emit geometryChanged(); */
 }
 
 void GeometryObject::geometryFailed_(const QString& e)
@@ -180,7 +179,7 @@ void GeometryObject::geometryFailed_(const QString& e)
         geometry_->releaseRef();
     geometry_ = 0;
 
-    /** @todo newobj emit geometryChanged(); */
+    /* emit geometryChanged(); */
 }
 
 void GeometryObject::setGeometrySettings(const GEOM::GeometryFactorySettings & s)
@@ -197,7 +196,7 @@ void GeometryObject::setGeometry(const GEOM::Geometry & g)
         geometry_ = new GEOM::Geometry;
     *geometry_ = g;
 
-    /** @todo newobj emit geometryChanged(); */
+    /* emit geometryChanged(); */
 }
 
 const GEOM::Geometry * GeometryObject::valueGeometry(uint channel, const RenderTime& time) const

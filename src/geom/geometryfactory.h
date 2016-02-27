@@ -60,7 +60,6 @@ public:
     static void createTorus(Geometry *, Float rad_outer, Float rad_inner, uint segu, uint segv,
                             bool asTriangles, const Vec3 & offset = Vec3(0));
 
-    // XXX some normals are wrong in some platonics and no uv-mapping in general
     static void createTetrahedron(Geometry *, Float scale, bool asTriangles = true);
     static void createOctahedron(Geometry *, Float scale, bool asTriangles = true);
     static void createIcosahedron(Geometry *, Float scale, bool asTriangles = true);

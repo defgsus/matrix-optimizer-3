@@ -865,6 +865,7 @@ void GeometryFactory::createTorus(Geometry * g, Float rad_out, Float rad_in,
     }
 }
 
+/** @todo no uv-mapping in platonics */
 
 void GeometryFactory::createOctahedron(Geometry * g, Float scale, bool asTriangles)
 {
@@ -906,6 +907,7 @@ void GeometryFactory::createOctahedron(Geometry * g, Float scale, bool asTriangl
         g->addLine( p4,p5 );
     }
 }
+
 
 void GeometryFactory::createIcosahedron(Geometry * g, Float scale, bool asTriangles)
 {
@@ -1051,78 +1053,97 @@ void GeometryFactory::createDodecahedron(Geometry * g, Float scale, bool asTrian
         MO__ADDPOINT( x4,y4,z4 ); \
         MO__ADDPOINT( x5,y5,z5 );
 
+    #define MO__PENT_R(x1,y1,z1,x2,y2,z2,x3,y3,z3,x4,y4,z4,x5,y5,z5) \
+        MO__ADDPOINT( x5,y5,z5 ); \
+        MO__ADDPOINT( x4,y4,z4 ); \
+        MO__ADDPOINT( x3,y3,z3 ); \
+        MO__ADDPOINT( x2,y2,z2 ); \
+        MO__ADDPOINT( x1,y1,z1 );
+
+    // front-top
+    MO__PENT_R(
+     p_c,  p_0, p_a,
+     p_mc, p_0, p_a,
+     p_mb, p_b, p_b,
+     p_0,  p_a, p_c,
+     p_b,  p_b, p_b);
+    // front-bottom
+    MO__PENT_R(
+     p_mc, p_0,  p_a,
+     p_c,  p_0,  p_a,
+     p_b,  p_mb, p_b,
+     p_0,  p_ma, p_c,
+     p_mb, p_mb, p_b);
+    // back-top
+    MO__PENT_R(
+     p_c,  p_0,  p_ma,
+     p_mc, p_0,  p_ma,
+     p_mb, p_mb, p_mb,
+     p_0,  p_ma, p_mc,
+     p_b,  p_mb, p_mb);
+    // back-bottom
+    MO__PENT_R(
+     p_mc, p_0, p_ma,
+     p_c,  p_0, p_ma,
+     p_b,  p_b, p_mb,
+     p_0,  p_a, p_mc,
+     p_mb, p_b, p_mb);
+    // top-right
     MO__PENT(
-     p_c,p_0,p_a,
-     p_mc,p_0,p_a,
-     p_mb,p_b,p_b,
-     p_0,p_a,p_c,
-     p_b,p_b,p_b);
+     p_0,  p_a, p_mc,
+     p_0,  p_a, p_c,
+     p_b,  p_b, p_b,
+     p_a,  p_c, p_0,
+     p_b,  p_b, p_mb);
+    // top-left
     MO__PENT(
-     p_mc,p_0,p_a,
-     p_c,p_0,p_a,
-     p_b,p_mb,p_b,
-     p_0,p_ma,p_c,
-     p_mb,p_mb,p_b);
+     p_0,  p_a, p_c,
+     p_0,  p_a, p_mc,
+     p_mb, p_b, p_mb,
+     p_ma, p_c, p_0,
+     p_mb, p_b, p_b);
+    // bottom-left
     MO__PENT(
-     p_c,p_0,p_ma,
-     p_mc,p_0,p_ma,
-     p_mb,p_mb,p_mb,
-     p_0,p_ma,p_mc,
-     p_b,p_mb,p_mb);
+     p_0,  p_ma, p_mc,
+     p_0,  p_ma, p_c,
+     p_mb, p_mb, p_b,
+     p_ma, p_mc, p_0,
+     p_mb, p_mb, p_mb);
+    // bottom-right
     MO__PENT(
-     p_mc,p_0,p_ma,
-     p_c,p_0,p_ma,
-     p_b,p_b,p_mb,
-     p_0,p_a,p_mc,
-     p_mb,p_b,p_mb);
-    MO__PENT(
-     p_0,p_a,p_mc,
-     p_0,p_a,p_c,
-     p_b,p_b,p_b,
-     p_a,p_c,p_0,
-     p_b,p_b,p_mb);
-    MO__PENT(
-     p_0,p_a,p_c,
-     p_0,p_a,p_mc,
-     p_mb,p_b,p_mb,
-     p_ma,p_c,p_0,
-     p_mb,p_b,p_b);
-    MO__PENT(
-     p_0,p_ma,p_mc,
-     p_0,p_ma,p_c,
-     p_mb,p_mb,p_b,
-     p_ma,p_mc,p_0,
-     p_mb,p_mb,p_mb);
-    MO__PENT(
-     p_0,p_ma,p_c,
-     p_0,p_ma,p_mc,
-     p_b,p_mb,p_mb,
-     p_a,p_mc,p_0,
-     p_b,p_mb,p_b);
-    MO__PENT(
-     p_a,p_c,p_0,
-     p_a,p_mc,p_0,
-     p_b,p_mb,p_b,
-     p_c,p_0,p_a,
-     p_b,p_b,p_b);
-    MO__PENT(
-     p_a,p_mc,p_0,
-     p_a,p_c,p_0,
-     p_b,p_b,p_mb,
-     p_c,p_0,p_ma,
-     p_b,p_mb,p_mb);
-    MO__PENT(
-     p_ma,p_c,p_0,
-     p_ma,p_mc,p_0,
-     p_mb,p_mb,p_mb,
-     p_mc,p_0,p_ma,
-     p_mb,p_b,p_mb);
-    MO__PENT(
-     p_ma,p_mc,p_0,
-     p_ma,p_c,p_0,
-     p_mb,p_b,p_b,
-     p_mc,p_0,p_a,
-     p_mb,p_mb,p_b);
+     p_0,  p_ma, p_c,
+     p_0,  p_ma, p_mc,
+     p_b,  p_mb, p_mb,
+     p_a,  p_mc, p_0,
+     p_b,  p_mb, p_b);
+    // right
+    MO__PENT_R(
+     p_a,  p_c,  p_0,
+     p_a,  p_mc, p_0,
+     p_b,  p_mb, p_b,
+     p_c,  p_0,  p_a,
+     p_b,  p_b,  p_b);
+    // right-back
+    MO__PENT_R(
+     p_a,  p_mc, p_0,
+     p_a,  p_c,  p_0,
+     p_b,  p_b,  p_mb,
+     p_c,  p_0,  p_ma,
+     p_b,  p_mb, p_mb);
+    // left-back
+    MO__PENT_R(
+     p_ma, p_c,  p_0,
+     p_ma, p_mc, p_0,
+     p_mb, p_mb, p_mb,
+     p_mc, p_0,  p_ma,
+     p_mb, p_b,  p_mb);
+    // left
+    MO__PENT_R(
+     p_ma, p_mc, p_0,
+     p_ma, p_c,  p_0,
+     p_mb, p_b,  p_b,
+     p_mc, p_0,  p_a,
+     p_mb, p_mb, p_b);
 
     #undef MO__PENT
     #undef MO__ADDPOINT

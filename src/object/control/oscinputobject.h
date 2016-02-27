@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_CONTROL_OSCINPUTOBJECT_H
 #define MOSRC_OBJECT_CONTROL_OSCINPUTOBJECT_H
 
+#include <QObject>
+
 #include "object/object.h"
 #include "object/interface/valuefloatinterface.h"
 
@@ -37,15 +39,28 @@ public:
 
     Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 
-signals:
-
-private slots:
 
     void onValueChanged(const QString& id);
 
 private:
     struct Private;
     Private * p_;
+};
+
+/** Wrapper for threadsafe receiving osc input */
+class OscInputObjectReceiver
+        : public QObject
+{
+    Q_OBJECT
+public:
+    OscInputObjectReceiver(OscInputObject* obj)
+        : QObject(0), obj(obj)
+    { }
+
+    OscInputObject* obj;
+
+public slots:
+    void onValueChanged(const QString& id);
 };
 
 } // namespace MO

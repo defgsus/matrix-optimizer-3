@@ -41,6 +41,7 @@ struct OscInputObject::Private
 
     Private(OscInputObject * p)
         : p     (p)
+        , receiver(new OscInputObjectReceiver(p))
         , osc   (0)
     {
         values.resize(10);
@@ -50,6 +51,7 @@ struct OscInputObject::Private
     {
         if (osc)
             osc->releaseRef();
+        delete receiver;
     }
 
     void setParamVis();
@@ -59,6 +61,7 @@ struct OscInputObject::Private
     void updateValueMap();
 
     OscInputObject * p;
+    OscInputObjectReceiver* receiver;
     ParameterSelect * p_interpol;
     ParameterInt * p_numChan, * p_port;
     ParameterFloat * p_smoothTime;
@@ -68,6 +71,10 @@ struct OscInputObject::Private
     OscInput * osc;
 };
 
+void OscInputObjectReceiver::onValueChanged(const QString &id)
+{
+    obj->onValueChanged(id);
+}
 
 OscInputObject::OscInputObject()
     : Object    ()
@@ -223,11 +230,11 @@ void OscInputObject::Private::setPort()
         OscInputs::releaseListener(osc->port());
     const int num = p_port->baseValue();
     osc = OscInputs::getListener(num);
-    /** @todo newobj
-    connect(osc, SIGNAL(valueChanged(QString)),
-            p, SLOT(onValueChanged(QString)),
-            Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
-            */
+
+    QObject::connect(
+                osc, SIGNAL(valueChanged(QString)),
+                receiver, SLOT(onValueChanged(QString)),
+                Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
 }
 
 
