@@ -22,10 +22,8 @@
 
 namespace MO {
 
-
 SynthSetting::SynthSetting(Object *parent)
-    : QObject   (parent),
-      o_        (parent),
+    : o_        (parent),
       synth_    (new AUDIO::Synth()),
       gate_     (new AUDIO::FloatGate<Double>())
 {

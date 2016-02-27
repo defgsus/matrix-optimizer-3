@@ -18,11 +18,11 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ModulatorObjectFloat)
 
-ModulatorObjectFloat::ModulatorObjectFloat(QObject *parent) :
-    ModulatorObject(parent),
-    p_value_ (0),
-    timeStamp_  (0.0),
-    offset_     (0.0)
+ModulatorObjectFloat::ModulatorObjectFloat()
+    : ModulatorObject   ()
+    , p_value_          (0)
+    , timeStamp_        (0.0)
+    , offset_           (0.0)
 {
     setName("ModulatorFloat");
     setNumberOutputs(ST_FLOAT, 1);

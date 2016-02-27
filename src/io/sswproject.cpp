@@ -18,7 +18,7 @@
 
 #include "sswproject.h"
 #include "model/jsontreemodel.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/control/trackfloat.h"
 #include "object/control/sequencefloat.h"
 #include "object/util/objecteditor.h"

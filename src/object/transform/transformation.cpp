@@ -14,8 +14,8 @@
 
 namespace MO {
 
-Transformation::Transformation(QObject *parent) :
-    Object(parent)
+Transformation::Transformation()
+    : Object()
 {
     setName("Transformation");
     setNumberOutputs(ST_TRANSFORMATION, 1);

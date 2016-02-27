@@ -436,7 +436,7 @@ void AudioObjectConnections::remove(Object *obj)
 {
     MO__DEBUG("remove(" << obj << ")");
 
-    if (auto o = qobject_cast<AudioObject*>(obj))
+    if (auto o = dynamic_cast<AudioObject*>(obj))
     {
         // remove from maps
         std::multimap<AudioObject*, AudioObjectConnection*>

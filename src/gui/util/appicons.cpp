@@ -170,66 +170,67 @@ void AppIcons::Private::init()
 
 AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 {
+    /** @todo newobj
     if (o->isTransformation())
     {
-        if (qobject_cast<const Translation*>(o))
+        if (dynamic_cast<const Translation*>(o))
             return I_TRANSLATION;
-        if (qobject_cast<const AxisRotation*>(o))
+        if (dynamic_cast<const AxisRotation*>(o))
             return I_ROTATION;
-        if (qobject_cast<const Scale*>(o))
+        if (dynamic_cast<const Scale*>(o))
             return I_SCALE;
-        if (qobject_cast<const Shear*>(o))
+        if (dynamic_cast<const Shear*>(o))
             return I_SHEAR;
-        if (qobject_cast<const Look*>(o))
+        if (dynamic_cast<const Look*>(o))
             return I_LOOK;
-        if (qobject_cast<const LookAt*>(o))
+        if (dynamic_cast<const LookAt*>(o))
             return I_LOOKAT;
-        if (qobject_cast<const Mix*>(o))
+        if (dynamic_cast<const Mix*>(o))
             return I_MIX;
-        if (qobject_cast<const ClearTrans*>(o))
+        if (dynamic_cast<const ClearTrans*>(o))
             return I_CLEAR;
-        if (qobject_cast<const MirrorTrans*>(o))
+        if (dynamic_cast<const MirrorTrans*>(o))
             return I_MIRROR;
-        if (qobject_cast<const TransformationInput*>(o))
+        if (dynamic_cast<const TransformationInput*>(o))
             return I_INPUT;
     }
 
     if (o->isAudioObject())
     {
-        //if (qobject_cast<const FilterAO*>(o))
+        //if (dynamic_cast<const FilterAO*>(o))
         //    return I_AU_FILTER;
 
         return I_AUDIO;
     }
 
-    if (qobject_cast<const OscInputObject*>(o))
+    if (dynamic_cast<const OscInputObject*>(o))
         return I_OSCIN;
 
-    if (qobject_cast<const AScriptObject*>(o))
+    if (dynamic_cast<const AScriptObject*>(o))
         return I_ANGELSCRIPT;
 
-    if (qobject_cast<const Oscillograph*>(o))
+    if (dynamic_cast<const Oscillograph*>(o))
         return I_OSCILLOGRAPH;
 
-    if (qobject_cast<const ImageGallery*>(o))
+    if (dynamic_cast<const ImageGallery*>(o))
         return I_GALLERY;
 
-    if (qobject_cast<const DerivativeObjectFloat*>(o))
+    if (dynamic_cast<const DerivativeObjectFloat*>(o))
         return I_DERIVATIVE;
 
 #ifndef MO_DISABLE_SPATIAL
 #ifndef MO_DISABLE_EXP
-    if (qobject_cast<const MicrophoneGroup*>(o))
+    if (dynamic_cast<const MicrophoneGroup*>(o))
         return I_MICROPHONE_GROUP;
 #endif
-    if (qobject_cast<const Synthesizer*>(o))
+    if (dynamic_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
 #endif
 
-    if (qobject_cast<const BlurTO*>(o))
+    if (dynamic_cast<const BlurTO*>(o))
         return I_TO_BLUR;
 
-    if (qobject_cast<const TextObject*>(o))
+    if (dynamic_cast<const TextObject*>(o))
         return I_TEXT;
 
     if (o->isGeometry()) return I_GEOMETRY;
@@ -247,7 +248,7 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (o->isParameter()) return I_PARAMETER;
     if (o->isLightSource()) return I_LIGHT;
     if (o->isModulatorObject()) return I_MODULATOR;
-
+    */
     return I_NONE;
 }
 

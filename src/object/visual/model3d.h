@@ -27,7 +27,7 @@ class Model3d
         , public ValueGeometryInterface
         , public GeometryEditInterface
 {
-    Q_OBJECT
+
 public:
     enum LightMode
     {
@@ -72,9 +72,7 @@ protected:
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
-signals:
-
-private slots:
+private:
 
     void geometryCreated_();
     void geometryFailed_(const QString & e);
@@ -82,8 +80,6 @@ private slots:
     void setupDrawable_();
     /** Discards the current thread, if any, and sets creator_=0. */
     void resetCreator_();
-
-private:
 
     void updateCodeVersion_();
 

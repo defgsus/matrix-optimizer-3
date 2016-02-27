@@ -8,13 +8,13 @@
     <p>created 6/27/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_OBJECTFACTORY_H
-#define MOSRC_OBJECT_OBJECTFACTORY_H
+#ifndef MOSRC_OBJECT_UTIL_OBJECTFACTORY_H
+#define MOSRC_OBJECT_UTIL_OBJECTFACTORY_H
 
 #include <map>
 #include <memory>
 
-#include <QObject>
+#include <QCoreApplication> // for Q_DECLARE_TR_FUNCTIONS()
 #include <QSize>
 
 #include "object/object_fwd.h"
@@ -26,9 +26,10 @@ namespace MO {
 namespace IO { class DataStream; }
 
 /** Singleton class to create all objects */
-class ObjectFactory : public QObject
+class ObjectFactory
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(ObjectFactory)
+
     /** Private constructor */
     ObjectFactory();
 public:
@@ -176,7 +177,7 @@ template <class OBJ>
 OBJ * create_object(const QString& name = "")
 {
     Object * o = ObjectFactory::createObject(OBJ::staticClassName());
-    if (OBJ * obj = qobject_cast<OBJ*>(o))
+    if (OBJ * obj = dynamic_cast<OBJ*>(o))
     {
         if (!name.isEmpty())
             obj->setName(name);
@@ -189,4 +190,4 @@ OBJ * create_object(const QString& name = "")
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_OBJECTFACTORY_H
+#endif // MOSRC_OBJECT_UTIL_OBJECTFACTORY_H

@@ -24,8 +24,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ImageTO)
 
-ImageTO::ImageTO(QObject *parent)
-    : TextureObjectBase (parent)
+ImageTO::ImageTO()
+    : TextureObjectBase ()
     , initFilename_     (":/texture/mo_black.png")
     , pFilename_        (0)
     , tex_              (0)

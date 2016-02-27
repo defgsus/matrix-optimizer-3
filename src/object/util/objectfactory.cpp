@@ -22,16 +22,16 @@
 #include "io/log.h"
 #include "io/application.h"
 
-#include "object.h"
-#include "dummy.h"
-#include "transform/translation.h"
-#include "transform/axisrotation.h"
-#include "transform/scale.h"
-#include "transform/shear.h"
-#include "transform/look.h"
-#include "transform/lookat.h"
-#include "transform/mix.h"
-#include "param/parameters.h"
+#include "object/object.h"
+#include "object/dummy.h"
+#include "object/transform/translation.h"
+#include "object/transform/axisrotation.h"
+#include "object/transform/scale.h"
+#include "object/transform/shear.h"
+#include "object/transform/look.h"
+#include "object/transform/lookat.h"
+#include "object/transform/mix.h"
+#include "object/param/parameters.h"
 #include "object/scene.h"
 #include "object/control/trackfloat.h"
 #include "object/control/sequencefloat.h"
@@ -41,8 +41,8 @@
 #include "object/visual/model3d.h"
 #include "object/texture/imageto.h"
 #include "geom/geometryfactorysettings.h"
-#include "util/audioobjectconnections.h"
-#include "audio/filterao.h"
+#include "object/util/audioobjectconnections.h"
+#include "object/audio/filterao.h"
 #include "io/files.h"
 
 namespace MO {
@@ -59,8 +59,7 @@ namespace {
 
 ObjectFactory * ObjectFactory::instance_ = 0;
 
-ObjectFactory::ObjectFactory() :
-    QObject(application())
+ObjectFactory::ObjectFactory()
 {
 }
 
@@ -199,7 +198,7 @@ bool ObjectFactory::registerObject(Object * obj)
     }
 
     instance().objectMap_.insert(
-        std::make_pair(obj->className(), std::shared_ptr<Object>(obj))
+        std::make_pair(obj->className(), std::shared_ptr<Object>(obj, RefCountedDeleter()))
         );
 
 //    MO_DEBUG("registered object '" << obj->className() << "'");
@@ -317,7 +316,7 @@ Scene * ObjectFactory::createSceneObject()
 
 TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
 {
-    TrackFloat * t = qobject_cast<TrackFloat*>(createObject("TrackFloat"));
+    TrackFloat * t = dynamic_cast<TrackFloat*>(createObject("TrackFloat"));
     MO_ASSERT(t, "could not create TrackFloat object");
 
     if (!name.isEmpty())
@@ -328,7 +327,7 @@ TrackFloat * ObjectFactory::createTrackFloat(const QString &name)
 
 SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
 {
-    SequenceFloat * seq = qobject_cast<SequenceFloat*>(createObject("SequenceFloat"));
+    SequenceFloat * seq = dynamic_cast<SequenceFloat*>(createObject("SequenceFloat"));
     MO_ASSERT(seq, "could not create SequenceFloat object");
     if (!name.isEmpty())
         seq->setName(name);
@@ -338,7 +337,7 @@ SequenceFloat * ObjectFactory::createSequenceFloat(const QString& name)
 ModulatorObjectFloat * ObjectFactory::createModulatorObjectFloat(const QString &name)
 {
     ModulatorObjectFloat * o =
-            qobject_cast<ModulatorObjectFloat*>(createObject("ModulatorObjectFloat"));
+            dynamic_cast<ModulatorObjectFloat*>(createObject("ModulatorObjectFloat"));
     MO_ASSERT(o, "could not create ModulatorObjectFloat object");
 
     if (!name.isEmpty())
@@ -531,7 +530,7 @@ Scene * ObjectFactory::loadScene(IO::DataStream &io)
         o = Object::deserializeTreeCompressed(data);
     }
 
-    if (Scene * scene = qobject_cast<Scene*>(o))
+    if (Scene * scene = dynamic_cast<Scene*>(o))
     {
         return scene;
     }
@@ -540,7 +539,7 @@ Scene * ObjectFactory::loadScene(IO::DataStream &io)
         MO_IO_WARNING(VERSION_MISMATCH, "Expected scene, got "
                       << (o? o->className() : "NULL"));
         if (o)
-            delete o;
+            o->releaseRef();
         return 0;
     }
 }

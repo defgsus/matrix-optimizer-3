@@ -24,7 +24,7 @@
 
 #include "liveaudioengine.h"
 #include "object/scene.h"
-#include "object/scenelock_p.h"
+#include "object/util/scenelock_p.h"
 #include "object/util/audioobjectconnections.h"
 #include "tool/locklessqueue.h"
 #include "audio/audiodevice.h"

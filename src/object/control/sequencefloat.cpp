@@ -93,8 +93,8 @@ QStringList SequenceFloat::loopOverlapModeName =
 { "off", "begin", "end" };
 
 
-SequenceFloat::SequenceFloat(QObject *parent)
-    :   Sequence        (parent),
+SequenceFloat::SequenceFloat()
+    :   Sequence        (),
 
         timeline_       (0),
         wavetable_      (0),

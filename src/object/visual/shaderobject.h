@@ -25,7 +25,6 @@ class ShaderObject
         , public ValueTextureInterface
         , public MasterOutInterface
 {
-    Q_OBJECT
 public:
 
 

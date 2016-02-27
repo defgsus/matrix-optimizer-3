@@ -647,9 +647,9 @@ void ObjectDspPath::Private::createPath(Scene * s)
             /** @todo this is a problem.
                 Changing the number of channels touches through to the gui */
             // update sys io objects' channels
-            if (auto ao = qobject_cast<AudioInAO*>(o))
+            if (auto ao = dynamic_cast<AudioInAO*>(o))
                 ao->setNumberAudioInputsOutputs(audioIns.size());
-            if (auto ao = qobject_cast<AudioOutAO*>(o))
+            if (auto ao = dynamic_cast<AudioOutAO*>(o))
                 ao->setNumberAudioInputsOutputs(audioOuts.size());
 
             // ObjectBuffer for each audio object
@@ -769,7 +769,7 @@ void ObjectDspPath::Private::prepareAudioInputBuffers(ObjectBuffer * buf)
     AudioObject * o = static_cast<AudioObject*>(buf->object);
 
     // system-audio-in object?
-    if (qobject_cast<AudioInAO*>(o))
+    if (dynamic_cast<AudioInAO*>(o))
     {
         // copy the list of sys-inputs
         buf->audioInputs = audioIns;
@@ -846,7 +846,7 @@ void ObjectDspPath::Private::prepareAudioOutputBuffers(ObjectBuffer * buf)
     AudioObject * ao = static_cast<AudioObject*>(buf->object);
 
     // special system-out object?
-    AudioOutAO * oout = qobject_cast<AudioOutAO*>(ao);
+    AudioOutAO * oout = dynamic_cast<AudioOutAO*>(ao);
 
     // prepare outputs
     // (create an entry in ObjectBuffer::audioOutputs for each output
@@ -955,7 +955,7 @@ void ObjectDspPath::Private::prepareUdpOutputs(ObjectBuffer * buf)
     AudioObject * ao = static_cast<AudioObject*>(buf->object);
 
     // special system-out object?
-    AudioOutAO * oout = qobject_cast<AudioOutAO*>(ao);
+    AudioOutAO * oout = dynamic_cast<AudioOutAO*>(ao);
 
     // prepare outputs
     // (create an entry in ObjectBuffer::audioOutputs for each output

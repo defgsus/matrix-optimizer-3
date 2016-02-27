@@ -15,8 +15,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Dummy)
 
-Dummy::Dummy(QObject *parent) :
-    Object(parent)
+Dummy::Dummy()
+    : Object()
 {
     setName("Dummy");
 }

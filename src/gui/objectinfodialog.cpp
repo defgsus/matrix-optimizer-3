@@ -145,7 +145,7 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ---------- render modes ---------
 
-    if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+    if (ObjectGl * gl = dynamic_cast<ObjectGl*>(o))
     if (gl->isRenderSettingsEnabled())
     {
         s << "<p>render count: " << gl->renderCount()
@@ -170,8 +170,8 @@ void ObjectInfoDialog::setObject(Object * o)
     }
 
     // ---------- matrix ---------------
-
-    if (Transformation * tran = qobject_cast<Transformation*>(o))
+    /** @todo newobj
+    if (Transformation * tran = dynamic_cast<Transformation*>(o))
     {
         Mat4 mat(1.0);
         tran->applyTransformation(mat, RenderTime(curTime, MO_GUI_THREAD));
@@ -181,10 +181,10 @@ void ObjectInfoDialog::setObject(Object * o)
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation()) << "</p>";
-
+    */
     // ------- geometry ------------------
 
-    if (Model3d * model = qobject_cast<Model3d*>(o))
+    if (Model3d * model = dynamic_cast<Model3d*>(o))
     {
         s << "<p>" << tr("geometry") << ": ";
         if (!model->geometry())
@@ -207,8 +207,7 @@ void ObjectInfoDialog::setObject(Object * o)
     }
 
     // ---------- audio object -----------
-
-    if (AudioObject * au = qobject_cast<AudioObject*>(o))
+    if (AudioObject * au = dynamic_cast<AudioObject*>(o))
     {
         s << "<p>AudioObject:<br/>channels: "
           << au->numAudioInputs() << "/" << au->numAudioOutputs()
@@ -231,9 +230,10 @@ void ObjectInfoDialog::setObject(Object * o)
         s  << "</ul></p>";
     }
 
+/** @todo newobj
     // ------- clip container -------------
 
-    if (ClipController * clipcon = qobject_cast<ClipController*>(o))
+    if (ClipController * clipcon = dynamic_cast<ClipController*>(o))
     {
         s << "<p>ClipContainer:<br/>size: "
           << clipcon->numberColumns() << "x"
@@ -243,7 +243,7 @@ void ObjectInfoDialog::setObject(Object * o)
 
     // ------------ clip ---------------
 
-    if (Clip * clip = qobject_cast<Clip*>(o))
+    if (Clip * clip = dynamic_cast<Clip*>(o))
     {
         s << "<p>Clip:<br/>position: " << clip->column() << ", " << clip->row()
           << "<br/>Contained sequences: " << clip->sequences().size()
@@ -254,6 +254,8 @@ void ObjectInfoDialog::setObject(Object * o)
             s << "no";
         s << "</p>";
     }
+*/
+
 
     s << "</html>";
 

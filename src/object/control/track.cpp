@@ -14,8 +14,8 @@
 
 namespace MO {
 
-Track::Track(QObject *parent) :
-    Object(parent)
+Track::Track() :
+    Object()
 {
 }
 

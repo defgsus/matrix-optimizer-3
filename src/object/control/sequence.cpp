@@ -17,8 +17,8 @@
 
 namespace MO {
 
-Sequence::Sequence(QObject *parent) :
-    Object          (parent),
+Sequence::Sequence() :
+    Object          (),
     parentTrack_    (0),
     parentClip_     (0),
     color_          (QColor(80, 120, 80))
@@ -63,8 +63,8 @@ void Sequence::onParentChanged()
 {
     Object::onParentChanged();
 
-    parentTrack_ = qobject_cast<Track*>(parentObject());
-    parentClip_ = qobject_cast<Clip*>(parentObject());
+    parentTrack_ = dynamic_cast<Track*>(parentObject());
+    parentClip_ = dynamic_cast<Clip*>(parentObject());
 }
 
 Track * Sequence::parentTrack() const

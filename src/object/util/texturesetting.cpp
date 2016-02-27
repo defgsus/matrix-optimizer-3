@@ -36,11 +36,10 @@ const QStringList TextureSetting::textureTypeNames =
 
 
 TextureSetting::TextureSetting(Object *parent)
-    : QObject       (parent),
-      object_       (parent),
-      texture_      (0),
-      constTexture_ (0),
-      paramType_    (0)
+    : object_       (parent)
+    , texture_      (0)
+    , constTexture_ (0)
+    , paramType_    (0)
     , paramTex_     (0)
     , createNoneTex_(false)
 {
@@ -283,8 +282,10 @@ void TextureSetting::initGl()
         if (!scene)
             MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
 
+        /** @todo newobj
         connect(scene, SIGNAL(sceneFboChanged()),
                 this, SLOT(updateSceneFbo_()));
+        */
 
         updateSceneFbo_();
         return;
@@ -300,8 +301,10 @@ void TextureSetting::releaseGl()
     Scene * scene = object_->sceneObject();
     if (scene)
     {
+        /** @todo newobj
         disconnect(scene, SIGNAL(sceneFboChanged()),
                 this, SLOT(updateSceneFbo_()));
+                */
     }
 
     if (texture_)

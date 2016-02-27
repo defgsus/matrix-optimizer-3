@@ -24,7 +24,6 @@ namespace MO {
 
 class Sequence : public Object
 {
-    Q_OBJECT
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(Sequence)
 

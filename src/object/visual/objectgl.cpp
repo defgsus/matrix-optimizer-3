@@ -33,8 +33,8 @@ const QStringList ObjectGl::depthWriteModeNames =
 { tr("parent"), tr("on"), tr("off") };
 
 
-ObjectGl::ObjectGl(QObject *parent)
-    : Object                    (parent),
+ObjectGl::ObjectGl()
+    : Object                    (),
       p_alphaBlend_             (this),
       p_numberLightSources_     (0),
       p_renderCount_            (0),

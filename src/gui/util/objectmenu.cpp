@@ -17,7 +17,7 @@
 #include "objectmenu.h"
 #include "appicons.h"
 #include "object/object.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/param/parameter.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"

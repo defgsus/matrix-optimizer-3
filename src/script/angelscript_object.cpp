@@ -19,7 +19,7 @@
 #include "angelscript_geometry.h"
 #include "angelscript.h"
 #include "object/object.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/scene.h"
 #include "object/control/sequencefloat.h"
 #include "object/group.h"
@@ -74,7 +74,7 @@ template <class OBJ>
 OBJ * find_type_name(Object * root, const QString& n)
 {
     if (root->name() == n)
-        if (auto o = qobject_cast<OBJ*>(root))
+        if (auto o = dynamic_cast<OBJ*>(root))
             return o;
 
     for (auto c : root->childObjects())
@@ -153,13 +153,13 @@ public:
 
     ObjectAS * findPath(const StringAS& path) { auto obj = o->findObjectByNamePath(MO::toString(path)); return obj ? wrap_(obj) : 0; }
 
-    bool isSequence() const { return qobject_cast<Sequence*>(o) != 0; }
-    bool isGroup() const { return qobject_cast<Group*>(o) != 0; }
-    bool isModel() const { return qobject_cast<Model3d*>(o) != 0; }
-    bool isCamera() const { return qobject_cast<Camera*>(o) != 0; }
+    bool isSequence() const { return dynamic_cast<Sequence*>(o) != 0; }
+    bool isGroup() const { return dynamic_cast<Group*>(o) != 0; }
+    bool isModel() const { return dynamic_cast<Model3d*>(o) != 0; }
+    bool isCamera() const { return dynamic_cast<Camera*>(o) != 0; }
 #ifndef MO_DISABLE_SPATIAL
-    bool isMicrophone() const { return qobject_cast<Microphone*>(o) != 0; }
-    bool isSoundSource() const { return qobject_cast<SoundSource*>(o) != 0; }
+    bool isMicrophone() const { return dynamic_cast<Microphone*>(o) != 0; }
+    bool isSoundSource() const { return dynamic_cast<SoundSource*>(o) != 0; }
 #endif
 
     uint parameterCount() { return o->params()->parameters().size(); }
@@ -191,7 +191,7 @@ public:
 
     Timeline1AS * timeline()
     {
-        if (auto seq = qobject_cast<SequenceFloat*>(o))
+        if (auto seq = dynamic_cast<SequenceFloat*>(o))
             if (seq->timeline())
                 return timeline_to_angelscript(*seq->timeline());
         return timeline_to_angelscript(MATH::Timeline1d());
@@ -200,7 +200,7 @@ public:
     void setTimeline(Timeline1AS * tl)
     {
         if (tl)
-        if (auto seq = qobject_cast<SequenceFloat*>(o))
+        if (auto seq = dynamic_cast<SequenceFloat*>(o))
         {
             seq->setTimeline(get_timeline(tl));
             if (!seq->sequenceType() == SequenceFloat::ST_TIMELINE)
@@ -213,7 +213,7 @@ public:
 
     GeometryAS * geometry()
     {
-        if (auto model = qobject_cast<Model3d*>(o))
+        if (auto model = dynamic_cast<Model3d*>(o))
             if (model->geometry())
                 return geometry_to_angelscript(model->geometry());
         return 0;
@@ -221,7 +221,7 @@ public:
 
     void setGeometry(GeometryAS * gas)
     {
-        Model3d * model = qobject_cast<Model3d*>(o);
+        Model3d * model = dynamic_cast<Model3d*>(o);
         if (!model)
         {
             MO_WARNING("Object " << o << " has no Geometry to set");
@@ -528,7 +528,7 @@ struct obj_factory<Object, AS>
 template <class From, class To, class OBJ>
 struct obj_cast
 {
-    static To * cast(From * as) { if (auto c = qobject_cast<OBJ*>(as->o)) return obj_factory<OBJ, To>::factory(c); return 0; }
+    static To * cast(From * as) { if (auto c = dynamic_cast<OBJ*>(as->o)) return obj_factory<OBJ, To>::factory(c); return 0; }
 
 //    static ObjectAS * castToObjectAS(From * as) { return obj_factory<Object, ObjectAS>::factory(as->o); }
 };

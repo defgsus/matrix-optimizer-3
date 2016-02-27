@@ -8,10 +8,10 @@
     <p>created 8/8/2014</p>
 */
 
-#ifndef MOSRC_OBJECT_SCENELOCK_P_H
-#define MOSRC_OBJECT_SCENELOCK_P_H
+#ifndef MOSRC_OBJECT_UTIL_SCENELOCK_P_H
+#define MOSRC_OBJECT_UTIL_SCENELOCK_P_H
 
-#include "scene.h"
+#include "object/scene.h"
 
 namespace MO {
 
@@ -43,4 +43,4 @@ public:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_SCENELOCK_P_H
+#endif // MOSRC_OBJECT_UTIL_SCENELOCK_P_H

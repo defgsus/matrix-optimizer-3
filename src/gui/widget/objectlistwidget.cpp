@@ -15,7 +15,7 @@
 #include "objectlistwidgetitem.h"
 #include "object/object.h"
 #include "object/scene.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/util/objecteditor.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"

@@ -75,10 +75,12 @@ void Manager::setScene(Scene * scene)
     // XXX Would not work if window was not created yet
     if (changed && scene_ && window_)
     {
+        /** @todo newobj
         // connect events from scene to window
         connect(scene_, SIGNAL(renderRequest()),
                     //this, SLOT(onRenderRequest_()));
                     window_, SLOT(renderLater()));
+        */
     }
 
     renderer_->setScene(scene);

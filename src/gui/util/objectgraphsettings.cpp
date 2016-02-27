@@ -16,7 +16,7 @@
 #include "object/object.h"
 #include "object/control/clip.h"
 #include "object/audioobject.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/param/modulator.h"
 #include "object/util/audioobjectconnections.h"
 

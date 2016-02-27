@@ -28,7 +28,6 @@ class TextureObjectBase
         , public ValueShaderSourceInterface
         , public MasterOutInterface
 {
-    Q_OBJECT
 public:
 
     enum ResolutionMode

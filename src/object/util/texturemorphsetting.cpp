@@ -19,7 +19,6 @@
 namespace MO {
 
 TextureMorphSetting::TextureMorphSetting(Object * parent) :
-    QObject (parent),
     object_ (parent),
     pTrans_ (0),
     pSineMorph_ (0)

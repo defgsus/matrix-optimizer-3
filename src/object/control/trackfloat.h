@@ -20,7 +20,6 @@ namespace MO {
 
 class TrackFloat : public Track, public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(TrackFloat);
 

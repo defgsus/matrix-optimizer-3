@@ -21,17 +21,11 @@ HEADERS += \
     src/io/datastream.h \
     src/model/qobjecttreemodel.h \
     src/doc.h \
-    src/object/object.h \
     src/tool/stringmanip.h \
-    src/object/objectfactory.h \
     src/io/application.h \
-    src/object/soundsource.h \
-    src/object/microphone.h \
-    src/object/dummy.h \
     src/model/objecttreemimedata.h \
     src/gl/window.h \
     src/gl/context.h \
-    src/object/scene.h \
     src/gl/manager.h \
     src/io/init.h \
     src/io/applicationtime.h \
@@ -42,22 +36,9 @@ HEADERS += \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
     src/tool/syntaxhighlighter.h \
-    src/object/object_fwd.h \
-    src/object/transform/axisrotation.h \
-    src/object/transform/translation.h \
-    src/object/transform/transformation.h \
-    src/object/transform/scale.h \
-    src/object/param/parameter.h \
-    src/object/param/parameterfloat.h \
     src/tool/actionlist.h \
     src/tool/enumnames.h \
-    src/object/transform/look.h \
-    src/object/transform/lookat.h \
-    src/object/transform/shear.h \
-    src/object/transform/mix.h \
     src/io/memory.h \
-    src/object/param/parameterselect.h \
-    src/object/group.h \
     src/io/settings.h \
     src/audio/configuration.h \
     src/types/int.h \
@@ -82,12 +63,9 @@ HEADERS += \
     src/geom/geometrycreator.h \
     src/geom/freecamera.h \
     src/io/files.h \
-    src/object/param/modulator.h \
-    src/object/param/modulatorfloat.h \
     src/io/currentthread.h \
     src/gl/lightsettings.h \
     src/audio/audio_fwd.h \
-    src/object/scenelock_p.h \
     src/audio/tool/envelopefollower.h \
     src/audio/tool/multifilter.h \
     src/audio/tool/waveform.h \
@@ -95,10 +73,8 @@ HEADERS += \
     src/audio/tool/wavetablegenerator.h \
     src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
-    src/object/param/parameterint.h \
     src/audio/tool/chebychevfilter.h \
     src/gl/rendersettings.h \
-    src/object/param/parameterfilename.h \
     src/io/filetypes.h \
     src/geom/geometrymodifier.h \
     src/geom/geometrymodifierscale.h \
@@ -116,13 +92,10 @@ HEADERS += \
     src/geom/geometrymodifierprimitiveequation.h \
     src/geom/geometrymodifierextrude.h \
     src/geom/geometryfactorysettings.h \
-    src/object/util/texturesetting.h \
     src/geom/geometrymodifiertexcoords.h \
     src/geom/objexporter.h \
-    src/object/util/colorpostprocessingsetting.h \
     src/audio/tool/soundfile.h \
     src/audio/tool/soundfilemanager.h \
-    src/object/param/parametertext.h \
     src/math/intersection.h \
     src/projection/domesettings.h \
     src/projection/projectorsettings.h \
@@ -132,7 +105,6 @@ HEADERS += \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
-    src/object/microphonegroup.h \
     src/audio/audiomicrophone.h \
     src/io/equationpresets.h \
     src/io/equationpreset.h \
@@ -152,7 +124,6 @@ HEADERS += \
     src/network/eventcom.h \
     src/geom/tesselator.h \
     src/audio/tool/notefreq.h \
-    src/object/synthesizer.h \
     src/audio/tool/floatgate.h \
     src/audio/tool/synth.h \
     src/audio/tool/envelopegenerator.h \
@@ -160,27 +131,21 @@ HEADERS += \
     src/math/denormals.h \
     src/audio/tool/butterworthfilter.h \
     src/audio/tool/fixedfilter.h \
-    src/object/util/synthsetting.h \
-    src/object/util/objectfilter.h \
     src/geom/geometrymodifierduplicate.h \
     src/math/polygon.h \
     src/audio/tool/bandlimitwavetablegenerator.h \
     src/math/fft.h \
-    src/object/param/parametertimeline1d.h \
     src/audio/tool/fftwavetablegenerator.h \
     src/projection/testprojectionrenderer.h \
     src/io/commandlineparser.h \
     src/io/version.h \
     src/tool/selection.h \
     src/graph/directedgraph.h \
-    src/object/util/objectmodulatorgraph.h \
     src/graph/tree.h \
     src/projection/projectorblender.h \
     src/video/videostreamreader.h \
     src/tool/commonresolutions.h \
     src/gl/scenerenderer.h \
-    src/object/util/alphablendsetting.h \
-    src/object/util/texturemorphsetting.h \
     src/io/currenttime.h \
     src/network/clientstate.h \
     src/io/qtextstreamoperators.h \
@@ -189,43 +154,20 @@ HEADERS += \
     src/io/helpexporterlatex.h \
     src/io/isclient.h \
     src/engine/serverengine.h \
-    src/object/util/objecteditor.h \
     src/types/time.h \
     src/audio/tool/audiobuffer.h \
-    src/object/audioobject.h \
-    src/object/param/parameters.h \
-    src/object/audio/oscillatorao.h \
-    src/object/util/audioobjectconnections.h \
-    src/object/audio/audiooutao.h \
     src/engine/liveaudioengine.h \
     src/engine/audioengine.h \
-    src/object/util/objectdsppath.h \
-    src/object/audio/filterao.h \
     src/math/transformationbuffer.h \
     src/model/objectmimedata.h \
-    src/object/audio/mverbao.h \
     src/audio/3rd/MVerb.h \
-    src/object/audio/fftao.h \
     src/audio/tool/resamplebuffer.h \
-    src/object/audio/shaperao.h \
     src/audio/spatial/spatialsoundsource.h \
     src/audio/spatial/spatialmicrophone.h \
     src/types/conversion.h \
     src/audio/tool/delay.h \
-    src/object/audio/audioinao.h \
-    src/object/param/modulatorevent.h \
-    src/object/audio/filterbankao.h \
-    src/object/audio/envelopefollowerao.h \
     src/gl/bufferobject.h \
-    src/object/audio/delayao.h \
-    src/object/audio/soundsourceao.h \
-    src/object/audio/parameterao.h \
-    src/object/audio/impulseao.h \
-    src/object/audio/panao.h \
-    src/object/audio/dustao.h \
-    src/object/audio/bandfilterbankao.h \
     src/audio/tool/dumbfile.h \
-    src/object/audio/modplayerao.h \
     src/geom/geometrymodifierangelscript.h \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.h \
     src/script/3rd/angelscript/scriptarray/scriptarray.h \
@@ -238,10 +180,7 @@ HEADERS += \
     src/script/angelscript_geometry.h \
     src/geom/builtinlinefont.h \
     src/script/angelscript_timeline.h \
-    src/object/ascriptobject.h \
-    src/object/util/useruniformsetting.h \
     src/geom/pointcloud.h \
-    src/object/util/objectglpath.h \
     src/engine/renderengine.h \
     src/geom/marchingcubes.h \
     src/network/udpconnection.h \
@@ -258,98 +197,32 @@ HEADERS += \
     src/io/diskrendersettings.h \
     src/engine/diskrenderer.h \
     src/tool/threadpool.h \
-    src/object/interface/valuefloatinterface.h \
-    src/object/control/sequencefloat.h \
-    src/object/control/sequence.h \
-    src/object/control/modulatorobject.h \
-    src/object/control/modulatorobjectfloat.h \
-    src/object/control/track.h \
-    src/object/control/trackfloat.h \
-    src/object/control/clip.h \
-    src/object/control/clipcontroller.h \
-    src/object/control/derivativeobjectfloat.h \
     src/audio/spatial/wavetracershader.h \
     src/audio/tool/irmap.h \
     src/audio/audioplayer.h \
     src/audio/audioplayerdata.h \
     src/math/convolution.h \
-    src/object/audio/sampleholdao.h \
-    src/object/audio/phasorao.h \
-    src/object/audio/noiseao.h \
-    src/object/audio/playbufferao.h \
-    src/object/audio/convolveao.h \
     src/audio/tool/convolvebuffer.h \
     src/geom/geometrymodifierenum.h \
     src/io/ladspaloader.h \
     src/audio/tool/ladspaplugin.h \
-    src/object/audio/pluginao.h \
-    src/object/param/parametercallback.h \
-    src/object/audio/waveplayerao.h \
     src/audio/3rd/ladspa.h \
-    src/object/param/modulatortexture.h \
-    src/object/interface/valuetextureinterface.h \
-    src/object/param/parametertexture.h \
-    src/object/texture/textureobjectbase.h \
-    src/object/texture/colorto.h \
-    src/object/texture/blurto.h \
-    src/object/texture/imageto.h \
-    src/object/textobject.h \
-    src/object/interface/valuetextinterface.h \
-    src/object/texture/keyto.h \
-    src/object/texture/mixto.h \
-    src/object/param/parametertransformation.h \
-    src/object/interface/valuetransformationinterface.h \
-    src/object/transform/transformationinput.h \
-    src/object/param/modulatortransformation.h \
-    src/object/transform/mirrortrans.h \
-    src/object/transform/cleartrans.h \
-    src/object/texture/randomto.h \
-    src/object/texture/normalmapto.h \
-    src/object/texture/lensdistto.h \
     src/gl/texturerenderer.h \
-    src/object/audio/microphoneao.h \
-    src/object/texture/generate3dto.h \
     $$PWD/io/sswproject.h \
     $$PWD/model/jsontreemodel.h \
     $$PWD/geom/shploader.h \
     $$PWD/audio/tool/soundfileistream.h \
     $$PWD/io/imagereader.h \
-    $$PWD/object/texture/distancemapto.h \
-    $$PWD/object/texture/thresholdto.h \
     $$PWD/tool/dfdownsampler.h \
-    $$PWD/object/param/parameterimagelist.h \
-    $$PWD/object/texture/imagesto.h \
-    $$PWD/object/visual/camera.h \
-    $$PWD/object/visual/geometryobject.h \
-    $$PWD/object/visual/lightsource.h \
-    $$PWD/object/visual/model3d.h \
-    $$PWD/object/visual/objectgl.h \
-    $$PWD/object/visual/shaderobject.h \
-    $$PWD/object/visual/sprite.h \
-    $$PWD/object/visual/textureoverlay.h \
-    $$PWD/object/visual/oscillograph.h \
-    $$PWD/object/visual/imagegallery.h \
-    $$PWD/object/param/parametergeometry.h \
-    $$PWD/object/param/modulatorgeometry.h \
-    $$PWD/object/interface/valuegeometryinterface.h \
     $$PWD/geom/geometrymodifiertext.h \
     $$PWD/geom/textmesh.h \
-    $$PWD/object/texture/shaderto.h \
-    $$PWD/object/texture/posterizeto.h \
-    $$PWD/object/texture/kalisetto.h \
     $$PWD/tool/linearizerfloat.h \
-    $$PWD/object/control/oscinputobject.h \
     $$PWD/network/oscinput.h \
     $$PWD/network/oscinputs.h \
     $$PWD/tool/valuesmoother.h \
     $$PWD/math/interpolationtype.h \
-    $$PWD/object/control/keyboardobject.h \
-    $$PWD/object/transform/freefloattransform.h \
-    $$PWD/object/texture/textto.h \
-    $$PWD/object/param/parameterfont.h \
     $$PWD/io/keyboardstate.h \
     $$PWD/io/mousestate.h \
-    $$PWD/object/control/mouseobject.h \
     $$PWD/math/csgbase.h \
     $$PWD/math/csgprimitives.h \
     $$PWD/math/csgcombine.h \
@@ -357,22 +230,13 @@ HEADERS += \
     $$PWD/gl/csgshader.h \
     $$PWD/math/csgdeform.h \
     $$PWD/math/csgfractals.h \
-    $$PWD/object/interface/masteroutinterface.h \
-    $$PWD/object/texture/neuroto.h \
     $$PWD/gl/neurogl.h \
-    $$PWD/object/util/objectconnectiongraph.h \
-    $$PWD/object/texture/cropto.h \
-    $$PWD/object/interface/geometryeditinterface.h \
     $$PWD/tool/evolutionbase.h \
     $$PWD/tool/evolutionpool.h \
     $$PWD/model/evolutionmimedata.h \
     $$PWD/math/kalisetevolution.h \
-    $$PWD/object/interface/evolutioneditinterface.h \
     $$PWD/tool/brainf.h \
-    $$PWD/object/util/parameterevolution.h \
-    $$PWD/tool/generalimage.h \
-    $$PWD/object/visual/skybox.h \
-    $$PWD/object/interface/valueshadersourceinterface.h
+    $$PWD/tool/generalimage.h
 
 
 SOURCES += \
@@ -382,39 +246,21 @@ SOURCES += \
     src/io/xmlstream.cpp \
     src/io/datastream.cpp \
     src/model/qobjecttreemodel.cpp \
-    src/object/object.cpp \
     src/tool/stringmanip.cpp \
-    src/object/objectfactory.cpp \
     src/io/application.cpp \
-    src/object/soundsource.cpp \
-    src/object/microphone.cpp \
-    src/object/dummy.cpp \
     src/model/objecttreemimedata.cpp \
     src/gl/window.cpp \
     src/gl/context.cpp \
-    src/object/scene.cpp \
-    src/gl/manager.cpp \
     src/io/init.cpp \
     src/types/float.cpp \
     src/io/applicationtime.cpp \
     src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
     src/tool/syntaxhighlighter.cpp \
-    src/object/transform/axisrotation.cpp \
-    src/object/transform/transformation.cpp \
-    src/object/transform/translation.cpp \
-    src/object/transform/scale.cpp \
-    src/object/param/parameter.cpp \
-    src/object/param/parameterfloat.cpp \
+    src/gl/manager.cpp \
     src/tool/actionlist.cpp \
     src/tool/enumnames.cpp \
-    src/object/transform/look.cpp \
-    src/object/transform/lookat.cpp \
-    src/object/transform/shear.cpp \
-    src/object/transform/mix.cpp \
     src/io/memory.cpp \
-    src/object/param/parameterselect.cpp \
-    src/object/group.cpp \
     src/io/settings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
@@ -434,8 +280,6 @@ SOURCES += \
     src/geom/geometrycreator.cpp \
     src/geom/freecamera.cpp \
     src/io/files.cpp \
-    src/object/param/modulator.cpp \
-    src/object/param/modulatorfloat.cpp \
     src/io/currentthread.cpp \
     src/gl/lightsettings.cpp \
     src/audio/tool/envelopefollower.cpp \
@@ -443,10 +287,8 @@ SOURCES += \
     src/audio/tool/waveform.cpp \
     src/audio/tool/wavetablegenerator.cpp \
     src/io/lockedoutput.cpp \
-    src/object/param/parameterint.cpp \
     src/audio/tool/chebychevfilter.cpp \
     src/gl/rendersettings.cpp \
-    src/object/param/parameterfilename.cpp \
     src/io/filetypes.cpp \
     src/geom/geometrymodifier.cpp \
     src/geom/geometrymodifierscale.cpp \
@@ -464,13 +306,10 @@ SOURCES += \
     src/geom/geometrymodifierprimitiveequation.cpp \
     src/geom/geometrymodifierextrude.cpp \
     src/geom/geometryfactorysettings.cpp \
-    src/object/util/texturesetting.cpp \
     src/geom/geometrymodifiertexcoords.cpp \
     src/geom/objexporter.cpp \
-    src/object/util/colorpostprocessingsetting.cpp \
     src/audio/tool/soundfile.cpp \
     src/audio/tool/soundfilemanager.cpp \
-    src/object/param/parametertext.cpp \
     src/math/intersection.cpp \
     src/projection/domesettings.cpp \
     src/projection/projectorsettings.cpp \
@@ -480,7 +319,6 @@ SOURCES += \
     src/io/povrayexporter.cpp \
     src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
-    src/object/microphonegroup.cpp \
     src/audio/audiomicrophone.cpp \
     src/io/equationpresets.cpp \
     src/io/equationpreset.cpp \
@@ -494,31 +332,23 @@ SOURCES += \
     src/io/systeminfo.cpp \
     src/io/filemanager.cpp \
     src/network/eventcom.cpp \
-    src/object/synthesizer.cpp \
     src/audio/tool/synth.cpp \
     src/audio/tool/filter24.cpp \
     src/math/denormals.cpp \
     src/audio/tool/butterworthfilter.cpp \
     src/audio/tool/fixedfilter.cpp \
-    src/object/util/synthsetting.cpp \
-    src/object/util/objectfilter.cpp \
     src/geom/geometrymodifierduplicate.cpp \
     src/math/polygon.cpp \
     src/projection/projectormapper_gl.cpp \
     src/audio/tool/bandlimitwavetablegenerator.cpp \
     src/math/fft.cpp \
-    src/object/param/parametertimeline1d.cpp \
     src/projection/testprojectionrenderer.cpp \
     src/io/commandlineparser.cpp \
     src/io/version.cpp \
-    src/object/util/objectmodulatorgraph.cpp \
-    src/object/util/objecttree.cpp \
     src/projection/projectorblender.cpp \
     src/video/videostreamreader.cpp \
     src/tool/commonresolutions.cpp \
     src/gl/scenerenderer.cpp \
-    src/object/util/alphablendsetting.cpp \
-    src/object/util/texturemorphsetting.cpp \
     src/io/currenttime.cpp \
     src/network/clientstate.cpp \
     src/io/qtextstreamoperators.cpp \
@@ -528,37 +358,14 @@ SOURCES += \
     src/io/isclient.cpp \
     src/main.cpp \
     src/engine/serverengine.cpp \
-    src/object/util/objecteditor.cpp \
     src/audio/tool/audiobuffer.cpp \
-    src/object/audioobject.cpp \
-    src/object/param/parameters.cpp \
-    src/object/audio/oscillatorao.cpp \
-    src/object/util/audioobjectconnections.cpp \
-    src/object/audio/audiooutao.cpp \
     src/engine/liveaudioengine.cpp \
     src/engine/audioengine.cpp \
-    src/object/util/objectdsppath.cpp \
-    src/object/audio/filterao.cpp \
-    src/model/objectmimedata.cpp \
-    src/object/audio/mverbao.cpp \
-    src/object/audio/fftao.cpp \
-    src/object/audio/shaperao.cpp \
     src/audio/spatial/spatialsoundsource.cpp \
     src/audio/spatial/spatialmicrophone.cpp \
-    src/object/audio/audioinao.cpp \
-    src/object/param/modulatorevent.cpp \
-    src/object/audio/filterbankao.cpp \
-    src/object/audio/envelopefollowerao.cpp \
-    src/gl/bufferobject.cpp \
-    src/object/audio/delayao.cpp \
-    src/object/audio/soundsourceao.cpp \
-    src/object/audio/parameterao.cpp \
-    src/object/audio/impulseao.cpp \
-    src/object/audio/panao.cpp \
-    src/object/audio/dustao.cpp \
-    src/object/audio/bandfilterbankao.cpp \
+    src/model/objectmimedata.cpp \
     src/audio/tool/dumbfile.cpp \
-    src/object/audio/modplayerao.cpp \
+    src/gl/bufferobject.cpp \
     src/geom/geometrymodifierangelscript.cpp \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.cpp \
     src/script/3rd/angelscript/scriptarray/scriptarray.cpp \
@@ -572,10 +379,7 @@ SOURCES += \
     src/script/angelscript_geometry.cpp \
     src/geom/builtinlinefont.cpp \
     src/script/angelscript_timeline.cpp \
-    src/object/ascriptobject.cpp \
-    src/object/util/useruniformsetting.cpp \
     src/geom/pointcloud.cpp \
-    src/object/util/objectglpath.cpp \
     src/engine/renderengine.cpp \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
@@ -591,92 +395,31 @@ SOURCES += \
     src/io/diskrendersettings.cpp \
     src/engine/diskrenderer.cpp \
     src/tool/threadpool.cpp \
-    src/object/control/sequencefloat.cpp \
-    src/object/control/sequence.cpp \
-    src/object/control/modulatorobject.cpp \
-    src/object/control/modulatorobjectfloat.cpp \
-    src/object/control/track.cpp \
-    src/object/control/trackfloat.cpp \
-    src/object/control/clip.cpp \
-    src/object/control/clipcontroller.cpp \
-    src/object/control/derivativeobjectfloat.cpp \
     src/audio/spatial/wavetracershader.cpp \
     src/audio/tool/irmap.cpp \
     src/audio/audioplayer.cpp \
     src/audio/audioplayerdata.cpp \
     src/math/convolution.cpp \
-    src/object/audio/sampleholdao.cpp \
-    src/object/audio/phasorao.cpp \
-    src/object/audio/noiseao.cpp \
-    src/object/audio/playbufferao.cpp \
-    src/object/audio/convolveao.cpp \
     src/audio/tool/convolvebuffer.cpp \
     src/geom/geometrymodifierenum.cpp \
     src/io/ladspaloader.cpp \
     src/audio/tool/ladspaplugin.cpp \
-    src/object/audio/pluginao.cpp \
-    src/object/param/parametercallback.cpp \
-    src/object/audio/waveplayerao.cpp \
-    src/object/param/modulatortexture.cpp \
-    src/object/param/parametertexture.cpp \
-    src/object/texture/textureobjectbase.cpp \
-    src/object/texture/colorto.cpp \
-    src/object/texture/blurto.cpp \
-    src/object/texture/imageto.cpp \
-    src/object/textobject.cpp \
-    src/object/texture/keyto.cpp \
-    src/object/texture/mixto.cpp \
-    src/object/param/parametertransformation.cpp \
-    src/object/transform/transformationinput.cpp \
-    src/object/param/modulatortransformation.cpp \
-    src/object/transform/mirrortrans.cpp \
-    src/object/transform/cleartrans.cpp \
-    src/object/texture/randomto.cpp \
-    src/object/texture/normalmapto.cpp \
-    src/object/texture/lensdistto.cpp \
     src/gl/texturerenderer.cpp \
-    src/object/audio/microphoneao.cpp \
-    src/object/texture/generate3dto.cpp \
     $$PWD/io/sswproject.cpp \
     $$PWD/model/jsontreemodel.cpp \
     $$PWD/geom/shploader.cpp \
     $$PWD/audio/tool/soundfileistream.cpp \
     $$PWD/io/imagereader.cpp \
-    $$PWD/object/texture/distancemapto.cpp \
-    $$PWD/object/texture/thresholdto.cpp \
     $$PWD/tool/dfdownsampler.cpp \
-    $$PWD/object/param/parameterimagelist.cpp \
-    $$PWD/object/texture/imagesto.cpp \
-    $$PWD/object/visual/camera.cpp \
-    $$PWD/object/visual/geometryobject.cpp \
-    $$PWD/object/visual/lightsource.cpp \
-    $$PWD/object/visual/model3d.cpp \
-    $$PWD/object/visual/objectgl.cpp \
-    $$PWD/object/visual/oscillograph.cpp \
-    $$PWD/object/visual/shaderobject.cpp \
-    $$PWD/object/visual/sprite.cpp \
-    $$PWD/object/visual/textureoverlay.cpp \
-    $$PWD/object/visual/imagegallery.cpp \
-    $$PWD/object/param/parametergeometry.cpp \
-    $$PWD/object/param/modulatorgeometry.cpp \
     $$PWD/geom/tesselator_glu.cpp \
     $$PWD/geom/tesselator.cpp \
     $$PWD/geom/geometrymodifiertext.cpp \
     $$PWD/geom/textmesh.cpp \
-    $$PWD/object/texture/shaderto.cpp \
-    $$PWD/object/texture/posterizeto.cpp \
-    $$PWD/object/texture/kalisetto.cpp \
     $$PWD/tool/linearizerfloat.cpp \
-    $$PWD/object/control/oscinputobject.cpp \
     $$PWD/network/oscinput.cpp \
     $$PWD/network/oscinputs.cpp \
-    $$PWD/object/control/keyboardobject.cpp \
-    $$PWD/object/transform/freefloattransform.cpp \
-    $$PWD/object/texture/textto.cpp \
-    $$PWD/object/param/parameterfont.cpp \
     $$PWD/io/mousestate.cpp \
     $$PWD/io/keyboardstate.cpp \
-    $$PWD/object/control/mouseobject.cpp \
     $$PWD/math/csgbase.cpp \
     $$PWD/math/csgprimitives.cpp \
     $$PWD/math/csgcombine.cpp \
@@ -684,18 +427,10 @@ SOURCES += \
     $$PWD/gl/csgshader.cpp \
     $$PWD/math/csgdeform.cpp \
     $$PWD/math/csgfractals.cpp \
-    $$PWD/object/texture/neuroto.cpp \
     $$PWD/gl/neurogl.cpp \
-    $$PWD/object/util/objectconnectiongraph.cpp \
-    $$PWD/object/texture/cropto.cpp \
-    $$PWD/object/interface/geometryeditinterface.cpp \
     $$PWD/tool/evolutionbase.cpp \
     $$PWD/tool/evolutionpool.cpp \
     $$PWD/model/evolutionmimedata.cpp \
     $$PWD/math/kalisetevolution.cpp \
-    $$PWD/object/interface/evolutioneditinterface.cpp \
-    $$PWD/object/util/parameterevolution.cpp \
-    $$PWD/tool/generalimage.cpp \
-    $$PWD/object/interface/valuefloatinterface.cpp \
-    $$PWD/object/visual/skybox.cpp
+    $$PWD/tool/generalimage.cpp
 

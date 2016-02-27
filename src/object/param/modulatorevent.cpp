@@ -84,7 +84,7 @@ void ModulatorEvent::modulatorChanged_()
     if (modulator() == 0)
         type_ = T_NONE;
     else
-    if (qobject_cast<AudioObject*>(modulator()))
+    if (dynamic_cast<AudioObject*>(modulator()))
         type_ = T_FLOAT;
     else
     {

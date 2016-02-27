@@ -17,9 +17,10 @@
 
 namespace MO {
 
-class ModulatorObjectFloat : public ModulatorObject, public ValueFloatInterface
+class ModulatorObjectFloat
+        : public ModulatorObject
+        , public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ModulatorObjectFloat);
 
@@ -35,10 +36,6 @@ public:
     /** Sets the base-value.
         This is an offset independent of the contained ParameterFloat */
     void setValue(Double timeStamp, Double value);
-
-signals:
-
-public slots:
 
 private:
 

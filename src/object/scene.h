@@ -37,8 +37,6 @@ class ProjectionSystemSettings;
 */
 class Scene : public Object
 {
-    Q_OBJECT
-
     friend class Object; // for updateTree_()
     friend class ScopedSceneLockRead;
     friend class ScopedSceneLockWrite;

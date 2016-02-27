@@ -20,8 +20,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(LightSource)
 
-LightSource::LightSource(QObject *parent) :
-    Object(parent)
+LightSource::LightSource()
+    : Object()
 {
     setName("LightSource");
 }

@@ -14,8 +14,8 @@
 
 namespace MO {
 
-ModulatorObject::ModulatorObject(QObject *parent) :
-    Object(parent)
+ModulatorObject::ModulatorObject()
+    : Object()
 {
 }
 

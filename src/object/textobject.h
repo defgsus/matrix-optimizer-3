@@ -16,9 +16,10 @@
 
 namespace MO {
 
-class TextObject : public Object, ValueTextInterface
+class TextObject
+        : public Object
+        , ValueTextInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(TextObject);
 

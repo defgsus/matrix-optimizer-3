@@ -22,7 +22,7 @@
 #include "objectinfodialog.h"
 #include "widget/objectlistwidget.h"
 #include "object/object.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/control/trackfloat.h"
 #include "object/interface/valuetextureinterface.h"
 #include "gl/texturerenderer.h"

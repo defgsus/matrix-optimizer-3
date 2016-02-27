@@ -23,8 +23,8 @@ namespace {
     const uint minimumColumns_ = 12;
 }
 
-ClipController::ClipController(QObject *parent) :
-    Object          (parent),
+ClipController::ClipController() :
+    Object          (),
     rows_           (minimumRows_),
     cols_           (minimumColumns_)
 {
@@ -263,7 +263,7 @@ void ClipController::triggerClip(Clip *clip, Double gtime)
 {
     MO_DEBUG_CLIP("ClipContainer::triggerClip(" << clip << ", " << gtime << ")");
 
-    emit clipTriggered(clip);
+    ///@todo newobj emit clipTriggered(clip);
 
     // stop other clip on this column
     if (Clip * c = playingClip(clip->column()))
@@ -272,7 +272,7 @@ void ClipController::triggerClip(Clip *clip, Double gtime)
 
     // XXX
     clip->startClip(gtime);
-    emit clipStarted(clip);
+    ///@todo newobj emit clipStarted(clip);
 }
 
 void ClipController::triggerStopClip(Clip *clip, Double gtime)
@@ -280,11 +280,11 @@ void ClipController::triggerStopClip(Clip *clip, Double gtime)
     MO_DEBUG_CLIP("ClipContainer::triggerStopClip(" << clip << ", " << gtime << ")");
     Q_UNUSED(gtime);
 
-    emit clipStopTriggered(clip);
+    ///@todo newobj emit clipStopTriggered(clip);
 
     // XXX
     clip->stopClip();
-    emit clipStopped(clip);
+    ///@todo newobj emit clipStopped(clip);
 }
 
 void ClipController::triggerRow(uint index, Double gtime)
@@ -301,11 +301,11 @@ void ClipController::triggerRow(uint index, Double gtime)
 
         if (c)
         {
-            emit clipTriggered(c);
+            ///@todo newobj emit clipTriggered(c);
 
             // XXX
             c->startClip(gtime);
-            emit clipStarted(c);
+            ///@todo newobj emit clipStarted(c);
         }
 
         // stop others on this column

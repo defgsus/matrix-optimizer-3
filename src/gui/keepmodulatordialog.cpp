@@ -18,7 +18,7 @@
 #include "object/scene.h"
 #include "object/param/parameter.h"
 #include "object/param/modulator.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/util/objecteditor.h"
 #include "io/log.h"
 #include "io/error.h"

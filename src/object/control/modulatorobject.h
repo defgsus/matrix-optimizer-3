@@ -20,7 +20,6 @@ namespace MO {
     Derived classes specialize for possible value types. */
 class ModulatorObject : public Object
 {
-    Q_OBJECT
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(ModulatorObject);
 
@@ -39,10 +38,6 @@ public:
     /** Returns true when this ModulatorObject is a proxy for
         an GUI::AbstractFrontItem. */
     bool isUiProxy() const { return !p_uiId_.isEmpty(); }
-
-signals:
-
-public slots:
 
 private:
 

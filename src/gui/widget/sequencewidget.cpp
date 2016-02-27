@@ -54,7 +54,7 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
     setMouseTracking(true);
 
     // prepare a float curve painter
-    if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(seq))
+    if (SequenceFloat * seqf = dynamic_cast<SequenceFloat*>(seq))
     {
         curvePainter_ = new PAINTER::ValueCurve(this);
         auto data = new SequenceFloatCurveData;
@@ -90,7 +90,7 @@ void SequenceWidget::updateName()
 
 void SequenceWidget::updateValueRange()
 {
-    if (SequenceFloat * seqf = qobject_cast<SequenceFloat*>(sequence_))
+    if (SequenceFloat * seqf = dynamic_cast<SequenceFloat*>(sequence_))
     {
         seqf->getValueFloatRange(
                     0, RenderTime(seqf->start(), MO_GUI_THREAD),

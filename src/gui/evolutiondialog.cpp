@@ -22,7 +22,7 @@
 #include "object/interface/evolutioneditinterface.h"
 #include "object/object.h"
 #include "object/util/objecteditor.h"
-#include "object/scenelock_p.h"
+#include "object/util/scenelock_p.h"
 #include "io/settings.h"
 
 namespace MO {

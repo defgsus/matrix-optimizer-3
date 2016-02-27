@@ -129,7 +129,7 @@ bool ObjectFilter::transform(const QList<OBJ*>& input, QList<OBJ2*>& output) con
     bool r = transform(input, set);
 
     for (auto i : set)
-        if (auto o = qobject_cast<OBJ2*>(i))
+        if (auto o = dynamic_cast<OBJ2*>(i))
             output.append(o);
 
     return r;

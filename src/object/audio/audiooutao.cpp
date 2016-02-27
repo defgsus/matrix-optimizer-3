@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(AudioOutAO)
 
-AudioOutAO::AudioOutAO(QObject *parent)
-    : AudioObject   (parent)
+AudioOutAO::AudioOutAO()
+    : AudioObject   ()
 {
     setName("AudioOut");
 }

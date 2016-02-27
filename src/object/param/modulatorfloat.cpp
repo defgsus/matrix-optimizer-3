@@ -102,7 +102,7 @@ void ModulatorFloat::modulatorChanged_()
         interface_ = iface;
     }
     else
-    if (qobject_cast<AudioObject*>(modulator()))
+    if (dynamic_cast<AudioObject*>(modulator()))
     {
         sourceType_ = ST_AUDIO_OBJECT;
     }

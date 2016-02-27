@@ -19,7 +19,6 @@ namespace MO {
 
 class SoundSource : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(SoundSource);
 
@@ -32,10 +31,6 @@ public:
     virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
                                             const RenderTime& time)
                                             Q_DECL_OVERRIDE;
-signals:
-
-public slots:
-
 private:
 
     ParameterFloat * audioTrack_;

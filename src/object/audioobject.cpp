@@ -44,8 +44,8 @@ public:
 };
 
 
-AudioObject::AudioObject(QObject *parent)
-    : Object    (parent),
+AudioObject::AudioObject()
+    : Object    (),
       p_ao_     (new PrivateAO)
 {
 }

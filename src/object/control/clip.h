@@ -20,7 +20,6 @@ namespace MO {
 
 class Clip : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Clip)
 

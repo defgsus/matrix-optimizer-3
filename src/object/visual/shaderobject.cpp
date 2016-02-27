@@ -35,8 +35,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ShaderObject)
 
-ShaderObject::ShaderObject(QObject *parent)
-    : ObjectGl      (parent)
+ShaderObject::ShaderObject()
+    : ObjectGl      ()
     , fbo_          (0)
     , shaderQuad_   (0)
     , screenQuad_   (0)

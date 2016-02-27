@@ -15,8 +15,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Group)
 
-Group::Group(QObject *parent) :
-    Object(parent)
+Group::Group() :
+    Object()
 {
     setName("Group");
 }

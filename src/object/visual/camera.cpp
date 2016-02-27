@@ -43,8 +43,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Camera)
 
-Camera::Camera(QObject *parent)
-    : ObjectGl              (parent)
+Camera::Camera()
+    : ObjectGl              ()
     , fbo_                  (0)
     , msFbo_                (0)
     , screenQuad_           (0)
@@ -448,8 +448,10 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
     }
 
+    /** @todo newobj
     if (sceneObject())
         emit sceneObject()->CameraFboChanged(this);
+    */
 }
 
 void Camera::releaseGl(uint )

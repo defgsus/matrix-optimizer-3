@@ -30,7 +30,7 @@
 #include "gui/util/appicons.h"
 #include "object/object.h"
 #include "object/audioobject.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/audio/audiooutao.h"
 #include "object/audio/audioinao.h"
 #include "object/param/modulator.h"
@@ -191,7 +191,7 @@ AbstractObjectItem::~AbstractObjectItem()
 
 ObjectGraphScene * AbstractObjectItem::objectScene() const
 {
-    return qobject_cast<ObjectGraphScene*>(scene());
+    return dynamic_cast<ObjectGraphScene*>(scene());
 }
 
 Object * AbstractObjectItem::object() const
@@ -730,7 +730,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
         for (uint i = 0; i < it.value(); ++i)
         {
             // dont show outputs of output AO
-            if (it.key() == ST_AUDIO && qobject_cast<AudioOutAO*>(object))
+            if (it.key() == ST_AUDIO && dynamic_cast<AudioOutAO*>(object))
                 continue;
 
             outputItems.append(
@@ -741,11 +741,11 @@ void AbstractObjectItem::PrivateOI::createConnectors()
 
 
     // audio input items
-    if (AudioObject * ao = qobject_cast<AudioObject*>(object))
+    if (AudioObject * ao = dynamic_cast<AudioObject*>(object))
     {
         //item->setUnexpandedSize(QSize(1, 1));
 
-        if (!qobject_cast<AudioInAO*>(ao))
+        if (!dynamic_cast<AudioInAO*>(ao))
         {
             if (ao->numAudioInputs() >= 0)
                 for (int i=0; i<ao->numAudioInputs(); ++i)
@@ -756,7 +756,7 @@ void AbstractObjectItem::PrivateOI::createConnectors()
                                        true, ST_AUDIO, 0, ao->getAudioInputName(0), item) );
         }
         /*
-        if (!qobject_cast<AudioOutAO*>(ao))
+        if (!dynamic_cast<AudioOutAO*>(ao))
         {
             for (uint i=0; i<ao->numAudioOutputs(); ++i)
                 outputItems.append( new ObjectGraphConnectItem(false, i, ao->getAudioOutputName(i), item) );

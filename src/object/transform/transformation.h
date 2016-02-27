@@ -18,7 +18,6 @@ namespace MO {
 
 class Transformation : public Object
 {
-    Q_OBJECT
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(Transformation)
 
@@ -26,10 +25,6 @@ public:
     virtual bool isTransformation() const { return true; }
 
     virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const = 0;
-
-signals:
-
-public slots:
 
 };
 

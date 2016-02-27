@@ -44,8 +44,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Model3d)
 
-Model3d::Model3d(QObject * parent)
-    : ObjectGl      (parent),
+Model3d::Model3d()
+    : ObjectGl      (),
       draw_         (0),
       creator_      (0),
       geomSettings_ (new GEOM::GeometryFactorySettings(this)),
@@ -662,19 +662,20 @@ void Model3d::initGl(uint /*thread*/)
     if (!nextGeometry_) // or in background
     {
         resetCreator_();
+        /** @todo newobj
         creator_ = new GEOM::GeometryCreator(this);
-        /** @todo find out if Qt's signal/slot mechanism doesn't work when
+        ** @todo find out if Qt's signal/slot mechanism doesn't work when
             not connected to main thread. In this case, when started via DiskRenderer,
             no signals are received from the GEOM::GeometryCreator.
             It's currently solved via the Scene::lazyFlag() but would be good
-            to find out if this is the desired behaviour. */
+            to find out if this is the desired behaviour. *
         connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
         connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_(QString)));
-
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
         creator_->start();
         MO_DEBUG_MODEL("Model3d::initGl() started creator");
+        */
     }
 }
 
@@ -700,9 +701,11 @@ void Model3d::resetCreator_()
     {
         if (creator_->isRunning())
         {
+            /** @todo newobj
             //creator_->setParent(0);
             connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
             creator_->discard();
+            */
         }
         else
             creator_->deleteLater();

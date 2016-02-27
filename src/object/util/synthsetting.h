@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#include <QObject>
+#include <QCoreApplication>
 
 #include "object/object_fwd.h"
 #include "types/time.h"
@@ -22,9 +22,9 @@ namespace MO {
 namespace AUDIO { class Synth; class SynthVoice; template <typename F> class FloatGate; }
 
 
-class SynthSetting : public QObject
+class SynthSetting
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(SynthSetting)
 public:
 
     /** Each triggered voice contains a pointer to this field */

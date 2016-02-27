@@ -24,8 +24,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Clip)
 
-Clip::Clip(QObject *parent)
-    : Object        (parent),
+Clip::Clip()
+    : Object          (),
       p_clipContainer_(0),
       p_timeStarted_  (0),
       p_running_      (false)

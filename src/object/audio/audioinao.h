@@ -18,7 +18,6 @@ namespace MO {
 
 class AudioInAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(AudioInAO)
 

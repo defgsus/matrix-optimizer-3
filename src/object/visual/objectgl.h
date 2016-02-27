@@ -23,8 +23,6 @@ namespace GL { class Context; class Drawable; }
 /** Base of all OpenGL objects. */
 class ObjectGl : public Object
 {
-    Q_OBJECT
-
     // for gl context handling
     friend class Scene;
 

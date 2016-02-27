@@ -18,7 +18,7 @@
 #include <QSpinBox>
 
 #include "bulkrenamedialog.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/scene.h"
 #include "io/settings.h"
 #include "io/files.h"

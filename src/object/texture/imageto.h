@@ -18,7 +18,6 @@ namespace MO {
 /** An image to texture loader */
 class ImageTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(ImageTO);
@@ -41,10 +40,6 @@ public:
     // ---------- specific stuff -----------
 
     void setImageFilename(const QString& fn);
-
-signals:
-
-public slots:
 
 private:
 

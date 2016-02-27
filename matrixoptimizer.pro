@@ -125,6 +125,7 @@ linux: { INCLUDEPATH += /usr/include/gstreamer-1.0 \
 
 include(src/gui/gui.pri)
 include(src/common.pri)
+include(src/object/object.pri)
 include(src/client.pri)
 include(src/tests/tests.pri)
 include(other_files.pri)

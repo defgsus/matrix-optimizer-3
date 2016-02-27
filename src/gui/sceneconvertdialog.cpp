@@ -19,7 +19,7 @@
 #include "io/files.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/scene.h"
 
 namespace MO {

@@ -38,7 +38,7 @@
 #include "object/visual/model3d.h"
 #include "object/visual/geometryobject.h"
 #include "object/texture/textureobjectbase.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/control/sequencefloat.h"
 #include "object/param/parameters.h"
 #include "object/param/parameter.h"
@@ -207,7 +207,7 @@ void ObjectGraphScene::setRootObject(Object *root)
     p_->modItems.clear();
     p_->audioConItems.clear();
     p_->zStack = 0;
-    p_->root = qobject_cast<Scene*>(root);
+    p_->root = dynamic_cast<Scene*>(root);
     p_->action = Private::A_NONE;
 
     if (p_->root)
@@ -366,7 +366,7 @@ void ObjectGraphScene::Private::createModulatorItems(Object *root)
     }
 
     // add audio connections
-    if (auto ao = qobject_cast<AudioObject*>(root))
+    if (auto ao = dynamic_cast<AudioObject*>(root))
     {
         auto list = this->root->audioConnections()->getInputs(ao);
         for (auto c : list)
@@ -458,7 +458,7 @@ void ObjectGraphScene::Private::createObjectItem(Object *o, const QPoint& local_
             : local_pos;
 
     // limit to parent rect
-    if (o->parent() && o->parent() != o->sceneObject())
+    if (o->parentObject() && o->parentObject() != o->sceneObject())
     {
         if (pos.x() < 1) pos.setX(1);
         if (pos.y() < 1) pos.setY(1);
@@ -851,8 +851,8 @@ void ObjectGraphScene::Private::endConnection()
 {
     if (connectStartConnectItem->signalType() == ST_AUDIO)
     {
-        auto aoFrom = qobject_cast<AudioObject*>(connectStartItem->object()),
-             aoTo = qobject_cast<AudioObject*>(connectEndItem->object());
+        auto aoFrom = dynamic_cast<AudioObject*>(connectStartItem->object()),
+             aoTo = dynamic_cast<AudioObject*>(connectEndItem->object());
 
         if (aoFrom && aoTo)
         {
@@ -1391,7 +1391,7 @@ void ObjectGraphScene::popupObjectDrag(Object * source, Object * goal, const QPo
 
     // --- move here ---
 
-    if (goal != source->parent() && !goal->hasParentObject(source))
+    if (goal != source->parentObject() && !goal->hasParentObject(source))
     {
         QAction * a = p_->actions.addAction(tr("move into %1").arg(goal->name()), this);
         connect(a, &QAction::triggered, [=]()
@@ -1671,7 +1671,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     }
 
     // Model3d specific
-    if (Model3d * model = qobject_cast<Model3d*>(obj))
+    if (Model3d * model = dynamic_cast<Model3d*>(obj))
     {
         // show source code
         auto sub = new QMenu(tr("Show shader source"));
@@ -1726,7 +1726,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     }
 
     // wrap float sequence in float track
-    if (SequenceFloat * seq = qobject_cast<SequenceFloat*>(obj))
+    if (SequenceFloat * seq = dynamic_cast<SequenceFloat*>(obj))
     if (!obj->findParentObject(Object::T_TRACK_FLOAT))
     {
         a = actions.addAction(tr("Wrap into track"), scene);
@@ -2139,7 +2139,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
         return;
     }
 
-    // NOTE: dynamic_cast or qobject_cast won't work between
+    // NOTE: dynamic_cast or dynamic_cast won't work between
     // application boundaries, e.g. after quit or pasting into
     // a different instance. But static_cast works alright after we checked the MimeType.
     // It's important to not rely on class members of ObjectTreeMimeData

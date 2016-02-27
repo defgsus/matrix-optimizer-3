@@ -22,7 +22,6 @@ class Camera
         , public ValueTextureInterface
         , public MasterOutInterface
 {
-    Q_OBJECT
 public:
     enum RenderMode
     {

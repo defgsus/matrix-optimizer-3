@@ -10,7 +10,7 @@
 
 #include "objecttree.h"
 #include "object/object.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 
 namespace MO {
 

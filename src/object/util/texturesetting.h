@@ -11,10 +11,10 @@
 #ifndef MOSRC_OBJECT_UTIL_TEXTURESETTING_H
 #define MOSRC_OBJECT_UTIL_TEXTURESETTING_H
 
-#include <QObject>
+#include <QCoreApplication> // for Q_DECLARE_TR_FUNCTIONS()
 #include <QStringList>
 
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "gl/opengl_fwd.h"
 #include "types/time.h"
 #include "io/filetypes.h"
@@ -22,9 +22,9 @@
 namespace MO {
 
 /** A wrapper for texture parameters and load/generation functions */
-class TextureSetting : public QObject
+class TextureSetting
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(TextureSetting)
 public:
     enum TextureType
     {

@@ -14,13 +14,14 @@
 #include <vector>
 #include <functional>
 
+#include <QCoreApplication> // for Q_DECLARE_TR_FUNCTIONS()
 #include <QByteArray>
-#include <QObject>
 #include <QList>
 #include <QSet>
 #include <QMap>
 
 #include "object_fwd.h"
+#include "types/refcounted.h"
 #include "interface/valuetransformationinterface.h"
 #include "interface/evolutioneditinterface.h"
 #include "types/int.h"
@@ -64,11 +65,11 @@ public:
 #define MO_REGISTER_OBJECT(class__) \
     namespace { \
         static bool success_register_object_##class__ = \
-            ::MO::ObjectPrivate::registerObject( new class__((QObject*)0) ); \
+            ::MO::ObjectPrivate::registerObject( new class__() ); \
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
-    explicit Class__(QObject *parent = 0); \
+    explicit Class__(); \
     virtual Class__ * cloneClass() const Q_DECL_OVERRIDE { return new Class__(); } \
     static const QString& staticClassName() { static QString s(#Class__); return s; } \
     virtual const QString& className() const Q_DECL_OVERRIDE { return staticClassName(); } \
@@ -76,28 +77,28 @@ public:
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR(Class__) \
-    explicit Class__(QObject *parent = 0); \
+    explicit Class__(); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR_2(Class__, p1__, p2__) \
-    explicit Class__(p1__, p2__, QObject *parent = 0); \
+    explicit Class__(p1__, p2__); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR_3(Class__, p1__, p2__, p3__) \
-    explicit Class__(p1__, p2__, p3__, QObject *parent = 0); \
+    explicit Class__(p1__, p2__, p3__); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 /** Abstract base of all Objects in MO
 
 */
-class Object : public QObject
+class Object : public RefCounted
              , public ValueTransformationInterface
              , public EvolutionEditInterface
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(Object)
 
     friend class ObjectPrivate;
     // to edit the tree
@@ -198,24 +199,16 @@ public:
     };
 
     // -------------- ctor -------------------
-
+protected:
     /** Constructs a new object.
-        If @p parent is also an Object, this object will be installed in the
-        parent's child list via setParentObject() or addObject().
-        @note The @p parent parameter follows more QObject's style and is not really
-        necessary here.
-        @note More important: Never construct an object yourself, it will not suffice.
+        @warning Never construct an object yourself, it will not suffice.
         Always use ObjectFactory::createObject().
         */
-    explicit Object(QObject *parent = 0);
+    explicit Object();
 
     ~Object();
 
-    /** Increase the reference counter */
-    void addRef();
-
-    /** Release the reference counter. Deletes the Object if it goes to 0. */
-    void releaseRef();
+public:
 
     /** Creates a new instance of the class.
         In derived classes this will be defined via the MO_OBJECT_CONSTRUCTOR() macro.
@@ -274,11 +267,11 @@ public:
         MUST NOT CHANGE for compatibility with saved files! */
     virtual const QString& className() const = 0;
     /** Tree-unique id of the object. */
-    const QString& idName() const { return p_idName_; }
+    const QString& idName() const;
     /** User defined name of the object */
-    const QString& name() const { return p_name_; }
+    const QString& name() const;
     /** Override to add some additional information. */
-    virtual QString infoName() const { return p_name_; }
+    virtual QString infoName() const;
 
     /** Return the path up to this object */
     QString namePath() const;
@@ -288,7 +281,7 @@ public:
 
     virtual bool isValid() const { return true; }
     /** Returns whether the Object should be displayed to the user. */
-    virtual bool isVisible() const { return p_visible_; }
+    virtual bool isVisible() const;
 
     virtual Type type() const { return T_NONE; }
     virtual bool isScene() const { return false; }
@@ -324,10 +317,10 @@ public:
     virtual bool hasAudioOutput() const { return false; }
 
     /** Returns true when there are transformation objects among the children. */
-    bool hasTransformationObjects() const { return !p_transformationObjects_.isEmpty(); }
+    bool hasTransformationObjects() const { return !transformationObjects().isEmpty(); }
 
     /** Returns true when the object can be deleted by the ObjectTreeView */
-    bool canBeDeleted() const { return p_canBeDeleted_; }
+    bool canBeDeleted() const;
 
     /** Returns a name that is unique among the direct children of the object */
     QString makeUniqueName(const QString& name) const;
@@ -359,7 +352,7 @@ public:
     ActivityScope activityScope() const;
 
     /** Returns the currently set scope for the tree */
-    ActivityScope currentActivityScope() const { return p_currentActivityScope_; }
+    ActivityScope currentActivityScope() const;
 
     /** Changes the activity scope for the object */
     void setActivityScope(ActivityScope, bool sendGui = false);
@@ -382,7 +375,7 @@ public:
 
     /** Sets the visibility flag, nothing else.
         This flag should be set before the object is exposed to any views. */
-    void setVisible(bool v) { p_visible_ = v; }
+    void setVisible(bool v);
 
     // ---------- tree getter --------------------
 
@@ -404,7 +397,7 @@ public:
     ObjectEditor * editor() const;
 
     /** Returns the parent Object, or NULL */
-    Object * parentObject() const { return p_parentObject_; }
+    Object * parentObject() const;
 
     /** See if this object has a parent object @p o. */
     bool hasParentObject(Object * o) const;
@@ -440,7 +433,7 @@ public:
     virtual bool canHaveChildren(Type type) const;
 
     /** Read-access to the list of childs */
-    const QList<Object*>& childObjects() const { return p_childObjects_; }
+    const QList<Object*>& childObjects() const;
 
     /** Returns a set of all idNames */
     QSet<QString> getChildIds(bool recursive) const;
@@ -497,6 +490,8 @@ public:
     /** Adds the tree to the map */
     void getIdMap(QMap<QString, Object*>& idMap) const;
 
+    bool haveChildrenChanged() const;
+
     // ------------- tree stuff -----------------
 
     /** Needed for ObjectGl. Base implementation calls propagteRenderMode() for
@@ -540,14 +535,14 @@ public:
     virtual void updateParameterVisibility() { }
 
     /** This is called when Scene::installDependency() was called,
-        in the requested object made an action.
+        and the requested object made an action.
         XXX Will be refined later, currently only used for TextObject */
     virtual void onDependency(Object * ) { }
 
 public:
 
     /** Returns the number of threads, this object is assigned for */
-    uint numberThreads() const { return p_numberThreads_; }
+    uint numberThreads() const;
 
     /** Returns true if number of threads is matching @p num.
         This checks for all contained stuff like AudioSources as well.
@@ -558,12 +553,7 @@ public:
         Any mutable values of the object must be present @p num times!
         @note Call ancestor's implementation before your derived code! */
     virtual void setNumberThreads(uint num);
-#if (0)
-    /** Sets the thread and dsp-block storage for the object.
-        Override this to change the number of mutable values in your object.
-        Always call the ancestor implementation in your derived function! */
-    virtual void setThreadStorage(int threads, int blockSize);
-#endif
+
     // ---------- only callable by scene or ObjectPrivate -----------------
 private:
 
@@ -651,7 +641,7 @@ public:
     uint getNumberOutputs(SignalType ) const;
 
     /** Returns a map with the number of outputs per signal type */
-    const QMap<SignalType, uint>& getNumberOutputs() const { return p_outputMap_; }
+    const QMap<SignalType, uint>& getNumberOutputs() const;
 
     /** Returns the name of the specific output.
         Override to change names. */
@@ -680,13 +670,12 @@ protected:
 public:
 
     /** Returns the list of parameters for this object */
-    const Parameters * params() const { return p_parameters_; }
-    Parameters * params() { return p_parameters_; }
+    const Parameters * params() const;
+    Parameters * params();
 
     /** Override to create all parameters for your object.
         Always call the ancestor classes createParameters() in your derived function! */
     virtual void createParameters();
-
 
     /** Called when a parameter has changed it's value (from the gui).
         Be sure to call the ancestor class implementation before your derived code! */
@@ -709,10 +698,10 @@ protected:
     // ------------------- audio ------------------
 public:
     /** Returns the set sample rate in samples per second. */
-    uint sampleRate() const { return p_sampleRate_; }
+    uint sampleRate() const;
 
     /** Returns the reciprocal of the set sample rate, e.g. 1.0 / sampleRate() */
-    Double sampleRateInv() const { return p_sampleRateInv_; }
+    Double sampleRateInv() const;
 
     /** Sets the samplerate for the object.
         Override to initialize coefficients or stuff that depends on the samplerate.
@@ -732,11 +721,11 @@ public:
 
     // ------------------ spatial audio -------------------
 
-    uint numberSoundSources() const { return p_numberSoundSources_; }
+    uint numberSoundSources() const;
 
     /** Override to create all microphones for your object.
         @note Be sure to call the ancestor class implementation before your derived code! */
-    uint numberMicrophones() const { return p_numberMicrophones_; }
+    uint numberMicrophones() const;
 
 protected:
 
@@ -776,37 +765,32 @@ public:
     //     before a generic render class wraps this
 
     /** Initialize transformation matrix */
-    void clearTransformation() { p_transformation_ = Mat4(1); }
+    void clearTransformation();
+    /** Sets the transformation matrix */
+    void setTransformation(const Mat4& mat);
 
     /** Returns the transformation matrix of this object */
-    const Mat4& transformation() const { return p_transformation_; }
+    const Mat4& transformation() const;
 
     /** ValueTransformationInterface */
     virtual Mat4 valueTransformation(
-            uint /*channel*/, const RenderTime& /*time*/) const Q_DECL_OVERRIDE
-        { return p_transformation_; }
+            uint /*channel*/, const RenderTime& /*time*/) const Q_DECL_OVERRIDE;
 
     /** Returns the position of this object */
-    Vec3 position() const
-        { return Vec3(p_transformation_[3][0],
-                      p_transformation_[3][1],
-                      p_transformation_[3][2]); }
-
-    void setTransformation(const Mat4& mat)
-        { p_transformation_ = mat; }
+    Vec3 position() const;
 
     /** Base implementation applies all transformation objects inside this object to the given matrix.
         XXX Made virtual to override Camera's matrix... */
     virtual void calculateTransformation(Mat4& matrix, const RenderTime& time) const;
 
     /** List of all direct transformation childs */
-    const QList<Transformation*> transformationObjects() const { return p_transformationObjects_; }
+    const QList<Transformation*>& transformationObjects() const;
 
     // ----------------- errors ----------------------
 
-    bool hasError() const { return !p_errorStr_.isEmpty(); }
-    const QString& errorString() const { return p_errorStr_; }
-    void clearError() { p_errorStr_.clear(); }
+    bool hasError() const;
+    const QString& errorString() const;
+    void clearError();
     /** Call this during initialization to signal an error to the gui/user.
         Passing an empty string does nothing. Otherise, error strings are
         accumulated (with newline).
@@ -828,101 +812,22 @@ public:
     virtual const EvolutionBase* getEvolution(const QString& key) const override;
     virtual void setEvolution(const QString& key, const EvolutionBase*) override;
 
-signals:
-
-public slots:
-
     // _____________ PRIVATE AREA __________________
 
 private:
 
     // disable copy
-    Object(const Object&);
-    void operator=(const Object&);
-
-    /** Implementation of deserializeTree() */
-    static Object * p_deserializeTree_(IO::DataStream&);
-
-    /** Removes the child from the child list, nothing else. */
-    bool p_takeChild_(Object * child);
-
-    /** Adds the object to child list, nothing else */
-    Object * p_addChildObjectHelper_(Object * object, int insert_index = -1);
+    Object(const Object&) = delete;
+    void operator=(const Object&) = delete;
 
     /** Called on changes to the child list */
     void p_childrenChanged_();
 
-    /** Fills the transformationChilds() array */
-    void p_collectTransformationObjects_();
+    /** Removes the child from the child list, nothing else. */
+    bool p_takeChild_(Object * child);
 
-    //void setNumberThreadsRecursive_(int threads);
-
-    // ---------- parameter s-----------------
-
-    Parameters * p_parameters_;
-    mutable ParameterEvolution* p_paramEvo_;
-
-    void p_passDownActivityScope_(ActivityScope parent_scope);
-
-    // --------- default parameters ----------
-
-    ParameterSelect * p_paramActiveScope_;
-    ParameterFloat * p_paramActive_;
-
-    // ------------ properties ---------------
-
-    QString p_idName_, p_name_;
-
-    bool p_canBeDeleted_, p_visible_;
-
-    int p_ref_;
-
-    QMap<QString, QMap<qint64, QVariant>> p_attachedData_;
-
-    // ----------- tree ----------------------
-
-    Object * p_parentObject_;
-    QList<Object*> p_childObjects_;
-    QList<Transformation*> p_transformationObjects_;
-    bool p_childrenHaveChanged_;
-
-    // ---------- outputs --------------------
-
-    QMap<SignalType, uint> p_outputMap_;
-
-    // ---------- per-thread store -----------
-
-    uint p_numberThreads_;
-
-    // ------------ audio --------------------
-
-    // requested count
-    uint p_numberSoundSources_,
-         p_numberMicrophones_;
-
-    uint p_sampleRate_;
-    Double p_sampleRateInv_;
-
-    AudioObjectConnections * p_aoCons_;
-
-    // ------------ runtime ------------------
-
-    ActivityScope
-    /** activity scope passed down from parents */
-        p_parentActivityScope_,
-    /** current requested activity scope */
-        p_currentActivityScope_;
-
-    // ----------- position ------------------
-
-    /** @deprecated */
-    Mat4 p_transformation_;
-
-    /** Used for deserialization errors */
-    mutable QString
-    /** Used during object creation/initialization */
-            p_errorStr_,
-            p_ioLoadErrorStr_;
+    struct PrivateObj;
+    PrivateObj* pobj_;
 };
 
 
@@ -938,10 +843,10 @@ QList<T*> Object::findChildObjects(const QString& id, bool recursive, Object * i
 {
     QList<T*> list;
 
-    for (auto o : p_childObjects_)
+    for (auto o : childObjects())
     {
         if (o != ignore
-            && (qobject_cast<T*>(o))
+            && (dynamic_cast<T*>(o))
             && (id.isEmpty() || o->idName() == id))
                 list.append(static_cast<T*>(o));
 
@@ -959,10 +864,10 @@ QList<T*> Object::findChildObjects(std::function<bool(T*)> selector,
 {
     QList<T*> list;
 
-    for (auto o : p_childObjects_)
+    for (auto o : childObjects())
     {
         if (o != ignore
-            && (qobject_cast<T*>(o))
+            && (dynamic_cast<T*>(o))
             && (selector(static_cast<T*>(o))))
                 list.append(static_cast<T*>(o));
 
@@ -979,10 +884,10 @@ QList<T*> Object::findChildObjectsStopAt(
 {
     QList<T*> list;
 
-    for (auto o : p_childObjects_)
+    for (auto o : childObjects())
     {
         if (o != stopAt
-            && (qobject_cast<T*>(o))
+            && (dynamic_cast<T*>(o))
             && (id.isEmpty() || o->idName() == id))
                 list.append(static_cast<T*>(o));
 
@@ -997,15 +902,15 @@ QList<T*> Object::findChildObjectsStopAt(
 template <class T>
 int Object::indexOfLastChild(int last) const
 {
-    if (p_childObjects_.empty())
+    if (childObjects().empty())
         return -1;
 
-    if (last < 0 || last >= p_childObjects_.size())
-        last = p_childObjects_.size() - 1;
+    if (last < 0 || last >= childObjects().size())
+        last = childObjects().size() - 1;
 
     for (int i = last; i>=0; --i)
     {
-        if (qobject_cast<T*>(p_childObjects_[i]))
+        if (dynamic_cast<T*>(childObjects()[i]))
             return i;
     }
 

@@ -18,8 +18,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(TrackFloat)
 
-TrackFloat::TrackFloat(QObject *parent) :
-    Track(parent)
+TrackFloat::TrackFloat() :
+    Track()
 {
     setName("TrackFloat");
     setNumberOutputs(ST_FLOAT, 1);

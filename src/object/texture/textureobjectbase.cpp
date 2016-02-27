@@ -111,8 +111,8 @@ struct TextureObjectBase::PrivateTO
 };
 
 
-TextureObjectBase::TextureObjectBase(QObject *parent)
-    : ObjectGl      (parent)
+TextureObjectBase::TextureObjectBase()
+    : ObjectGl      ()
     , p_to_         (new PrivateTO(this))
 {
     initCreateRenderSettings(false);

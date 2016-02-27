@@ -18,7 +18,7 @@
 #include "io/error.h"
 #include "network/netlog.h"
 #include "io/systeminfo.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/scene.h"
 #include "tool/stringmanip.h"
 #include "io/log.h"

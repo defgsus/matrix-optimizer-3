@@ -24,7 +24,7 @@
 #include "gui/util/appicons.h"
 #include "gui/item/abstractobjectitem.h"
 #include "math/funcparser/parser.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/object.h"
 #include "object/param/parameters.h"
 #include "script/angelscript.h"

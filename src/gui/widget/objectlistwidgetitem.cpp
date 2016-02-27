@@ -12,7 +12,7 @@
 #include "objectlistwidget.h"
 #include "gui/util/appicons.h"
 #include "object/object.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/scene.h"
 #include "object/util/objecteditor.h"
 

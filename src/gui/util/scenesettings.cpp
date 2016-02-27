@@ -198,7 +198,7 @@ UTIL::ViewSpace SceneSettings::getViewSpace(const Object *obj)
 
     // adjust/initialize to certain objects
 
-    if (const Sequence * seq = qobject_cast<const Sequence*>(obj))
+    if (const Sequence * seq = dynamic_cast<const Sequence*>(obj))
     {
         space.setScaleX(std::min(10.0, seq->length()));
         space.setY(-1.2);

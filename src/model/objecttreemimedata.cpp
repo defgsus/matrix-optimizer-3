@@ -263,7 +263,7 @@ QList<QString> ObjectTreeMimeData::getObjectTreeIds() const
     {
         auto obj = Object::deserializeTree(io);
         list.append( obj->idName() );
-        delete obj;
+        obj->releaseRef();
     }
     return list;
 }

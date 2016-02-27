@@ -27,7 +27,7 @@
 #include "widget/spinbox.h"
 #include "widget/filenameinput.h"
 #include "engine/diskrenderer.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "tool/stringmanip.h"
 #include "io/diskrendersettings.h"
 #include "io/error.h"

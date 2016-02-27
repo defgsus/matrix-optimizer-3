@@ -10,7 +10,7 @@
 
 #include "audioengine.h"
 #include "object/scene.h"
-//#include "object/scenelock_p.h"
+//#include "object/util/scenelock_p.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/audioobjectconnections.h"
 #include "audio/configuration.h"

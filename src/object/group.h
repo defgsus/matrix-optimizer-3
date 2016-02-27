@@ -17,7 +17,6 @@ namespace MO {
 
 class Group : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Group);
 

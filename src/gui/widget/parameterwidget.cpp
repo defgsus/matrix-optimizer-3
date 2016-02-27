@@ -923,7 +923,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
                 emitObjectSelected_(o);
             }
         });
-
+        /** @todo newobj
         // in existing clip
         auto list = Clip::getAssociatedClips(param,
                 Object::TG_REAL_OBJECT | Object::TG_SEQUENCE
@@ -949,6 +949,7 @@ void ParameterWidget::addCreateModMenuFloat_(QMenu * menu, Parameter * param)
             }
 
         });
+        */
 
 }
 

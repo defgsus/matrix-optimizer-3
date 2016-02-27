@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_UTIL_USERUNIFORMSETTING_H
 #define MOSRC_OBJECT_UTIL_USERUNIFORMSETTING_H
 
-#include <QObject>
+#include <QCoreApplication> // for Q_DECLARE_TR_FUNCTIONS()
 #include <QVector>
 
 #include "object/object_fwd.h"
@@ -24,7 +24,7 @@ namespace GL { class Shader; class Uniform; class Texture; }
 class UserUniformSetting
         : public QObject
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(UserUniformSetting)
 public:
     /** Creates a uniform setting for the given Object */
     explicit UserUniformSetting(Object *parent, uint maxUniforms = 10);

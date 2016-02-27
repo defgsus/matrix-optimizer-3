@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(TextObject)
 
-TextObject::TextObject(QObject *parent) :
-    Object(parent)
+TextObject::TextObject()
+    : Object()
 {
     setName("Text");
     setNumberOutputs(ST_TEXT, 1);

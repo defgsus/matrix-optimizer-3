@@ -26,7 +26,6 @@ namespace MATH { class Timeline1d; }
 
 class SequenceFloat : public Sequence, public ValueFloatInterface
 {
-    Q_OBJECT
 public:
 
     enum SequenceType

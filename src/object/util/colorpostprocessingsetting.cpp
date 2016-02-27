@@ -18,9 +18,8 @@
 
 namespace MO {
 
-ColorPostProcessingSetting::ColorPostProcessingSetting(Object * parent) :
-    QObject (parent),
-    object_ (parent)
+ColorPostProcessingSetting::ColorPostProcessingSetting(Object * parent)
+    : object_ (parent)
 {
 }
 

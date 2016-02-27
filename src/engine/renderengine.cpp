@@ -10,7 +10,7 @@
 
 #include "renderengine.h"
 #include "object/scene.h"
-//#include "object/scenelock_p.h"
+//#include "object/util/scenelock_p.h"
 #include "object/util/objectglpath.h"
 #include "gl/context.h"
 #include "io/error.h"

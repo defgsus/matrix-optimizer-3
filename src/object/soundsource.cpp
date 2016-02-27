@@ -23,8 +23,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(SoundSource)
 
-SoundSource::SoundSource(QObject *parent) :
-    Object(parent)
+SoundSource::SoundSource()
+    : Object()
 {
     setName("Soundsource");
     setNumberSoundSources(1);

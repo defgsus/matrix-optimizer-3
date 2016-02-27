@@ -43,8 +43,7 @@ bool UserUniformSetting::Uniform::isTextureInput() const
 }
 
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
-    : QObject       (object)
-    , object_       (object)
+    : object_       (object)
     , num_          (maxUnis)
     , uploadTime_   (-1.1234)
 {

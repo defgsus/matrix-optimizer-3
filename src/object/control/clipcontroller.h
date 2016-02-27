@@ -20,7 +20,6 @@ namespace MO {
 
 class ClipController : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ClipController)
 
@@ -91,6 +90,7 @@ public:
         The currently playing clip on the column is triggered for stopping. */
     void triggerStopColumn(uint index, Double gtime);
 
+    /** @todo newobj
 signals:
 
     void clipTriggered(Clip *);
@@ -99,6 +99,7 @@ signals:
     void clipStopped(Clip *);
 
 public slots:
+    */
 
 private:
 

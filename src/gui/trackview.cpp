@@ -29,7 +29,7 @@
 #include "object/scene.h"
 #include "object/util/objectfilter.h"
 #include "object/util/objecteditor.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -497,7 +497,7 @@ void TrackView::assignModulatingWidgets_()
         QList<Object*> mods = w->sequence()->getModulatingObjectsList(true);
         for (auto m : mods)
             // if it's a sequence ..
-            if (auto seq = qobject_cast<Sequence*>(m))
+            if (auto seq = dynamic_cast<Sequence*>(m))
                 // .. and in this view ..
                 if (auto sw = widgetForSequence_(seq))
                     // .. then tell it that 'w' needs an update when it changes
@@ -560,7 +560,7 @@ void TrackView::mousePressEvent(QMouseEvent * e)
 
     // !! a popup eats the hoverWidget_
     QWidget * w = childAt(e->pos());
-    if (SequenceWidget * sw = qobject_cast<SequenceWidget*>(w))
+    if (SequenceWidget * sw = dynamic_cast<SequenceWidget*>(w))
         hoverWidget_ = sw;
 
     if (hoverWidget_)
@@ -907,7 +907,7 @@ void TrackView::clearSelection_()
 
 void TrackView::onParameterChanged_(Parameter * p)
 {
-    if (auto seq = qobject_cast<Sequence*>(p->object()))
+    if (auto seq = dynamic_cast<Sequence*>(p->object()))
         onSequenceChanged_(seq);
 }
 
@@ -938,7 +938,7 @@ void TrackView::onSequenceChanged_(Sequence * seq)
 
 void TrackView::onObjectChanged_(Object * obj)
 {
-    if (auto seq = qobject_cast<Sequence*>(obj))
+    if (auto seq = dynamic_cast<Sequence*>(obj))
         if (auto w = widgetForSequence_(seq))
         {
             w->update();
@@ -1156,7 +1156,7 @@ void TrackView::createEditActions_()
         a->setStatusTip(tr("Creates a new sequence at the current time"));
         connect(a, &QAction::triggered, [this]()
         {
-            if (auto trackf = qobject_cast<TrackFloat*>(selTrack_))
+            if (auto trackf = dynamic_cast<TrackFloat*>(selTrack_))
             {
                 Sequence * seq = ObjectFactory::createSequenceFloat(trackf->name());
                 seq->setStart(currentTime_);
@@ -1175,7 +1175,7 @@ void TrackView::createEditActions_()
                     ObjectTreeMimeData::objectMimeType))
         {
             const ObjectTreeMimeData * data
-                    = qobject_cast<const ObjectTreeMimeData*>(application()->clipboard()->mimeData());
+                    = dynamic_cast<const ObjectTreeMimeData*>(application()->clipboard()->mimeData());
             if (data)
             {
                 // paste single
@@ -1211,7 +1211,7 @@ bool TrackView::paste_(bool single_track)
     if (!selTrack_)
         return false;
 
-    const ObjectTreeMimeData * data = qobject_cast<const ObjectTreeMimeData*>
+    const ObjectTreeMimeData * data = dynamic_cast<const ObjectTreeMimeData*>
             (application()->clipboard()->mimeData());
     if (!data)
         return false;
@@ -1224,7 +1224,7 @@ bool TrackView::paste_(bool single_track)
     if (data->getNumObjects() == 1)
     {
         Object * o = data->getObjectTree();
-        if (Sequence * s = qobject_cast<Sequence*>(o))
+        if (Sequence * s = dynamic_cast<Sequence*>(o))
         {
             if (selTrack_->isSaveToAdd(s, error))
             {
@@ -1239,7 +1239,8 @@ bool TrackView::paste_(bool single_track)
                 QMessageBox::warning(this, tr("Can not paste"), error);
         }
         nextFocusSequence_ = 0;
-        delete o;
+        if (o)
+            o->releaseRef();
         return false;
     }
     // multi sequences
@@ -1254,7 +1255,7 @@ bool TrackView::paste_(bool single_track)
         {
             Double time = currentTime_;
             for (int i=0; i<objs.size(); ++i)
-            if (Sequence * s = qobject_cast<Sequence*>(objs[i]))
+            if (Sequence * s = dynamic_cast<Sequence*>(objs[i]))
             {
                 if (!selTrack_->isSaveToAdd(s, error))
                 {
@@ -1277,7 +1278,7 @@ bool TrackView::paste_(bool single_track)
 
             // select
             for (auto o : objs)
-                if (Sequence * s = qobject_cast<Sequence*>(o))
+                if (Sequence * s = dynamic_cast<Sequence*>(o))
                     if (auto w = widgetForSequence_(s))
                         selectSequenceWidget_(w, SELECT_);
 
@@ -1311,14 +1312,14 @@ bool TrackView::paste_(bool single_track)
                 // get left-most start time
                 Double start = -1;
                 for (auto o : objs)
-                    if (Sequence * s = qobject_cast<Sequence*>(o))
+                    if (Sequence * s = dynamic_cast<Sequence*>(o))
                         if (start < 0 || s->start() < start)
                             start = s->start();
 
                 if (start >= 0)
                 {
                     for (int i = 0; i<objs.size(); ++i)
-                    if (Sequence * s = qobject_cast<Sequence*>(objs[i]))
+                    if (Sequence * s = dynamic_cast<Sequence*>(objs[i]))
                     {
                         s->setStart(currentTime_ + s->start() - start);
                         // find track
@@ -1345,7 +1346,7 @@ bool TrackView::paste_(bool single_track)
                     }
                     // select
                     for (auto o : objs)
-                        if (Sequence * s = qobject_cast<Sequence*>(o))
+                        if (Sequence * s = dynamic_cast<Sequence*>(o))
                             if (auto w = widgetForSequence_(s))
                                 selectSequenceWidget_(w, SELECT_);
 
@@ -1363,7 +1364,7 @@ bool TrackView::paste_(bool single_track)
                            "number of sequences (" << objs.size() << ")");
 
             for (auto o : objs)
-                delete o;
+                o->releaseRef();
         }
     }
 

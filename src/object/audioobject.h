@@ -18,7 +18,6 @@ namespace AUDIO { class AudioBuffer; }
 
 class AudioObject : public Object
 {
-    Q_OBJECT
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(AudioObject)
     ~AudioObject();

@@ -20,7 +20,7 @@
 #include "object/control/clipcontroller.h"
 #include "object/control/clip.h"
 #include "object/scene.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/util/objecteditor.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -162,6 +162,7 @@ void ClipView::setScene(Scene * scene)
         clipCon_ = scene_->clipController();
 
         // connect
+        /** @todo
         if (clipCon_)
         {
             connect(clipCon_, SIGNAL(clipTriggered(Clip*)), this, SLOT(onClipTriggered_(Clip*)));
@@ -169,6 +170,7 @@ void ClipView::setScene(Scene * scene)
             connect(clipCon_, SIGNAL(clipStarted(Clip*)), this, SLOT(onClipStarted_(Clip*)));
             connect(clipCon_, SIGNAL(clipStopped(Clip*)), this, SLOT(onClipStopped_(Clip*)));
         }
+        */
 
         if (editor_)
         {
@@ -464,7 +466,7 @@ void ClipView::onMoved_(ClipWidget * widget, const QPoint &wpos, Qt::MouseButton
 
     // find move-to position
     QPoint pos = widget->mapTo(this, wpos);
-    ClipWidget * goalw = qobject_cast<ClipWidget*>(childAt(pos));
+    ClipWidget * goalw = dynamic_cast<ClipWidget*>(childAt(pos));
     if (!goalw || goalw->type() != ClipWidget::T_CLIP)
         return;
 
@@ -1002,14 +1004,14 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
     QList<Clip*> clips;
     for (auto obj : list)
     {
-        if (Clip * clip = qobject_cast<Clip*>(obj))
+        if (Clip * clip = dynamic_cast<Clip*>(obj))
         {
             clips << clip;
             minx = std::min(minx, clip->column());
             miny = std::min(miny, clip->row());
         }
         else
-            delete obj;
+            obj->releaseRef();
     }
 
     MO_ASSERT(clipCon_ && clipCon_->sceneObject(), "");
@@ -1090,7 +1092,7 @@ void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
 #endif*/
         }
         else
-            delete obj;
+            obj->releaseRef();
     }
 
     // check for modulator reuse
@@ -1110,7 +1112,7 @@ void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
     // paste all childs of obj
     for (auto obj : list)
     {
-        if (Clip * clip = qobject_cast<Clip*>(obj))
+        if (Clip * clip = dynamic_cast<Clip*>(obj))
         {
             for (auto c : clip->childObjects())
             if (parent->canHaveChildren(c->type()))
@@ -1124,7 +1126,7 @@ void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
             }
         }
 
-        delete obj;
+        obj->releaseRef();
     }
 
     // check for modulator reuse

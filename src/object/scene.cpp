@@ -12,11 +12,11 @@
 #include <QReadWriteLock>
 
 #include "scene.h"
-#include "scenelock_p.h"
+#include "util/scenelock_p.h"
 #include "io/error.h"
 #include "io/log.h"
 #include "io/datastream.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/param/modulator.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterint.h"
@@ -63,8 +63,8 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene* Scene::currentScene_ = 0;
 
-Scene::Scene(QObject *parent) :
-    Object              (parent),
+Scene::Scene() :
+    Object              (),
     editor_             (0),
     frontScene_         (0),
     showSceneDesc_      (false),
@@ -284,7 +284,7 @@ void Scene::initGlChilds_()
 
 void Scene::render_()
 {
-    emit renderRequest();
+    /** @todo newobj emit renderRequest(); */
 }
 
 
@@ -653,7 +653,7 @@ void Scene::updateChildrenChanged_()
     MO_DEBUG_TREE("Scene::updateChildrenChanged_() ");
 
     for (auto o : allObjects_)
-        if (o->p_childrenHaveChanged_)
+        if (o->haveChildrenChanged())
             o->p_childrenChanged_();
 }
 
@@ -741,7 +741,7 @@ void Scene::notifyParameterVisibility(Parameter *p)
 {
     if (editor_)
         emit editor_->parameterVisibilityChanged(p);
-    emit parameterVisibilityChanged(p);
+    /** @todo newobj emit parameterVisibilityChanged(p); */
 }
 
 void Scene::notifyParameterChange(ParameterText * par)
@@ -844,7 +844,7 @@ void Scene::endTimelineChange()
 {
     MO_DEBUG_PARAM("Scene::endTimelineChange()");
     unlock_();
-    if (Sequence * s = qobject_cast<Sequence*>(changedTimelineObject_))
+    if (Sequence * s = dynamic_cast<Sequence*>(changedTimelineObject_))
         if (editor_)
             emit editor_->sequenceChanged(s);
 
@@ -877,12 +877,8 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
     {
         //MO_PRINT(":" << o->namePath());
 
-        // unmake the QObject tree structure so we can
-        // destroy each object safely
-        o->setParent(0);
-
         if (releaseGl)
-        if (ObjectGl * gl = qobject_cast<ObjectGl*>(o))
+        if (ObjectGl * gl = dynamic_cast<ObjectGl*>(o))
         {
             for (uint i=0; i<gl->numberThreads(); ++i)
                 if (gl->isGlInitialized(i))
@@ -992,7 +988,7 @@ void Scene::resizeFbo_(uint thread)
     fboFinal_[thread]->setName("scene_final");
     fboFinal_[thread]->create();
 
-    emit sceneFboChanged();
+    /** @todo newobj emit sceneFboChanged(); */
 }
 
 GL::FrameBufferObject * Scene::fboMaster(uint thread) const
@@ -1050,7 +1046,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
             releaseAllGlRequested_[time.thread()] = false;
 
-            emit glReleased(time.thread());
+            /** @todo newobj emit glReleased(time.thread()); */
             return;
         }
 
@@ -1357,9 +1353,10 @@ void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
 
 void Scene::runScripts()
 {
+    /** @todo newobj
     for (Object * o : allObjects_)
     if (o->activeAtAll())
-    if (auto script = qobject_cast<AScriptObject*>(o))
+    if (auto script = dynamic_cast<AScriptObject*>(o))
     {
         try
         {
@@ -1367,11 +1364,12 @@ void Scene::runScripts()
         }
         catch (const Exception & e)
         {
-            /** @todo put this in a log console, visible to user! */
+            ** @todo put this in a log console, visible to user! *
             MO_WARNING("The script object '" << script->name() << "' failed:\n"
                        << e.what());
         }
     }
+    */
 }
 
 void Scene::lockRead_()
@@ -1416,9 +1414,10 @@ void Scene::setSceneTime(Double time, bool send_signal)
 
     CurrentTime::setTime(time);
 
+    /** @todo newobj
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
-
+    */
 //    render_();
 }
 
@@ -1429,8 +1428,10 @@ void Scene::setSceneTime(SamplePos pos, bool send_signal)
 
     CurrentTime::setTime(sceneTime_);
 
+    /** @todo newobj
     if (send_signal)
         emit sceneTimeChanged(sceneTime_);
+        */
 //    render_();
 }
 

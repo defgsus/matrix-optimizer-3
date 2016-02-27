@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(AudioInAO)
 
-AudioInAO::AudioInAO(QObject *parent)
-    : AudioObject   (parent)
+AudioInAO::AudioInAO()
+    : AudioObject   ()
 {
     setName("AudioIn");
     setNumberAudioOutputs(2);

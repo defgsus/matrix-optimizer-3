@@ -18,7 +18,6 @@ namespace MO {
 /** Scene object encapsulating light source settings */
 class LightSource : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(LightSource);
 
@@ -33,10 +32,6 @@ public:
 
     /** fill the settings container with current values */
     void getLightSettings(GL::LightSettings *, uint index, const RenderTime & time);
-
-signals:
-
-public slots:
 
 private:
 

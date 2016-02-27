@@ -14,13 +14,13 @@
 #include "objecteditor.h"
 #include "object/object.h"
 #include "object/scene.h"
-#include "object/scenelock_p.h"
+#include "object/util/scenelock_p.h"
 #include "object/control/sequence.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/trackfloat.h"
 #include "object/control/clipcontroller.h"
 #include "object/audioobject.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/control/modulatorobject.h"
 #include "object/texture/textureobjectbase.h"
 #include "object/visual/shaderobject.h"
@@ -226,7 +226,7 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
                             .arg(newChild->name())
                             .arg(parent->name())
                             .arg(error);
-        delete newChild;
+        newChild->releaseRef();
         QMessageBox::critical(0, tr("Can't add object"), errtext);
 
         MO_DEBUG(errtext);
@@ -287,7 +287,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     if (saveAdd.contains(o))
         actualObjects.append(o);
     else
-        delete o;
+        o->releaseRef();
 
     if (!actualObjects.isEmpty())
     {
@@ -428,7 +428,7 @@ void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int
 
     // be smart about some settings
     bool doMasterOut = false;
-    if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(newObject))
+    if (TextureObjectBase * to = dynamic_cast<TextureObjectBase*>(newObject))
     {
         to->setMasterOutputEnabled(doMasterOut = true);
         to->setResolutionMode(TextureObjectBase::RM_INPUT);
@@ -436,7 +436,7 @@ void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int
     // disable output in source module
     if (doMasterOut)
     {
-        if (TextureObjectBase * to = qobject_cast<TextureObjectBase*>(object))
+        if (TextureObjectBase * to = dynamic_cast<TextureObjectBase*>(object))
             to->setMasterOutputEnabled(false, true);
     }
 
@@ -490,7 +490,7 @@ namespace
         emit edit->parameterChanged(p);
         if (auto iface = dynamic_cast<ValueFloatInterface*>(p->object()))
             emit edit->valueFloatChanged(iface);
-        if (Sequence * seq = qobject_cast<Sequence*>(p->object()))
+        if (Sequence * seq = dynamic_cast<Sequence*>(p->object()))
             emit edit->sequenceChanged(seq);
 
         // repaint
@@ -848,7 +848,7 @@ Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip
 
     if (parent && !parent->canHaveChildren(obj->type()))
     {
-        delete obj;
+        obj->releaseRef();
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 
@@ -866,7 +866,7 @@ Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip
 
     if (!parent->canHaveChildren(obj->type()))
     {
-        delete obj;
+        obj->releaseRef();
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 

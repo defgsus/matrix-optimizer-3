@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_UTIL_TEXTUREMORPHSETTING_H
 
 
-#include <QObject>
+#include <QCoreApplication> // for Q_DECLARE_TR_FUNCTIONS()
 
 #include "object/object_fwd.h"
 #include "gl/opengl_fwd.h"
@@ -22,7 +22,7 @@ namespace MO {
 
 class TextureMorphSetting : public QObject
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(TextureMorphSetting)
 public:
     /** Creates the settings for the given object */
     explicit TextureMorphSetting(Object *parent = 0);

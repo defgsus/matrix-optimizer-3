@@ -108,7 +108,7 @@
 #include "engine/audioengine.h"
 #include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
-#include "object/objectfactory.h"
+#include "object/util/objectfactory.h"
 #include "object/object.h"
 #include "object/scene.h"
 #include "object/control/sequencefloat.h"
@@ -951,13 +951,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (scene_)
     {
         scene_->kill();
-        scene_->deleteLater();
+        scene_->releaseRef();
     }
 
     scene_ = s;
-
-    // manage memory
-    scene_->setParent(this);
 
     scene_->setObjectEditor(objectEditor_);
     scene_->setCurrentScene(scene_);
@@ -1035,8 +1032,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // connect to render window
     glManager_->setScene(scene_);
+    /** @todo newobj
     connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                 scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
+    */
 
     // widgets -> scenetime
     connect(seqView_, SIGNAL(sceneTimeChanged(Double)),
@@ -1045,16 +1044,18 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             this, SLOT(setSceneTime(Double)));
 
     // scene changes
+    /** @todo newobj
     connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
     connect(scene_, SIGNAL(sceneTimeChanged(Double)),
             this, SLOT(onSceneTimeChanged_(Double)));
-
+    */
     // update widgets
 
+    /** @todo newobj
     connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
-
+    */
     objectGraphView_->setRootObject(scene_);
     objectView_->setObject(scene_);
     objectOutputView()->setObject(0);
@@ -1157,7 +1158,7 @@ void MainWidgetController::onObjectAdded_(Object * o)
     copySceneSettings_(o);
 
     // update clipview
-    if (Clip * clip = qobject_cast<Clip*>(o))
+    if (Clip * clip = dynamic_cast<Clip*>(o))
     {
         if (clip->clipContainer() == clipView_->clipContainer())
             clipView_->updateClip(clip);

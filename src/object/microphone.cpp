@@ -22,8 +22,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Microphone)
 
-Microphone::Microphone(QObject *parent) :
-    Object(parent)
+Microphone::Microphone()
+    : Object()
 {
     setName("Microphone");
     setNumberMicrophones(1);

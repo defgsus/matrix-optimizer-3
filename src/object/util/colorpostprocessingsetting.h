@@ -11,7 +11,7 @@
 #ifndef MOSRC_OBJECT_UTIL_COLORPOSTPROCESSINGSETTING_H
 #define MOSRC_OBJECT_UTIL_COLORPOSTPROCESSINGSETTING_H
 
-#include <QObject>
+#include <QCoreApplication>
 
 #include "object/object_fwd.h"
 #include "gl/opengl_fwd.h"
@@ -19,9 +19,9 @@
 
 namespace MO {
 
-class ColorPostProcessingSetting : public QObject
+class ColorPostProcessingSetting
 {
-    Q_OBJECT
+    Q_DECLARE_TR_FUNCTIONS(ColorPostProcessingSetting)
 public:
     /** Creates the settings for the given object */
     explicit ColorPostProcessingSetting(Object *parent = 0);
