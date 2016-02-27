@@ -22,8 +22,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(SoundSourceAO)
 
-SoundSourceAO::SoundSourceAO(QObject *parent)
-    : AudioObject   (parent)
+SoundSourceAO::SoundSourceAO()
+    : AudioObject   ()
 {
     setName("SoundSource");
     setNumberAudioInputsOutputs(1,1);

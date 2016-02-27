@@ -90,8 +90,8 @@ struct RandomTO::Private
 };
 
 
-RandomTO::RandomTO(QObject *parent)
-    : TextureObjectBase (parent)
+RandomTO::RandomTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Random");

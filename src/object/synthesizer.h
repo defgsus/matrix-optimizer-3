@@ -26,7 +26,6 @@ class SynthSetting;
 
 class Synthesizer : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Synthesizer);
 

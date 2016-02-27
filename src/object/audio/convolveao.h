@@ -17,7 +17,6 @@ namespace MO {
 
 class ConvolveAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ConvolveAO)
     ~ConvolveAO();

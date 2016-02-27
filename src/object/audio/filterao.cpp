@@ -43,8 +43,8 @@ class FilterAO::Private
     std::vector<std::shared_ptr<AUDIO::MultiFilter>> filters;
 };
 
-FilterAO::FilterAO(QObject *parent)
-    : AudioObject   (parent),
+FilterAO::FilterAO()
+    : AudioObject   (),
       p_            (new Private())
 {
     setName("Filter");

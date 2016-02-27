@@ -46,8 +46,8 @@ class PanAO::Private
             * paramMode;
 };
 
-PanAO::PanAO(QObject *parent)
-    : AudioObject (parent)
+PanAO::PanAO()
+    : AudioObject   ()
     , p_ (new Private(this))
 {
     setName("Pan");

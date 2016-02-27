@@ -7,7 +7,6 @@ namespace MO {
 
 class NoiseAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(NoiseAO);
     ~NoiseAO();

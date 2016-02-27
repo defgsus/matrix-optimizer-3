@@ -54,8 +54,8 @@ struct NormalMapTO::Private
 };
 
 
-NormalMapTO::NormalMapTO(QObject *parent)
-    : TextureObjectBase (parent)
+NormalMapTO::NormalMapTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("NormalMap");

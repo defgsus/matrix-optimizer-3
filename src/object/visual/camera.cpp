@@ -23,6 +23,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametertext.h"
+#include "object/util/scenesignals.h"
 #include "object/util/objecteditor.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
@@ -448,10 +449,8 @@ void Camera::initGl(uint thread)
         sliceMatrix_ = MATH::rotate(sliceMatrix_, 90.f, Vec3(1.f, 0.f, 0.f));
     }
 
-    /** @todo newobj
-    if (sceneObject())
-        emit sceneObject()->CameraFboChanged(this);
-    */
+    if (auto s = sceneObject())
+        emit s->sceneSignals()->CameraFboChanged(this);
 }
 
 void Camera::releaseGl(uint )

@@ -22,8 +22,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(FreeFloatTransform)
 
-FreeFloatTransform::FreeFloatTransform(QObject *parent)
-    : Transformation    (parent)
+FreeFloatTransform::FreeFloatTransform()
+    : Transformation    ()
     , freefloat_        (new FreeFloatCamera)
     , doReset_          (true)
 {

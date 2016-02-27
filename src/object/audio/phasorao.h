@@ -7,7 +7,6 @@ namespace MO {
 
 class PhasorAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(PhasorAO);
     ~PhasorAO();

@@ -22,7 +22,6 @@ namespace AUDIO { class LadspaPlugin; }
     Currently only based on AUDIO::LadspaPlugin */
 class PluginAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(PluginAO);
     ~PluginAO();

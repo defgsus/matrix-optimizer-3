@@ -63,8 +63,8 @@ class ModPlayerAO::Private
 
 
 
-ModPlayerAO::ModPlayerAO(QObject *parent)
-    : AudioObject   (parent),
+ModPlayerAO::ModPlayerAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("ModPlayer");

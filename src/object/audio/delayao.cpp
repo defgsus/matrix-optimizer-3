@@ -44,8 +44,8 @@ class DelayAO::Private
     std::vector<std::shared_ptr<AUDIO::AudioDelay>> delays;
 };
 
-DelayAO::DelayAO(QObject *parent)
-    : AudioObject   (parent),
+DelayAO::DelayAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("Delay");

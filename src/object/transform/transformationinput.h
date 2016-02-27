@@ -19,7 +19,6 @@ namespace MO {
     through a parameter */
 class TransformationInput : public Transformation
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(TransformationInput);
 
@@ -27,11 +26,6 @@ public:
 
     virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const
                                                             Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
-
 protected:
 
     ParameterTransformation * p_trans_;

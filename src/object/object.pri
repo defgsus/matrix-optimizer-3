@@ -23,6 +23,13 @@ HEADERS += \
     src/object/control/clip.h \
     src/object/control/clipcontroller.h \
     src/object/transform/transformation.h \
+    src/object/transform/axisrotation.h \
+    src/object/transform/translation.h \
+    src/object/transform/scale.h \
+    src/object/transform/look.h \
+    src/object/transform/lookat.h \
+    src/object/transform/shear.h \
+    src/object/transform/mix.h \
     src/object/audio/audioinao.h \
     src/object/audio/audiooutao.h \
     src/object/util/texturesetting.h \
@@ -70,71 +77,65 @@ HEADERS += \
     src/object/interface/geometryeditinterface.h \
     src/object/interface/evolutioneditinterface.h \
     src/object/interface/valueshadersourceinterface.h \
-    src/object/object_fwd.h
-#    src/object/transform/axisrotation.h \
-#    src/object/transform/translation.h \
-#    src/object/transform/scale.h \
-#    src/object/transform/look.h \
-#    src/object/transform/lookat.h \
-#    src/object/transform/shear.h \
-#    src/object/transform/mix.h \
-#    src/object/microphonegroup.h \
-#    src/object/synthesizer.h \
-#    src/object/audio/oscillatorao.h \
-#    src/object/audio/filterao.h \
-#    src/object/audio/mverbao.h \
-#    src/object/audio/fftao.h \
-#    src/object/audio/shaperao.h \
-#    src/object/audio/filterbankao.h \
-#    src/object/audio/envelopefollowerao.h \
-#    src/object/audio/delayao.h \
-#    src/object/audio/soundsourceao.h \
-#    src/object/audio/parameterao.h \
-#    src/object/audio/impulseao.h \
-#    src/object/audio/panao.h \
-#    src/object/audio/dustao.h \
-#    src/object/audio/bandfilterbankao.h \
-#    src/object/audio/modplayerao.h \
-#    src/object/ascriptobject.h \
-#    src/object/control/derivativeobjectfloat.h \
-#    src/object/audio/sampleholdao.h \
-#    src/object/audio/phasorao.h \
-#    src/object/audio/noiseao.h \
-#    src/object/audio/playbufferao.h \
-#    src/object/audio/convolveao.h \
-#    src/object/audio/pluginao.h \
-#    src/object/audio/waveplayerao.h \
-#    src/object/texture/colorto.h \
-#    src/object/texture/blurto.h \
-#    src/object/texture/keyto.h \
-#    src/object/texture/mixto.h \
-#    src/object/transform/transformationinput.h \
-#    src/object/transform/mirrortrans.h \
-#    src/object/transform/cleartrans.h \
-#    src/object/texture/randomto.h \
-#    src/object/texture/normalmapto.h \
-#    src/object/texture/lensdistto.h \
-#    src/object/audio/microphoneao.h \
-#    src/object/texture/generate3dto.h \
-#    src/object/texture/distancemapto.h \
-#    src/object/texture/thresholdto.h \
-#    src/object/texture/imagesto.h \
-#    src/object/visual/geometryobject.h \
-#    src/object/visual/sprite.h \
-#    src/object/visual/textureoverlay.h \
-#    src/object/visual/oscillograph.h \
-#    src/object/visual/imagegallery.h \
-#    src/object/texture/shaderto.h \
-#    src/object/texture/posterizeto.h \
-#    src/object/texture/kalisetto.h \
-#    src/object/control/oscinputobject.h \
-#    src/object/control/keyboardobject.h \
-#    src/object/transform/freefloattransform.h \
-#    src/object/texture/textto.h \
-#    src/object/control/mouseobject.h \
-#    src/object/texture/neuroto.h \
-#    src/object/texture/cropto.h \
-#    src/object/visual/skybox.h
+    src/object/object_fwd.h \
+    src/object/util/scenesignals.h \
+    src/object/microphonegroup.h \
+    src/object/synthesizer.h \
+    src/object/audio/oscillatorao.h \
+    src/object/audio/filterao.h \
+    src/object/audio/mverbao.h \
+    src/object/audio/fftao.h \
+    src/object/audio/shaperao.h \
+    src/object/audio/filterbankao.h \
+    src/object/audio/envelopefollowerao.h \
+    src/object/audio/delayao.h \
+    src/object/audio/soundsourceao.h \
+    src/object/audio/parameterao.h \
+    src/object/audio/impulseao.h \
+    src/object/audio/panao.h \
+    src/object/audio/dustao.h \
+    src/object/audio/bandfilterbankao.h \
+    src/object/audio/modplayerao.h \
+    src/object/ascriptobject.h \
+    src/object/control/derivativeobjectfloat.h \
+    src/object/audio/sampleholdao.h \
+    src/object/audio/phasorao.h \
+    src/object/audio/noiseao.h \
+    src/object/audio/playbufferao.h \
+    src/object/audio/convolveao.h \
+    src/object/audio/pluginao.h \
+    src/object/audio/waveplayerao.h \
+    src/object/texture/colorto.h \
+    src/object/texture/blurto.h \
+    src/object/texture/keyto.h \
+    src/object/texture/mixto.h \
+    src/object/transform/transformationinput.h \
+    src/object/transform/mirrortrans.h \
+    src/object/transform/cleartrans.h \
+    src/object/texture/randomto.h \
+    src/object/texture/normalmapto.h \
+    src/object/texture/lensdistto.h \
+    src/object/audio/microphoneao.h \
+    src/object/texture/generate3dto.h \
+    src/object/texture/distancemapto.h \
+    src/object/texture/thresholdto.h \
+    src/object/texture/imagesto.h \
+    src/object/visual/geometryobject.h \
+    src/object/visual/sprite.h \
+    src/object/visual/textureoverlay.h \
+    src/object/visual/oscillograph.h \
+    src/object/visual/imagegallery.h \
+    src/object/texture/shaderto.h \
+    src/object/texture/posterizeto.h \
+    src/object/texture/kalisetto.h \
+    src/object/control/oscinputobject.h \
+    src/object/control/keyboardobject.h \
+    src/object/transform/freefloattransform.h \
+    src/object/texture/textto.h \
+    src/object/control/mouseobject.h \
+    src/object/texture/neuroto.h \
+    src/object/texture/cropto.h \
+    src/object/visual/skybox.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -161,6 +162,13 @@ SOURCES += \
     src/object/control/clip.cpp \
     src/object/control/clipcontroller.cpp \
     src/object/transform/transformation.cpp \
+    src/object/transform/axisrotation.cpp \
+    src/object/transform/translation.cpp \
+    src/object/transform/scale.cpp \
+    src/object/transform/look.cpp \
+    src/object/transform/lookat.cpp \
+    src/object/transform/shear.cpp \
+    src/object/transform/mix.cpp \
     src/object/audio/audioinao.cpp \
     src/object/audio/audiooutao.cpp \
     src/object/util/texturesetting.cpp \
@@ -201,68 +209,61 @@ SOURCES += \
     src/object/param/parameterfont.cpp \
     src/object/interface/geometryeditinterface.cpp \
     src/object/interface/evolutioneditinterface.cpp \
-    src/object/interface/valuefloatinterface.cpp
-#    src/object/transform/axisrotation.cpp \
-#    src/object/transform/translation.cpp \
-#    src/object/transform/scale.cpp \
-#    src/object/transform/look.cpp \
-#    src/object/transform/lookat.cpp \
-#    src/object/transform/shear.cpp \
-#    src/object/transform/mix.cpp \
-#    src/object/microphonegroup.cpp \
-#    src/object/synthesizer.cpp \
-#    src/object/audio/oscillatorao.cpp \
-#    src/object/audio/filterao.cpp \
-#    src/object/audio/mverbao.cpp \
-#    src/object/audio/fftao.cpp \
-#    src/object/audio/shaperao.cpp \
-#    src/object/audio/filterbankao.cpp \
-#    src/object/audio/envelopefollowerao.cpp \
-#    src/object/audio/delayao.cpp \
-#    src/object/audio/soundsourceao.cpp \
-#    src/object/audio/parameterao.cpp \
-#    src/object/audio/impulseao.cpp \
-#    src/object/audio/panao.cpp \
-#    src/object/audio/dustao.cpp \
-#    src/object/audio/bandfilterbankao.cpp \
-#    src/object/audio/modplayerao.cpp \
-#    src/object/ascriptobject.cpp \
-#    src/object/control/derivativeobjectfloat.cpp \
-#    src/object/audio/sampleholdao.cpp \
-#    src/object/audio/phasorao.cpp \
-#    src/object/audio/noiseao.cpp \
-#    src/object/audio/playbufferao.cpp \
-#    src/object/audio/convolveao.cpp \
-#    src/object/audio/pluginao.cpp \
-#    src/object/audio/waveplayerao.cpp \
-#    src/object/texture/colorto.cpp \
-#    src/object/texture/blurto.cpp \
-#    src/object/texture/keyto.cpp \
-#    src/object/texture/mixto.cpp \
-#    src/object/transform/transformationinput.cpp \
-#    src/object/transform/mirrortrans.cpp \
-#    src/object/transform/cleartrans.cpp \
-#    src/object/texture/randomto.cpp \
-#    src/object/texture/normalmapto.cpp \
-#    src/object/texture/lensdistto.cpp \
-#    src/object/audio/microphoneao.cpp \
-#    src/object/texture/generate3dto.cpp \
-#    src/object/texture/distancemapto.cpp \
-#    src/object/texture/thresholdto.cpp \
-#    src/object/texture/imagesto.cpp \
-#    src/object/visual/geometryobject.cpp \
-#    src/object/visual/oscillograph.cpp \
-#    src/object/visual/sprite.cpp \
-#    src/object/visual/textureoverlay.cpp \
-#    src/object/visual/imagegallery.cpp \
-#    src/object/texture/shaderto.cpp \
-#    src/object/texture/posterizeto.cpp \
-#    src/object/texture/kalisetto.cpp \
-#    src/object/control/oscinputobject.cpp \
-#    src/object/control/keyboardobject.cpp \
-#    src/object/transform/freefloattransform.cpp \
-#    src/object/texture/textto.cpp \
-#    src/object/control/mouseobject.cpp \
-#    src/object/texture/neuroto.cpp \
-#    src/object/texture/cropto.cpp \
-#    src/object/visual/skybox.cpp
+    src/object/interface/valuefloatinterface.cpp \
+    src/object/microphonegroup.cpp \
+    src/object/synthesizer.cpp \
+    src/object/audio/oscillatorao.cpp \
+    src/object/audio/filterao.cpp \
+    src/object/audio/mverbao.cpp \
+    src/object/audio/fftao.cpp \
+    src/object/audio/shaperao.cpp \
+    src/object/audio/filterbankao.cpp \
+    src/object/audio/envelopefollowerao.cpp \
+    src/object/audio/delayao.cpp \
+    src/object/audio/soundsourceao.cpp \
+    src/object/audio/parameterao.cpp \
+    src/object/audio/impulseao.cpp \
+    src/object/audio/panao.cpp \
+    src/object/audio/dustao.cpp \
+    src/object/audio/bandfilterbankao.cpp \
+    src/object/audio/modplayerao.cpp \
+    src/object/ascriptobject.cpp \
+    src/object/control/derivativeobjectfloat.cpp \
+    src/object/audio/sampleholdao.cpp \
+    src/object/audio/phasorao.cpp \
+    src/object/audio/noiseao.cpp \
+    src/object/audio/playbufferao.cpp \
+    src/object/audio/convolveao.cpp \
+    src/object/audio/pluginao.cpp \
+    src/object/audio/waveplayerao.cpp \
+    src/object/texture/colorto.cpp \
+    src/object/texture/blurto.cpp \
+    src/object/texture/keyto.cpp \
+    src/object/texture/mixto.cpp \
+    src/object/transform/transformationinput.cpp \
+    src/object/transform/mirrortrans.cpp \
+    src/object/transform/cleartrans.cpp \
+    src/object/texture/randomto.cpp \
+    src/object/texture/normalmapto.cpp \
+    src/object/texture/lensdistto.cpp \
+    src/object/audio/microphoneao.cpp \
+    src/object/texture/generate3dto.cpp \
+    src/object/texture/distancemapto.cpp \
+    src/object/texture/thresholdto.cpp \
+    src/object/texture/imagesto.cpp \
+    src/object/visual/geometryobject.cpp \
+    src/object/visual/oscillograph.cpp \
+    src/object/visual/sprite.cpp \
+    src/object/visual/textureoverlay.cpp \
+    src/object/visual/imagegallery.cpp \
+    src/object/texture/shaderto.cpp \
+    src/object/texture/posterizeto.cpp \
+    src/object/texture/kalisetto.cpp \
+    src/object/control/oscinputobject.cpp \
+    src/object/control/keyboardobject.cpp \
+    src/object/transform/freefloattransform.cpp \
+    src/object/texture/textto.cpp \
+    src/object/control/mouseobject.cpp \
+    src/object/texture/neuroto.cpp \
+    src/object/texture/cropto.cpp \
+    src/object/visual/skybox.cpp

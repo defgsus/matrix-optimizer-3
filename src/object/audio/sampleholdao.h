@@ -7,7 +7,6 @@ namespace MO {
 
 class SampleHoldAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(SampleHoldAO);
     ~SampleHoldAO();

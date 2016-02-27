@@ -17,7 +17,6 @@ namespace MO {
 
 class OscillatorAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(OscillatorAO)
     ~OscillatorAO();

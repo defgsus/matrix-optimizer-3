@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(TransformationInput)
 
-TransformationInput::TransformationInput(QObject *parent) :
-    Transformation(parent)
+TransformationInput::TransformationInput()
+    : Transformation    ()
 {
     setName("Input");
 }

@@ -72,8 +72,8 @@ class OscillatorAO::Private
 
 
 
-OscillatorAO::OscillatorAO(QObject *parent)
-    : AudioObject   (parent),
+OscillatorAO::OscillatorAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("Oscillator");

@@ -18,7 +18,6 @@ namespace MO {
 /** An multiple images to texture loader */
 class ImagesTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(ImagesTO);
@@ -41,10 +40,6 @@ public:
     // ---------- specific stuff -----------
 
     void setImageFilenames(const QStringList& fn);
-
-signals:
-
-public slots:
 
 private:
 

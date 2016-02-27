@@ -79,8 +79,8 @@ void Synthesizer::VoiceEqu_::feedParser_(Double x, Double y, Double z, const AUD
 
 MO_REGISTER_OBJECT(Synthesizer)
 
-Synthesizer::Synthesizer(QObject *parent)
-    : Object    (parent),
+Synthesizer::Synthesizer()
+    : Object    (),
       synth_    (new SynthSetting(this))
     , doPanic_  (false)
 {

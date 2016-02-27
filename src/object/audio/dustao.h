@@ -7,7 +7,6 @@ namespace MO {
 
 class DustAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(DustAO);
     ~DustAO();

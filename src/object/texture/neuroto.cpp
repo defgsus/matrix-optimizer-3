@@ -76,8 +76,8 @@ struct NeuroTO::Private
             *p_reset_weights;
 };
 
-NeuroTO::NeuroTO(QObject *parent)
-    : TextureObjectBase (parent)
+NeuroTO::NeuroTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Neuro");

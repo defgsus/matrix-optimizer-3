@@ -17,7 +17,6 @@ namespace MO {
 
 class ShaperAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ShaperAO)
     ~ShaperAO();

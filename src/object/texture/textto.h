@@ -19,7 +19,6 @@ namespace MO {
 /** A texture generator using system fonts */
 class TextTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(TextTO);
@@ -42,10 +41,6 @@ public:
     // ---------- specific stuff -----------
 
     void setText(const QString& text);
-
-signals:
-
-public slots:
 
 private:
 

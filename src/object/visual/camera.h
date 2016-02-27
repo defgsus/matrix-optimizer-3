@@ -108,10 +108,6 @@ public:
     void calculateTransformation(Mat4& matrix, const RenderTime& time) const
                                                                     Q_DECL_OVERRIDE;
 
-signals:
-
-public slots:
-
 private:
 
     void updateFboSize_();

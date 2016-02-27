@@ -367,7 +367,8 @@ void SequenceView::onSequenceChanged_(Sequence * s)
 {
     MO_DEBUG_PARAM("SequenceView::sequenceTimeChanged(" << s
                    << ") baseSequence_=" << sequence_
-                   << " defaultSettingsAvailable_=" << defaultSettingsAvailable_);
+                   //<< " defaultSettingsAvailable_=" << defaultSettingsAvailable_
+                   );
     Q_UNUSED(s);
 
     // update playbar

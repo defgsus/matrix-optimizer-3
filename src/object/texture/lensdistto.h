@@ -19,7 +19,6 @@ namespace MO {
 /** Classic lens distorion with chromatic abberation and user function */
 class LensDistTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(LensDistTO);
@@ -35,10 +34,6 @@ public:
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

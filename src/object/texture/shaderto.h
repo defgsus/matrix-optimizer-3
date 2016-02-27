@@ -18,7 +18,6 @@ namespace MO {
 /** User-defined shader texture processor */
 class ShaderTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(ShaderTO);
@@ -34,10 +33,6 @@ public:
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

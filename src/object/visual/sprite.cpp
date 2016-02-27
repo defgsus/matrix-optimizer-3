@@ -30,8 +30,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Sprite)
 
-Sprite::Sprite(QObject * parent)
-    : ObjectGl      (parent),
+Sprite::Sprite()
+    : ObjectGl      (),
       draw_         (0),
       texture_      (new TextureSetting(this))
 {

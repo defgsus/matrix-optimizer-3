@@ -18,7 +18,6 @@ namespace MO {
 /** All kinds of color processing */
 class ColorTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(ColorTO);
@@ -39,10 +38,6 @@ public:
     //virtual const GL::Texture * valueTexture(Double time, uint thread) const Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

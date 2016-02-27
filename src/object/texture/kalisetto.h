@@ -20,7 +20,6 @@ namespace MO {
 class KaliSetTO
         : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(KaliSetTO);
@@ -41,10 +40,6 @@ public:
     virtual void setEvolution(const QString& key, const EvolutionBase*) override;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

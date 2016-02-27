@@ -60,8 +60,8 @@ struct KeyTO::Private
 };
 
 
-KeyTO::KeyTO(QObject *parent)
-    : TextureObjectBase (parent)
+KeyTO::KeyTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Key");

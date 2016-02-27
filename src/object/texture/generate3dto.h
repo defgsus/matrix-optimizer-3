@@ -20,7 +20,6 @@ namespace MO {
 /** A 3D-Texture generator sampling a scalar-field function */
 class Generate3dTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(Generate3dTO);
@@ -38,10 +37,6 @@ public:
     virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

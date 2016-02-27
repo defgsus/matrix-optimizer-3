@@ -7,7 +7,6 @@ namespace MO {
 
 class PlayBufferAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(PlayBufferAO);
     ~PlayBufferAO();

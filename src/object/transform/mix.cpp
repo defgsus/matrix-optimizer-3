@@ -17,8 +17,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Mix)
 
-Mix::Mix(QObject *parent) :
-    Transformation(parent)
+Mix::Mix()
+    : Transformation()
 {
     setName("Mix");
 }

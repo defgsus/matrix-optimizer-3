@@ -51,8 +51,8 @@ struct MixTO::Private
 };
 
 
-MixTO::MixTO(QObject *parent)
-    : TextureObjectBase (parent)
+MixTO::MixTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Mixer");

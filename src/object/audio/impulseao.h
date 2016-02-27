@@ -7,7 +7,6 @@ namespace MO {
 
 class ImpulseAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ImpulseAO);
     ~ImpulseAO();

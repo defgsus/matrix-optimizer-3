@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ClearTrans)
 
-ClearTrans::ClearTrans(QObject *parent) :
-    Transformation(parent)
+ClearTrans::ClearTrans()
+    : Transformation    ()
 {
     setName("Clear");
 }

@@ -68,8 +68,8 @@ struct BlurTO::Private
 };
 
 
-BlurTO::BlurTO(QObject *parent)
-    : TextureObjectBase (parent)
+BlurTO::BlurTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Blur");

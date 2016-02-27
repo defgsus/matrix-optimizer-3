@@ -18,7 +18,6 @@ namespace MO {
 
 class LookAt : public Transformation
 {
-    Q_OBJECT
 public:
 
     enum LookMode
@@ -34,10 +33,6 @@ public:
 
     virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const
                                                 Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
 
 protected:
 

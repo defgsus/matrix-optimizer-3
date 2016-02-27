@@ -67,8 +67,8 @@ class NoiseAO::Private
             * paramMode;
 };
 
-NoiseAO::NoiseAO(QObject *parent)
-    : AudioObject (parent)
+NoiseAO::NoiseAO()
+    : AudioObject   ()
     , p_          (new Private(this))
 {
     setName("Noise");

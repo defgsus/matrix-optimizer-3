@@ -15,6 +15,7 @@
 #include "context.h"
 #include "scenerenderer.h"
 #include "object/scene.h"
+#include "object/util/scenesignals.h"
 #include "io/log.h"
 #include "io/error.h"
 #include "io/application.h"
@@ -75,12 +76,10 @@ void Manager::setScene(Scene * scene)
     // XXX Would not work if window was not created yet
     if (changed && scene_ && window_)
     {
-        /** @todo newobj
         // connect events from scene to window
-        connect(scene_, SIGNAL(renderRequest()),
+        connect(scene_->sceneSignals(), SIGNAL(renderRequest()),
                     //this, SLOT(onRenderRequest_()));
                     window_, SLOT(renderLater()));
-        */
     }
 
     renderer_->setScene(scene);

@@ -7,7 +7,6 @@ namespace MO {
 
 class PanAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(PanAO);
     ~PanAO();

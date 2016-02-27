@@ -16,9 +16,10 @@
 
 namespace MO {
 
-class OscInputObject : public Object, public ValueFloatInterface
+class OscInputObject
+        : public Object
+        , public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(OscInputObject);
     ~OscInputObject();

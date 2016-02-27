@@ -20,7 +20,6 @@ class Skybox
         : public ObjectGl
         , public ValueShaderSourceInterface
 {
-    Q_OBJECT
 public:
 
     enum ContentMode

@@ -18,7 +18,6 @@ namespace MO {
 /** A blur effect */
 class BlurTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(BlurTO);
@@ -36,10 +35,6 @@ public:
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

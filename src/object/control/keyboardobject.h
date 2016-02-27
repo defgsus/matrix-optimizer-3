@@ -19,7 +19,6 @@ namespace MO {
 
 class KeyboardObject : public Object, public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(KeyboardObject);
     ~KeyboardObject();

@@ -124,8 +124,8 @@ namespace {
 } // namespace
 
 
-ShaperAO::ShaperAO(QObject *parent)
-    : AudioObject   (parent),
+ShaperAO::ShaperAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("Shaper");

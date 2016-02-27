@@ -17,7 +17,6 @@ namespace MO {
 
 class Mix : public Transformation
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Mix);
 
@@ -29,10 +28,6 @@ public:
                                         Q_DECL_OVERRIDE;
 
     virtual void childrenChanged() Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
 
 protected:
 

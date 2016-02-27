@@ -21,7 +21,6 @@ namespace MO {
 
 class FftAO : public AudioObject
 {
-    Q_OBJECT
 public:
 
     enum FftType

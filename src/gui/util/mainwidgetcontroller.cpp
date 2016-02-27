@@ -117,6 +117,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/objectdsppath.h"
 #include "object/util/objecttree.h"
+#include "object/util/scenesignals.h"
 #include "object/interface/valuefloatinterface.h"
 #include "tool/commonresolutions.h"
 
@@ -1032,10 +1033,11 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // connect to render window
     glManager_->setScene(scene_);
-    /** @todo newobj
-    connect(glManager_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
-                scene_, SLOT(setFreeCameraMatrix(MO::Mat4)));
-    */
+    connect(glManager_, &GL::Manager::cameraMatrixChanged, [=](const Mat4& m)
+    {
+        scene_->setFreeCameraMatrix(m);
+    });
+
 
     // widgets -> scenetime
     connect(seqView_, SIGNAL(sceneTimeChanged(Double)),
@@ -1044,18 +1046,17 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             this, SLOT(setSceneTime(Double)));
 
     // scene changes
-    /** @todo newobj
-    connect(scene_, SIGNAL(numberOutputEnvelopesChanged(uint)),
+    connect(scene_->sceneSignals(), SIGNAL(numberOutputEnvelopesChanged(uint)),
             this, SLOT(updateNumberOutputEnvelopes_(uint)));
-    connect(scene_, SIGNAL(sceneTimeChanged(Double)),
+    connect(scene_->sceneSignals(), SIGNAL(sceneTimeChanged(Double)),
             this, SLOT(onSceneTimeChanged_(Double)));
-    */
+
     // update widgets
 
-    /** @todo newobj
-    connect(scene_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
+    connect(scene_->sceneSignals(),
+            SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
-    */
+
     objectGraphView_->setRootObject(scene_);
     objectView_->setObject(scene_);
     objectOutputView()->setObject(0);

@@ -21,7 +21,6 @@ namespace MO {
     experimental and deprecated.. */
 class TextureOverlay : public ObjectGl
 {
-    Q_OBJECT
 public:
 
     enum ProjectionType
@@ -45,10 +44,6 @@ protected:
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
-
-signals:
-
-private slots:
 
 private:
 

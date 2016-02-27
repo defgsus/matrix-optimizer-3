@@ -62,8 +62,8 @@ struct ImageGallery::Entity_
 };
 
 
-ImageGallery::ImageGallery(QObject * parent)
-    : ObjectGl      (parent),
+ImageGallery::ImageGallery()
+    : ObjectGl      (),
       shader_       (0),
       vaoImage_     (0),
       vaoFrame_     (0),

@@ -15,6 +15,7 @@
 #include "clientenginecommandline.h"
 #include "object/scene.h"
 #include "object/util/objectfactory.h"
+#include "object/util/scenesignals.h"
 #include "object/control/clipcontroller.h"
 #include "network/tcpserver.h"
 #include "network/netlog.h"
@@ -504,13 +505,11 @@ void ClientEngine::setSceneObject(Scene * scene)
 
     glManager_->setScene(scene_);
 
-    /** @todo newobj
     // connect to render window
-    connect(scene_, SIGNAL(playbackStarted()),
+    connect(scene_->sceneSignals(), SIGNAL(playbackStarted()),
             glWindow_, SLOT(startAnimation()));
-    connect(scene_, SIGNAL(playbackStopped()),
+    connect(scene_->sceneSignals(), SIGNAL(playbackStopped()),
             glWindow_, SLOT(stopAnimation()));
-    */
 
     // update projection settings
     scene_->setProjectionSettings(settings()->getDefaultProjectionSettings());

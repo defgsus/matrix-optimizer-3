@@ -48,8 +48,8 @@ struct ThresholdTO::Private
 };
 
 
-ThresholdTO::ThresholdTO(QObject *parent)
-    : TextureObjectBase (parent)
+ThresholdTO::ThresholdTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Threshold");

@@ -55,8 +55,8 @@ struct Generate3dTO::Private
 };
 
 
-Generate3dTO::Generate3dTO(QObject *parent)
-    : TextureObjectBase (parent)
+Generate3dTO::Generate3dTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Generator3d");

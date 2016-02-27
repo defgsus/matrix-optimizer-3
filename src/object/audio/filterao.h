@@ -17,7 +17,6 @@ namespace MO {
 
 class FilterAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(FilterAO)
     ~FilterAO();

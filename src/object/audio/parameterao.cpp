@@ -20,8 +20,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ParameterAO)
 
-ParameterAO::ParameterAO(QObject *parent)
-    : AudioObject   (parent),
+ParameterAO::ParameterAO()
+    : AudioObject   (),
       lastSample_   (0.f),
       lastSample2_  (0.f),
       samplesWaited_(0)

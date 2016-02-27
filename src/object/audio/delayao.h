@@ -19,7 +19,6 @@ namespace MO {
 
 class DelayAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(DelayAO)
     ~DelayAO();

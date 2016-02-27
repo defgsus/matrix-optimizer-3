@@ -61,8 +61,8 @@ class BandFilterBankAO::Private
     std::vector<Filters> filters;
 };
 
-BandFilterBankAO::BandFilterBankAO(QObject *parent)
-    : AudioObject   (parent),
+BandFilterBankAO::BandFilterBankAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("BandFilterBank");

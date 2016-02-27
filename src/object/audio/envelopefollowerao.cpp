@@ -43,8 +43,8 @@ class EnvelopeFollowerAO::Private
 
 
 
-EnvelopeFollowerAO::EnvelopeFollowerAO(QObject *parent)
-    : AudioObject   (parent),
+EnvelopeFollowerAO::EnvelopeFollowerAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("EnvelopeFollower");

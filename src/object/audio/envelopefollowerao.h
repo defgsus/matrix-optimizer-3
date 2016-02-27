@@ -17,7 +17,6 @@ namespace MO {
 
 class EnvelopeFollowerAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(EnvelopeFollowerAO)
     ~EnvelopeFollowerAO();

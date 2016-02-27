@@ -170,7 +170,6 @@ void AppIcons::Private::init()
 
 AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 {
-    /** @todo newobj
     if (o->isTransformation())
     {
         if (dynamic_cast<const Translation*>(o))
@@ -248,7 +247,7 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (o->isParameter()) return I_PARAMETER;
     if (o->isLightSource()) return I_LIGHT;
     if (o->isModulatorObject()) return I_MODULATOR;
-    */
+
     return I_NONE;
 }
 

@@ -55,8 +55,8 @@ void CsgRenderWidget::releaseGL()
 
 void CsgRenderWidget::drawGL(const Mat4 &projection,
                              const Mat4 &cubeViewTrans,
-                             const Mat4 &viewtrans,
-                             const Mat4 &trans)
+                             const Mat4 &/*viewtrans*/,
+                             const Mat4 &/*trans*/)
 {
     try
     {

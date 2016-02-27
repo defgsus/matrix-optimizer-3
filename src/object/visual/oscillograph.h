@@ -19,7 +19,6 @@ namespace MO {
 /** An oscillograph render object. */
 class Oscillograph : public ObjectGl
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(Oscillograph);

@@ -20,8 +20,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(MirrorTrans)
 
-MirrorTrans::MirrorTrans(QObject *parent) :
-    Transformation(parent)
+MirrorTrans::MirrorTrans()
+    : Transformation()
 {
     setName("Mirror");
 }

@@ -21,8 +21,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(DerivativeObjectFloat)
 
-DerivativeObjectFloat::DerivativeObjectFloat(QObject *parent)
-    : Object        (parent)
+DerivativeObjectFloat::DerivativeObjectFloat()
+    : Object        ()
 {
     setName("DerivativeFloat");
     setNumberOutputs(ST_FLOAT, 1);

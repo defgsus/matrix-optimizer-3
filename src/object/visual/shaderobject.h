@@ -27,7 +27,6 @@ class ShaderObject
 {
 public:
 
-
     MO_OBJECT_CONSTRUCTOR(ShaderObject);
     ~ShaderObject();
 
@@ -66,10 +65,6 @@ public:
 
     /** Returns the resolution of the internal framebuffer */
     QSize resolution() const;
-
-signals:
-
-public slots:
 
 private:
 

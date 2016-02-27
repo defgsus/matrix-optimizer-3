@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Look)
 
-Look::Look(QObject *parent) :
-    Transformation(parent)
+Look::Look()
+    : Transformation()
 {
     setName("Look");
 }

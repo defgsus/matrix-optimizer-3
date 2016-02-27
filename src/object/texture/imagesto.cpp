@@ -23,8 +23,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(ImagesTO)
 
-ImagesTO::ImagesTO(QObject *parent)
-    : TextureObjectBase (parent)
+ImagesTO::ImagesTO()
+    : TextureObjectBase ()
     , pFilenames_       (0)
 {
     setName("Images");

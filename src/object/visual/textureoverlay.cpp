@@ -33,8 +33,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(TextureOverlay)
 
-TextureOverlay::TextureOverlay(QObject * parent)
-    : ObjectGl      (parent),
+TextureOverlay::TextureOverlay()
+    : ObjectGl      (),
       ptype_        (PT_FLAT),
       actualPtype_  (ptype_),
       texture_      (new TextureSetting(this)),

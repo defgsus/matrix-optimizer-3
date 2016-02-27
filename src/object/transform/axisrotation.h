@@ -19,7 +19,6 @@ namespace MO {
 
 class AxisRotation : public Transformation
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(AxisRotation);
 
@@ -27,10 +26,6 @@ public:
 
     virtual void applyTransformation(
             Mat4& matrix, const RenderTime& time) const Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
 
 protected:
 

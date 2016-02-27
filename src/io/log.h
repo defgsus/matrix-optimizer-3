@@ -53,14 +53,15 @@
 #   define MO_DEBUGF(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_IO
 #   define MO_DEBUG_IO(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_IO(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+// opengl stuff
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GL
 #   define MO_DEBUG_GL(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
@@ -68,7 +69,7 @@
 #endif
 
 // tree changes and updates
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_TREE
 #   define MO_DEBUG_TREE(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
@@ -76,7 +77,7 @@
 #endif
 
 // modulator stuff
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_MOD
 #   define MO_DEBUG_MOD(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
@@ -84,21 +85,21 @@
 #endif
 
 // for parameter updates between gui/scene
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_PARAM
 #   define MO_DEBUG_PARAM(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_PARAM(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GUI
 #   define MO_DEBUG_GUI(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_GUI(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_AUDIO
 #   define MO_DEBUG_AUDIO(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
@@ -113,21 +114,21 @@
 #   define MO_DEBUG_RENDER(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_IMG
 #   define MO_DEBUG_IMG(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_IMG(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GEOM
 #   define MO_DEBUG_GEOM(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else
 #   define MO_DEBUG_GEOM(unused__) { }
 #endif
 
-#if (0) && defined(MO_ENABLE_DEBUG)
+#if (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_SND
 #   define MO_DEBUG_SND(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else

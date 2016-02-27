@@ -145,8 +145,8 @@ class Oscillograph::Private
 };
 
 
-Oscillograph::Oscillograph(QObject * parent)
-    : ObjectGl      (parent),
+Oscillograph::Oscillograph()
+    : ObjectGl      (),
       p_            (new Private(this))
 {
     setName("Oscillograph");

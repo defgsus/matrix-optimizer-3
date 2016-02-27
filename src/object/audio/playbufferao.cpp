@@ -62,8 +62,8 @@ class PlayBufferAO::Private
             * paramMode;
 };
 
-PlayBufferAO::PlayBufferAO(QObject * parent)
-    : AudioObject(parent)
+PlayBufferAO::PlayBufferAO()
+    : AudioObject   ()
     , p_         (new Private(this))
 {
     setName("PlayBuffer");

@@ -34,8 +34,8 @@ class PhasorAO::Private
             * paramOffset;
 };
 
-PhasorAO::PhasorAO(QObject *parent)
-    : AudioObject (parent)
+PhasorAO::PhasorAO()
+    : AudioObject   ()
     , p_          (new Private(this))
 {
     setName("Phasor");

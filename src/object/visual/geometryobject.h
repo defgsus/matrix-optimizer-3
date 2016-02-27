@@ -29,7 +29,6 @@ class GeometryObject
         , public ValueGeometryInterface
         , public GeometryEditInterface
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(GeometryObject);
@@ -63,13 +62,15 @@ protected:
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
+    /** @todo newobj
 signals:
 
-    /** Emitted when the Geometry has been changed or removed.
-        Call geometry() to receive it. */
+    ** Emitted when the Geometry has been changed or removed.
+        Call geometry() to receive it. *
     void geometryChanged();
 
 private slots:
+*/
 
     void createGeometry_();
 

@@ -22,8 +22,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(MicrophoneAO)
 
-MicrophoneAO::MicrophoneAO(QObject *parent)
-    : AudioObject   (parent),
+MicrophoneAO::MicrophoneAO()
+    : AudioObject   (),
       mbuf_         (new AUDIO::AudioBuffer)
 {
     setName("Microphone");

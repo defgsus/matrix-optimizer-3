@@ -67,8 +67,8 @@ struct ConvolveAO::Private
     bool needUpdate, delayCleared;
 };
 
-ConvolveAO::ConvolveAO(QObject *parent)
-    : AudioObject   (parent),
+ConvolveAO::ConvolveAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("Convolver");

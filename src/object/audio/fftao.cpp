@@ -39,8 +39,8 @@ class FftAO::Private
     std::vector<size_t> writtenOut;
 };
 
-FftAO::FftAO(QObject *parent)
-    : AudioObject   (parent),
+FftAO::FftAO()
+    : AudioObject   (),
       p_            (new Private())
 {
     setName("FFT");

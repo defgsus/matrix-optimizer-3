@@ -18,7 +18,6 @@ namespace MO {
 
 class Translation : public Transformation
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(Translation);
 
@@ -26,11 +25,6 @@ public:
 
     virtual void applyTransformation(Mat4& matrix, const RenderTime& time) const
                                                                         Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
-
 protected:
 
     ParameterFloat * x_, * y_, * z_;

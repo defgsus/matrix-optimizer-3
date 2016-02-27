@@ -46,8 +46,8 @@ struct CropTO::Private
 };
 
 
-CropTO::CropTO(QObject *parent)
-    : TextureObjectBase (parent)
+CropTO::CropTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Crop");

@@ -18,7 +18,6 @@ namespace MO {
 
 class MouseObject : public Object, public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(MouseObject);
     ~MouseObject();

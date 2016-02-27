@@ -170,7 +170,6 @@ void ObjectInfoDialog::setObject(Object * o)
     }
 
     // ---------- matrix ---------------
-    /** @todo newobj
     if (Transformation * tran = dynamic_cast<Transformation*>(o))
     {
         Mat4 mat(1.0);
@@ -181,7 +180,7 @@ void ObjectInfoDialog::setObject(Object * o)
     else if (o->type() & Object::TG_REAL_OBJECT)
         s << "<p>" << tr("current transformation") << ":<br/>"
           << matrix2Html(o->transformation()) << "</p>";
-    */
+
     // ------- geometry ------------------
 
     if (Model3d * model = dynamic_cast<Model3d*>(o))

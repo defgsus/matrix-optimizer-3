@@ -43,8 +43,8 @@ class MVerbAO::Private
     std::vector<MVERB::MVerb<F32>> reverbs;
 };
 
-MVerbAO::MVerbAO(QObject *parent)
-    : AudioObject   (parent),
+MVerbAO::MVerbAO()
+    : AudioObject   (),
       p_            (new Private())
 {
     setName("Reverb");

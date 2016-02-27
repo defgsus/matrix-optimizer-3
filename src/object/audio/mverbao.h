@@ -19,7 +19,6 @@ namespace MO {
 
 class MVerbAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(MVerbAO)
     ~MVerbAO();

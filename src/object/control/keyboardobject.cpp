@@ -57,8 +57,8 @@ struct KeyboardObject::Private
 };
 
 
-KeyboardObject::KeyboardObject(QObject *parent)
-    : Object    (parent)
+KeyboardObject::KeyboardObject()
+    : Object    ()
     , p_        (new Private(this))
 {
     setName("Keyboard");

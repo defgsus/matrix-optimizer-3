@@ -32,6 +32,7 @@
 #include "object/util/texturemorphsetting.h"
 #include "object/util/useruniformsetting.h"
 #include "gui/geometrydialog.h"
+#include "io/application.h"
 #include "io/log.h"
 
 #if 0
@@ -662,20 +663,20 @@ void Model3d::initGl(uint /*thread*/)
     if (!nextGeometry_) // or in background
     {
         resetCreator_();
-        /** @todo newobj
-        creator_ = new GEOM::GeometryCreator(this);
-        ** @todo find out if Qt's signal/slot mechanism doesn't work when
+        creator_ = new GEOM::GeometryCreator(application());
+        /** @todo find out if Qt's signal/slot mechanism doesn't work when
             not connected to main thread. In this case, when started via DiskRenderer,
             no signals are received from the GEOM::GeometryCreator.
             It's currently solved via the Scene::lazyFlag() but would be good
-            to find out if this is the desired behaviour. *
-        connect(creator_, SIGNAL(succeeded()), this, SLOT(geometryCreated_()));
-        connect(creator_, SIGNAL(failed(QString)), this, SLOT(geometryFailed_(QString)));
+            to find out if this is the desired behaviour. */
+        QObject::connect(creator_, &GEOM::GeometryCreator::succeeded,
+                         [=](){ geometryCreated_(); });
+        QObject::connect(creator_, &GEOM::GeometryCreator::failed,
+                         [=](const QString& e){ geometryFailed_(e); });
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
         creator_->start();
         MO_DEBUG_MODEL("Model3d::initGl() started creator");
-        */
     }
 }
 
@@ -701,11 +702,10 @@ void Model3d::resetCreator_()
     {
         if (creator_->isRunning())
         {
-            /** @todo newobj
             //creator_->setParent(0);
-            connect(creator_, SIGNAL(finished()), creator_, SLOT(deleteLater()));
+            QObject::connect(creator_, SIGNAL(finished()),
+                             creator_, SLOT(deleteLater()));
             creator_->discard();
-            */
         }
         else
             creator_->deleteLater();

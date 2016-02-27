@@ -19,7 +19,6 @@ namespace MO {
 /** An object calculating the derivative of it's input */
 class DerivativeObjectFloat : public Object, public ValueFloatInterface
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(DerivativeObjectFloat);
 
@@ -28,10 +27,6 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
 
     Double valueFloat(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
-
-signals:
-
-public slots:
 
 private:
 

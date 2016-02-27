@@ -18,7 +18,6 @@ namespace MO {
 /** All kinds of color processing */
 class KeyTO : public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(KeyTO);
@@ -34,10 +33,6 @@ public:
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
     // ---------- specific stuff -----------
-
-signals:
-
-public slots:
 
 private:
 

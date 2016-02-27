@@ -51,8 +51,8 @@ struct DistanceMapTO::Private
 };
 
 
-DistanceMapTO::DistanceMapTO(QObject *parent)
-    : TextureObjectBase (parent)
+DistanceMapTO::DistanceMapTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("DistanceMap");

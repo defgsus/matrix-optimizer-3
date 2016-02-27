@@ -20,8 +20,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(LookAt)
 
-LookAt::LookAt(QObject *parent) :
-    Transformation(parent)
+LookAt::LookAt()
+    : Transformation()
 {
     setName("LookAt");
 }

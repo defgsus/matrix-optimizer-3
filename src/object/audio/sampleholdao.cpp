@@ -43,8 +43,8 @@ class SampleHoldAO::Private
             * paramMode;
 };
 
-SampleHoldAO::SampleHoldAO(QObject *parent)
-    : AudioObject (parent)
+SampleHoldAO::SampleHoldAO()
+    : AudioObject   ()
     , p_          (new Private(this))
 {
     setName("S&H");

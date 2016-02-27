@@ -38,6 +38,7 @@
 #include "object/util/objectdsppath.h"
 #include "object/util/objecteditor.h"
 #include "object/util/audioobjectconnections.h"
+#include "object/util/scenesignals.h"
 #include "audio/audiodevice.h"
 #include "audio/audiosource.h"
 #include "gl/context.h"
@@ -61,43 +62,44 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Scene)
 
-Scene* Scene::currentScene_ = 0;
+Scene* Scene::p_currentScene_ = 0;
 
 Scene::Scene() :
-    Object              (),
-    editor_             (0),
-    frontScene_         (0),
-    showSceneDesc_      (false),
-    glContext_          (0),
-    releaseAllGlRequested_(0),
-    fbSize_             (1024, 1024),
-    fbFormat_           ((int)gl::GL_RGBA),
-    fbSizeRequest_      (fbSize_),
-    fbFormatRequest_    (fbFormat_),
-    doMatchOutputResolution_(false),
-    isShutDown_         (false),
-    fboFinal_           (0),
-    debugRenderOptions_ (0),
-    freeCameraIndex_    (-1),
-    freeCameraMatrix_   (1.0),
-    projectionSettings_ (new ProjectionSystemSettings()),
-    projectorIndex_     (0),
-    clipController_      (0),
-    sceneNumberThreads_ (3),
-    sceneSampleRate_    (44100),
-    audioCon_           (new AudioObjectConnections()),
-    isPlayback_         (false),
-    p_lazyFlag_         (false),
-    sceneTime_          (0),
-    samplePos_          (0)
+    Object                  (),
+    p_editor_               (0),
+    p_frontScene_           (0),
+    p_sceneSignals_         (new SceneSignals()),
+    p_showSceneDesc_        (false),
+    p_glContext_            (0),
+    p_releaseAllGlRequested_(0),
+    p_fbSize_               (1024, 1024),
+    p_fbFormat_             ((int)gl::GL_RGBA),
+    p_fbSizeRequest_        (p_fbSize_),
+    p_fbFormatRequest_      (p_fbFormat_),
+    p_doMatchOutputResolution_(false),
+    p_isShutDown_           (false),
+    p_fboFinal_             (0),
+    p_debugRenderOptions_   (0),
+    p_freeCameraIndex_      (-1),
+    p_freeCameraMatrix_     (1.0),
+    p_projectionSettings_   (new ProjectionSystemSettings()),
+    p_projectorIndex_       (0),
+    p_clipController_       (0),
+    p_sceneNumberThreads_   (3),
+    p_sceneSampleRate_      (44100),
+    p_audioCon_             (new AudioObjectConnections()),
+    p_isPlayback_           (false),
+    p_lazyFlag_             (false),
+    p_sceneTime_            (0),
+    p_samplePos_            (0)
 {
     MO_DEBUG_TREE("Scene::Scene()");
 
     setName("Scene");
 
-    readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
+    p_readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
 
-    releaseAllGlRequested_.resize(sceneNumberThreads_);
+    p_releaseAllGlRequested_.resize(p_sceneNumberThreads_);
 }
 
 Scene::~Scene()
@@ -106,15 +108,16 @@ Scene::~Scene()
 
     destroyDeletedObjects_(false);
 
-    for (auto i : debugRenderer_)
+    for (auto i : p_debugRenderer_)
         delete i;
-    for (auto i : fboFinal_)
+    for (auto i : p_fboFinal_)
         delete i;
-    for (auto i : screenQuad_)
+    for (auto i : p_screenQuad_)
         delete i;
-    delete readWriteLock_;
-    delete audioCon_;
-    delete projectionSettings_;
+    delete p_readWriteLock_;
+    delete p_audioCon_;
+    delete p_projectionSettings_;
+    delete p_sceneSignals_;
 }
 
 void Scene::serialize(IO::DataStream & io) const
@@ -123,10 +126,10 @@ void Scene::serialize(IO::DataStream & io) const
     io.writeHeader("scene", 3);
 
     // v2
-    io << fbSize_ << doMatchOutputResolution_;
+    io << p_fbSize_ << p_doMatchOutputResolution_;
 
     // v3
-    io << sceneDesc_ << showSceneDesc_;
+    io << p_sceneDesc_ << p_showSceneDesc_;
 }
 
 void Scene::deserialize(IO::DataStream & io)
@@ -135,7 +138,7 @@ void Scene::deserialize(IO::DataStream & io)
     const int ver = io.readHeader("scene", 3);
 
     if (ver >= 2)
-        io >> fbSizeRequest_ >> doMatchOutputResolution_;
+        io >> p_fbSizeRequest_ >> p_doMatchOutputResolution_;
 
 /*#ifdef MO_DISABLE_EXP
     doMatchOutputResolution_ = true;
@@ -143,7 +146,7 @@ void Scene::deserialize(IO::DataStream & io)
 #endif*/
 
     if (ver >= 3)
-        io >> sceneDesc_ >> showSceneDesc_;
+        io >> p_sceneDesc_ >> p_showSceneDesc_;
 
 }
 
@@ -152,7 +155,7 @@ bool Scene::serializeAfterChilds(IO::DataStream & io) const
 {
     io.writeHeader("scene_", 2);
 
-    audioCon_->serialize(io);
+    p_audioCon_->serialize(io);
 
     // v2
 #ifndef MO_DISABLE_FRONT
@@ -168,29 +171,29 @@ void Scene::deserializeAfterChilds(IO::DataStream & io)
 {
     const int ver = io.readHeader("scene_", 2);
 
-    audioCon_->deserialize(io, this);
+    p_audioCon_->deserialize(io, this);
 
     if (ver>=2)
     {
-        io >> frontSceneXml_;
+        io >> p_frontSceneXml_;
     }
 }
 
 
 void Scene::setObjectEditor(ObjectEditor * editor)
 {
-    editor_ = editor;
-    editor_->setScene(this);
+    p_editor_ = editor;
+    p_editor_->setScene(this);
 }
 
 void Scene::setCurrentScene(Scene* s)
 {
-    currentScene_ = s;
+    p_currentScene_ = s;
 }
 
 Scene* Scene::currentScene()
 {
-    return currentScene_;
+    return p_currentScene_;
 }
 
 void Scene::findObjects_()
@@ -198,43 +201,43 @@ void Scene::findObjects_()
     MO_DEBUG_TREE("Scene::findObjects_()");
 
     // all objects including scene
-    allObjects_ = findChildObjects<Object>(QString(), true);
-    allObjects_.prepend(this);
+    p_allObjects_ = findChildObjects<Object>(QString(), true);
+    p_allObjects_.prepend(this);
 
     // all cameras
-    cameras_ = findChildObjects<Camera>(QString(), true);
+    p_cameras_ = findChildObjects<Camera>(QString(), true);
 
     // all shader objects
-    shaderObjects_ = findChildObjects<ShaderObject>(QString(), true);
+    p_shaderObjects_ = findChildObjects<ShaderObject>(QString(), true);
 
     // all light sources
-    lightSources_ = findChildObjects<LightSource>(QString(), true);
+    p_lightSources_ = findChildObjects<LightSource>(QString(), true);
 
     // all objects that need to be rendered
-    glObjects_ = findChildObjects<ObjectGl>(QString(), true);
+    p_glObjects_ = findChildObjects<ObjectGl>(QString(), true);
 
     // all objects that draw their frames into the output
-    frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
+    p_frameDrawers_ = findChildObjects<ObjectGl>([](ObjectGl*o)
     {
         return o->isCamera() | o->isShader() | o->isTexture();
     }, true);
 
     // not all objects need there transformation calculated
     // these are the ones that do
-    posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
+    p_posObjects_ = findChildObjects(TG_REAL_OBJECT, true);
 
     // assign clip container
-    clipController_ = 0;
-    for (auto o : allObjects_)
+    p_clipController_ = 0;
+    for (auto o : p_allObjects_)
         if (o->type() == T_CLIP_CONTROLLER)
-            clipController_ = static_cast<ClipController*>(o);
+            p_clipController_ = static_cast<ClipController*>(o);
     // assign clips to it
-    if (clipController_)
-        clipController_->collectClips();
+    if (p_clipController_)
+        p_clipController_->collectClips();
 
     // ui-proxies
-    uiModsFloat_.clear();
-    for (Object * c : allObjects_)
+    p_uiModsFloat_.clear();
+    for (Object * c : p_allObjects_)
     if (c->type() & TG_MODULATOR_OBJECT)
     {
         auto m = dynamic_cast<ModulatorObject*>(c);
@@ -242,11 +245,11 @@ void Scene::findObjects_()
             continue;
 
         if (m->type() == T_MODULATOR_OBJECT_FLOAT)
-            uiModsFloat_.insert(m->uiId(), static_cast<ModulatorObjectFloat*>(m));
+            p_uiModsFloat_.insert(m->uiId(), static_cast<ModulatorObjectFloat*>(m));
     }
 
 #ifdef MO_DO_DEBUG_TREE
-    for (auto o : allObjects_)
+    for (auto o : p_allObjects_)
         MO_DEBUG_TREE("object: " << o << ", parent: " << o->parentObject());
 #endif
 
@@ -261,9 +264,9 @@ void Scene::findObjects_()
 void Scene::updateWeakNameLinks()
 {
     // render objects per camera
-    glObjectsPerCamera_.clear();
-    for (Camera * c : cameras_)
-        glObjectsPerCamera_ << c->getRenderObjects();
+    p_glObjectsPerCamera_.clear();
+    for (Camera * c : p_cameras_)
+        p_glObjectsPerCamera_ << c->getRenderObjects();
 
     // XXX strong connections should maybe not be handled here
     // this function is called from updateTree_()
@@ -284,7 +287,7 @@ void Scene::initGlChilds_()
 
 void Scene::render_()
 {
-    /** @todo newobj emit renderRequest(); */
+    emit sceneSignals()->renderRequest();
 }
 
 
@@ -309,7 +312,7 @@ QSet<Object*> Scene::getAllModulators() const
 {
     QSet<Object*> set;
 
-    for (auto o : allObjects_)
+    for (auto o : p_allObjects_)
     {
         QList<Object*> list = o->getModulatingObjectsList(true);
         for (auto mod : list)
@@ -340,8 +343,8 @@ QList<ModulatorObject*> Scene::getUiModulatorObjects(const QList<QString>& uiIds
     QList<ModulatorObject*> list;
     for (auto & id : uiIds)
     {
-        auto i = uiModsFloat_.find(id);
-        if (i != uiModsFloat_.end())
+        auto i = p_uiModsFloat_.find(id);
+        if (i != p_uiModsFloat_.end())
             list << i.value();
     }
 
@@ -370,8 +373,8 @@ QList<Modulator*> Scene::getUiModulators(const QList<QString>& uiIds) const
 
 void Scene::setUiValue(const QString &uiId, Double timeStamp, Float value)
 {
-    auto i = uiModsFloat_.find(uiId);
-    if (i == uiModsFloat_.end())
+    auto i = p_uiModsFloat_.find(uiId);
+    if (i == p_uiModsFloat_.end())
     {
         MO_WARNING("Scene::setUiValue(" << uiId << ", " << value << ") "
                    "no such ModulatorObject found");
@@ -480,7 +483,7 @@ void Scene::deleteObject(Object *object)
         dellist = object->findChildObjects<Object>(QString(), true);
         dellist.prepend(object);
         // memorize so we can free resources later
-        deletedObjects_.append(dellist);
+        p_deletedObjects_.append(dellist);
 
         // get list of all remaining objects
         QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -525,7 +528,7 @@ void Scene::deleteObjects(const QList<Object*>& objects)
             dellist = object->findChildObjects<Object>(QString(), true);
             dellist.prepend(object);
             // memorize so we can free resources later
-            deletedObjects_.append(dellist);
+            p_deletedObjects_.append(dellist);
 
             // get list of all remaining objects
             QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -611,7 +614,7 @@ void Scene::updateTree_()
     findObjects_();
 
     // update debug renderer objects
-    for (auto i : debugRenderer_)
+    for (auto i : p_debugRenderer_)
         if (i)
             i->updateTree();
 
@@ -637,11 +640,11 @@ void Scene::updateTree_()
     // update the rendermodes
     propagateRenderMode(0);
 
-    if (glContext_)
+    if (p_glContext_)
     {
         // update infos for new objects
         // XXX This should be iteratively for all glContext_s
-        setGlContext(MO_GFX_THREAD, glContext_);
+        setGlContext(MO_GFX_THREAD, p_glContext_);
 
         // update image
         render_();
@@ -652,7 +655,7 @@ void Scene::updateChildrenChanged_()
 {
     MO_DEBUG_TREE("Scene::updateChildrenChanged_() ");
 
-    for (auto o : allObjects_)
+    for (auto o : p_allObjects_)
         if (o->haveChildrenChanged())
             o->p_childrenChanged_();
 }
@@ -660,49 +663,49 @@ void Scene::updateChildrenChanged_()
 
 void Scene::updateNumberThreads_()
 {
-    MO_DEBUG_TREE("Scene::updateNumberThreads_() sceneNumberThreads_ == " << sceneNumberThreads_);
+    MO_DEBUG_TREE("Scene::updateNumberThreads_() sceneNumberThreads_ == " << p_sceneNumberThreads_);
 
-    if (!verifyNumberThreads(sceneNumberThreads_))
-        setNumberThreads(sceneNumberThreads_);
+    if (!verifyNumberThreads(p_sceneNumberThreads_))
+        setNumberThreads(p_sceneNumberThreads_);
 
-    for (auto o : allObjects_)
-        if (!o->verifyNumberThreads(sceneNumberThreads_))
-            o->setNumberThreads(sceneNumberThreads_);
+    for (auto o : p_allObjects_)
+        if (!o->verifyNumberThreads(p_sceneNumberThreads_))
+            o->setNumberThreads(p_sceneNumberThreads_);
 }
 
 void Scene::setNumberThreads(uint num)
 {
     Object::setNumberThreads(num);
 
-    uint oldnum = fboFinal_.size();
-    fboFinal_.resize(num);
-    screenQuad_.resize(num);
-    lightSettings_.resize(num);
-    debugRenderer_.resize(num);
+    uint oldnum = p_fboFinal_.size();
+    p_fboFinal_.resize(num);
+    p_screenQuad_.resize(num);
+    p_lightSettings_.resize(num);
+    p_debugRenderer_.resize(num);
 
     for (uint i=oldnum; i<num; ++i)
     {
-        fboFinal_[i] = 0;
-        screenQuad_[i] = 0;
-        lightSettings_[i].resize(0); // just to be sure
-        debugRenderer_[i] = 0;
+        p_fboFinal_[i] = 0;
+        p_screenQuad_[i] = 0;
+        p_lightSettings_[i].resize(0); // just to be sure
+        p_debugRenderer_[i] = 0;
     }
 }
 
 void Scene::setSceneSampleRate(uint samplerate)
 {
-    sceneSampleRate_ = samplerate;
+    p_sceneSampleRate_ = samplerate;
     updateSampleRate_();
 }
 
 void Scene::updateNumberLights_()
 {
-    for (auto o : glObjects_)
-    if ((int)o->numberLightSources() != lightSources_.size())
+    for (auto o : p_glObjects_)
+    if ((int)o->numberLightSources() != p_lightSources_.size())
     {
-        o->p_numberLightSources_ = lightSources_.size();
+        o->p_numberLightSources_ = p_lightSources_.size();
         // don't notify if objects havn't even been initialized properly
-        if (o->numberThreads() == sceneNumberThreads_)
+        if (o->numberThreads() == p_sceneNumberThreads_)
             o->numberLightSourcesChanged(MO_GFX_THREAD);
     }
 }
@@ -712,7 +715,7 @@ void Scene::updateModulators_()
 {
     MO_DEBUG_TREE("Scene::updateModulators_()");
 
-    for (auto o : allObjects_)
+    for (auto o : p_allObjects_)
     {
         o->collectModulators();
         // check parameters as well
@@ -726,11 +729,11 @@ void Scene::updateSampleRate_()
 {
     MO_DEBUG_AUDIO("Scene::updateSampleRate_()");
 
-    setSampleRate(sceneSampleRate_);
+    setSampleRate(p_sceneSampleRate_);
 
-    for (auto o : allObjects_)
+    for (auto o : p_allObjects_)
     {
-        o->setSampleRate(sceneSampleRate_);
+        o->setSampleRate(p_sceneSampleRate_);
     }
 }
 
@@ -739,9 +742,9 @@ void Scene::updateSampleRate_()
 
 void Scene::notifyParameterVisibility(Parameter *p)
 {
-    if (editor_)
-        emit editor_->parameterVisibilityChanged(p);
-    /** @todo newobj emit parameterVisibilityChanged(p); */
+    if (p_editor_)
+        emit p_editor_->parameterVisibilityChanged(p);
+    //emit sceneSignals()->parameterVisibilityChanged(p);
 }
 
 void Scene::notifyParameterChange(ParameterText * par)
@@ -770,8 +773,8 @@ void Scene::notifyParameterChange(ParameterText * par)
     }*/
 
     // see if anyone depends on this parameter
-    auto it = dependMap_.lowerBound(par->object());
-    while (it != dependMap_.end() && it.key() == par->object())
+    auto it = p_dependMap_.lowerBound(par->object());
+    while (it != p_dependMap_.end() && it.key() == par->object())
     {
         it.value()->onDependency(par->object());
         ++it;
@@ -780,23 +783,23 @@ void Scene::notifyParameterChange(ParameterText * par)
 
 void Scene::installDependency(Object *object, Object *source)
 {
-    if (dependMap_.find(source, object) == dependMap_.end())
-        dependMap_.insert(source, object);
+    if (p_dependMap_.find(source, object) == p_dependMap_.end())
+        p_dependMap_.insert(source, object);
 }
 
 void Scene::removeDependency(Object *object, Object *source)
 {
-    dependMap_.remove(source, object);
+    p_dependMap_.remove(source, object);
 }
 
 void Scene::removeDependencies(Object *object)
 {
-    auto copy = dependMap_;
-    dependMap_.clear();
+    auto copy = p_dependMap_;
+    p_dependMap_.clear();
     for (auto i = copy.begin(); i != copy.end(); ++i)
     {
         if (i.value() != object)
-            dependMap_.insert(i.key(), i.value());
+            p_dependMap_.insert(i.key(), i.value());
     }
 }
 
@@ -821,15 +824,15 @@ void Scene::beginSequenceChange(Sequence * s)
 {
     MO_DEBUG_PARAM("Scene::beginSequenceChange(" << s << ")");
     lockWrite_();
-    changedSequence_ = s;
+    p_changedSequence_ = s;
 }
 
 void Scene::endSequenceChange()
 {
     MO_DEBUG_PARAM("Scene::endSequenceChange()");
     unlock_();
-    if (editor_)
-        emit editor_->sequenceChanged(changedSequence_);
+    if (p_editor_)
+        emit p_editor_->sequenceChanged(p_changedSequence_);
     render_();
 }
 
@@ -837,16 +840,16 @@ void Scene::beginTimelineChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginTimelineChange(" << o << ")");
     lockWrite_();
-    changedTimelineObject_ = o;
+    p_changedTimelineObject_ = o;
 }
 
 void Scene::endTimelineChange()
 {
     MO_DEBUG_PARAM("Scene::endTimelineChange()");
     unlock_();
-    if (Sequence * s = dynamic_cast<Sequence*>(changedTimelineObject_))
-        if (editor_)
-            emit editor_->sequenceChanged(s);
+    if (Sequence * s = dynamic_cast<Sequence*>(p_changedTimelineObject_))
+        if (p_editor_)
+            emit p_editor_->sequenceChanged(s);
 
     render_();
 }
@@ -857,15 +860,15 @@ void Scene::beginObjectChange(Object * o)
 {
     MO_DEBUG_PARAM("Scene::beginObjectChange(" << o << ")");
     lockWrite_();
-    changedObject_ = o;
+    p_changedObject_ = o;
 }
 
 void Scene::endObjectChange()
 {
     MO_DEBUG_PARAM("Scene::endObjectChange()");
     unlock_();
-    if (editor_)
-        emit editor_->objectChanged(changedObject_);
+    if (p_editor_)
+        emit p_editor_->objectChanged(p_changedObject_);
     render_();
 }
 
@@ -873,7 +876,7 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
 {
     //MO_PRINT("Scene::destroyDeletedObjects_(" << releaseGl <<")");
 
-    for (Object * o : deletedObjects_)
+    for (Object * o : p_deletedObjects_)
     {
         //MO_PRINT(":" << o->namePath());
 
@@ -886,10 +889,10 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
         }
     }
 
-    for (Object * o : deletedObjects_)
+    for (Object * o : p_deletedObjects_)
         o->releaseRef();
 
-    deletedObjects_.clear();
+    p_deletedObjects_.clear();
 }
 
 
@@ -899,36 +902,36 @@ void Scene::setGlContext(uint thread, GL::Context *context)
 {
     MO_DEBUG_GL("Scene::setGlContext(" << thread << ", " << context << ")");
 
-    glContext_ = context;
+    p_glContext_ = context;
 
     MO_DEBUG_GL("setting gl context for objects");
-    for (auto o : glObjects_)
-        o->p_setGlContext_(thread, glContext_);
+    for (auto o : p_glObjects_)
+        o->p_setGlContext_(thread, p_glContext_);
 }
 
 void Scene::createSceneGl_(uint thread)
 {
     MO_DEBUG_GL("Scene::createSceneGl_(" << thread << ")");
 
-    fboFinal_[thread] = new GL::FrameBufferObject(
-                fbSize_.width(),
-                fbSize_.height(),
-                gl::GLenum(fbFormat_),
+    p_fboFinal_[thread] = new GL::FrameBufferObject(
+                p_fbSize_.width(),
+                p_fbSize_.height(),
+                gl::GLenum(p_fbFormat_),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 false, false);
-    fboFinal_[thread]->setName("scene_final");
-    fboFinal_[thread]->create();
-    fboFinal_[thread]->unbind();
+    p_fboFinal_[thread]->setName("scene_final");
+    p_fboFinal_[thread]->create();
+    p_fboFinal_[thread]->unbind();
 
     // create screen quad
-    screenQuad_[thread] = new GL::ScreenQuad("scene_quad");
-    screenQuad_[thread]->setAntialiasing(3);
-    screenQuad_[thread]->create();
+    p_screenQuad_[thread] = new GL::ScreenQuad("scene_quad");
+    p_screenQuad_[thread]->setAntialiasing(3);
+    p_screenQuad_[thread]->create();
 
-    debugRenderer_[thread] = new GL::SceneDebugRenderer(this);
-    debugRenderer_[thread]->initGl();
-    debugRenderer_[thread]->updateTree();
+    p_debugRenderer_[thread] = new GL::SceneDebugRenderer(this);
+    p_debugRenderer_[thread]->initGl();
+    p_debugRenderer_[thread]->updateTree();
 }
 
 
@@ -936,31 +939,31 @@ void Scene::releaseSceneGl_(uint thread)
 {
     MO_DEBUG_GL("Scene::releaseSceneGl_(" << thread << ")");
 
-    if (fboFinal_[thread])
+    if (p_fboFinal_[thread])
     {
-        fboFinal_[thread]->release();
-        delete fboFinal_[thread];
-        fboFinal_[thread] = 0;
+        p_fboFinal_[thread]->release();
+        delete p_fboFinal_[thread];
+        p_fboFinal_[thread] = 0;
     }
 
-    if (screenQuad_[thread])
+    if (p_screenQuad_[thread])
     {
-        screenQuad_[thread]->release();
-        delete screenQuad_[thread];
-        screenQuad_[thread] = 0;
+        p_screenQuad_[thread]->release();
+        delete p_screenQuad_[thread];
+        p_screenQuad_[thread] = 0;
     }
 
-    if (debugRenderer_[thread])
+    if (p_debugRenderer_[thread])
     {
-        debugRenderer_[thread]->releaseGl();
-        delete debugRenderer_[thread];
-        debugRenderer_[thread] = 0;
+        p_debugRenderer_[thread]->releaseGl();
+        delete p_debugRenderer_[thread];
+        p_debugRenderer_[thread] = 0;
     }
 }
 
 void Scene::setResolution(const QSize &r)
 {
-    fbSizeRequest_ = r;
+    p_fbSizeRequest_ = r;
     render_();
 }
 
@@ -968,46 +971,46 @@ void Scene::resizeFbo_(uint thread)
 {
     MO_DEBUG_GL("Scene::resizeFbo_(" << thread << ")");
 
-    if (thread >= fboFinal_.size() || !fboFinal_[thread])
+    if (thread >= p_fboFinal_.size() || !p_fboFinal_[thread])
         return;
 
-    fbSize_ = fbSizeRequest_;
-    fbFormat_ = fbFormatRequest_;
+    p_fbSize_ = p_fbSizeRequest_;
+    p_fbFormat_ = p_fbFormatRequest_;
 
-    if (fboFinal_[thread]->isCreated())
-        fboFinal_[thread]->release();
-    delete fboFinal_[thread];
+    if (p_fboFinal_[thread]->isCreated())
+        p_fboFinal_[thread]->release();
+    delete p_fboFinal_[thread];
 
-    fboFinal_[thread] = new GL::FrameBufferObject(
-                fbSize_.width(),
-                fbSize_.height(),
-                gl::GLenum(fbFormat_),
+    p_fboFinal_[thread] = new GL::FrameBufferObject(
+                p_fbSize_.width(),
+                p_fbSize_.height(),
+                gl::GLenum(p_fbFormat_),
                 gl::GL_FLOAT,
                 GL::FrameBufferObject::A_DEPTH,
                 false, false);
-    fboFinal_[thread]->setName("scene_final");
-    fboFinal_[thread]->create();
+    p_fboFinal_[thread]->setName("scene_final");
+    p_fboFinal_[thread]->create();
 
-    /** @todo newobj emit sceneFboChanged(); */
+    emit sceneSignals()->sceneFboChanged();
 }
 
 GL::FrameBufferObject * Scene::fboMaster(uint thread) const
 {
-    if (thread < fboFinal_.size())
-        return fboFinal_[thread];
+    if (thread < p_fboFinal_.size())
+        return p_fboFinal_[thread];
     else
         return 0;
 }
 
 GL::FrameBufferObject * Scene::fboCamera(uint , uint camera_index) const
 {
-    if ((int)camera_index >= cameras_.size())
+    if ((int)camera_index >= p_cameras_.size())
     {
         MO_WARNING("request for camera fbo " << camera_index
-                   << " is out of range (" << cameras_.size() << ")");
+                   << " is out of range (" << p_cameras_.size() << ")");
         return 0;
     }
-    return cameras_[camera_index]->fbo();
+    return p_cameras_[camera_index]->fbo();
 }
 
 
@@ -1017,9 +1020,9 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 {
     //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
 
-    MO_ASSERT(glContext_, "renderScene() without context");
+    MO_ASSERT(p_glContext_, "renderScene() without context");
 
-    if (!glContext_ || frameDrawers_.empty())
+    if (!p_glContext_ || p_frameDrawers_.empty())
         return;
 
     //Double time = sceneTime_;
@@ -1036,31 +1039,31 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
         destroyDeletedObjects_(true);
 
         // release all openGL resources and quit
-        if (releaseAllGlRequested_[time.thread()])
+        if (p_releaseAllGlRequested_[time.thread()])
         {
             releaseSceneGl_(time.thread());
 
-            for (auto o : glObjects_)
+            for (auto o : p_glObjects_)
                 if (o->isGlInitialized(time.thread()))
                     o->p_releaseGl_(time.thread());
 
-            releaseAllGlRequested_[time.thread()] = false;
+            p_releaseAllGlRequested_[time.thread()] = false;
 
-            /** @todo newobj emit glReleased(time.thread()); */
+            emit sceneSignals()->glReleased(time.thread());
             return;
         }
 
         // initialize scene gl resources
-        if (!fboFinal_[time.thread()])
+        if (!p_fboFinal_[time.thread()])
             createSceneGl_(time.thread());
 
         // resize fbo on request
-        if (fbSize_ != fbSizeRequest_
-         || fbFormat_ != fbFormatRequest_)
+        if (p_fbSize_ != p_fbSizeRequest_
+         || p_fbFormat_ != p_fbFormatRequest_)
             resizeFbo_(time.thread());
 
         // initialize object gl resources
-        for (auto o : glObjects_)
+        for (auto o : p_glObjects_)
             if (o->needsInitGl(time.thread()))// && o->active(time))
             {
                 if (o->isGlInitialized(time.thread()))
@@ -1086,21 +1089,21 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
     // --- render ShaderObjects and TextureObjects ----
 
-    if (!frameDrawers_.isEmpty())
+    if (!p_frameDrawers_.isEmpty())
     {
         GL::RenderSettings renderSet;
         GL::CameraSpace camSpace;
 
         renderSet.setLightSettings(&lightSettings(time.thread()));
         renderSet.setCameraSpace(&camSpace);
-        renderSet.setFinalFramebuffer(fboFinal_[time.thread()]);
+        renderSet.setFinalFramebuffer(p_fboFinal_[time.thread()]);
 
         try
         {
             uint cindex = 0;
 
             // for each object that renders
-            for (ObjectGl * o : frameDrawers_)
+            for (ObjectGl * o : p_frameDrawers_)
             {
                 if (o->active(time))
                 {
@@ -1126,7 +1129,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
                         // update the list of to-render objects
                         if (camera->needsUpdateRenderObjects())
-                            glObjectsPerCamera_[cindex] = camera->getRenderObjects();
+                            p_glObjectsPerCamera_[cindex] = camera->getRenderObjects();
 
                         // get camera viewspace
                         camera->initCameraSpace(camSpace, time);
@@ -1147,7 +1150,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                             camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
 
                             // render each opengl object per camera & per cube-face
-                            for (ObjectGl * o : glObjectsPerCamera_[cindex])
+                            for (ObjectGl * o : p_glObjectsPerCamera_[cindex])
                             if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
                                 && o->active(time))
                             {
@@ -1160,9 +1163,9 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                             }
 
                             // render debug objects
-                            if (debugRenderOptions_)
-                                debugRenderer_[time.thread()]
-                                        ->render(renderSet, time.thread(), debugRenderOptions_);
+                            if (p_debugRenderOptions_)
+                                p_debugRenderer_[time.thread()]
+                                        ->render(renderSet, time.thread(), p_debugRenderOptions_);
                         }
 
                         camera->finishGlFrame(time);
@@ -1182,7 +1185,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     }
 
     // okay, we've painted them
-    for (ObjectGl * o : glObjects_)
+    for (ObjectGl * o : p_glObjects_)
         o->clearUpdateRequest();
 
 //    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());    
@@ -1191,26 +1194,26 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
     using namespace gl;
 
-    fboFinal_[time.thread()]->bind();
-    fboFinal_[time.thread()]->setViewport();
+    p_fboFinal_[time.thread()]->bind();
+    p_fboFinal_[time.thread()]->setViewport();
     MO_CHECK_GL( glClearColor(0, 0, 0, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_DEPTH_TEST) );
-    for (ObjectGl * drawer : frameDrawers_)
+    for (ObjectGl * drawer : p_frameDrawers_)
     if (drawer->active(time))
     {
         if (drawer->isCamera())
             static_cast<Camera*>(drawer)->drawFramebuffer(time);
         else if (drawer->isShader())
             static_cast<ShaderObject*>(drawer)->drawFramebuffer(time,
-                                                                fboFinal_[time.thread()]->width(),
-                                                                fboFinal_[time.thread()]->height());
+                                                                p_fboFinal_[time.thread()]->width(),
+                                                                p_fboFinal_[time.thread()]->height());
         else if (drawer->isTexture())
             static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(time,
-                                                                fboFinal_[time.thread()]->width(),
-                                                                fboFinal_[time.thread()]->height());
+                                                                p_fboFinal_[time.thread()]->width(),
+                                                                p_fboFinal_[time.thread()]->height());
     }
-    fboFinal_[time.thread()]->unbind();
+    p_fboFinal_[time.thread()]->unbind();
 
     // --- draw to screen ---
 
@@ -1219,8 +1222,8 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
     //MO_DEBUG_GL("Scene::renderScene(" << thread << ")");
 
-    int width = glContext_->size().width(),
-        height = glContext_->size().height();
+    int width = p_glContext_->size().width(),
+        height = p_glContext_->size().height();
     // .. or output fbo
     /*
     if (outputFbo)
@@ -1233,16 +1236,16 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     //width = fbSize_.width();
     //height = fbSize_.height();
 
-    fboFinal_[time.thread()]->colorTexture()->bind();
+    p_fboFinal_[time.thread()]->colorTexture()->bind();
     MO_CHECK_GL( glViewport(0, 0, width, height) );
     MO_CHECK_GL( glClearColor(0.1, 0.1, 0.1, 1.0) );
     MO_CHECK_GL( glClear(GL_COLOR_BUFFER_BIT) );
     MO_CHECK_GL( glDisable(GL_BLEND) );
     if (isClient())
-        screenQuad_[time.thread()]->draw(width, height);
+        p_screenQuad_[time.thread()]->draw(width, height);
     else
-        screenQuad_[time.thread()]->drawCentered(width, height,
-                                                 fboFinal_[time.thread()]->aspect());
+        p_screenQuad_[time.thread()]->drawCentered(width, height,
+                                                 p_fboFinal_[time.thread()]->aspect());
 
     //if (outputFbo)
     //    outputFbo->unbind();
@@ -1250,21 +1253,21 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
 void Scene::updateLightSettings_(const RenderTime& time)
 {
-    MO_ASSERT(time.thread() < lightSettings_.size(), "thread " << time.thread() << " for "
-              "LightSettings out-of-range (" << lightSettings_.size() << ")");
+    MO_ASSERT(time.thread() < p_lightSettings_.size(), "thread " << time.thread() << " for "
+              "LightSettings out-of-range (" << p_lightSettings_.size() << ")");
 
-    GL::LightSettings * l = &lightSettings_[time.thread()];
+    GL::LightSettings * l = &p_lightSettings_[time.thread()];
 
     // resize if necessary
-    if ((int)l->count() != lightSources_.size())
-        l->resize(lightSources_.size());
+    if ((int)l->count() != p_lightSources_.size())
+        l->resize(p_lightSources_.size());
 
     // fill vectors
     for (uint i=0; i<l->count(); ++i)
     {
-        if (lightSources_[i]->active(time))
+        if (p_lightSources_[i]->active(time))
         {
-            lightSources_[i]->getLightSettings(l, i, time);
+            p_lightSources_[i]->getLightSettings(l, i, time);
         }
         else
             // XXX there should be a runtime switch in shader!
@@ -1296,7 +1299,7 @@ void Scene::calculateSceneTransform_(const RenderTime& time)
 //    int camcount = 0;
 
     // calculate transformations
-    for (auto &o : posObjects_)
+    for (auto &o : p_posObjects_)
     {
 #if 0
         // see if this object is a user-controlled camera
@@ -1327,21 +1330,21 @@ void Scene::calculateSceneTransform_(const RenderTime& time)
 
 void Scene::setFreeCameraIndex(int index)
 {
-    freeCameraIndex_ = index;
-    for (auto c : cameras_)
+    p_freeCameraIndex_ = index;
+    for (auto c : p_cameras_)
         c->clearOverrideMatrix();
-    if (freeCameraIndex_ >= 0 && freeCameraIndex_ < cameras_.size())
-        cameras_[freeCameraIndex_]->setOverrideMatrix(freeCameraMatrix_);
+    if (p_freeCameraIndex_ >= 0 && p_freeCameraIndex_ < p_cameras_.size())
+        p_cameras_[p_freeCameraIndex_]->setOverrideMatrix(p_freeCameraMatrix_);
     render_();
 }
 
 void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
 {
-    freeCameraMatrix_ = glm::inverse(mat);
-    if (freeCameraIndex_ < 0 || freeCameraIndex_ >= cameras_.size())
+    p_freeCameraMatrix_ = glm::inverse(mat);
+    if (p_freeCameraIndex_ < 0 || p_freeCameraIndex_ >= p_cameras_.size())
         return;
 
-    cameras_[freeCameraIndex_]->setOverrideMatrix(freeCameraMatrix_);
+    p_cameras_[p_freeCameraIndex_]->setOverrideMatrix(p_freeCameraMatrix_);
 
     render_();
 }
@@ -1353,8 +1356,7 @@ void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
 
 void Scene::runScripts()
 {
-    /** @todo newobj
-    for (Object * o : allObjects_)
+    for (Object * o : p_allObjects_)
     if (o->activeAtAll())
     if (auto script = dynamic_cast<AScriptObject*>(o))
     {
@@ -1364,43 +1366,42 @@ void Scene::runScripts()
         }
         catch (const Exception & e)
         {
-            ** @todo put this in a log console, visible to user! *
+            /** @todo put this in a log console, visible to user! */
             MO_WARNING("The script object '" << script->name() << "' failed:\n"
                        << e.what());
         }
     }
-    */
 }
 
 void Scene::lockRead_()
 {
-    readWriteLock_->lockForRead();
+    p_readWriteLock_->lockForRead();
 }
 
 void Scene::lockWrite_()
 {
-    readWriteLock_->lockForWrite();
+    p_readWriteLock_->lockForWrite();
 }
 
 void Scene::unlock_()
 {
-    readWriteLock_->unlock();
+    p_readWriteLock_->unlock();
 }
 
 void Scene::kill()
 {
-    if (!glContext_)
+    if (!p_glContext_)
         return;
 
     // release opengl resources later in their thread
-    for (uint i=0; i<releaseAllGlRequested_.size(); ++i)
-        releaseAllGlRequested_[i] = true;
+    for (uint i=0; i<p_releaseAllGlRequested_.size(); ++i)
+        p_releaseAllGlRequested_[i] = true;
 
 #if 1
     // kill now (The calling thread must be GUI thread!)
-    glContext_->makeCurrent();
+    p_glContext_->makeCurrent();
     renderScene(RenderTime(sceneTime(), MO_GFX_THREAD));
-    isShutDown_ = true;
+    p_isShutDown_ = true;
 #else
     // move to later (Window must repaint!)
     render_();
@@ -1409,39 +1410,36 @@ void Scene::kill()
 
 void Scene::setSceneTime(Double time, bool send_signal)
 {
-    sceneTime_ = time;
-    samplePos_ = time * sampleRate();
+    p_sceneTime_ = time;
+    p_samplePos_ = time * sampleRate();
 
     CurrentTime::setTime(time);
 
-    /** @todo newobj
     if (send_signal)
-        emit sceneTimeChanged(sceneTime_);
-    */
+        emit sceneSignals()->sceneTimeChanged(p_sceneTime_);
+
 //    render_();
 }
 
 void Scene::setSceneTime(SamplePos pos, bool send_signal)
 {
-    sceneTime_ = pos * sampleRateInv();
-    samplePos_ = pos;
+    p_sceneTime_ = pos * sampleRateInv();
+    p_samplePos_ = pos;
 
-    CurrentTime::setTime(sceneTime_);
+    CurrentTime::setTime(p_sceneTime_);
 
-    /** @todo newobj
     if (send_signal)
-        emit sceneTimeChanged(sceneTime_);
-        */
+        emit sceneSignals()->sceneTimeChanged(p_sceneTime_);
 //    render_();
 }
 
 
 void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
 {
-    *projectionSettings_ = p;
+    *p_projectionSettings_ = p;
 
     // update all cameras
-    for (Camera * c : cameras_)
+    for (Camera * c : p_cameras_)
         for (uint i=0; i<c->numberThreads(); ++i)
             c->p_needsInitGl_[i] = true;
 
@@ -1450,18 +1448,18 @@ void Scene::setProjectionSettings(const ProjectionSystemSettings & p)
 
 void Scene::setProjectorIndex(uint index)
 {
-    if (index == projectorIndex_)
+    if (index == p_projectorIndex_)
         return;
 
-    projectorIndex_ = index;
+    p_projectorIndex_ = index;
 
-    if (index < projectionSettings_->numProjectors())
-        fbSizeRequest_ = QSize(
-                    projectionSettings_->cameraSettings(index).width(),
-                    projectionSettings_->cameraSettings(index).height());
+    if (index < p_projectionSettings_->numProjectors())
+        p_fbSizeRequest_ = QSize(
+                    p_projectionSettings_->cameraSettings(index).width(),
+                    p_projectionSettings_->cameraSettings(index).height());
 
     // update all cameras
-    for (Camera * c : cameras_)
+    for (Camera * c : p_cameras_)
         for (uint i=0; i<c->numberThreads(); ++i)
             c->p_needsInitGl_[i] = true;
 

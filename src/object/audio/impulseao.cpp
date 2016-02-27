@@ -46,8 +46,8 @@ class ImpulseAO::Private
             * paramMode;
 };
 
-ImpulseAO::ImpulseAO(QObject *parent)
-    : AudioObject (parent)
+ImpulseAO::ImpulseAO()
+    : AudioObject   ()
     , p_          (new Private(this))
 {
     setName("Impulse");

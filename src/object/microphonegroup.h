@@ -19,7 +19,6 @@ namespace MO {
 
 class MicrophoneGroup : public Object
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(MicrophoneGroup);
 

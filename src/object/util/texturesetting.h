@@ -154,6 +154,8 @@ private:
     QString errorStr_;
     bool createNoneTex_,
          isParamCube_;
+
+    QMetaObject::Connection sceneConnection_;
 };
 
 } // namespace MO

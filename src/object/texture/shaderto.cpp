@@ -66,8 +66,8 @@ struct ShaderTO::Private
 };
 
 
-ShaderTO::ShaderTO(QObject *parent)
-    : TextureObjectBase (parent)
+ShaderTO::ShaderTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Shader");

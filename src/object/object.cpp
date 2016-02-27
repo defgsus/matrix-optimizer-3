@@ -38,119 +38,119 @@ struct Object::PrivateObj
 {
     PrivateObj(Object* o)
         : object            (o)
-        , p_parent_                 (0)
-        , p_parameters_             (new Parameters(object))
-        , p_paramEvo_               (0)
-        , p_paramActiveScope_       (0)
-        , p_paramActive_            (0)
-        , p_canBeDeleted_           (true)
-        , p_visible_                (true)
-        , p_parentObject_           (0)
-        , p_childrenHaveChanged_    (false)
-        , p_numberThreads_          (1)
-        , p_numberSoundSources_     (0)
-        , p_numberMicrophones_      (0)
-        , p_sampleRate_             (44100)
-        , p_sampleRateInv_          (1.0/44100.0)
-        , p_aoCons_                 (0)
-        , p_parentActivityScope_    (AS_ON)
-        , p_currentActivityScope_   (AS_ON)
-    //  , parentActivityScope_    (ActivityScope(AS_ON | AS_CLIENT_ONLY))
-    //  , currentActivityScope_   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+        , parent                 (0)
+        , parameters             (new Parameters(object))
+        , paramEvo               (0)
+        , paramActiveScope       (0)
+        , paramActive            (0)
+        , canBeDeleted           (true)
+        , visible                (true)
+        , parentObject           (0)
+        , childrenHaveChanged    (false)
+        , numberThreads          (1)
+        , numberSoundSources     (0)
+        , numberMicrophones      (0)
+        , sampleRate             (44100)
+        , sampleRateInv          (1.0/44100.0)
+        , aoCons                 (0)
+        , parentActivityScope    (AS_ON)
+        , currentActivityScope   (AS_ON)
+    //  , parentActivityScope    (ActivityScope(AS_ON | AS_CLIENT_ONLY))
+    //  , currentActivityScope   (ActivityScope(AS_ON | AS_CLIENT_ONLY))
     { }
 
     ~PrivateObj()
     {
-        delete p_paramEvo_;
-        delete p_aoCons_;
-        delete p_parameters_;
+        delete paramEvo;
+        delete aoCons;
+        delete parameters;
 
         // release references on childs
-        for (auto c : p_childObjects_)
+        for (auto c : childObjects)
             c->releaseRef();
     }
 
     /** Implementation of Object::deserializeTree() */
-    static Object * p_deserializeTree_(IO::DataStream&);
+    static Object * deserializeTree_(IO::DataStream&);
 
     /** Adds the object to child list, nothing else */
-    Object * p_addChildObjectHelper_(Object * object, int insert_index = -1);
+    Object * addChildObjectHelper(Object * object, int insert_index = -1);
 
     /** Fills the transformationChilds() array */
-    void p_collectTransformationObjects_();
+    void collectTransformationObjects();
 
 
     Object * object;
 
     // ------------- tree --------------------
 
-    Object* p_parent_;
+    Object* parent;
     std::vector<Object*> p_children_;
 
     // ---------- parameter s-----------------
 
-    Parameters * p_parameters_;
-    mutable ParameterEvolution* p_paramEvo_;
+    Parameters * parameters;
+    mutable ParameterEvolution* paramEvo;
 
-    void p_passDownActivityScope_(ActivityScope parent_scope);
+    void passDownActivityScope(ActivityScope parent_scope);
 
     // --------- default parameters ----------
 
-    ParameterSelect * p_paramActiveScope_;
-    ParameterFloat * p_paramActive_;
+    ParameterSelect * paramActiveScope;
+    ParameterFloat * paramActive;
 
     // ------------ properties ---------------
 
-    QString p_idName_, p_name_;
+    QString idName, name;
 
-    bool p_canBeDeleted_, p_visible_;
+    bool canBeDeleted, visible;
 
     QMap<QString, QMap<qint64, QVariant>> p_attachedData_;
 
     // ----------- tree ----------------------
 
-    Object * p_parentObject_;
-    QList<Object*> p_childObjects_;
+    Object * parentObject;
+    QList<Object*> childObjects;
     QList<Transformation*> p_transformationObjects_;
-    bool p_childrenHaveChanged_;
+    bool childrenHaveChanged;
 
     // ---------- outputs --------------------
 
-    QMap<SignalType, uint> p_outputMap_;
+    QMap<SignalType, uint> outputMap;
 
     // ---------- per-thread store -----------
 
-    uint p_numberThreads_;
+    uint numberThreads;
 
     // ------------ audio --------------------
 
     // requested count
-    uint p_numberSoundSources_,
-         p_numberMicrophones_;
+    uint numberSoundSources,
+         numberMicrophones;
 
-    uint p_sampleRate_;
-    Double p_sampleRateInv_;
+    uint sampleRate;
+    Double sampleRateInv;
 
-    AudioObjectConnections * p_aoCons_;
+    AudioObjectConnections * aoCons;
 
     // ------------ runtime ------------------
 
     ActivityScope
     /** activity scope passed down from parents */
-        p_parentActivityScope_,
+        parentActivityScope,
     /** current requested activity scope */
-        p_currentActivityScope_;
+        currentActivityScope;
 
     // ----------- position ------------------
 
     /** @deprecated */
-    Mat4 p_transformation_;
+    Mat4 transformation;
 
     /** Used for deserialization errors */
     QString
     /** Used during object creation/initialization */
-            p_errorStr_,
-            p_ioLoadErrorStr_;
+            errorStr,
+            ioLoadErrorStr;
 };
 
 
@@ -161,7 +161,7 @@ bool ObjectPrivate::registerObject(Object * obj)
 
 void ObjectPrivate::setObjectId(Object * o, const QString& id)
 {
-    o->pobj_->p_idName_ = id;
+    o->pobj_->idName = id;
 }
 
 void ObjectPrivate::addObject(Object* parent, Object* newChild, int index)
@@ -256,8 +256,8 @@ void Object::serializeTree(IO::DataStream & io) const
     io.endSkip(startPos);
 
     // write childs
-    io << (qint32)pobj_->p_childObjects_.size();
-    for (auto o : pobj_->p_childObjects_)
+    io << (qint32)pobj_->childObjects.size();
+    for (auto o : pobj_->childObjects)
         o->serializeTree(io);
 
     // v2
@@ -269,7 +269,7 @@ void Object::serializeTree(IO::DataStream & io) const
 
 Object * Object::deserializeTree(IO::DataStream & io)
 {
-    Object * obj = PrivateObj::p_deserializeTree_(io);
+    Object * obj = PrivateObj::deserializeTree_(io);
 
     if (Scene * scene = dynamic_cast<Scene*>(obj))
     {
@@ -282,7 +282,7 @@ Object * Object::deserializeTree(IO::DataStream & io)
 
 QString Object::getIoLoadErrors() const
 {
-    QString e = pobj_->p_ioLoadErrorStr_;
+    QString e = pobj_->ioLoadErrorStr;
     for (auto c : childObjects())
     {
         auto ce = c->getIoLoadErrors().trimmed();
@@ -293,7 +293,7 @@ QString Object::getIoLoadErrors() const
     return e;
 }
 
-Object * Object::PrivateObj::p_deserializeTree_(IO::DataStream & io)
+Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
 {
     MO_DEBUG_IO("Object::deserializeTree_()");
 
@@ -357,13 +357,13 @@ Object * Object::PrivateObj::p_deserializeTree_(IO::DataStream & io)
         o = ObjectFactory::createDummy();
         name = name + " *missing*";
 
-        o->pobj_->p_ioLoadErrorStr_ += tr("unknown object of type '%1'\n")
+        o->pobj_->ioLoadErrorStr += tr("unknown object of type '%1'\n")
                                 .arg(className);
     }
 
     // set default object info
-    o->pobj_->p_idName_ = idName;
-    o->pobj_->p_name_ = name;
+    o->pobj_->idName = idName;
+    o->pobj_->name = name;
 
     // iterate over childs
     quint32 numChilds;
@@ -391,19 +391,19 @@ void Object::serialize(IO::DataStream & io) const
 {
     io.writeHeader("obj", 4);
 
-    io << pobj_->p_canBeDeleted_;
+    io << pobj_->canBeDeleted;
 
     // v2/4
     io << pobj_->p_attachedData_;
     // v3
-    io << pobj_->p_visible_;
+    io << pobj_->visible;
 }
 
 void Object::deserialize(IO::DataStream & io)
 {
     const auto ver = io.readHeader("obj", 4);
 
-    io >> pobj_->p_canBeDeleted_;
+    io >> pobj_->canBeDeleted;
 
     if (ver >= 2)
         io >> pobj_->p_attachedData_;
@@ -412,7 +412,7 @@ void Object::deserialize(IO::DataStream & io)
         setAttachedData(QVariant(), DT_GRAPH_EXPANDED);
 
     if (ver >= 3)
-        io >> pobj_->p_visible_;
+        io >> pobj_->visible;
 }
 
 
@@ -422,7 +422,7 @@ void Object::dumpTreeIds(std::ostream &out, const std::string& prefix) const
 {
     out << prefix << idName() << std::endl;
 
-    for (const Object * c : pobj_->p_childObjects_)
+    for (const Object * c : pobj_->childObjects)
         c->dumpTreeIds(out, " " + prefix);
 }
 
@@ -490,11 +490,11 @@ bool Object::containsObject(Object * o) const
 
 // ---------------- getter -------------------------
 
-const QString& Object::idName() const { return pobj_->p_idName_; }
-const QString& Object::name() const { return pobj_->p_name_; }
-QString Object::infoName() const { return pobj_->p_name_; }
-bool Object::isVisible() const { return pobj_->p_visible_; }
-bool Object::canBeDeleted() const { return pobj_->p_canBeDeleted_; }
+const QString& Object::idName() const { return pobj_->idName; }
+const QString& Object::name() const { return pobj_->name; }
+QString Object::infoName() const { return pobj_->name; }
+bool Object::isVisible() const { return pobj_->visible; }
+bool Object::canBeDeleted() const { return pobj_->canBeDeleted; }
 
 QString Object::namePath() const
 {
@@ -542,7 +542,7 @@ bool Object::isAudioRelevant() const
     if (numberMicrophones() || numberSoundSources())
         return true;
 
-    for (auto c : pobj_->p_childObjects_)
+    for (auto c : pobj_->childObjects)
         if (c->isAudioRelevant())
             return true;
 
@@ -641,96 +641,96 @@ QColor Object::color() const
 void Object::setActivityScope(ActivityScope scope, bool sendGui)
 {
     // XXX forgot what this is used for..
-    pobj_->p_currentActivityScope_ = scope;
+    pobj_->currentActivityScope = scope;
 
-    if (pobj_->p_paramActiveScope_)
+    if (pobj_->paramActiveScope)
     {
         if (sendGui)
         {
             if (auto e = editor())
             {
-                e->setParameterValue(pobj_->p_paramActiveScope_, scope);
+                e->setParameterValue(pobj_->paramActiveScope, scope);
                 return;
             }
         }
-        pobj_->p_paramActiveScope_->setValue(scope);
+        pobj_->paramActiveScope->setValue(scope);
     }
 
-    pobj_->p_passDownActivityScope_(activityScope());
+    pobj_->passDownActivityScope(activityScope());
 }
 
 Object::ActivityScope Object::activityScope() const
 {
-    if (pobj_->p_paramActiveScope_)
+    if (pobj_->paramActiveScope)
         return (ActivityScope)(
-                    pobj_->p_paramActiveScope_->baseValue()
-                            & pobj_->p_parentActivityScope_);
+                    pobj_->paramActiveScope->baseValue()
+                            & pobj_->parentActivityScope);
     else
-        return pobj_->p_parentActivityScope_;
+        return pobj_->parentActivityScope;
 }
 
 Object::ActivityScope Object::currentActivityScope() const
-{ return pobj_->p_currentActivityScope_; }
+{ return pobj_->currentActivityScope; }
 
 
-void Object::PrivateObj::p_passDownActivityScope_(ActivityScope parent_scope)
+void Object::PrivateObj::passDownActivityScope(ActivityScope parent_scope)
 {
     ActivityScope scope = parent_scope;
-    if (p_paramActiveScope_)
-        scope = (ActivityScope)(scope & p_paramActiveScope_->baseValue());
+    if (paramActiveScope)
+        scope = (ActivityScope)(scope & paramActiveScope->baseValue());
 
-    for (auto c : p_childObjects_)
+    for (auto c : childObjects)
     {
-        c->pobj_->p_parentActivityScope_ = scope;
-        c->pobj_->p_passDownActivityScope_(scope);
+        c->pobj_->parentActivityScope = scope;
+        c->pobj_->passDownActivityScope(scope);
     }
 }
 
 bool Object::active(const RenderTime& time) const
 {
-    return (activityScope() & pobj_->p_currentActivityScope_)
-            && (!pobj_->p_paramActive_ || pobj_->p_paramActive_->value(time) > 0.);
+    return (activityScope() & pobj_->currentActivityScope)
+            && (!pobj_->paramActive || pobj_->paramActive->value(time) > 0.);
 }
 
 bool Object::activeAtAll() const
 {
-    return activityScope() & pobj_->p_currentActivityScope_;
+    return activityScope() & pobj_->currentActivityScope;
 }
 
 // ------------------ setter -----------------------
 
 void Object::setName(const QString & n)
 {
-    pobj_->p_name_ = makeUniqueName(n);
+    pobj_->name = makeUniqueName(n);
 }
 
-void Object::setVisible(bool v) { pobj_->p_visible_ = v; }
+void Object::setVisible(bool v) { pobj_->visible = v; }
 
 
 void Object::setCurrentActivityScope(ActivityScope scope)
 {
-    pobj_->p_currentActivityScope_ = scope;
+    pobj_->currentActivityScope = scope;
 
     // currentActivityScope_ = ActivityScope(currentActivityScope_ | AS_CLIENT_ONLY);
 
-    for (auto o : pobj_->p_childObjects_)
+    for (auto o : pobj_->childObjects)
         o->setCurrentActivityScope(scope);
 }
 
 // ------------- tree stuff ------------------------
 
-Object * Object::parentObject() const { return pobj_->p_parentObject_; }
+Object * Object::parentObject() const { return pobj_->parentObject; }
 
 const Object * Object::rootObject() const
 {
 #if 0
     return pobj_->p_parentObject_ ? pobj_->p_parentObject_->rootObject() : this;
 #else
-    auto root = pobj_->p_parentObject_;
+    auto root = pobj_->parentObject;
     if (!root)
         return this;
-    while (root && root->pobj_->p_parentObject_)
-        root = root->pobj_->p_parentObject_;
+    while (root && root->pobj_->parentObject)
+        root = root->pobj_->parentObject;
     return root;
 #endif
 }
@@ -740,11 +740,11 @@ Object * Object::rootObject()
 #if 0
     return pobj_->p_parentObject_ ? pobj_->p_parentObject_->rootObject() : this;
 #else
-    auto root = pobj_->p_parentObject_;
+    auto root = pobj_->parentObject;
     if (!root)
         return this;
-    while (root && root->pobj_->p_parentObject_)
-        root = root->pobj_->p_parentObject_;
+    while (root && root->pobj_->parentObject)
+        root = root->pobj_->parentObject;
     return root;
 #endif
 }
@@ -773,25 +773,25 @@ int Object::numChildren(bool recursive) const
         return childObjects().size();
 
     int n = childObjects().size();
-    for (auto o : pobj_->p_childObjects_)
+    for (auto o : pobj_->childObjects)
         n += o->numChildren(true);
     return n;
 }
 
 bool Object::hasParentObject(Object *o) const
 {
-    if (!pobj_->p_parentObject_)
+    if (!pobj_->parentObject)
         return false;
 
-    return pobj_->p_parentObject_ == o? true : pobj_->p_parentObject_->hasParentObject(o);
+    return pobj_->parentObject == o? true : pobj_->parentObject->hasParentObject(o);
 }
 
 Object * Object::findParentObject(int tflags) const
 {
-    if (!pobj_->p_parentObject_)
+    if (!pobj_->parentObject)
         return 0;
 
-    return pobj_->p_parentObject_->type() & tflags ? pobj_->p_parentObject_ : pobj_->p_parentObject_->findParentObject(tflags);
+    return pobj_->parentObject->type() & tflags ? pobj_->parentObject : pobj_->parentObject->findParentObject(tflags);
 }
 
 Object * Object::findCommonParentObject(Object *other) const
@@ -880,34 +880,30 @@ void Object::setParentObject_(Object *parent, int index)
 
     MO_DEBUG_TREE("Object("<<idName()<<")::SetParentObject("<<parent->idName()<<")");
 
-    MO_ASSERT(pobj_->p_parentObject_ != parent, "trying to add object to same parent");
+    MO_ASSERT(pobj_->parentObject != parent, "trying to add object to same parent");
     MO_ASSERT(!hasParentObject(this), "trying to add object to it's own hierarchy");
     MO_ASSERT(parent->canHaveChildren(type()), "invalid child '" << idName() << "' "
                               "for object '" << parent->idName() << "'");
 
     // silently ignore in release mode
-    if (parent == pobj_->p_parentObject_ || hasParentObject(this))
+    if (parent == pobj_->parentObject || hasParentObject(this))
         return;
 
-    // install in QObject tree (handle memory)
-    /** @todo newobj setParent(parent); */
-    addRef();
-
     // remove from previous parent
-    if (pobj_->p_parentObject_)
+    if (pobj_->parentObject)
     {
-        pobj_->p_parentObject_->p_takeChild_(this);
+        pobj_->parentObject->p_takeChild_(this);
     }
-    pobj_->p_parentObject_ = 0;
+    pobj_->parentObject = 0;
 
     // adjust idnames in new subtree
     ObjectEditor::makeUniqueIds(parent->rootObject(), this);
 
     // assign
-    pobj_->p_parentObject_ = parent;
+    pobj_->parentObject = parent;
 
     // and add to child list
-    pobj_->p_parentObject_->pobj_->p_addChildObjectHelper_(this, index);
+    pobj_->parentObject->pobj_->addChildObjectHelper(this, index);
 
     // signal this object
     this->onParentChanged();
@@ -917,24 +913,29 @@ void Object::setParentObject_(Object *parent, int index)
 Object * Object::addObject_(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
-    MO_ASSERT(!pobj_->p_childObjects_.contains(o), "duplicate addChild for '" << o->idName());
+    MO_ASSERT(!pobj_->childObjects.contains(o),
+              "duplicate addObject() for '" << o->idName());
 
-    o->setParentObject_(this, index);
+    if (!pobj_->childObjects.contains(o))
+    {
+        o->setParentObject_(this, index);
+        o->addRef();
+        pobj_->childrenHaveChanged = true;
+    }
 
-    pobj_->p_childrenHaveChanged_ = true;
     return o;
 }
 
-Object * Object::PrivateObj::p_addChildObjectHelper_(Object * o, int index)
+Object * Object::PrivateObj::addChildObjectHelper(Object * o, int index)
 {
     MO_ASSERT(o, "trying to add a NULL child");
 
     if (index < 0)
-        p_childObjects_.append(o);
+        childObjects.append(o);
     else
-        p_childObjects_.insert(index, o);
+        childObjects.insert(index, o);
 
-    p_childrenHaveChanged_ = true;
+    childrenHaveChanged = true;
     return o;
 }
 
@@ -942,19 +943,17 @@ void Object::deleteObject_(Object * child, bool destroy)
 {
     if (p_takeChild_(child))
     {
-        /** @todo newobj
-        child->setParent(0);*/
         if (destroy)
             child->releaseRef();
-        pobj_->p_childrenHaveChanged_ = true;
+        pobj_->childrenHaveChanged = true;
     }
 }
 
 bool Object::p_takeChild_(Object *child)
 {
-    if (pobj_->p_childObjects_.removeOne(child))
+    if (pobj_->childObjects.removeOne(child))
     {
-        return pobj_->p_childrenHaveChanged_ = true;
+        return pobj_->childrenHaveChanged = true;
     }
     return false;
 }
@@ -963,14 +962,15 @@ void Object::swapChildren_(int from, int to)
 {
     if (from >= 0 && from < numChildren()
         && to >= 0 && to < numChildren())
-
-    pobj_->p_childObjects_.swap(from, to);
-    pobj_->p_childrenHaveChanged_ = true;
+    {
+        pobj_->childObjects.swap(from, to);
+        pobj_->childrenHaveChanged = true;
+    }
 }
 
 bool Object::setChildrenObjectIndex_(Object *child, int newIndex)
 {
-    auto idx = pobj_->p_childObjects_.indexOf(child);
+    auto idx = pobj_->childObjects.indexOf(child);
     if (idx < 0)
         return false;
 
@@ -986,17 +986,17 @@ bool Object::setChildrenObjectIndex_(Object *child, int newIndex)
         --newIndex;
 
     // remove at old location
-    pobj_->p_childObjects_.removeAt(idx);
+    pobj_->childObjects.removeAt(idx);
     // put at new location
     if (newIndex >= 0)
-        pobj_->p_childObjects_.insert(newIndex, child);
+        pobj_->childObjects.insert(newIndex, child);
     else
-        pobj_->p_childObjects_.append(child);
+        pobj_->childObjects.append(child);
 
     return true;
 }
 
-const QList<Object*>& Object::childObjects() const { return pobj_->p_childObjects_; }
+const QList<Object*>& Object::childObjects() const { return pobj_->childObjects; }
 
 
 QSet<QString> Object::getChildIds(bool recursive) const
@@ -1090,12 +1090,12 @@ void Object::pobj_->p_makeUniqueIds_(QSet<QString> &existing)
 */
 Object * Object::findChildObject(const QString &id, bool recursive, Object * ignore) const
 {
-    for (auto o : pobj_->p_childObjects_)
+    for (auto o : pobj_->childObjects)
         if (o != ignore && o->idName() == id)
             return o;
 
     if (recursive)
-        for (auto i : pobj_->p_childObjects_)
+        for (auto i : pobj_->childObjects)
             if (Object * o = i->findChildObject(id, recursive, ignore))
                 return o;
 
@@ -1105,12 +1105,12 @@ Object * Object::findChildObject(const QString &id, bool recursive, Object * ign
 QList<Object*> Object::findChildObjects(int typeFlags, bool recursive) const
 {
     QList<Object*> list;
-    for (auto o : pobj_->p_childObjects_)
+    for (auto o : pobj_->childObjects)
         if (o->type() & typeFlags)
             list.append(o);
 
     if (recursive)
-        for (auto o : pobj_->p_childObjects_)
+        for (auto o : pobj_->childObjects)
             list.append( o->findChildObjects(typeFlags, true) );
 
     return list;
@@ -1201,13 +1201,13 @@ void Object::p_childrenChanged_()
     MO_DEBUG_TREE("Object('" << idName() << "')::childrenChanged_()");
 
     // collect special sub-objects
-    pobj_->p_collectTransformationObjects_();
+    pobj_->collectTransformationObjects();
 
     // notify derived classes
     childrenChanged();
 
-    pobj_->p_passDownActivityScope_(activityScope());
-    pobj_->p_childrenHaveChanged_ = false;
+    pobj_->passDownActivityScope(activityScope());
+    pobj_->childrenHaveChanged = false;
 }
 
 
@@ -1236,21 +1236,21 @@ void Object::idNamesChanged(const QMap<QString, QString> & map)
 
     // attached audio connections
     // (of pasted/loaded objects)
-    if (pobj_->p_aoCons_)
-        pobj_->p_aoCons_->idNamesChanged(map);
+    if (pobj_->aoCons)
+        pobj_->aoCons->idNamesChanged(map);
 }
 
 void Object::propagateRenderMode(ObjectGl *parent)
 {
-    for (auto c : pobj_->p_childObjects_)
+    for (auto c : pobj_->childObjects)
         c->propagateRenderMode(parent);
 }
 
-uint Object::numberThreads() const { return pobj_->p_numberThreads_; }
+uint Object::numberThreads() const { return pobj_->numberThreads; }
 
 bool Object::verifyNumberThreads(uint num)
 {
-    if (pobj_->p_numberThreads_ != num)
+    if (pobj_->numberThreads != num)
         return false;
 
     return true;
@@ -1260,7 +1260,7 @@ void Object::setNumberThreads(uint num)
 {
     MO_DEBUG_TREE("Object('" << idName() << "')::setNumberThreads(" << num << ")");
 
-    pobj_->p_numberThreads_ = num;
+    pobj_->numberThreads = num;
 }
 
 void Object::getIdMap(QMap<QString, Object *> &idMap) const
@@ -1272,34 +1272,34 @@ void Object::getIdMap(QMap<QString, Object *> &idMap) const
 
 bool Object::haveChildrenChanged() const
 {
-    return pobj_->p_childrenHaveChanged_;
+    return pobj_->childrenHaveChanged;
 }
 
 // ------------------------- 3d -----------------------
 
-void Object::clearTransformation() { pobj_->p_transformation_ = Mat4(1); }
-void Object::setTransformation(const Mat4& mat) { pobj_->p_transformation_ = mat; }
+void Object::clearTransformation() { pobj_->transformation = Mat4(1); }
+void Object::setTransformation(const Mat4& mat) { pobj_->transformation = mat; }
 
-const Mat4& Object::transformation() const { return pobj_->p_transformation_; }
+const Mat4& Object::transformation() const { return pobj_->transformation; }
 const QList<Transformation*>& Object::transformationObjects() const
     { return pobj_->p_transformationObjects_; }
 
 Mat4 Object::valueTransformation(
         uint /*channel*/, const RenderTime& /*time*/) const
-{ return pobj_->p_transformation_; }
+{ return pobj_->transformation; }
 
 /** Returns the position of this object */
 Vec3 Object::position() const
-    { return Vec3(pobj_->p_transformation_[3][0],
-                  pobj_->p_transformation_[3][1],
-                  pobj_->p_transformation_[3][2]); }
+    { return Vec3(pobj_->transformation[3][0],
+                  pobj_->transformation[3][1],
+                  pobj_->transformation[3][2]); }
 
 
-void Object::PrivateObj::p_collectTransformationObjects_()
+void Object::PrivateObj::collectTransformationObjects()
 {
     p_transformationObjects_.clear();
 
-    for (auto o : p_childObjects_)
+    for (auto o : childObjects)
         if (auto t = dynamic_cast<Transformation*>(o))
             p_transformationObjects_.append(t);
 }
@@ -1316,8 +1316,8 @@ void Object::calculateTransformation(Mat4 &matrix, const RenderTime& time) const
 
 // ---------------------- parameter --------------------------
 
-const Parameters * Object::params() const { return pobj_->p_parameters_; }
-Parameters * Object::params() { return pobj_->p_parameters_; }
+const Parameters * Object::params() const { return pobj_->parameters; }
+Parameters * Object::params() { return pobj_->parameters; }
 
 void Object::createParameters()
 {
@@ -1337,7 +1337,7 @@ void Object::createParameters()
 
     params()->beginParameterGroup("active", tr("activity"));
 
-        pobj_->p_paramActiveScope_ =
+        pobj_->paramActiveScope =
             params()->createSelectParameter("_activescope", tr("activity scope"),
                             strTip,
                             { "off", "on", "client", "prev", "ren", "prev1", "prev2", "prev3",
@@ -1351,14 +1351,14 @@ void Object::createParameters()
                               AS_PREVIEW_1, AS_PREVIEW_2, AS_PREVIEW_3,
                               AS_PREVIEW_1 | AS_RENDER, AS_PREVIEW_2 | AS_RENDER, AS_PREVIEW_3 | AS_RENDER },
                               AS_ON, true, false );
-        pobj_->p_paramActiveScope_->setDefaultEvolvable(false);
+        pobj_->paramActiveScope->setDefaultEvolvable(false);
 
         /// @todo live activity parameter should apply to children as well!
-        pobj_->p_paramActive_ = params()->createFloatParameter("_active_f", tr("active"),
+        pobj_->paramActive = params()->createFloatParameter("_active_f", tr("active"),
                             tr("A value greater than 0.0 makes the object active"
                                " - this does CURRENTLY NOT apply to child objects"),
                             1., 1.);
-        pobj_->p_paramActive_->setDefaultEvolvable(false);
+        pobj_->paramActive->setDefaultEvolvable(false);
 
     params()->endParameterGroup();
 }
@@ -1368,8 +1368,8 @@ void Object::onParameterChanged(Parameter * p)
     MO_DEBUG_PARAM("Object::parameterChanged('" << p->idName() << "')");
 
     // activity scope changed
-    if (p == pobj_->p_paramActiveScope_)
-        pobj_->p_passDownActivityScope_(activityScope());
+    if (p == pobj_->paramActiveScope)
+        pobj_->passDownActivityScope(activityScope());
 
 }
 
@@ -1382,22 +1382,22 @@ void Object::initParameterGroupExpanded(const QString &groupId, bool expanded)
 
 // ----------------- audio sources ---------------------
 
-uint Object::sampleRate() const { return pobj_->p_sampleRate_; }
-Double Object::sampleRateInv() const { return pobj_->p_sampleRateInv_; }
-uint Object::numberSoundSources() const { return pobj_->p_numberSoundSources_; }
-uint Object::numberMicrophones() const { return pobj_->p_numberMicrophones_; }
+uint Object::sampleRate() const { return pobj_->sampleRate; }
+Double Object::sampleRateInv() const { return pobj_->sampleRateInv; }
+uint Object::numberSoundSources() const { return pobj_->numberSoundSources; }
+uint Object::numberMicrophones() const { return pobj_->numberMicrophones; }
 
 void Object::setSampleRate(uint samplerate)
 {
     MO_ASSERT(samplerate>0, "bogus samplerate");
 
-    pobj_->p_sampleRate_ = std::max((uint)1, samplerate);
-    pobj_->p_sampleRateInv_ = 1.0 / pobj_->p_sampleRate_;
+    pobj_->sampleRate = std::max((uint)1, samplerate);
+    pobj_->sampleRateInv = 1.0 / pobj_->sampleRate;
 }
 
 void Object::setNumberSoundSources(uint num)
 {
-    pobj_->p_numberSoundSources_ = num;
+    pobj_->numberSoundSources = num;
     auto e = editor();
     if (e)
         emit e->audioConnectionsChanged();
@@ -1406,7 +1406,7 @@ void Object::setNumberSoundSources(uint num)
 void Object::setNumberMicrophones(uint num)
 {
     /** @todo update audio dsp path on soundSource/microphone change. */
-    pobj_->p_numberMicrophones_ = num;
+    pobj_->numberMicrophones = num;
     if (auto e = editor())
         emit e->audioConnectionsChanged();
 }
@@ -1435,13 +1435,13 @@ void Object::calculateMicrophoneTransformation(const TransformationBuffer * obje
 
 void Object::assignAudioConnections(AudioObjectConnections * ao)
 {
-    delete pobj_->p_aoCons_;
-    pobj_->p_aoCons_ = ao;
+    delete pobj_->aoCons;
+    pobj_->aoCons = ao;
 }
 
 AudioObjectConnections * Object::getAssignedAudioConnections() const
 {
-    return pobj_->p_aoCons_;
+    return pobj_->aoCons;
 }
 
 // -------------------- modulators ---------------------
@@ -1564,13 +1564,13 @@ QList<QPair<Parameter*, Object*>> Object::getModulationPairs() const
 
 const QMap<SignalType, uint>& Object::getNumberOutputs() const
 {
-    return pobj_->p_outputMap_;
+    return pobj_->outputMap;
 }
 
 uint Object::getNumberOutputs(SignalType t) const
 {
-    auto it = pobj_->p_outputMap_.find(t);
-    return it == pobj_->p_outputMap_.end() ? 0 : it.value();
+    auto it = pobj_->outputMap.find(t);
+    return it == pobj_->outputMap.end() ? 0 : it.value();
 }
 
 QString Object::getSignalName(SignalType t)
@@ -1606,11 +1606,11 @@ void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)
     MO_DEBUG_MOD("Object::setNumberOutputs(" << t << ", " << num << ", " << emitSignal << ")");
 
     // check for change
-    auto it = pobj_->p_outputMap_.find(t);
-    if (it != pobj_->p_outputMap_.end() && num == it.value())
+    auto it = pobj_->outputMap.find(t);
+    if (it != pobj_->outputMap.end() && num == it.value())
         return;
 
-    pobj_->p_outputMap_.insert(t, num);
+    pobj_->outputMap.insert(t, num);
 
     /** @todo Need a signal for changing outputs */
     if (emitSignal && editor())
@@ -1624,19 +1624,19 @@ void Object::emitConnectionsChanged()
 }
 
 
-bool Object::hasError() const { return !pobj_->p_errorStr_.isEmpty(); }
-const QString& Object::errorString() const { return pobj_->p_errorStr_; }
-void Object::clearError() { pobj_->p_errorStr_.clear(); }
+bool Object::hasError() const { return !pobj_->errorStr.isEmpty(); }
+const QString& Object::errorString() const { return pobj_->errorStr; }
+void Object::clearError() { pobj_->errorStr.clear(); }
 
 void Object::setErrorMessage(const QString &errorString) const
 {
     if (errorString.isEmpty())
         return;
 
-    if (!pobj_->p_errorStr_.isEmpty())
-        pobj_->p_errorStr_.append("\n");
+    if (!pobj_->errorStr.isEmpty())
+        pobj_->errorStr.append("\n");
 
-    pobj_->p_errorStr_.append(errorString);
+    pobj_->errorStr.append(errorString);
 }
 
 
@@ -1644,11 +1644,11 @@ const EvolutionBase* Object::getEvolution(const QString& key) const
 {
     if (key == tr("Parameters"))
     {
-        if (!pobj_->p_paramEvo_)
-            pobj_->p_paramEvo_ = new ParameterEvolution(const_cast<Object*>(this));
+        if (!pobj_->paramEvo)
+            pobj_->paramEvo = new ParameterEvolution(const_cast<Object*>(this));
         else
-            pobj_->p_paramEvo_->updateFromObject();
-        return pobj_->p_paramEvo_;
+            pobj_->paramEvo->updateFromObject();
+        return pobj_->paramEvo;
     }
     return nullptr;
 }
@@ -1665,10 +1665,10 @@ void Object::setEvolution(const QString& key, const EvolutionBase* evobase)
         if (evo->object() != this)
             return;
 
-        if (!pobj_->p_paramEvo_)
-            pobj_->p_paramEvo_ = evo->createClone();
+        if (!pobj_->paramEvo)
+            pobj_->paramEvo = evo->createClone();
         else
-            pobj_->p_paramEvo_->copyFrom(evo);
+            pobj_->paramEvo->copyFrom(evo);
 
         evo->applyParametersToObject(true);
     }

@@ -18,7 +18,6 @@ namespace MO {
 
 class ImageGallery : public ObjectGl
 {
-    Q_OBJECT
 public:
     enum LightMode
     {

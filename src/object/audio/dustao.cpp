@@ -52,8 +52,8 @@ class DustAO::Private
             * paramMode;
 };
 
-DustAO::DustAO(QObject * parent)
-    : AudioObject(parent)
+DustAO::DustAO()
+    : AudioObject   ()
     , p_         (new Private(this))
 {
     setName("Dust");

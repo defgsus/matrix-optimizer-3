@@ -49,8 +49,8 @@ struct PosterizeTO::Private
 };
 
 
-PosterizeTO::PosterizeTO(QObject *parent)
-    : TextureObjectBase (parent)
+PosterizeTO::PosterizeTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Posterize");

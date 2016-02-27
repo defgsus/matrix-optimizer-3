@@ -18,7 +18,6 @@ namespace MO {
 /** An neuronal network texture processor */
 class NeuroTO: public TextureObjectBase
 {
-    Q_OBJECT
 public:
 
     enum Mode
@@ -54,10 +53,6 @@ public:
 
     /** Returns current component mode, or default if parameter is not created */
     Mode getNeuroMode() const;
-
-signals:
-
-public slots:
 
 private:
 

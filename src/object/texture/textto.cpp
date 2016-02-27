@@ -30,8 +30,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(TextTO)
 
-TextTO::TextTO(QObject *parent)
-    : TextureObjectBase (parent)
+TextTO::TextTO()
+    : TextureObjectBase ()
     , text_             ("coffee\n&\ncigarettes")
     , pText_            (0)
     , tex_              (0)

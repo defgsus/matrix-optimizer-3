@@ -18,8 +18,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Scale)
 
-Scale::Scale(QObject *parent) :
-    Transformation(parent)
+Scale::Scale()
+    : Transformation()
 {
     setName("Scale");
 }

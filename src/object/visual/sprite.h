@@ -21,7 +21,6 @@ namespace MO {
 /** A billboard object */
 class Sprite : public ObjectGl
 {
-    Q_OBJECT
 public:
 
     MO_OBJECT_CONSTRUCTOR(Sprite);
@@ -34,10 +33,6 @@ public:
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
-
-signals:
-
-private slots:
 
 private:
     GL::Drawable * draw_;

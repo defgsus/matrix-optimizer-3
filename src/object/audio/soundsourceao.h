@@ -19,7 +19,6 @@ namespace MO {
 
 class SoundSourceAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(SoundSourceAO)
 

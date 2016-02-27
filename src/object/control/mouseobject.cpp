@@ -34,8 +34,8 @@ struct MouseObject::Private
 };
 
 
-MouseObject::MouseObject(QObject *parent)
-    : Object    (parent)
+MouseObject::MouseObject()
+    : Object    ()
     , p_        (new Private(this))
 {
     setName("Mouse");

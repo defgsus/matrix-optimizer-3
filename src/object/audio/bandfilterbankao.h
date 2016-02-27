@@ -17,7 +17,6 @@ namespace MO {
 
 class BandFilterBankAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(BandFilterBankAO)
     ~BandFilterBankAO();

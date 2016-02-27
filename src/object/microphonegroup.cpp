@@ -61,8 +61,8 @@ static const Vec3 mic_pos[] = {
 
 
 
-MicrophoneGroup::MicrophoneGroup(QObject *parent) :
-    Object(parent)
+MicrophoneGroup::MicrophoneGroup()
+    : Object        ()
 {
     setName("MicrophoneGroup");
     setNumberMicrophones(1);

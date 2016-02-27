@@ -51,8 +51,8 @@ struct ColorTO::Private
 };
 
 
-ColorTO::ColorTO(QObject *parent)
-    : TextureObjectBase (parent)
+ColorTO::ColorTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("Color");

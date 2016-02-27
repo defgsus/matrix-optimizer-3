@@ -19,7 +19,6 @@ namespace MO {
 
 class MicrophoneAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(MicrophoneAO)
     ~MicrophoneAO();

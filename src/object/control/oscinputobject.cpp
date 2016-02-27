@@ -69,8 +69,8 @@ struct OscInputObject::Private
 };
 
 
-OscInputObject::OscInputObject(QObject *parent)
-    : Object    (parent)
+OscInputObject::OscInputObject()
+    : Object    ()
     , p_        (new Private(this))
 {
     setName("OscInput");
@@ -223,9 +223,11 @@ void OscInputObject::Private::setPort()
         OscInputs::releaseListener(osc->port());
     const int num = p_port->baseValue();
     osc = OscInputs::getListener(num);
+    /** @todo newobj
     connect(osc, SIGNAL(valueChanged(QString)),
             p, SLOT(onValueChanged(QString)),
             Qt::ConnectionType(Qt::QueuedConnection | Qt::UniqueConnection));
+            */
 }
 
 

@@ -76,9 +76,9 @@ struct Skybox::Private
         *u_fade_dist;
 };
 
-Skybox::Skybox(QObject *parent)
-    : ObjectGl  (parent)
-    , p_        (new Private(this))
+Skybox::Skybox()
+    : ObjectGl      ()
+    , p_            (new Private(this))
 
 {
     setName("Skybox");

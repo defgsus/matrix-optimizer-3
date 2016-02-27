@@ -25,6 +25,7 @@ namespace MO {
 namespace AUDIO { class AudioDevice; }
 namespace GUI { class FrontScene; }
 
+class SceneSignals;
 class AudioOutThread;
 class AudioInThread;
 template <typename T> class LocklessQueue;
@@ -65,13 +66,16 @@ public:
 
     // ################ PUBLIC INTERFACE ###################
 
+    /** Returns the signals class */
+    SceneSignals* sceneSignals() const { return p_sceneSignals_; }
+
     // ------------- object model --------------
 
     /** Sets the editor to edit the scene.
         This also assignes the scene to the editor. */
     void setObjectEditor(ObjectEditor * );
     /** Returns the editor that is assigned to this scene. */
-    ObjectEditor * editor() const { return editor_; }
+    ObjectEditor * editor() const { return p_editor_; }
 
     /** A flag to be queried by object when they create runtime resources.
         If this returns true, all resources should be created lazily, so
@@ -86,10 +90,10 @@ public:
 
     // ------------- child objects -------------
 
-    const QList<Camera*> cameras() const { return cameras_; }
+    const QList<Camera*> cameras() const { return p_cameras_; }
 
     /** Returns the one clip con, OR NULL */
-    ClipController * clipController() const { return clipController_; }
+    ClipController * clipController() const { return p_clipController_; }
 
     // --------------- files -------------------
 
@@ -99,9 +103,9 @@ public:
     // -------------- info ---------------------
 
     void setSceneDesc(const QString& desc, bool showOnStart)
-        { sceneDesc_ = desc; showSceneDesc_ = showOnStart; }
-    const QString& sceneDesc() const { return sceneDesc_; }
-    bool showSceneDesc() const { return showSceneDesc_; }
+        { p_sceneDesc_ = desc; p_showSceneDesc_ = showOnStart; }
+    const QString& sceneDesc() const { return p_sceneDesc_; }
+    bool showSceneDesc() const { return p_showSceneDesc_; }
 
     // ------------- modulators ----------------
 
@@ -131,31 +135,29 @@ public:
     /** Attaches a FrontScene to the scene.
         The FrontScene will be serialized with the scene.
         Otherwise the FrontScene is not touched. */
-    void setFrontScene(GUI::FrontScene * s) { frontScene_ = s; }
+    void setFrontScene(GUI::FrontScene * s) { p_frontScene_ = s; }
 
     /** Returns the FrontScene xml that has been deserialized.
         If there was no interface saved with the scene, an empty string is returned. */
-    QString frontSceneXml() const { return frontSceneXml_; }
+    QString frontSceneXml() const { return p_frontSceneXml_; }
 
     // ------------- open gl -------------------
 
-    // XXX These can be separate per thread!
-
     /** Returns the currently active framebuffer resolution */
-    const QSize & frameBufferSize() const { return fbSize_; }
+    const QSize & frameBufferSize() const { return p_fbSize_; }
 
-    uint frameBufferFormat() const { return fbFormat_; }
+    uint frameBufferFormat() const { return p_fbFormat_; }
 
     /** Returns the resolution of the framebuffer during the next render pass */
-    const QSize & requestedFrameBufferSize() const { return fbSizeRequest_; }
+    const QSize & requestedFrameBufferSize() const { return p_fbSizeRequest_; }
 
     /** Returns the flag if output resolution should be matched by scene fbo resolution */
-    bool doMatchOutputResolution() const { return doMatchOutputResolution_; }
+    bool doMatchOutputResolution() const { return p_doMatchOutputResolution_; }
     /** Sets the flag if output resolution should be matched by scene fbo resolution.
         This does not do anything else than storing the flag! */
-    void setMatchOutputResolution(bool enable) { doMatchOutputResolution_ = enable; }
+    void setMatchOutputResolution(bool enable) { p_doMatchOutputResolution_ = enable; }
 
-    QSize outputSize() const { return fbSize_; }
+    QSize outputSize() const { return p_fbSize_; }
 
     /** Sets the output framebuffer size.
         This is only a request! The framebuffer will change just
@@ -169,8 +171,8 @@ public:
     /** Sets the options for the debug drawer.
         @p options can be an OR combination of DebugDrawOption enums */
     void setDebugRenderOptions(int options)
-        { debugRenderOptions_ = options; render_(); }
-    int debugRenderOptions() const { return debugRenderOptions_; }
+        { p_debugRenderOptions_ = options; render_(); }
+    int debugRenderOptions() const { return p_debugRenderOptions_; }
 
     // ----------- projection ------------------
 
@@ -178,22 +180,22 @@ public:
     void setProjectionSettings(const ProjectionSystemSettings &);
     /** The slice camera */
     const ProjectionSystemSettings& projectionSettings() const
-        { return * projectionSettings_; }
+        { return * p_projectionSettings_; }
 
     /** Sets the index of the projector.
         @note Call setProjectionSettings() before to make
         sure the index is not out of range. */
     void setProjectorIndex(uint index);
-    uint projectorIndex() const { return projectorIndex_; }
+    uint projectorIndex() const { return p_projectorIndex_; }
 
     // ----------- audio info ------------------
 
-    AudioObjectConnections * audioConnections() { return audioCon_; }
-    const AudioObjectConnections * audioConnections() const { return audioCon_; }
+    AudioObjectConnections * audioConnections() { return p_audioCon_; }
+    const AudioObjectConnections * audioConnections() const { return p_audioCon_; }
 
     // --------------- runtime -----------------
 
-    Double sceneTime() const { return sceneTime_; }
+    Double sceneTime() const { return p_sceneTime_; }
 
     void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -227,41 +229,10 @@ public:
 
     /** Installs a (runtime) dependency.
         XXX This will be refined in the future.
-        Experiment feature to propagate changed in TextObject to shaders. */
+        Experiment feature to propagate changes in TextObject to shaders. */
     void installDependency(Object * dependendObject, Object * source);
     void removeDependency(Object * dependendObject, Object * source);
     void removeDependencies(Object * dependendObject);
-
-signals:
-
-    /** Scene should be re-rendered */
-    void renderRequest();
-
-    void playbackStarted();
-    void playbackStopped();
-
-    /** Emitted when the number of channels is set/changed */
-    void numberChannelsChanged(uint numIn, uint numOut);
-
-    /** Emitted when the number of (currently) microphones changed */
-    void numberOutputEnvelopesChanged(uint num);
-
-    /** This is send regularily during playback, representing the microphone levels */
-    void outputEnvelopeChanged(const F32 * levels);
-
-    /** Emitted whenever the scene time changed */
-    void sceneTimeChanged(Double);
-
-    /** openGL resources have been released for the given thread. */
-    void glReleased(uint thread);
-
-    /** Send when a parameter changed it's visibility */
-    void parameterVisibilityChanged(MO::Parameter*);
-
-    void CameraFboChanged(Camera *);
-    void sceneFboChanged();
-
-public slots:
 
     // --------------- tree --------------------
 
@@ -282,8 +253,8 @@ public slots:
     // ------------- runtime -------------------
 
     /** Sets the playing-flag, nothing else. */
-    void setPlaying(bool playing) { isPlayback_ = playing; }
-    bool isPlaying() const { return isPlayback_; }
+    void setPlaying(bool playing) { p_isPlayback_ = playing; }
+    bool isPlaying() const { return p_isPlayback_; }
 
     /** Call before deleting the scene.
         OpenGL resources will be released a short while later from their particular thead.
@@ -298,10 +269,10 @@ public slots:
 
     // ------------- open gl -------------------
 
-    bool isShutDown() const { return isShutDown_; }
+    bool isShutDown() const { return p_isShutDown_; }
 
     /** Returns currently set opengl context of all objects in scene. */
-    GL::Context * glContext() const { return glContext_; }
+    GL::Context * glContext() const { return p_glContext_; }
 
     /** Sets the opengl Context for all objects in the scene. */
     void setGlContext(uint thread, MO::GL::Context * context);
@@ -312,14 +283,14 @@ public slots:
     /** Sets the index of the camera to control will setFreeCameraMatrix(),
         -1 for no free camera. */
     void setFreeCameraIndex(int index);
-    int freeCameraIndex() const { return freeCameraIndex_; }
+    int freeCameraIndex() const { return p_freeCameraIndex_; }
 
     /** Sets the camera matrix in free-camera-mode */
     void setFreeCameraMatrix(const MO::Mat4& mat);
 
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */
-    const GL::LightSettings& lightSettings(uint thread) const { return lightSettings_[thread]; }
+    const GL::LightSettings& lightSettings(uint thread) const { return p_lightSettings_[thread]; }
 
     /** Returns the framebuffer of the final master frame, or NULL */
     GL::FrameBufferObject * fboMaster(uint thread) const;
@@ -330,8 +301,6 @@ public slots:
     /** Render the whole scene on the current context.
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
     void renderScene(const RenderTime & time, bool paintToScreen = true);//, GL::FrameBufferObject * fbo = 0);
-
-private slots:
 
 private:
 
@@ -357,7 +326,7 @@ private:
     /** Tell everyone the number of light sources */
     void updateNumberLights_();
 public:
-    /** Well.., individually updates objects which functioning might depend
+    /** Well.., individually updates objects whos functioning might depend
         on names of other objects. */
     void updateWeakNameLinks();
 private:
@@ -399,85 +368,84 @@ private:
 
     // -------------- model --------------------
 
-    ObjectEditor * editor_;
-    GUI::FrontScene * frontScene_;
-    QString frontSceneXml_;
-    static Scene* currentScene_;
+    ObjectEditor * p_editor_;
+    GUI::FrontScene * p_frontScene_;
+    QString p_frontSceneXml_;
+    static Scene* p_currentScene_;
+    SceneSignals * p_sceneSignals_;
 
     // ------------------ desc -----------------
 
-    QString sceneDesc_;
-    bool showSceneDesc_;
+    QString p_sceneDesc_;
+    bool p_showSceneDesc_;
 
     // ---------- opengl -----------------------
 
-    GL::Context * glContext_;
+    GL::Context * p_glContext_;
 
-    std::vector<bool> releaseAllGlRequested_;
+    std::vector<bool> p_releaseAllGlRequested_;
 
-    QSize fbSize_;
-    uint fbFormat_;
-    QSize fbSizeRequest_;
-    uint fbFormatRequest_;
+    QSize p_fbSize_;
+    uint p_fbFormat_;
+    QSize p_fbSizeRequest_;
+    uint p_fbFormatRequest_;
 
-    bool doMatchOutputResolution_,
-         isShutDown_;
+    bool p_doMatchOutputResolution_,
+         p_isShutDown_;
 
-    std::vector<GL::FrameBufferObject *> fboFinal_;
-    std::vector<GL::ScreenQuad *> screenQuad_;
-    std::vector<GL::LightSettings> lightSettings_;
+    std::vector<GL::FrameBufferObject *> p_fboFinal_;
+    std::vector<GL::ScreenQuad *> p_screenQuad_;
+    std::vector<GL::LightSettings> p_lightSettings_;
 
-    std::vector<GL::SceneDebugRenderer*> debugRenderer_;
-    int debugRenderOptions_;
+    std::vector<GL::SceneDebugRenderer*> p_debugRenderer_;
+    int p_debugRenderOptions_;
 
-    int freeCameraIndex_;
-    Mat4 freeCameraMatrix_;
+    int p_freeCameraIndex_;
+    Mat4 p_freeCameraMatrix_;
 
-    ProjectionSystemSettings * projectionSettings_;
-    uint projectorIndex_;
+    ProjectionSystemSettings * p_projectionSettings_;
+    uint p_projectorIndex_;
 
     // ----------- special objects -------------
 
-    ClipController * clipController_;
-    QList<Object*> allObjects_;
-    QList<Object*> posObjects_;
-    //QList<Object*> posObjectsAudio_;
-    QList<Camera*> cameras_;
-    QList<QList<ObjectGl*>> glObjectsPerCamera_;
-    QList<ObjectGl*> glObjects_, frameDrawers_;
-    QList<ShaderObject*> shaderObjects_;
-    //QList<Object*> audioObjects_;
-    //QList<Object*> microphoneObjects_;
-    QList<LightSource*> lightSources_;
-    //QList<AudioUnit*> topLevelAudioUnits_;
-    QList<Object*> deletedObjects_;
-    QMap<QString, ModulatorObjectFloat*> uiModsFloat_;
+    ClipController * p_clipController_;
+    QList<Object*> p_allObjects_;
+    QList<Object*> p_posObjects_;
+    QList<Camera*> p_cameras_;
+    QList<QList<ObjectGl*>> p_glObjectsPerCamera_;
+    QList<ObjectGl*> p_glObjects_, p_frameDrawers_;
+    QList<ShaderObject*> p_shaderObjects_;
+    QList<LightSource*> p_lightSources_;
+    QList<Object*> p_deletedObjects_;
+    QMap<QString, ModulatorObjectFloat*> p_uiModsFloat_;
 
-    QMultiMap<Object*, Object*> dependMap_;
+    QMultiMap<Object*, Object*> p_dependMap_;
 
     // ---------- properties -------------------
 
-    uint sceneNumberThreads_;
-    uint sceneSampleRate_;
+    uint p_sceneNumberThreads_;
+    uint p_sceneSampleRate_;
 
     // ------------ threadstuff ----------------
 
-    Object * changedObject_, * changedTimelineObject_,
-            * changedTreeObject_;
-    Sequence * changedSequence_;
+    Object * p_changedObject_,
+            * p_changedTimelineObject_,
+            * p_changedTreeObject_;
+    Sequence * p_changedSequence_;
 
     // ----------- audio ----------------------
 
-    AudioObjectConnections * audioCon_;
+    AudioObjectConnections
+            * p_audioCon_;
 
     // ------------ runtime --------------------
 
-    QReadWriteLock * readWriteLock_;
+    QReadWriteLock * p_readWriteLock_;
 
-    bool isPlayback_, p_lazyFlag_;
+    bool p_isPlayback_, p_lazyFlag_;
 
-    Double sceneTime_;
-    SamplePos samplePos_;
+    Double p_sceneTime_;
+    SamplePos p_samplePos_;
 };
 
 

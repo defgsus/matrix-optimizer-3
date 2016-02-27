@@ -55,8 +55,8 @@ class PluginAO::Private
 
 };
 
-PluginAO::PluginAO(QObject * parent)
-    : AudioObject(parent)
+PluginAO::PluginAO()
+    : AudioObject   ()
     , p_         (new Private(this))
 {
     setName("Plugin");

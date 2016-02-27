@@ -17,8 +17,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Shear)
 
-Shear::Shear(QObject *parent) :
-    Transformation(parent)
+Shear::Shear()
+    : Transformation()
 {
     setName("Shear");
 }

@@ -12,6 +12,7 @@
 
 #include "texturesetting.h"
 #include "object/scene.h"
+#include "object/util/scenesignals.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterselect.h"
@@ -282,10 +283,9 @@ void TextureSetting::initGl()
         if (!scene)
             MO_GL_ERROR("No Scene object for TextureSetting with type TT_MASTER_FRAME");
 
-        /** @todo newobj
-        connect(scene, SIGNAL(sceneFboChanged()),
-                this, SLOT(updateSceneFbo_()));
-        */
+        sceneConnection_ =
+            QObject::connect(scene->sceneSignals(), &SceneSignals::sceneFboChanged,
+                         [=](){ updateSceneFbo_(); });
 
         updateSceneFbo_();
         return;
@@ -298,13 +298,9 @@ void TextureSetting::initGl()
 
 void TextureSetting::releaseGl()
 {
-    Scene * scene = object_->sceneObject();
-    if (scene)
+    if (sceneConnection_)
     {
-        /** @todo newobj
-        disconnect(scene, SIGNAL(sceneFboChanged()),
-                this, SLOT(updateSceneFbo_()));
-                */
+        QObject::disconnect(sceneConnection_);
     }
 
     if (texture_)

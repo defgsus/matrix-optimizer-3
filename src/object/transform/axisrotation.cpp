@@ -19,8 +19,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(AxisRotation)
 
-AxisRotation::AxisRotation(QObject *parent) :
-    Transformation(parent)
+AxisRotation::AxisRotation()
+    : Transformation()
 {
     setName("Rotation");
 }

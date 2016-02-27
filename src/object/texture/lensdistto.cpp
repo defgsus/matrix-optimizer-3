@@ -58,8 +58,8 @@ struct LensDistTO::Private
 };
 
 
-LensDistTO::LensDistTO(QObject *parent)
-    : TextureObjectBase (parent)
+LensDistTO::LensDistTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("LensDistortion");

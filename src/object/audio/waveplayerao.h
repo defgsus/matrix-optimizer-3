@@ -18,7 +18,6 @@ namespace MO {
 /** A straight-forward SoundFile player */
 class WavePlayerAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(WavePlayerAO)
     ~WavePlayerAO();

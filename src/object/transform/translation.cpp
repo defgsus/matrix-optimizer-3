@@ -18,8 +18,8 @@ namespace MO {
 
 MO_REGISTER_OBJECT(Translation)
 
-Translation::Translation(QObject *parent) :
-    Transformation(parent)
+Translation::Translation()
+    : Transformation()
 {
     setName("Translation");
 }

@@ -81,8 +81,8 @@ class WavePlayerAO::Private
 
 
 
-WavePlayerAO::WavePlayerAO(QObject *parent)
-    : AudioObject   (parent),
+WavePlayerAO::WavePlayerAO()
+    : AudioObject   (),
       p_            (new Private(this))
 {
     setName("WavePlayer");

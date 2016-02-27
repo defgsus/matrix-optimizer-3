@@ -50,8 +50,8 @@ class AScriptObject::Private
 };
 
 
-AScriptObject::AScriptObject(QObject *parent)
-    : Object    (parent),
+AScriptObject::AScriptObject()
+    : Object    (),
       p_        (new Private(this))
 {
     setName("AngelScript");

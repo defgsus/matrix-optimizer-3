@@ -32,15 +32,17 @@ GeometryCreator::GeometryCreator(QObject *parent) :
     curGeometry_(0),
     settings_   (new GeometryFactorySettings(0)),
     timer_      (new QTimer(this)),
-    mutex_      (new QMutex()),
+    mutex_      (new QMutex(QMutex::Recursive)),
     doStop_     (false),
     doDiscard_  (false)
 {
     timer_->setSingleShot(false);
     timer_->setInterval(1000 / 10);
-    connect(timer_, SIGNAL(timeout()), this, SLOT(onTimer_()));
+    connect(timer_, SIGNAL(timeout()), this, SLOT(onTimer_()),
+            Qt::QueuedConnection);
 
-    connect(this, SIGNAL(started()), timer_, SLOT(start()));
+    connect(this, SIGNAL(started()), timer_, SLOT(start()),
+            Qt::QueuedConnection);
 }
 
 GeometryCreator::~GeometryCreator()

@@ -19,7 +19,6 @@ namespace MO {
 
 class ModPlayerAO : public AudioObject
 {
-    Q_OBJECT
 public:
     MO_OBJECT_CONSTRUCTOR(ModPlayerAO)
     ~ModPlayerAO();

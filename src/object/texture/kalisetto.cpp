@@ -64,8 +64,8 @@ struct KaliSetTO::Private
 };
 
 
-KaliSetTO::KaliSetTO(QObject *parent)
-    : TextureObjectBase (parent)
+KaliSetTO::KaliSetTO()
+    : TextureObjectBase ()
     , p_                (new Private(this))
 {
     setName("KaliSet");
