@@ -383,7 +383,7 @@ private:
 
     GL::Context * p_glContext_;
 
-    std::vector<bool> p_releaseAllGlRequested_;
+    bool p_releaseAllGlRequested_;
 
     QSize p_fbSize_;
     uint p_fbFormat_;

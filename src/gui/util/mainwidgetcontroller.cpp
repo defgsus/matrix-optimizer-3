@@ -83,6 +83,9 @@
 #   include "script/angelscript.h"
 #   include "script/angelscript_object.h"
 #endif
+#ifdef MO_ENABLE_PYTHON27
+#   include "gui/widget/python27widget.h"
+#endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
 #include "gui/renderdialog.h"
@@ -727,7 +730,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             win->show();
         });
 
-        a = new QAction(tr("Evolution test"), m);
+        a = new QAction(tr("Evolution"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
@@ -846,9 +849,10 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
         {
             auto diag = new QDialog(application()->mainWindow());
             diag->setObjectName("_AngelScriptTest");
-            diag->setMinimumSize(580,740);
+            diag->setWindowTitle(tr("AngelScript test"));
+            diag->setMinimumSize(580,540);
             diag->setAttribute(Qt::WA_DeleteOnClose);
-            //settings()->restoreGeometry(diag);
+            settings()->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
 
             auto script = new AngelScriptWidget(diag);
@@ -858,10 +862,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             l->addWidget(script);
             script->setScriptText(settings()->value("tmp/AngelScript", exampleAngelScript()).toString());
             auto but = new QPushButton(tr("&Run"), diag);
-            //but->setShortcut(Qt::CTRL + Qt::Key_B);
+            but->setShortcut(Qt::ALT + Qt::Key_Return);
             l->addWidget(but);
             connect(but, &QPushButton::clicked, [=]()
             {
+                settings()->storeGeometry(diag);
                 settings()->setValue("tmp/AngelScript", script->scriptText());
                 script->executeScript();
             });
@@ -875,6 +880,36 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             exportAngelScriptFunctions("./angelscript_export.xml");
         });
 #endif
+#endif
+
+#ifdef MO_ENABLE_PYTHON27
+        a = new QAction(tr("Python 2.7 test"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new QDialog(application()->mainWindow());
+            diag->setObjectName("_Python27Test");
+            diag->setWindowTitle(tr("Python 2.7 script"));
+            diag->setMinimumSize(320,320);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            settings()->restoreGeometry(diag);
+            auto l = new QVBoxLayout(diag);
+
+            auto script = new Python27Widget(diag);
+            l->addWidget(script);
+
+            script->setScriptText(settings()->value("tmp/Python27", "").toString());
+            auto but = new QPushButton(tr("&Run"), diag);
+            but->setShortcut(Qt::ALT + Qt::Key_Return);
+            l->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                settings()->storeGeometry(diag);
+                settings()->setValue("tmp/Python27", script->scriptText());
+                script->executeScript();
+            });
+            diag->show();
+        });
 #endif
 
     // ######### VIEW MENU #########

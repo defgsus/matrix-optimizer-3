@@ -38,6 +38,7 @@ namespace IO {
       "glsl",
       "angelscript",
       "equation",
+      "python27",
       "ssw",
       "csg",
       "evo"
@@ -66,6 +67,7 @@ namespace IO {
       QObject::tr("Glsl"),
       QObject::tr("Angelscript"),
       QObject::tr("Equation"),
+      QObject::tr("Python 2.7"),
       QObject::tr("SSW Project"),
       QObject::tr("CSG Tree"),
       QObject::tr("Evolution")
@@ -95,6 +97,7 @@ namespace IO {
         { "glsl", "vert", "frag", "txt", "asc" },
         { "as", "txt", "asc" },
         { "txt", "asc" },
+        { "py" },
         { "uifm" },
         { "xml-csg" },
         { "json" }
@@ -142,6 +145,8 @@ namespace IO {
         { QObject::tr("angelscript source") + " ( *.as *.txt *.asc )",
           QObject::tr("all files (*)") },
         { QObject::tr("equations") + " ( *.txt *.asc )",
+          QObject::tr("all files (*)") },
+        { QObject::tr("python") + " ( *.py )",
           QObject::tr("all files (*)") },
         { QObject::tr("SSW-JSON-Project (*.uifm)") },
         { QObject::tr("xml files ( *.xml *.xml-csg )") },

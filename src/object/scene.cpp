@@ -71,7 +71,7 @@ Scene::Scene() :
     p_sceneSignals_         (new SceneSignals()),
     p_showSceneDesc_        (false),
     p_glContext_            (0),
-    p_releaseAllGlRequested_(0),
+    p_releaseAllGlRequested_(false),
     p_fbSize_               (1024, 1024),
     p_fbFormat_             ((int)gl::GL_RGBA),
     p_fbSizeRequest_        (p_fbSize_),
@@ -98,8 +98,6 @@ Scene::Scene() :
     setName("Scene");
 
     p_readWriteLock_ = new QReadWriteLock(QReadWriteLock::Recursive);
-
-    p_releaseAllGlRequested_.resize(p_sceneNumberThreads_);
 }
 
 Scene::~Scene()
@@ -1039,7 +1037,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
         destroyDeletedObjects_(true);
 
         // release all openGL resources and quit
-        if (p_releaseAllGlRequested_[time.thread()])
+        if (p_releaseAllGlRequested_)
         {
             releaseSceneGl_(time.thread());
 
@@ -1047,7 +1045,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                 if (o->isGlInitialized(time.thread()))
                     o->p_releaseGl_(time.thread());
 
-            p_releaseAllGlRequested_[time.thread()] = false;
+            p_releaseAllGlRequested_ = false;
 
             emit sceneSignals()->glReleased(time.thread());
             return;
@@ -1394,8 +1392,7 @@ void Scene::kill()
         return;
 
     // release opengl resources later in their thread
-    for (uint i=0; i<p_releaseAllGlRequested_.size(); ++i)
-        p_releaseAllGlRequested_[i] = true;
+    p_releaseAllGlRequested_ = true;
 
 #if 1
     // kill now (The calling thread must be GUI thread!)

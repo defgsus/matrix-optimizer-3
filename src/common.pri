@@ -236,7 +236,9 @@ HEADERS += \
     $$PWD/model/evolutionmimedata.h \
     $$PWD/math/kalisetevolution.h \
     $$PWD/tool/brainf.h \
-    $$PWD/tool/generalimage.h
+    $$PWD/tool/generalimage.h \
+    $$PWD/python/2.7/geometrymodule.h \
+    $$PWD/python/2.7/python.h
 
 
 SOURCES += \
@@ -432,5 +434,7 @@ SOURCES += \
     $$PWD/tool/evolutionpool.cpp \
     $$PWD/model/evolutionmimedata.cpp \
     $$PWD/math/kalisetevolution.cpp \
-    $$PWD/tool/generalimage.cpp
+    $$PWD/tool/generalimage.cpp \
+    $$PWD/python/2.7/geometrymodule.cpp \
+    $$PWD/python/2.7/python.cpp
 

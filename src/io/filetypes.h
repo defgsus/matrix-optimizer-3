@@ -43,6 +43,7 @@ namespace IO {
         FT_TEXT_GLSL,
         FT_TEXT_ANGELSCRIPT,
         FT_TEXT_EQUATION,
+        FT_TEXT_PYTHON27,
         FT_SSW_PROJECT,
         FT_CSG_XML,
         FT_EVOLUTION
