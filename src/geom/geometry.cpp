@@ -26,6 +26,7 @@
 #include "math/vector.h"
 #include "math/intersection.h"
 #include "tool/stringmanip.h"
+#include "io/log.h"
 
 using namespace gl;
 
@@ -106,10 +107,12 @@ Geometry::Geometry()
         threshold_      (minimumThreshold),
         p_hash_   (geom_hash_++)
 {
+    //MO_PRINT("Geometry::Geometry()");
 }
 
 Geometry::~Geometry()
 {
+    //MO_PRINT("Geometry::~Geometry()");
     clear();
 }
 

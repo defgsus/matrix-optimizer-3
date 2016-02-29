@@ -131,7 +131,7 @@ HEADERS += \
     $$PWD/widget/evolutionarea.h \
     $$PWD/evolutiondialog.h \
     $$PWD/evolutionbaseviewer.h \
-    $$PWD/widget/python27widget.h
+    $$PWD/widget/python34widget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -262,4 +262,4 @@ SOURCES += \
     $$PWD/widget/evolutionarea.cpp \
     $$PWD/evolutiondialog.cpp \
     $$PWD/evolutionbaseviewer.cpp \
-    $$PWD/widget/python27widget.cpp
+    $$PWD/widget/python34widget.cpp

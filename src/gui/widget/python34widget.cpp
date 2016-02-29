@@ -9,23 +9,22 @@
 */
 
 
-#ifdef MO_ENABLE_PYTHON27
+#ifdef MO_ENABLE_PYTHON34
 
-#include "python27widget.h"
-#include "python/2.7/python.h"
+#include "python34widget.h"
+#include "python/34/python.h"
 #include "tool/syntaxhighlighter.h"
 #include "io/error.h"
 #include "io/log.h"
-
 
 namespace MO {
 namespace GUI {
 
 
-class Python27Widget::Private
+class Python34Widget::Private
 {
 public:
-    Private(Python27Widget * widget)
+    Private(Python34Widget * widget)
         : widget    (widget),
           syn       (0)
     {
@@ -43,60 +42,60 @@ public:
 
     void execute();
 
-    Python27Widget * widget;
+    Python34Widget * widget;
 
     SyntaxHighlighter * syn;
 };
 
 
 
-Python27Widget::Python27Widget(QWidget *parent)
-    : AbstractScriptWidget  (IO::FT_TEXT_PYTHON27, parent),
+Python34Widget::Python34Widget(QWidget *parent)
+    : AbstractScriptWidget  (IO::FT_TEXT_PYTHON34, parent),
       p_                    (new Private(this))
 {
     p_->createObjects();
 }
 
-Python27Widget::~Python27Widget()
+Python34Widget::~Python34Widget()
 {
     delete p_;
 }
 
-void Python27Widget::Private::createObjects()
+void Python34Widget::Private::createObjects()
 {
     if (!syn)
         syn = new SyntaxHighlighter(widget);
-    //syn->initForPython27();
+    //syn->initForPython34();
 
     widget->setSyntaxHighlighter(syn);
 }
 
-QString Python27Widget::getHelpUrl(const QString& token) const
+QString Python34Widget::getHelpUrl(const QString& token) const
 {
-    QString url = "python27.html#" + token.toHtmlEscaped();
+    QString url = "python34.html#" + token.toHtmlEscaped();
     return url;
 }
 
-bool Python27Widget::compile()
+bool Python34Widget::compile()
 {
     return p_->compile();
 }
 
-void Python27Widget::executeScript()
+void Python34Widget::executeScript()
 {
     p_->execute();
 }
 
-bool Python27Widget::Private::compile()
+bool Python34Widget::Private::compile()
 {
     return true;
 }
 
-void Python27Widget::Private::execute()
+void Python34Widget::Private::execute()
 {
     try
     {
-        PYTHON27::PythonInterpreter py;
+        PYTHON34::PythonInterpreter py;
         py.execute(widget->scriptText());
     }
     catch (const Exception& e)
@@ -109,5 +108,5 @@ void Python27Widget::Private::execute()
 } // namespace MO
 
 
-#endif // MO_ENABLE_PYTHON27
+#endif // MO_ENABLE_PYTHON34
 

@@ -238,9 +238,9 @@ HEADERS += \
     $$PWD/tool/brainf.h \
     $$PWD/tool/brainfevolution.h \
     $$PWD/tool/generalimage.h \
-    $$PWD/python/2.7/python.h \
-    $$PWD/python/2.7/python_geometry.h \
-    $$PWD/python/2.7/python_funcs.h
+    $$PWD/python/34/python.h \
+    $$PWD/python/34/python_geometry.h \
+    $$PWD/python/34/python_funcs.h
 
 
 SOURCES += \
@@ -438,7 +438,7 @@ SOURCES += \
     $$PWD/math/kalisetevolution.cpp \
     $$PWD/tool/brainfevolution.cpp \
     $$PWD/tool/generalimage.cpp \
-    $$PWD/python/2.7/python.cpp \
-    $$PWD/python/2.7/python_geometry.cpp \
-    $$PWD/python/2.7/python_funcs.cpp
+    $$PWD/python/34/python.cpp \
+    $$PWD/python/34/python_geometry.cpp \
+    $$PWD/python/34/python_funcs.cpp
 

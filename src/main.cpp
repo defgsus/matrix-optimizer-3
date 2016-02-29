@@ -25,7 +25,7 @@
 #include "engine/clientengine.h"
 #include "maincommandline.h"
 #include "io/diskrendersettings.h"
-#include "python/2.7/python.h"
+#include "python/34/python.h"
 
 void showHelp()
 {
@@ -203,8 +203,8 @@ int main(int argc, char *argv[])
 
     }
 
-#ifdef MO_ENABLE_PYTHON27
-    MO::PYTHON27::finalizePython();
+#ifdef MO_ENABLE_PYTHON34
+    MO::PYTHON34::finalizePython();
 #endif
 
     std::cout << std::endl

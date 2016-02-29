@@ -70,7 +70,7 @@ windows { DEFINES += \
 unix: { DEFINES += \
 # for optirun bug (XXX old and obsolete by now)
         MO_DISABLE_OBJECT_TREE_DRAG \
-        MO_ENABLE_PYTHON27
+        MO_ENABLE_PYTHON34
 }
 
 ##################### libs ############################
@@ -94,7 +94,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -ljpeg -langelscript \
-        -lpython2.7 \
+        -lpython3.4m \
         -lshp -latomic \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking

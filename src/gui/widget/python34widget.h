@@ -8,28 +8,28 @@
     <p>created 2/28/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON27
+#ifdef MO_ENABLE_PYTHON34
 
-#ifndef MOSRC_GUI_WIDGET_PYTHON27WIDGET_H
-#define MOSRC_GUI_WIDGET_PYTHON27WIDGET_H
+#ifndef MOSRC_GUI_WIDGET_PYTHON34WIDGET_H
+#define MOSRC_GUI_WIDGET_PYTHON34WIDGET_H
 
 #include "abstractscriptwidget.h"
 
 namespace MO {
 namespace GUI {
 
-class Python27Widget : public AbstractScriptWidget
+class Python34Widget : public AbstractScriptWidget
 {
     Q_OBJECT
 public:
-    explicit Python27Widget(QWidget *parent = 0);
-    ~Python27Widget();
+    explicit Python34Widget(QWidget *parent = 0);
+    ~Python34Widget();
 
 signals:
 
 public slots:
 
-    /* @throws everything */
+    /** Exceptions are cought and displayed as error message */
     void executeScript();
 
 protected:
@@ -46,6 +46,6 @@ private:
 } // namespace GUI
 } // namespace MO
 
-#endif // PYTHON27WIDGET_H
+#endif // PYTHON34WIDGET_H
 
-#endif // MO_ENABLE_PYTHON27
+#endif // MO_ENABLE_PYTHON34

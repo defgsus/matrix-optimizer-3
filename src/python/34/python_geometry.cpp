@@ -8,10 +8,10 @@
     <p>created 2/28/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON27
+#ifdef MO_ENABLE_PYTHON34
 
-#include <python2.7/Python.h>
-#include <python2.7/structmember.h>
+#include <python3.4/Python.h>
+#include <python3.4/structmember.h>
 
 #include "python_geometry.h"
 #include "python.h"
@@ -31,11 +31,6 @@ namespace
             *val = PyFloat_AsDouble(obj);
             return true;
         }
-        if (PyInt_Check(obj))
-        {
-            *val = PyInt_AsLong(obj);
-            return true;
-        }
         if (PyLong_Check(obj))
         {
             *val = PyLong_AsLong(obj);
@@ -43,38 +38,7 @@ namespace
         }
         return false;
     }
-#if 0
-    bool py_array_to_vec3(PyObject* obj, Vec3* vec)
-    {
-        if (!PySequence_Check(obj))
-        {
-            PyErr_SetString(PyExc_TypeError, "expected float array");
-            return false;
-        }
-        if (PySequence_Size(obj) != 3)
-        {
-            PyErr_SetString(PyExc_ValueError, "invalid size of array");
-            return false;
-        }
-        for (int i=0; i<3; ++i)
-        {
-            PyObject* val = PySequence_GetItem(obj, i);
-            //if (val) MO_PRINT("refcnt: " << val->ob_refcnt);
-            double d;
-            bool worked = py_to_double(val, &d);
-            //MO_PRINT("conv: " << yes);
-            Py_XDECREF(val);
-            if (!worked)
-            {
-                PyErr_SetString(PyExc_TypeError,
-                                "invalid type in array, expected float");
-                return false;
-            }
-            (*vec)[i] = d;
-        }
-        return true;
-    }
-#endif
+
 
     bool py_array_or_tuple_to_vec3(PyObject* obj, Vec3* v)
     {
@@ -91,7 +55,7 @@ namespace
 
 extern "C"
 {
-    struct Python27Geom
+    struct Python34Geom
     {
         PyObject_HEAD
         GEOM::Geometry* geometry;
@@ -99,25 +63,38 @@ extern "C"
         static constexpr const char* docString =
                 "The Geometry object";
 
-        static void dealloc(Python27Geom* self)
+        static void dealloc(Python34Geom* self)
         {
+            //MO_PRINT("Geom dealloc");
             if (self->geometry)
                 self->geometry->releaseRef();
-            self->ob_type->tp_free((PyObject*)self);
+            self->ob_base.ob_type->tp_free((PyObject*)self);
         }
 
-        static int init(Python27Geom* self, PyObject* args, PyObject* kwds)
+        static int init(Python34Geom* self, PyObject* args, PyObject*)
         {
-            if (self->geometry)
-                self->geometry->releaseRef();
-            self->geometry = new GEOM::Geometry;
+            auto owngeom = self->geometry;
+
+            PyObject* obj = 0;
+            PyArg_ParseTuple(args, "|O", &obj);
+            if (obj && 0==strcmp(obj->ob_type->tp_name, "matrixoptimizer.Geometry"))
+            {
+                auto other = reinterpret_cast<Python34Geom*>(obj);
+                self->geometry = other->geometry;
+                self->geometry->addRef();
+            }
+            else
+                self->geometry = new GEOM::Geometry;
+
+            if (owngeom)
+                owngeom->releaseRef();
 
             return 0;
         }
 
         static PyObject* newfunc(PyTypeObject* type, PyObject* args, PyObject* kwds)
         {
-            Python27Geom* self = (Python27Geom*)type->tp_alloc(type, 0);
+            Python34Geom* self = (Python34Geom*)type->tp_alloc(type, 0);
 
             if (self != NULL)
             {
@@ -125,11 +102,11 @@ extern "C"
                 init(self, args, kwds);
             }
 
-            return (PyObject*)self;
+            return reinterpret_cast<PyObject*>(self);
         }
     };
 
-    struct Python27GeomFuncs
+    struct Python34GeomFuncs
     {
         #define MO__GETGEOM(name__) \
             if (self == nullptr) \
@@ -137,7 +114,9 @@ extern "C"
                 PyErr_SetString(PyExc_RuntimeError, "self is NULL"); \
                 return NULL; \
             } \
-            auto name__ = reinterpret_cast<Python27Geom*>(self);
+            auto name__ = reinterpret_cast<Python34Geom*>(self); \
+            if (name__->geometry == nullptr) \
+                { Py_RETURN_NONE; }
 
         static PyObject* num_vertices(PyObject* self, PyObject* )
         {
@@ -152,6 +131,7 @@ extern "C"
             str += QString(" (refcnt:%1)").arg(self->ob_refcnt);
             return Py_BuildValue("s", str.toLatin1().constData());
         }
+        static PyObject* repr(PyObject* self) { return to_string(self, nullptr); }
 
         static PyObject* add_vertex(PyObject* self, PyObject* obj)
         {
@@ -168,76 +148,78 @@ extern "C"
         #undef MO__GETGEOM
     };
 
-    PyMemberDef Python27Geom_members[] =
+    PyMemberDef Python34Geom_members[] =
     {
         { NULL, 0, 0, 0, NULL }
     };
 
-    PyMethodDef Python27Geom_methods[] =
+    PyMethodDef Python34Geom_methods[] =
     {
-        { "__str__",
-          (PyCFunction)Python27GeomFuncs::to_string,
+        { "to_string",
+          (PyCFunction)Python34GeomFuncs::to_string,
           METH_NOARGS,
+          "to_string() -> string\n"
           "Returns an informative string"
         },
 
         { "num_vertices",
-          (PyCFunction)Python27GeomFuncs::num_vertices,
+          (PyCFunction)Python34GeomFuncs::num_vertices,
           METH_NOARGS,
-          "Returns the number of vertices defined"
+          "num_vertices() -> long\n"
+          "Returns the number of vertices"
         },
 
         { "add_vertex",
-          (PyCFunction)Python27GeomFuncs::add_vertex,
+          (PyCFunction)Python34GeomFuncs::add_vertex,
           METH_VARARGS,
-          "Adds a new vertex. "
-          "Function arguments can either be 3 floats or a list of three floats."
+          "add_vertex(f, f, f) -> self\n"
+          "add_vertex([f, f, f]) -> self\n"
+          "Adds a new vertex"
         },
 
         { NULL, NULL, 0, NULL }
     };
 
 
-    static PyTypeObject Python27Geom_type = {
-        PyObject_HEAD_INIT(NULL)
-        0,                         /*ob_size*/
+    static PyTypeObject Python34Geom_type = {
+        PyVarObject_HEAD_INIT(NULL, 0)
         "matrixoptimizer.Geometry",/*tp_name*/
-        sizeof(Python27Geom),      /*tp_basicsize*/
+        sizeof(Python34Geom),      /*tp_basicsize*/
         0,                         /*tp_itemsize*/
-        (destructor)Python27Geom::dealloc,/*tp_dealloc*/
+        (destructor)Python34Geom::dealloc,/*tp_dealloc*/
         0,                         /*tp_print*/
         0,                         /*tp_getattr*/
         0,                         /*tp_setattr*/
-        0,                         /*tp_compare*/
+        0,                         /*tp_reserved*/
         0,                         /*tp_repr*/
         0,                         /*tp_as_number*/
         0,                         /*tp_as_sequence*/
         0,                         /*tp_as_mapping*/
         0,                         /*tp_hash */
         0,                         /*tp_call*/
-        0,                         /*tp_str*/
+        Python34GeomFuncs::repr,   /*tp_str*/
         0,                         /*tp_getattro*/
         0,                         /*tp_setattro*/
         0,                         /*tp_as_buffer*/
         Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-        Python27Geom::docString,             /* tp_doc */
+        Python34Geom::docString,   /* tp_doc */
         0,		               /* tp_traverse */
         0,		               /* tp_clear */
         0,		               /* tp_richcompare */
         0,		               /* tp_weaklistoffset */
         0,		               /* tp_iter */
         0,		               /* tp_iternext */
-        Python27Geom_methods,             /* tp_methods */
-        Python27Geom_members,             /* tp_members */
+        Python34Geom_methods,      /* tp_methods */
+        Python34Geom_members,      /* tp_members */
         0,                         /* tp_getset */
         0,                         /* tp_base */
         0,                         /* tp_dict */
         0,                         /* tp_descr_get */
         0,                         /* tp_descr_set */
         0,                         /* tp_dictoffset */
-        (initproc)Python27Geom::init,      /* tp_init */
+        (initproc)Python34Geom::init,      /* tp_init */
         0,                         /* tp_alloc */
-        (newfunc)Python27Geom::newfunc,       /* tp_new */
+        (newfunc)Python34Geom::newfunc,       /* tp_new */
         0, /*tp_free*/
         0, /*tp_is_gc*/
         0, /*tp_bases*/
@@ -247,6 +229,7 @@ extern "C"
         0, /*tp_weaklist*/
         0, /*tp_del*/
         0, /*tp_version_tag*/
+        0, /*tp_finalize*/
     #ifdef COUNT_ALLOCS
         0, /*tp_allocs*/
         0, /*tp_frees*/
@@ -259,35 +242,39 @@ extern "C"
 } // extern "C"
 
 
-namespace PYTHON27 {
+namespace PYTHON34 {
 
 void initGeometry(void* mod)
 {
     PyObject* module = reinterpret_cast<PyObject*>(mod);
 
-    if (0 != PyType_Ready(&Python27Geom_type))
+    if (0 != PyType_Ready(&Python34Geom_type))
         MO_ERROR("Failed to readify Geometry object with Python 2.7");
 
-    Py_INCREF(&Python27Geom_type);
-    if (0 != PyModule_AddObject(module, "Geometry", (PyObject*)&Python27Geom_type))
+
+    PyObject* object = reinterpret_cast<PyObject*>(&Python34Geom_type);
+    //PyObject* object = reinterpret_cast<PyObject*>(createGeometryObject(nullptr));
+    Py_INCREF(object);
+    if (0 != PyModule_AddObject(module, "Geometry", object))
     {
-        Py_DECREF(&Python27Geom_type);
+        Py_DECREF(object);
         MO_ERROR("Failed to add Geometry object to Python 2.7");
     }
 
-    //auto ins = PyInstance_New((PyObject*)&Python27Geom_type, NULL, NULL);
+    //auto ins = PyInstance_New((PyObject*)&Python34Geom_type, NULL, NULL);
     //PyModule_AddObject(module, "k", ins);
 }
 
 void* createGeometryObject(MO::GEOM::Geometry* geom)
 {
-    auto pgeom = PyObject_New(Python27Geom, &Python27Geom_type);
+    auto pgeom = PyObject_New(Python34Geom, &Python34Geom_type);
     pgeom->geometry = geom;
+    pgeom->geometry->addRef();
     return pgeom;
 }
 
-} // namespace PYTHON27
+} // namespace PYTHON34
 } // namespace MO
 
-#endif // MO_ENABLE_PYTHON27
+#endif // MO_ENABLE_PYTHON34
 

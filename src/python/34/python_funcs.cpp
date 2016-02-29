@@ -8,28 +8,29 @@
     <p>created 2/29/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON27
+#ifdef MO_ENABLE_PYTHON34
 
-#include <python2.7/Python.h>
+#include <python3.4/Python.h>
 
 #include "python_funcs.h"
 #include "python_geometry.h"
 #include "python.h"
 #include "geom/geometry.h"
+#include "io/log.h"
 
 namespace MO {
-namespace PYTHON27 {
+namespace PYTHON34 {
 
 extern "C" {
 
-struct Python27Funcs
+struct Python34Funcs
 {
-    static PyObject* geometry(PyObject* self, PyObject*)
+    static PyObject* geometry(PyObject* , PyObject*)
     {
-        if (self)
-        if (auto geom = reinterpret_cast<PythonInterpreter*>(self)->geometry())
+        if (auto inter = PythonInterpreter::current())
+        if (inter->geometry())
         {
-            auto pgeom = createGeometryObject(geom);
+            auto pgeom = createGeometryObject(inter->geometry());
             return reinterpret_cast<PyObject*>(pgeom);
         }
         Py_RETURN_NONE;
@@ -44,7 +45,7 @@ void* pythonFuncs()
     static PyMethodDef methods[] =
     {
         { "geometry",
-          (PyCFunction)Python27Funcs::geometry,
+          (PyCFunction)Python34Funcs::geometry,
           METH_NOARGS,
           "Returns the current Geometry instance, if any."
         },
@@ -55,7 +56,7 @@ void* pythonFuncs()
     return &methods;
 }
 
-} // namespace PYTHON27
+} // namespace PYTHON34
 } // namespace MO
 
-#endif // MO_ENABLE_PYTHON27
+#endif // MO_ENABLE_PYTHON34

@@ -8,17 +8,22 @@
     <p>created 2/28/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON27
+#ifdef MO_ENABLE_PYTHON34
 
-#ifndef MOSRC_PYTHON_27_PYTHON_H
-#define MOSRC_PYTHON_27_PYTHON_H
+#ifndef MOSRC_PYTHON_34_PYTHON_H
+#define MOSRC_PYTHON_34_PYTHON_H
 
 #include <QString>
 
 namespace MO {
 namespace GEOM { class Geometry; }
-namespace PYTHON27 {
+namespace PYTHON34 {
 
+    /** Python 3.4 interpreter.
+        This class wraps an interpreter instance
+        and associates state to it.
+        @todo Not tested with multiple instances yet
+    */
     class PythonInterpreter
     {
     public:
@@ -32,6 +37,10 @@ namespace PYTHON27 {
         void clear();
 
         // ----------- state ------------
+
+        /** Returns the current Interpreter that runs
+            the PyThreadState, or NULL */
+        static PythonInterpreter* current();
 
         void setGeometry(MO::GEOM::Geometry*);
         MO::GEOM::Geometry* geometry() const;
@@ -50,9 +59,9 @@ namespace PYTHON27 {
     void finalizePython();
 
 
-} // namespace PYTHON27
+} // namespace PYTHON34
 } // namespace MO
 
-#endif // MOSRC_PYTHON_27_PYTHON_H
+#endif // MOSRC_PYTHON_34_PYTHON_H
 
-#endif // #ifdef MO_ENABLE_PYTHON27
+#endif // #ifdef MO_ENABLE_PYTHON34

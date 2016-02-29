@@ -83,8 +83,8 @@
 #   include "script/angelscript.h"
 #   include "script/angelscript_object.h"
 #endif
-#ifdef MO_ENABLE_PYTHON27
-#   include "gui/widget/python27widget.h"
+#ifdef MO_ENABLE_PYTHON34
+#   include "gui/widget/python34widget.h"
 #endif
 #include "gui/util/scenesettings.h"
 #include "gui/texteditdialog.h"
@@ -882,30 +882,30 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 #endif
 #endif
 
-#ifdef MO_ENABLE_PYTHON27
-        a = new QAction(tr("Python 2.7 test"), m);
+#ifdef MO_ENABLE_PYTHON34
+        a = new QAction(tr("Python 3.4"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
         {
             auto diag = new QDialog(application()->mainWindow());
-            diag->setObjectName("_Python27Test");
-            diag->setWindowTitle(tr("Python 2.7 script"));
+            diag->setObjectName("_Python34Test");
+            diag->setWindowTitle(tr("Python 3.4 script"));
             diag->setMinimumSize(320,320);
             diag->setAttribute(Qt::WA_DeleteOnClose);
             settings()->restoreGeometry(diag);
             auto l = new QVBoxLayout(diag);
 
-            auto script = new Python27Widget(diag);
+            auto script = new Python34Widget(diag);
             l->addWidget(script);
 
-            script->setScriptText(settings()->value("tmp/Python27", "").toString());
+            script->setScriptText(settings()->value("tmp/Python34", "").toString());
             auto but = new QPushButton(tr("&Run"), diag);
             but->setShortcut(Qt::ALT + Qt::Key_Return);
             l->addWidget(but);
             connect(but, &QPushButton::clicked, [=]()
             {
                 settings()->storeGeometry(diag);
-                settings()->setValue("tmp/Python27", script->scriptText());
+                settings()->setValue("tmp/Python34", script->scriptText());
                 script->executeScript();
             });
             diag->show();
