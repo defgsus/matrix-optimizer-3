@@ -97,11 +97,31 @@ void Python34Widget::Private::execute()
     {
         PYTHON34::PythonInterpreter py;
         py.execute(widget->scriptText());
+        widget->setErrorFrom(&py);
     }
     catch (const Exception& e)
     {
         widget->addCompileMessage(0, M_ERROR, e.what());
     }
+}
+
+void Python34Widget::setErrorFrom(const PYTHON34::PythonInterpreter* inter)
+{
+    QString outp = inter->errorOutput();
+    if (outp.isEmpty())
+        return;
+
+    int ln = 0;
+    int idx = outp.indexOf(", line");
+    if (idx > 0)
+    {
+        idx += 7;
+        int idx2 = outp.indexOf(" ", idx);
+        if (idx2 > 0)
+            ln = outp.mid(idx, idx2-idx).toInt();
+    }
+
+    addCompileMessage(ln, M_ERROR, outp);
 }
 
 } // namespace GUI

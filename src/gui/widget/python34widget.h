@@ -16,6 +16,7 @@
 #include "abstractscriptwidget.h"
 
 namespace MO {
+namespace PYTHON34 { class PythonInterpreter; }
 namespace GUI {
 
 class Python34Widget : public AbstractScriptWidget
@@ -31,6 +32,10 @@ public slots:
 
     /** Exceptions are cought and displayed as error message */
     void executeScript();
+
+    /** Sets the error messages from the interpreter,
+        if there are any. */
+    void setErrorFrom(const PYTHON34::PythonInterpreter*);
 
 protected:
 

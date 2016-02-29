@@ -15,6 +15,7 @@
 #include "python.h"
 #include "python_funcs.h"
 #include "python_geometry.h"
+#include "python_output.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -67,7 +68,8 @@ void initPython()
     }
 }
 
-/** @todo Py_Finalize() crashes for Python 3.4 */
+/** @todo Py_Finalize() crashes for Python 3.4
+    when using Py_NewInstance() / Py_EndInstance() */
 void finalizePython()
 {
     //if (Py_IsInitialized())
@@ -84,9 +86,13 @@ struct PythonInterpreter::Private
         , curGeom       (0)
     { }
 
+    void setup();
+
     PythonInterpreter* p;
     PyThreadState* threadState;
     PyObject* module;
+
+    QString output, errorOutput;
 
     GEOM::Geometry* curGeom;
 };
@@ -102,6 +108,9 @@ PythonInterpreter::~PythonInterpreter()
     delete p_;
 }
 
+const QString& PythonInterpreter::output() const { return p_->output; }
+const QString& PythonInterpreter::errorOutput() const { return p_->errorOutput; }
+
 void PythonInterpreter::clear()
 {
     if (p_->threadState)
@@ -109,6 +118,8 @@ void PythonInterpreter::clear()
         Py_EndInterpreter(p_->threadState);
         p_->threadState = 0;
     }
+    p_->output.clear();
+    p_->errorOutput.clear();
 }
 
 PythonInterpreter* PythonInterpreter::current()
@@ -136,6 +147,48 @@ PythonInterpreter* PythonInterpreter::current()
 void PythonInterpreter::setGeometry(GEOM::Geometry* geom) { p_->curGeom = geom; }
 MO::GEOM::Geometry* PythonInterpreter::geometry() const { return p_->curGeom; }
 
+void PythonInterpreter::Private::setup()
+{
+    initPython();
+
+    if (!threadState)
+    {
+        try
+        {
+            threadState = Py_NewInterpreter();
+            if (!threadState)
+                MO_ERROR("Could not create Python 2.7 interpreter");
+
+            // -- store interpreter instance in threadstate dict --
+
+            auto dict = PyThreadState_GetDict();
+            if (!dict)
+                MO_ERROR("Can't access Python thread state");
+
+            // wrap pointer to this class in PyCapsule
+            auto caps = PyCapsule_New(p, "interpreter", NULL);
+            if (!caps)
+                MO_ERROR("Failed to init Python interpreter capsule");
+            PyDict_SetItemString(dict, "matrixoptimizer-interpreter", caps);
+
+            // redirect output
+            for (int i=0; i<2; ++i)
+            {
+                auto outp = reinterpret_cast<PyObject*>(createOutputObject(p, i==0));
+                if (!outp)
+                    MO_ERROR("Failed to create output redirection object for Python");
+                if (0 != PySys_SetObject(i==0? "stderr" : "stdout", outp))
+                    MO_ERROR("Failed to install output redirection for Python");
+            }
+        }
+        catch (...)
+        {
+            p->clear();
+            throw;
+        }
+    }
+}
+
 void PythonInterpreter::execute(const QString& str)
 {
     auto utf8 = str.toUtf8();
@@ -145,31 +198,7 @@ void PythonInterpreter::execute(const QString& str)
 
 void PythonInterpreter::execute(const char* utf8)
 {
-    initPython();
-
-    if (!p_->threadState)
-    {
-        p_->threadState = Py_NewInterpreter();
-        if (!p_->threadState)
-            MO_ERROR("Could not create Python 2.7 interpreter");
-
-        // -- store interpreter instance in threadstate dict --
-
-        auto dict = PyThreadState_GetDict();
-        if (!dict)
-        {
-            clear();
-            MO_ERROR("Can't access Python thread state");
-        }
-
-        auto caps = PyCapsule_New(this, "interpreter", NULL);
-        if (!caps)
-        {
-            clear();
-            MO_ERROR("Failed to init Python interpreter capsule");
-        }
-        PyDict_SetItemString(dict, "matrixoptimizer-interpreter", caps);
-    }
+    p_->setup();
 
     // --- execute ---
 
@@ -177,10 +206,16 @@ void PythonInterpreter::execute(const char* utf8)
     flags.cf_flags = PyCF_SOURCE_IS_UTF8;
 
     PyRun_SimpleStringFlags(utf8, &flags);
-
-    std::cout.flush();
-    std::cerr.flush();
 }
+
+void PythonInterpreter::write(const char *utf8, bool error)
+{
+    if (error)
+        p_->errorOutput += QString::fromUtf8(utf8);
+    else
+        p_->output += QString::fromUtf8(utf8);
+}
+
 
 } // namespace PYTHON34
 } // namespace MO

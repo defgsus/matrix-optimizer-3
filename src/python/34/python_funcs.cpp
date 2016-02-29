@@ -47,6 +47,7 @@ void* pythonFuncs()
         { "geometry",
           (PyCFunction)Python34Funcs::geometry,
           METH_NOARGS,
+          "geometry() -> Geometry | None\n"
           "Returns the current Geometry instance, if any."
         },
 

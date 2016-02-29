@@ -36,6 +36,11 @@ namespace PYTHON34 {
         /** Deletes the current interpreter */
         void clear();
 
+        /** The current runtime output */
+        const QString& output() const;
+        /** The current runtime error output */
+        const QString& errorOutput() const;
+
         // ----------- state ------------
 
         /** Returns the current Interpreter that runs
@@ -44,6 +49,10 @@ namespace PYTHON34 {
 
         void setGeometry(MO::GEOM::Geometry*);
         MO::GEOM::Geometry* geometry() const;
+
+        // ------- output callback ------
+
+        void write(const char* utf8, bool error = false);
 
     private:
         struct Private;

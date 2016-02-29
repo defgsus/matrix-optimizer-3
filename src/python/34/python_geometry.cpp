@@ -49,6 +49,17 @@ namespace
             return true;
         return false;
     }
+
+    bool py_array_or_tuple_to_uint2(PyObject* obj,
+                                    unsigned long* v1, unsigned long* v2)
+    {
+        if (PyArg_ParseTuple(obj, "(kk)", v1, v2))
+            return true;
+        PyErr_Clear();
+        if (PyArg_ParseTuple(obj, "kk", v1, v2))
+            return true;
+        return false;
+    }
 }
 
 
@@ -139,11 +150,25 @@ extern "C"
             if (!py_array_or_tuple_to_vec3(obj, &v))
                 return NULL;
             MO__GETGEOM(pgeom);
-            pgeom->geometry->addVertex(v);
-            Py_INCREF(self);
-            return self;
+            auto i = pgeom->geometry->addVertex(v);
+            return Py_BuildValue("n", i);
         }
 
+        static PyObject* add_line(PyObject* self, PyObject* obj)
+        {
+            unsigned long i1, i2;
+            if (!py_array_or_tuple_to_uint2(obj, &i1, &i2))
+                return NULL;
+            MO__GETGEOM(pgeom);
+            if (i1 >= pgeom->geometry->numVertices()
+             || i2 >= pgeom->geometry->numVertices())
+            {
+                PyErr_SetString(PyExc_IndexError, "index out of range");
+                return NULL;
+            }
+            pgeom->geometry->addLine(i1, i2);
+            Py_RETURN_NONE;
+        }
 
         #undef MO__GETGEOM
     };
@@ -172,9 +197,20 @@ extern "C"
         { "add_vertex",
           (PyCFunction)Python34GeomFuncs::add_vertex,
           METH_VARARGS,
-          "add_vertex(f, f, f) -> self\n"
-          "add_vertex([f, f, f]) -> self\n"
-          "Adds a new vertex"
+          "add_vertex(f, f, f) -> long\n"
+          "add_vertex([f, f, f]) -> long\n"
+          "Adds a new vertex. The returned value is the index of the vertex. "
+          "For unshared geometries this value is equal to num_vertices() - 1, "
+          "for shared geometries the vertex might have been present already "
+          "and it's index is returned."
+        },
+
+        { "add_line",
+          (PyCFunction)Python34GeomFuncs::add_line,
+          METH_VARARGS,
+          "add_line(long, long) -> None\n"
+          "add_line([long, long]) -> None\n"
+          "Adds a line between two vertices."
         },
 
         { NULL, NULL, 0, NULL }
