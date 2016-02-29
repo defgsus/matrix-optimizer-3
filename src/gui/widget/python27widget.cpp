@@ -94,9 +94,15 @@ bool Python27Widget::Private::compile()
 
 void Python27Widget::Private::execute()
 {
-    auto utf8 = widget->scriptText().toUtf8();
-    const char * src = utf8.constData();
-    executePython27(src);
+    try
+    {
+        PYTHON27::PythonInterpreter py;
+        py.execute(widget->scriptText());
+    }
+    catch (const Exception& e)
+    {
+        widget->addCompileMessage(0, M_ERROR, e.what());
+    }
 }
 
 } // namespace GUI
