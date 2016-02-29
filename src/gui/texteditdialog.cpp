@@ -20,6 +20,7 @@
 #include "widget/equationeditor.h"
 #include "widget/angelscriptwidget.h"
 #include "widget/glslwidget.h"
+#include "widget/python34widget.h"
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
 #include "script/angelscript_object.h"
@@ -39,6 +40,7 @@ QString textTypeId(TextType tt)
         case TT_APP_STYLESHEET: return "css";
         case TT_ANGELSCRIPT: return "angelscript";
         case TT_GLSL: return "glsl";
+        case TT_PYTHON34: return "python34";
         case TT_OBJECT_WILDCARD: return "wildcard";
     }
     return QString();
@@ -150,7 +152,9 @@ QString TextEditDialog::getText() const
         case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
         case TT_GLSL:
-        case TT_ANGELSCRIPT: return p_->scriptEdit->scriptText();
+        case TT_ANGELSCRIPT:
+        case TT_PYTHON34:
+            return p_->scriptEdit->scriptText();
     }
 
     return QString();
@@ -169,7 +173,9 @@ void TextEditDialog::setText(const QString & text, bool send_signal)
         case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
         case TT_GLSL:
-        case TT_ANGELSCRIPT: p_->scriptEdit->setScriptText(text); break;
+        case TT_ANGELSCRIPT:
+        case TT_PYTHON34:
+            p_->scriptEdit->setScriptText(text); break;
     }
 
     if (send_signal)
@@ -253,6 +259,18 @@ void TextEditDialog::Private::createWidgets()
                 });
             }
             break;
+
+            case TT_PYTHON34:
+            {
+                auto py = new Python34Widget(dialog);
+                lv->addWidget(py);
+                scriptEdit = py;
+                //scriptEdit->setReadOnly(readOnly);
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emit dialog->textChanged();
+                });
+            }
         }
 
         auto lh = new QHBoxLayout();

@@ -279,7 +279,6 @@ void QVariantWidget::Private::createWidgets()
                         layout->addWidget(b);
                         connect(b, &QToolButton::clicked, [=]()
                         {
-                            /** @todo script engines need to be passed to dialog */
                             auto diag = new TextEditDialog(
                                         TextType(subtype & Properties::subTypeMask), widget);
                             diag->setAttribute(Qt::WA_DeleteOnClose);

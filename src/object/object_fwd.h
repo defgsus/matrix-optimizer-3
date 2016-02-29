@@ -20,6 +20,7 @@ namespace MO {
         TT_EQUATION,
         TT_APP_STYLESHEET,
         TT_ANGELSCRIPT,
+        TT_PYTHON34,
         TT_GLSL,
         TT_OBJECT_WILDCARD
     };
