@@ -235,7 +235,8 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
     }
 
     scene_->addObject(parent, newChild,
-                      ObjectFactory::getBestInsertIndex(parent, newChild, insert_index)
+                      insert_index
+                      //ObjectFactory::getBestInsertIndex(parent, newChild, insert_index)
                       );
 
     emit objectAdded(newChild);

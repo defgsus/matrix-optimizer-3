@@ -855,7 +855,7 @@ bool Object::isSaveToAdd(Object *o, QString &error) const
         if (auto s = sceneObject())
             if (s->clipController())
             {
-                error = tr("Only one clipcontainer allowed per scene");
+                error = tr("Only one ClipController allowed per scene");
                 return false;
             }
 

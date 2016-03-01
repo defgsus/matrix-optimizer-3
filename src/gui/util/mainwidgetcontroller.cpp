@@ -687,6 +687,38 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             diag->show();
         });
 #endif
+
+
+#ifdef MO_ENABLE_PYTHON34
+        a = new QAction(tr("Python Script"), m);
+        m->addAction(a);
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto diag = new QDialog(application()->mainWindow());
+            diag->setObjectName("_Python34Test");
+            diag->setWindowTitle(tr("Python 3.4 script"));
+            diag->setMinimumSize(320,320);
+            diag->setAttribute(Qt::WA_DeleteOnClose);
+            settings()->restoreGeometry(diag);
+            auto l = new QVBoxLayout(diag);
+
+            auto script = new Python34Widget(diag);
+            l->addWidget(script);
+
+            script->setScriptText(settings()->value("tmp/Python34", "").toString());
+            auto but = new QPushButton(tr("&Run"), diag);
+            but->setShortcut(Qt::ALT + Qt::Key_Return);
+            l->addWidget(but);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                settings()->storeGeometry(diag);
+                settings()->setValue("tmp/Python34", script->scriptText());
+                script->executeScript();
+            });
+            diag->show();
+        });
+#endif
+
         a = new QAction(tr("Batch scene converter"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -882,35 +914,6 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 #endif
 #endif
 
-#ifdef MO_ENABLE_PYTHON34
-        a = new QAction(tr("Python 3.4"), m);
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=]()
-        {
-            auto diag = new QDialog(application()->mainWindow());
-            diag->setObjectName("_Python34Test");
-            diag->setWindowTitle(tr("Python 3.4 script"));
-            diag->setMinimumSize(320,320);
-            diag->setAttribute(Qt::WA_DeleteOnClose);
-            settings()->restoreGeometry(diag);
-            auto l = new QVBoxLayout(diag);
-
-            auto script = new Python34Widget(diag);
-            l->addWidget(script);
-
-            script->setScriptText(settings()->value("tmp/Python34", "").toString());
-            auto but = new QPushButton(tr("&Run"), diag);
-            but->setShortcut(Qt::ALT + Qt::Key_Return);
-            l->addWidget(but);
-            connect(but, &QPushButton::clicked, [=]()
-            {
-                settings()->storeGeometry(diag);
-                settings()->setValue("tmp/Python34", script->scriptText());
-                script->executeScript();
-            });
-            diag->show();
-        });
-#endif
 
     // ######### VIEW MENU #########
     viewMenu_ = m = new QMenu("View", menuBar);

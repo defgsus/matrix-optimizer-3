@@ -212,9 +212,9 @@ int main(int argc, char *argv[])
         << "peak memory: " << MO::Memory::peak()
         << ", lost = " << MO::Memory::lost() << "\n"
 #endif
-#ifndef NDEBUG
+//#ifndef NDEBUG
         << "bis später"
-#endif
+//#endif
         << std::endl;
 
     return ret;
