@@ -15,8 +15,12 @@
 
 namespace MO {
 namespace PYTHON34 {
-class PythonInterpreter;
 
+    class PythonInterpreter;
+
+    /** Creates a sys.stdout/stderr compatible object.
+        Its output is forwarded to PythonInterpreter::write().
+        @returns PyObject* */
     void* createOutputObject(PythonInterpreter*, bool error);
 
 } // namespace PYTHON34

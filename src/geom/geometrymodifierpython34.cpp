@@ -34,7 +34,9 @@ GeometryModifierPython34::GeometryModifierPython34()
             "# get the current geometry instance\n"
             "g = mo.geometry()\n\n"
             "# and do something with it\n"
-            "g.add_vertex(1, 2, 3)\n"
+            "i1 = g.add_vertex(0, 0, 0)\n"
+            "i2 = g.add_vertex(5, 5, 0)\n"
+            "g.add_line(i1, i2)\n"
             "\n";
 
     properties().set(
@@ -42,16 +44,15 @@ GeometryModifierPython34::GeometryModifierPython34()
         QObject::tr("A piece of code to freely create/modify the geometry"),
         script);
     properties().setSubType("script", Properties::ST_TEXT | TT_PYTHON34);
+    /*
     properties().setWidgetCallback("script", [](QWidget*w)
     {
-        /*
         if (auto te = dynamic_cast<GUI::TextEditDialog*>(w))
             if (auto as = te->getWidgetAngelScript())
                 as->setScriptEngine(
                     GeometryEngineAS::createNullEngine(true) );
-        */
     });
-
+    */
 }
 
 QString GeometryModifierPython34::statusTip() const

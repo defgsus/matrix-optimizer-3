@@ -20,6 +20,7 @@
 #include "equationeditor.h"
 #include "angelscriptwidget.h"
 #include "glslwidget.h"
+#include "python34widget.h"
 #include "tool/syntaxhighlighter.h"
 #include "script/angelscript.h"
 #include "script/angelscript_object.h"
@@ -111,7 +112,9 @@ QString TextEditWidget::getText() const
         case TT_APP_STYLESHEET: return p_->plainText->toPlainText();
         case TT_EQUATION: return p_->equEdit->toPlainText();
         case TT_GLSL:
-        case TT_ANGELSCRIPT: return p_->scriptEdit->scriptText();
+        case TT_ANGELSCRIPT:
+        case TT_PYTHON34:
+            return p_->scriptEdit->scriptText();
     }
 
     return QString();
@@ -130,7 +133,9 @@ void TextEditWidget::setText(const QString & text, bool send_signal)
         case TT_APP_STYLESHEET: p_->plainText->setText(text); break;
         case TT_EQUATION: p_->equEdit->setPlainText(text); break;
         case TT_GLSL:
-        case TT_ANGELSCRIPT: p_->scriptEdit->setScriptText(text); break;
+        case TT_ANGELSCRIPT:
+        case TT_PYTHON34:
+            p_->scriptEdit->setScriptText(text); break;
     }
 
     if (send_signal)
@@ -189,6 +194,18 @@ void TextEditWidget::Private::createWidgets()
                 auto glsl = new GlslWidget(widget);
                 lv->addWidget(glsl);
                 scriptEdit = glsl;
+                connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
+                {
+                    emitTextChanged();
+                });
+            }
+            break;
+
+            case TT_PYTHON34:
+            {
+                auto pydit = new Python34Widget(widget);
+                lv->addWidget(pydit);
+                scriptEdit = pydit;
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
                     emitTextChanged();

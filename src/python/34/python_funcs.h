@@ -16,8 +16,10 @@
 namespace MO {
 namespace PYTHON34 {
 
-/** Returns a PyMethodDef pointer */
-void* pythonFuncs();
+    /** Returns a PyMethodDef pointer.
+        The struct contains all global functions that
+        belong to the matrixoptimizer module. */
+    void* pythonFuncs();
 
 } // namespace PYTHON34
 } // namespace MO

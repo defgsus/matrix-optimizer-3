@@ -111,13 +111,18 @@ void Python34Widget::setErrorFrom(const PYTHON34::PythonInterpreter* inter)
     if (outp.isEmpty())
         return;
 
+    /* Find the line number in the python message.
+       XXX Currently this only captures the first error,
+       don't know if there are more possible */
     int ln = 0;
     int idx = outp.indexOf(", line");
     if (idx > 0)
     {
         idx += 7;
-        int idx2 = outp.indexOf(" ", idx);
-        if (idx2 > 0)
+        int idx2 = idx;
+        while (idx2 < outp.size() && outp[idx2].isDigit())
+            ++idx2;
+        if (idx2 > idx)
             ln = outp.mid(idx, idx2-idx).toInt();
     }
 

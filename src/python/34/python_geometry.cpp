@@ -119,15 +119,17 @@ extern "C"
 
     struct Python34GeomFuncs
     {
-        #define MO__GETGEOM(name__) \
+        #define MO__GETGEOM0(name__) \
             if (self == nullptr) \
             { \
                 PyErr_SetString(PyExc_RuntimeError, "self is NULL"); \
                 return NULL; \
             } \
-            auto name__ = reinterpret_cast<Python34Geom*>(self); \
-            if (name__->geometry == nullptr) \
-                { Py_RETURN_NONE; }
+            auto name__ = reinterpret_cast<Python34Geom*>(self);
+
+        #define MO__GETGEOM(name__) \
+            MO__GETGEOM0(name__) \
+            if (name__->geometry == nullptr) { Py_RETURN_NONE; }
 
         static PyObject* num_vertices(PyObject* self, PyObject* )
         {
@@ -137,7 +139,9 @@ extern "C"
 
         static PyObject* to_string(PyObject* self, PyObject* )
         {
-            MO__GETGEOM(pgeom);
+            MO__GETGEOM0(pgeom);
+            if (!pgeom->geometry)
+                return Py_BuildValue("s", "*empty*");
             auto str = pgeom->geometry->infoString();
             str += QString(" (refcnt:%1)").arg(self->ob_refcnt);
             return Py_BuildValue("s", str.toLatin1().constData());
@@ -171,6 +175,7 @@ extern "C"
         }
 
         #undef MO__GETGEOM
+        #undef MO__GETGEOM0
     };
 
     PyMemberDef Python34Geom_members[] =
@@ -285,7 +290,7 @@ void initGeometry(void* mod)
     PyObject* module = reinterpret_cast<PyObject*>(mod);
 
     if (0 != PyType_Ready(&Python34Geom_type))
-        MO_ERROR("Failed to readify Geometry object with Python 2.7");
+        MO_ERROR("Failed to readify Geometry object with Python 3.4");
 
 
     PyObject* object = reinterpret_cast<PyObject*>(&Python34Geom_type);
@@ -294,12 +299,10 @@ void initGeometry(void* mod)
     if (0 != PyModule_AddObject(module, "Geometry", object))
     {
         Py_DECREF(object);
-        MO_ERROR("Failed to add Geometry object to Python 2.7");
+        MO_ERROR("Failed to add Geometry object to Python 3.4");
     }
-
-    //auto ins = PyInstance_New((PyObject*)&Python34Geom_type, NULL, NULL);
-    //PyModule_AddObject(module, "k", ins);
 }
+
 
 void* createGeometryObject(MO::GEOM::Geometry* geom)
 {

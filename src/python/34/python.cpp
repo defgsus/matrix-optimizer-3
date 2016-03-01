@@ -14,6 +14,7 @@
 
 #include "python.h"
 #include "python_funcs.h"
+#include "python_object.h"
 #include "python_geometry.h"
 #include "python_output.h"
 #include "io/error.h"
@@ -52,7 +53,11 @@ namespace
         auto module = PyModule_Create(moModuleDef());
         if (!module)
             return nullptr;
+
+        // add the classes
+        initObject(module);
         initGeometry(module);
+
         return module;
     }
 }
@@ -83,6 +88,7 @@ struct PythonInterpreter::Private
         : p             (p)
         , threadState   (0)
         , module        (0)
+        , curObject     (0)
         , curGeom       (0)
     { }
 
@@ -94,6 +100,7 @@ struct PythonInterpreter::Private
 
     QString output, errorOutput;
 
+    Object* curObject;
     GEOM::Geometry* curGeom;
 };
 
@@ -110,6 +117,12 @@ PythonInterpreter::~PythonInterpreter()
 
 const QString& PythonInterpreter::output() const { return p_->output; }
 const QString& PythonInterpreter::errorOutput() const { return p_->errorOutput; }
+
+void PythonInterpreter::setGeometry(GEOM::Geometry* geom) { p_->curGeom = geom; }
+GEOM::Geometry* PythonInterpreter::getGeometry() const { return p_->curGeom; }
+
+void PythonInterpreter::setObject(Object*o) { p_->curObject = o; }
+Object* PythonInterpreter::getObject() const { return p_->curObject; }
 
 void PythonInterpreter::clear()
 {
@@ -143,9 +156,6 @@ PythonInterpreter* PythonInterpreter::current()
     }
     return nullptr;
 }
-
-void PythonInterpreter::setGeometry(GEOM::Geometry* geom) { p_->curGeom = geom; }
-MO::GEOM::Geometry* PythonInterpreter::geometry() const { return p_->curGeom; }
 
 void PythonInterpreter::Private::setup()
 {

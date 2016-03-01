@@ -16,6 +16,7 @@
 #include <QString>
 
 namespace MO {
+class Object;
 namespace GEOM { class Geometry; }
 namespace PYTHON34 {
 
@@ -47,8 +48,11 @@ namespace PYTHON34 {
             the PyThreadState, or NULL */
         static PythonInterpreter* current();
 
-        void setGeometry(MO::GEOM::Geometry*);
-        MO::GEOM::Geometry* geometry() const;
+        void setGeometry(GEOM::Geometry*);
+        GEOM::Geometry* getGeometry() const;
+
+        void setObject(Object*);
+        Object* getObject() const;
 
         // ------- output callback ------
 
