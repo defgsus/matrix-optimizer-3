@@ -34,8 +34,8 @@ namespace PYTHON34 {
         void execute(const char* utf8);
         void execute(const QString&);
 
-        /** Deletes the current interpreter */
-        void clear();
+        /* Deletes the current interpreter */
+        //void clear();
 
         /** The current runtime output */
         const QString& output() const;
@@ -47,6 +47,7 @@ namespace PYTHON34 {
         /** Returns the current Interpreter that runs
             the PyThreadState, or NULL */
         static PythonInterpreter* current();
+        static long instanceCount();
 
         void setGeometry(GEOM::Geometry*);
         GEOM::Geometry* getGeometry() const;
@@ -71,6 +72,8 @@ namespace PYTHON34 {
         Does nothing if initPython() has not been called. */
     void finalizePython();
 
+
+    void runConsole(int argc, char** args);
 
 } // namespace PYTHON34
 } // namespace MO

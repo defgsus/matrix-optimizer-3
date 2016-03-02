@@ -17,7 +17,7 @@ namespace MO {
 class Object;
 namespace PYTHON34 {
 
-    /** Adds the Geometry object to the module.
+    /** Adds the Object wrapper to the module.
         @p module is PyObject* */
     void initObject(void* module);
 

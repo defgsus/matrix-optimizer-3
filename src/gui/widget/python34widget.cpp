@@ -93,14 +93,16 @@ bool Python34Widget::Private::compile()
 
 void Python34Widget::Private::execute()
 {
+    PYTHON34::PythonInterpreter py;
+
     try
     {
-        PYTHON34::PythonInterpreter py;
         py.execute(widget->scriptText());
         widget->setErrorFrom(&py);
     }
     catch (const Exception& e)
     {
+        widget->setErrorFrom(&py);
         widget->addCompileMessage(0, M_ERROR, e.what());
     }
 }

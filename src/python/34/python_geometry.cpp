@@ -12,6 +12,10 @@
 
 #include <python3.4/Python.h>
 #include <python3.4/structmember.h>
+#ifdef MO_ENABLE_NUMPY
+#   define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#   include <numpy/arrayobject.h>
+#endif
 
 #include "python_geometry.h"
 #include "python.h"
@@ -24,6 +28,18 @@ namespace MO {
 
 namespace
 {
+    bool checkIndex(long idx, long size)
+    {
+        if (idx < 0 || idx >= size)
+        {
+            PyErr_SetString(PyExc_IndexError,
+                            QString("index out of range %1/%2")
+                            .arg(idx).arg(size).toUtf8().constData());
+            return false;
+        }
+        return true;
+    }
+
     bool py_to_double(PyObject* obj, double* val)
     {
         if (PyFloat_Check(obj))
@@ -40,12 +56,50 @@ namespace
     }
 
 
-    bool py_array_or_tuple_to_vec3(PyObject* obj, Vec3* v)
+    bool py_array_or_tuple_to_vec3(PyObject* arg, Vec3* v)
     {
-        if (PyArg_ParseTuple(obj, "(fff)", &v->x, &v->y, &v->z))
+        PyObject* obj;
+        if (PyArg_ParseTuple(arg, "O", &obj))
+        {
+            if (PyList_Check(obj))
+            {
+                if (PyArg_ParseTuple(arg, "(fff)", &v->x, &v->y, &v->z))
+                    return true;
+                return false;
+            }
+#ifdef MO_ENABLE_NUMPY__
+            if (PyArray_Check(obj))
+            {
+                auto nda = reinterpret_cast<PyArrayObject*>(obj);
+                if (PyArray_NDIM(nda) != 1)
+                {
+                    PyErr_SetString(PyExc_TypeError, "expected 1-dimensional ndarray");
+                    return false;
+                }
+                if (PyArray_DIM(nda, 0) != 3)
+                {
+                    PyErr_SetString(PyExc_TypeError, "expected ndarray of length 3");
+                    return false;
+                }
+                //PyArray_VectorUnaryFunc();
+                return true;
+            }
+#endif
+            PyErr_SetString(PyExc_TypeError, "unexpected object type");
+            return false;
+        }
+        PyErr_Clear();
+        if (PyArg_ParseTuple(arg, "fff", &v->x, &v->y, &v->z))
+            return true;
+        return false;
+    }
+
+    bool py_array_or_tuple_to_index_and_vec3(PyObject* obj, long* idx, Vec3* v)
+    {
+        if (PyArg_ParseTuple(obj, "l(fff)", idx, &v->x, &v->y, &v->z))
             return true;
         PyErr_Clear();
-        if (PyArg_ParseTuple(obj, "fff", &v->x, &v->y, &v->z))
+        if (PyArg_ParseTuple(obj, "lfff", idx, &v->x, &v->y, &v->z))
             return true;
         return false;
     }
@@ -148,20 +202,51 @@ extern "C"
         }
         static PyObject* repr(PyObject* self) { return to_string(self, nullptr); }
 
-        static PyObject* add_vertex(PyObject* self, PyObject* obj)
+        static PyObject* get_vertex(PyObject* self, PyObject* arg)
+        {
+            long idx;
+            if (!PyArg_ParseTuple(arg, "l", &idx))
+                return NULL;
+            MO__GETGEOM(p);
+            if (!checkIndex(idx, p->geometry->numVertices()))
+                return NULL;
+            return Py_BuildValue("[f,f,f]",
+                p->geometry->vertices()[idx * p->geometry->numVertexComponents()],
+                p->geometry->vertices()[idx * p->geometry->numVertexComponents()+1],
+                p->geometry->vertices()[idx * p->geometry->numVertexComponents()+2]
+                );
+        }
+
+        // -------------- setter ----------------
+
+        static PyObject* add_vertex(PyObject* self, PyObject* arg)
         {
             Vec3 v;
-            if (!py_array_or_tuple_to_vec3(obj, &v))
+            if (!py_array_or_tuple_to_vec3(arg, &v))
                 return NULL;
             MO__GETGEOM(pgeom);
             auto i = pgeom->geometry->addVertex(v);
             return Py_BuildValue("n", i);
         }
 
-        static PyObject* add_line(PyObject* self, PyObject* obj)
+        static PyObject* set_vertex(PyObject* self, PyObject* arg)
+        {
+            Vec3 v;
+            long idx;
+            if (!py_array_or_tuple_to_index_and_vec3(arg, &idx, &v))
+                return NULL;
+            MO__GETGEOM(pgeom);
+            if (!checkIndex(idx, pgeom->geometry->numVertices()))
+                return NULL;
+            pgeom->geometry->setVertex(idx, v);
+            Py_RETURN_NONE;
+        }
+
+
+        static PyObject* add_line(PyObject* self, PyObject* arg)
         {
             unsigned long i1, i2;
-            if (!py_array_or_tuple_to_uint2(obj, &i1, &i2))
+            if (!py_array_or_tuple_to_uint2(arg, &i1, &i2))
                 return NULL;
             MO__GETGEOM(pgeom);
             if (i1 >= pgeom->geometry->numVertices()
@@ -199,15 +284,32 @@ extern "C"
           "Returns the number of vertices"
         },
 
+        { "get_vertex",
+          (PyCFunction)Python34GeomFuncs::get_vertex,
+          METH_VARARGS,
+          "get_vertex(long) -> [f,f,f]\n"
+          "Returns the vertex position at the given index as float list"
+        },
+
+        // --------- setter ---------
+
         { "add_vertex",
           (PyCFunction)Python34GeomFuncs::add_vertex,
           METH_VARARGS,
           "add_vertex(f, f, f) -> long\n"
           "add_vertex([f, f, f]) -> long\n"
-          "Adds a new vertex. The returned value is the index of the vertex. "
-          "For unshared geometries this value is equal to num_vertices() - 1, "
-          "for shared geometries the vertex might have been present already "
+          "Adds a new vertex. The returned value is the index of the vertex.\n"
+          "For unshared geometries this value is equal to num_vertices() - 1,\n"
+          "for shared geometries the vertex might have been present already\n"
           "and it's index is returned."
+        },
+
+        { "set_vertex",
+          (PyCFunction)Python34GeomFuncs::set_vertex,
+          METH_VARARGS,
+          "set_vertex(long, f, f, f) -> None\n"
+          "set_vertex(long, [f, f, f]) -> None\n"
+          "Sets a new vertex position at the given index."
         },
 
         { "add_line",

@@ -510,8 +510,8 @@ extern "C" {
             0,                         /*tp_hash */
             0,                         /*tp_call*/
             BaseObjectFuncs::repr,     /*tp_str*/
-            0,                         /*tp_getattro*/
-            0,                         /*tp_setattro*/
+            PyObject_GenericGetAttr,   /*tp_getattro*/
+            PyObject_GenericSetAttr,   /*tp_setattro*/
             0,                         /*tp_as_buffer*/
             Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
             baseObjectDocString(),   /* tp_doc */
@@ -575,23 +575,58 @@ extern "C" {
         return reinterpret_cast<PyObject*>(pobj);
     }
 
+    /*
+    XXX Not working yet
+    PyTypeObject* createDerivedType(const QString& className)
+    {
+        auto type = new PyTypeObject;
+        memcpy(type, BaseObject_type(), sizeof(PyTypeObject));
+
+        type->tp_name = "matrixoptimizer.Derived";
+        type->tp_base = BaseObject_type();
+
+        if (0 != PyType_Ready(type))
+            MO_ERROR("Failed to readify Derived wrapper with Python 3.4");
+
+        type->tp_bases = Py_BuildValue("(O,)", (PyObject*)BaseObject_type());
+        type->tp_mro = Py_BuildValue("(O,)", (PyObject*)BaseObject_type());
+        //PyTuple_SetItem(type->tp_bases, 0, (PyObject*)BaseObject_type());
+
+        return type;
+    }
+    */
+
+    void initObjectType(PyObject* module, PyTypeObject* type, const char* name)
+    {
+        if (0 != PyType_Ready(type))
+            MO_ERROR("Failed to readify Object wrapper with Python 3.4");
+
+
+        PyObject* object = reinterpret_cast<PyObject*>(type);
+        Py_INCREF(object);
+        if (0 != PyModule_AddObject(module, name, object))
+        {
+            Py_DECREF(object);
+            MO_ERROR("Failed to add " << name << " to Python 3.4");
+        }
+    }
+
 } // extern "C"
 } // namespace
 
+
 void initObject(void* mod)
 {
+    static std::vector<PyTypeObject*> classes;
+    if (!classes.empty())
+        MO_ERROR("Duplicate call to PYTHON34::initObject()");
+
     PyObject* module = reinterpret_cast<PyObject*>(mod);
 
-    if (0 != PyType_Ready(BaseObject_type()))
-        MO_ERROR("Failed to readify Object wrapper with Python 3.4");
+    initObjectType(module, BaseObject_type(), "Object");
 
-    PyObject* object = reinterpret_cast<PyObject*>(BaseObject_type());
-    Py_INCREF(object);
-    if (0 != PyModule_AddObject(module, "Object", object))
-    {
-        Py_DECREF(object);
-        MO_ERROR("Failed to add Object wrapper to Python 3.4");
-    }
+    //classes.push_back(createDerivedType("SequenceFloat"));
+    //initObjectType(module, classes.back(), "Derived");
 }
 
 void* createObjectWrapper(Object* o)

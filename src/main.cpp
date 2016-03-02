@@ -60,6 +60,7 @@ int renderToDisk()
 //#include "tests/testcommandlineparser.h"
 //#include "tests/testdirectedgraph.h"
 //#include "tests/testcsg.h"
+#include "tests/testpython.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"
@@ -72,6 +73,8 @@ int main(int argc, char *argv[])
     MO::setCurrentThreadName("GUI");
 
     // tests without QApplication
+    //MO::PYTHON34::runConsole(argc, argv); return 0;
+    //TestPython t; return t.run();
     //MO::TestCsg t; return t.run();
     //TestXmlStream t; return t.run();
     //MO::TestEquation t; return t.run();

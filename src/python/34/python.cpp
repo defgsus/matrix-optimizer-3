@@ -12,6 +12,8 @@
 
 #include <python3.4/Python.h>
 
+#include <atomic>
+
 #include "python.h"
 #include "python_funcs.h"
 #include "python_object.h"
@@ -19,6 +21,13 @@
 #include "python_output.h"
 #include "io/error.h"
 #include "io/log.h"
+
+#if 1
+#   define MO_PY_DEBUG(arg__) \
+        MO_PRINT("PythonInterpreter(" << this << "): " << arg__);
+#else
+#   define MO_PY_DEBUG(unused__)
+#endif
 
 namespace MO {
 namespace PYTHON34 {
@@ -65,20 +74,40 @@ namespace
 
 void initPython()
 {
-    if (!Py_IsInitialized())
+    static bool is_init = false;
+    if (!is_init)//Py_IsInitialized())
     {
+        is_init = true;
+
         PyImport_AppendInittab("matrixoptimizer", moCreateModule);
-        //PyEval_InitThreads();
+
         Py_Initialize();
+
+        PyEval_InitThreads();
+        PyEval_SaveThread();
     }
 }
 
-/** @todo Py_Finalize() crashes for Python 3.4
-    when using Py_NewInstance() / Py_EndInstance() */
+/** @todo Py_Finalize() crashes - prob some refcount */
 void finalizePython()
 {
     //if (Py_IsInitialized())
     //    Py_Finalize();
+}
+
+void runConsole(int argc, char **args)
+{
+    initPython();
+
+    wchar_t* wargs[argc];
+    for (int i=0; i<argc; ++i)
+    {
+        wchar_t* ws = new wchar_t[1000];
+        swprintf(ws, 1000, L"%hs", args[i]);
+        wargs[i] = ws;
+    }
+
+    Py_Main(argc, wargs);
 }
 
 
@@ -86,17 +115,26 @@ struct PythonInterpreter::Private
 {
     Private(PythonInterpreter* p)
         : p             (p)
-        , threadState   (0)
-        , module        (0)
+        , main_module   (0)
+        , byteCode      (0)
         , curObject     (0)
         , curGeom       (0)
     { }
 
     void setup();
+    void backup_main();
+    void restore_main();
+    void destroy();
+    void compile(const char* utf8);
+    PyObject* create_namespace(const char* filename);
+
+    /** high-level */
+    void execute(const char* utf8);
 
     PythonInterpreter* p;
-    PyThreadState* threadState;
-    PyObject* module;
+
+    PyObject* main_module,
+            * byteCode;
 
     QString output, errorOutput;
 
@@ -104,19 +142,29 @@ struct PythonInterpreter::Private
     GEOM::Geometry* curGeom;
 };
 
+namespace { std::atomic_long instanceCount_(0); }
+
+
 PythonInterpreter::PythonInterpreter()
     : p_        (new Private(this))
 {
+    MO_PY_DEBUG("PythonInterpreter()");
 }
 
 PythonInterpreter::~PythonInterpreter()
 {
-    clear();
+    MO_PY_DEBUG("~PythonInterpreter()");
+
+    p_->destroy();
+    //clear();
     delete p_;
+
+    MO_PY_DEBUG("~PythonInterpreter() ended");
 }
 
 const QString& PythonInterpreter::output() const { return p_->output; }
 const QString& PythonInterpreter::errorOutput() const { return p_->errorOutput; }
+long PythonInterpreter::instanceCount() { return instanceCount_; }
 
 void PythonInterpreter::setGeometry(GEOM::Geometry* geom) { p_->curGeom = geom; }
 GEOM::Geometry* PythonInterpreter::getGeometry() const { return p_->curGeom; }
@@ -124,6 +172,20 @@ GEOM::Geometry* PythonInterpreter::getGeometry() const { return p_->curGeom; }
 void PythonInterpreter::setObject(Object*o) { p_->curObject = o; }
 Object* PythonInterpreter::getObject() const { return p_->curObject; }
 
+
+void PythonInterpreter::execute(const QString& str)
+{
+    auto utf8 = str.toUtf8();
+    const char * src = utf8.constData();
+    p_->execute(src);
+}
+
+void PythonInterpreter::execute(const char* utf8)
+{
+    p_->execute(utf8);
+}
+
+/*
 void PythonInterpreter::clear()
 {
     if (p_->threadState)
@@ -134,6 +196,7 @@ void PythonInterpreter::clear()
     p_->output.clear();
     p_->errorOutput.clear();
 }
+*/
 
 PythonInterpreter* PythonInterpreter::current()
 {
@@ -157,19 +220,122 @@ PythonInterpreter* PythonInterpreter::current()
     return nullptr;
 }
 
-void PythonInterpreter::Private::setup()
+void PythonInterpreter::Private::backup_main()
+{
+    MO_ASSERT(!main_module, "duplicate backup");
+
+    MO_PY_DEBUG("backup __main__");
+    PyInterpreterState *interp = PyThreadState_GET()->interp;
+    main_module = PyDict_GetItemString(interp->modules, "__main__");
+    Py_XINCREF(main_module);
+}
+
+void PythonInterpreter::Private::restore_main()
+{
+    MO_ASSERT(main_module, "restore without backup");
+
+    MO_PY_DEBUG("restore __main__");
+    PyInterpreterState *interp = PyThreadState_GET()->interp;
+    PyDict_SetItemString(interp->modules, "__main__", main_module);
+    Py_XDECREF(main_module);
+    main_module = nullptr;
+}
+
+void PythonInterpreter::Private::destroy()
+{
+    MO_PY_DEBUG("destroy()");
+
+    Py_XDECREF(byteCode);
+    byteCode = nullptr;
+    if (main_module)
+        restore_main();
+}
+
+PyObject* PythonInterpreter::Private::create_namespace(const char *filename)
+{
+    MO_PY_DEBUG("create_namespace(" << filename << ")");
+
+    PyInterpreterState *interp = PyThreadState_GET()->interp;
+
+    // create fresh __main__
+    PyObject *mod_main = PyModule_New("__main__");
+    PyDict_SetItemString(interp->modules, "__main__", mod_main);
+    Py_DECREF(mod_main); /* sys.modules owns now */
+    PyModule_AddStringConstant(mod_main, "__name__", "__main__");
+    if (filename)
+    {
+        /* __file__ mainly for nice UI'ness
+         * note: this wont map to a real file when executing text-blocks and buttons. */
+//		PyModule_AddObject(mod_main, "__file__", PyC_UnicodeFromByte(filename));
+    }
+    PyModule_AddObject(mod_main, "__builtins__", interp->builtins);
+    Py_INCREF(interp->builtins); /* AddObject steals a reference */
+
+    auto dict = PyModule_GetDict(mod_main);
+
+    return dict;
+}
+
+void PythonInterpreter::Private::compile(const char *utf8)
+{
+    Py_XDECREF(byteCode);
+    byteCode = 0;
+
+    MO_PY_DEBUG("compiling");
+
+    PyObject* fn_dummy = Py_BuildValue("s", "matrixoptimizer");
+    if (!fn_dummy)
+        MO_ERROR("failed to initialize compiling python");
+    PyCompilerFlags flags;
+    flags.cf_flags = PyCF_SOURCE_IS_UTF8;
+    byteCode = Py_CompileStringObject(utf8, fn_dummy, Py_file_input, &flags, -1);
+    Py_DECREF(fn_dummy);
+
+    if (PyErr_Occurred() || !byteCode)
+    {
+        MO_PY_DEBUG("compile error");
+        /** XXX @todo catch compile errors */
+        PyErr_Print();
+        PyErr_Clear();
+        Py_XDECREF(byteCode);
+        byteCode = 0;
+    }
+
+    if (!byteCode)
+        MO_ERROR("failed to compile python");
+}
+
+
+void PythonInterpreter::Private::execute(const char* utf8)
 {
     initPython();
 
-    if (!threadState)
-    {
-        try
-        {
-            threadState = Py_NewInterpreter();
-            if (!threadState)
-                MO_ERROR("Could not create Python 2.7 interpreter");
+    MO_PY_DEBUG("get GIL");
+    PyGILState_STATE gil_state = PyGILState_Ensure();
 
-            // -- store interpreter instance in threadstate dict --
+    try
+    {
+        backup_main();
+
+        // redirect output
+        MO_PY_DEBUG("redirect stdout/err");
+        for (int i=0; i<2; ++i)
+        {
+            auto outp = reinterpret_cast<PyObject*>(createOutputObject(p, i==0));
+            if (!outp)
+                MO_ERROR("Failed to create output redirection object for Python");
+            if (0 != PySys_SetObject(i==0? "stderr" : "stdout", outp))
+                MO_ERROR("Failed to install output redirection for Python");
+        }
+
+        PyObject* dict = create_namespace("sub-script");
+
+        compile(utf8);
+
+        // -- store interpreter instance in threadstate dict --
+
+        {
+            MO_PY_DEBUG("attach interpreter class");
 
             auto dict = PyThreadState_GetDict();
             if (!dict)
@@ -180,51 +346,49 @@ void PythonInterpreter::Private::setup()
             if (!caps)
                 MO_ERROR("Failed to init Python interpreter capsule");
             PyDict_SetItemString(dict, "matrixoptimizer-interpreter", caps);
+        }
 
-            // redirect output
-            for (int i=0; i<2; ++i)
-            {
-                auto outp = reinterpret_cast<PyObject*>(createOutputObject(p, i==0));
-                if (!outp)
-                    MO_ERROR("Failed to create output redirection object for Python");
-                if (0 != PySys_SetObject(i==0? "stderr" : "stdout", outp))
-                    MO_ERROR("Failed to install output redirection for Python");
-            }
-        }
-        catch (...)
+        // execute
+        MO_PY_DEBUG("eval");
+        ++instanceCount_;
+        Py_INCREF(byteCode);
+        PyEval_EvalCode(byteCode, dict, dict);
+
+        if (PyErr_Occurred())
         {
-            p->clear();
-            throw;
+            MO_PY_DEBUG("runtime error");
+            PyErr_Print();
+            PyErr_Clear();
+            MO_ERROR("python runtime error");
         }
+
+        restore_main();
+
+        MO_PY_DEBUG("release GIL");
+        PyGILState_Release(gil_state);
+    }
+    catch (...)
+    {
+        MO_PY_DEBUG("shutdown from exception");
+        destroy();
+        MO_PY_DEBUG("release GIL");
+        PyGILState_Release(gil_state);
+        throw;
     }
 }
 
-void PythonInterpreter::execute(const QString& str)
-{
-    auto utf8 = str.toUtf8();
-    const char * src = utf8.constData();
-    execute(src);
-}
 
-void PythonInterpreter::execute(const char* utf8)
-{
-    p_->setup();
-
-    // --- execute ---
-
-    PyCompilerFlags flags;
-    flags.cf_flags = PyCF_SOURCE_IS_UTF8;
-
-    PyRun_SimpleStringFlags(utf8, &flags);
-}
 
 void PythonInterpreter::write(const char *utf8, bool error)
 {
+    //MO_PY_DEBUG("write(" << utf8 << ")");
+
     if (error)
         p_->errorOutput += QString::fromUtf8(utf8);
     else
         p_->output += QString::fromUtf8(utf8);
 }
+
 
 
 } // namespace PYTHON34

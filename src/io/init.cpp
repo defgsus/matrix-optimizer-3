@@ -12,6 +12,7 @@
 #include <QtGlobal>
 
 #include "init.h"
+#include "python/34/python.h"
 #include "io/error.h"
 
 #ifdef Q_OS_LINUX
@@ -35,6 +36,11 @@ void startOfProgram()
     XSetErrorHandler(dummy_::errHandler);
 
     XInitThreads();
+#endif
+
+
+#ifdef MO_ENABLE_PYTHON34
+    MO::PYTHON34::initPython();
 #endif
 
 }
