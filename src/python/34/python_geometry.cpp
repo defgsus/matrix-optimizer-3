@@ -42,6 +42,7 @@ namespace
         return true;
     }
 
+
     // all vector(3) convertible arguments
     bool py_get_vec3(PyObject* arg, Vec3* vec)
     {
@@ -227,6 +228,28 @@ extern "C"
         return Py_BuildValue("n", i);
     }
 
+    MO_PY_DEF_DOC(geom_add_vertices,
+        "add_vertices(vector3 list) -> None\n"
+        "Adds the list of vertices.\n"
+    )
+    static PyObject* geom_add_vertices(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        auto foo = [pgeom](PyObject* item)
+        {
+            MO_PRINT("ITEM[" << typeName(item) << "]");
+            Vec3 v;
+            if (!py_get_vec3(item, &v))
+                return false;
+            pgeom->geometry->addVertex(v);
+            return true;
+        };
+        arg = removeArgumentTuple(arg);
+        if (!iterateSequence(arg, foo))
+            return NULL;
+        Py_RETURN_NONE;
+    }
+
     MO_PY_DEF_DOC(geom_set_vertex,
         "set_vertex(long, vector3) -> None\n"
         "Sets a new vertex position at the given index."
@@ -301,8 +324,10 @@ extern "C"
         MO__METHOD(get_vertex,      METH_VARARGS)
         MO__METHOD(add_vertex,      METH_VARARGS)
         MO__METHOD(set_vertex,      METH_VARARGS)
+        MO__METHOD(add_vertices,    METH_VARARGS)
         MO__METHOD(add_line,        METH_VARARGS)
         MO__METHOD(add_triangle,    METH_VARARGS)
+
 
         { NULL, NULL, 0, NULL }
     };

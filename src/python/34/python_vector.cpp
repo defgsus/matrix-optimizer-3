@@ -64,12 +64,8 @@ bool get_vector(void* vargs_, int len, double v[])
         PyErr_SetString(PyExc_TypeError, "NULL argument");
         return false;
     }
-    PyObject* args_ = reinterpret_cast<PyObject*>(vargs_);
     // get single argument from tuple
-    if (PyTuple_Check(args_) && PyTuple_Size(args_) == 1)
-    {
-        args_ = PyTuple_GetItem(args_, 0);
-    }
+    auto args_ = removeArgumentTuple( reinterpret_cast<PyObject*>(vargs_) );
     if (PySequence_Check(args_))
     {
         if (PySequence_Size(args_) != len)
@@ -421,14 +417,28 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
             { x /= y; });
     }
 
+    static PyObject* vec_imod(VectorStruct* self, PyObject* other)
+    {
+        return vec_operator_inp(self, other, [](double& x, double y)
+            { x = MATH::modulo(x, y); });
+    }
+
     // ----- other number methods -----
 
     static PyObject* vec_abs_unary(VectorStruct* self)
     {
-        for (int i=0; i<self->len; ++i)
-            self->v[i] = std::abs(self->v[i]);
-        Py_INCREF(self);
-        return reinterpret_cast<PyObject*>(self);
+        auto res = copy_vec(self);
+        for (int i=0; i<res->len; ++i)
+            res->v[i] = std::abs(res->v[i]);
+        return reinterpret_cast<PyObject*>(res);
+    }
+
+    static PyObject* vec_neg_unary(VectorStruct* self)
+    {
+        auto res = copy_vec(self);
+        for (int i=0; i<res->len; ++i)
+            res->v[i] = -res->v[i];
+        return reinterpret_cast<PyObject*>(res);
     }
 
     static PyObject* vec_pow(VectorStruct* self, PyObject* other);
@@ -838,9 +848,9 @@ static PyNumberMethods Vector_NumMethods = {
     (binaryfunc)    vec_mod, /*nb_remainder*/
     NULL,                       /*nb_divmod*/
     (ternaryfunc)   vec_pow_ternary, /*nb_power*/
-    NULL,//(unaryfunc)     Vector_neg, /*nb_negative*/
-    NULL,//(unaryfunc)     Vector_copy,/*tp_positive*/
-    (unaryfunc)vec_abs_unary,       /*tp_absolute*/
+    (unaryfunc)     vec_neg_unary, /*nb_negative*/
+    (unaryfunc)     copy_vec,/*tp_positive*/
+    (unaryfunc)     vec_abs_unary,       /*tp_absolute*/
     (inquiry)   NULL,           /*tp_bool*/
     (unaryfunc) NULL,           /*nb_invert*/
     NULL,                       /*nb_lshift*/
@@ -854,7 +864,7 @@ static PyNumberMethods Vector_NumMethods = {
     (binaryfunc)vec_iadd,                /* nb_inplace_add */
     (binaryfunc)vec_isub,                /* nb_inplace_subtract */
     (binaryfunc)vec_imul,                /* nb_inplace_multiply */
-    NULL,                       /* nb_inplace_remainder */
+    (binaryfunc)vec_imod,       /* nb_inplace_remainder */
     NULL,                       /* nb_inplace_power */
     NULL,                       /* nb_inplace_lshift */
     NULL,                       /* nb_inplace_rshift */

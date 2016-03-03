@@ -19,6 +19,7 @@
 #include "python_object.h"
 #include "python_vector.h"
 #include "python_geometry.h"
+#include "python_timeline.h"
 #include "python_output.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -68,6 +69,7 @@ namespace
         MO_PY_DEBUG("init object"); initObject(module);
         MO_PY_DEBUG("init geometry"); initGeometry(module);
         MO_PY_DEBUG("init vector"); initVector(module);
+        MO_PY_DEBUG("init timeline"); initTimeline(module);
 
         return module;
     }

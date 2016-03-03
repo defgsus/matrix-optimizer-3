@@ -38,6 +38,14 @@ bool toDouble(PyObject* arg, double* v);
 
 void PyErr_Set(PyObject* exc, const QString& txt);
 
+/** Iterates over every item in the PySequence. If seq is not sequencable,
+    sets PyErr and returns false. If foo returns false, the iteration is stopped
+    and false is returned. */
+bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo);
+
+/** If @p arg is a tuple with one object, then return the object */
+PyObject* removeArgumentTuple(PyObject* arg);
+
 } // namespace PYTHON34
 } // namespace MO
 

@@ -74,7 +74,36 @@ void PyErr_Set(PyObject* exc, const QString& txt)
     PyErr_SetObject(exc, fromString(txt));
 }
 
+bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo)
+{
+    if (!PySequence_Check(seq))
+    {
+        PyErr_Set(PyExc_TypeError, QString("expected sequence, got %1")
+                  .arg(typeName(seq)));
+        return false;
+    }
+    Py_ssize_t size = PySequence_Size(seq);
+    for (Py_ssize_t i = 0; i < size; ++i)
+    {
+        auto item = PySequence_GetItem(seq, i);
+        if (!item)
+        {
+            PyErr_Set(PyExc_TypeError, QString("NULL object in sequence[%1]").arg(i));
+            return false;
+        }
+        if (!foo(item))
+            return false;
+    }
+    return true;
+}
 
+
+PyObject* removeArgumentTuple(PyObject* arg)
+{
+    if (PyTuple_Check(arg) && PyTuple_Size(arg) == 1)
+        return PyTuple_GetItem(arg, 0);
+    return arg;
+}
 
 
 void dumpObject(PyObject* arg, bool introspect)
