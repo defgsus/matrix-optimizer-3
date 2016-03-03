@@ -121,6 +121,11 @@ int TestPython::Private::testVector()
                     "print(v)\n"
                     "v = Vec(1., 2., 3., 4.)\n"
                     "print(v)\n"
+                    "print('print(v.x, v.y, v.z, v.w):', v.x, v.y, v.z, v.w)\n"
+                    "print('print(v.xx, v.xxx, v.zyxw):', v.xx, v.xxx, v.zyxw)\n"
+                    "v.w = 10; print('v.w = 10: ', v)\n"
+                    "v.yw = 5, 6; print('v.yw = 5, 6: ', v)\n"
+
                     "v = Vec([0])\n"
                     "print(v)\n"
                     "v = Vec([0, 1])\n"
@@ -143,6 +148,8 @@ int TestPython::Private::testVector()
                     "print(\"Vec(1,2,3,4) -= (4,3,2,1)\"); v = Vec(1,2,3,4); v -= (4,3,2,1); print('   ', v)\n"
                     "print(\"Vec(1,2,3,4) *= (4,3,2,1)\"); v = Vec(1,2,3,4); v *= (4,3,2,1); print('   ', v)\n"
                     "print(\"Vec(1,2,3,4) /= (4,3,2,1)\"); v = Vec(1,2,3,4); v /= (4,3,2,1); print('   ', v)\n"
+                    "test_func(\"Vec(2,3,4).pow(2)\")\n"
+                    "test_func(\"Vec(2,3,4).pow(.5, 2, 3)\")\n"
                     );
     }
     catch (const MO::Exception& e)

@@ -101,12 +101,15 @@ void runConsole(int argc, char **args)
 {
     initPython();
 
+    std::vector<std::wstring> swargs;
     wchar_t* wargs[argc];
     for (int i=0; i<argc; ++i)
     {
-        wchar_t* ws = new wchar_t[1000];
-        swprintf(ws, 1000, L"%hs", args[i]);
-        wargs[i] = ws;
+        std::wstring str;
+        str.resize(4096);
+        swprintf(&str[0], 4095, L"%hs", args[i]);
+        swargs.push_back(str);
+        wargs[i] = &swargs.back()[0];
     }
 
     Py_Main(argc, wargs);

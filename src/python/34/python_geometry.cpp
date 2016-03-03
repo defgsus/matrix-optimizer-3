@@ -17,6 +17,7 @@
 #endif
 
 #include "python_geometry.h"
+#include "python_vector.h"
 #include "python.h"
 #include "geom/geometry.h"
 #include "math/vector.h"
@@ -24,6 +25,8 @@
 #include "io/log.h"
 
 namespace MO {
+namespace PYTHON34 {
+
 
 namespace
 {
@@ -39,50 +42,30 @@ namespace
         return true;
     }
 
-    bool py_array_or_tuple_to_vec3(PyObject* arg, Vec3* v)
+    // all vector(3) convertible arguments
+    bool py_get_vec3(PyObject* arg, Vec3* vec)
     {
-        PyObject* obj;
-        if (PyArg_ParseTuple(arg, "O", &obj))
+        double v[3];
+        if (get_vector(arg, 3, v))
         {
-            if (PyList_Check(obj))
-            {
-                if (PyArg_ParseTuple(arg, "(fff)", &v->x, &v->y, &v->z))
-                    return true;
-                return false;
-            }
-#ifdef MO_ENABLE_NUMPY
-            if (PyArray_Check(obj))
-            {
-                auto nda = reinterpret_cast<PyArrayObject*>(obj);
-                if (PyArray_NDIM(nda) != 1)
-                {
-                    PyErr_SetString(PyExc_TypeError, "expected 1-dimensional ndarray");
-                    return false;
-                }
-                if (PyArray_DIM(nda, 0) != 3)
-                {
-                    PyErr_SetString(PyExc_TypeError, "expected ndarray of length 3");
-                    return false;
-                }
-                //PyArray_VectorUnaryFunc();
-                return true;
-            }
-#endif
-            PyErr_SetString(PyExc_TypeError, "unexpected object type");
-            return false;
-        }
-        PyErr_Clear();
-        if (PyArg_ParseTuple(arg, "fff", &v->x, &v->y, &v->z))
+            vec->x = v[0];
+            vec->y = v[1];
+            vec->z = v[2];
             return true;
+        }
         return false;
     }
 
-    bool py_array_or_tuple_to_index_and_vec3(PyObject* obj, long* idx, Vec3* v)
+    // either (long, f,f,f) or (long, vec-convertible)
+    bool py_get_index_and_vec3(PyObject* args_, long* idx, Vec3* v)
     {
-        if (PyArg_ParseTuple(obj, "l(fff)", idx, &v->x, &v->y, &v->z))
+        if (PyArg_ParseTuple(args_, "l|fff", idx, &v->x, &v->y, &v->z))
             return true;
         PyErr_Clear();
-        if (PyArg_ParseTuple(obj, "lfff", idx, &v->x, &v->y, &v->z))
+        PyObject * second;
+        if (!PyArg_ParseTuple(args_, "l|O", idx, &second))
+            return false;
+        if (py_get_vec3(second, v))
             return true;
         return false;
     }
@@ -166,176 +149,164 @@ extern "C"
         }
     };
 
-    struct Python34GeomFuncs
+
+#define MO_PY_DEF_DOC(name__, str__) \
+    static const char* name__##_doc = str__;
+
+#define MO__GETGEOM0(name__) \
+    if (self == nullptr) \
+    { \
+        PyErr_SetString(PyExc_RuntimeError, "self is NULL"); \
+        return NULL; \
+    } \
+    auto name__ = reinterpret_cast<Python34Geom*>(self);
+
+#define MO__GETGEOM(name__) \
+    MO__GETGEOM0(name__) \
+    if (name__->geometry == nullptr) { Py_RETURN_NONE; }
+
+    // ---------- getter ---------------
+
+    MO_PY_DEF_DOC(geom_to_string,
+        "to_string() -> str\n"
+        "Returns an informative string"
+    )
+    static PyObject* geom_to_string(PyObject* self, PyObject* )
     {
-        #define MO__GETGEOM0(name__) \
-            if (self == nullptr) \
-            { \
-                PyErr_SetString(PyExc_RuntimeError, "self is NULL"); \
-                return NULL; \
-            } \
-            auto name__ = reinterpret_cast<Python34Geom*>(self);
+        MO__GETGEOM0(pgeom);
+        if (!pgeom->geometry)
+            return Py_BuildValue("s", "*empty*");
+        auto str = pgeom->geometry->infoString();
+        str += QString(" (refcnt:%1)").arg(self->ob_refcnt);
+        return Py_BuildValue("s", str.toLatin1().constData());
+    }
+    static PyObject* geom_repr(PyObject* self) { return geom_to_string(self, nullptr); }
 
-        #define MO__GETGEOM(name__) \
-            MO__GETGEOM0(name__) \
-            if (name__->geometry == nullptr) { Py_RETURN_NONE; }
+    MO_PY_DEF_DOC(geom_num_vertices,
+        "num_vertices() -> long\n"
+        "Returns the number of vertices"
+    )
+    static PyObject* geom_num_vertices(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return Py_BuildValue("n", pgeom->geometry->numVertices());
+    }
 
-        static PyObject* num_vertices(PyObject* self, PyObject* )
-        {
-            MO__GETGEOM(pgeom);
-            return Py_BuildValue("n", pgeom->geometry->numVertices());
-        }
+    MO_PY_DEF_DOC(geom_get_vertex,
+        "get_vertex(long) -> Vec\n"
+        "Returns the vertex position at the given index as 3d vector"
+    )
+    static PyObject* geom_get_vertex(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numVertices()))
+            return NULL;
+        return reinterpret_cast<PyObject*>(buildVector(
+                    p->geometry->getVertex(idx) ));
+    }
 
-        static PyObject* to_string(PyObject* self, PyObject* )
-        {
-            MO__GETGEOM0(pgeom);
-            if (!pgeom->geometry)
-                return Py_BuildValue("s", "*empty*");
-            auto str = pgeom->geometry->infoString();
-            str += QString(" (refcnt:%1)").arg(self->ob_refcnt);
-            return Py_BuildValue("s", str.toLatin1().constData());
-        }
-        static PyObject* repr(PyObject* self) { return to_string(self, nullptr); }
+    // -------------- setter ----------------
 
-        static PyObject* get_vertex(PyObject* self, PyObject* arg)
-        {
-            long idx;
-            if (!PyArg_ParseTuple(arg, "l", &idx))
-                return NULL;
-            MO__GETGEOM(p);
-            if (!checkIndex(idx, p->geometry->numVertices()))
-                return NULL;
-            return Py_BuildValue("[f,f,f]",
-                p->geometry->vertices()[idx * p->geometry->numVertexComponents()],
-                p->geometry->vertices()[idx * p->geometry->numVertexComponents()+1],
-                p->geometry->vertices()[idx * p->geometry->numVertexComponents()+2]
-                );
-        }
+    MO_PY_DEF_DOC(geom_add_vertex,
+        "add_vertex(vector3) -> long\n"
+        "Adds a new vertex. The returned value is the index of the vertex.\n"
+        "For unshared geometries this value is equal to num_vertices() - 1,\n"
+        "for shared geometries the vertex might have been present already\n"
+        "and it's index is returned."
+    )
+    static PyObject* geom_add_vertex(PyObject* self, PyObject* arg)
+    {
+        Vec3 v;
+        if (!py_get_vec3(arg, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        auto i = pgeom->geometry->addVertex(v);
+        return Py_BuildValue("n", i);
+    }
 
-        // -------------- setter ----------------
-
-        static PyObject* add_vertex(PyObject* self, PyObject* arg)
-        {
-            Vec3 v;
-            if (!py_array_or_tuple_to_vec3(arg, &v))
-                return NULL;
-            MO__GETGEOM(pgeom);
-            auto i = pgeom->geometry->addVertex(v);
-            return Py_BuildValue("n", i);
-        }
-
-        static PyObject* set_vertex(PyObject* self, PyObject* arg)
-        {
-            Vec3 v;
-            long idx;
-            if (!py_array_or_tuple_to_index_and_vec3(arg, &idx, &v))
-                return NULL;
-            MO__GETGEOM(pgeom);
-            if (!checkIndex(idx, pgeom->geometry->numVertices()))
-                return NULL;
-            pgeom->geometry->setVertex(idx, v);
-            Py_RETURN_NONE;
-        }
+    MO_PY_DEF_DOC(geom_set_vertex,
+        "set_vertex(long, vector3) -> None\n"
+        "Sets a new vertex position at the given index."
+    )
+    static PyObject* geom_set_vertex(PyObject* self, PyObject* arg)
+    {
+        Vec3 v;
+        long idx;
+        if (!py_get_index_and_vec3(arg, &idx, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!checkIndex(idx, pgeom->geometry->numVertices()))
+            return NULL;
+        pgeom->geometry->setVertex(idx, v);
+        Py_RETURN_NONE;
+    }
 
 
-        static PyObject* add_line(PyObject* self, PyObject* arg)
-        {
-            unsigned long i1, i2;
-            if (!py_array_or_tuple_to_uint2(arg, &i1, &i2))
-                return NULL;
-            MO__GETGEOM(pgeom);
-            if (!(checkIndex(i1, pgeom->geometry->numVertices())
-               && checkIndex(i2, pgeom->geometry->numVertices())))
-                return 0;
-            pgeom->geometry->addLine(i1, i2);
-            Py_RETURN_NONE;
-        }
+    MO_PY_DEF_DOC(geom_add_line,
+        "add_line(two longs) -> None\n"
+        "Adds a line between two vertices defined by their indices."
+    )
+    static PyObject* geom_add_line(PyObject* self, PyObject* arg)
+    {
+        unsigned long i1, i2;
+        if (!py_array_or_tuple_to_uint2(arg, &i1, &i2))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!(checkIndex(i1, pgeom->geometry->numVertices())
+           && checkIndex(i2, pgeom->geometry->numVertices())))
+            return 0;
+        pgeom->geometry->addLine(i1, i2);
+        Py_RETURN_NONE;
+    }
 
-        static PyObject* add_triangle(PyObject* self, PyObject* arg)
-        {
-            unsigned long i1, i2, i3;
-            if (!py_array_or_tuple_to_uint3(arg, &i1, &i2, &i3))
-                return NULL;
-            MO__GETGEOM(pgeom);
-            if (!(checkIndex(i1, pgeom->geometry->numVertices())
-               && checkIndex(i2, pgeom->geometry->numVertices())
-               && checkIndex(i3, pgeom->geometry->numVertices())))
-                return 0;
-            pgeom->geometry->addTriangle(i1, i2, i3);
-            Py_RETURN_NONE;
-        }
+    MO_PY_DEF_DOC(geom_add_triangle,
+        "add_triangle(three longs) -> None\n"
+        "Adds a triangle between the three vertices defined by their indices."
+    )
+    static PyObject* geom_add_triangle(PyObject* self, PyObject* arg)
+    {
+        unsigned long i1, i2, i3;
+        if (!py_array_or_tuple_to_uint3(arg, &i1, &i2, &i3))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!(checkIndex(i1, pgeom->geometry->numVertices())
+           && checkIndex(i2, pgeom->geometry->numVertices())
+           && checkIndex(i3, pgeom->geometry->numVertices())))
+            return 0;
+        pgeom->geometry->addTriangle(i1, i2, i3);
+        Py_RETURN_NONE;
+    }
 
-        #undef MO__GETGEOM
-        #undef MO__GETGEOM0
-    };
+#undef MO__GETGEOM
+#undef MO__GETGEOM0
+
+
 
     PyMemberDef Python34Geom_members[] =
     {
         { NULL, 0, 0, 0, NULL }
     };
 
+#define MO__METHOD(name__, args__) \
+    { #name__, (PyCFunction)geom_##name__, args__, geom_##name__##_doc },
+
     static PyMethodDef Python34Geom_methods[] =
     {
-        { "to_string",
-          (PyCFunction)Python34GeomFuncs::to_string,
-          METH_NOARGS,
-          "to_string() -> string\n"
-          "Returns an informative string"
-        },
+        MO__METHOD(to_string,       METH_NOARGS)
+        MO__METHOD(num_vertices,    METH_NOARGS)
 
-        { "num_vertices",
-          (PyCFunction)Python34GeomFuncs::num_vertices,
-          METH_NOARGS,
-          "num_vertices() -> long\n"
-          "Returns the number of vertices"
-        },
-
-        { "get_vertex",
-          (PyCFunction)Python34GeomFuncs::get_vertex,
-          METH_VARARGS,
-          "get_vertex(long) -> [f,f,f]\n"
-          "Returns the vertex position at the given index as float list"
-        },
-
-        // --------- setter ---------
-
-        { "add_vertex",
-          (PyCFunction)Python34GeomFuncs::add_vertex,
-          METH_VARARGS,
-          "add_vertex(f, f, f) -> long\n"
-          "add_vertex([f, f, f]) -> long\n"
-          "Adds a new vertex. The returned value is the index of the vertex.\n"
-          "For unshared geometries this value is equal to num_vertices() - 1,\n"
-          "for shared geometries the vertex might have been present already\n"
-          "and it's index is returned."
-        },
-
-        { "set_vertex",
-          (PyCFunction)Python34GeomFuncs::set_vertex,
-          METH_VARARGS,
-          "set_vertex(long, f, f, f) -> None\n"
-          "set_vertex(long, [f, f, f]) -> None\n"
-          "Sets a new vertex position at the given index."
-        },
-
-        { "add_line",
-          (PyCFunction)Python34GeomFuncs::add_line,
-          METH_VARARGS,
-          "add_line(long, long) -> None\n"
-          "add_line([long, long]) -> None\n"
-          "Adds a line between two vertices."
-        },
-
-        { "add_triangle",
-          (PyCFunction)Python34GeomFuncs::add_triangle,
-          METH_VARARGS,
-          "add_triangle(l, l, l) -> None\n"
-          "add_triangle([l, l, l]) -> None\n"
-          "Adds a triangle between the three vertices."
-        },
+        MO__METHOD(get_vertex,      METH_VARARGS)
+        MO__METHOD(add_vertex,      METH_VARARGS)
+        MO__METHOD(set_vertex,      METH_VARARGS)
+        MO__METHOD(add_line,        METH_VARARGS)
+        MO__METHOD(add_triangle,    METH_VARARGS)
 
         { NULL, NULL, 0, NULL }
     };
+#undef MO__METHOD
 
 
     static PyTypeObject Python34Geom_type = {
@@ -354,7 +325,7 @@ extern "C"
         0,                         /*tp_as_mapping*/
         0,                         /*tp_hash */
         0,                         /*tp_call*/
-        Python34GeomFuncs::repr,   /*tp_str*/
+        geom_repr,                /*tp_str*/
         0,                         /*tp_getattro*/
         0,                         /*tp_setattro*/
         0,                         /*tp_as_buffer*/
@@ -398,8 +369,6 @@ extern "C"
 
 } // extern "C"
 
-
-namespace PYTHON34 {
 
 
 void initGeometry(void* mod)

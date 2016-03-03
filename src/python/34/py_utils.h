@@ -33,6 +33,7 @@ void dumpObject(PyObject* arg, bool introspect);
 PyObject* fromString(const QString&);
 QString typeName(PyObject* arg);
 
+PyObject* fromDouble(double v);
 bool toDouble(PyObject* arg, double* v);
 
 void PyErr_Set(PyObject* exc, const QString& txt);

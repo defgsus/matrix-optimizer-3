@@ -30,6 +30,14 @@ QString typeName(PyObject *arg)
     return s;
 }
 
+PyObject* fromDouble(double v)
+{
+    auto obj = PyFloat_FromDouble(v);
+    if (obj == NULL)
+        PyErr_SetString(PyExc_MemoryError, "failed to create float object");
+    return obj;
+}
+
 bool toDouble(PyObject* obj, double* val)
 {
     if (PyFloat_Check(obj))

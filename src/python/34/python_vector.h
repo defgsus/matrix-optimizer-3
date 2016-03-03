@@ -38,6 +38,7 @@ namespace PYTHON34 {
     DVec2 getVector2(void* pyObject);
     DVec3 getVector3(void* pyObject);
     DVec4 getVector4(void* pyObject);
+    bool  getVector(void* pyObjectWhichIsVector, int *lenOut, double vOut[4]);
 
 } // namespace PYTHON34
 } // namespace MO
