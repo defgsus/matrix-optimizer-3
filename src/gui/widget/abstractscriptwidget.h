@@ -55,6 +55,8 @@ signals:
     /** Only emitted when the changed script is valid */
     void scriptTextChanged();
 
+    void compileMessageAdded(int line, int type, const QString & text);
+
     // ------------------ actions --------------------------
 public slots:
 
@@ -107,6 +109,11 @@ protected:
     /** Override to return an internal html reference for the type of script.
         Optionally return an anchor using the word under cursor or whatever */
     virtual QString getHelpUrl(const QString& token) const = 0;
+
+protected slots:
+
+    void onAddCompileMessage(int line, int t, const QString & text);
+
 
 private:
     class PrivateSW;

@@ -16,6 +16,7 @@
 #include "geometrymodifier.h"
 
 namespace MO {
+namespace GUI { class Python34Widget; }
 namespace GEOM {
 
 
@@ -30,6 +31,7 @@ public:
     // ------------ setter -------------------
 
 private:
+    GUI::Python34Widget* widget_;
 };
 
 

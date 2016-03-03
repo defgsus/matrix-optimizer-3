@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
 
     // tests without QApplication
     //MO::PYTHON34::runConsole(argc, argv); return 0;
-    //TestPython t; return t.run();
+    TestPython t; return t.run();
     //MO::TestCsg t; return t.run();
     //TestXmlStream t; return t.run();
     //MO::TestEquation t; return t.run();

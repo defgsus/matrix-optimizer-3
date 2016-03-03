@@ -20,6 +20,7 @@ namespace GUI {
 
 class AbstractScriptWidget;
 class AngelScriptWidget;
+class Python34Widget;
 
 class TextEditDialog : public QDialog
 {
@@ -53,7 +54,7 @@ public:
 
     /** Access to the angelscript widget (if text type was TT_ANGELSCRIPT in constructor) */
     AngelScriptWidget * getWidgetAngelScript() const;
-
+    Python34Widget * getWidgetPython() const;
 signals:
 
     /** The text was changed by the user.

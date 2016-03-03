@@ -24,7 +24,7 @@
 #include "gui/helpdialog.h"
 #include "io/files.h"
 #include "io/settings.h"
-//#include "io/log.h"
+#include "io/log.h"
 
 
 namespace MO {
@@ -95,6 +95,10 @@ AbstractScriptWidget::AbstractScriptWidget(IO::FileType type, QWidget *parent)
     p_sw_->fileType = type;
     p_sw_->createWidgets();
     p_sw_->updateInfoWidget();
+
+    connect(this, SIGNAL(compileMessageAdded(int,int,QString)),
+            this, SLOT(onAddCompileMessage(int,int,QString)),
+            Qt::QueuedConnection);
 }
 
 AbstractScriptWidget::~AbstractScriptWidget()
@@ -361,9 +365,16 @@ void AbstractScriptWidget::PrivateSW::updateErrorWidget()
 }
 
 
-void AbstractScriptWidget::addCompileMessage(int line, MessageType type, const QString &text)
+void AbstractScriptWidget::addCompileMessage(
+        int line, MessageType type, const QString &text)
 {
-    p_sw_->messages << PrivateSW::Message(line, type, text);
+    MO_PRINT("COMPILE " << text);
+    emit compileMessageAdded(line, type, text);
+}
+
+void AbstractScriptWidget::onAddCompileMessage(int line, int type, const QString &text)
+{
+    p_sw_->messages << PrivateSW::Message(line, MessageType(type), text);
     p_sw_->updateErrorWidget();
 }
 

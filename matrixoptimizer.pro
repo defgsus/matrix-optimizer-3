@@ -70,8 +70,8 @@ windows { DEFINES += \
 unix: { DEFINES += \
 # for optirun bug (XXX old and obsolete by now)
         MO_DISABLE_OBJECT_TREE_DRAG \
-        MO_ENABLE_PYTHON34 \
-        MO_ENABLE_NUMPY
+        MO_ENABLE_PYTHON34
+        #MO_ENABLE_NUMPY
 }
 
 ##################### libs ############################
@@ -97,7 +97,7 @@ LIBS += -lglbinding \
         -ljpeg -langelscript \
         -lpython3.4m \
         # numpy
-        -L/home/defgsus/.local/lib/ -lnpymath-1.8 \
+        #-L/home/defgsus/.local/lib/ -lnpymath-1.8 \
         -lshp -latomic \
 #        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking
@@ -128,8 +128,8 @@ mac: { INCLUDEPATH += /opt/local/include \
 
 linux: { INCLUDEPATH += /usr/include/gstreamer-1.0 \
                         /usr/include/glib-2.0 \
-                        /usr/lib/x86_64-linux-gnu/glib-2.0/include \
-                        $HOME/.local/lib/python3.4/site-packages/numpy/core/include
+                        #$HOME/.local/lib/python3.4/site-packages/numpy/core/include \
+                        /usr/lib/x86_64-linux-gnu/glib-2.0/include
 }
 
 include(src/gui/gui.pri)

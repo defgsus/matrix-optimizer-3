@@ -243,7 +243,9 @@ HEADERS += \
     $$PWD/python/34/python_funcs.h \
     $$PWD/geom/geometrymodifierpython34.h \
     $$PWD/python/34/python_output.h \
-    $$PWD/python/34/python_object.h
+    $$PWD/python/34/python_object.h \
+    $$PWD/python/34/python_vector.h \
+    $$PWD/python/34/py_utils.h
 
 
 SOURCES += \
@@ -446,5 +448,7 @@ SOURCES += \
     $$PWD/python/34/python_funcs.cpp \
     $$PWD/geom/geometrymodifierpython34.cpp \
     $$PWD/python/34/python_output.cpp \
-    $$PWD/python/34/python_object.cpp
+    $$PWD/python/34/python_object.cpp \
+    $$PWD/python/34/python_vector.cpp \
+    $$PWD/python/34/py_utils.cpp
 

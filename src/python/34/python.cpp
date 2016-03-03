@@ -17,14 +17,15 @@
 #include "python.h"
 #include "python_funcs.h"
 #include "python_object.h"
+#include "python_vector.h"
 #include "python_geometry.h"
 #include "python_output.h"
 #include "io/error.h"
 #include "io/log.h"
 
-#if 1
+#if 0
 #   define MO_PY_DEBUG(arg__) \
-        MO_PRINT("PythonInterpreter(" << this << "): " << arg__);
+        MO_PRINT("PythonInterpreter(): " << arg__);
 #else
 #   define MO_PY_DEBUG(unused__)
 #endif
@@ -64,8 +65,9 @@ namespace
             return nullptr;
 
         // add the classes
-        initObject(module);
-        initGeometry(module);
+        MO_PY_DEBUG("init object"); initObject(module);
+        MO_PY_DEBUG("init geometry"); initGeometry(module);
+        MO_PY_DEBUG("init vector"); initVector(module);
 
         return module;
     }

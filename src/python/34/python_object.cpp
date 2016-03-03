@@ -10,10 +10,7 @@
 
 #ifdef MO_ENABLE_PYTHON34
 
-#include <python3.4/Python.h>
-#include <python3.4/structmember.h>
-#undef T_NONE
-#undef T_OBJECT
+#include "py_utils.h"
 
 #include "object/object.h"
 #include "object/util/objecteditor.h"
@@ -595,21 +592,6 @@ extern "C" {
         return type;
     }
     */
-
-    void initObjectType(PyObject* module, PyTypeObject* type, const char* name)
-    {
-        if (0 != PyType_Ready(type))
-            MO_ERROR("Failed to readify Object wrapper with Python 3.4");
-
-
-        PyObject* object = reinterpret_cast<PyObject*>(type);
-        Py_INCREF(object);
-        if (0 != PyModule_AddObject(module, name, object))
-        {
-            Py_DECREF(object);
-            MO_ERROR("Failed to add " << name << " to Python 3.4");
-        }
-    }
 
 } // extern "C"
 } // namespace

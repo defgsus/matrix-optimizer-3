@@ -10,8 +10,7 @@
 
 #ifdef MO_ENABLE_PYTHON34
 
-#include <python3.4/Python.h>
-#include <python3.4/structmember.h>
+#include "py_utils.h"
 #ifdef MO_ENABLE_NUMPY
 #   define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #   include <numpy/arrayobject.h>
@@ -40,22 +39,6 @@ namespace
         return true;
     }
 
-    bool py_to_double(PyObject* obj, double* val)
-    {
-        if (PyFloat_Check(obj))
-        {
-            *val = PyFloat_AsDouble(obj);
-            return true;
-        }
-        if (PyLong_Check(obj))
-        {
-            *val = PyLong_AsLong(obj);
-            return true;
-        }
-        return false;
-    }
-
-
     bool py_array_or_tuple_to_vec3(PyObject* arg, Vec3* v)
     {
         PyObject* obj;
@@ -67,7 +50,7 @@ namespace
                     return true;
                 return false;
             }
-#ifdef MO_ENABLE_NUMPY__
+#ifdef MO_ENABLE_NUMPY
             if (PyArray_Check(obj))
             {
                 auto nda = reinterpret_cast<PyArrayObject*>(obj);
@@ -111,6 +94,18 @@ namespace
             return true;
         PyErr_Clear();
         if (PyArg_ParseTuple(obj, "kk", v1, v2))
+            return true;
+        return false;
+    }
+
+    bool py_array_or_tuple_to_uint3(PyObject* obj,
+                                    unsigned long* v1, unsigned long* v2,
+                                    unsigned long* v3)
+    {
+        if (PyArg_ParseTuple(obj, "(kkk)", v1, v2, v3))
+            return true;
+        PyErr_Clear();
+        if (PyArg_ParseTuple(obj, "kkk", v1, v2, v3))
             return true;
         return false;
     }
@@ -249,13 +244,24 @@ extern "C"
             if (!py_array_or_tuple_to_uint2(arg, &i1, &i2))
                 return NULL;
             MO__GETGEOM(pgeom);
-            if (i1 >= pgeom->geometry->numVertices()
-             || i2 >= pgeom->geometry->numVertices())
-            {
-                PyErr_SetString(PyExc_IndexError, "index out of range");
-                return NULL;
-            }
+            if (!(checkIndex(i1, pgeom->geometry->numVertices())
+               && checkIndex(i2, pgeom->geometry->numVertices())))
+                return 0;
             pgeom->geometry->addLine(i1, i2);
+            Py_RETURN_NONE;
+        }
+
+        static PyObject* add_triangle(PyObject* self, PyObject* arg)
+        {
+            unsigned long i1, i2, i3;
+            if (!py_array_or_tuple_to_uint3(arg, &i1, &i2, &i3))
+                return NULL;
+            MO__GETGEOM(pgeom);
+            if (!(checkIndex(i1, pgeom->geometry->numVertices())
+               && checkIndex(i2, pgeom->geometry->numVertices())
+               && checkIndex(i3, pgeom->geometry->numVertices())))
+                return 0;
+            pgeom->geometry->addTriangle(i1, i2, i3);
             Py_RETURN_NONE;
         }
 
@@ -268,7 +274,7 @@ extern "C"
         { NULL, 0, 0, 0, NULL }
     };
 
-    PyMethodDef Python34Geom_methods[] =
+    static PyMethodDef Python34Geom_methods[] =
     {
         { "to_string",
           (PyCFunction)Python34GeomFuncs::to_string,
@@ -318,6 +324,14 @@ extern "C"
           "add_line(long, long) -> None\n"
           "add_line([long, long]) -> None\n"
           "Adds a line between two vertices."
+        },
+
+        { "add_triangle",
+          (PyCFunction)Python34GeomFuncs::add_triangle,
+          METH_VARARGS,
+          "add_triangle(l, l, l) -> None\n"
+          "add_triangle([l, l, l]) -> None\n"
+          "Adds a triangle between the three vertices."
         },
 
         { NULL, NULL, 0, NULL }
@@ -387,22 +401,11 @@ extern "C"
 
 namespace PYTHON34 {
 
+
 void initGeometry(void* mod)
 {
     PyObject* module = reinterpret_cast<PyObject*>(mod);
-
-    if (0 != PyType_Ready(&Python34Geom_type))
-        MO_ERROR("Failed to readify Geometry object with Python 3.4");
-
-
-    PyObject* object = reinterpret_cast<PyObject*>(&Python34Geom_type);
-    //PyObject* object = reinterpret_cast<PyObject*>(createGeometryObject(nullptr));
-    Py_INCREF(object);
-    if (0 != PyModule_AddObject(module, "Geometry", object))
-    {
-        Py_DECREF(object);
-        MO_ERROR("Failed to add Geometry object to Python 3.4");
-    }
+    initObjectType(module, &Python34Geom_type, "Geometry");
 }
 
 

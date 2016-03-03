@@ -26,6 +26,8 @@ struct TestPython::Private
     TestPython * p;
     int exec();
     int exec(const char* utf8);
+
+    int testVector();
 };
 
 TestPython::TestPython()
@@ -81,6 +83,8 @@ int TestPython::Private::exec()
         delete t;
     }
 
+    err += testVector();
+
     return err;
 }
 
@@ -97,6 +101,56 @@ int TestPython::Private::exec(const char* utf8)
         MO_PRINT("EXCEPTION: " << e.what());
         return 1;
     }
+
+    return 0;
+}
+
+int TestPython::Private::testVector()
+{
+    MO::PYTHON34::PythonInterpreter interp;
+
+    try
+    {
+        interp.execute(
+                    "from matrixoptimizer import *\n"
+                    "v = Vec(1.)\n"
+                    "print(v)\n"
+                    "v = Vec(1., 2.)\n"
+                    "print(v)\n"
+                    "v = Vec(1., 2., 3.)\n"
+                    "print(v)\n"
+                    "v = Vec(1., 2., 3., 4.)\n"
+                    "print(v)\n"
+                    "v = Vec([0])\n"
+                    "print(v)\n"
+                    "v = Vec([0, 1])\n"
+                    "print(v)\n"
+                    "v = Vec([0, 1, 2])\n"
+                    "print(v)\n"
+                    "v = Vec([0, 1, 2, 3])\n"
+                    "print(v)\n"
+                    "v = Vec([0, 1], 2, [3])\n"
+                    "print(v)\n"
+                    "def test_func(code):\n"
+                    "    print(code, \": \", )\n"
+                    "    eval(\"print('   ', \" + code + \")\")\n"
+                    "\n"
+                    "test_func(\"Vec(1,2,3) + (3, 2, 1)\")\n"
+                    "test_func(\"Vec(1,2,3) - (3, 2, 1)\")\n"
+                    "test_func(\"Vec(1,2,3) * (3, 2, 1)\")\n"
+                    "test_func(\"Vec(1,2,3) / (3, 2, 1)\")\n"
+                    "print(\"Vec(1,2,3,4) += (4,3,2,1)\"); v = Vec(1,2,3,4); v += (4,3,2,1); print('   ', v)\n"
+                    "print(\"Vec(1,2,3,4) -= (4,3,2,1)\"); v = Vec(1,2,3,4); v -= (4,3,2,1); print('   ', v)\n"
+                    "print(\"Vec(1,2,3,4) *= (4,3,2,1)\"); v = Vec(1,2,3,4); v *= (4,3,2,1); print('   ', v)\n"
+                    "print(\"Vec(1,2,3,4) /= (4,3,2,1)\"); v = Vec(1,2,3,4); v /= (4,3,2,1); print('   ', v)\n"
+                    );
+    }
+    catch (const MO::Exception& e)
+    {
+        MO_PRINT("EXCEPTION: " << e.what());
+        return 1;
+    }
+
 
     return 0;
 }

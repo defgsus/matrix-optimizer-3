@@ -27,6 +27,7 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPython34)
 
 GeometryModifierPython34::GeometryModifierPython34()
     : GeometryModifier  ("CreatePy34", QObject::tr("Python (3.4)"))
+    , widget_   (0)
 {
     static const QString script =
             "# Python interface (beta)\n"
@@ -44,15 +45,12 @@ GeometryModifierPython34::GeometryModifierPython34()
         QObject::tr("A piece of code to freely create/modify the geometry"),
         script);
     properties().setSubType("script", Properties::ST_TEXT | TT_PYTHON34);
-    /*
-    properties().setWidgetCallback("script", [](QWidget*w)
+    properties().setWidgetCallback("script", [=](QWidget*w)
     {
         if (auto te = dynamic_cast<GUI::TextEditDialog*>(w))
-            if (auto as = te->getWidgetAngelScript())
-                as->setScriptEngine(
-                    GeometryEngineAS::createNullEngine(true) );
+            if (auto py = te->getWidgetPython())
+                widget_ = py;
     });
-    */
 }
 
 QString GeometryModifierPython34::statusTip() const
@@ -76,20 +74,27 @@ void GeometryModifierPython34::execute(Geometry * g)
     if (g->numVertices() == 0)
         g->setColor(1, 1, 1, 1);
 
+    PYTHON34::PythonInterpreter py;
     try
     {
-        PYTHON34::PythonInterpreter py;
         py.setGeometry(g);
         py.execute( properties().get("script").toString() );
     }
     catch (const Exception&e)
     {
-        // XXX Exceptions disturb the editor right now
-        // E.g. somehow the code get's compiled again leading to endless error windows
         MO_DEBUG("GeometryModifierPython34: XXX EXCEPTION: \""
                  << e.what() << "\"");
+        if (widget_)
+        {
+            widget_->setErrorFrom(&py);
+            widget_->addCompileMessage(0, widget_->M_ERROR, e.what());
+        }
+        // XXX Widget is currently not attached!
         throw;
     }
+
+    if (widget_)
+        widget_->setErrorFrom(&py);
 }
 
 
