@@ -65,7 +65,7 @@ void Python34Widget::Private::createObjects()
 {
     if (!syn)
         syn = new SyntaxHighlighter(widget);
-    //syn->initForPython34();
+    syn->initForPython(NULL);
 
     widget->setSyntaxHighlighter(syn);
 }

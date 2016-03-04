@@ -164,6 +164,11 @@ class TimelineNd : public RefCounted
     /** get value at time (without limits) */
     ValueType getNoLimit(Double time) const;
 
+    /** get derivative at time (with limits).
+        @p range is the range to observe for calculating the derivative
+        and <b>must not</b> be smaller than timeQuantum(). */
+    ValueType getDerivative(Double time, Double range = 0.01) const;
+
     /** return smallest time */
     Double tmin() const
     {

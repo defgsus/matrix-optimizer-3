@@ -99,6 +99,9 @@ public:
 
     // ------- query ---------
 
+    /** Returns true when no primitives are created */
+    bool isEmpty() const;
+
     /** Some value reflecting changes to the geometry.
         This value is unique for all Geometries and all changes
         made to it (unique per application runtime). */

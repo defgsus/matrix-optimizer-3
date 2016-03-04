@@ -365,7 +365,7 @@ const GL::Texture* NeuroGl::errorOutputTexture() const
 
 void NeuroGl::updateGl() { p_->updateGl(); }
 
-void NeuroGl::step(int iterations)
+void NeuroGl::step()
 {
     p_->step();
 

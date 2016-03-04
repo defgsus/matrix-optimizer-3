@@ -41,6 +41,13 @@ public:
 
     // -------------- getter -------------------------------
 
+    /** Returns the widget for the given instanceId(), if still present */
+    static AbstractScriptWidget* instanceForId(int id);
+    static AbstractScriptWidget* instanceForScriptText(const QString& text);
+
+    /** Returns a runtime-unique id for each widget */
+    int instanceId() const;
+
     const QString scriptText() const;
 
     /** Returns true when the current text has been successfully compiled. */
@@ -55,6 +62,7 @@ signals:
     /** Only emitted when the changed script is valid */
     void scriptTextChanged();
 
+    /** Used to send from compiling thread to gui thread */
     void compileMessageAdded(int line, int type, const QString & text);
 
     // ------------------ actions --------------------------

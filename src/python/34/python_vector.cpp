@@ -58,15 +58,15 @@ static VectorStruct* copy_vec(VectorStruct*);
 } // namespace
 
 
-bool get_vector(void* vargs_, int len, double v[])
+bool get_vector(PyObject* args_, int len, double v[])
 {
-    if (!vargs_)
+    if (!args_)
     {
         PyErr_SetString(PyExc_TypeError, "NULL argument");
         return false;
     }
     // get single argument from tuple
-    auto args_ = removeArgumentTuple( reinterpret_cast<PyObject*>(vargs_) );
+    args_ = removeArgumentTuple( args_ );
     if (PySequence_Check(args_))
     {
         if (PySequence_Size(args_) != len)
@@ -114,14 +114,13 @@ bool get_vector(void* vargs_, int len, double v[])
     return false;
 }
 
-bool get_vector_var(void* vargs_, int *len, double vout[4])
+bool get_vector_var(PyObject* args_, int *len, double vout[4])
 {
-    if (!vargs_)
+    if (!args_)
     {
         PyErr_SetString(PyExc_TypeError, "NULL argument");
         return false;
     }
-    PyObject* args_ = reinterpret_cast<PyObject*>(vargs_);
     if (toDouble(args_, &vout[0]))
     {
         *len = 1;
@@ -289,7 +288,7 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
                 v2[i] = op(self->v[i], v[i]);
         }
 
-        return (PyObject*)buildVector(v2, self->len);
+        return buildVector(v2, self->len);
     }
 
     static PyObject* vec_operator_ternary(
@@ -327,7 +326,7 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         for (int i=0; i<self->len; ++i)
             vres[i] = op(self->v[i], v1[i], v2[i]);
 
-        return (PyObject*)buildVector(vres, self->len);
+        return buildVector(vres, self->len);
     }
 
 
@@ -711,10 +710,10 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     }
 
 
-    // gets single component by index
-    static PyObject* vec_getter(VectorStruct* self, void* ptr)
+    // gets single component by index [1,4]
+    static PyObject* vec_single_getter(VectorStruct* self, void* ptr)
     {
-        int idx = int64_t(ptr);
+        int idx = int64_t(ptr) - 1;
         if (idx < 0 || idx >= self->len)
         {
             PyErr_Set(PyExc_IndexError, QString("index in vector out of range %1/%2")
@@ -792,7 +791,7 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
     static PyObject* vec_sq_item(VectorStruct* self, Py_ssize_t idx)
     {
-        return vec_getter(self, (void*)idx);
+        return vec_single_getter(self, (void*)(idx+1));
     }
 
     static int vec_sq_ass_item(VectorStruct* self, Py_ssize_t idx, PyObject* arg)
@@ -894,8 +893,8 @@ PySequenceMethods Vector_SeqMethods = {
 
 
 static PyGetSetDef Vector_getseters[] = {
-    { (char*)"x"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x1 },
-    { (char*)"r"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x1 },
+    { (char*)"x"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x1 },
+    { (char*)"r"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x1 },
     { (char*)"xx"  , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x11 },
     { (char*)"rr"  , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x11 },
     { (char*)"xxx" , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x111 },
@@ -1064,8 +1063,8 @@ static PyGetSetDef Vector_getseters[] = {
     { (char*)"raab", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x3441 },
     { (char*)"xwww", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4441 },
     { (char*)"raaa", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4441 },
-    { (char*)"y"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x2 },
-    { (char*)"g"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x2 },
+    { (char*)"y"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x2 },
+    { (char*)"g"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x2 },
     { (char*)"yx"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x12 },
     { (char*)"gr"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x12 },
     { (char*)"yxx" , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x112 },
@@ -1234,8 +1233,8 @@ static PyGetSetDef Vector_getseters[] = {
     { (char*)"gaab", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x3442 },
     { (char*)"ywww", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4442 },
     { (char*)"gaaa", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4442 },
-    { (char*)"z"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x3 },
-    { (char*)"b"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x3 },
+    { (char*)"z"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x3 },
+    { (char*)"b"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x3 },
     { (char*)"zx"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x13 },
     { (char*)"br"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x13 },
     { (char*)"zxx" , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x113 },
@@ -1404,8 +1403,8 @@ static PyGetSetDef Vector_getseters[] = {
     { (char*)"baab", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x3443 },
     { (char*)"zwww", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4443 },
     { (char*)"baaa", (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x4443 },
-    { (char*)"w"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x4 },
-    { (char*)"a"   , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x4 },
+    { (char*)"w"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x4 },
+    { (char*)"a"   , (getter)vec_single_getter , (setter)vec_swizzle_setter, NULL, (void*)0x4 },
     { (char*)"wx"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x14 },
     { (char*)"ar"  , (getter)vec_swizzle_getter, (setter)vec_swizzle_setter, NULL, (void*)0x14 },
     { (char*)"wxx" , (getter)vec_swizzle_getter, (setter)NULL              , NULL, (void*)0x114 },
@@ -1595,14 +1594,15 @@ swizz.sort()
 for s in swizz:
     name = s.replace('1','x').replace('2','y').replace('3','z').replace('4','w')
     #print(s, name)
+    getter = 'vec_swizzle_getter'
+    if len(name) == 1: getter = 'vec_single_getter '
     setter = 'NULL              '
     if s.count('1') <= 1 and s.count('2') <= 1 and s.count('3') <= 1 and s.count('4') <= 1:
         setter = 'vec_swizzle_setter'
-    print('{ (char*)"%s"%s, (getter)vec_swizzle_getter, (setter)%s, NULL, (void*)0x%s },' % (name, ' '*(4-len(name)), setter, s[::-1]) )
+    print('{ (char*)"%s"%s, (getter)%s, (setter)%s, NULL, (void*)0x%s },' % (name, ' '*(4-len(name)), getter, setter, s[::-1]) )
     name = s.replace('1','r').replace('2','g').replace('3','b').replace('4','a')
-    print('{ (char*)"%s"%s, (getter)vec_swizzle_getter, (setter)%s, NULL, (void*)0x%s },' % (name, ' '*(4-len(name)), setter, s[::-1]) )
-
-  */
+    print('{ (char*)"%s"%s, (getter)%s, (setter)%s, NULL, (void*)0x%s },' % (name, ' '*(4-len(name)), getter, setter, s[::-1]) )
+*/
 
 
 
@@ -1693,23 +1693,22 @@ VectorStruct* copy_vec(VectorStruct* self)
 
 
 
-bool isVector(void *obj)
-{ return PyObject_TypeCheck(reinterpret_cast<PyObject*>(obj), Vector_Type()); }
+bool isVector(PyObject* obj)
+{ return PyObject_TypeCheck(obj, Vector_Type()); }
 
-void initVector(void* mod)
+void initVector(PyObject* module)
 {
-    PyObject* module = reinterpret_cast<PyObject*>(mod);
     initObjectType(module, Vector_Type(), MO__VEC_STR);
 }
 
 template <class VEC, int len>
-void* tmpl_buildVector(const VEC& v)
+PyObject* tmpl_buildVector(const VEC& v)
 {
     auto pobj = new_vec();
     pobj->len = len;
     for (int i=0; i<len; ++i)
         pobj->v[i] = v[i];
-    return pobj;
+    return reinterpret_cast<PyObject*>(pobj);
 }
 
 template <class VEC, int len>
@@ -1725,13 +1724,13 @@ VEC tmpl_getVector(void* vobj)
     return v;
 }
 
-void* buildVector(const Vec2& v) { return tmpl_buildVector<Vec2,2>(v); }
-void* buildVector(const Vec3& v) { return tmpl_buildVector<Vec3,3>(v); }
-void* buildVector(const Vec4& v) { return tmpl_buildVector<Vec4,4>(v); }
-void* buildVector(const DVec2& v) { return tmpl_buildVector<DVec2,2>(v); }
-void* buildVector(const DVec3& v) { return tmpl_buildVector<DVec3,3>(v); }
-void* buildVector(const DVec4& v) { return tmpl_buildVector<DVec4,4>(v); }
-void* buildVector(const double v[], int len)
+PyObject* buildVector(const Vec2& v) { return tmpl_buildVector<Vec2,2>(v); }
+PyObject* buildVector(const Vec3& v) { return tmpl_buildVector<Vec3,3>(v); }
+PyObject* buildVector(const Vec4& v) { return tmpl_buildVector<Vec4,4>(v); }
+PyObject* buildVector(const DVec2& v) { return tmpl_buildVector<DVec2,2>(v); }
+PyObject* buildVector(const DVec3& v) { return tmpl_buildVector<DVec3,3>(v); }
+PyObject* buildVector(const DVec4& v) { return tmpl_buildVector<DVec4,4>(v); }
+PyObject* buildVector(const double v[], int len)
 {
     if (len == 0) return tmpl_buildVector<const double*, 0>(v);
     else if (len == 1) return tmpl_buildVector<const double*, 1>(v);
@@ -1741,48 +1740,48 @@ void* buildVector(const double v[], int len)
     else return NULL;
 }
 
-void* buildVector(double x, double y)
+PyObject* buildVector(double x, double y)
 {
     auto pobj = new_vec();
     pobj->len = 2;
     pobj->v[0] = x; pobj->v[1] = y;
-    return pobj;
+    return reinterpret_cast<PyObject*>(pobj);
 }
 
-void* buildVector(double x, double y, double z)
+PyObject* buildVector(double x, double y, double z)
 {
     auto pobj = new_vec();
     pobj->len = 3;
     pobj->v[0] = x; pobj->v[1] = y; pobj->v[2] = z;;
-    return pobj;
+    return reinterpret_cast<PyObject*>(pobj);
 }
 
-void* buildVector(double x, double y, double z, double w)
+PyObject* buildVector(double x, double y, double z, double w)
 {
     auto pobj = new_vec();
     pobj->len = 4;
     pobj->v[0] = x; pobj->v[1] = y; pobj->v[2] = z; pobj->v[3] = w;
-    return pobj;
+    return reinterpret_cast<PyObject*>(pobj);
 }
 
-void* buildVector(const MATH::ArithmeticArray<double>& v)
+PyObject* buildVector(const MATH::ArithmeticArray<double>& v)
 {
     auto pobj = new_vec();
     pobj->len = std::min(size_t(4), v.numDimensions());
     for (int i=0; i<pobj->len; ++i)
         pobj->v[i] = v[i];
-    return pobj;
+    return reinterpret_cast<PyObject*>(pobj);
 }
 
-DVec2 getVector2(void* pyObject) { return tmpl_getVector<DVec2, 2>(pyObject); }
-DVec3 getVector3(void* pyObject) { return tmpl_getVector<DVec3, 3>(pyObject); }
-DVec4 getVector4(void* pyObject) { return tmpl_getVector<DVec4, 4>(pyObject); }
+DVec2 getVector2(PyObject* pyObject) { return tmpl_getVector<DVec2, 2>(pyObject); }
+DVec3 getVector3(PyObject* pyObject) { return tmpl_getVector<DVec3, 3>(pyObject); }
+DVec4 getVector4(PyObject* pyObject) { return tmpl_getVector<DVec4, 4>(pyObject); }
 
-bool getVector(void* vobj, int *len, double v[4])
+bool getVector(PyObject* arg, int *len, double v[4])
 {
-    if (!isVector(vobj))
+    if (!isVector(arg))
         return false;
-    auto self = reinterpret_cast<VectorStruct*>(vobj);
+    auto self = reinterpret_cast<VectorStruct*>(arg);
     for (int i = 0; i < self->len; ++i)
         v[i] = self->v[i];
     *len = self->len;

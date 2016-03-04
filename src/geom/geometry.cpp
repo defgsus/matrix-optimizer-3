@@ -121,6 +121,12 @@ void Geometry::setChanged()
     p_hash_ = geom_hash_++;
 }
 
+bool Geometry::isEmpty() const
+{
+    return (!numVertices()
+       || !(numPoints() || numLines() || numTriangles()));
+}
+
 QString Geometry::infoString() const
 {
     QString s = QObject::tr("%1 vertices (%2)")

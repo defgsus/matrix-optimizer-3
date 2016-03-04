@@ -34,7 +34,8 @@ template <typename T>
 class ArithmeticArray
 {
 public:
-    static struct NoInitTag { } NoInit;
+    struct NoInitTag { };
+    static const NoInitTag NoInit;
 
     ArithmeticArray(size_t dim, T fill = T(0))
         : p_dim_    (dim)
@@ -310,6 +311,8 @@ private:
     std::vector<T> p_data_;
 };
 
+template <typename T>
+const typename ArithmeticArray<T>::NoInitTag ArithmeticArray<T>::NoInit;
 
 
 

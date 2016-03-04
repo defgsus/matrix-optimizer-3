@@ -19,6 +19,8 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QFile>
+#include <QMutex>
+#include <QMutexLocker>
 
 #include "abstractscriptwidget.h"
 #include "gui/helpdialog.h"
@@ -41,7 +43,18 @@ public:
         , isUpdateOptional  (false)
         , isAlwaysUpdate    (false)
         , isChanged         (false)
-    { }
+    {
+        QMutexLocker lock(&instanceMutex);
+        instanceId = instanceCount++;
+        instanceMap.insert(instanceId, widget);
+    }
+
+    ~PrivateSW()
+    {
+        QMutexLocker lock(&instanceMutex);
+        instanceMap.remove(instanceId);
+    }
+
 
     void createWidgets();
     void updateEditorColor();
@@ -81,8 +94,39 @@ public:
     QString curText, curFilename;
 
     QList<Message> messages;
+
+    int instanceId;
+    static QMutex instanceMutex;
+    static QMap<int, AbstractScriptWidget*> instanceMap;
+    static int instanceCount;
 };
 
+QMutex AbstractScriptWidget::PrivateSW::instanceMutex(QMutex::Recursive);
+QMap<int, AbstractScriptWidget*> AbstractScriptWidget::PrivateSW::instanceMap;
+int AbstractScriptWidget::PrivateSW::instanceCount = 0;
+
+AbstractScriptWidget* AbstractScriptWidget::instanceForId(int id)
+{
+    QMutexLocker lock(&PrivateSW::instanceMutex);
+    auto i = PrivateSW::instanceMap.find(id);
+    if (i == PrivateSW::instanceMap.end())
+        return nullptr;
+    return i.value();
+}
+
+AbstractScriptWidget* AbstractScriptWidget::instanceForScriptText(const QString& txt)
+{
+    QMutexLocker lock(&PrivateSW::instanceMutex);
+    for (auto w : PrivateSW::instanceMap)
+    {
+        if (txt == w->scriptText())
+            return w;
+    }
+    return nullptr;
+}
+
+/** Returns a runtime-unique id for each widget */
+int AbstractScriptWidget::instanceId() const { return p_sw_->instanceId; }
 
 /** @todo TextEditDialog duplicates update functionality from AbstractScriptWidget and
             it's a bit more involving to work on that */

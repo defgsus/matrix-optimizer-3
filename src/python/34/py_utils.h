@@ -31,7 +31,8 @@ void initObjectType(PyObject* module, PyTypeObject* type, const char* name);
 void dumpObject(PyObject* arg, bool introspect);
 
 PyObject* fromString(const QString&);
-QString typeName(PyObject* arg);
+QString toString(PyObject* unicode);
+QString typeName(const PyObject* arg);
 
 PyObject* fromInt(int v);
 PyObject* fromLong(long v);

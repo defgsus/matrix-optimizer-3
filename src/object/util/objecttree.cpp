@@ -15,12 +15,12 @@
 namespace MO {
 
 
-ObjectTreeNode * get_object_tree(Object * root_object, bool own)
+ObjectTreeNode * get_object_tree(Object * root_object)
 {
-    auto node = new ObjectTreeNode(root_object, own);
+    auto node = new ObjectTreeNode(root_object);
 
     for (auto c : root_object->childObjects())
-        node->append( get_object_tree(c, own) );
+        node->append( get_object_tree(c) );
 
     return node;
 }

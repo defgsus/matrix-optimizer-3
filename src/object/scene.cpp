@@ -742,7 +742,7 @@ void Scene::notifyParameterVisibility(Parameter *p)
 {
     if (p_editor_)
         emit p_editor_->parameterVisibilityChanged(p);
-    //emit sceneSignals()->parameterVisibilityChanged(p);
+    emit sceneSignals()->parameterVisibilityChanged(p);
 }
 
 void Scene::notifyParameterChange(ParameterText * par)

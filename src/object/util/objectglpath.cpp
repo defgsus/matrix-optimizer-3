@@ -322,7 +322,7 @@ void ObjectGlPath::Private::createPath(Scene * s)
     // make a tree of all render-relevant translation objects
     // [the copy function will always copy the root/scene object
     //  so it can serve as the root transformation (identity)]
-    auto transformTree = tree->copy(false, [tree](Object * o)
+    auto transformTree = tree->copy([tree](Object * o)
     {
         // XXX need to better check render relevance
         return (tree->find(true, [](Object * o) { return o->isGl(); })

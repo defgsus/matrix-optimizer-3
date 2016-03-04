@@ -113,6 +113,24 @@ TimelineNd::ValueType TimelineNd::get(Double time) const
     return r;
 }
 
+TimelineNd::ValueType TimelineNd::getDerivative(Double time, Double h) const
+{
+#if 0 // XXX stimmt nich!
+
+    Double  h2 = .5 * h;
+    auto    d0 = get(time) * 2.,
+            d1 = get(time - h2),
+            d2 = get(time + h2);
+    d2 -= d0;
+    d2 += d1;
+    d2 /= (h * h);
+    return d2;
+    //return (d2 - 2. * d0 + d1) / (h * h);
+#else
+    return (get(time+h*.5) - get(time-h*.5)) / h;
+#endif
+}
+
 TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 {
     if (p_data_.empty())
@@ -167,7 +185,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::CONSTANT:
             ret = i1->second.val;
             return ret;
-        break;
 
         case Point::LINEAR:
         {
@@ -184,7 +201,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             ret = t1->val*(1.0-f) + f*(t2->val);
             return ret;
         }
-        break;
 
         case Point::SMOOTH:
         {
@@ -203,7 +219,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             ret = t1->val*(1.0-f) + f*(t2->val);
             return ret;
         }
-        break;
 
         case Point::SYMMETRIC:
         {
@@ -227,7 +242,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
             return ret;
         }
-        break;
 
         /** a variation of hermite with arbitrary derivatives
             http://paulbourke.net/miscellaneous/interpolation/ */
@@ -256,7 +270,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
             return ret;
         }
-        break;
 
 
         case Point::SPLINE4_SYM:
@@ -295,7 +308,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
             return ret;
         }
-        break;
 
 
         case Point::SPLINE4:
@@ -365,7 +377,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             ret = (a0*t*tq + a1*tq + a2*t + y1);
             return ret;
         }
-        break;
 
 
         case Point::SPLINE6:
@@ -416,7 +427,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
             return interpol_6((time - t2) / (t3-t2), y0,y1,y2,y3,y4,y5);
         }
-        break;
 
     }
 }

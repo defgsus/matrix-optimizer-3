@@ -587,7 +587,7 @@ void ObjectDspPath::Private::createPath(Scene * s)
     // make a tree of all audio-relevant translation objects
     // [the copy function will always copy the root/scene object
     //  so it can serve as the root transformation (identity)]
-    auto audioPosTree = tree->copy(false, [](Object * o)
+    auto audioPosTree = tree->copy([](Object * o)
     {
         return (o->isAudioRelevant() && o->hasTransformationObjects());
     });

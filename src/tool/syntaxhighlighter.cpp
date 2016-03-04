@@ -28,13 +28,10 @@ SyntaxHighlighter::SyntaxHighlighter(QObject * parent) :
     commentFormat_.setForeground(QBrush(QColor(140,140,140)));
 }
 
-SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent) :
-    QSyntaxHighlighter(parent)
+SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent)
+    : SyntaxHighlighter(parent)
 {
-    // setup multiline comments
-    commentStartExpression_ = QRegExp("/\\*");
-    commentEndExpression_ = QRegExp("\\*/");
-    commentFormat_.setForeground(QBrush(QColor(140,140,140)));
+
 }
 
 void SyntaxHighlighter::setNames(const QStringList &variables,
@@ -444,8 +441,27 @@ void SyntaxHighlighter::initForGlsl()
 
     };
 
-
     setNames(QStringList(), glsl_functions, glsl_types, glsl_reserved);
 }
+
+#ifdef MO_ENABLE_PYTHON34
+void SyntaxHighlighter::initForPython(const PYTHON34::PythonInterpreter*)
+{
+    static const QStringList python_reserved =
+    {
+        "False"      , "class"      , "finally"    , "is"         , "return"
+        "None"       , "continue"   , "for"        , "lambda"     , "try"
+        "True"       , "def"        , "from"       , "nonlocal"   , "while"
+        "and"        , "del"        , "global"     , "not"        , "with"
+        "as"         , "elif"       , "if"         , "or"         , "yield"
+        "assert"     , "else"       , "import"     , "pass"
+        "break"      , "except"     , "in"         , "raise"
+    };
+
+    setNames(QStringList(), QStringList(), QStringList(), python_reserved);
+}
+
+#endif
+
 
 } // namespace MO

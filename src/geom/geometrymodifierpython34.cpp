@@ -27,7 +27,6 @@ MO_REGISTER_GEOMETRYMODIFIER(GeometryModifierPython34)
 
 GeometryModifierPython34::GeometryModifierPython34()
     : GeometryModifier  ("CreatePy34", QObject::tr("Python (3.4)"))
-    , widget_   (0)
 {
     static const QString script =
             "# Python interface (beta)\n"
@@ -45,12 +44,6 @@ GeometryModifierPython34::GeometryModifierPython34()
         QObject::tr("A piece of code to freely create/modify the geometry"),
         script);
     properties().setSubType("script", Properties::ST_TEXT | TT_PYTHON34);
-    properties().setWidgetCallback("script", [=](QWidget*w)
-    {
-        if (auto te = dynamic_cast<GUI::TextEditDialog*>(w))
-            if (auto py = te->getWidgetPython())
-                widget_ = py;
-    });
 }
 
 QString GeometryModifierPython34::statusTip() const
@@ -72,7 +65,12 @@ void GeometryModifierPython34::execute(Geometry * g)
 {
     // initial color
     if (g->numVertices() == 0)
-        g->setColor(1, 1, 1, 1);
+        g->setColor(.5, .5, .5, 1);
+
+    // brute-force to attach error message to widget
+    GUI::Python34Widget* widget = dynamic_cast<GUI::Python34Widget*>
+            (GUI::AbstractScriptWidget::instanceForScriptText(
+                 properties().get("script").toString()));
 
     PYTHON34::PythonInterpreter py;
     try
@@ -84,17 +82,17 @@ void GeometryModifierPython34::execute(Geometry * g)
     {
         MO_DEBUG("GeometryModifierPython34: XXX EXCEPTION: \""
                  << e.what() << "\"");
-        if (widget_)
+        if (widget)
         {
-            widget_->setErrorFrom(&py);
-            widget_->addCompileMessage(0, widget_->M_ERROR, e.what());
+            widget->setErrorFrom(&py);
+            widget->addCompileMessage(0, widget->M_ERROR, e.what());
         }
-        // XXX Widget is currently not attached!
-        throw;
+        // if widget is not attached pass through to system
+        else throw;
     }
 
-    if (widget_)
-        widget_->setErrorFrom(&py);
+    if (widget)
+        widget->setErrorFrom(&py);
 }
 
 

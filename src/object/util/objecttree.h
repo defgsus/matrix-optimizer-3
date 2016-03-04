@@ -21,18 +21,10 @@ namespace MO {
 
     class Object;
 
-    typedef TreeNode<Object*> ObjectTreeNode;
-
-    /** Returns a copy of the current object tree structure.
-        XXX There is a lot of work in newobj branch that manages
-        the Object tree through ObjectTreeNode but it's not there yet.. */
-    ObjectTreeNode * get_object_tree(Object* root_object, bool own = false);
-
     /** Specialization for Object* in TreeNode */
-    template <>
-    struct TreeNodeTraits<Object*>
+    struct ObjectTreeNodeTraits
     {
-        typedef TreeNode<Object*> Node;
+        typedef TreeNode<Object*, ObjectTreeNodeTraits> Node;
 
         static void creator(Node * ) { }
         static void destructor(Node * ) { }
@@ -40,6 +32,14 @@ namespace MO {
             { if (node->object()) return node->object()->name();
                 else return "Object(null)"; }
     };
+
+    typedef TreeNode<Object*, ObjectTreeNodeTraits> ObjectTreeNode;
+
+    /** Returns a copy of the current object tree structure.
+        XXX There is a lot of work in newobj branch that manages
+        the Object tree through ObjectTreeNode but it's not there yet..
+        XXX Superseded and obsolete by now (2016) */
+    ObjectTreeNode * get_object_tree(Object* root_object);
 
 #if 0
 

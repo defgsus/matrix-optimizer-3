@@ -13,17 +13,19 @@
 #ifndef MOSRC_PYTHON_34_PYTHON_TIMELINE_H
 #define MOSRC_PYTHON_34_PYTHON_TIMELINE_H
 
+#include "py_utils.h"
+
 namespace MO {
-namespace MATH { class TimelineNd; }
+namespace MATH { class TimelineNd; template <typename T> class ArithmeticArray; }
 namespace PYTHON34 {
 
-    /** Adds the Timeline objects to the module.
-        @p module is PyObject* */
-    void initTimeline(void* module);
+    /** Adds the Timeline objects to the module. */
+    void initTimeline(PyObject* module);
 
-    bool isTimeline(void* pyObject);
+    bool isTimeline(PyObject* obj);
 
-    void* buildTimeline(MATH::TimelineNd*);
+    PyObject* buildTimeline(MATH::TimelineNd*);
+    PyObject* buildList(const MATH::ArithmeticArray<double>&);
 
 } // namespace PYTHON34
 } // namespace MO

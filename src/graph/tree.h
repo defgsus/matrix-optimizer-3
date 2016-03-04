@@ -23,9 +23,9 @@
 #include <QString>
 #include <QList>
 
-#ifdef MO_GRAPH_DEBUG
+//#ifdef MO_GRAPH_DEBUG
 #   include <iostream>
-#endif
+//#endif
 
 #include "io/error.h"
 
@@ -33,38 +33,32 @@
 namespace MO {
 
 
-//template <class T>
-//class Tree;
-
-template <class T>
-class TreeNode;
-
-/** Traits class for objects in TreeNode */
-template <class T>
+/** Traits class for objects in TreeNode.
+    Not exactly a typical traits class,
+    this is rather passed as template argument of TreeNode*/
 struct TreeNodeTraits
 {
-    typedef TreeNode<T> Node;
-
     /** This is called when a node is created */
-    static void creator(Node * node) { node=node; }
+    template <class Node>
+    static void creator(Node * node) { (void)node; }
     /** Called in destructor of node */
-    static void destructor(Node * node) { node=node; }
+    template <class Node>
+    static void destructor(Node * node) { (void)node; }
 
     /** Returns a string representation of each node */
+    template <class Node>
     static QString toString(const Node * node)
         { return QString("Node(0x%1)").arg((size_t)node, 0, 16); }
 };
 
 
-template <class T>
+template <class T, class Traits = TreeNodeTraits>
 class TreeNode
 {
 
 public:
 
     // ---------- types --------------
-
-    typedef TreeNodeTraits<T> Traits;
 
     enum Order
     {
@@ -74,16 +68,13 @@ public:
 
     // -------------- ctor -----------
 
-    TreeNode(T object, bool own = true);
+    TreeNode(T object);
     ~TreeNode();
 
     // ------- getter --------
 
     /** Associated object */
     T object() const { return p_obj_; }
-
-    /** Returns true if the associated object is owned */
-    bool isOwning() const { return p_own_; }
 
     /** Parent node */
     TreeNode * parent() const { return p_parent_; }
@@ -123,7 +114,8 @@ public:
     // ------ iterative getter ------
 
     /** Will return the root of the hierarchy which can be
-        the node itself */
+        the node itself.
+        This will never return NULL. */
     TreeNode * root();
     const TreeNode * root() const;
 
@@ -132,7 +124,7 @@ public:
     int countLevel() const;
 
     /** Creates a copy of this node and it's subtree. */
-    TreeNode * copy(bool owning = false) const;
+    TreeNode * copy() const;
 
     /** Returns the node for the object if it's in the hierarchy, including
         this node itself, or NULL */
@@ -162,7 +154,7 @@ public:
         for the contained objects.
         @note The node for which this function is called will <b>always</b> be the
         root of the returned tree, regardless of the selector. */
-    TreeNode * copy(bool owning, std::function<bool(const T)> selector) const;
+    TreeNode * copy(std::function<bool(const T)> selector) const;
 
     /** Returns the node for the first object for which @p selector returns true,
         including this node itself, or NULL */
@@ -202,9 +194,7 @@ public:
         The inserted node is returned. */
     TreeNode * insert(int index, TreeNode * node);
 
-    /** Adds a new children node with associated object.
-        Adding the same object twice when this node is owning
-        leads to undefined behaviour. */
+    /** Adds a new children node with associated object. */
     TreeNode * append(T object);
 
     /** Inserts a new children node with associated object at the given index,
@@ -247,9 +237,9 @@ public:
 
     QString toString() const { return Traits::toString(this); }
 
-#ifdef MO_GRAPH_DEBUG
+//#ifdef MO_GRAPH_DEBUG
     std::ostream& dumpTree(std::ostream& out, const std::string& prepend = "") const;
-#endif
+//#endif
 
 private:
 
@@ -259,12 +249,11 @@ private:
 
     void p_install_node_(TreeNode*);
     TreeNode * p_copy_impl_(TreeNode * inserter,
-                            std::function<bool(const T)> selector, bool owning = false) const;
+                            std::function<bool(const T)> selector) const;
 
     TreeNode * p_parent_;
     std::vector<TreeNode*> p_child_;
     T p_obj_;
-    bool p_own_;
 };
 
 
@@ -275,15 +264,15 @@ private:
 
 // #################################### templ impl ##########################################
 
-template <class T>
-inline TreeNode<T>::TreeNode(T object, bool own)
-    : p_parent_(0), p_obj_(object), p_own_(own)
+template <class T, class Traits>
+inline TreeNode<T, Traits>::TreeNode(T object)
+    : p_parent_(0), p_obj_(object)
 {
     Traits::creator(this);
 }
 
-template <class T>
-inline TreeNode<T>::~TreeNode()
+template <class T, class Traits>
+inline TreeNode<T, Traits>::~TreeNode()
 {
     for (auto c : p_child_) delete c;
     Traits::destructor(this);
@@ -291,39 +280,39 @@ inline TreeNode<T>::~TreeNode()
 
 
 
-template <class T>
-inline int TreeNode<T>::indexOf(TreeNode * child) const
+template <class T, class Traits>
+inline int TreeNode<T, Traits>::indexOf(TreeNode * child) const
 {
     for (size_t i=0; i!=p_child_.size(); ++i)
         if (child == p_child_[i]) return i;
     return -1;
 }
 
-template <class T>
-inline int TreeNode<T>::indexOf(const TreeNode * child) const
+template <class T, class Traits>
+inline int TreeNode<T, Traits>::indexOf(const TreeNode * child) const
 {
     for (size_t i=0; i!=p_child_.size(); ++i)
         if (child == p_child_[i]) return i;
     return -1;
 }
 
-template <class T>
-inline int TreeNode<T>::indexOf(T child) const
+template <class T, class Traits>
+inline int TreeNode<T, Traits>::indexOf(T child) const
 {
     for (size_t i=0; i!=p_child_.size(); ++i)
         if (child == p_child_[i]->object()) return i;
     return -1;
 }
 
-template <class T>
-inline int TreeNode<T>::indexInParent() const
+template <class T, class Traits>
+inline int TreeNode<T, Traits>::indexInParent() const
 {
     return parent() ? parent()->indexOf(this) : 0;
 }
 
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::children(T object) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::children(T object) const
 {
     const int i = indexOf(object);
     return i < 0 ? 0 : children(i);
@@ -334,30 +323,30 @@ inline TreeNode<T> * TreeNode<T>::children(T object) const
 
 // ----------------- iterative ----------------
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::root()
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::root()
 {
     TreeNode * p = parent();
     if (!p)
         return this;
-    while (p)
+    while (p && p->parent())
         p = p->parent();
     return p;
 }
 
-template <class T>
-inline const TreeNode<T> * TreeNode<T>::root() const
+template <class T, class Traits>
+inline const TreeNode<T, Traits> * TreeNode<T, Traits>::root() const
 {
     TreeNode * p = parent();
     if (!p)
         return this;
-    while (p)
+    while (p && p->parent())
         p = p->parent();
     return p;
 }
 
-template <class T>
-inline int TreeNode<T>::countLevel() const
+template <class T, class Traits>
+inline int TreeNode<T, Traits>::countLevel() const
 {
     int level = 0;
     TreeNode * p = parent();
@@ -371,52 +360,49 @@ inline int TreeNode<T>::countLevel() const
 
 // ------------------------- copy --------------------------------
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::copy(bool owning) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::copy() const
 {
-    MO_ASSERT(!(p_own_ && owning), "copy of TreeNode with more than one owner");
-
-    auto root = new TreeNode(p_obj_, owning);
+    auto root = new TreeNode(p_obj_);
 
     for (auto c : p_child_)
-        root->append(c->copy(owning));
+        root->append(c->copy());
 
     return root;
 }
 
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::p_copy_impl_(TreeNode<T> * inserter,
-                                             std::function<bool(const T)> selector, bool owning) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::p_copy_impl_(
+            TreeNode<T, Traits> * inserter,
+            std::function<bool(const T)> selector) const
 {
     if (selector(object()))
-        inserter = inserter->append(new TreeNode(object(), owning));
+        inserter = inserter->append(new TreeNode(object()));
 
     for (auto c : children())
-        c->p_copy_impl_(inserter, selector, owning);
+        c->p_copy_impl_(inserter, selector);
 
     return inserter;
 }
 
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::copy(bool owning, std::function<bool(const T)> selector) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::copy(std::function<bool(const T)> selector) const
 {
-    MO_ASSERT(!(p_own_ && owning), "copy of TreeNode with more than one owner");
-
-    TreeNode * root = new TreeNode(object(), owning);
+    TreeNode * root = new TreeNode(object());
 
     for (auto c : children())
-        c->p_copy_impl_(root, selector, owning);
+        c->p_copy_impl_(root, selector);
 
     return root;
 }
 
 // ---------------------------- linear ------------------------------
 
-template <class T>
+template <class T, class Traits>
 template <class U>
-void TreeNode<T>::makeLinear(QList<U>& objects, std::function<bool(const U)> selector,
+void TreeNode<T, Traits>::makeLinear(QList<U>& objects, std::function<bool(const U)> selector,
                              int max_level, Order order) const
 {
     if (max_level == 0)
@@ -473,8 +459,8 @@ void TreeNode<T>::makeLinear(QList<U>& objects, std::function<bool(const U)> sel
     }
 }
 
-template <class T>
-void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
+template <class T, class Traits>
+void TreeNode<T, Traits>::makeLinear(QList<T>& objects, std::function<bool(const T)> selector,
                              int max_level, Order order) const
 {
     if (max_level == 0)
@@ -530,9 +516,9 @@ void TreeNode<T>::makeLinear(QList<T>& objects, std::function<bool(const T)> sel
 }
 
 
-template <class T>
+template <class T, class Traits>
 template <class U>
-void TreeNode<T>::makeLinear(QList<U>& objects, int max_level, Order order) const
+void TreeNode<T, Traits>::makeLinear(QList<U>& objects, int max_level, Order order) const
 {
     if (max_level == 0)
         return;
@@ -586,8 +572,8 @@ void TreeNode<T>::makeLinear(QList<U>& objects, int max_level, Order order) cons
     }
 }
 
-template <class T>
-void TreeNode<T>::makeLinear(QList<T>& objects, int max_level, Order order) const
+template <class T, class Traits>
+void TreeNode<T, Traits>::makeLinear(QList<T>& objects, int max_level, Order order) const
 {
     if (max_level == 0)
         return;
@@ -643,8 +629,8 @@ void TreeNode<T>::makeLinear(QList<T>& objects, int max_level, Order order) cons
 
 // ---------------------------- find --------------------------------
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::findParent(T o) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::findParent(T o) const
 {
     return parent() ?
                 parent()->object() == o ? parent()
@@ -652,8 +638,8 @@ inline TreeNode<T> * TreeNode<T>::findParent(T o) const
                     : 0;
 }
 
-template <class T>
-inline bool TreeNode<T>::hasParent(TreeNode * node) const
+template <class T, class Traits>
+inline bool TreeNode<T, Traits>::hasParent(TreeNode * node) const
 {
     return parent() ?
                 parent() == node ? true
@@ -661,8 +647,8 @@ inline bool TreeNode<T>::hasParent(TreeNode * node) const
                     : false;
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::findParent(std::function<bool(const T)> selector) const
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::findParent(std::function<bool(const T)> selector) const
 {
     return parent() ?
                 selector(parent()->object()) ? parent()
@@ -670,8 +656,8 @@ inline TreeNode<T> * TreeNode<T>::findParent(std::function<bool(const T)> select
                     : 0;
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::find(T o, bool recursive)
 {
     if (object() == o)
         return this;
@@ -694,8 +680,8 @@ inline TreeNode<T> * TreeNode<T>::find(T o, bool recursive)
     return 0;
 }
 
-template <class T>
-inline const TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
+template <class T, class Traits>
+inline const TreeNode<T, Traits> * TreeNode<T, Traits>::find(T o, bool recursive) const
 {
     if (object() == o)
         return this;
@@ -718,8 +704,8 @@ inline const TreeNode<T> * TreeNode<T>::find(T o, bool recursive) const
     return 0;
 }
 
-template <class T>
-TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector)
+template <class T, class Traits>
+TreeNode<T, Traits> * TreeNode<T, Traits>::find(bool recursive, std::function<bool(const T)> selector)
 {
     if (selector(object()))
         return this;
@@ -740,8 +726,8 @@ TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> sel
     return 0;
 }
 
-template <class T>
-const TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T)> selector) const
+template <class T, class Traits>
+const TreeNode<T, Traits> * TreeNode<T, Traits>::find(bool recursive, std::function<bool(const T)> selector) const
 {
     if (selector(object()))
         return this;
@@ -765,18 +751,16 @@ const TreeNode<T> * TreeNode<T>::find(bool recursive, std::function<bool(const T
 
 // --------------------------------- edit ---------------------------------
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::append(T object)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::append(T object)
 {
-    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::append() duplicate object " << object);
-
-    auto node = new TreeNode(object, p_own_);
+    auto node = new TreeNode(object);
     append(node);
     return node;
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::append(TreeNode * node)
 {
     MO_ASSERT(indexOf(node) < 0, "TreeNode::append() duplicate node " << node);
 
@@ -786,20 +770,18 @@ inline TreeNode<T> * TreeNode<T>::append(TreeNode * node)
     return node;
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::insert(int index, T object)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::insert(int index, T object)
 {
-    MO_ASSERT(!isOwning() || indexOf(object) < 0, "TreeNode::insert() duplicate object " << object);
-
-    auto node = new TreeNode(object, p_own_);
+    auto node = new TreeNode(object);
     insert(index, node);
     return node;
 }
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::insert(int index, TreeNode * node)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::insert(int index, TreeNode * node)
 {
-    MO_ASSERT(indexOf(node) < 0, "TreeNode<T>::insert() duplicate node " << node);
+    MO_ASSERT(indexOf(node) < 0, "TreeNode<T, Traits>::insert() duplicate node " << node);
 
     if (index < 0 || index >= (int)p_child_.size())
         p_child_.push_back(node);
@@ -814,14 +796,14 @@ inline TreeNode<T> * TreeNode<T>::insert(int index, TreeNode * node)
     return node;
 }
 
-template <class T>
-inline void TreeNode<T>::p_install_node_(TreeNode * node)
+template <class T, class Traits>
+inline void TreeNode<T, Traits>::p_install_node_(TreeNode * node)
 {
     node->p_parent_ = this;
 }
 
-template <class T>
-inline void TreeNode<T>::swapChildren(size_t from, size_t to)
+template <class T, class Traits>
+inline void TreeNode<T, Traits>::swapChildren(size_t from, size_t to)
 {
     if (from == to)
         return;
@@ -830,8 +812,8 @@ inline void TreeNode<T>::swapChildren(size_t from, size_t to)
 }
 
 
-template <class T>
-inline bool TreeNode<T>::remove(T object)
+template <class T, class Traits>
+inline bool TreeNode<T, Traits>::remove(T object)
 {
     const int i = indexOf(object);
     if (i < 0)
@@ -840,8 +822,8 @@ inline bool TreeNode<T>::remove(T object)
     return true;
 }
 
-template <class T>
-inline bool TreeNode<T>::removeAll(T object)
+template <class T, class Traits>
+inline bool TreeNode<T, Traits>::removeAll(T object)
 {
     int i = indexOf(object);
     if (i < 0)
@@ -855,8 +837,8 @@ inline bool TreeNode<T>::removeAll(T object)
     return true;
 }
 
-template <class T>
-inline bool TreeNode<T>::remove(TreeNode * node)
+template <class T, class Traits>
+inline bool TreeNode<T, Traits>::remove(TreeNode * node)
 {
     const int i = indexOf(node);
     if (i < 0)
@@ -865,10 +847,10 @@ inline bool TreeNode<T>::remove(TreeNode * node)
     return true;
 }
 
-template <class T>
-inline void TreeNode<T>::remove(size_t index)
+template <class T, class Traits>
+inline void TreeNode<T, Traits>::remove(size_t index)
 {
-    MO_ASSERT(index < p_child_.size(), "TreeNode<T>::remove(" << index << ") out of range");
+    MO_ASSERT(index < p_child_.size(), "TreeNode<T, Traits>::remove(" << index << ") out of range");
 
     auto node = p_child_[index];
     p_child_.erase(p_child_.begin() + index);
@@ -876,10 +858,10 @@ inline void TreeNode<T>::remove(size_t index)
 }
 
 
-template <class T>
-inline TreeNode<T> * TreeNode<T>::takeChildren(size_t index)
+template <class T, class Traits>
+inline TreeNode<T, Traits> * TreeNode<T, Traits>::takeChildren(size_t index)
 {
-    MO_ASSERT(index < p_child_.size(), "TreeNode<T>::takeChildren(" << index << ") out of range");
+    MO_ASSERT(index < p_child_.size(), "TreeNode<T, Traits>::takeChildren(" << index << ") out of range");
 
     auto node = p_child_[index];
     p_child_.erase(p_child_.begin() + index);
@@ -887,20 +869,20 @@ inline TreeNode<T> * TreeNode<T>::takeChildren(size_t index)
     return node;
 }
 
-template <class T>
-inline void TreeNode<T>::detachFromParent()
+template <class T, class Traits>
+inline void TreeNode<T, Traits>::detachFromParent()
 {
     if (parent())
     {
         int idx = parent()->indexOf(this);
-        MO_ASSERT(idx >= 0, "TreeNode<T>::detachFromParent() i'm not part of parent's children list !?");
+        MO_ASSERT(idx >= 0, "TreeNode<T, Traits>::detachFromParent() i'm not part of parent's children list !?");
 
         parent()->takeChildren( idx );
     }
 }
 
-template <class T>
-inline void TreeNode<T>::forEachNode(std::function<void(TreeNode*)> func)
+template <class T, class Traits>
+inline void TreeNode<T, Traits>::forEachNode(std::function<void(TreeNode*)> func)
 {
     func(this);
     for (auto c : p_child_)
@@ -910,10 +892,10 @@ inline void TreeNode<T>::forEachNode(std::function<void(TreeNode*)> func)
 
 // --------------------------------- debug --------------------------------
 
-#ifdef MO_GRAPH_DEBUG
+//#ifdef MO_GRAPH_DEBUG
 
-template <class T>
-std::ostream& TreeNode<T>::dumpTree(std::ostream& out, const std::string& prepend) const
+template <class T, class Traits>
+std::ostream& TreeNode<T, Traits>::dumpTree(std::ostream& out, const std::string& prepend) const
 {
     out << prepend << toString().toStdString() << std::endl;
 
@@ -923,7 +905,7 @@ std::ostream& TreeNode<T>::dumpTree(std::ostream& out, const std::string& prepen
     return out;
 }
 
-#endif
+//#endif
 
 
 } // namespace MO

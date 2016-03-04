@@ -164,11 +164,17 @@ void GeometryWidget::drawGL(const Mat4& projection,
     if (showGrid_)
         drawGrid(projection, cubeViewTrans, viewTrans, trans);
 
+    // quit after drawing grid if no data is available
+    if (drawable_->geometry() && drawable_->geometry()->isEmpty())
+        return;
+
     if (recompile && drawable_->isReady())
         drawable_->releaseOpenGl();
 
     // compile drawable when geometry is ready
-    if (!drawable_->isReady() && drawable_->geometry())
+    if (!drawable_->isReady()
+        && drawable_->geometry()
+        && !drawable_->geometry()->isEmpty())
     {
         // set source (and flags)
         GL::ShaderSource * src = new GL::ShaderSource();

@@ -15,6 +15,7 @@
 #include "python_funcs.h"
 #include "python_object.h"
 #include "python_geometry.h"
+#include "py_tree.h"
 #include "python.h"
 #include "geom/geometry.h"
 #include "object/scene.h"
@@ -26,8 +27,15 @@ namespace PYTHON34 {
 namespace {
 extern "C" {
 
+#define MO_PY_DEF_DOC(name__, str__) \
+    static constexpr const char* name__##_doc = str__;
+
     struct PythonFuncs
     {
+
+        MO_PY_DEF_DOC(instance_id,
+            "instance_id() -> long\n"
+                      );
         static PyObject* instance_id(PyObject* , PyObject*)
         {
             long i = 0;
@@ -36,6 +44,9 @@ extern "C" {
             return Py_BuildValue("n", i);
         }
 
+        MO_PY_DEF_DOC(instance_count,
+            "instance_count() -> long\n"
+                      );
         static PyObject* instance_count(PyObject* , PyObject*)
         {
             long i = 0;
@@ -44,7 +55,12 @@ extern "C" {
             return Py_BuildValue("n", i);
         }
 
-        static PyObject* get_geometry(PyObject* , PyObject*)
+        MO_PY_DEF_DOC(geometry,
+            "geometry() -> Geometry | None\n"
+            "Returns the current Geometry instance, if any.\n"
+            "This is usually only available within a geometry script."
+                      );
+        static PyObject* geometry(PyObject* , PyObject*)
         {
             if (auto inter = PythonInterpreter::current())
             if (inter->getGeometry())
@@ -55,7 +71,13 @@ extern "C" {
             Py_RETURN_NONE;
         }
 
-        static PyObject* get_object(PyObject* , PyObject*)
+        MO_PY_DEF_DOC(object,
+            "object() -> Object | None\n"
+            "Returns the current Object instance, if any.\n"
+            "This is usually only available from a script running in "
+            "a python object or a geometry script."
+                      );
+        static PyObject* object(PyObject* , PyObject*)
         {
             if (auto inter = PythonInterpreter::current())
             if (inter->getObject())
@@ -66,7 +88,12 @@ extern "C" {
             Py_RETURN_NONE;
         }
 
-        static PyObject* get_scene(PyObject* , PyObject*)
+        MO_PY_DEF_DOC(scene,
+            "scene() -> Object | None\n"
+            "Returns the currently loaded scene object, if any.\n"
+            "This is the root object of everything."
+                      );
+        static PyObject* scene(PyObject* , PyObject*)
         {
             if (auto s = Scene::currentScene())
             {
@@ -76,6 +103,20 @@ extern "C" {
             Py_RETURN_NONE;
         }
 
+        MO_PY_DEF_DOC(debug_tree,
+            "debug_tree(Object) -> None\n"
+                      );
+        static PyObject* debug_tree(PyObject*, PyObject* arg)
+        {
+            PyObjectTree* tree = createPyObjectTree(arg);
+            tree->dumpTree(std::cout);
+            delete tree;
+            Py_RETURN_NONE;
+        }
+
+        MO_PY_DEF_DOC(debug_object,
+            "debug_object(Object) -> None\n"
+                      );
         static PyObject* debug_object(PyObject*, PyObject* arg)
         {
             #define MO__PRINTPY(what__) \
@@ -166,53 +207,23 @@ extern "C" {
 
 void* pythonFuncs()
 {
+
+#define MO__METHOD(name__, args__) \
+    { #name__, (PyCFunction)PythonFuncs::name__, args__, PythonFuncs::name__##_doc },
+
     static PyMethodDef methods[] =
     {
-        { "geometry",
-          (PyCFunction)PythonFuncs::get_geometry,
-          METH_NOARGS,
-          "geometry() -> Geometry | None\n"
-          "Returns the current Geometry instance, if any.\n"
-          "This is usually only available within a geometry script."
-        },
-
-        { "object",
-          (PyCFunction)PythonFuncs::get_object,
-          METH_NOARGS,
-          "object() -> Object | None\n"
-          "Returns the current Object instance, if any.\n"
-          "This is usually only available from a script running in "
-          "a python object or a geometry script."
-        },
-
-        { "scene",
-          (PyCFunction)PythonFuncs::get_scene,
-          METH_NOARGS,
-          "scene() -> Object | None\n"
-          "Returns the currently loaded scene object, if any.\n"
-          "This is the root object of everything."
-        },
-
-        { "instance_id",
-          (PyCFunction)PythonFuncs::instance_id,
-          METH_NOARGS,
-          "instance_id() -> long\n"
-        },
-
-        { "instance_count",
-          (PyCFunction)PythonFuncs::instance_count,
-          METH_NOARGS,
-          "instance_count() -> long\n"
-        },
-
-        { "debug_object",
-          (PyCFunction)PythonFuncs::debug_object,
-          METH_O,
-          "debug_object(Object) -> None\n"
-        },
+        MO__METHOD(geometry,        METH_NOARGS)
+        MO__METHOD(object,          METH_NOARGS)
+        MO__METHOD(scene,           METH_NOARGS)
+        MO__METHOD(instance_id,     METH_NOARGS)
+        MO__METHOD(instance_count,  METH_NOARGS)
+        MO__METHOD(debug_object,    METH_O)
+        MO__METHOD(debug_tree,      METH_O)
 
         { NULL, NULL, 0, NULL }
     };
+#undef MO__METHOD
 
     return &methods;
 }

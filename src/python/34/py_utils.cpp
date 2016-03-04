@@ -22,7 +22,12 @@ PyObject* fromString(const QString& s)
     return PyUnicode_FromString(s.toUtf8().constData());
 }
 
-QString typeName(PyObject *arg)
+QString toString(PyObject* o)
+{
+    return QString::fromUtf8( PyUnicode_AsUTF8(o) );
+}
+
+QString typeName(const PyObject *arg)
 {
     if (!arg)
         return "NULL";

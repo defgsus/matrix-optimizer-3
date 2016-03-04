@@ -93,6 +93,71 @@ namespace
             return true;
         return false;
     }
+
+    bool py_get_index_make_impl(GEOM::Geometry* geom, int num,
+                                PyObject* arg[], long idx[])
+    {
+        for (int i=0; i<num; ++i)
+        {
+            double v[4];
+            int vlen;
+            if (getVector(arg[i], &vlen, v))
+            {
+                if (vlen != 3)
+                {
+                    PyErr_Set(PyExc_TypeError,
+                              QString("expected vector of length 3 not %1 "
+                                      "for argument #%2").arg(vlen).arg(i+1));
+                    return false;
+                }
+                idx[i] = geom->addVertex(v[0], v[1], v[2]);
+            }
+            else if (PyLong_Check(arg[i]))
+            {
+                idx[i] = PyLong_AsLong(arg[i]);
+                if (!checkIndex(idx[i], geom->numVertices()))
+                    return false;
+            }
+            else
+            {
+                PyErr_Set(PyExc_TypeError,
+                          QString("expected vector or index at argument #%1, "
+                                  "got %2 instead").arg(i+1).arg(typeName(arg[i])));
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // returns num indices for either long arguments or vec3s wich
+    // implicitly create indices in the geometry
+    bool py_get_index_make(GEOM::Geometry* geom, int num, PyObject* args_,
+                           long idx[])
+    {
+        PyObject* arg[num];
+        if (num == 1)
+        {
+            if (!PyArg_ParseTuple(args_, "O", &arg[0]))
+                return false;
+        }
+        else if (num == 2)
+        {
+            if (!PyArg_ParseTuple(args_, "OO", &arg[0], &arg[1]))
+                return false;
+        }
+        else if (num == 3)
+        {
+            if (!PyArg_ParseTuple(args_, "OOO", &arg[0], &arg[1], &arg[2]))
+                return false;
+        }
+        else if (num == 4)
+        {
+            if (!PyArg_ParseTuple(args_, "OOOO", &arg[0], &arg[1], &arg[2], &arg[4]))
+                return false;
+        }
+        return py_get_index_make_impl(geom, num, arg, idx);
+    }
+
 }
 
 
@@ -205,11 +270,44 @@ extern "C"
         MO__GETGEOM(p);
         if (!checkIndex(idx, p->geometry->numVertices()))
             return NULL;
-        return reinterpret_cast<PyObject*>(buildVector(
-                    p->geometry->getVertex(idx) ));
+        return buildVector(p->geometry->getVertex(idx));
+    }
+
+    MO_PY_DEF_DOC(geom_is_shared,
+        "is_shared() -> bool\n"
+        "Returns the current shared-vertex-mode."
+    )
+    static PyObject* geom_is_shared(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return PyBool_FromLong(pgeom->geometry->sharedVertices());
     }
 
     // -------------- setter ----------------
+
+    MO_PY_DEF_DOC(geom_set_shared,
+        "set_shared() -> None\n"
+        "set_shared(bool, float) -> None\n"
+        "Decides whether the geometry should reuse existing vertex points (shared)\n"
+        "or create different vertex points even for the same points in space (unshared).\n"
+        "Unshared mode might be necessary for correct texture mapping while shared mode\n"
+        "can greatly reduce the memory footprint of a mesh.\n"
+        "Optionally, a minimum distance can be given (defaults to 0.001) below which\n"
+        "vertex positions are considered 'the same' in shared mode.\n"
+        "When no argument is given, True and 0.001 is assumed.\n"
+        "Changing the shared-state does not affect previously created verices."
+    )
+    static PyObject* geom_set_shared(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        int is_true = true;
+        float thresh = GEOM::Geometry::minimumThreshold;
+        if (!PyArg_ParseTuple(arg, "|pf", &is_true, &thresh))
+            return NULL;
+        pgeom->geometry->setSharedVertices(is_true, thresh);
+        Py_RETURN_NONE;
+    }
+
 
     MO_PY_DEF_DOC(geom_add_vertex,
         "add_vertex(vector3) -> long\n"
@@ -251,8 +349,8 @@ extern "C"
     }
 
     MO_PY_DEF_DOC(geom_set_vertex,
-        "set_vertex(long, vector3) -> None\n"
-        "Sets a new vertex position at the given index."
+        "set_vertex(long, vec3) -> None\n"
+        "Changes the vertex position at the given index."
     )
     static PyObject* geom_set_vertex(PyObject* self, PyObject* arg)
     {
@@ -268,38 +366,54 @@ extern "C"
     }
 
 
+    MO_PY_DEF_DOC(geom_add_point,
+        "add_point(long) -> None\n"
+        "add_point(vec3) -> None\n"
+        "Adds a point at the vertex position.\n"
+        "Argument can be either index as returned by add_vertex() or 3d vector\n"
+        "In case of a vector, the vertex is created/reused as if called add_vertex()"
+    )
+    static PyObject* geom_add_point(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        long idx;
+        if (!py_get_index_make(pgeom->geometry, 1, arg, &idx))
+            return NULL;
+        pgeom->geometry->addPoint(idx);
+        Py_RETURN_NONE;
+    }
+
     MO_PY_DEF_DOC(geom_add_line,
-        "add_line(two longs) -> None\n"
-        "Adds a line between two vertices defined by their indices."
+        "add_line(long, long) -> None\n"
+        "add_line(vec3, vec3) -> None\n"
+        "Adds a line between two vertex positions.\n"
+        "Arguments can be either indices as returned by add_vertex() or 3d vectors\n"
+        "In case of vectors, the vertices are created/reused as if called add_vertex()"
     )
     static PyObject* geom_add_line(PyObject* self, PyObject* arg)
     {
-        unsigned long i1, i2;
-        if (!py_array_or_tuple_to_uint2(arg, &i1, &i2))
-            return NULL;
         MO__GETGEOM(pgeom);
-        if (!(checkIndex(i1, pgeom->geometry->numVertices())
-           && checkIndex(i2, pgeom->geometry->numVertices())))
-            return 0;
-        pgeom->geometry->addLine(i1, i2);
+        long idx[2];
+        if (!py_get_index_make(pgeom->geometry, 2, arg, idx))
+            return NULL;
+        pgeom->geometry->addLine(idx[0], idx[1]);
         Py_RETURN_NONE;
     }
 
     MO_PY_DEF_DOC(geom_add_triangle,
-        "add_triangle(three longs) -> None\n"
-        "Adds a triangle between the three vertices defined by their indices."
+        "add_triangle(long, long, long) -> None\n"
+        "add_triangle(vec3, vec3, vec3) -> None\n"
+        "Adds a triangle between the three vertex positions.\n"
+        "Arguments can be either indices as returned by add_vertex() or 3d vectors\n"
+        "In case of vectors, the vertices are created/reused as if called add_vertex()"
     )
     static PyObject* geom_add_triangle(PyObject* self, PyObject* arg)
     {
-        unsigned long i1, i2, i3;
-        if (!py_array_or_tuple_to_uint3(arg, &i1, &i2, &i3))
-            return NULL;
         MO__GETGEOM(pgeom);
-        if (!(checkIndex(i1, pgeom->geometry->numVertices())
-           && checkIndex(i2, pgeom->geometry->numVertices())
-           && checkIndex(i3, pgeom->geometry->numVertices())))
-            return 0;
-        pgeom->geometry->addTriangle(i1, i2, i3);
+        long idx[3];
+        if (!py_get_index_make(pgeom->geometry, 3, arg, idx))
+            return NULL;
+        pgeom->geometry->addTriangle(idx[0], idx[1], idx[2]);
         Py_RETURN_NONE;
     }
 
@@ -319,12 +433,15 @@ extern "C"
     static PyMethodDef Python34Geom_methods[] =
     {
         MO__METHOD(to_string,       METH_NOARGS)
+        MO__METHOD(is_shared,       METH_NOARGS)
         MO__METHOD(num_vertices,    METH_NOARGS)
 
+        MO__METHOD(set_shared,      METH_VARARGS)
         MO__METHOD(get_vertex,      METH_VARARGS)
         MO__METHOD(add_vertex,      METH_VARARGS)
         MO__METHOD(set_vertex,      METH_VARARGS)
         MO__METHOD(add_vertices,    METH_VARARGS)
+        MO__METHOD(add_point,       METH_VARARGS)
         MO__METHOD(add_line,        METH_VARARGS)
         MO__METHOD(add_triangle,    METH_VARARGS)
 

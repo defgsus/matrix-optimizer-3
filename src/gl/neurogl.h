@@ -145,7 +145,7 @@ public:
     /** Lazily initialize all resources that have changed */
     void updateGl();
 
-    void step(int iterations);
+    void step();
 
 private:
     struct Private;

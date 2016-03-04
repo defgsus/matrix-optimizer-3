@@ -540,7 +540,7 @@ void NeuroTO::renderGl(const GL::RenderSettings&, const RenderTime& time)
 
     try
     {
-        p_->neurogl->step(1);
+        p_->neurogl->step();
     }
     catch (Exception& e)
     {

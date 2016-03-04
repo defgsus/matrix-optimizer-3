@@ -201,8 +201,11 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
 
     MO_PY_DEF_DOC(tl_value,
-        "value(f) -> f | vec\n"
-        "Returns the value at the given time"
+        "value(f) -> f | vec | list\n"
+        "Returns the value at the given time.\n"
+        "If dimension is 1, returns float.\n"
+        "If dimension is 2-4, returns matrixoptimizer.Vec\n"
+        "If dimension is >4, returns list of float"
     )
     static PyObject* tl_value(TimelineStruct* self, PyObject* arg)
     {
@@ -213,18 +216,42 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         if (self->tl->numDimensions() == 1)
             return fromDouble(self->tl->get(time)[0]);
         if (self->tl->numDimensions() <= 4)
-        {
-            return reinterpret_cast<PyObject*>(buildVector(self->tl->get(time)));
-        }
-        // XXX
-        Py_RETURN_NONE;
+            return buildVector(self->tl->get(time));
+        return buildList(self->tl->get(time));
+    }
+
+    MO_PY_DEF_DOC(tl_derivative,
+        "derivative(f, f) -> f | vec | list\n"
+        "Returns the derivative at the given time.\n"
+        "The optional second argument is the time range to observe, initialized to 0.01\n"
+        "If dimension is 1, returns float.\n"
+        "If dimension is 2-4, returns matrixoptimizer.Vec\n"
+        "If dimension is >4, returns list of float"
+    )
+    static PyObject* tl_derivative(TimelineStruct* self, PyObject* arg)
+    {
+        MO__ASSERT_TL(self);
+        double time, range = 0.01;
+        if (!PyArg_ParseTuple(arg, "d|d", &time, &range))
+            return NULL;
+        range = .5001 * std::max(range, MATH::TimelineNd::timeQuantum());
+        if (self->tl->numDimensions() == 1)
+            return fromDouble(self->tl->getDerivative(time, range)[0]);
+        if (self->tl->numDimensions() <= 4)
+            return buildVector(self->tl->getDerivative(time, range));
+        return buildList(self->tl->getDerivative(time, range));
+    }
+
+    static PyObject* tl_type_getter(TimelineStruct* , void* ptr)
+    {
+        return fromInt((int64_t)ptr);
     }
 
     // ----------------- setter ---------------------
 
     MO_PY_DEF_DOC(tl_set_dimensions,
         "set_dim(long) -> None\n"
-        "Sets the number of dimensions which must be in range [1,4]\n"
+        "Sets the number of dimensions which must be at least one.\n"
         "Each point in the timeline is affected. If the dimensionality grows,\n"
         "new data is initialized to zero."
     )
@@ -255,14 +282,23 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
                 val(self->tl->numDimensions(), MATH::TimelineNd::ValueType::NoInit);
         if (!py_get_time_and_vec(arg, &time, &val))
             return NULL;
-        MO_PRINT("ADD " << time << ", " << val);
         self->tl->add(time, val);
 
         Py_INCREF(self);
         return reinterpret_cast<PyObject*>(self);
     }
 
-
+    MO_PY_DEF_DOC(tl_update,
+        "update() -> None\n"
+        "Precalculates the derivatives of the timeline.\n"
+        "This is needed for some interpolation modes."
+    )
+    static PyObject* tl_update(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        self->tl->setAutoDerivative();
+        Py_RETURN_NONE;
+    }
 
 
 
@@ -279,9 +315,12 @@ static PyMethodDef Timeline_methods[] =
 
     MO__METHOD(copy,                METH_NOARGS)
     MO__METHOD(value,               METH_O)
+    MO__METHOD(derivative,          METH_VARARGS)
 
     MO__METHOD(set_dimensions,      METH_O)
     MO__METHOD(add,                 METH_VARARGS)
+    MO__METHOD(update,              METH_O)
+
 
     { NULL, NULL, 0, NULL }
 };
@@ -301,6 +340,27 @@ PySequenceMethods Timeline_SeqMethods = {
     NULL  /* ssizeargfunc sq_inplace_repeat */
 };
 #endif
+
+#define MO__TYPE(name__, enum__, doc__) \
+    { (char*)name__, (getter)tl_type_getter, (setter)NULL, \
+      (char*)"interpolation type: " doc__, (void*)MATH::TimelineNd::Point::enum__ },
+
+static PyGetSetDef Timeline_getseters[] = {
+    MO__TYPE("CONSTANT"   , CONSTANT    , "no transition")
+    MO__TYPE("LINEAR"     , LINEAR      , "two-point linear transition")
+    MO__TYPE("SMOOTH"     , SMOOTH      , "two-point sigmoid transition")
+    MO__TYPE("SYMMETRIC"  , SYMMETRIC   , "two-point smooth transition"
+                                          "using defined derivatives (differentiable)")
+    MO__TYPE("HERMITE"    , SYMMETRIC2  , "two-point hermite-like transition "
+                                          "using defined derivatives")
+    MO__TYPE("SPLINE4"    , SPLINE4_SYM , "four-point spline (differentiable)")
+    MO__TYPE("SPLINE4_2"  , SPLINE4     , "four-point spline")
+    MO__TYPE("SPLINE6"    , SPLINE6     , "six-point spline")
+
+    { NULL, NULL, NULL, NULL, NULL }
+};
+
+#undef MO__TYPE
 
 static PyTypeObject* Timeline_Type()
 {
@@ -335,7 +395,7 @@ static PyTypeObject* Timeline_Type()
         0,//TimelineFuncs::next_iter, /* tp_iternext */
         Timeline_methods,      /* tp_methods */
         0,//Timeline_members,      /* tp_members */
-        0,//Timeline_getseters,    /* tp_getset */
+        Timeline_getseters,    /* tp_getset */
         0,                         /* tp_base */
         0,                         /* tp_dict */
         0,                         /* tp_descr_get */
@@ -408,18 +468,18 @@ bool set_tl_dim(TimelineStruct* self, size_t num)
 } // namespace
 
 
-void initTimeline(void* mod)
+void initTimeline(PyObject* mod)
 {
     PyObject* module = reinterpret_cast<PyObject*>(mod);
     initObjectType(module, Timeline_Type(), "Timeline");
 }
 
-bool isTimeline(void* vobj)
+bool isTimeline(PyObject* obj)
 {
-    return PyObject_TypeCheck(reinterpret_cast<PyObject*>(vobj), Timeline_Type());
+    return PyObject_TypeCheck(obj, Timeline_Type());
 }
 
-void* buildTimeline(MO::MATH::TimelineNd* tl)
+PyObject* buildTimeline(MO::MATH::TimelineNd* tl)
 {
     auto obj = new_tl();
     auto tmp = obj->tl;
@@ -430,9 +490,24 @@ void* buildTimeline(MO::MATH::TimelineNd* tl)
         tl->addRef();
     if (tmp)
         tmp->releaseRef();
-    return obj;
+    return reinterpret_cast<PyObject*>(obj);
 }
 
+PyObject* buildList(const MO::MATH::ArithmeticArray<double>& a)
+{
+    auto list = PyList_New(a.numDimensions());
+    for (size_t i=0; i<a.numDimensions(); ++i)
+    {
+        auto v = fromDouble(a[i]);
+        if (!v)
+        {
+            Py_DECREF(list);
+            return NULL;
+        }
+        PyList_SET_ITEM(list, i, v);
+    }
+    return list;
+}
 
 } // namespace PYTHON34
 } // namespace MO

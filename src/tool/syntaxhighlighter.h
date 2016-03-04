@@ -22,6 +22,9 @@ class asIScriptContext;
 
 namespace MO {
 
+#ifdef MO_ENABLE_PYTHON34
+namespace PYTHON34 { class PythonInterpreter; }
+#endif
 
 
 class SyntaxHighlighter : public QSyntaxHighlighter
@@ -50,6 +53,10 @@ public slots:
 #ifndef MO_DISABLE_ANGELSCRIPT
     /** Gathers all installed names from the angelscript module */
     void initForAngelScript(asIScriptModule*);
+#endif
+
+#ifdef MO_ENABLE_PYTHON34
+    void initForPython(const PYTHON34::PythonInterpreter*);
 #endif
 
 protected:
