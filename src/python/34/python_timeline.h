@@ -8,13 +8,13 @@
     <p>created 3/3/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON34_
+#ifdef MO_ENABLE_PYTHON34
 
 #ifndef MOSRC_PYTHON_34_PYTHON_TIMELINE_H
 #define MOSRC_PYTHON_34_PYTHON_TIMELINE_H
 
 namespace MO {
-namespace MATH { class Timeline1d; }
+namespace MATH { class TimelineNd; }
 namespace PYTHON34 {
 
     /** Adds the Timeline objects to the module.
@@ -23,7 +23,7 @@ namespace PYTHON34 {
 
     bool isTimeline(void* pyObject);
 
-    void* buildTimeline(MATH::Timeline1d*);
+    void* buildTimeline(MATH::TimelineNd*);
 
 } // namespace PYTHON34
 } // namespace MO

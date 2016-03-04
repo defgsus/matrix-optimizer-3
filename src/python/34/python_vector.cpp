@@ -19,6 +19,7 @@
 #include "python_vector.h"
 #include "math/vector.h"
 #include "math/functions.h"
+#include "math/arithmeticarray.h"
 #include "io/log.h"
 
 namespace MO {
@@ -531,7 +532,7 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     static PyObject* vec_clamp(VectorStruct* self, PyObject* other)
     {
         double mi, ma;
-        if (!PyArg_ParseTuple(other, "ff", &mi, &ma))
+        if (!PyArg_ParseTuple(other, "dd", &mi, &ma))
             return NULL;
         for (int i = 0; i<self->len; ++i)
             self->v[i] = std::max(mi,std::min(ma, self->v[i]));
@@ -1761,6 +1762,15 @@ void* buildVector(double x, double y, double z, double w)
     auto pobj = new_vec();
     pobj->len = 4;
     pobj->v[0] = x; pobj->v[1] = y; pobj->v[2] = z; pobj->v[3] = w;
+    return pobj;
+}
+
+void* buildVector(const MATH::ArithmeticArray<double>& v)
+{
+    auto pobj = new_vec();
+    pobj->len = std::min(size_t(4), v.numDimensions());
+    for (int i=0; i<pobj->len; ++i)
+        pobj->v[i] = v[i];
     return pobj;
 }
 

@@ -16,6 +16,7 @@
 #include "math/vector.h"
 
 namespace MO {
+namespace MATH { template <typename F> class ArithmeticArray; }
 namespace PYTHON34 {
 
     /** Adds the Vector objects to the module.
@@ -37,6 +38,7 @@ namespace PYTHON34 {
     void* buildVector(double x, double y);
     void* buildVector(double x, double y, double z);
     void* buildVector(double x, double y, double z, double w);
+    void* buildVector(const MATH::ArithmeticArray<double>& v);
 
     DVec2 getVector2(void* pyObject);
     DVec3 getVector3(void* pyObject);

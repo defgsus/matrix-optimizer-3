@@ -8,12 +8,13 @@
     <p>created 3/3/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON34_
+#ifdef MO_ENABLE_PYTHON34
 
 #include "py_utils.h"
 #include "python_timeline.h"
 #include "python_vector.h"
-#include "math/timeline1d.h"
+#include "math/timelinend.h"
+#include "io/log.h"
 
 namespace MO {
 namespace PYTHON34 {
@@ -24,15 +25,47 @@ extern "C" {
 
 static const char* TimelineDocString()
 {
-    static const char* str = "The timeline";
+    static const char* str = "N-Dimensional timeline";
     return str;
 }
 
 
 // ---------- helper -----------
 
+struct TimelineStruct;
 
+bool set_tl_dim(TimelineStruct*, size_t num);
 
+bool py_get_time_and_vec(PyObject* args_, double* time, MATH::TimelineNd::ValueType* vec)
+{
+    if (vec->numDimensions() == 1)
+    {
+        if (PyArg_ParseTuple(args_, "dd", time, &(*vec)[0]))
+            return true;
+    }
+    else if (vec->numDimensions() == 2)
+    {
+        if (PyArg_ParseTuple(args_, "ddd", time, &(*vec)[0], &(*vec)[1]))
+            return true;
+    }
+    else if (vec->numDimensions() == 3)
+    {
+        if (PyArg_ParseTuple(args_, "dddd", time, &(*vec)[0], &(*vec)[1], &(*vec)[2]))
+            return true;
+    }
+    else if (vec->numDimensions() == 4)
+    {
+        if (PyArg_ParseTuple(args_, "ddddd", time, &(*vec)[0], &(*vec)[1], &(*vec)[2], &(*vec)[3]))
+            return true;
+    }
+    PyErr_Clear();
+    PyObject * second;
+    if (!PyArg_ParseTuple(args_, "dO", time, &second))
+        return false;
+    if (get_vector(second, vec->numDimensions(), &(*vec)[0]))
+        return true;
+    return false;
+}
 
 
 
@@ -43,49 +76,48 @@ static const char* TimelineDocString()
 struct TimelineStruct
 {
     PyObject_HEAD
-    MATH::Timeline1d* tl[4];
-    int num;
+    MATH::TimelineNd* tl;
 };
 
 static TimelineStruct* new_tl();
-static TimelineStruct* copy_tl(TimelineStruct*);
+static TimelineStruct* copy_tl(TimelineStruct*, bool newInstance);
 
 static void tl_dealloc(TimelineStruct* self)
 {
-    for (int i=0; i<4; ++i)
-    if (self->tl[i])
-        self->tl[i]->releaseRef();
+    if (self->tl)
+        self->tl->releaseRef();
     self->ob_base.ob_type->tp_free((PyObject*)self);
 }
 
 static void tl_copy_from(TimelineStruct* self, const TimelineStruct* other)
 {
-    MATH::Timeline1d* tmp[4];
-    for (int i=0; i<4; ++i)
-        tmp[i] = self->tl[i];
+    auto tmp = self->tl;
 
-    for (int i=0; i<4; ++i)
-    {
-        self->tl[i] = other->tl[i];
-        if (self->tl[i])
-            self->tl[i]->addRef();
-    }
+    self->tl = other->tl;
+    if (self->tl)
+        self->tl->addRef();
 
-    for (int i=0; i<4; ++i)
-        if (tmp[i])
-            tmp[i]->releaseRef();
+    if (tmp)
+        tmp->releaseRef();
 }
 
 static int tl_init(TimelineStruct* self, PyObject* args_, PyObject*)
 {
+    // copy_construct
     if (isTimeline(args_))
     {
         auto other = reinterpret_cast<TimelineStruct*>(args_);
         tl_copy_from(self, other);
         return 0;
     }
+    long numDim;
+    if (PyArg_ParseTuple(args_, "l", &numDim))
+    {
+        if (set_tl_dim(self, numDim))
+            return 0;
+    }
 
-    return 0;
+    return -1;
 }
 
 static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
@@ -94,10 +126,7 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
     if (self != NULL)
     {
-        for (int i=0; i<4; ++i)
-            self->tl[i] = 0;
-        self->tl[0] = new MATH::Timeline1d;
-        self->num = 1;
+        self->tl = new MATH::TimelineNd(1);
     }
 
     return reinterpret_cast<PyObject*>(self);
@@ -107,20 +136,18 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 // --------------------- getter ---------------------------
 
 #define MO__ASSERT_TL(struct__) \
-    if (struct__->num == 0 || struct__->num > 4) \
+    if (struct__->tl == nullptr) \
     { \
-        PyErr_Set(PyExc_ReferenceError, \
-                QString("attached timeline dimensionality %1 is bogus").arg(struct__->num)); \
+        PyErr_SetString(PyExc_ReferenceError, "attached timeline is NULL"); \
         return NULL; \
     } \
-    for (int i=0; i<struct__->num; ++i) \
-    if (struct__->tl[i] == nullptr) \
+    if (struct__->tl->numDimensions() == 0) \
     { \
-        PyErr_Set(PyExc_ReferenceError, \
-                QString("attached timeline #%1/%2 is NULL") \
-                    .arg(i+1).arg(struct__->num)); \
+        PyErr_SetString(PyExc_ReferenceError, \
+                "timeline dimensionality is NULL"); \
         return NULL; \
     }
+
 
 
 #define MO_PY_DEF_DOC(name__, str__) \
@@ -133,11 +160,9 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     static PyObject* tl_to_string(TimelineStruct* self, PyObject* )
     {
         MO__ASSERT_TL(self);
-        auto str = QString("Timeline(dim %1, points %2")
-                          .arg(self->num, self->tl[0]->size());
-        for (int i=1; i<self->num; ++i)
-            str += QString("/%1").arg(self->tl[i]->size());
-        return fromString(str + ")");
+        return fromString(QString("Timeline(dim %1, points %2)")
+                          .arg(self->tl->numDimensions())
+                          .arg(self->tl->size()) );
     }
     static PyObject* tl_repr(PyObject* self)
         { return tl_to_string(reinterpret_cast<TimelineStruct*>(self), nullptr); }
@@ -148,7 +173,8 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     )
     static PyObject* tl_dimensions(TimelineStruct* self, PyObject* )
     {
-        return fromInt(self->num);
+        MO__ASSERT_TL(self);
+        return fromInt(self->tl->numDimensions());
     }
 
     MO_PY_DEF_DOC(tl_size,
@@ -158,10 +184,19 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     static PyObject* tl_size(TimelineStruct* self, PyObject* )
     {
         MO__ASSERT_TL(self);
-        unsigned int num = self->tl[0]->size();
-        for (int i=1; i<self->num; ++i)
-            num = std::max(num, self->tl[i]->size());
-        return fromInt(num);
+        return fromInt(self->tl->size());
+    }
+
+
+    MO_PY_DEF_DOC(tl_copy,
+        "copy() -> Timeline\n"
+        "Returns a copy of the current timeline.\n"
+        "The copy is a NEW instance."
+    )
+    static PyObject* tl_copy(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        return reinterpret_cast<PyObject*>(copy_tl(self, true));
     }
 
 
@@ -172,21 +207,39 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     static PyObject* tl_value(TimelineStruct* self, PyObject* arg)
     {
         MO__ASSERT_TL(self);
-        double v;
-        if (!toDouble(arg, &v))
+        double time;
+        if (!toDouble(arg, &time))
             return NULL;
-        if (self->num == 1)
-            return fromDouble(self->tl[0]->get(v));
-        if (self->num == 2)
-            return buildVector(self->tl[0]->get(v), self->tl[1]->get(v));
-        if (self->num == 3)
-            return buildVector(self->tl[0]->get(v), self->tl[1]->get(v),
-                               self->tl[2]->get(v));
-        return buildVector(self->tl[0]->get(v), self->tl[1]->get(v),
-                           self->tl[2]->get(v), self->tl[3]->get(v));
+        if (self->tl->numDimensions() == 1)
+            return fromDouble(self->tl->get(time)[0]);
+        if (self->tl->numDimensions() <= 4)
+        {
+            return reinterpret_cast<PyObject*>(buildVector(self->tl->get(time)));
+        }
+        // XXX
+        Py_RETURN_NONE;
     }
 
     // ----------------- setter ---------------------
+
+    MO_PY_DEF_DOC(tl_set_dimensions,
+        "set_dim(long) -> None\n"
+        "Sets the number of dimensions which must be in range [1,4]\n"
+        "Each point in the timeline is affected. If the dimensionality grows,\n"
+        "new data is initialized to zero."
+    )
+    static PyObject* tl_set_dimensions(TimelineStruct* self, PyObject* arg)
+    {
+        MO__ASSERT_TL(self);
+        long numDim;
+        if (PyArg_ParseTuple(arg, "l", &numDim))
+        {
+            if (!set_tl_dim(self, numDim))
+                return NULL;
+        }
+        Py_RETURN_NONE;
+    }
+
 
     MO_PY_DEF_DOC(tl_add,
         "add(vec2) -> Timeline\n"
@@ -195,11 +248,16 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     )
     static PyObject* tl_add(TimelineStruct* self, PyObject* arg)
     {
-        MO__ASSERT_TL(self->tl);
-        double v[2];
-        if (!get_vector(arg, 2, v))
+        MO__ASSERT_TL(self);
+
+        double time;
+        MATH::TimelineNd::ValueType
+                val(self->tl->numDimensions(), MATH::TimelineNd::ValueType::NoInit);
+        if (!py_get_time_and_vec(arg, &time, &val))
             return NULL;
-        self->tl->add(v[0], v[1]);
+        MO_PRINT("ADD " << time << ", " << val);
+        self->tl->add(time, val);
+
         Py_INCREF(self);
         return reinterpret_cast<PyObject*>(self);
     }
@@ -219,8 +277,10 @@ static PyMethodDef Timeline_methods[] =
     MO__METHOD(dimensions,          METH_NOARGS)
     MO__METHOD(size,                METH_NOARGS)
 
+    MO__METHOD(copy,                METH_NOARGS)
     MO__METHOD(value,               METH_O)
 
+    MO__METHOD(set_dimensions,      METH_O)
     MO__METHOD(add,                 METH_VARARGS)
 
     { NULL, NULL, 0, NULL }
@@ -311,11 +371,37 @@ TimelineStruct* new_tl()
     return PyObject_New(TimelineStruct, Timeline_Type());
 }
 
-TimelineStruct* copy_tl(TimelineStruct* self)
+TimelineStruct* copy_tl(TimelineStruct* self, bool newInstance)
 {
     auto copy = PyObject_New(TimelineStruct, Timeline_Type());
-    tl_copy_from(copy, self);
+    if (!newInstance)
+        tl_copy_from(copy, self);
+    else
+    {
+        auto tmp = copy->tl;
+        if (copy->tl)
+            copy->tl->releaseRef();
+        if (self->tl)
+            copy->tl = new MATH::TimelineNd(*self->tl);
+        else
+            copy->tl = new MATH::TimelineNd(1);
+        if (tmp)
+            tmp->releaseRef();
+    }
     return copy;
+}
+
+bool set_tl_dim(TimelineStruct* self, size_t num)
+{
+    if (num<1 || num>4)
+    {
+        PyErr_Set(PyExc_TypeError,
+                  QString("number of dimensions out of range 1<=%1<=4")
+                  .arg(num));
+        return false;
+    }
+    self->tl->setDimensions(num);
+    return true;
 }
 
 } // extern "C"
@@ -333,7 +419,7 @@ bool isTimeline(void* vobj)
     return PyObject_TypeCheck(reinterpret_cast<PyObject*>(vobj), Timeline_Type());
 }
 
-void* buildTimeline(MATH::Timeline1d* tl)
+void* buildTimeline(MO::MATH::TimelineNd* tl)
 {
     auto obj = new_tl();
     auto tmp = obj->tl;

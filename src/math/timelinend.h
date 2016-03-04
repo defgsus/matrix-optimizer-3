@@ -151,12 +151,12 @@ class TimelineNd : public RefCounted
     //bool operator == (const TimelineNd& other) const;
 
     /** return number of que points */
-    size_t size() const { return data_.size(); }
+    size_t size() const { return p_data_.size(); }
 
     size_t numDimensions() const { return p_dim_; }
 
     /** Returns wheter the timeline has no points */
-    bool empty() const { return data_.empty(); }
+    bool empty() const { return p_data_.empty(); }
 
     /** get value at time (with limits) */
     ValueType get(Double time) const;
@@ -167,43 +167,43 @@ class TimelineNd : public RefCounted
     /** return smallest time */
     Double tmin() const
     {
-        if (data_.begin() == data_.end()) return 0.0;
-        else return data_.begin()->second.t;
+        if (p_data_.begin() == p_data_.end()) return 0.0;
+        else return p_data_.begin()->second.t;
     }
 
     /** return largest time */
     Double tmax() const
     {
-        if (data_.rbegin() == data_.rend()) return 0.0;
-        else return data_.rbegin()->second.t;
+        if (p_data_.rbegin() == p_data_.rend()) return 0.0;
+        else return p_data_.rbegin()->second.t;
     }
 
     /** return the reference on the data point structure */
-    TpList &getData() { return data_; }
-    const TpList &getData() const { return data_; }
+    TpList &getData() { return p_data_; }
+    const TpList &getData() const { return p_data_; }
 
     /** returns the TpList::iterator for a point at time 't',
         or data_.end() if there is no point */
     TpList::iterator find(Double t)
     {
         const TpHash h = hash(t);
-        auto i = data_.find(h);
+        auto i = p_data_.find(h);
         // must check left and right because of rounding
-        if (i==data_.end())
-            i = data_.find(h+1);
-        if (i==data_.end())
-            i = data_.find(h-1);
+        if (i==p_data_.end())
+            i = p_data_.find(h+1);
+        if (i==p_data_.end())
+            i = p_data_.find(h-1);
         return i;
     }
     TpList::const_iterator find(Double t) const
     {
         const TpHash h = hash(t);
-        auto i = data_.find(h);
+        auto i = p_data_.find(h);
         // must check left and right because of rounding
-        if (i==data_.end())
-            i = data_.find(h+1);
-        if (i==data_.end())
-            i = data_.find(h-1);
+        if (i==p_data_.end())
+            i = p_data_.find(h+1);
+        if (i==p_data_.end())
+            i = p_data_.find(h-1);
         return i;
     }
 
@@ -212,14 +212,14 @@ class TimelineNd : public RefCounted
         returns the next point <b>even</b> if there is a point at 't' */
     TpList::iterator next_after(Double t)
     {
-        return data_.upper_bound(hash(t));
+        return p_data_.upper_bound(hash(t));
     }
 
     /** return the TpList::iterator of the first point >= time 't',
         or data_.end() if none there */
     TpList::iterator first(Double t)
     {
-        return data_.lower_bound(hash(t));
+        return p_data_.lower_bound(hash(t));
     }
 
     /** return the closest point to time 't', or data_.end() */
@@ -234,6 +234,9 @@ class TimelineNd : public RefCounted
 
     /** remove all points */
     void clear();
+
+    /** Changes the dimensionality of the whole Timeline. */
+    void setDimensions(size_t newDim);
 
 #if 0
     /** Adds the timeline data at the specified offset */
@@ -274,22 +277,22 @@ class TimelineNd : public RefCounted
     void setLowerLimit(const ValueType& lmin)
     {
         MO_AA_ASSERT(lmin.numDimensions() == p_dim_);
-        lmin_ = lmin;
-        lowerLimit_ = true;
+        p_minVal_ = lmin;
+        p_isLowerLimit_ = true;
     }
 
     /** set an upper limit for the output */
     void setUpperLimit(const ValueType& lmax)
     {
         MO_AA_ASSERT(lmax.numDimensions() == p_dim_);
-        lmax_ = lmax;
-        upperLimit_ = true;
+        p_maxVal_ = lmax;
+        p_isUpperLimit_ = true;
     }
 
     /** enable or disable lower limit */
-    void enableLowerLimit(bool doLimit) { lowerLimit_ = doLimit; }
+    void enableLowerLimit(bool doLimit) { p_isLowerLimit_ = doLimit; }
     /** enable or disable upper limit */
-    void enableUpperLimit(bool doLimit) { upperLimit_ = doLimit; }
+    void enableUpperLimit(bool doLimit) { p_isUpperLimit_ = doLimit; }
 
     /** automatically set the derivative for point 'i' */
     void setAutoDerivative(TpList::iterator &i);
@@ -297,7 +300,7 @@ class TimelineNd : public RefCounted
         'start' to 'end' - 1 */
     void setAutoDerivative(TpList::iterator start, TpList::iterator end);
     /** automatically set the derivatives for all points */
-    void setAutoDerivative() { setAutoDerivative(data_.begin(), data_.end()); }
+    void setAutoDerivative() { setAutoDerivative(p_data_.begin(), p_data_.end()); }
 
     // ------------- functions- --------------
 
@@ -324,58 +327,57 @@ class TimelineNd : public RefCounted
 
 
     /** all data points */
-    TpList data_;
+    TpList p_data_;
 
     size_t p_dim_;
 
     /** current (last modified) point */
-    Point *cur_;
+    Point *p_cur_;
 
     /** true if lower limit is used */
-    bool lowerLimit_,
+    bool p_isLowerLimit_,
     /** true if upper limit is used */
-         upperLimit_;
+         p_isUpperLimit_;
 
     ValueType
     /** the lower limit for output */
-        lmin_,
+        p_minVal_,
     /** the upper limit for output */
-        lmax_;
+        p_maxVal_;
 
     // ------------------- private functions -----------------------
 
     /** type of point at this location, or default. */
-    Point::Type currentType_(Double time);
+    Point::Type p_currentType_(Double time);
 
     /** returns true if the iterator 'i' is the LAST element in data */
-    bool isLastElement_(TpList::iterator i) const
+    bool p_isLastElement_(TpList::iterator i) const
     {
-        if (i==data_.end()) return false;
+        if (i==p_data_.end()) return false;
         i++;
-        return (i==data_.end());
+        return (i==p_data_.end());
     }
 
-    bool isLastElement_(TpList::const_iterator i) const
+    bool p_isLastElement_(TpList::const_iterator i) const
     {
-        if (i==data_.end()) return false;
+        if (i==p_data_.end()) return false;
         i++;
-        return (i==data_.end());
+        return (i==p_data_.end());
     }
 
     /** linearly fade between the two points. <br>
         'time' must be <b>between</b> 'p1's and 'p2's time */
-    ValueType fadeLinear_(Point &p1, Point &p2, Double time) const
+    ValueType p_fadeLinear_(Point &p1, Point &p2, Double time) const
     {
         Double f = (time - p1.t) / (p2.t - p1.t);
         return p1.val*(1.0-f) + f*p2.val;
     }
 
     /** limit the value according to limit-settings */
-    ValueType limit_(const ValueType& val) const
+    void p_limit_(ValueType& val) const
     {
-        //if (lowerLimit_) val = std::max(lmin_, val);
-        //if (upperLimit_) val = std::min(lmax_, val);
-        return val;
+        if (p_isLowerLimit_) val = max(p_minVal_, val);
+        if (p_isUpperLimit_) val = min(p_maxVal_, val);
     }
 
 };

@@ -63,11 +63,11 @@ TimelineNd::Point::Type TimelineNd::Point::getTypeForPersistentName(const QStrin
 
 TimelineNd::TimelineNd(size_t dim)
     : p_dim_        (dim)
-    , cur_          (0)
-    , lowerLimit_   (false)
-    , upperLimit_   (false)
-    , lmin_         (dim)
-    , lmax_         (dim)
+    , p_cur_          (0)
+    , p_isLowerLimit_   (false)
+    , p_isUpperLimit_   (false)
+    , p_minVal_         (dim)
+    , p_maxVal_         (dim)
 {
 
 }
@@ -78,25 +78,25 @@ TimelineNd::~TimelineNd()
 
 
 TimelineNd::TimelineNd(const TimelineNd &other)
-    :   data_       (other.data_),
+    :   p_data_       (other.p_data_),
         p_dim_      (other.p_dim_),
-        cur_        (0),
-        lowerLimit_ (other.lowerLimit_),
-        upperLimit_ (other.upperLimit_),
-        lmin_       (other.lmin_),
-        lmax_       (other.lmax_)
+        p_cur_        (0),
+        p_isLowerLimit_ (other.p_isLowerLimit_),
+        p_isUpperLimit_ (other.p_isUpperLimit_),
+        p_minVal_       (other.p_minVal_),
+        p_maxVal_       (other.p_maxVal_)
 {
 
 }
 
 const TimelineNd& TimelineNd::operator = (const TimelineNd& other)
 {
-    data_ = other.data_;
-    cur_ = 0;
-    lowerLimit_ = other.lowerLimit_;
-    upperLimit_ = other.upperLimit_;
-    lmin_ = other.lmin_;
-    lmax_ = other.lmax_;
+    p_data_ = other.p_data_;
+    p_cur_ = 0;
+    p_isLowerLimit_ = other.p_isLowerLimit_;
+    p_isUpperLimit_ = other.p_isUpperLimit_;
+    p_minVal_ = other.p_minVal_;
+    p_maxVal_ = other.p_maxVal_;
 
     return *this;
 }
@@ -108,31 +108,33 @@ bool TimelineNd::operator == (const TimelineNd& other) const
 */
 TimelineNd::ValueType TimelineNd::get(Double time) const
 {
-    return limit_(getNoLimit(time));
+    auto r = getNoLimit(time);
+    p_limit_(r);
+    return r;
 }
 
 TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 {
-    if (data_.empty())
+    if (p_data_.empty())
         return ValueType(p_dim_, 0);
 
     const TpHash htime = hash(time);
 
-    TpList::const_iterator i1 = data_.upper_bound(htime);
+    TpList::const_iterator i1 = p_data_.upper_bound(htime);
 
     bool
-        isFirst = (i1==data_.begin()),
-        isOver = (i1==data_.end()),
-        isLast = isLastElement_(i1);
+        isFirst = (i1==p_data_.begin()),
+        isOver = (i1==p_data_.end()),
+        isLast = p_isLastElement_(i1);
 
     // get the one before time
     if ( !isFirst && htime <= i1->first )
     {
         i1--;
 
-        isFirst = (i1==data_.begin());
-        isOver = (i1==data_.end());
-        isLast = isLastElement_(i1);
+        isFirst = (i1==p_data_.begin());
+        isOver = (i1==p_data_.end());
+        isLast = p_isLastElement_(i1);
     }
 
     ValueType ret(0);
@@ -170,7 +172,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::LINEAR:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end()) {
+            if (i2==p_data_.end()) {
                 ret = i1->second.val;
                 return ret;
             }
@@ -187,7 +189,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::SMOOTH:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
+            if (i2==p_data_.end())
             {
                 ret = i1->second.val;
                 return ret;
@@ -206,7 +208,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::SYMMETRIC:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
+            if (i2==p_data_.end())
             {
                 ret = i1->second.val;
                 return ret;
@@ -232,7 +234,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::SYMMETRIC2:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
+            if (i2==p_data_.end())
             {
                 ret = i1->second.val;
                 return ret;
@@ -260,7 +262,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         case Point::SPLINE4_SYM:
         {
             auto i0=i1, i2 = i1; i2++;
-            if (i2==data_.end())
+            if (i2==p_data_.end())
             {
                 ret = i1->second.val;
                 return ret;
@@ -268,13 +270,13 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
             ValueType d1(p_dim_), d2(p_dim_);
 
-            if (i0!=data_.begin())
+            if (i0!=p_data_.begin())
             {
                 i0--;
                 d1 = (i2->second.val-i0->second.val)/(i2->second.t-i0->second.t);
             }
             auto i3=i2; i3++;
-            if (i3!=data_.end())
+            if (i3!=p_data_.end())
             {
                 d2 = (i3->second.val-i1->second.val)/(i3->second.t-i1->second.t);
             }
@@ -316,7 +318,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
                     t2=t1+1.0;
 
             // only two points?
-            if (data_.size()<3)
+            if (p_data_.size()<3)
             {
                 // then it's i1 and i2
                 i2 = i1; i2++;
@@ -334,7 +336,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
                 i3 = i2; i3++;
                 // i3 missing?
-                if (i3==data_.end())
+                if (i3==p_data_.end())
                     y3 = y2;
                 else
                     y3=i3->second.val;
@@ -383,11 +385,11 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
                 t2=i1->second.t, t3=t2+1.0;
 
             im = i1;
-            if (im != data_.begin())
+            if (im != p_data_.begin())
             {
                 --im;
                 y1 = im->second.val;
-                if (im != data_.begin())
+                if (im != p_data_.begin())
                 {
                     --im;
                     y0 = im->second.val;
@@ -395,18 +397,18 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             }
             im = i1;
             ++im;
-            if (im != data_.end())
+            if (im != p_data_.end())
             {
                 y3 = im->second.val;
                 t3 = im->second.t;
                 ++im;
-                if (im != data_.end())
+                if (im != p_data_.end())
                 {
                     y4 = im->second.val;
-                    if (im != data_.end())
+                    if (im != p_data_.end())
                     {
                         ++im;
-                        if (im != data_.end())
+                        if (im != p_data_.end())
                             y5 = im->second.val;
                     }
                 }
@@ -425,7 +427,17 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
 void TimelineNd::clear()
 {
-    data_.clear();
+    p_data_.clear();
+}
+
+void TimelineNd::setDimensions(size_t dim)
+{
+    p_dim_ = dim;
+    for (auto& i : p_data_)
+    {
+        i.second.val.setDimensions(dim);
+        i.second.d1.setDimensions(dim);
+    }
 }
 
 #if 0
@@ -452,7 +464,7 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::T
 {
     // check if present
     TpList::iterator i = find(time);
-    if (i!=data_.end())
+    if (i!=p_data_.end())
     {
         return 0;
     }
@@ -466,13 +478,13 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::T
     p.d1 = 0.0;
 
     if (typ == Point::DEFAULT)
-        p.type = currentType_(time);
+        p.type = p_currentType_(time);
     else
         p.type = typ;
 
     // insert as element
-    cur_ = &data_[hash(time)];
-    *cur_ = p;
+    p_cur_ = &p_data_[hash(time)];
+    *p_cur_ = p;
 
     // automatically set the derivative
     if (hasAutoDerivative(p.type))
@@ -481,7 +493,7 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::T
         setAutoDerivative(i);
     }
 
-    return cur_;
+    return p_cur_;
 }
 
 
@@ -499,16 +511,16 @@ TimelineNd::Point* TimelineNd::add(Point &p)
 {
     add(p.t, p.val, p.type);
 
-    return cur_;
+    return p_cur_;
 }
 
-TimelineNd::Point::Type TimelineNd::currentType_(Double time)
+TimelineNd::Point::Type TimelineNd::p_currentType_(Double time)
 {
-    if (data_.empty()) return Point::SPLINE4_SYM;
+    if (p_data_.empty()) return Point::SPLINE4_SYM;
 
     TpList::iterator i = first(time);
-    if (i==data_.end()) i--;
-    if (i!=data_.begin() && i->second.t>=time) i--;
+    if (i==p_data_.end()) i--;
+    if (i!=p_data_.begin() && i->second.t>=time) i--;
 
     return i->second.type;
 }
@@ -518,40 +530,40 @@ void TimelineNd::remove(Double time)
 {
     // check if present
     TpList::iterator i = find(time);
-    if (i==data_.end()) return;
+    if (i==p_data_.end()) return;
 
     // reset cur if it was pointing to that point
-    if (cur_==&i->second) cur_ = 0;
+    if (p_cur_==&i->second) p_cur_ = 0;
 
-    data_.erase(i);
+    p_data_.erase(i);
 }
 
 void TimelineNd::remove(TpHash hash)
 {
     // check if present
-    TpList::iterator i = data_.lower_bound(hash);
-    if (i==data_.end()) return;
+    TpList::iterator i = p_data_.lower_bound(hash);
+    if (i==p_data_.end()) return;
 
     // reset cur if it was pointing to that point
-    if (cur_==&i->second) cur_ = 0;
+    if (p_cur_==&i->second) p_cur_ = 0;
 
-    data_.erase(i);
+    p_data_.erase(i);
 }
 
 void TimelineNd::remove(Double start, Double end)
 {
-    if (data_.empty())
+    if (p_data_.empty())
         return;
 
     auto s = first(start);
-    if (s == data_.end())
+    if (s == p_data_.end())
         return;
 
     auto e = first(end);
-    if (e == data_.end())
+    if (e == p_data_.end())
         --e;
 
-    data_.erase(s, e);
+    p_data_.erase(s, e);
 }
 
 
@@ -563,7 +575,7 @@ void TimelineNd::setAutoDerivative(TpList::iterator &i)
     ValueType v0(0), v1(0);
 
     i0 = i;
-    if (i0==data_.begin())
+    if (i0==p_data_.begin())
     {
         t0 = i->second.t-1.0;
         v0 = i->second.val;
@@ -577,7 +589,7 @@ void TimelineNd::setAutoDerivative(TpList::iterator &i)
 
     i1 = i;
     i1++;
-    if (i1==data_.end())
+    if (i1==p_data_.end())
     {
         t1 = i->second.t+1.0;
         v1 = i->second.val;
@@ -605,8 +617,8 @@ void TimelineNd::shiftTime(Double secOff)
     // first, copy all points
     std::list<TimelineNd::Point> plist;
 
-    for (TpList::iterator i=data_.begin();
-            i != data_.end(); i++)
+    for (TpList::iterator i=p_data_.begin();
+            i != p_data_.end(); i++)
     {
         plist.push_back( i->second );
     }
