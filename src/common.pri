@@ -246,7 +246,9 @@ HEADERS += \
     $$PWD/python/34/python_object.h \
     $$PWD/python/34/python_vector.h \
     $$PWD/python/34/py_utils.h \
-    $$PWD/python/34/python_timeline.h
+    $$PWD/python/34/python_timeline.h \
+    $$PWD/math/arithmeticarray.h \
+    $$PWD/math/timelinend.h
 
 
 SOURCES += \
@@ -452,5 +454,6 @@ SOURCES += \
     $$PWD/python/34/python_object.cpp \
     $$PWD/python/34/python_vector.cpp \
     $$PWD/python/34/py_utils.cpp \
-    $$PWD/python/34/python_timeline.cpp
+    $$PWD/python/34/python_timeline.cpp \
+    $$PWD/math/timelinend.cpp
 

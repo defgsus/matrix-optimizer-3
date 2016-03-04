@@ -30,6 +30,22 @@ QString typeName(PyObject *arg)
     return s;
 }
 
+PyObject* fromInt(int i)
+{
+    auto obj = PyLong_FromLong(i);
+    if (obj == NULL)
+        PyErr_SetString(PyExc_MemoryError, "failed to create long object");
+    return obj;
+}
+
+PyObject* fromLong(long i)
+{
+    auto obj = PyLong_FromLong(i);
+    if (obj == NULL)
+        PyErr_SetString(PyExc_MemoryError, "failed to create long object");
+    return obj;
+}
+
 PyObject* fromDouble(double v)
 {
     auto obj = PyFloat_FromDouble(v);

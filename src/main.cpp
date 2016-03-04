@@ -61,6 +61,7 @@ int renderToDisk()
 //#include "tests/testdirectedgraph.h"
 //#include "tests/testcsg.h"
 #include "tests/testpython.h"
+//#include "math/arithmeticarray.h"
 
 //#include "types/vector.h"
 //#include "tool/stringmanip.h"

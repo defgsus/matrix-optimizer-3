@@ -34,6 +34,9 @@ namespace PYTHON34 {
     void* buildVector(const DVec3& v);
     void* buildVector(const DVec4& v);
     void* buildVector(const double v[], int len);
+    void* buildVector(double x, double y);
+    void* buildVector(double x, double y, double z);
+    void* buildVector(double x, double y, double z, double w);
 
     DVec2 getVector2(void* pyObject);
     DVec3 getVector3(void* pyObject);

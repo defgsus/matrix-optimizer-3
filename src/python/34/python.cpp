@@ -69,7 +69,7 @@ namespace
         MO_PY_DEBUG("init object"); initObject(module);
         MO_PY_DEBUG("init geometry"); initGeometry(module);
         MO_PY_DEBUG("init vector"); initVector(module);
-        MO_PY_DEBUG("init timeline"); initTimeline(module);
+//        MO_PY_DEBUG("init timeline"); initTimeline(module);
 
         return module;
     }

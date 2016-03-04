@@ -1704,7 +1704,7 @@ void initVector(void* mod)
 template <class VEC, int len>
 void* tmpl_buildVector(const VEC& v)
 {
-    auto pobj = PyObject_New(VectorStruct, Vector_Type());
+    auto pobj = new_vec();
     pobj->len = len;
     for (int i=0; i<len; ++i)
         pobj->v[i] = v[i];
@@ -1738,6 +1738,30 @@ void* buildVector(const double v[], int len)
     else if (len == 3) return tmpl_buildVector<const double*, 3>(v);
     else if (len == 4) return tmpl_buildVector<const double*, 4>(v);
     else return NULL;
+}
+
+void* buildVector(double x, double y)
+{
+    auto pobj = new_vec();
+    pobj->len = 2;
+    pobj->v[0] = x; pobj->v[1] = y;
+    return pobj;
+}
+
+void* buildVector(double x, double y, double z)
+{
+    auto pobj = new_vec();
+    pobj->len = 3;
+    pobj->v[0] = x; pobj->v[1] = y; pobj->v[2] = z;;
+    return pobj;
+}
+
+void* buildVector(double x, double y, double z, double w)
+{
+    auto pobj = new_vec();
+    pobj->len = 4;
+    pobj->v[0] = x; pobj->v[1] = y; pobj->v[2] = z; pobj->v[3] = w;
+    return pobj;
 }
 
 DVec2 getVector2(void* pyObject) { return tmpl_getVector<DVec2, 2>(pyObject); }
