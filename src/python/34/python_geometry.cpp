@@ -45,6 +45,19 @@ namespace
     }
 
 
+    // all vector(2) convertible arguments
+    bool py_get_vec2(PyObject* arg, Vec2* vec)
+    {
+        double v[2];
+        if (get_vector(arg, 2, v))
+        {
+            vec->x = v[0];
+            vec->y = v[1];
+            return true;
+        }
+        return false;
+    }
+
     // all vector(3) convertible arguments
     bool py_get_vec3(PyObject* arg, Vec3* vec)
     {
@@ -59,6 +72,36 @@ namespace
         return false;
     }
 
+    // all vector(4) convertible arguments
+    bool py_get_vec4(PyObject* arg, Vec4* vec)
+    {
+        double v[4];
+        if (get_vector(arg, 4, v))
+        {
+            vec->x = v[0];
+            vec->y = v[1];
+            vec->z = v[2];
+            vec->w = v[3];
+            return true;
+        }
+        return false;
+    }
+
+
+    // either (long, f,f) or (long, vec-convertible)
+    bool py_get_index_and_vec2(PyObject* args_, long* idx, Vec2* v)
+    {
+        if (PyArg_ParseTuple(args_, "l|ff", idx, &v->x, &v->y))
+            return true;
+        PyErr_Clear();
+        PyObject * second;
+        if (!PyArg_ParseTuple(args_, "l|O", idx, &second))
+            return false;
+        if (py_get_vec2(second, v))
+            return true;
+        return false;
+    }
+
     // either (long, f,f,f) or (long, vec-convertible)
     bool py_get_index_and_vec3(PyObject* args_, long* idx, Vec3* v)
     {
@@ -69,6 +112,20 @@ namespace
         if (!PyArg_ParseTuple(args_, "l|O", idx, &second))
             return false;
         if (py_get_vec3(second, v))
+            return true;
+        return false;
+    }
+
+    // either (long, f,f,f,f) or (long, vec-convertible)
+    bool py_get_index_and_vec4(PyObject* args_, long* idx, Vec4* v)
+    {
+        if (PyArg_ParseTuple(args_, "l|ffff", idx, &v->x, &v->y, &v->z, &v->w))
+            return true;
+        PyErr_Clear();
+        PyObject * second;
+        if (!PyArg_ParseTuple(args_, "l|O", idx, &second))
+            return false;
+        if (py_get_vec4(second, v))
             return true;
         return false;
     }
@@ -190,7 +247,7 @@ extern "C"
             if (obj && 0==strcmp(obj->ob_type->tp_name, "matrixoptimizer.Geometry"))
             {
                 auto other = reinterpret_cast<Python34Geom*>(obj);
-                other->geometry->addRef("py geometry.__init__");
+                other->geometry->addRef("py geometry.__init__ copyctor");
                 if (self->geometry)
                     self->geometry->releaseRef("py geometry.__init__ relprev");
                 self->geometry = other->geometry;
@@ -328,6 +385,85 @@ extern "C"
         return buildVector(p->geometry->getVertex(idx));
     }
 
+    MO_PY_DEF_DOC(geom_get_color,
+        "get_color(long) -> Vec\n"
+        "Returns the color of the vertex at the given index as 4d vector"
+    )
+    static PyObject* geom_get_color(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numVertices(), "vertex"))
+            return NULL;
+        return buildVector(p->geometry->getColor(idx));
+    }
+
+
+    MO_PY_DEF_DOC(geom_get_normal,
+        "get_normal(long) -> Vec\n"
+        "Returns the normal of the vertex at the given index as 3d vector"
+    )
+    static PyObject* geom_get_normal(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numVertices(), "vertex"))
+            return NULL;
+        return buildVector(p->geometry->getNormal(idx));
+    }
+
+    MO_PY_DEF_DOC(geom_get_tex_coord,
+        "get_tex_coord(long) -> Vec\n"
+        "Returns the texture coords of the vertex at the given index as 2d vector"
+    )
+    static PyObject* geom_get_tex_coord(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numVertices(), "vertex"))
+            return NULL;
+        return buildVector(p->geometry->getTexCoord(idx));
+    }
+
+    MO_PY_DEF_DOC(geom_get_attribute,
+        "get_attribute(str, long) -> float | Vec\n"
+        "Returns the vertex attribute of the vertex at the given index as float "
+        "or as 2-4d vector.\n"
+        "The attribute name is specified as the first parameter.\n"
+        "If the attribute does not exist, None is returned!"
+    )
+    static PyObject* geom_get_attribute(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        const char * utf8;
+        if (!PyArg_ParseTuple(arg, "sl", &utf8, &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numVertices(), "vertex"))
+            return NULL;
+        auto attName = QString::fromUtf8(utf8);
+        auto att = p->geometry->getAttribute(attName);
+        if (!att)
+            Py_RETURN_NONE;
+        if (att->numComponents > 4)
+        {
+            PyErr_Set(PyExc_TypeError, QString("attribute '%1' has invalid component "
+                                               "size %2").arg(attName).arg(att->numComponents));
+            return NULL;
+        }
+        double v[4];
+        for (unsigned int i=0; i<att->numComponents; ++i)
+            v[i] = att->value(idx, i);
+        return buildVector(v, att->numComponents);
+    }
+
+
     MO_PY_DEF_DOC(geom_get_point,
         "get_point(long) -> Vec\n"
         "Returns the position of the point at the given index."
@@ -436,7 +572,7 @@ extern "C"
         MO__GETGEOM(pgeom);
         auto foo = [pgeom](PyObject* item)
         {
-            MO_PRINT("ITEM[" << typeName(item) << "]");
+            //MO_PRINT("ITEM[" << typeName(item) << "]");
             Vec3 v;
             if (!py_get_vec3(item, &v))
                 return false;
@@ -463,6 +599,98 @@ extern "C"
         if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
             return NULL;
         pgeom->geometry->setVertex(idx, v);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_color,
+        "set_color(long, vec4) -> None\n"
+        //"First version sets the current color, used on the next call to add_vertex()\n"
+        "Changes the color of the vertex at the given index."
+    )
+    static PyObject* geom_set_color(PyObject* self, PyObject* arg)
+    {
+        Vec4 v;
+        long idx;
+        if (!py_get_index_and_vec4(arg, &idx, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
+            return NULL;
+        pgeom->geometry->setColor(idx, v);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_normal,
+        "set_normal(long, vec3) -> None\n"
+        "Changes the normal of the vertex at the given index."
+    )
+    static PyObject* geom_set_normal(PyObject* self, PyObject* arg)
+    {
+        Vec3 v;
+        long idx;
+        if (!py_get_index_and_vec3(arg, &idx, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
+            return NULL;
+        pgeom->geometry->setNormal(idx, v);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_tex_coord,
+        "set_tex_coord(long, vec2) -> None\n"
+        "Changes the texuture coords of the vertex at the given index."
+    )
+    static PyObject* geom_set_tex_coord(PyObject* self, PyObject* arg)
+    {
+        Vec2 v;
+        long idx;
+        if (!py_get_index_and_vec2(arg, &idx, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
+            return NULL;
+        pgeom->geometry->setTexCoord(idx, v);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_attribute,
+        "set_attribute(str, long, vec) -> None\n"
+        "Changes the vertex attribute of the vertex at the given index.\n"
+        "The vector can be 1 to 4 components long. "
+    )
+    static PyObject* geom_set_attribute(PyObject* self, PyObject* arg)
+    {
+        const char* utf8;
+        long idx;
+        PyObject * second;
+        if (!PyArg_ParseTuple(arg, "slO", &utf8, &idx, &second))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        auto attName = QString::fromUtf8(utf8);
+        if (attName.isEmpty())
+        {
+            PyErr_SetString(PyExc_TypeError, "empty attribute name is not allowed");
+            return NULL;
+        }
+        if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
+            return NULL;
+        int num;
+        double v[4];
+        if (!get_vector_var(second, &num, v))
+            return NULL;
+        auto att = pgeom->geometry->getAttribute(attName);
+        // create attribute if not there already
+        if (!att)
+            att = pgeom->geometry->addAttribute(attName, num);
+        if ((int)att->numComponents != num)
+        {
+            PyErr_Set(PyExc_TypeError, QString("attribute '%1' is already "
+                                               "defined with %2 component(s), not %3")
+                      .arg(attName).arg(att->numComponents).arg(num));
+            return NULL;
+        }
+        pgeom->geometry->setAttribute(attName, idx, v[0], v[1], v[2], v[3]);
         Py_RETURN_NONE;
     }
 
@@ -648,13 +876,22 @@ extern "C"
         MO__METHOD(num_triangles,   METH_NOARGS)
 
         MO__METHOD(get_vertex,      METH_VARARGS)
+        MO__METHOD(get_color,       METH_VARARGS)
+        MO__METHOD(get_normal,      METH_VARARGS)
+        MO__METHOD(get_tex_coord,   METH_VARARGS)
+        MO__METHOD(get_attribute,   METH_VARARGS)
         MO__METHOD(get_point,       METH_VARARGS)
         MO__METHOD(get_line,        METH_VARARGS)
         MO__METHOD(get_triangle,    METH_VARARGS)
 
         MO__METHOD(set_shared,      METH_VARARGS)
-        MO__METHOD(add_vertex,      METH_VARARGS)
         MO__METHOD(set_vertex,      METH_VARARGS)
+        MO__METHOD(set_color,       METH_VARARGS)
+        MO__METHOD(set_normal,      METH_VARARGS)
+        MO__METHOD(set_tex_coord,   METH_VARARGS)
+        MO__METHOD(set_attribute,   METH_VARARGS)
+
+        MO__METHOD(add_vertex,      METH_VARARGS)
         MO__METHOD(add_vertices,    METH_VARARGS)
         MO__METHOD(add_point,       METH_VARARGS)
         MO__METHOD(add_line,        METH_VARARGS)

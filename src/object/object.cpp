@@ -197,9 +197,7 @@ Object::Object()
 
 Object::~Object()
 {
-    MO_PRINT("Object(\"" << namePath() << "\")::~Object()");
-
-
+    //MO_PRINT("Object(\"" << namePath() << "\")::~Object()");
 
     delete pobj_;
 }

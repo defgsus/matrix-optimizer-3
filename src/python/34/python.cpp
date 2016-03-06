@@ -14,6 +14,8 @@
 
 #include <atomic>
 
+#include <QSet>
+
 #include "python.h"
 #include "python_funcs.h"
 #include "python_object.h"
@@ -22,6 +24,7 @@
 #include "python_timeline.h"
 #include "python_output.h"
 #include "tool/stringmanip.h"
+#include "io/applicationtime.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -398,6 +401,13 @@ void PythonInterpreter::write(const char *utf8, bool error)
 {
     //MO_PY_DEBUG("write(" << utf8 << ")");
 
+    /** @todo segfault on python geometry script when run
+        at program start from autoloaded scene and there is
+        an output channeled to PythonInterpreter::write().
+        Current workaround is by not printing during the first five seconds. */
+    if (applicationTime() < 5.)
+        return;
+
     if (error)
         p_->errorOutput += QString::fromUtf8(utf8);
     else
@@ -408,24 +418,57 @@ void PythonInterpreter::write(const char *utf8, bool error)
 
 QString PythonInterpreter::getHelpHtmlString()
 {
+    static QString helpStr;
+    if (!helpStr.isEmpty())
+        return helpStr;
+
     PythonInterpreter interp;
     interp.execute("import matrixoptimizer as mo\nhelp(mo)");
     QString help = interp.output();
 
-    /*
+    QSet<QString> anchors;
+
     auto lines = help.split("\n");
     help.clear();
     for (QString& line : lines)
     {
-        if (line.contains("("))
+        // function
+        if (line.contains("(...)"))
         {
-
+            int idx = line.indexOf("|");
+            if (idx > 0)
+            {
+                int idx2 = line.indexOf("(...)");
+                QString funcName = line.mid(idx+1, idx2-idx-1).simplified();
+                if (!anchors.contains(funcName))
+                {
+                    anchors.insert(funcName);
+                    line = QString("</pre><a name=\"%1\"></a><pre>\n%2")
+                            .arg(funcName).arg(line);
+                }
+            }
+        }
+        // class
+        else if (line.simplified().startsWith("class"))
+        {
+            int idx = line.indexOf("class");
+            int idx2 = line.indexOf("(");
+            if (idx2 > idx)
+            {
+                QString className = line.mid(idx+5, idx2-idx-5).simplified();
+                if (!anchors.contains(className))
+                {
+                    anchors.insert(className);
+                    line = QString("</pre><a name=\"%1\"></a><pre>\n%2")
+                            .arg(className).arg(line);
+                };
+            }
         }
 
         help.append(line + "\n");
-    }*/
+    }
 
-    return "<pre>" + help + "</pre>";
+    return helpStr = "<pre>" + help + "</pre>";
 }
 
 
