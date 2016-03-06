@@ -123,10 +123,10 @@ void GeometryModifierDuplicate::execute(Geometry *g)
 
         g->addGeometry(*geom);
 
-        geom->releaseRef();
+        geom->releaseRef("GeometryModifierDuplicate release temp");
     }
 
-    copy->releaseRef();
+    copy->releaseRef("GeometryModifierDuplicate release temp");
 }
 
 } // namespace GEOM

@@ -55,7 +55,7 @@ EvolutionBaseViewer::~EvolutionBaseViewer()
     settings()->storeGeometry(this);
 
     if (evo_)
-        evo_->releaseRef();
+        evo_->releaseRef("EvolutionBaseView destroy");
     delete image_;
 }
 
@@ -64,7 +64,7 @@ void EvolutionBaseViewer::setSpecimen(const EvolutionBase* evo)
     if (evo == evo_)
         return;
     if (evo_)
-        evo_->releaseRef();
+        evo_->releaseRef("EvolutionBaseView set releaseprev");
     if (!evo)
         evo_ = nullptr;
     else

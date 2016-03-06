@@ -250,7 +250,8 @@ HEADERS += \
     $$PWD/math/arithmeticarray.h \
     $$PWD/math/timelinend.h \
     $$PWD/model/python34model.h \
-    $$PWD/python/34/py_tree.h
+    $$PWD/python/34/py_tree.h \
+    $$PWD/math/vec_math.h
 
 
 SOURCES += \
@@ -459,5 +460,6 @@ SOURCES += \
     $$PWD/python/34/python_timeline.cpp \
     $$PWD/math/timelinend.cpp \
     $$PWD/model/python34model.cpp \
-    $$PWD/python/34/py_tree.cpp
+    $$PWD/python/34/py_tree.cpp \
+    $$PWD/types/refcounted.cpp
 

@@ -393,7 +393,7 @@ QImage HelpSystem::getObjectImage(const QString &url) const
     p.translate(-item.boundingRect().topLeft());
     item.paint(&p, 0, 0);
 
-    o->releaseRef();
+    o->releaseRef("HelpSystem getObjectImage release temp");
     return size != itemsize
             ? img.scaled(size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation)
             : img;

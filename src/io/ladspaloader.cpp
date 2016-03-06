@@ -36,7 +36,7 @@ LadspaLoader::~LadspaLoader()
 void LadspaLoader::clear()
 {
     for (auto & p : p_map_)
-        p->releaseRef();
+        p->releaseRef("LadspaLoader clear");
     p_map_.clear();
 }
 
@@ -168,7 +168,7 @@ AUDIO::LadspaPlugin * LadspaLoader::loadPlugin(const QString &filename, const QS
 
     auto plug = loader.getPlugin(filename, label);
     if (plug)
-        plug->addRef();
+        plug->addRef("LadspaLoader loadplugin");
 
     return plug;
 }

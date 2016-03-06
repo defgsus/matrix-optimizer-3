@@ -86,6 +86,7 @@ QSpinBox[readOnly="true"],
 QDoubleSpinBox[readOnly="true"],
 QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
 
+QPlainTextEdit, QTextBrowser { background-color: #111; }
 
 /* ---- lists ---- */
 

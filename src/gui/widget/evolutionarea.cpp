@@ -349,7 +349,7 @@ QMenu* EvolutionArea::createMenu(unsigned idx)
                 if (auto evo = md->createSpecimen())
                 {
                     p_->pool.setSpecimen(idx, evo);
-                    evo->releaseRef();
+                    evo->releaseRef("EvolutionMimeData release after paste");
                     saveHistory();
                     updateTile(idx);
                     emit propertiesChanged();

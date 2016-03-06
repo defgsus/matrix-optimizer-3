@@ -102,14 +102,14 @@ public:
         // The syntax checker needs a null object..
         //MO_ASSERT(o, "Can't create wrapper for NULL Object");
         if (o)
-            o->addRef();
+            o->addRef("ObjectAS creator");
     }
 
 private:
     ~ObjectAS()
     {
         if (o)
-            o->releaseRef();
+            o->releaseRef("ObjectAS destroy");
     }
 public:
 
@@ -263,13 +263,13 @@ public:
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
-        o->addRef();
+        o->addRef("ObjectAnyAS create");
     }
 
 private:
     ~ObjectAnyAS()
     {
-        o->releaseRef();
+        o->releaseRef("ObjectAnyAS destroy");
     }
 };
 
@@ -293,12 +293,12 @@ public:
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
-        o->addRef();
+        o->addRef("SequenceAS creator");
     }
 private:
     ~SequenceAS()
     {
-        o->releaseRef();
+        o->releaseRef("SequenceAS destroy");
     }
 public:
 
@@ -374,13 +374,13 @@ public:
     {
         MO_ASSERT(p, "Can't create wrapper for NULL Parameter");
         MO_ASSERT(o, "Can't create AngelScript Parameter without parent Object");
-        o->addRef();
+        o->addRef("ParameterAS creator");
     }
 
 private:
     ~ParameterAS()
     {
-        o->releaseRef();
+        o->releaseRef("ParameterAS destroy");
     }
 
 public:

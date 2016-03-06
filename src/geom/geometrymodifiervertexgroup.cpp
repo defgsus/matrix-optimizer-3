@@ -75,7 +75,7 @@ void GeometryModifierVertexGroup::execute(Geometry *g)
         g->clear();
         g->setSharedVertices(true, properties().get("threshold").toFloat());
         g->addGeometry(*geo);
-        geo->releaseRef();
+        geo->releaseRef("GeometryModifierVertexGroup release temporary");
     }
 
     if (!share)

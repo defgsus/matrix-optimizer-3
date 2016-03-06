@@ -78,7 +78,7 @@ bool ParameterFilename::openFileDialog(QWidget * parent)
             if (plug)
             {
                 fn = plug->idName();
-                plug->releaseRef();
+                plug->releaseRef("ParameterFilename::openDialog getplugname done");
             }
         }
         break;

@@ -779,7 +779,7 @@ void WaveTracerWidget::playIr()
     auto data = AUDIO::AudioPlayerSample::fromData(&sam[0], sam.size(),
                     AUDIO::AudioPlayer::sampleRate());
     AUDIO::AudioPlayer::play(data);
-    data->releaseRef();
+    data->releaseRef("WaveTracerWidget playIr done");
 }
 
 bool WaveTracerWidget::loadSound()
@@ -874,7 +874,7 @@ void WaveTracerWidget::playSound()
     auto data = AUDIO::AudioPlayerSample::fromData(&conv[0], conv.size(),
                     AUDIO::AudioPlayer::sampleRate());
     AUDIO::AudioPlayer::play(data);
-    data->releaseRef();
+    data->releaseRef("WaveTracerWidget playSound done");
 }
 
 

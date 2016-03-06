@@ -71,7 +71,7 @@ AUDIO::LadspaPlugin * AudioPluginDialog::selectPlugin(QWidget * parent)
 
     auto plug = diag.currentPlugin();
     if (plug)
-        plug->addRef();
+        plug->addRef("AudioPluginDialog set after select");
 
     return plug;
 }

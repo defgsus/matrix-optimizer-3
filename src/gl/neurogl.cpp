@@ -463,13 +463,13 @@ void NeuroGl::Private::updateQuad(Stage* s, const QString& name) const
         }
         catch (Exception& e)
         {
-            g->releaseRef();
+            g->releaseRef("NeuroGl::updateQuad failed");
             delete s->quad;
             s->quad = 0;
             e << "\nwhen creating shader quad for NeuroGl stage";
             throw;
         }
-        g->releaseRef();
+        g->releaseRef("NeuroGl::updateQuad finish");
     }
 }
 

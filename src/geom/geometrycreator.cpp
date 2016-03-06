@@ -48,7 +48,7 @@ GeometryCreator::GeometryCreator(QObject *parent) :
 GeometryCreator::~GeometryCreator()
 {
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("GeometryCreator destroy");
     delete settings_;
     delete mutex_;
 }
@@ -111,7 +111,7 @@ void GeometryCreator::run()
         QMutexLocker lock(mutex_);
 
         if (curGeometry_)
-            curGeometry_->releaseRef();
+            curGeometry_->releaseRef("GeometryCreator run exception");
         curGeometry_ = 0;
     }
 
@@ -119,7 +119,7 @@ void GeometryCreator::run()
 
     // get geometry back
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("GeometryCreator run finish relprev");
     geometry_ = curGeometry_;
 
     MO_DEBUG_GL("GeometryCreator::run() finished (instance = " << instanceCounter << ")");

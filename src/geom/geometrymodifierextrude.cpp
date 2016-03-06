@@ -108,7 +108,7 @@ void GeometryModifierExtrude::execute(Geometry *g)
         geom->unGroupVertices();
 
     *g = *geom;
-    geom->releaseRef();
+    geom->releaseRef("GeometryModifierExtrude release temp");
 }
 
 } // namespace GEOM

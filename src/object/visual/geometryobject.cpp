@@ -42,7 +42,7 @@ GeometryObject::~GeometryObject()
 {
     resetCreator_();
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("GeometryObject destroy");
 }
 
 void GeometryObject::serialize(IO::DataStream & io) const
@@ -117,7 +117,7 @@ void GeometryObject::createGeometry_()
     if (lazy) // instantly
     {
         if (geometry_)
-            geometry_->releaseRef();
+            geometry_->releaseRef("GeometryObject create relprev");
         geometry_ = new GEOM::Geometry;
         geomSettings_->setObject(this);
         geomSettings_->modifierChain()->execute(geometry_, this);
@@ -159,7 +159,7 @@ void GeometryObject::resetCreator_()
 void GeometryObject::geometryCreated_()
 {
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("GeometryObject creator-finished relprev");
     geometry_ = creator_->takeGeometry();
 
     creator_->deleteLater();
@@ -176,7 +176,7 @@ void GeometryObject::geometryFailed_(const QString& e)
     creator_ = 0;
 
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("GeometryObject creator-failed relprev");
     geometry_ = 0;
 
     /* emit geometryChanged(); */

@@ -58,7 +58,7 @@ PresetsWidget::PresetsWidget(QWidget *parent)
 PresetsWidget::~PresetsWidget()
 {
     if (p_->presets)
-        p_->presets->releaseRef();
+        p_->presets->releaseRef("PresetsWidget destroy");
     delete p_;
 }
 
@@ -208,10 +208,10 @@ void PresetsWidget::loadNext()
 void PresetsWidget::setPresets(FrontPresets * p)
 {
     if (p_->presets)
-        p_->presets->releaseRef();
+        p_->presets->releaseRef("PresetsWidget setPresets, delete previous");
 
     p_->presets = p;
-    p_->presets->addRef();
+    p_->presets->addRef("PresetsWidget setPresets");
 
     p_->updateCombo();
 }

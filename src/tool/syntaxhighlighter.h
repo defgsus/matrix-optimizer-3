@@ -32,7 +32,6 @@ class SyntaxHighlighter : public QSyntaxHighlighter
     Q_OBJECT
 public:
     explicit SyntaxHighlighter(QObject * parent);
-    explicit SyntaxHighlighter(QTextDocument * parent);
 
 signals:
 

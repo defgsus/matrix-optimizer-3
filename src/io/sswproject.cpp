@@ -469,11 +469,11 @@ SswSource::Automation::Automation()
 
 SswSource::Automation::~Automation()
 {
-    if (x) x->releaseRef();
-    if (y) y->releaseRef();
-    if (z) z->releaseRef();
-    if (gainDb) gainDb->releaseRef();
-    if (type) type->releaseRef();
+    if (x) x->releaseRef("SswSource::Automation destroy");
+    if (y) y->releaseRef("SswSource::Automation destroy");
+    if (z) z->releaseRef("SswSource::Automation destroy");
+    if (gainDb) gainDb->releaseRef("SswSource::Automation destroy");
+    if (type) type->releaseRef("SswSource::Automation destroy");
 }
 
 SswSource::SswSource(SswProject * p)

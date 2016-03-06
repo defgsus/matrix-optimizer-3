@@ -11,7 +11,7 @@
 #ifndef MOSRC_TYPES_REFCOUNTED_H
 #define MOSRC_TYPES_REFCOUNTED_H
 
-#include <atomic>
+#include <QString>
 
 namespace MO {
 
@@ -21,27 +21,29 @@ class RefCounted
 {
 public:
 
-    RefCounted() : p_refcount_(1) { }
+    RefCounted();
 
-    void addRef() { ++p_refcount_; }
+    void addRef(const QString& reason);
 
-    void releaseRef() { if (--p_refcount_ == 0) delete this; }
+    void releaseRef(const QString& reason);
 
-    int referenceCount() const { return p_refcount_; }
+    int refCount() const;
 
 protected:
-    virtual ~RefCounted() { }
+    virtual ~RefCounted();
 
 private:
-
-    std::atomic_int p_refcount_;
+    struct P_RefCountedPrivate;
+    P_RefCountedPrivate* p_refcount_private_;
 };
 
 
 /** Deleter for smart-pointer of RefCounted types */
 struct RefCountedDeleter
 {
-    void operator()(RefCounted * r) { r->releaseRef(); }
+    RefCountedDeleter(const QString& reason) : reason_(reason) { }
+    void operator()(RefCounted * r) { r->releaseRef("AUTODELETE " + reason_); }
+    QString reason_;
 };
 
 

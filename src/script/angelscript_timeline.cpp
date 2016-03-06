@@ -65,7 +65,7 @@ public:
     ~Timeline1AS()
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS()");
-        tl->releaseRef();
+        tl->releaseRef("Timeline1AS destroy");
     }
 
     // ------ interface -------

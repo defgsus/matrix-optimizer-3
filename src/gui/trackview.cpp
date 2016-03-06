@@ -1240,7 +1240,7 @@ bool TrackView::paste_(bool single_track)
         }
         nextFocusSequence_ = 0;
         if (o)
-            o->releaseRef();
+            o->releaseRef("trackview paste complete");
         return false;
     }
     // multi sequences
@@ -1364,7 +1364,7 @@ bool TrackView::paste_(bool single_track)
                            "number of sequences (" << objs.size() << ")");
 
             for (auto o : objs)
-                o->releaseRef();
+                o->releaseRef("trackview multi-paste complete");
         }
     }
 

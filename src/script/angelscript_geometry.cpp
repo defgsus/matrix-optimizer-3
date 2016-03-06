@@ -128,7 +128,7 @@ public:
         MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ")");
         // Syntax checker needs NULL object
         if (g)
-            g->addRef();
+            g->addRef("as geometry create");
     }
 
 private:
@@ -136,7 +136,7 @@ private:
     {
         MO_DEBUG_GAS("GeometryAS("<<this<<")::~GeometryAS()")
         if (g)
-            g->releaseRef();
+            g->releaseRef("as geometry destroyed");
     }
 
 public:
@@ -280,7 +280,9 @@ public:
 
     void addGeometry(const GeometryAS& o) { g->addGeometry( *o.g ); }
     void addGeometryP(const GeometryAS& o, const Vec3& p) { g->addGeometry( *o.g, p ); }
-    void addGeometryM(const GeometryAS& o, const Mat4& m) { auto tmp = new GEOM::Geometry(*o.g); tmp->applyMatrix(m); g->addGeometry(*tmp); tmp->releaseRef(); }
+    void addGeometryM(const GeometryAS& o, const Mat4& m) {
+        auto tmp = new GEOM::Geometry(*o.g);
+        tmp->applyMatrix(m); g->addGeometry(*tmp); tmp->releaseRef("GeometryAS addGeometryM release temp"); }
 
     /*
     void marchingCubesFunc(const asIScriptFunction * f, uint w, uint h, uint d, float isolevel, const Vec3& mine, const Vec3& maxe)
@@ -944,14 +946,14 @@ public:
 //        if (engine)
 //            engine->Release();
 
-        gas->releaseRef();
+        gas->releaseRef("GeometryEngineAS destroy");
     }
 
     void createEngine();
     void messageCallback(const asSMessageInfo *msg);
 
     // global script function
-    GeometryAS * getGeometryAS() { gas->addRef(); return gas; }
+    GeometryAS * getGeometryAS() { gas->addRef("GeometryEngineAS::get"); return gas; }
 
     Object * object;
     GEOM::Geometry * g;

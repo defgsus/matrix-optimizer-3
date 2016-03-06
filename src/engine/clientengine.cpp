@@ -498,7 +498,7 @@ void ClientEngine::setSceneObject(Scene * scene)
     if (scene_)
     {
         scene_->kill();
-        scene_->releaseRef();
+        scene_->releaseRef("ClientEngine relprev scene");
     }
 
     scene_ = scene;

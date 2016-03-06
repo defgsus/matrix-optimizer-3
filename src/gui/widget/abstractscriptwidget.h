@@ -81,6 +81,11 @@ public slots:
         and always sends a scriptTextChanged() signal */
     void updateScript();
 
+    void incFontSize();
+    void decFontSize();
+
+    void setEditorFont(const QFont&, bool doSaveSettings);
+
     /** Call this to install or update a syntax highlighter.
         Call this even if you have installed it already instead of
         QSyntaxHighlighter::rehighlight() because this function
@@ -121,7 +126,6 @@ protected:
 protected slots:
 
     void onAddCompileMessage(int line, int t, const QString & text);
-
 
 private:
     class PrivateSW;

@@ -41,7 +41,7 @@ struct ShpLoader::Private
     {
         close();
         if (geometry)
-            geometry->releaseRef();
+            geometry->releaseRef("ShpLoader destroy");
     }
 
     struct Vertex

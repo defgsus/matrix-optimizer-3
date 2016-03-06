@@ -67,7 +67,11 @@ struct Object::PrivateObj
 
         // release references on childs
         for (auto c : childObjects)
-            c->releaseRef();
+        {
+            if (c->refCount() > 1)
+                MO_PRINT("NOT RELEASING " << c->idName());
+            c->releaseRef("Object destroy: release children");
+        }
     }
 
     /** Implementation of Object::deserializeTree() */
@@ -192,15 +196,10 @@ Object::Object()
 
 Object::~Object()
 {
-    MO_DEBUG("Object(\"" << namePath() << "\")::~Object()");
+    MO_PRINT("Object(\"" << namePath() << "\")::~Object()");
 
-#ifndef NDEBUG
-    if (referenceCount() > 1)
-    {
-        MO_WARNING("Object(" << idName() << ")::~Object() with a ref-count of "
-                   << referenceCount() << ".");
-    }
-#endif
+
+
     delete pobj_;
 }
 
@@ -320,7 +319,7 @@ Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            o->releaseRef();
+            o->releaseRef("Object deserialize failed");
             e << "\nobject creation failed for class '" << className << "'";
             throw;
         }
@@ -328,7 +327,7 @@ Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
         // once in a while check stream for errors
         if (io.status() != QDataStream::Ok)
         {
-            o->releaseRef();
+            o->releaseRef("Object deserialize stream error");
             MO_IO_ERROR(READ, "error deserializing object '"<<idName<<"'.\n"
                         "QIODevice error: '"<<io.device()->errorString()<<"'");
         }
@@ -343,7 +342,7 @@ Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            o->releaseRef();
+            o->releaseRef("Object deserialize params failed");
             e << "\nCould not read parameters for object '" << idName << "'";
             throw;
         }
@@ -374,6 +373,7 @@ Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
         Object * child = deserializeTree(io);
         MO_ASSERT(child, "duh?");
         o->addObject_(child);//, ObjectFactory::getBestInsertIndex(o, child, -1));
+        child->releaseRef("Object::deserialize child added");
     }
 
     if (ver >= 2)
@@ -919,7 +919,7 @@ Object * Object::addObject_(Object * o, int index)
     if (!pobj_->childObjects.contains(o))
     {
         o->setParentObject_(this, index);
-        o->addRef();
+        o->addRef(QString("%1.addObject(%2)").arg(idName()).arg(o->idName()));
         pobj_->childrenHaveChanged = true;
     }
 
@@ -944,7 +944,7 @@ void Object::deleteObject_(Object * child, bool destroy)
     if (p_takeChild_(child))
     {
         if (destroy)
-            child->releaseRef();
+            child->releaseRef(QString("deleteObject(%1)").arg(child->idName()));
         pobj_->childrenHaveChanged = true;
     }
 }

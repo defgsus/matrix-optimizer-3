@@ -82,7 +82,7 @@ FrontPreset * FrontPreset::fromStream(IO::XmlStream& io)
 
     // create new instance for loading
     auto tmp = new FrontPreset(name);
-    std::shared_ptr<FrontPreset> ptmp(tmp, RefCountedDeleter());
+    std::shared_ptr<FrontPreset> ptmp(tmp, RefCountedDeleter("FrontPresest load"));
 
     while (io.nextSubSection())
     {
@@ -92,7 +92,7 @@ FrontPreset * FrontPreset::fromStream(IO::XmlStream& io)
         io.leaveSection();
     }
 
-    tmp->addRef();
+    tmp->addRef("FrontPreset load finish");
     return tmp;
 }
 
@@ -183,7 +183,7 @@ FrontPresets * FrontPresets::fromStream(IO::XmlStream& io, const QString& preset
 
     // create instance for loading
     auto tmp = new FrontPresets(name);
-    std::shared_ptr<FrontPresets> ptmp(tmp, RefCountedDeleter());
+    std::shared_ptr<FrontPresets> ptmp(tmp, RefCountedDeleter("FrontPreset streamload"));
 
     while (io.nextSubSection())
     {
@@ -193,13 +193,13 @@ FrontPresets * FrontPresets::fromStream(IO::XmlStream& io, const QString& preset
 
             auto p = FrontPreset::fromStream(io);
             tmp->setPreset(id, p);
-            p->releaseRef();
+            p->releaseRef("FrontPreset load add finish");
         }
 
         io.leaveSection();
     }
 
-    tmp->addRef();
+    tmp->addRef("FrontPreset load finish");
     return tmp;
 }
 
@@ -344,7 +344,7 @@ FrontPreset * FrontPresets::newPreset(const QString& id, const QString& name)
         return p;
 
     auto p = new FrontPreset(name);
-    auto pp = std::shared_ptr<FrontPreset>(p, RefCountedDeleter());
+    auto pp = std::shared_ptr<FrontPreset>(p, RefCountedDeleter("FrontPresets new preset"));
     p_map_.insert(id, pp);
 
     return p;
@@ -355,9 +355,9 @@ void FrontPresets::setPreset(const QString &id, FrontPreset *preset)
     // replace?
     p_map_.remove(id);
 
-    auto pp = std::shared_ptr<FrontPreset>(preset, RefCountedDeleter());
+    auto pp = std::shared_ptr<FrontPreset>(preset, RefCountedDeleter("FrontPresets set preset"));
     p_map_.insert(id, pp);
-    preset->addRef();
+    preset->addRef("FrontPresets set preset");
 }
 
 void FrontPresets::removePreset(const QString &id)

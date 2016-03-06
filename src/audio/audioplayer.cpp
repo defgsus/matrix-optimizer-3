@@ -161,7 +161,7 @@ void AudioPlayerPrivate::addData(AudioPlayerData * d)
     QWriteLocker lock(&dataLock);
 
     dataList.append(d);
-    d->addRef();
+    d->addRef("AudioPlayerPrivate addData");
     MO_DEBUG_AUPLAY("addData(" << d << "): " << d->lengthSamples() << "x"
              << d->numChannels() << " @ " << d->sampleRate() << "hz");
 }
@@ -174,7 +174,7 @@ void AudioPlayerPrivate::removeData(AudioPlayerData * d)
 
     int num = dataList.removeAll(d);
     for (int i=0; i<num; ++i)
-        d->releaseRef();
+        d->releaseRef("AudioPlayerPrivate removeData");
 }
 
 bool AudioPlayerPrivate::removeAllData()
@@ -186,7 +186,7 @@ bool AudioPlayerPrivate::removeAllData()
     bool r = !dataList.isEmpty();
 
     for (auto d : dataList)
-        d->releaseRef();
+        d->releaseRef("AudioPlayerPrivate removeAllData");
     dataList.clear();
 
     return r;
@@ -225,7 +225,7 @@ void AudioPlayerPrivate::mixBlock(F32 * dst1)
         {
             MO_DEBUG_AUPLAY("AudioPlayer::data finished (" << data
                      << "): " << data->lengthSamples());
-            data->releaseRef();
+            data->releaseRef("AudioPlayerPrivate mixBlock finish");
             data = 0;
             continue;
         }

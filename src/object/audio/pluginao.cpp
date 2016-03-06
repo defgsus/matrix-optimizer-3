@@ -70,9 +70,9 @@ PluginAO::~PluginAO()
 {
 #ifndef MO_DISABLE_LADSPA
     if (p_->plugin)
-        p_->plugin->releaseRef();
+        p_->plugin->releaseRef("PluginAO destroy");
     if (p_->usedPlugin)
-        p_->usedPlugin->releaseRef();
+        p_->usedPlugin->releaseRef("PluginAO destroy");
 #endif
     delete p_;
 }
@@ -246,7 +246,7 @@ void PluginAO::setPlugin(AUDIO::LadspaPlugin * p)
     {
         firstTime = false;
 #ifndef MO_DISABLE_LADSPA
-        p_->plugin->releaseRef();
+        p_->plugin->releaseRef("PluginAO setplugin relprev");
 #endif
     }
     p_->plugin = p;
@@ -254,7 +254,7 @@ void PluginAO::setPlugin(AUDIO::LadspaPlugin * p)
     if (p_->plugin)
     {
 #ifndef MO_DISABLE_LADSPA
-        p_->plugin->addRef();
+        p_->plugin->addRef("PluginAO setplugin relprev");
         p_->plugin->initialize(256, sampleRate());
 #endif
         //MO_DEBUG("PluginAO: plugin '" << p_->plugin->name() << "' initialized");
@@ -286,7 +286,7 @@ void PluginAO::Private::loadPlugin()
 
     ao->setPlugin(plug);
     if (plug)
-        plug->releaseRef();
+        plug->releaseRef("PluginAO setplugin finish");
 #endif
 }
 
@@ -297,10 +297,10 @@ void PluginAO::processAudio(const RenderTime& time)
     if (p_->hasNewPlugin)
     {
         if (p_->usedPlugin)
-            p_->usedPlugin->releaseRef();
+            p_->usedPlugin->releaseRef("PluginAO lazyexchange relprev");
         p_->usedPlugin = p_->plugin;
         if (p_->usedPlugin)
-            p_->usedPlugin->addRef();
+            p_->usedPlugin->addRef("PluginAO lazyexchange finish");
         p_->hasNewPlugin = false;
     }
 

@@ -68,13 +68,13 @@ DomePreviewWidget::~DomePreviewWidget()
     delete glProps_;
 
     for (auto i : ptextureGeom_)
-        i->releaseRef();
+        i->releaseRef("DomePreviewWidget destroy");
     for (auto i : ptextureDrawable_)
         delete i;
     if (domeGeometry_)
-        domeGeometry_->releaseRef();
+        domeGeometry_->releaseRef("DomePreviewWidget destroy");
     if (projectorGeometry_)
-        projectorGeometry_->releaseRef();
+        projectorGeometry_->releaseRef("DomePreviewWidget destroy");
     delete settings_;
 }
 
@@ -213,7 +213,7 @@ void DomePreviewWidget::updateTexture(uint index)
 void DomePreviewWidget::createDomeGeometry_()
 {
     if (domeGeometry_)
-        domeGeometry_->releaseRef();
+        domeGeometry_->releaseRef("DomePreviewWidget create rel prev");
     domeGeometry_ = new GEOM::Geometry();
     domeGeometry_->setSharedVertices(false);
     domeGeometry_->setColor(0.5,0.5,0.5,1.0);
@@ -253,7 +253,7 @@ void DomePreviewWidget::createProjectorGeometry_()
     ProjectorMapper mapper;
 
     for (auto i : ptextureGeom_)
-        i->releaseRef();
+        i->releaseRef("DomePreviewWidget create rel prev");
     ptextureGeom_.clear();
 
     // move all textures to release-stack
@@ -266,7 +266,7 @@ void DomePreviewWidget::createProjectorGeometry_()
 
     // build geometry
     if (projectorGeometry_)
-        projectorGeometry_->releaseRef();
+        projectorGeometry_->releaseRef("DomePreviewWidget create del prev");
     projectorGeometry_ = new GEOM::Geometry();
 
     for (uint i=0; i<settings_->numProjectors(); ++i)
@@ -428,7 +428,7 @@ void DomePreviewWidget::releaseGL()
     ptextureDrawable_.clear();
 
     if (projectorGeometry_)
-        projectorGeometry_->releaseRef();
+        projectorGeometry_->releaseRef("DomePreviewWidget release");
     projectorGeometry_ = 0;
 
     // release textures

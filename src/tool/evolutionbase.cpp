@@ -67,7 +67,7 @@ EvolutionBase* EvolutionBase::fromJson(const QJsonObject& dobj)
         auto obj = dobj.value(key).toObject();
         if (obj.isEmpty())
         {
-            evo->releaseRef();
+            evo->releaseRef("EvolutionBase::fromJson() no object");
             continue;
             //MO_IO_ERROR(VERSION_MISMATCH, "Value '" << key << "' "
             //            "in Json string contains no evolution object");
@@ -79,7 +79,7 @@ EvolutionBase* EvolutionBase::fromJson(const QJsonObject& dobj)
         }
         catch (...)
         {
-            evo->releaseRef();
+            evo->releaseRef("EvolutionBase::fromJson() read error");
             throw;
         }
     }

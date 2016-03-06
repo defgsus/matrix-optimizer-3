@@ -210,7 +210,7 @@ void EvolutionDialog::setEditSpecimen(const EvolutionBase* evo)
     {
         auto s = evo->createClone();
         p_->area->pool().setSpecimen(0, s);
-        s->releaseRef();
+        s->releaseRef("EvolutionDialog release after set");
         p_->area->pool().repopulateFrom(0);
         p_->updateProps();
     }

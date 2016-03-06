@@ -20,6 +20,7 @@
 #include "math/vector.h"
 #include "math/functions.h"
 #include "math/arithmeticarray.h"
+#include "math/vec_math.h"
 #include "io/log.h"
 
 namespace MO {
@@ -57,6 +58,16 @@ static VectorStruct* copy_vec(VectorStruct*);
 } // extern "C"
 } // namespace
 
+bool checkSize(VectorStruct* self, int len)
+{
+    if (self->len != len)
+    {
+        PyErr_Set(PyExc_TypeError, QString("Expected %1d vector, got %2d")
+                  .arg(len).arg(self->len));
+        return false;
+    }
+    return true;
+}
 
 bool get_vector(PyObject* args_, int len, double v[])
 {
@@ -476,6 +487,26 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
             { return MATH::modulo(x, y); });
     }
 
+    MO_PY_DEF_DOC(vec_cross_doc,
+        "cross(vec) -> " MO__VEC_STR "\n"
+        "Calculates the cross product of self and vector argument.\n"
+        "Must be 3d vector."
+    )
+    static PyObject* vec_cross(VectorStruct* self, PyObject* other)
+    {
+        if (!checkSize(self, 3))
+            return NULL;
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double v2[4];
+            if (!get_vector(other, 3, v2))
+                return false;
+            MATH::INPLACE::vec_cross_3_3(self->v, v2);
+            return true;
+        });
+    }
+
+
     MO_PY_DEF_DOC(vec_normalize_doc,
         "normalize() -> " MO__VEC_STR "\n"
         "Normalizes the vector so it's length will be one.\n"
@@ -522,6 +553,33 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
                 self->v[i] = 0.;
         });
     }
+    /*
+    MO_PY_DEF_DOC(vec_orthogonal_doc,
+        "orthogonal() -> " MO__VEC_STR "\n"
+        "   2D: Returns the perpendicular vector2 to 0 -> self.\n"
+        "orthogonal(Vec) -> " MO__VEC_STR "\n"
+        "   2D: Returns the perpendicular vector2 to self -> arg.\n"
+        "   3D: Returns the perpendicular vector3 to to a plane that\n"
+        "       crosses 0,0,0 and that self and arg lay on.\n"
+        "orthogonal(Vec, Vec) -> " MO__VEC_STR "\n"
+        "   3D: return perpendicular vector to a plane that\n"
+        "       self, arg1 and arg2 lay on.\n"
+        "Vector must be 2d or 3d."
+    )
+    static PyObject* vec_orthogonal_doc(VectorStruct* self, PyObject* args_)
+    {
+        PyObject* o1, o2;
+        if (PyArg_ParseTuple(args_, "OO", &o1, &o2))
+        {
+            double v1[3], v2[3];
+            if (!get_vector(o1, 3, v1) || !get_vector(o2, 3, v2))
+                return NULL;
+            MATH::INPLACE::vec_ortho_3_3_3(self->v, v1, v2);
+            Py_INCREF()
+        }
+        PyErr_Clear();
+    }*/
+
 
 
     MO_PY_DEF_DOC(vec_clamp_doc,
@@ -829,7 +887,9 @@ static PyMethodDef Vector_methods[] =
 
     MO__METHOD(normalize,           METH_NOARGS)
     MO__METHOD(normalized,          METH_NOARGS)
+    //MO__METHOD(orthogonal,          METH_NOARGS)
 
+    MO__METHOD(cross,               METH_VARARGS)
     MO__METHOD(pow,                 METH_VARARGS)
     MO__METHOD(mod,                 METH_VARARGS)
 
@@ -1739,6 +1799,15 @@ PyObject* buildVector(const double v[], int len)
     else if (len == 4) return tmpl_buildVector<const double*, 4>(v);
     else return NULL;
 }
+PyObject* buildVector(const float v[], int len)
+{
+    if (len == 0) return tmpl_buildVector<const float*, 0>(v);
+    else if (len == 1) return tmpl_buildVector<const float*, 1>(v);
+    else if (len == 2) return tmpl_buildVector<const float*, 2>(v);
+    else if (len == 3) return tmpl_buildVector<const float*, 3>(v);
+    else if (len == 4) return tmpl_buildVector<const float*, 4>(v);
+    else return NULL;
+}
 
 PyObject* buildVector(double x, double y)
 {
@@ -1787,6 +1856,93 @@ bool getVector(PyObject* arg, int *len, double v[4])
     *len = self->len;
     return true;
 }
+
+
+
+
+
+
+
+// ---------------------- nonclass vector functions ------------------------
+
+namespace {
+
+
+    MO_PY_DEF_DOC(vecnm_abs_doc,
+        "abs(Vec) -> Vec"
+    );
+    static PyObject* vecnm_abs(PyObject* a, PyObject* arg)
+    {
+        std::cout << typeName(a) << " " << typeName(arg) << std::endl;
+        Py_RETURN_NONE;
+    }
+
+
+
+
+
+
+
+
+
+void* vectorFuncs()
+{
+#define MO__METHOD(name__, args__) \
+    { #name__, (PyCFunction)vecnm_##name__, args__, vecnm_##name__##_doc },
+
+    static PyMethodDef methods[] =
+    {
+        MO__METHOD(abs,     METH_VARARGS)
+
+        { NULL, NULL, 0, NULL }
+    };
+#undef MO__METHOD
+
+    return &methods;
+}
+
+
+
+const char* vecDocString()
+{
+    return "This module contains vector functions";
+}
+
+PyModuleDef* vecModuleDef()
+{
+    static PyModuleDef module =
+    {
+        PyModuleDef_HEAD_INIT,
+        "matrixoptimizer.vecfunc",
+        vecDocString(),
+        -1, /* m_size */
+        reinterpret_cast<PyMethodDef*>(vectorFuncs()), /* m_methods */
+        nullptr, /* m_reload */
+        nullptr, /* m_traverse */
+        nullptr, /* m_clear */
+        nullptr, /* m_free */
+    };
+    return &module;
+}
+
+
+} // namespace
+
+PyMODINIT_FUNC vecCreateModule()
+{
+    auto module = PyModule_Create(vecModuleDef());
+    if (!module)
+        return nullptr;
+
+    return module;
+}
+
+
+
+
+
+
+
 
 } // namespace PYTHON34
 } // namespace MO

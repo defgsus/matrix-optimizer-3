@@ -684,7 +684,7 @@ void ImageGallery::setupVaos_()
             }
         }
 
-        geom->releaseRef();
+        geom->releaseRef("ImageGallery rel temp");
     }
 
     // frame geom
@@ -725,7 +725,7 @@ void ImageGallery::setupVaos_()
             }
         }
 
-        geom->releaseRef();
+        geom->releaseRef("ImageGallery rel temp");
     }
 
     extent_ = extentMax_ - extentMin_;

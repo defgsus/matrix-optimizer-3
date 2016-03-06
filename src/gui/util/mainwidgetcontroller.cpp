@@ -987,10 +987,12 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (renderEngine_)
         renderEngine_->release();
 
+    objectView_->setObject(0);
+
     if (scene_)
     {
         scene_->kill();
-        scene_->releaseRef();
+        scene_->releaseRef("MainWidgetController release scene");
     }
 
     scene_ = s;

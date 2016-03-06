@@ -85,7 +85,7 @@ static TimelineStruct* copy_tl(TimelineStruct*, bool newInstance);
 static void tl_dealloc(TimelineStruct* self)
 {
     if (self->tl)
-        self->tl->releaseRef();
+        self->tl->releaseRef("py timeline dealloc");
     self->ob_base.ob_type->tp_free((PyObject*)self);
 }
 
@@ -95,10 +95,10 @@ static void tl_copy_from(TimelineStruct* self, const TimelineStruct* other)
 
     self->tl = other->tl;
     if (self->tl)
-        self->tl->addRef();
+        self->tl->addRef("py timeline copy-from-other");
 
     if (tmp)
-        tmp->releaseRef();
+        tmp->releaseRef("py timeline copy-from-other release-previous");
 }
 
 static int tl_init(TimelineStruct* self, PyObject* args_, PyObject*)
@@ -438,15 +438,12 @@ TimelineStruct* copy_tl(TimelineStruct* self, bool newInstance)
         tl_copy_from(copy, self);
     else
     {
-        auto tmp = copy->tl;
         if (copy->tl)
-            copy->tl->releaseRef();
+            copy->tl->releaseRef("py timeline copyfrom relprev");
         if (self->tl)
             copy->tl = new MATH::TimelineNd(*self->tl);
         else
             copy->tl = new MATH::TimelineNd(1);
-        if (tmp)
-            tmp->releaseRef();
     }
     return copy;
 }
@@ -482,14 +479,11 @@ bool isTimeline(PyObject* obj)
 PyObject* buildTimeline(MO::MATH::TimelineNd* tl)
 {
     auto obj = new_tl();
-    auto tmp = obj->tl;
     if (obj->tl)
-        obj->tl->releaseRef();
+        obj->tl->releaseRef("py timeline buildfrom relprev");
     obj->tl = tl;
     if (tl)
-        tl->addRef();
-    if (tmp)
-        tmp->releaseRef();
+        tl->addRef("py timeline buildfrom");
     return reinterpret_cast<PyObject*>(obj);
 }
 

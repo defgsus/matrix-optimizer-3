@@ -198,7 +198,9 @@ bool ObjectFactory::registerObject(Object * obj)
     }
 
     instance().objectMap_.insert(
-        std::make_pair(obj->className(), std::shared_ptr<Object>(obj, RefCountedDeleter()))
+        std::make_pair(obj->className(),
+                       std::shared_ptr<Object>(obj,
+                                RefCountedDeleter("ObjectFactory installed-map")))
         );
 
 //    MO_DEBUG("registered object '" << obj->className() << "'");
@@ -539,7 +541,7 @@ Scene * ObjectFactory::loadScene(IO::DataStream &io)
         MO_IO_WARNING(VERSION_MISMATCH, "Expected scene, got "
                       << (o? o->className() : "NULL"));
         if (o)
-            o->releaseRef();
+            o->releaseRef("ObjectFactory loadscene failed");
         return 0;
     }
 }

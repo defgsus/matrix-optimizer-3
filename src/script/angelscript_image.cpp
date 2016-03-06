@@ -300,14 +300,14 @@ public:
         if (context)
             context->Release();
 
-        ias->releaseRef();
+        ias->releaseRef("ImageAS destroy");
     }
 
     void createEngine();
     void messageCallback(const asSMessageInfo *msg);
 
     // global script function
-    ImageAS * getImageAS() { if (ias) ias->addRef(); return ias; }
+    ImageAS * getImageAS() { if (ias) ias->addRef("ImageAS::getImageAS()"); return ias; }
 
     Object * object;
     QImage * img;

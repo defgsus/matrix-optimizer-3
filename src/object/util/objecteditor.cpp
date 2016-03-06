@@ -226,7 +226,7 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
                             .arg(newChild->name())
                             .arg(parent->name())
                             .arg(error);
-        newChild->releaseRef();
+        newChild->releaseRef("ObjectEditor::addObject can't add");
         QMessageBox::critical(0, tr("Can't add object"), errtext);
 
         MO_DEBUG(errtext);
@@ -288,7 +288,7 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     if (saveAdd.contains(o))
         actualObjects.append(o);
     else
-        o->releaseRef();
+        o->releaseRef("ObjectEditor::addObjects can't add");
 
     if (!actualObjects.isEmpty())
     {
@@ -849,7 +849,7 @@ Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip
 
     if (parent && !parent->canHaveChildren(obj->type()))
     {
-        obj->releaseRef();
+        obj->releaseRef("ObjectEditor::createInClip can't add");
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 
@@ -867,7 +867,7 @@ Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip
 
     if (!parent->canHaveChildren(obj->type()))
     {
-        obj->releaseRef();
+        obj->releaseRef("ObjectEditor::createInClip can't add");
         MO_ERROR("Can't add '" << obj->name() << "' to " << parent->name());
     }
 

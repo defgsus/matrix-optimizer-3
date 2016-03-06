@@ -207,7 +207,6 @@ extern "C" {
 
 void* pythonFuncs()
 {
-
 #define MO__METHOD(name__, args__) \
     { #name__, (PyCFunction)PythonFuncs::name__, args__, PythonFuncs::name__##_doc },
 

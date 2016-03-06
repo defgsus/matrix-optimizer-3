@@ -54,11 +54,11 @@ OverlapAreaEditWidget::~OverlapAreaEditWidget()
     delete lines_;
     delete triangles_;
     if (blendGeom_)
-        blendGeom_->releaseRef();
+        blendGeom_->releaseRef("OverlapAreaEdit destruction");
     if (lineGeom_)
-        lineGeom_->releaseRef();
+        lineGeom_->releaseRef("OverlapAreaEdit destruction");
     if (triangleGeom_)
-        triangleGeom_->releaseRef();
+        triangleGeom_->releaseRef("OverlapAreaEdit destruction");
     delete settings_;
 }
 
@@ -96,11 +96,11 @@ void OverlapAreaEditWidget::updateFboSize_()
 void OverlapAreaEditWidget::createGeometry_()
 {
     if (lineGeom_)
-        lineGeom_->releaseRef();
+        lineGeom_->releaseRef("OverlapAreaEdit create destroy prev");
     if (blendGeom_)
-        blendGeom_->releaseRef();
+        blendGeom_->releaseRef("OverlapAreaEdit create destroy prev");
     if (triangleGeom_)
-        triangleGeom_->releaseRef();
+        triangleGeom_->releaseRef("OverlapAreaEdit create destroy prev");
 
     const ProjectorSettings& proj = settings_->projectorSettings(projectorIndex_);
     const DomeSettings& dome = settings_->domeSettings();
@@ -272,13 +272,18 @@ void OverlapAreaEditWidget::releaseGL()
     blendTex_ = 0;
 
     if (lineGeom_)
-        lineGeom_->releaseRef();
+        lineGeom_->releaseRef("OverlapAreaEdit release");
     lineGeom_ = 0;
 
     if (blendGeom_)
-        blendGeom_->releaseRef();
+        blendGeom_->releaseRef("OverlapAreaEdit release");
     blendGeom_ = 0;
+
+    if (triangleGeom_)
+        triangleGeom_->releaseRef("OverlapAreaEdit release");
+    triangleGeom_ = 0;
 }
+
 
 void OverlapAreaEditWidget::drawGL(const Mat4& projection,
                                    const Mat4& cubeViewTrans,

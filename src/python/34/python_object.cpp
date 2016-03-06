@@ -79,7 +79,7 @@ extern "C" {
         static void dealloc(BaseObjectStruct* self)
         {
             if (self->object)
-                self->object->releaseRef();
+                self->object->releaseRef("py object dealloc");
             self->ob_base.ob_type->tp_free((PyObject*)self);
         }
 
@@ -100,7 +100,7 @@ extern "C" {
                 {
                     self->object = other->object;
                     if (self->object)
-                        self->object->addRef();
+                        self->object->addRef("py object copy construct");
                 }
                 else if (PyUnicode_Check(arg))
                 {
@@ -126,7 +126,7 @@ extern "C" {
             }
 
             if (own)
-                own->releaseRef();
+                own->releaseRef("py object __init__ relprev");
             if (self->object)
                 self->editor = self->object->editor();
 
@@ -566,7 +566,7 @@ extern "C" {
         pobj->object = o;
         if (o)
         {
-            o->addRef();
+            o->addRef("py object create");
             pobj->editor = o->editor();
         }
         return reinterpret_cast<PyObject*>(pobj);

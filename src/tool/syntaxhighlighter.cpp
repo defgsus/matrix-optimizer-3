@@ -28,11 +28,6 @@ SyntaxHighlighter::SyntaxHighlighter(QObject * parent) :
     commentFormat_.setForeground(QBrush(QColor(140,140,140)));
 }
 
-SyntaxHighlighter::SyntaxHighlighter(QTextDocument *parent)
-    : SyntaxHighlighter(parent)
-{
-
-}
 
 void SyntaxHighlighter::setNames(const QStringList &variables,
                                  const QStringList &functions,

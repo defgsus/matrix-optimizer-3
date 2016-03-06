@@ -201,6 +201,9 @@ void Geometry::copyFrom(const Geometry &o)
     lineIndex_ = o.lineIndex_;
     pointIndex_ = o.pointIndex_;
     indexMap_ = o.indexMap_;
+    pointMap_ = o.pointMap_;
+    lineMap_ = o.lineMap_;
+    triMap_ = o.triMap_;
 
     for (auto i : o.attributes_)
         attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
@@ -726,6 +729,16 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
+
+    uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
+    if (triMap_.find(hash) != triMap_.end())
+    {
+        for (size_t i=0; i<triIndex_.size(); i += 3)
+            if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
+            return;
+    }
+    triMap_.insert(hash);
+
     setChanged();
     triIndex_.push_back(p1);
     triIndex_.push_back(p2);
@@ -748,6 +761,15 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
             pos3 = getVertex(p3);
     if (checkTriangle(pos1, pos2, pos3))
     {
+        uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
+        if (triMap_.find(hash) != triMap_.end())
+        {
+            for (size_t i=0; i<triIndex_.size(); i += 3)
+                if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
+                return;
+        }
+        triMap_.insert(hash);
+
         setChanged();
         triIndex_.push_back(p1);
         triIndex_.push_back(p2);
@@ -760,10 +782,40 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
     }
 }
 
+void Geometry::addQuad(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3, const Vec3 &p4)
+{
+    if (checkTriangle(p1, p2, p3) && checkTriangle(p1, p3, p4))
+    {
+        auto i1 = addVertex(p1.x, p1.y, p1.z),
+             i2 = addVertex(p2.x, p2.y, p2.z),
+             i3 = addVertex(p3.x, p3.y, p3.z),
+             i4 = addVertex(p4.x, p4.y, p4.z);
+        addTriangle(i1, i2, i3);
+        addTriangle(i1, i3, i4);
+    }
+}
+
+void Geometry::addQuad(IndexType p1, IndexType p2, IndexType p3, IndexType p4)
+{
+    addTriangleChecked(p1, p2, p3);
+    addTriangleChecked(p1, p3, p4);
+}
+
 void Geometry::addLine(IndexType p1, IndexType p2)
 {
     MO_ASSERT(p1 < numVertices(), "line index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "line index #2 out of range " << p2 << "/" << numVertices());
+
+    uint64_t hash = MATH::getHashUnordered<uint64_t>(p1, p2);
+    if (lineMap_.find(hash) != lineMap_.end())
+    {
+        for (size_t i=0; i<lineIndex_.size(); i += 2)
+            if ((p1 == lineIndex_[i] && p2 == lineIndex_[i+1])
+             || (p1 == lineIndex_[i+1] && p2 == lineIndex_[i]))
+            return;
+    }
+    lineMap_.insert(hash);
+
     setChanged();
     lineIndex_.push_back(p1);
     lineIndex_.push_back(p2);
@@ -779,6 +831,12 @@ void Geometry::addLine(const Vec3 &p1, const Vec3 &p2)
 void Geometry::addPoint(IndexType p1)
 {
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());
+
+    uint64_t hash = p1;
+    if (pointMap_.find(hash) != pointMap_.end())
+        return;
+    pointMap_.insert(hash);
+
     setChanged();
     pointIndex_.push_back(p1);
 }
@@ -819,6 +877,10 @@ const Geometry::VertexType * Geometry::line(
             * numVertexComponents()];
 }
 
+const Geometry::VertexType * Geometry::point(IndexType pointIndex) const
+{
+    return &vertex_[pointIndex_[pointIndex] * numVertexComponents()];
+}
 
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
@@ -2000,11 +2062,11 @@ void Geometry::extrudeTriangles(Geometry &geom, VertexType constant, VertexType 
 #undef MO__MAKEHASH
 }
 
+/** @todo color/texcoord handling in tesselateLines() */
 void Geometry::tesselateLines(uint level)
 {
     if (!numLines())
         return;
-    // XXX TODO: color/texcoord handling
 
     Geometry tess;
     tess.sharedVertices_ = sharedVertices_;

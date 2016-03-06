@@ -50,7 +50,7 @@ struct OscInputObject::Private
     ~Private()
     {
         if (osc)
-            osc->releaseRef();
+            osc->releaseRef("OscInputObject destroy");
         delete receiver;
     }
 

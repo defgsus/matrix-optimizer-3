@@ -38,7 +38,7 @@ namespace IO {
       "glsl",
       "angelscript",
       "equation",
-      "python27",
+      "python34",
       "ssw",
       "csg",
       "evo"
@@ -67,7 +67,7 @@ namespace IO {
       QObject::tr("Glsl"),
       QObject::tr("Angelscript"),
       QObject::tr("Equation"),
-      QObject::tr("Python 2.7"),
+      QObject::tr("Python 3.4"),
       QObject::tr("SSW Project"),
       QObject::tr("CSG Tree"),
       QObject::tr("Evolution")

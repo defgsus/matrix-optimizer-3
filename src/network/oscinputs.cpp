@@ -42,7 +42,7 @@ OscInput * OscInputs::getListener(uint16_t port)
     // return existing
     if (i != portMap_.end())
     {
-        i.value()->addRef();
+        i.value()->addRef("OscInput::getListener()");
         return i.value();
     }
 
@@ -51,7 +51,7 @@ OscInput * OscInputs::getListener(uint16_t port)
     // and open
     if (!osc->open(port))
     {
-        osc->releaseRef();
+        osc->releaseRef("OscInput::getListener() open failed");
         return 0;
     }
     // install in map
@@ -66,11 +66,11 @@ void OscInputs::releaseListener(uint16_t port)
     if (i == portMap_.end())
         return;
 
-    if (i.value()->referenceCount() > 1)
-        i.value()->releaseRef();
+    if (i.value()->refCount() > 1)
+        i.value()->releaseRef("OscInputs::releaseListener()");
     else
     {
-        i.value()->releaseRef();
+        i.value()->releaseRef("OscInputs::releaseListener()");
         portMap_.remove(port);
         emit instance()->listenersChanged();
     }

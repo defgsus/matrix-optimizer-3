@@ -143,6 +143,12 @@ AbstractScriptWidget::AbstractScriptWidget(IO::FileType type, QWidget *parent)
     connect(this, SIGNAL(compileMessageAdded(int,int,QString)),
             this, SLOT(onAddCompileMessage(int,int,QString)),
             Qt::QueuedConnection);
+
+    QFont font = p_sw_->editor->font();
+    font.setPointSizeF( settings()->value(
+                QString("ScriptEdit/%1/fontSize").arg(IO::fileTypeIds[p_sw_->fileType]),
+                    font.pointSizeF()).toDouble() );
+    setEditorFont(font, false);
 }
 
 AbstractScriptWidget::~AbstractScriptWidget()
@@ -231,9 +237,7 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         // XXX does not work for Mac
         QFont f("Monospace");
         f.setStyleHint(QFont::Monospace);
-        editor->setFont(f);
-        editor->setTabStopWidth(QFontMetrics(editor->font()).width("    "));
-
+        widget->setEditorFont(f, false);
 
         // --- bottom display ----
 
@@ -305,6 +309,8 @@ void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
 
 void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 {
+    const bool ctrl = (e->modifiers() & Qt::CTRL);
+
     if (e->key() == Qt::Key_F1)
     {
         // get word under cursor
@@ -320,36 +326,62 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
     }
 
     if ((e->key() == Qt::Key_Return || e->key() == Qt::Key_Enter)
-        && (e->modifiers() & Qt::ALT || e->modifiers() & Qt::CTRL))
+        && (e->modifiers() & Qt::ALT || ctrl))
     {
         p_sw_->onTextChanged(true);
         e->accept();
         return;
     }
 
-    if (e->modifiers() & Qt::CTRL && e->key() == Qt::Key_L)
+    if (ctrl && e->key() == Qt::Key_L)
     {
         loadScript();
         e->accept();
         return;
     }
 
-    if (e->modifiers() & Qt::CTRL && e->key() == Qt::Key_S)
+    if (ctrl && e->key() == Qt::Key_S)
     {
         saveScript();
         e->accept();
         return;
     }
 
-    if (e->modifiers() & Qt::CTRL && e->modifiers() & Qt::SHIFT
-            && e->key() == Qt::Key_L)
+    if (ctrl && (e->modifiers() & Qt::SHIFT) && e->key() == Qt::Key_S)
     {
         saveScriptAs();
         e->accept();
         return;
     }
 
+    if (ctrl && (e->key() == Qt::Key_Plus || e->text() == "+")) incFontSize();
+    if (ctrl && (e->key() == Qt::Key_Minus || e->text() == "-")) decFontSize();
+
     QWidget::keyPressEvent(e);
+}
+
+void AbstractScriptWidget::incFontSize()
+{
+    auto font = p_sw_->editor->font();
+    font.setPointSizeF(font.pointSizeF() * 1.1);
+    setEditorFont(font, true);
+}
+
+void AbstractScriptWidget::decFontSize()
+{
+    auto font = p_sw_->editor->font();
+    font.setPointSizeF(font.pointSizeF() / 1.1);
+    setEditorFont(font, true);
+}
+
+void AbstractScriptWidget::setEditorFont(const QFont& f, bool doSave)
+{
+    p_sw_->editor->setFont(f);
+    p_sw_->editor->setTabStopWidth(QFontMetrics(f).width("    "));
+    if (doSave)
+        settings()->setValue(
+                QString("ScriptEdit/%1/fontSize").arg(IO::fileTypeIds[p_sw_->fileType]),
+                    f.pointSizeF());
 }
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()

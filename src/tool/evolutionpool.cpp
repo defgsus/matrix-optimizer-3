@@ -39,14 +39,14 @@ struct EvolutionPool::Private
     struct Tile
     {
         Tile(EvolutionBase*i=nullptr) : instance(i), dirty(true), isLocked(false) { }
-        ~Tile() { if (instance) instance->releaseRef(); }
+        ~Tile() { if (instance) instance->releaseRef("EvolutionPool tile destroy"); }
         Tile(const Tile& o) : Tile(nullptr) { *this = o; }
         Tile& operator=(const Tile& o)
         {
             if (o.instance)
-                o.instance->addRef();
+                o.instance->addRef("EvolutionPool tile copyfrom");
             if (instance)
-                instance->releaseRef();
+                instance->releaseRef("EvolutionPool tile copyfrom relprev");
             instance = o.instance;
             dirty = o.dirty;
             if (!dirty)
@@ -57,7 +57,7 @@ struct EvolutionPool::Private
         void setInstance(EvolutionBase*evo)
         {
             if (instance)
-                instance->releaseRef();
+                instance->releaseRef("EvolutionPool tile set");
             instance = evo;
             dirty = true;
         }
@@ -119,7 +119,7 @@ void EvolutionPool::deserialize(const QJsonObject& obj)
             setSpecimen(i, evo);
             setLocked(i, evoObj.value("locked").toBool());
             if (evo)
-                evo->releaseRef();
+                evo->releaseRef("EvolutionPool deserialize finish");
         }
     }
 }
@@ -197,7 +197,7 @@ void EvolutionPool::setSpecimen(size_t idx, EvolutionBase* evo)
 {
     p_->tiles[idx].setInstance(evo);
     if (p_->tiles[idx].instance)
-        p_->tiles[idx].instance->addRef();
+        p_->tiles[idx].instance->addRef("EvolutionPool set specimen");
 }
 
 void EvolutionPool::setSpecimen(size_t idx, const QString& className)
@@ -318,7 +318,7 @@ void EvolutionPool::resize(size_t num, bool doClear)
         for (auto& t : p_->tiles)
         if (t.instance)
         {
-            t.instance->releaseRef();
+            t.instance->releaseRef("EvolutionPool resize clearprev");
             t.instance = 0;
             t.dirty = true;
         }
@@ -350,7 +350,7 @@ void EvolutionPool::repopulate()
         return;
 
     for (auto v : vec)
-        v->addRef();
+        v->addRef("EvolutionPool::repopulate()");
 
     for (size_t i=0; i<size(); ++i)
     if (!isLocked(i))
@@ -360,7 +360,7 @@ void EvolutionPool::repopulate()
     }
 
     for (auto v : vec)
-        v->releaseRef();
+        v->releaseRef("EvolutionPool::repopulate()");
 }
 
 void EvolutionPool::repopulate(const EvolutionBase* base)
@@ -391,7 +391,7 @@ void EvolutionPool::crossBreed()
     if (t.instance && t.isLocked)
     {
         parents.push_back(t.instance);
-        t.instance->addRef();
+        t.instance->addRef("EvolutionPool::crossBreed()");
     }
 
     for (auto& t : p_->tiles)
@@ -403,7 +403,7 @@ void EvolutionPool::crossBreed()
     }
 
     for (auto v : parents)
-        v->releaseRef();
+        v->releaseRef("EvolutionPool::crossBreed()");
 }
 
 void EvolutionPool::crossBreed(size_t idx)
@@ -417,7 +417,7 @@ void EvolutionPool::crossBreed(size_t idx)
     if (t.instance && t.instance != jovani.instance && t.isLocked)
     {
         parents.push_back(t.instance);
-        t.instance->addRef();
+        t.instance->addRef("EvolutionPool::crossBreed()");
     }
 
     if (parents.size() > 0)
@@ -434,7 +434,7 @@ void EvolutionPool::crossBreed(size_t idx)
         }
     }
     for (auto v : parents)
-        v->releaseRef();
+        v->releaseRef("EvolutionPool::crossBreed()");
 }
 
 void EvolutionPool::repopulateFrom(size_t idx)

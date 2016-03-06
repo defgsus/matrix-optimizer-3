@@ -20,6 +20,8 @@ namespace MO {
 namespace MATH { template <typename F> class ArithmeticArray; }
 namespace PYTHON34 {
 
+    PyMODINIT_FUNC vecCreateModule();
+
     /** Adds the Vector objects to the module. */
     void initVector(PyObject* module);
 
@@ -35,6 +37,7 @@ namespace PYTHON34 {
     PyObject* buildVector(const DVec3& v);
     PyObject* buildVector(const DVec4& v);
     PyObject* buildVector(const double v[], int len);
+    PyObject* buildVector(const float v[], int len);
     PyObject* buildVector(double x, double y);
     PyObject* buildVector(double x, double y, double z);
     PyObject* buildVector(double x, double y, double z, double w);

@@ -701,7 +701,7 @@ bool ProjectorMapper::getIntersectionGeometry(const ProjectorMapper &other, GEOM
 #undef MO__EDGE_DIST
 
     g->addGeometry(*geom);
-    geom->releaseRef();
+    geom->releaseRef("ProjectorMapper release temp");
 
     return true;
 }

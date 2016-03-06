@@ -221,6 +221,8 @@ QVariant Settings::getValue(const QString &key, const QVariant& def) const
     if (i != defaultValues_.end())
         return i.value();
 
+    //MO_WARNING("unknown setting '" << key << "', using default");
+
     // not found
     return def;
 }

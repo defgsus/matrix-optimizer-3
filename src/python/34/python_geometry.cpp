@@ -30,13 +30,15 @@ namespace PYTHON34 {
 
 namespace
 {
-    bool checkIndex(long idx, long size)
+    bool checkIndex(long idx, long size, const QString& prefix="")
     {
         if (idx < 0 || idx >= size)
         {
-            PyErr_SetString(PyExc_IndexError,
-                            QString("index out of range %1/%2")
-                            .arg(idx).arg(size).toUtf8().constData());
+            QString str = QString("index out of range %1/%2")
+                    .arg(idx).arg(size);
+            if (!prefix.isEmpty())
+                str.prepend(prefix + " ");
+            PyErr_Set(PyExc_IndexError, str);
             return false;
         }
         return true;
@@ -115,7 +117,8 @@ namespace
             else if (PyLong_Check(arg[i]))
             {
                 idx[i] = PyLong_AsLong(arg[i]);
-                if (!checkIndex(idx[i], geom->numVertices()))
+                if (!checkIndex(idx[i], geom->numVertices(),
+                                QString("argument #%1").arg(i+1)))
                     return false;
             }
             else
@@ -176,27 +179,28 @@ extern "C"
         {
             //MO_PRINT("Geom dealloc");
             if (self->geometry)
-                self->geometry->releaseRef();
+                self->geometry->releaseRef("py geometry destroy");
             self->ob_base.ob_type->tp_free((PyObject*)self);
         }
 
         static int init(Python34Geom* self, PyObject* args, PyObject*)
         {
-            auto owngeom = self->geometry;
-
             PyObject* obj = 0;
             PyArg_ParseTuple(args, "|O", &obj);
             if (obj && 0==strcmp(obj->ob_type->tp_name, "matrixoptimizer.Geometry"))
             {
                 auto other = reinterpret_cast<Python34Geom*>(obj);
+                other->geometry->addRef("py geometry.__init__");
+                if (self->geometry)
+                    self->geometry->releaseRef("py geometry.__init__ relprev");
                 self->geometry = other->geometry;
-                self->geometry->addRef();
             }
             else
+            {
+                if (self->geometry)
+                    self->geometry->releaseRef("py geometry.__init__ relprev");
                 self->geometry = new GEOM::Geometry;
-
-            if (owngeom)
-                owngeom->releaseRef();
+            }
 
             return 0;
         }
@@ -248,6 +252,26 @@ extern "C"
     }
     static PyObject* geom_repr(PyObject* self) { return geom_to_string(self, nullptr); }
 
+    MO_PY_DEF_DOC(geom_is_shared,
+        "is_shared() -> bool\n"
+        "Returns the current shared-vertex-mode."
+    )
+    static PyObject* geom_is_shared(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return PyBool_FromLong(pgeom->geometry->sharedVertices());
+    }
+
+    MO_PY_DEF_DOC(geom_is_empty,
+        "is_empty() -> bool\n"
+        "Returns True if no primitive is created (regardless of vertices)"
+    )
+    static PyObject* geom_is_empty(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return PyBool_FromLong(pgeom->geometry->isEmpty());
+    }
+
     MO_PY_DEF_DOC(geom_num_vertices,
         "num_vertices() -> long\n"
         "Returns the number of vertices"
@@ -257,6 +281,37 @@ extern "C"
         MO__GETGEOM(pgeom);
         return Py_BuildValue("n", pgeom->geometry->numVertices());
     }
+
+    MO_PY_DEF_DOC(geom_num_points,
+        "num_points() -> long\n"
+        "Returns the number of points"
+    )
+    static PyObject* geom_num_points(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return Py_BuildValue("n", pgeom->geometry->numPoints());
+    }
+
+    MO_PY_DEF_DOC(geom_num_lines,
+        "num_lines() -> long\n"
+        "Returns the number of lines"
+    )
+    static PyObject* geom_num_lines(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return Py_BuildValue("n", pgeom->geometry->numLines());
+    }
+
+    MO_PY_DEF_DOC(geom_num_triangles,
+        "num_triangles() -> long\n"
+        "Returns the number of triangles"
+    )
+    static PyObject* geom_num_triangles(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        return Py_BuildValue("n", pgeom->geometry->numTriangles());
+    }
+
 
     MO_PY_DEF_DOC(geom_get_vertex,
         "get_vertex(long) -> Vec\n"
@@ -268,20 +323,66 @@ extern "C"
         if (!PyArg_ParseTuple(arg, "l", &idx))
             return NULL;
         MO__GETGEOM(p);
-        if (!checkIndex(idx, p->geometry->numVertices()))
+        if (!checkIndex(idx, p->geometry->numVertices(), "vertex"))
             return NULL;
         return buildVector(p->geometry->getVertex(idx));
     }
 
-    MO_PY_DEF_DOC(geom_is_shared,
-        "is_shared() -> bool\n"
-        "Returns the current shared-vertex-mode."
+    MO_PY_DEF_DOC(geom_get_point,
+        "get_point(long) -> Vec\n"
+        "Returns the position of the point at the given index."
     )
-    static PyObject* geom_is_shared(PyObject* self, PyObject* )
+    static PyObject* geom_get_point(PyObject* self, PyObject* arg)
     {
-        MO__GETGEOM(pgeom);
-        return PyBool_FromLong(pgeom->geometry->sharedVertices());
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numPoints(), "point"))
+            return NULL;
+        return buildVector(p->geometry->point(idx), 3);
     }
+
+    MO_PY_DEF_DOC(geom_get_line,
+        "get_line(long) -> (Vec, Vec)\n"
+        "Returns the endpoints positions of the line at the given index\n"
+        "as tuple of 3d vectors."
+    )
+    static PyObject* geom_get_line(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numLines(), "line"))
+            return NULL;
+        return Py_BuildValue("(OO)",
+                             buildVector(p->geometry->line(idx, 0), 3),
+                             buildVector(p->geometry->line(idx, 1), 3)
+                             );
+    }
+
+    MO_PY_DEF_DOC(geom_get_triangle,
+        "get_triangle(long) -> (Vec, Vec, Vec)\n"
+        "Returns the corner point positions of the triangle at the given index\n"
+        "as tuple of 3d vectors."
+    )
+    static PyObject* geom_get_triangle(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numTriangles(), "triangle"))
+            return NULL;
+        return Py_BuildValue("(OOO)",
+                             buildVector(p->geometry->triangle(idx, 0), 3),
+                             buildVector(p->geometry->triangle(idx, 1), 3),
+                             buildVector(p->geometry->triangle(idx, 2), 3)
+                             );
+    }
+
+
 
     // -------------- setter ----------------
 
@@ -359,7 +460,7 @@ extern "C"
         if (!py_get_index_and_vec3(arg, &idx, &v))
             return NULL;
         MO__GETGEOM(pgeom);
-        if (!checkIndex(idx, pgeom->geometry->numVertices()))
+        if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
             return NULL;
         pgeom->geometry->setVertex(idx, v);
         Py_RETURN_NONE;
@@ -404,6 +505,7 @@ extern "C"
         "add_triangle(long, long, long) -> None\n"
         "add_triangle(vec3, vec3, vec3) -> None\n"
         "Adds a triangle between the three vertex positions.\n"
+        "Positions should be ordered counter-clockwise.\n"
         "Arguments can be either indices as returned by add_vertex() or 3d vectors\n"
         "In case of vectors, the vertices are created/reused as if called add_vertex()"
     )
@@ -416,6 +518,111 @@ extern "C"
         pgeom->geometry->addTriangle(idx[0], idx[1], idx[2]);
         Py_RETURN_NONE;
     }
+
+    MO_PY_DEF_DOC(geom_add_quad,
+        "add_quad(long, long, long, long) -> None\n"
+        "add_quad(vec3, vec3, vec3, vec3) -> None\n"
+        "Adds a quad between the four vertex positions.\n"
+        "Positions should be ordered counter-clockwise.\n"
+        "Arguments can be either indices as returned by add_vertex() or 3d vectors\n"
+        "In case of vectors, the vertices are created/reused as if called add_vertex()"
+    )
+    static PyObject* geom_add_quad(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        long idx[4];
+        if (!py_get_index_make(pgeom->geometry, 4, arg, idx))
+            return NULL;
+        pgeom->geometry->addQuad(idx[0], idx[1], idx[2], idx[3]);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_clear,
+        "clear() -> None\n"
+        "Completely wipes out all data."
+    )
+    static PyObject* geom_clear(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->clear();
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_calc_normals,
+        "calc_normals() -> None\n"
+        "Calculates the vertex normals from the triangle data.\n"
+        "Does nothing, if no triangles are present."
+    )
+    static PyObject* geom_calc_normals(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->calculateTriangleNormals();
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_invert_normals,
+        "invert_normals() -> None\n"
+        "Negates the vertex normals, which essentially turns the lighting inside-out."
+    )
+    static PyObject* geom_invert_normals(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->invertNormals();
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_tesselate,
+        "tesselate(int, float, float) -> None\n"
+        "Tesselates all triangles of the geometry.\n"
+        "All arguments are optional.\n"
+        "The first is the level of tesselation, defaulting to one.\n"
+        "Second is the smallest triangle area considered for tesselation, default 0.\n"
+        "Third is the shortest length of a triangle edge that is considered for\n"
+        "tesselation. Each triangle edge is considered individually."
+    )
+    static PyObject* geom_tesselate(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        int level = 1;
+        float minArea = 0., minLength = 0.;
+        if (!PyArg_ParseTuple(arg, "|iff", &level, &minArea, &minLength))
+            return NULL;
+        if (minArea <= 0. && minLength <= 0.)
+            pgeom->geometry->tesselateTriangles(level);
+        else
+            pgeom->geometry->tesselateTriangles(minArea, minLength, level);
+        Py_RETURN_NONE;
+    }
+
+
+    MO_PY_DEF_DOC(geom_tesselate_lines,
+        "tesselate_lines(int) -> None\n"
+        "Splits all lines into segments.\n"
+        "The optional argument is the level of tesselation, defaulting to one."
+    )
+    static PyObject* geom_tesselate_lines(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        int level = 1;
+        if (!PyArg_ParseTuple(arg, "|i", &level))
+            return NULL;
+        pgeom->geometry->tesselateLines(level);
+        Py_RETURN_NONE;
+    }
+
+
+    MO_PY_DEF_DOC(geom_convert_to_lines,
+        "convert_to_lines() -> None\n"
+        "Converts all triangles into line data.\n"
+        "Subsequently, all triangles are removed from the geometry."
+    )
+    static PyObject* geom_convert_to_lines(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->convertToLines();
+        Py_RETURN_NONE;
+    }
+
 
 #undef MO__GETGEOM
 #undef MO__GETGEOM0
@@ -433,18 +640,33 @@ extern "C"
     static PyMethodDef Python34Geom_methods[] =
     {
         MO__METHOD(to_string,       METH_NOARGS)
+        MO__METHOD(is_empty,        METH_NOARGS)
         MO__METHOD(is_shared,       METH_NOARGS)
         MO__METHOD(num_vertices,    METH_NOARGS)
+        MO__METHOD(num_points,      METH_NOARGS)
+        MO__METHOD(num_lines,       METH_NOARGS)
+        MO__METHOD(num_triangles,   METH_NOARGS)
+
+        MO__METHOD(get_vertex,      METH_VARARGS)
+        MO__METHOD(get_point,       METH_VARARGS)
+        MO__METHOD(get_line,        METH_VARARGS)
+        MO__METHOD(get_triangle,    METH_VARARGS)
 
         MO__METHOD(set_shared,      METH_VARARGS)
-        MO__METHOD(get_vertex,      METH_VARARGS)
         MO__METHOD(add_vertex,      METH_VARARGS)
         MO__METHOD(set_vertex,      METH_VARARGS)
         MO__METHOD(add_vertices,    METH_VARARGS)
         MO__METHOD(add_point,       METH_VARARGS)
         MO__METHOD(add_line,        METH_VARARGS)
         MO__METHOD(add_triangle,    METH_VARARGS)
+        MO__METHOD(add_quad,        METH_VARARGS)
 
+        MO__METHOD(clear,           METH_NOARGS)
+        MO__METHOD(calc_normals,    METH_NOARGS)
+        MO__METHOD(invert_normals,  METH_NOARGS)
+        MO__METHOD(tesselate,       METH_VARARGS)
+        MO__METHOD(tesselate_lines, METH_VARARGS)
+        MO__METHOD(convert_to_lines,METH_NOARGS)
 
         { NULL, NULL, 0, NULL }
     };
@@ -524,7 +746,7 @@ void* createGeometryObject(MO::GEOM::Geometry* geom)
 {
     auto pgeom = PyObject_New(Python34Geom, &Python34Geom_type);
     pgeom->geometry = geom;
-    pgeom->geometry->addRef();
+    pgeom->geometry->addRef("py geometry create c");
     return pgeom;
 }
 

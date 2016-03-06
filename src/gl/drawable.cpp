@@ -55,7 +55,7 @@ Drawable::~Drawable()
     delete shader_;
     delete shaderSource_;
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("Drawable destroy");
 }
 
 GEOM::Geometry * Drawable::geometry()
@@ -99,9 +99,9 @@ bool Drawable::isCreated() const
 
 void Drawable::setGeometry(GEOM::Geometry * g)
 {
-    g->addRef();
+    g->addRef("Drawable set geom");
     if (geometry_)
-        geometry_->releaseRef();
+        geometry_->releaseRef("Drawable set geom relprev");
     geometry_ = g;
     geometryChanged_ = true;
 }

@@ -65,6 +65,12 @@ namespace
         if (!module)
             return nullptr;
 
+        PyObject* submod = vecCreateModule();
+        if (!submod)
+            return NULL;
+        Py_INCREF(submod);
+        PyModule_AddObject(module, "vecfunc", submod);
+
         // add the classes
         MO_PY_DEBUG("init object"); initObject(module);
         MO_PY_DEBUG("init geometry"); initGeometry(module);
@@ -84,6 +90,7 @@ void initPython()
         is_init = true;
 
         PyImport_AppendInittab("matrixoptimizer", moCreateModule);
+        PyImport_AppendInittab("matrixoptimizer.vecfunc", vecCreateModule);
 
         Py_Initialize();
 

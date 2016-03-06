@@ -999,7 +999,7 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
 {
     uint minx = -1, miny = -1; // very large
 
-    // find all clips and the object list
+    // find all clips in the object list
     // and get minimum row and column
     QList<Clip*> clips;
     for (auto obj : list)
@@ -1011,7 +1011,7 @@ void ClipView::pasteClips_(const QList<Object*>& list, uint x, uint y)
             miny = std::min(miny, clip->row());
         }
         else
-            obj->releaseRef();
+            obj->releaseRef("clipview paste discard");
     }
 
     MO_ASSERT(clipCon_ && clipCon_->sceneObject(), "");
@@ -1092,7 +1092,7 @@ void ClipView::pasteSubObjects_(const QList<Object*>& list, Clip * clip)
 #endif*/
         }
         else
-            obj->releaseRef();
+            obj->releaseRef("paste sub reject");
     }
 
     // check for modulator reuse
@@ -1126,7 +1126,7 @@ void ClipView::pasteClipsInClip_(const QList<Object*>& list, Clip * parent)
             }
         }
 
-        obj->releaseRef();
+        obj->releaseRef("clipview paste complete");
     }
 
     // check for modulator reuse

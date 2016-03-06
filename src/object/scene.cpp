@@ -888,7 +888,7 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
     }
 
     for (Object * o : p_deletedObjects_)
-        o->releaseRef();
+        o->releaseRef("Scene::destroyDeletedObjects");
 
     p_deletedObjects_.clear();
 }

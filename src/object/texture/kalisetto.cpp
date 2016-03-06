@@ -77,7 +77,7 @@ KaliSetTO::KaliSetTO()
 KaliSetTO::~KaliSetTO()
 {
     if (p_->evo)
-        p_->evo->releaseRef();
+        p_->evo->releaseRef("KaliSetTO destroy");
     delete p_;
 }
 
@@ -110,7 +110,7 @@ void KaliSetTO::deserialize(IO::DataStream & io)
             evo = dynamic_cast<KaliSetEvolution*>( EvolutionBase::fromJsonString(s) );
         }
         if (p_->evo)
-            p_->evo->releaseRef();
+            p_->evo->releaseRef("KaliSetTO deserialize relprev");
         p_->evo = evo;
     }
 }
@@ -487,7 +487,7 @@ void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
     }
 
     if (p_->evo)
-        p_->evo->releaseRef();
+        p_->evo->releaseRef("KaliSetTO setEvolution relprev");
     auto k = dynamic_cast<const KaliSetEvolution*>(evo);
     p_->evo = k ? k->createClone() : nullptr;
 

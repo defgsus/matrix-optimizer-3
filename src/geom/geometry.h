@@ -183,6 +183,7 @@ public:
 
     const VertexType * triangle(IndexType triangeleIndex, IndexType cornerIndex) const;
     const VertexType * line(IndexType lineIndex, IndexType endIndex) const;
+    const VertexType * point(IndexType pointIndex) const;
 
     /** Returns the minimum and maximum vertex coordinates */
     void getExtent(VertexType * minX, VertexType * maxX,
@@ -354,6 +355,8 @@ public:
     void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
     void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3,
                      const Vec2& tex1, const Vec2& tex2, const Vec2& tex3);
+    void addQuad(IndexType p1, IndexType p2, IndexType p3, IndexType p4);
+    void addQuad(const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec3& p4);
 
 #ifndef MO_DISABLE_EDGEFLAG
     /** Connects three previously created indices to form a triangle. */
@@ -550,6 +553,7 @@ private:
     };
 
     std::map<Key_, MapStruct_> indexMap_;
+    std::set<Key_> pointMap_, lineMap_, triMap_;
 
     bool sharedVertices_;
     VertexType threshold_;
