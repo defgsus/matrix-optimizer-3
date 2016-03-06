@@ -308,13 +308,13 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
                 u.texBuf.resize(bsize);
 
             // sample inputs
-            const Double range = u.p_timerange->value(time) / std::max(1, int(len)-1);
+            const Double rangeStep = u.p_timerange->value(time) / std::max(1, int(len)-1);
             RenderTime ti(time);
             for (uint j=0; j<len; ++j)
             {
                 for (uint i=0; i<u.num_floats; ++i)
                     u.texBuf[j * u.num_floats + i] = u.p_float[i]->value(ti);
-                ti -= range * j;
+                ti -= rangeStep;
             }
 
             MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );

@@ -105,25 +105,56 @@ struct Geometry::Private
 {
     Private(Geometry* p)
         : p     (p)
-        , p_hash_   (geom_hash_++)
+        , geomHash   (geom_hash_++)
 
     { }
 
     void clearPrimitiveHash()
     {
-        pointMap_.clear();
-        lineMap_.clear();
-        triMap_.clear();
+        pointMap.clear();
+        lineMap.clear();
+        triMap.clear();
     }
 
+    // --- returns true if present, and adds indices ---
+    bool checkPointHash(IndexType x)
+    {
+        if (pointMap.find(x) != pointMap.end())
+            return true;
+        pointMap.insert(x);
+        return false;
+    }
+
+    bool checkLineHash(IndexType x, IndexType y)
+    {
+        MATH::THash2<IndexType>
+                h1(x, y), h2(y, x);
+        if (lineMap.find(h1) != lineMap.end()
+         || lineMap.find(h2) != lineMap.end())
+            return true;
+        lineMap.insert(h1);
+        lineMap.insert(h2);
+        return false;
+    }
+
+    bool checkTriHash(IndexType x, IndexType y, IndexType z)
+    {
+        MATH::THash3<IndexType> h(x, y, z);
+        if (triMap.find(h) != triMap.end())
+            return true;
+        triMap.insert(h);
+        return false;
+    }
     Geometry* p;
 
-    std::map<Key_, MapStruct_> indexMap_;
-    std::set<Key_> pointMap_, lineMap_, triMap_;
+    std::map<Key_, MapStruct_> indexMap;
+    std::set<IndexType> pointMap;
+    std::set<MATH::THash2<IndexType>> lineMap;
+    std::set<MATH::THash3<IndexType>> triMap;
 
-    bool sharedVertices_;
+    bool doSharedVertices;
 
-    int p_hash_;
+    int geomHash;
 };
 
 
@@ -167,7 +198,7 @@ Geometry::~Geometry()
 
 void Geometry::setChanged()
 {
-    p_->p_hash_ = geom_hash_++;
+    p_->geomHash = geom_hash_++;
 }
 
 bool Geometry::isEmpty() const
@@ -178,7 +209,7 @@ bool Geometry::isEmpty() const
 
 int Geometry::hash() const
 {
-    return p_->p_hash_;
+    return p_->geomHash;
 }
 
 QString Geometry::infoString() const
@@ -223,7 +254,7 @@ void Geometry::clear()
 
     sharedVertices_ = false;
     p_shareThreshold_ = minimumThreshold;
-    p_->indexMap_.clear();
+    p_->indexMap.clear();
     p_->clearPrimitiveHash();
 }
 
@@ -254,11 +285,11 @@ void Geometry::copyFrom(const Geometry &o)
 
     sharedVertices_ = o.sharedVertices_;
     p_shareThreshold_ = o.p_shareThreshold_;
-    p_->indexMap_ = o.p_->indexMap_;
-    p_->indexMap_ = o.p_->indexMap_;
-    p_->pointMap_ = o.p_->pointMap_;
-    p_->lineMap_ = o.p_->lineMap_;
-    p_->triMap_ = o.p_->triMap_;
+    p_->indexMap = o.p_->indexMap;
+    p_->indexMap = o.p_->indexMap;
+    p_->pointMap = o.p_->pointMap;
+    p_->lineMap = o.p_->lineMap;
+    p_->triMap = o.p_->triMap;
 
     for (auto i : o.attributes_)
         attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
@@ -555,7 +586,7 @@ void Geometry::setSharedVertices(bool enable, VertexType threshold)
     if (!enable)
     {
         std::map<Key_, MapStruct_> tmp;
-        p_->indexMap_.swap(tmp); // the seriously-clear method
+        p_->indexMap.swap(tmp); // the seriously-clear method
     }
 
 }
@@ -589,13 +620,13 @@ Geometry::IndexType Geometry::addVertex(
 
     // find vertex in range
     const Key_ key = MO__MAKE_KEY(x,y,z);
-    auto i = p_->indexMap_.find(key);
+    auto i = p_->indexMap.find(key);
 
     // add new
-    if (i == p_->indexMap_.end())
+    if (i == p_->indexMap.end())
     {
         const IndexType idx = addVertexAlways(x,y,z,nx,ny,nz,r,g,b,a,u,v);
-        p_->indexMap_.insert(std::make_pair(key, MapStruct_(idx)));
+        p_->indexMap.insert(std::make_pair(key, MapStruct_(idx)));
         return idx;
     }
 
@@ -636,8 +667,8 @@ Geometry::IndexType Geometry::addVertex(
 Geometry::IndexType Geometry::findVertex(VertexType x, VertexType y, VertexType z) const
 {
     const Key_ key = MO__MAKE_KEY(x,y,z);
-    auto i = p_->indexMap_.find(key);
-    return i == p_->indexMap_.end() ? invalidIndex : i->second.idx;
+    auto i = p_->indexMap.find(key);
+    return i == p_->indexMap.end() ? invalidIndex : i->second.idx;
 #undef MO__MAKE_KEY
 }
 
@@ -785,14 +816,8 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
 
-    uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
-    if (p_->triMap_.find(hash) != p_->triMap_.end())
-    {
-        for (size_t i=0; i<triIndex_.size(); i += 3)
-            if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
-            return;
-    }
-    p_->triMap_.insert(hash);
+    if (p_->checkTriHash(p1, p2, p3))
+        return;
 
     setChanged();
     triIndex_.push_back(p1);
@@ -816,14 +841,8 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
             pos3 = getVertex(p3);
     if (checkTriangle(pos1, pos2, pos3))
     {
-        uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
-        if (p_->triMap_.find(hash) != p_->triMap_.end())
-        {
-            for (size_t i=0; i<triIndex_.size(); i += 3)
-                if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
-                return;
-        }
-        p_->triMap_.insert(hash);
+        if (p_->checkTriHash(p1, p2, p3))
+            return;
 
         setChanged();
         triIndex_.push_back(p1);
@@ -861,15 +880,8 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     MO_ASSERT(p1 < numVertices(), "line index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "line index #2 out of range " << p2 << "/" << numVertices());
 
-    uint64_t hash = MATH::getHashUnordered<uint64_t>(p1, p2);
-    if (p_->lineMap_.find(hash) != p_->lineMap_.end())
-    {
-        for (size_t i=0; i<lineIndex_.size(); i += 2)
-            if ((p1 == lineIndex_[i] && p2 == lineIndex_[i+1])
-             || (p1 == lineIndex_[i+1] && p2 == lineIndex_[i]))
-            return;
-    }
-    p_->lineMap_.insert(hash);
+    if (p_->checkLineHash(p1, p2))
+        return;
 
     setChanged();
     lineIndex_.push_back(p1);
@@ -887,10 +899,8 @@ void Geometry::addPoint(IndexType p1)
 {
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());
 
-    uint64_t hash = p1;
-    if (p_->pointMap_.find(hash) != p_->pointMap_.end())
+    if (p_->checkPointHash(p1))
         return;
-    p_->pointMap_.insert(hash);
 
     setChanged();
     pointIndex_.push_back(p1);
@@ -1218,7 +1228,7 @@ void Geometry::unGroupVertices()
     normal_.clear();
     color_.clear();
     texcoord_.clear();
-    p_->indexMap_.clear();
+    p_->indexMap.clear();
     p_->clearPrimitiveHash();
 
 #ifndef MO_DISABLE_EDGEFLAG

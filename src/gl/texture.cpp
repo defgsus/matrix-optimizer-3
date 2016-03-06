@@ -561,6 +561,7 @@ void Texture::upload(void * ptr, gl::GLint mipmap_level)
     };
 }
 
+/** @todo implement fast version (see hevc player source) */
 void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 {
     MO_DEBUG_IMG("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level

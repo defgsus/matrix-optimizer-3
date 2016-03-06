@@ -269,8 +269,9 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
 
     MO_PY_DEF_DOC(tl_add,
-        "add(vec2) -> Timeline\n"
-        "Adds a point to the timeline.\n"
+        "add(float, vec) -> Timeline\n"
+        "Adds a value/vector at the given time.\n"
+        "The vector size must fit the dimension of the timeline data."
         "Returns self."
     )
     static PyObject* tl_add(TimelineStruct* self, PyObject* arg)

@@ -21,6 +21,7 @@
 #include "python_geometry.h"
 #include "python_timeline.h"
 #include "python_output.h"
+#include "tool/stringmanip.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -403,6 +404,29 @@ void PythonInterpreter::write(const char *utf8, bool error)
         p_->output += QString::fromUtf8(utf8);
 }
 
+
+
+QString PythonInterpreter::getHelpHtmlString()
+{
+    PythonInterpreter interp;
+    interp.execute("import matrixoptimizer as mo\nhelp(mo)");
+    QString help = interp.output();
+
+    /*
+    auto lines = help.split("\n");
+    help.clear();
+    for (QString& line : lines)
+    {
+        if (line.contains("("))
+        {
+
+        }
+
+        help.append(line + "\n");
+    }*/
+
+    return "<pre>" + help + "</pre>";
+}
 
 
 } // namespace PYTHON34

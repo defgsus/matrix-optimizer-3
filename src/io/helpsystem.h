@@ -85,6 +85,7 @@ private:
     void addObjectIndex_(QString& doc);
     void addEquationInfo_(QString& doc);
     void addAngelScriptInfo_(QString& doc);
+    void addPythonInfo_(QString& doc);
 
     QStringList searchPaths_;
 

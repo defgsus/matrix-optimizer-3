@@ -82,3 +82,6 @@ OTHER_FILES += $$BISON_FILES \
     $$PWD/assets/shader/neuro.vert \
     $$PWD/assets/shader/to/crop.frag \
     $$PWD/assets/shader/skybox.frag
+
+DISTFILES += \
+    $$PWD/assets/help/en/python34.html

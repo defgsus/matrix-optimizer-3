@@ -112,6 +112,27 @@ I getHash(I x, I y, I z, I w)
 /** Struct for holding and comparing 3 values of T.
     As long as T provides operator == and < this will work */
 template <typename T>
+struct THash2
+{
+    T x,y;
+    THash2(T x, T y) : x(x), y(y) { }
+
+    bool operator == (const THash2<T>& r) const
+    {
+        return x == r.x && y == r.y;
+    }
+
+    bool operator < (const THash2<T>& r) const
+    {
+        if (y == r.y)
+            return x < r.x;
+        return y < r.y;
+    }
+};
+
+/** Struct for holding and comparing 3 values of T.
+    As long as T provides operator == and < this will work */
+template <typename T>
 struct THash3
 {
     T x,y,z;
@@ -133,7 +154,6 @@ struct THash3
         return z < r.z;
     }
 };
-
 
 } // namespace MATH
 } // namespace MO

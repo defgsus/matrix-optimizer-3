@@ -28,7 +28,7 @@
 #include "object/object.h"
 #include "object/param/parameters.h"
 #include "script/angelscript.h"
-
+#include "python/34/python.h"
 
 #ifdef MO_DO_DEBUG_HELP
 #   include <iomanip>
@@ -209,6 +209,9 @@ bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
 
         if (url.contains("angelscript.html"))
             addAngelScriptInfo_(xhtml);
+
+        if (url.contains("python"))
+            addPythonInfo_(xhtml);
 
         addObjectIndex_(xhtml);
 
@@ -613,6 +616,17 @@ void HelpSystem::addAngelScriptInfo_(QString& doc)
         QString str = getAngelScriptFunctionsHtml();
         doc.replace("!FUNCTIONS!", str);
     }
+}
+
+void HelpSystem::addPythonInfo_(QString &doc)
+{
+#ifdef MO_ENABLE_PYTHON34
+    if (doc.contains("!REFERENCE!"))
+    {
+        QString str = PYTHON34::PythonInterpreter::getHelpHtmlString();
+        doc.replace("!REFERENCE!", str);
+    }
+#endif
 }
 
 void HelpSystem::addObjectIndex_(QString &doc)

@@ -22,6 +22,7 @@
         <file alias="glsl.html">assets/help/en/glsl.html</file>
         <file alias="diskrender.html">assets/help/en/diskrender.html</file>
         <file alias="issues.html">assets/help/en/issues.html</file>
+        <file alias="python34.html">assets/help/en/python34.html</file>
     </qresource>
     <qresource prefix="/">
         <file alias="stylesheet.css">assets/stylesheet.css</file>

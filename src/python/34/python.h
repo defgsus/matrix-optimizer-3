@@ -31,6 +31,8 @@ namespace PYTHON34 {
         PythonInterpreter();
         ~PythonInterpreter();
 
+        static QString getHelpHtmlString();
+
         void execute(const char* utf8);
         void execute(const QString&);
 
