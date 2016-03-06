@@ -18,6 +18,7 @@
 #include "angelscript_network.h"
 #include "angelscript.h"
 #include "network/udpconnection.h"
+#include "types/refcounted.h"
 #include "io/settings.h"
 #include "io/applicationtime.h"
 #include "io/currenttime.h"
@@ -39,7 +40,7 @@ namespace MO {
 //------------------------------
 
 
-class UdpConnectionAS
+class UdpConnectionAS : public RefCounted
 {
 public:
 
@@ -73,8 +74,8 @@ public:
 
     /** Create a non-owning wrapper */
     UdpConnectionAS(UdpConnection * con)
-        : con       (con),
-          ref       (1)
+        : RefCounted("UdpConnectionAS")
+        , con       (con)
     {
         MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS(" << con << ")");
         MO_ASSERT(con, "Can't create wrapper for NULL Connection");
@@ -82,7 +83,7 @@ public:
         connectListen_();
     }
 
-    UdpConnectionAS() : con(new UdpConnection), ref(1)
+    UdpConnectionAS() : RefCounted("UdpConnectionAS"), con(new UdpConnection)
     {
         MO_DEBUG_NAS("UdpConnectionAS::UdpConnectionAS() created " << con);
         connectListen_();
@@ -95,11 +96,12 @@ public:
         con->releaseRef();
     }
 
+    void addRefWrapper() { addRef("UdpConnectionAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("UdpConnectionAS from angelscript"); }
+
     static UdpConnectionAS * factoryNew() { return new UdpConnectionAS(); }
     static UdpConnectionAS * factory(UdpConnection * con) { return new UdpConnectionAS(con); }
 
-    void addRef() { ++ref; }
-    void releaseRef() { if (--ref == 0) delete this; }
 
     void connectListen_();
 
@@ -161,7 +163,6 @@ public:
 private:
 
     UdpConnection * con;
-    int ref;
     QVector<std::shared_ptr<Callback>> callbacks;
 
 };
@@ -254,9 +255,9 @@ static void register_connection(asIScriptEngine *engine, const char * typ)
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
         "UdpConnection@ f()", asFUNCTION(UdpConnectionAS::factoryNew), asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
-        "void f()", asMETHOD(UdpConnectionAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(UdpConnectionAS,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
-        "void f()", asMETHOD(UdpConnectionAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(UdpConnectionAS,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
@@ -278,7 +279,7 @@ static void register_connection(asIScriptEngine *engine, const char * typ)
     MO__REG_METHOD("bool send(const string &in data)", sendString);
     MO__REG_METHOD("bool send(const string &in data, const string &in addr, uint16 port)", sendStringAP);
 
-    MO__REG_METHOD("void keepAlive()", addRef);
+    MO__REG_METHOD("void keepAlive()", addRefWrapper);
 
     // ------------ non-member object functions ----------------
 

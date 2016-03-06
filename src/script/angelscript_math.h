@@ -29,10 +29,13 @@ class RandomAS : public RefCounted
 
     RandomAS(const RandomAS&);
     void operator = (RandomAS&);
-
+    ~RandomAS() { }
 public:
 
-    RandomAS(uint32_t seed = 0) : twister(seed) { }
+    RandomAS(uint32_t seed = 0) : RefCounted("RandomAS"), twister(seed) { }
+
+    void addRefWrapper() { addRef("RandomAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("RandomAS from angelscript"); }
 
     // --- factory ---
     static RandomAS * factory() { return new RandomAS(); }

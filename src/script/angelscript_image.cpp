@@ -50,7 +50,8 @@ public:
     const uint max_size = 1<<30;
 
     ImageAS(quint32 width, quint32 height, QImage::Format format)
-        : img   (new QImage(std::max(1u, width), std::max(1u, height), format)),
+        : RefCounted("ImageAS")
+        , img   (new QImage(std::max(1u, width), std::max(1u, height), format)),
           p_    (0),
           own   (true),
           self  (this)
@@ -59,7 +60,8 @@ public:
     }
 
     ImageAS(QImage * img)
-        : img   (img),
+        : RefCounted("ImageAS")
+        , img   (img),
           p_    (0),
           own   (false),
           self  (this)
@@ -77,6 +79,9 @@ public:
         if (own)
             delete img;
     }
+
+    void addRefWrapper() { addRef("ImageAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("ImageAS from angelscript"); }
 
     // -------- helper ---------------------------
 
@@ -195,9 +200,9 @@ static void register_image_type(asIScriptEngine *engine, const char * typ)
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
         "Image@ f(uint width = 1, uint height = 1, ImageFormat format = IMG_RGBA)", asFUNCTION(ImageAS::factoryGeneric), asCALL_GENERIC); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
-        "void f()", asMETHOD(ImageAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(ImageAS,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
-        "void f()", asMETHOD(ImageAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(ImageAS,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 

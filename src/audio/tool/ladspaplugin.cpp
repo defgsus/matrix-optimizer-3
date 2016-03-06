@@ -37,7 +37,8 @@ struct LadspaPlugin::Port
 
 
 LadspaPlugin::LadspaPlugin()
-    : p_sr_             (0)
+    : RefCounted("LadspaPlugin")
+    , p_sr_             (0)
     , p_bsize_          (0)
     , p_activateCalled_ (false)
     , p_handle_         (0)

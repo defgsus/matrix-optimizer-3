@@ -43,9 +43,9 @@ static void register_rnd(asIScriptEngine *engine)
     r = engine->RegisterObjectBehaviour("Random", asBEHAVE_FACTORY,
         "Random@ f(uint32 seed)", asFUNCTION(RandomAS::factorySeed), asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("Random", asBEHAVE_ADDREF,
-        "void f()", asMETHOD(RandomAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(RandomAS,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("Random", asBEHAVE_RELEASE,
-        "void f()", asMETHOD(RandomAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(RandomAS,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --- interface ---
 

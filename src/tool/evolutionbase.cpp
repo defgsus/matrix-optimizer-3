@@ -32,7 +32,7 @@ void EvolutionBase::copyFrom(const EvolutionBase* o)
 }
 
 EvolutionBase::EvolutionBase()
-    : RefCounted    ()
+    : RefCounted    ("EvolutionBase")
     , p_props_      (new Properties())
 {
 }

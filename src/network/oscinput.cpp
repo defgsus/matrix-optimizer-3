@@ -43,7 +43,7 @@ struct OscInput::Private
 
 OscInput::OscInput(QObject * parent)
     : QObject       (parent)
-    , RefCounted    ()
+    , RefCounted    ("OscInput")
     , p_            (new Private(this))
 {
 

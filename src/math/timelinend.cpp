@@ -62,7 +62,8 @@ TimelineNd::Point::Type TimelineNd::Point::getTypeForPersistentName(const QStrin
 
 
 TimelineNd::TimelineNd(size_t dim)
-    : p_dim_        (dim)
+    : RefCounted("TimelineNd")
+    , p_dim_        (dim)
     , p_cur_          (0)
     , p_isLowerLimit_   (false)
     , p_isUpperLimit_   (false)
@@ -78,7 +79,8 @@ TimelineNd::~TimelineNd()
 
 
 TimelineNd::TimelineNd(const TimelineNd &other)
-    :   p_data_       (other.p_data_),
+    :   RefCounted("TimelineNd")
+        , p_data_       (other.p_data_),
         p_dim_      (other.p_dim_),
         p_cur_        (0),
         p_isLowerLimit_ (other.p_isLowerLimit_),

@@ -112,18 +112,23 @@ public:
     GEOM::Geometry * g;
     StringAS p_name;
 
+    void addRefWrapper() { addRef("GeometryAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("GeometryAS from angelscript"); }
+
     // -------------- factory for script -----------
 
     /** Creates an instance for a new Geometry */
-    GeometryAS()
-        : g     (new GEOM::Geometry())
+    GeometryAS(const QString& reason)
+        : RefCounted("GeometryAS" + reason)
+        , g     (new GEOM::Geometry())
     {
         MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS()");
     }
 
     /** Creates an instance for an existing Geometry */
     GeometryAS(GEOM::Geometry * g)
-        : g     (g)
+        : RefCounted("GeometryAS")
+        , g     (g)
     {
         MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ")");
         // Syntax checker needs NULL object
@@ -141,7 +146,8 @@ private:
 
 public:
 
-    static GeometryAS * factory() { MO_DEBUG_GAS("GeometryAS::factory()"); return new GeometryAS(); }
+    static GeometryAS * factory() {
+        MO_DEBUG_GAS("GeometryAS::factory()"); return new GeometryAS("(Factory)"); }
 
     // ----------------- interface ----------------
 
@@ -470,14 +476,16 @@ public:
     uint max_steps;
     Float surface_threshold,
           trace_precission;
-    RandomAS rnd;
+    RandomAS* rnd;
 
     // -------------- factory for script -----------
 
     ScalarFieldAS()
-        : max_steps         (100),
+        : RefCounted("ScalarFieldAS")
+        , max_steps         (100),
           surface_threshold (0.002),
-          trace_precission  (1.0)
+          trace_precission  (1.0),
+          rnd               (new RandomAS())
     {
         MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::ScalarFieldAS()");
     }
@@ -486,9 +494,13 @@ private:
     ~ScalarFieldAS()
     {
         MO_DEBUG_GAS("ScalarFieldAS("<<this<<")::~ScalarFieldAS()")
+        rnd->releaseRef("ScalarFieldAS destroy");
     }
 
 public:
+
+    void addRefWrapper() { addRef("ScalarFielAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("ScalarFieldAS from angelscript"); }
 
     static ScalarFieldAS * factory() { MO_DEBUG_GAS("ScalarFieldAS::factory()"); return new ScalarFieldAS(); }
 
@@ -573,7 +585,7 @@ public:
 
         for (int i=0; i<num; ++i)
         {
-            Vec3 d = glm::normalize(dir + rnd.getVec3MinMax(-1,1) * spread);
+            Vec3 d = glm::normalize(dir + rnd->getVec3MinMax(-1,1) * spread);
             float t = trace(pos, d, max_dist);
             amb += t / max_dist;
         }
@@ -685,9 +697,9 @@ static void register_geometry(asIScriptEngine *engine)
     r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_FACTORY,
         "Geometry@ f()", asFUNCTION(GeometryAS::factory), asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_ADDREF,
-        "void f()", asMETHOD(GeometryAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(GeometryAS,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("Geometry", asBEHAVE_RELEASE,
-        "void f()", asMETHOD(GeometryAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(GeometryAS,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
@@ -842,9 +854,9 @@ static void register_scalarField(asIScriptEngine *engine)
     r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_FACTORY,
         "ScalarField@ f()", asFUNCTION(ScalarFieldAS::factory), asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_ADDREF,
-        "void f()", asMETHOD(ScalarFieldAS,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(ScalarFieldAS,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour("ScalarField", asBEHAVE_RELEASE,
-        "void f()", asMETHOD(ScalarFieldAS,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(ScalarFieldAS,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // ------------ methods ---------------------------
 

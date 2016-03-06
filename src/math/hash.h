@@ -109,6 +109,32 @@ I getHash(I x, I y, I z, I w)
             ^ (w * hash_traits<I>::prime4);
 }
 
+/** Struct for holding and comparing 3 values of T.
+    As long as T provides operator == and < this will work */
+template <typename T>
+struct THash3
+{
+    T x,y,z;
+    THash3(T x, T y, T z) : x(x), y(y), z(z) { }
+
+    bool operator == (const THash3<T>& r) const
+    {
+        return x == r.x && y == r.y && z == r.z;
+    }
+
+    bool operator < (const THash3<T>& r) const
+    {
+        if (z == r.z)
+        {
+            if (y == r.y)
+                return x < r.x;
+            return y < r.y;
+        }
+        return z < r.z;
+    }
+};
+
+
 } // namespace MATH
 } // namespace MO
 

@@ -25,7 +25,8 @@ namespace MO {
 namespace GUI {
 
 FrontPreset::FrontPreset(const QString& name)
-    : p_name_       (name)
+    : RefCounted("FrontPreset")
+    , p_name_       (name)
     , p_props_      (new Properties)
 
 {
@@ -121,12 +122,14 @@ void FrontPreset::setValue(const QString& id, const QVariant& value)
 
 
 FrontPresets::FrontPresets(const QString& name)
-    : p_name_       (name)
+    : RefCounted("FrontPresets")
+    , p_name_       (name)
 {
     MO_DEBUG_PRESETS("FrontPresets(" << name << ")");
 }
 
 FrontPresets::FrontPresets(const FrontPresets &other)
+    : RefCounted("FrontPresets")
 {
     copyFrom(other);
 }

@@ -96,7 +96,8 @@ public:
 
     /** Create a wrapper for existing object */
     ObjectAS(Object * o)
-        : o         (o),
+        : RefCounted("ObjectAS")
+        , o         (o),
           self      (this)
     {
         // The syntax checker needs a null object..
@@ -104,6 +105,9 @@ public:
         if (o)
             o->addRef("ObjectAS creator");
     }
+
+    void addRefWrapper() { addRef("ObjectAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("ObjectAS from angelscript"); }
 
 private:
     ~ObjectAS()
@@ -251,7 +255,8 @@ public:
 
     /** Create a wrapper for new object */
     ObjectAnyAS()
-        : o         (MO::create_object<OBJ>()),
+        : RefCounted("ObjectAnyAS")
+        , o         (MO::create_object<OBJ>()),
           self      (this)
     {
 
@@ -259,7 +264,8 @@ public:
 
     /** Create a wrapper for existing object */
     ObjectAnyAS(OBJ * o)
-        : o         (o),
+        : RefCounted("ObjectAnyAS")
+        , o         (o),
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
@@ -269,7 +275,8 @@ public:
 private:
     ~ObjectAnyAS()
     {
-        o->releaseRef("ObjectAnyAS destroy");
+        if (o)
+            o->releaseRef("ObjectAnyAS destroy");
     }
 };
 
@@ -283,13 +290,15 @@ public:
 
     /** Create a wrapper for new object */
     SequenceAS()
-        : o         (MO::create_object<SequenceFloat>()),
+        : RefCounted("SequenceAS")
+        , o         (MO::create_object<SequenceFloat>()),
           self      (this)
     { }
 
     /** Create a wrapper for existing object */
     SequenceAS(SequenceFloat * o)
-        : o         (o),
+        : RefCounted("SequenceAS")
+        , o         (o),
           self      (this)
     {
         MO_ASSERT(o, "Can't create wrapper for NULL Object");
@@ -368,7 +377,8 @@ public:
 
     /** Create a wrapper for existing object */
     ParameterAS(Parameter * p)
-        : o         (p->object()),
+        : RefCounted("ParameterAS")
+        , o         (p->object()),
           p         (p),
           self      (this)
     {
@@ -384,6 +394,9 @@ private:
     }
 
 public:
+
+    void addRefWrapper() { addRef("ParameterAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("ParameterAS from angelscript"); }
 
     // ---------------- helper -------------------
 
@@ -593,9 +606,9 @@ static void register_object_base(asIScriptEngine *engine, const char * typ)
     // ----------------- constructor ---------------------------
 
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
-        "void f()", asMETHOD(Wrapper,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Wrapper,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
-        "void f()", asMETHOD(Wrapper,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Wrapper,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
@@ -803,9 +816,9 @@ static void register_parameter_base(asIScriptEngine *engine, const char * typ)
     // ----------------- constructor ---------------------------
 
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
-        "void f()", asMETHOD(Wrapper,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Wrapper,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
-        "void f()", asMETHOD(Wrapper,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Wrapper,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 

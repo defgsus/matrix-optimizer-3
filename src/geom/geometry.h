@@ -89,7 +89,7 @@ private:
     ~Geometry();
 public:
 
-    Geometry(const Geometry& other) { copyFrom(other); }
+    Geometry(const Geometry& other) : RefCounted("Geometry") { copyFrom(other); }
     Geometry& operator = (const Geometry& other) { copyFrom(other); return *this; }
 
     void copyFrom(const Geometry& other);
@@ -105,7 +105,7 @@ public:
     /** Some value reflecting changes to the geometry.
         This value is unique for all Geometries and all changes
         made to it (unique per application runtime). */
-    int hash() const { return p_hash_; }
+    int hash() const;
 
     /** Returns the progress during certain intense functions [0,100] */
     int progress() const { return progress_; }
@@ -173,7 +173,7 @@ public:
 
     /** Returns the shared-mode */
     bool sharedVertices() const { return sharedVertices_; }
-    VertexType sharedVerticesThreshold() const { return threshold_; }
+    VertexType sharedVerticesThreshold() const { return p_shareThreshold_; }
 
     /** Returns the point of the vertex */
     Vec3 getVertex(IndexType vertexIndex) const;
@@ -543,22 +543,11 @@ private:
 
     // ------- vertex sharing ---------
 
-    typedef quint64 Key_;
-
-    struct MapStruct_
-    {
-        IndexType idx;
-        uint count;
-        MapStruct_(IndexType idx) : idx(idx), count(1) { }
-    };
-
-    std::map<Key_, MapStruct_> indexMap_;
-    std::set<Key_> pointMap_, lineMap_, triMap_;
-
     bool sharedVertices_;
-    VertexType threshold_;
+    VertexType p_shareThreshold_;
 
-    int p_hash_;
+    struct Private;
+    Private * p_;
 };
 
 } // namespace GEOM

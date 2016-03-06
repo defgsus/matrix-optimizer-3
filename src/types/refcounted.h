@@ -21,7 +21,12 @@ class RefCounted
 {
 public:
 
-    RefCounted();
+    RefCounted(const QString& className);
+
+    const  QString refClassName() const;
+           QString refInstanceName() const;
+    static QString refInstanceName(const RefCounted*);
+    static QString refClassName(const RefCounted*);
 
     void addRef(const QString& reason);
 

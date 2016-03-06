@@ -84,28 +84,68 @@ namespace
         }
     };
 
-
     typedef QMap<Hash3, uint> Map3;
+
+
+
+    // ---- other hashing stuff -----
+
+    typedef quint64 Key_;
+
+    struct MapStruct_
+    {
+        Geometry::IndexType idx;
+        uint count;
+        MapStruct_(Geometry::IndexType idx) : idx(idx), count(1) { }
+    };
 
 }
 
+struct Geometry::Private
+{
+    Private(Geometry* p)
+        : p     (p)
+        , p_hash_   (geom_hash_++)
+
+    { }
+
+    void clearPrimitiveHash()
+    {
+        pointMap_.clear();
+        lineMap_.clear();
+        triMap_.clear();
+    }
+
+    Geometry* p;
+
+    std::map<Key_, MapStruct_> indexMap_;
+    std::set<Key_> pointMap_, lineMap_, triMap_;
+
+    bool sharedVertices_;
+
+    int p_hash_;
+};
+
+
+
+
 Geometry::Geometry()
-    :
-        curR_   (1.f),
-        curG_   (1.f),
-        curB_   (1.f),
-        curA_   (1.f),
-        curNx_  (0.f),
-        curNy_  (0.f),
-        curNz_  (1.f),
-        curU_   (0.f),
-        curV_   (0.f),
+    : RefCounted("Geometry")
+    , curR_   (1.f)
+    , curG_   (1.f)
+    , curB_   (1.f)
+    , curA_   (1.f)
+    , curNx_  (0.f)
+    , curNy_  (0.f)
+    , curNz_  (1.f)
+    , curU_   (0.f)
+    , curV_   (0.f)
 #ifndef MO_DISABLE_EDGEFLAG
-        curEdge_(gl::GL_TRUE),
+    , curEdge_(gl::GL_TRUE)
 #endif
-        sharedVertices_ (false),
-        threshold_      (minimumThreshold),
-        p_hash_   (geom_hash_++)
+    , sharedVertices_ (false)
+    , p_shareThreshold_      (minimumThreshold)
+    , p_      (new Private(this))
 {
     //MO_PRINT("Geometry::Geometry()");
 }
@@ -114,17 +154,23 @@ Geometry::~Geometry()
 {
     //MO_PRINT("Geometry::~Geometry()");
     clear();
+    delete p_;
 }
 
 void Geometry::setChanged()
 {
-    p_hash_ = geom_hash_++;
+    p_->p_hash_ = geom_hash_++;
 }
 
 bool Geometry::isEmpty() const
 {
     return (!numVertices()
        || !(numPoints() || numLines() || numTriangles()));
+}
+
+int Geometry::hash() const
+{
+    return p_->p_hash_;
 }
 
 QString Geometry::infoString() const
@@ -154,7 +200,6 @@ void Geometry::clear()
     triIndex_.clear();
     lineIndex_.clear();
     pointIndex_.clear();
-    indexMap_.clear();
     for (auto i : attributes_)
         delete i.second;
     attributes_.clear();
@@ -167,9 +212,11 @@ void Geometry::clear()
 #ifndef MO_DISABLE_EDGEFLAG
     curEdge_ = gl::GL_TRUE;
 #endif
+
     sharedVertices_ = false;
-    threshold_ = minimumThreshold;
-    indexMap_.clear();
+    p_shareThreshold_ = minimumThreshold;
+    p_->indexMap_.clear();
+    p_->clearPrimitiveHash();
 }
 
 void Geometry::copyFrom(const Geometry &o)
@@ -189,10 +236,6 @@ void Geometry::copyFrom(const Geometry &o)
     curEdge_ = o.curEdge_;
 #endif
 
-    sharedVertices_ = o.sharedVertices_;
-    threshold_ = o.threshold_;
-    indexMap_ = o.indexMap_;
-
     vertex_ = o.vertex_;
     normal_ = o.normal_;
     color_ = o.color_;
@@ -200,10 +243,14 @@ void Geometry::copyFrom(const Geometry &o)
     triIndex_ = o.triIndex_;
     lineIndex_ = o.lineIndex_;
     pointIndex_ = o.pointIndex_;
-    indexMap_ = o.indexMap_;
-    pointMap_ = o.pointMap_;
-    lineMap_ = o.lineMap_;
-    triMap_ = o.triMap_;
+
+    sharedVertices_ = o.sharedVertices_;
+    p_shareThreshold_ = o.p_shareThreshold_;
+    p_->indexMap_ = o.p_->indexMap_;
+    p_->indexMap_ = o.p_->indexMap_;
+    p_->pointMap_ = o.p_->pointMap_;
+    p_->lineMap_ = o.p_->lineMap_;
+    p_->triMap_ = o.p_->triMap_;
 
     for (auto i : o.attributes_)
         attributes_.insert( std::make_pair(i.first, new UserAttribute(*i.second)) );
@@ -496,11 +543,11 @@ void Geometry::setSharedVertices(bool enable, VertexType threshold)
     setChanged();
 
     sharedVertices_ = enable;
-    threshold_ = std::max(minimumThreshold, threshold);
+    p_shareThreshold_ = std::max(minimumThreshold, threshold);
     if (!enable)
     {
         std::map<Key_, MapStruct_> tmp;
-        indexMap_.swap(tmp); // the seriously-clear method
+        p_->indexMap_.swap(tmp); // the seriously-clear method
     }
 
 }
@@ -528,19 +575,19 @@ Geometry::IndexType Geometry::addVertex(
     setChanged();
 
 #define MO__MAKE_KEY(x__, y__, z__)  \
-    (  (Key_((x__)/threshold_) & ((1<<23) - 1)) \
-    | ((Key_((y__)/threshold_) & ((1<<23) - 1)) << 24) \
-    | ((Key_((z__)/threshold_) & ((1<<23) - 1)) << 48) )
+    (  (Key_((x__)/p_shareThreshold_) & ((1<<23) - 1)) \
+    | ((Key_((y__)/p_shareThreshold_) & ((1<<23) - 1)) << 24) \
+    | ((Key_((z__)/p_shareThreshold_) & ((1<<23) - 1)) << 48) )
 
     // find vertex in range
     const Key_ key = MO__MAKE_KEY(x,y,z);
-    auto i = indexMap_.find(key);
+    auto i = p_->indexMap_.find(key);
 
     // add new
-    if (i == indexMap_.end())
+    if (i == p_->indexMap_.end())
     {
         const IndexType idx = addVertexAlways(x,y,z,nx,ny,nz,r,g,b,a,u,v);
-        indexMap_.insert(std::make_pair(key, MapStruct_(idx)));
+        p_->indexMap_.insert(std::make_pair(key, MapStruct_(idx)));
         return idx;
     }
 
@@ -581,8 +628,8 @@ Geometry::IndexType Geometry::addVertex(
 Geometry::IndexType Geometry::findVertex(VertexType x, VertexType y, VertexType z) const
 {
     const Key_ key = MO__MAKE_KEY(x,y,z);
-    auto i = indexMap_.find(key);
-    return i == indexMap_.end() ? invalidIndex : i->second.idx;
+    auto i = p_->indexMap_.find(key);
+    return i == p_->indexMap_.end() ? invalidIndex : i->second.idx;
 #undef MO__MAKE_KEY
 }
 
@@ -731,13 +778,13 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
 
     uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
-    if (triMap_.find(hash) != triMap_.end())
+    if (p_->triMap_.find(hash) != p_->triMap_.end())
     {
         for (size_t i=0; i<triIndex_.size(); i += 3)
             if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
             return;
     }
-    triMap_.insert(hash);
+    p_->triMap_.insert(hash);
 
     setChanged();
     triIndex_.push_back(p1);
@@ -762,13 +809,13 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
     if (checkTriangle(pos1, pos2, pos3))
     {
         uint64_t hash = MATH::getHash<uint64_t>(p1, p2, p3);
-        if (triMap_.find(hash) != triMap_.end())
+        if (p_->triMap_.find(hash) != p_->triMap_.end())
         {
             for (size_t i=0; i<triIndex_.size(); i += 3)
                 if (p1 == triIndex_[i] && p2 == triIndex_[i+1] && p3 == triIndex_[i+2])
                 return;
         }
-        triMap_.insert(hash);
+        p_->triMap_.insert(hash);
 
         setChanged();
         triIndex_.push_back(p1);
@@ -807,14 +854,14 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     MO_ASSERT(p2 < numVertices(), "line index #2 out of range " << p2 << "/" << numVertices());
 
     uint64_t hash = MATH::getHashUnordered<uint64_t>(p1, p2);
-    if (lineMap_.find(hash) != lineMap_.end())
+    if (p_->lineMap_.find(hash) != p_->lineMap_.end())
     {
         for (size_t i=0; i<lineIndex_.size(); i += 2)
             if ((p1 == lineIndex_[i] && p2 == lineIndex_[i+1])
              || (p1 == lineIndex_[i+1] && p2 == lineIndex_[i]))
             return;
     }
-    lineMap_.insert(hash);
+    p_->lineMap_.insert(hash);
 
     setChanged();
     lineIndex_.push_back(p1);
@@ -833,9 +880,9 @@ void Geometry::addPoint(IndexType p1)
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());
 
     uint64_t hash = p1;
-    if (pointMap_.find(hash) != pointMap_.end())
+    if (p_->pointMap_.find(hash) != p_->pointMap_.end())
         return;
-    pointMap_.insert(hash);
+    p_->pointMap_.insert(hash);
 
     setChanged();
     pointIndex_.push_back(p1);
@@ -1163,7 +1210,9 @@ void Geometry::unGroupVertices()
     normal_.clear();
     color_.clear();
     texcoord_.clear();
-    indexMap_.clear();
+    p_->indexMap_.clear();
+    p_->clearPrimitiveHash();
+
 #ifndef MO_DISABLE_EDGEFLAG
     edgeFlags_.clear();
 #endif
@@ -2070,7 +2119,7 @@ void Geometry::tesselateLines(uint level)
 
     Geometry tess;
     tess.sharedVertices_ = sharedVertices_;
-    tess.threshold_ = threshold_;
+    tess.p_shareThreshold_ = p_shareThreshold_;
 
     level = std::pow(2,level);
 
@@ -2111,7 +2160,7 @@ void Geometry::tesselateTriangles(uint level)
     {
         Geometry tess;
         tess.sharedVertices_ = sharedVertices_;
-        tess.threshold_ = threshold_;
+        tess.p_shareThreshold_ = p_shareThreshold_;
 
         for (uint i=0; i<numTriangles(); ++i)
         {
@@ -2192,7 +2241,7 @@ void Geometry::tesselateTriangles(VertexType minArea, VertexType minLength, uint
     {
         Geometry tess;
         tess.sharedVertices_ = sharedVertices_;
-        tess.threshold_ = threshold_;
+        tess.p_shareThreshold_ = p_shareThreshold_;
 
         for (uint i=0; i<numTriangles(); ++i)
         {

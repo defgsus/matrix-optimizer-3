@@ -64,6 +64,7 @@ Timeline1d::Point::Type Timeline1d::Point::getTypeForPersistentName(const QStrin
 
 
 Timeline1d::Timeline1d()
+    : RefCounted("Timeline1d")
 {
     // no current point
     cur_ = 0;
@@ -80,7 +81,8 @@ Timeline1d::~Timeline1d()
 
 
 Timeline1d::Timeline1d(const Timeline1d &other)
-    :   data_   (other.data_),
+    :   RefCounted("Tineline1d")
+    ,   data_   (other.data_),
         cur_    (0),
         lowerLimit_(other.lowerLimit_),
         upperLimit_(other.upperLimit_),

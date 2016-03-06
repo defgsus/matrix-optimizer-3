@@ -188,7 +188,8 @@ void ObjectPrivate::deleteChildren(Object* o)
 
 
 Object::Object()
-    : pobj_         (new PrivateObj(this))
+    : RefCounted("Object")
+    , pobj_         (new PrivateObj(this))
 {
 
     addEvolutionKey(tr("Parameters"));

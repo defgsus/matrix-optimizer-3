@@ -21,6 +21,7 @@ namespace AUDIO {
 class AudioPlayerData : public RefCounted
 {
 public:
+    AudioPlayerData() : RefCounted("AudioPlayerData") { }
 
     virtual size_t numChannels() const = 0;
     virtual size_t sampleRate() const = 0;

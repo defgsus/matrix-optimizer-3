@@ -50,13 +50,15 @@ public:
     // ----- ctor -----
 
     Timeline1AS()
-        : tl    (new MATH::Timeline1d)
+        : RefCounted("Timeline1AS")
+        , tl    (new MATH::Timeline1d)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS()");
     }
 
     Timeline1AS(MATH::Timeline1d * tl)
-        : tl    (tl)
+        : RefCounted("Timeline1AS")
+        , tl    (tl)
     {
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::Timeline1AS(" << tl << ")");
         MO_ASSERT(tl, "Can't create wrapper for NULL timeline");
@@ -67,6 +69,9 @@ public:
         MO_DEBUG_TAS("Timeline1AS("<<this<<")::~Timeline1AS()");
         tl->releaseRef("Timeline1AS destroy");
     }
+
+    void addRefWrapper() { addRef("Timeline1AS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("Timeline1AS from angelscript"); }
 
     // ------ interface -------
 
@@ -137,7 +142,7 @@ public:
 
     // ----- ctor -----
 
-    TimelineXAS()
+    TimelineXAS() : RefCounted("TimelineXAS")
     {
         MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::Timeline1AS()");
     }
@@ -146,6 +151,9 @@ public:
     {
         MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::~Timeline1AS()");
     }
+
+    void addRefWrapper() { addRef("TimelineXAS from angelscript"); }
+    void releaseRefWrapper() { releaseRef("TimelineXAS from angelscript"); }
 
     // ------ interface -------
 
@@ -299,9 +307,9 @@ void register_timeline_tmpl(asIScriptEngine * engine, const char * typ, const ch
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_FACTORY,
         MO__STR("%1@ f()"), asFUNCTION(Class::factory), asCALL_CDECL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_ADDREF,
-        "void f()", asMETHOD(Class,addRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Class,addRefWrapper), asCALL_THISCALL); assert( r >= 0 );
     r = engine->RegisterObjectBehaviour(typ, asBEHAVE_RELEASE,
-        "void f()", asMETHOD(Class,releaseRef), asCALL_THISCALL); assert( r >= 0 );
+        "void f()", asMETHOD(Class,releaseRefWrapper), asCALL_THISCALL); assert( r >= 0 );
 
     // --------------- the object methods ----------------------
 
