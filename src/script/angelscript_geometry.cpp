@@ -127,7 +127,7 @@ public:
 
     /** Creates an instance for an existing Geometry */
     GeometryAS(GEOM::Geometry * g)
-        : RefCounted("GeometryAS")
+        : RefCounted("GeometryAS(copy)")
         , g     (g)
     {
         MO_DEBUG_GAS("GeometryAS("<<this<<")::GeometryAS(" << g << ")");

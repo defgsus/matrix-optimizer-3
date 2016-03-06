@@ -150,6 +150,14 @@ Geometry::Geometry()
     //MO_PRINT("Geometry::Geometry()");
 }
 
+Geometry::Geometry(const Geometry& other)
+    : RefCounted("Geometry(copy)")
+    , p_    (new Private(this))
+{
+    copyFrom(other);
+}
+
+
 Geometry::~Geometry()
 {
     //MO_PRINT("Geometry::~Geometry()");

@@ -89,7 +89,7 @@ private:
     ~Geometry();
 public:
 
-    Geometry(const Geometry& other) : RefCounted("Geometry") { copyFrom(other); }
+    Geometry(const Geometry& other);
     Geometry& operator = (const Geometry& other) { copyFrom(other); return *this; }
 
     void copyFrom(const Geometry& other);
