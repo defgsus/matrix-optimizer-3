@@ -1237,7 +1237,60 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
     }
 }
 
+void Geometry::addGeometry(const Geometry& other, const Vec3& offset,
+                 bool doTri, bool doLine, bool doPoint,
+                 bool doColor, bool doNormal, bool doTex, bool doAttr)
+{
+    auto foo = [=](const int num, const IndexType otherVert[], IndexType vert[])
+    {
+        for (int corner = 0; corner < num; ++corner)
+        {
+            IndexType oidx = otherVert[corner];
+            if (doColor)
+                setColor(       other.color_[oidx * other.numColorComponents()],
+                                other.color_[oidx * other.numColorComponents() + 1],
+                                other.color_[oidx * other.numColorComponents() + 2],
+                                other.color_[oidx * other.numColorComponents() + 3]);
+            if (doNormal)
+                setNormal(      other.normal_[oidx * other.numNormalComponents()],
+                                other.normal_[oidx * other.numNormalComponents() + 1],
+                                other.normal_[oidx * other.numNormalComponents() + 2]);
+            if (doTex)
+                setTexCoord(    other.texcoord_[oidx * other.numTextureCoordComponents()],
+                                other.texcoord_[oidx * other.numTextureCoordComponents() + 1]);
 
+        vert[corner] = addVertex(
+                    other.vertex_[oidx * other.numVertexComponents()    ] + offset.x,
+                    other.vertex_[oidx * other.numVertexComponents() + 1] + offset.y,
+                    other.vertex_[oidx * other.numVertexComponents() + 2] + offset.z);
+        }
+    };
+
+    if (doTri)
+    for (uint i=0; i<other.numTriangles(); ++i)
+    {
+        IndexType v[3];
+        foo(3, &other.triIndex_[i*3], v);
+        addTriangle(v[0], v[1], v[2]);
+    }
+
+    if (doLine)
+    for (uint i=0; i<other.numLines(); ++i)
+    {
+        IndexType v[2];
+        foo(2, &other.lineIndex_[i*2], v);
+        addLine(v[0], v[1]);
+    }
+
+    if (doPoint)
+    for (uint i=0; i<other.numPoints(); ++i)
+    {
+        IndexType v;
+        foo(1, &other.pointIndex_[i], &v);
+        addPoint(v);
+    }
+
+}
 
 void Geometry::scale(VertexType x, VertexType y, VertexType z)
 {

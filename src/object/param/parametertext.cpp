@@ -70,6 +70,11 @@ void ParameterText::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+bool ParameterText::isOneliner() const
+{
+    return textType_ == TT_PLAIN_TEXT;
+}
+
 void ParameterText::setVariableNames(const std::vector<std::string> &names)
 {
     varNames_.clear();

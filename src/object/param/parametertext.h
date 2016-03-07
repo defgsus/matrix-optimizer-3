@@ -47,6 +47,9 @@ public:
     const QString& baseValue() const { return value_; }
     TextType textType() const { return textType_; }
 
+    /** Should be editable in single line or in text editor */
+    bool isOneliner() const;
+
     /** For TT_EQUATION this returns a list of variables the equation parser should know */
     const QStringList& variableNames() const { return varNames_; }
 

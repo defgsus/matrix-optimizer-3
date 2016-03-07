@@ -20,6 +20,7 @@
 #include "python_vector.h"
 #include "python.h"
 #include "geom/geometry.h"
+#include "geom/geometryfactory.h"
 #include "math/vector.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -244,7 +245,7 @@ extern "C"
         {
             PyObject* obj = 0;
             PyArg_ParseTuple(args, "|O", &obj);
-            if (obj && 0==strcmp(obj->ob_type->tp_name, "matrixoptimizer.Geometry"))
+            if (obj && isGeometry(obj))
             {
                 auto other = reinterpret_cast<Python34Geom*>(obj);
                 other->geometry->addRef("py geometry.__init__ copyctor");
@@ -585,6 +586,67 @@ extern "C"
         Py_RETURN_NONE;
     }
 
+    MO_PY_DEF_DOC(geom_add_geometry,
+        "add_geometry(Geometry) -> long\n"
+        "Adds the given Geometry data to self."
+    )
+    static PyObject* geom_add_geometry(PyObject* self, PyObject* arg, PyObject*)
+    {
+        MO__GETGEOM(pgeom);
+        PyObject* other;
+        PyArg_ParseTuple(arg, "O", &other);
+        if (!isGeometry(other))
+        {
+            PyErr_Set(PyExc_TypeError, QString(
+                          "expected Geometry, got %1").arg(typeName(other)));
+            return NULL;
+        }
+        pgeom->geometry->addGeometry(
+                    *(reinterpret_cast<Python34Geom*>(other)->geometry) );
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_add_geometry_only,
+        "add_geometry_only(Geometry, bools..) -> long\n"
+        "Adds only the selected data from the given Geometry to self.\n"
+        "bools.. match the following keywords:\n"
+        "triangle, line, point,\n"
+        "color, normal, tex_coord\n"
+        "By default, all are disabled, and the current value in self will be used."
+    )
+    static PyObject* geom_add_geometry_only(PyObject* self, PyObject* arg, PyObject* kwds)
+    {
+        MO__GETGEOM(pgeom);
+
+        PyObject* other;
+        int doTri = 0, doLine = 0, doPoint = 0,
+            doColor = 0, doNormal = 0, doTex = 0;
+        static const char* keywords[] =
+        {
+            "", "triangle", "line", "point",
+            "color", "normal", "tex_coord", NULL
+        };
+        if (!PyArg_ParseTupleAndKeywords(
+                    arg, kwds, "O|pppppp", const_cast<char**>(keywords),
+                    &other,
+                    &doTri, &doLine, &doPoint,
+                    &doColor, &doNormal, &doTex))
+            return NULL;
+
+        if (!isGeometry(other))
+        {
+            PyErr_Set(PyExc_TypeError, QString(
+                          "expected Geometry, got %1").arg(typeName(other)));
+            return NULL;
+        }
+        pgeom->geometry->addGeometry(
+                    *(reinterpret_cast<Python34Geom*>(other)->geometry),
+                    Vec3(0),
+                    doTri, doLine, doPoint, doColor, doNormal, doTex, false);
+        Py_RETURN_NONE;
+    }
+
+
     MO_PY_DEF_DOC(geom_set_vertex,
         "set_vertex(long, vec3) -> None\n"
         "Changes the vertex position at the given index."
@@ -850,6 +912,44 @@ extern "C"
         Py_RETURN_NONE;
     }
 
+    MO_PY_DEF_DOC(geom_add_box,
+        "add_box(float | vec3) -> None\n"
+        "Adds a cube or box with the given side length(s)."
+    )
+    static PyObject* geom_add_box(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        double v[4];
+        int len;
+        if (!get_vector_var(arg, &len, v))
+            return NULL;
+        if (len == 1)
+            v[2] = v[1] = v[0];
+        else if (len != 3)
+            { PyErr_Set(PyExc_TypeError, QString("expect 1 or 3 component vector, got").arg(len)); return NULL; }
+        if (!pgeom->geometry->sharedVertices())
+            GEOM::GeometryFactory::createTexturedBox(pgeom->geometry, v[0], v[1], v[2]);
+        else
+            GEOM::GeometryFactory::createBox(pgeom->geometry, v[0], v[1], v[2]);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_add_icosahedron,
+        "add_icosahederon(float) -> None\n"
+        "Adds an icosahedron with the given size."
+    )
+    static PyObject* geom_add_icosahedron(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        float size;
+        if (!PyArg_ParseTuple(arg, "f", &size))
+            return NULL;
+        GEOM::GeometryFactory::createIcosahedron(pgeom->geometry, size);
+        Py_RETURN_NONE;
+    }
+
+
+
     MO_PY_DEF_DOC(geom_clear,
         "clear() -> None\n"
         "Completely wipes out all data."
@@ -859,6 +959,17 @@ extern "C"
         MO__GETGEOM(pgeom);
         pgeom->geometry->clear();
         Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_copy,
+        "copy() -> Geometry\n"
+        "Creates a deep copy of all data"
+    )
+    static PyObject* geom_copy(PyObject* self, PyObject* )
+    {
+        MO__GETGEOM(pgeom);
+        auto geom = new GEOM::Geometry(*pgeom->geometry);
+        return reinterpret_cast<PyObject*>(createGeometryObject(geom));
     }
 
     MO_PY_DEF_DOC(geom_calc_normals,
@@ -977,6 +1088,27 @@ extern "C"
         Py_RETURN_NONE;
     }
 
+    MO_PY_DEF_DOC(geom_translate,
+        "translate(vec) -> None\n"
+        "Add offset to vertex positions. Argument size can be 1-3."
+    )
+    static PyObject* geom_translate(PyObject* self, PyObject* args)
+    {
+        MO__GETGEOM(pgeom);
+        int len;
+        double v[4] { 0,0,0,0 };
+        if (!get_vector_var(args, &len, v))
+            return NULL;
+        if (len > 3)
+        {
+            PyErr_Set(PyExc_TypeError, QString("expected 1 - 3 component vector, "
+                                               "got %1").arg(len));
+            return NULL;
+        }
+        pgeom->geometry->translate(v[0], v[1], v[2]);
+        Py_RETURN_NONE;
+    }
+
 #undef MO__GETGEOM
 #undef MO__GETGEOM0
 
@@ -1027,12 +1159,19 @@ extern "C"
         MO__METHOD(add_line,                METH_VARARGS)
         MO__METHOD(add_triangle,            METH_VARARGS)
         MO__METHOD(add_quad,                METH_VARARGS)
+        MO__METHOD(add_geometry,            METH_VARARGS)
+        MO__METHOD(add_geometry_only,       METH_VARARGS | METH_KEYWORDS)
+
+        MO__METHOD(add_box,                 METH_VARARGS)
+        MO__METHOD(add_icosahedron,         METH_VARARGS)
 
         MO__METHOD(clear,                   METH_NOARGS)
+        MO__METHOD(copy,                    METH_NOARGS)
         MO__METHOD(calc_normals,            METH_NOARGS)
         MO__METHOD(invert_normals,          METH_NOARGS)
 
         MO__METHOD(scale,                   METH_VARARGS)
+        MO__METHOD(translate,               METH_VARARGS)
 
         MO__METHOD(tesselate_triangles,     METH_VARARGS)
         MO__METHOD(tesselate_triangle,      METH_VARARGS)
@@ -1120,6 +1259,12 @@ void* createGeometryObject(MO::GEOM::Geometry* geom)
     pgeom->geometry->addRef("py geometry create c");
     return pgeom;
 }
+
+bool isGeometry(void *vobj)
+{
+    return PyObject_TypeCheck((PyObject*)vobj, &Python34Geom_type);
+}
+
 
 } // namespace PYTHON34
 } // namespace MO

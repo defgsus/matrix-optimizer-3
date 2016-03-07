@@ -28,6 +28,18 @@ public:
         T_TEXTURE_CUBE
     };*/
 
+    enum InputType
+    {
+        IT_NONE,
+        IT_INPUT,
+        IT_FILE,
+        IT_MASTER_FRAME,
+        IT_MASTER_FRAME_DEPTH
+    };
+    static const QStringList inputTypeIds;
+    static const QStringList inputTypeNames;
+    static const QList<InputType> inputTypeValues;
+
     enum MagMode
     {
         MAG_NEAREST,
@@ -61,6 +73,7 @@ public:
     static const QList<WrapMode> wrapModeValues;
 
     ParameterTexture(Object * object, const QString& idName, const QString& name);
+    ~ParameterTexture();
 
     virtual void serialize(IO::DataStream&) const;
     virtual void deserialize(IO::DataStream&);
@@ -78,24 +91,28 @@ public:
     /** Returns true when the texture is different since the last call to value() */
     bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
-    WrapMode wrapModeX() const { return wrapModeX_; }
-    WrapMode wrapModeY() const { return wrapModeY_; }
-    MagMode magMode() const { return magMode_; }
-    MinMode minMode() const { return minMode_; }
+    InputType inputType() const;
+    WrapMode wrapModeX() const;
+    WrapMode wrapModeY() const;
+    MagMode magMode() const;
+    MinMode minMode() const;
+    QString filename() const;
+
+    // ---------------- setter -----------------
+
+    void setInputType(InputType);
+    void setWrapMode(WrapMode m);
+    void setWrapModeX(WrapMode m);
+    void setWrapModeY(WrapMode m);
+    void setMagMode(MagMode m);
+    void setMinMode(MinMode m);
+    void setFilename(const QString&);
 
     /** Applies the wrap and min/mag settings */
     void setTextureParam(const GL::Texture*) const;
 
-    // ---------------- setter -----------------
-
-    /* Set this upon creation */
-    //void setType(Type) { type_ = type; }
-
-    void setWrapMode(WrapMode m) { setWrapModeX(m); setWrapModeY(m); }
-    void setWrapModeX(WrapMode m) { wrapModeX_ = m; }
-    void setWrapModeY(WrapMode m) { wrapModeY_ = m; }
-    void setMagMode(MagMode m) { magMode_ = m; }
-    void setMinMode(MinMode m) { minMode_ = m; }
+    /** Release any created textures */
+    void releaseGl();
 
     // --------- modulation -----------
 
@@ -104,13 +121,8 @@ public:
     virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
 private:
-
-    mutable const GL::Texture * lastTex_;
-    mutable std::vector<int> lastHash_;
-
-    WrapMode wrapModeX_, wrapModeY_;
-    MagMode magMode_;
-    MinMode minMode_;
+    struct Private;
+    Private * p_;
 };
 
 } // namespace MO

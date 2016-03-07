@@ -419,6 +419,7 @@ void ParameterWidget::createWidgets_()
         defaultValueName = pfn->defaultValue();
 
         QLineEdit * edit = lineEdit_ = new QLineEdit(this);
+        edit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
         l->addWidget(edit);
 
         // XXX
@@ -428,13 +429,13 @@ void ParameterWidget::createWidgets_()
         edit->setStatusTip(pfn->statusTip());
         edit->setText(pfn->value());
 
-        setFocusProxy(edit);
-
         // load button
         QToolButton * butload = new QToolButton(this);
         l->addWidget(butload);
         butload->setText("...");
         butload->setStatusTip(tr("Click to select a file"));
+
+        setFocusProxy(butload);
 
         // load button click
         connect(butload, &QToolButton::clicked, [=]()
@@ -511,37 +512,57 @@ void ParameterWidget::createWidgets_()
         defaultValueName = ptxt->defaultValue();
 
         QLineEdit * edit = lineEdit_ = new QLineEdit(this);
+        edit->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Minimum);
         l->addWidget(edit);
 
-        edit->setReadOnly(true);
         edit->setStatusTip(ptxt->statusTip());
         edit->setText(ptxt->baseValue());
 
-        // edit button
-        QToolButton * butedit = new QToolButton(this);
-        l->addWidget(butedit);
-        butedit->setText("...");
-        butedit->setStatusTip(tr("Click to edit the text"));
-
-        setFocusProxy(butedit);
-
-        // load button click
-        connect(butedit, &QToolButton::clicked, [=]()
+        if (ptxt->isOneliner())
         {
-#if 1
-            ptxt->openEditDialog();// application()->mainWindow() );
-#else
-            // XXX works but is not fully integrated yet
-            auto w = ptxt->createEditWidget( application()->mainWindow() );
-            application()->createDockWidget("parameter " + ptxt->infoName(), w);
-#endif
-        });
+            edit->setReadOnly(false);
+            setFocusProxy(edit);
 
-        // reset to default
-        connect(breset, &QToolButton::pressed, [=]()
+            connect(edit, &QLineEdit::editingFinished, [=]()
+            {
+                editor_->setParameterValue(ptxt, edit->text());
+            });
+
+            connect(breset, &QToolButton::pressed, [=]()
+            {
+                editor_->setParameterValue(ptxt, ptxt->defaultValue());
+            });
+        }
+        else
         {
-            editor_->setParameterValue(ptxt, ptxt->defaultValue());
-        });
+            edit->setReadOnly(true);
+
+            // edit button
+            QToolButton * butedit = new QToolButton(this);
+            l->addWidget(butedit);
+            butedit->setText("...");
+            butedit->setStatusTip(tr("Click to edit the text"));
+
+            setFocusProxy(butedit);
+
+            // load button click
+            connect(butedit, &QToolButton::clicked, [=]()
+            {
+    #if 1
+                ptxt->openEditDialog();// application()->mainWindow() );
+    #else
+                // XXX works but is not fully integrated yet
+                auto w = ptxt->createEditWidget( application()->mainWindow() );
+                application()->createDockWidget("parameter " + ptxt->infoName(), w);
+    #endif
+            });
+
+            // reset to default
+            connect(breset, &QToolButton::pressed, [=]()
+            {
+                editor_->setParameterValue(ptxt, ptxt->defaultValue());
+            });
+        }
     }
 
     else

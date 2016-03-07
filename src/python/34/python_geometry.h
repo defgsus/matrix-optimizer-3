@@ -26,6 +26,8 @@ namespace PYTHON34 {
         @returns PyObject* */
     void* createGeometryObject(MO::GEOM::Geometry*);
 
+    bool isGeometry(void* pyObject);
+
 } // namespace PYTHON34
 } // namespace MO
 

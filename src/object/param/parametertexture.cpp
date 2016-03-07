@@ -12,6 +12,9 @@
 #include "modulatortexture.h"
 #include "object/scene.h"
 #include "gl/texture.h"
+#include "gl/framebufferobject.h"
+#include "io/filemanager.h"
+#include "io/imagereader.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -22,15 +25,68 @@
 
 namespace MO {
 
+struct ParameterTexture::Private
+{
+    Private(ParameterTexture*p)
+        : p             (p)
+        , createdTex    (0)
+        , lastTex       (0)
+        , constTex      (0)
+        , lastScene     (0)
+        , inputType     (IT_INPUT)
+        , wrapModeX     (WM_CLAMP)
+        , wrapModeY     (WM_CLAMP)
+        , magMode       (MAG_LINEAR)
+        , minMode       (MIN_LINEAR)
+        , filename      (":/texture/mo_black.png")
+        , needChange    (true)
+    { }
+
+    ~Private()
+    {
+    }
+
+    void releaseCreated();
+    const GL::Texture* getNoneTexture();
+    const GL::Texture* getFileTexture();
+    const GL::Texture* getMasterFrameTexture(bool depth);
+
+    ParameterTexture* p;
+
+    GL::Texture *createdTex;
+    const GL::Texture *lastTex, *constTex;
+    std::vector<int> lastHash;
+    Scene* lastScene;
+
+    InputType inputType;
+    WrapMode wrapModeX, wrapModeY;
+    MagMode magMode;
+    MinMode minMode;
+
+    QString filename;
+    bool needChange;
+};
+
+
 ParameterTexture::ParameterTexture(Object * object, const QString& id, const QString& name)
     : Parameter         (object, id, name)
-    , lastTex_          (0)
-    , wrapModeX_        (WM_CLAMP)
-    , wrapModeY_        (WM_CLAMP)
-    , magMode_          (MAG_LINEAR)
-    , minMode_          (MIN_LINEAR)
+    , p_                (new Private(this))
 {
 }
+
+ParameterTexture::~ParameterTexture()
+{
+    delete p_->createdTex;
+    delete p_;
+}
+
+const QStringList ParameterTexture::inputTypeIds =
+{ "none", "input", "file", "master", "master_depth" };
+const QStringList ParameterTexture::inputTypeNames =
+{ QObject::tr("none"), QObject::tr("input"), QObject::tr("file"),
+  QObject::tr("master frame"), QObject::tr("master frame depth") };
+const QList<ParameterTexture::InputType> ParameterTexture::inputTypeValues =
+{ IT_NONE, IT_INPUT, IT_FILE, IT_MASTER_FRAME, IT_MASTER_FRAME_DEPTH };
 
 const QStringList ParameterTexture::magModeIds =
 { "nearest", "linear" };
@@ -57,36 +113,66 @@ const QStringList ParameterTexture::wrapModeNames =
 const QList<ParameterTexture::WrapMode> ParameterTexture::wrapModeValues =
 { WM_CLAMP, WM_REPEAT, WM_MIRROR };
 
+ParameterTexture::InputType ParameterTexture::inputType() const { return p_->inputType; }
+ParameterTexture::WrapMode  ParameterTexture::wrapModeX() const { return p_->wrapModeX; }
+ParameterTexture::WrapMode  ParameterTexture::wrapModeY() const { return p_->wrapModeY; }
+ParameterTexture::MagMode   ParameterTexture::magMode() const { return p_->magMode; }
+ParameterTexture::MinMode   ParameterTexture::minMode() const { return p_->minMode; }
+                    QString ParameterTexture::filename() const { return p_->filename; }
+
+void ParameterTexture::setInputType(InputType t)
+{
+    p_->inputType = t;
+    p_->needChange = true;
+}
+void ParameterTexture::setWrapMode(WrapMode m) { setWrapModeX(m); setWrapModeY(m); }
+void ParameterTexture::setWrapModeX(WrapMode m) { p_->wrapModeX = m; }
+void ParameterTexture::setWrapModeY(WrapMode m) { p_->wrapModeY = m; }
+void ParameterTexture::setMagMode(MagMode m) { p_->magMode = m; }
+void ParameterTexture::setMinMode(MinMode m) { p_->minMode = m; }
+void ParameterTexture::setFilename(const QString& fn) { p_->needChange = true; p_->filename = fn; }
+
 void ParameterTexture::serialize(IO::DataStream &io) const
 {
     Parameter::serialize(io);
 
-    io.writeHeader("partex", 2);
+    io.writeHeader("partex", 3);
 
     // v2
-    io << magModeIds[magMode_] << minModeIds[minMode_]
-       << wrapModeIds[wrapModeX_] << wrapModeIds[wrapModeY_];
+    io << magModeIds[p_->magMode] << minModeIds[p_->minMode]
+       << wrapModeIds[p_->wrapModeX] << wrapModeIds[p_->wrapModeY];
+    // v3
+    io << inputTypeIds[p_->inputType] << p_->filename;
 }
 
 void ParameterTexture::deserialize(IO::DataStream &io)
 {
     Parameter::deserialize(io);
 
-    const int ver = io.readHeader("partex", 2);
+    const int ver = io.readHeader("partex", 3);
 
     if (ver >= 2)
     {
-        io.readEnum(magMode_, MAG_LINEAR, magModeIds, magModeValues);
-        io.readEnum(minMode_, MIN_LINEAR, minModeIds, minModeValues);
-        io.readEnum(wrapModeX_, WM_CLAMP, wrapModeIds, wrapModeValues);
-        io.readEnum(wrapModeY_, WM_CLAMP, wrapModeIds, wrapModeValues);
+        io.readEnum(p_->magMode, MAG_LINEAR, magModeIds, magModeValues);
+        io.readEnum(p_->minMode, MIN_LINEAR, minModeIds, minModeValues);
+        io.readEnum(p_->wrapModeX, WM_CLAMP, wrapModeIds, wrapModeValues);
+        io.readEnum(p_->wrapModeY, WM_CLAMP, wrapModeIds, wrapModeValues);
     }
     else
     {
-        wrapModeX_ = wrapModeY_ = WM_CLAMP;
-        magMode_ = MAG_LINEAR;
-        minMode_ = MIN_LINEAR;
+        p_->wrapModeX = p_->wrapModeY = WM_CLAMP;
+        p_->magMode = MAG_LINEAR;
+        p_->minMode = MIN_LINEAR;
     }
+    if (ver >= 3)
+    {
+        io.readEnum(p_->inputType, IT_INPUT, inputTypeIds, inputTypeValues);
+        io >> p_->filename;
+    }
+    else
+        p_->inputType = IT_INPUT;
+
+    p_->needChange = true;
 }
 
 
@@ -103,7 +189,7 @@ void ParameterTexture::setTextureParam(const GL::Texture* tex) const
 
     using namespace gl;
 
-    switch (magMode_)
+    switch (p_->magMode)
     {
         case MAG_NEAREST:
             tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST)); break;
@@ -111,7 +197,7 @@ void ParameterTexture::setTextureParam(const GL::Texture* tex) const
             tex->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_LINEAR)); break;
     }
 
-    switch (minMode_)
+    switch (p_->minMode)
     {
         case MIN_NEAREST:
             tex->setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_NEAREST)); break;
@@ -127,7 +213,7 @@ void ParameterTexture::setTextureParam(const GL::Texture* tex) const
             tex->setTexParameter(GL_TEXTURE_MIN_FILTER, GLint(GL_LINEAR_MIPMAP_LINEAR)); break;
     }
 
-    switch (wrapModeX_)
+    switch (p_->wrapModeX)
     {
         case WM_CLAMP:
             tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)); break;
@@ -137,7 +223,7 @@ void ParameterTexture::setTextureParam(const GL::Texture* tex) const
             tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)); break;
     }
 
-    switch (wrapModeY_)
+    switch (p_->wrapModeY)
     {
         case WM_CLAMP:
             tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)); break;
@@ -151,26 +237,38 @@ void ParameterTexture::setTextureParam(const GL::Texture* tex) const
 
 const GL::Texture * ParameterTexture::value(const RenderTime& time) const
 {
-    // take the first valid
-    for (auto m : modulators())
-    if (auto t = static_cast<ModulatorTexture*>(m)->value(time))
+    const GL::Texture* tex = 0;
+
+    switch (p_->inputType)
     {
-        if (t)
-        {
-//            std::cout << "get tex '" << t->name() << "', hash=" << t->hash() << std::endl;
-            if (time.thread() >= lastHash_.size())
-                lastHash_.resize(time.thread()+1, -1);
-            lastHash_[time.thread()] = t->hash();
-        }
-        return lastTex_ = t;
+        case IT_NONE: tex = p_->getNoneTexture(); break;
+        case IT_FILE: tex = p_->getFileTexture(); break;
+        case IT_MASTER_FRAME: tex = p_->getMasterFrameTexture(false); break;
+        case IT_MASTER_FRAME_DEPTH: tex = p_->getMasterFrameTexture(true); break;
+        case IT_INPUT:
+            // take the first valid
+            for (auto m : modulators())
+            if (auto t = static_cast<ModulatorTexture*>(m)->value(time))
+            {
+                tex = t;
+                break;
+            }
+        break;
     }
 
-    return lastTex_ = 0;
+    if (tex)
+    {
+//  std::cout << "get tex '" << t->name() << "', hash=" << t->hash() << std::endl;
+        if (time.thread() >= p_->lastHash.size())
+            p_->lastHash.resize(time.thread()+1, -1);
+        p_->lastHash[time.thread()] = tex->hash();
+    }
+    return p_->lastTex = tex;
 }
 
 bool ParameterTexture::hasChanged(const RenderTime& time) const
 {
-    if (time.thread() >= lastHash_.size())
+    if (time.thread() >= p_->lastHash.size())
         return true;
 
     // get the connected texture
@@ -180,14 +278,14 @@ bool ParameterTexture::hasChanged(const RenderTime& time) const
             break;
 
     // different pointer
-    if (t != lastTex_)
+    if (t != p_->lastTex)
         return true;
     // same pointer, but changed
     if (t)
     {
 //        std::cout << t->name() << ":" << t->hash()
 //                  << ", last " << lastHash_[time.thread()] << std::endl;
-        return t->hash() != lastHash_[time.thread()];
+        return t->hash() != p_->lastHash[time.thread()];
     }
     return false;
 }
@@ -205,6 +303,86 @@ Modulator * ParameterTexture::getModulator(const QString& id, const QString& out
     return m;
 }
 
+void ParameterTexture::releaseGl()
+{
+    p_->releaseCreated();
+    p_->constTex = 0;
+    p_->needChange = true;
+}
+
+void ParameterTexture::Private::releaseCreated()
+{
+    if (createdTex && createdTex->isHandle())
+        createdTex->release();
+    delete createdTex;
+    createdTex = 0;
+}
+
+const GL::Texture* ParameterTexture::Private::getNoneTexture()
+{
+    if (!needChange)
+        return createdTex;
+    releaseCreated();
+    needChange = false;
+
+    QImage img(4,4,QImage::Format_RGBA8888);
+    img.fill(Qt::white);
+    createdTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
+    lastTex = 0;
+    return createdTex;
+}
+
+const GL::Texture* ParameterTexture::Private::getFileTexture()
+{
+    if (!needChange)
+        return createdTex;
+    releaseCreated();
+    needChange = false;
+
+    auto fn = IO::fileManager().localFilename(filename);
+
+    ImageReader reader;
+    reader.setFilename(fn);
+    QImage img = reader.read();
+
+    if (img.isNull())
+    {
+        // assign generic error texture
+        if (!img.load(":/texture/error.png"))
+            MO_IO_ERROR(READ, "Failed to even load internal error texture");
+
+        MO_WARNING(QObject::tr("Loading image '%1' failed with '%2'\n")
+                                        .arg(fn).arg(reader.errorString()));
+        //MO_IO_ERROR(READ, tr("Loading image '%1' failed with '%2'\n")
+        //                     .arg(fn).arg(reader.errorString()));
+    }
+
+    // upload to GPU
+    createdTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
+    //if (isMipmap())
+    //    texture_->createMipmaps(paramMipmaps_->baseValue(),
+    //                            (GLenum)paramMinify_->baseValue());
+
+    return createdTex;
+}
+
+const GL::Texture* ParameterTexture::Private::getMasterFrameTexture(bool depth)
+{
+    if (!needChange && lastScene)
+        return constTex;
+    constTex = 0;
+    needChange = false;
+
+    lastScene = p->object() ? p->object()->sceneObject() : 0;
+    if (lastScene)
+    {
+        constTex = depth
+                ? lastScene->fboMaster(MO_GFX_THREAD)->depthTexture()
+                : lastScene->fboMaster(MO_GFX_THREAD)->colorTexture(0);
+    }
+
+    return constTex;
+}
 
 
 } // namespace MO
