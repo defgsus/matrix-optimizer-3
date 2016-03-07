@@ -10,6 +10,8 @@
 
 #include <random>
 #include <atomic>
+#include <unordered_map>
+#include <unordered_set>
 
 #include <QSet>
 #include <QTextStream>
@@ -51,7 +53,7 @@ namespace
 
     // Some halbausgerorener stuff to build
     // a std::map from vertex positions
-
+    // used at specific place, not in general
     struct Hash2
     {
         Float x,y;
@@ -116,8 +118,8 @@ struct Geometry::Private
         triMap.clear();
     }
 
-    // --- returns true if present, and adds indices ---
-    bool checkPointHash(IndexType x)
+    // --- returns true if present, otherwise adds indices ---
+    bool checkAddPointHash(IndexType x)
     {
         if (pointMap.find(x) != pointMap.end())
             return true;
@@ -125,7 +127,7 @@ struct Geometry::Private
         return false;
     }
 
-    bool checkLineHash(IndexType x, IndexType y)
+    bool checkAddLineHash(IndexType x, IndexType y)
     {
         MATH::THash2<IndexType>
                 h1(x, y), h2(y, x);
@@ -137,6 +139,24 @@ struct Geometry::Private
         return false;
     }
 
+    // map from edge to connected triangles
+    typedef std::unordered_map<uint64_t,
+                               std::unordered_set<IndexType>> EdgeTriMap;
+    EdgeTriMap triEdgeMap;
+    #define MO_TRI_EDGE_HASH(x,y) ((uint64_t(y) << 32) | uint64_t(x))
+    void addTriEdge(IndexType primIdx, IndexType x, IndexType y)
+    {
+        triEdgeMap[MO_TRI_EDGE_HASH(x,y)].insert(primIdx);
+    }
+    void removeTriEdge(IndexType primIdx, IndexType x, IndexType y)
+    {
+        auto key = MO_TRI_EDGE_HASH(x,y);
+        auto i = triEdgeMap.find(key);
+        if (i == triEdgeMap.end())
+            return;
+        i->second.erase(primIdx);
+    }
+
     // primitive index for corner vertex index, or -1
     long getTriangleIndex(IndexType x, IndexType y, IndexType z)
     {
@@ -144,16 +164,66 @@ struct Geometry::Private
         auto i = triMap.find(h);
         if (i != triMap.end())
             return i->second;
+        h = MATH::THash3<IndexType>(y, z, x);
+        i = triMap.find(h);
+        if (i != triMap.end())
+            return i->second;
+        h = MATH::THash3<IndexType>(z, x, y);
+        i = triMap.find(h);
+        if (i != triMap.end())
+            return i->second;
         return -1;
     }
     void storeTriangleIndex(IndexType primIdx, IndexType x, IndexType y, IndexType z)
     {
         triMap.insert(std::make_pair(MATH::THash3<IndexType>(x, y, z), primIdx));
+        triMap.insert(std::make_pair(MATH::THash3<IndexType>(y, z, x), primIdx));
+        triMap.insert(std::make_pair(MATH::THash3<IndexType>(z, x, y), primIdx));
+        addTriEdge(primIdx, x,y); addTriEdge(primIdx, y,z); addTriEdge(primIdx, z,x);
     }
-    void removeTriangleIndex(IndexType x, IndexType y, IndexType z)
+    void removeTriangleIndex(IndexType primIdx, IndexType x, IndexType y, IndexType z)
     {
         triMap.erase(MATH::THash3<IndexType>(x, y, z));
+        triMap.erase(MATH::THash3<IndexType>(y, z, x));
+        triMap.erase(MATH::THash3<IndexType>(z, x, y));
+        removeTriEdge(primIdx, x,y); removeTriEdge(primIdx, y,z); removeTriEdge(primIdx, z,x);
     }
+    size_t getConnectedTriangleIndices(
+            IndexType x, IndexType y, std::vector<IndexType>* tris)
+    {
+        auto i = triEdgeMap.find(MO_TRI_EDGE_HASH(x,y));
+        if (i == triEdgeMap.end())
+            return 0;
+        for (auto idx : i->second)
+            tris->push_back(idx);
+        return i->second.size();
+    }
+    // split all triangles, if c1 and c2 are consequtive,
+    // supposed newVert is between c1 and c2
+    void splitConnectedTriangles(const std::vector<IndexType>& triPrimIdx,
+                                 IndexType c1, IndexType c2, IndexType newVert)
+    {
+        for (auto pIdx : triPrimIdx)
+        {
+            int corner = -1;
+            for (int i=0; i<3; ++i)
+                if (p->triIndex_[pIdx*3 + i] == c1
+                 && p->triIndex_[pIdx*3+(i+1)%3] == c2)
+                { corner = i; break; }
+            if (corner<0)
+                continue;
+            IndexType t1 = p->triIndex_[pIdx*3 + (corner) % 3],
+                      t2 = p->triIndex_[pIdx*3 + (corner+1) % 3],
+                      t3 = p->triIndex_[pIdx*3 + (corner+2) % 3],
+                      t12 = newVert;//p->addVertexBetween(t1, t2, mix);
+            p->setTriangle(pIdx, t1, t12, t3);
+            removeTriangleIndex(pIdx, t1, t2, t3);
+            storeTriangleIndex(pIdx, t1, t12, t3);
+
+            p->addTriangle(t12, t2, t3);
+        }
+    }
+
 
     Geometry* p;
 
@@ -684,6 +754,7 @@ Geometry::IndexType Geometry::findVertex(VertexType x, VertexType y, VertexType 
 }
 
 
+
 Geometry::IndexType Geometry::addVertexAlways(
                 VertexType x, VertexType y, VertexType z,
                 NormalType nx, NormalType ny, NormalType nz,
@@ -745,6 +816,105 @@ Geometry::IndexType Geometry::duplicateVertex(IndexType t)
 
     return idx;
 }
+
+Geometry::IndexType Geometry::addVertexBetween(IndexType t1, IndexType t2, float mix)
+{
+    const float mix1 = 1.-mix;
+    const Vec3
+            p1 = getVertex(t1),
+            p2 = getVertex(t2),
+            p = p1 * mix1 + mix * p2,
+
+            pn1 = getNormal(t1),
+            pn2 = getNormal(t2),
+            pn = pn1 * mix1 + mix * pn2;
+
+    const Vec4
+            pc1 = getColor(t1),
+            pc2 = getColor(t2),
+            pc = pc1 * mix1 + mix * pc2;
+
+    const Vec2
+            pt1 = getTexCoord(t1),
+            pt2 = getTexCoord(t2),
+            pt = pt1 * mix1 + mix * pt2;
+
+    /** @todo interpolate attributes */
+
+    auto idx = addVertex(p.x, p.y, p.z,
+                     pn.x, pn.y, pn.z,
+                     pc.x, pc.y, pc.z, pc.w,
+                     pt.x, pt.y);
+    return idx;
+}
+
+Geometry::IndexType Geometry::addVertexBetween(
+        IndexType t1, IndexType t2, IndexType t3, Vec3 mix)
+{
+    const Vec3
+            p1 = getVertex(t1),
+            p2 = getVertex(t2),
+            p3 = getVertex(t3),
+            p = p1 * mix.x + p2 * mix.y + p3 * mix.z,
+
+            pn1 = getNormal(t1),
+            pn2 = getNormal(t2),
+            pn3 = getNormal(t3),
+            pn = pn1 * mix.x + pn2 * mix.y + pn3 * mix.z;
+
+    const Vec4
+            pc1 = getColor(t1),
+            pc2 = getColor(t2),
+            pc3 = getColor(t3),
+            pc = pc1 * mix.x + pc2 * mix.y + pc3 * mix.z;
+
+    const Vec2
+            pt1 = getTexCoord(t1),
+            pt2 = getTexCoord(t2),
+            pt3 = getTexCoord(t3),
+            pt = pt1 * mix.x + pt2 * mix.y + pt3 * mix.z;
+
+    /** @todo interpolate attributes */
+
+    auto idx = addVertex(p.x, p.y, p.z,
+                     pn.x, pn.y, pn.z,
+                     pc.x, pc.y, pc.z, pc.w,
+                     pt.x, pt.y);
+    return idx;
+}
+
+void Geometry::setTriangle(
+        IndexType pIdx, IndexType new1, IndexType new2, IndexType new3)
+{
+    IndexType i1 = triIndex_[pIdx*3],
+              i2 = triIndex_[pIdx*3+1],
+              i3 = triIndex_[pIdx*3+2];
+    p_->removeTriangleIndex(pIdx, i1, i2, i3);
+
+    triIndex_[pIdx*3] = new1;
+    triIndex_[pIdx*3+1] = new2;
+    triIndex_[pIdx*3+2] = new3;
+    p_->storeTriangleIndex(pIdx, new1, new2, new3);
+}
+
+void Geometry::removeTriangle(IndexType pIdx)
+{
+    IndexType i1 = triIndex_[pIdx*3],
+              i2 = triIndex_[pIdx*3+1],
+              i3 = triIndex_[pIdx*3+2];
+    p_->removeTriangleIndex(pIdx, i1, i2, i3);
+
+    triIndex_.erase(triIndex_.begin() + pIdx * 3,
+                    triIndex_.begin() + (pIdx+1) * 3);
+}
+
+void Geometry::removeTriangle(IndexType p1, IndexType p2, IndexType p3)
+{
+    auto idx = p_->getTriangleIndex(p1, p2, p3);
+    if (idx >= 0)
+        removeTriangle(idx);
+}
+
 
 
 void Geometry::setAttribute(const QString &name, IndexType idx,
@@ -898,7 +1068,7 @@ void Geometry::addLine(IndexType p1, IndexType p2)
     MO_ASSERT(p1 < numVertices(), "line index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "line index #2 out of range " << p2 << "/" << numVertices());
 
-    if (p_->checkLineHash(p1, p2))
+    if (p_->checkAddLineHash(p1, p2))
         return;
 
     setChanged();
@@ -917,7 +1087,7 @@ void Geometry::addPoint(IndexType p1)
 {
     MO_ASSERT(p1 < numVertices(), "point index out of range " << p1 << "/" << numVertices());
 
-    if (p_->checkPointHash(p1))
+    if (p_->checkAddPointHash(p1))
         return;
 
     setChanged();
@@ -2194,73 +2364,40 @@ void Geometry::tesselateTriangle(IndexType triIndex, uint level)
             t2 = triIndex_[triIndex*3+1],
             t3 = triIndex_[triIndex*3+2];
 
-    const Vec3
-            p1 = getVertex(t1),
-            p2 = getVertex(t2),
-            p3 = getVertex(t3),
-            p12 = 0.5f * (p1 + p2),
-            p13 = 0.5f * (p1 + p3),
-            p23 = 0.5f * (p2 + p3),
-
-            pn1 = getNormal(t1),
-            pn2 = getNormal(t2),
-            pn3 = getNormal(t3),
-            pn12 = 0.5f * (pn1 + pn2),
-            pn13 = 0.5f * (pn1 + pn3),
-            pn23 = 0.5f * (pn2 + pn3);
-
-    const Vec4
-            pc1 = getColor(t1),
-            pc2 = getColor(t2),
-            pc3 = getColor(t3),
-            pc12 = 0.5f * (pc1 + pc2),
-            pc13 = 0.5f * (pc1 + pc3),
-            pc23 = 0.5f * (pc2 + pc3);
-
-    const Vec2
-            pt1 = getTexCoord(t1),
-            pt2 = getTexCoord(t2),
-            pt3 = getTexCoord(t3),
-            pt12 = 0.5f * (pt1 + pt2),
-            pt13 = 0.5f * (pt1 + pt3),
-            pt23 = 0.5f * (pt2 + pt3);
-
     const IndexType
-            // original triangle corners
-            n1 = t1,
-            n2 = t2,
-            n3 = t3,
-            // new tesselated corners
-            n12a = addVertex(p12[0], p12[1], p12[2], pn12[0], pn12[1], pn12[2], pc12[0], pc12[1], pc12[2], pc12[3], pt12[0], pt12[1]),
-            n13a = addVertex(p13[0], p13[1], p13[2], pn13[0], pn13[1], pn13[2], pc13[0], pc13[1], pc13[2], pc13[3], pt13[0], pt13[1]),
-            n23a = addVertex(p23[0], p23[1], p23[2], pn23[0], pn23[1], pn23[2], pc23[0], pc23[1], pc23[2], pc23[3], pt23[0], pt23[1]),
-            // copies for unshared vertex mode
-            // (same for shared vertex mode)
-            n12b = duplicateVertex(n12a),
-            n12c = duplicateVertex(n12a),
-            n13b = duplicateVertex(n13a),
-            n13c = duplicateVertex(n13a),
-            n23b = duplicateVertex(n23a),
-            n23c = duplicateVertex(n23a);
+            t12 = addVertexBetween(t1, t2, .5),
+            t23 = addVertexBetween(t2, t3, .5),
+            t31 = addVertexBetween(t3, t1, .5);
 
-    //tess.addTriangle(n1, n12a, n13a);
-    auto tri2 = addTriangle(n12b, n2, n23a);
-    auto tri3 = addTriangle(n12c, n23c, n13c);
-    auto tri4 = addTriangle(n13b, n23b, n3);
-    // (overwrite tesselated one)
-    p_->removeTriangleIndex(n1, n2, n3);
-    p_->storeTriangleIndex(triIndex_.size(), n1, n12a, n13a);
-    triIndex_[triIndex*3  ] = n1;
-    triIndex_[triIndex*3+1] = n12a;
-    triIndex_[triIndex*3+2] = n13a;
+    setTriangle(triIndex, t1, t12, t31);
+    auto tri1 = addTriangle(t12, t2, t23),
+         tri2 = addTriangle(t12, t23, t31),
+         tri3 = addTriangle(t31, t23, t3);
+
+    // shared edges we have split
+    std::vector<IndexType> other;
+    p_->getConnectedTriangleIndices(t1, t2, &other);
+    p_->splitConnectedTriangles(other, t1, t2, t12);
+    p_->getConnectedTriangleIndices(t2, t1, &other);
+    p_->splitConnectedTriangles(other, t2, t1, t12);
+
+    p_->getConnectedTriangleIndices(t2, t3, &other);
+    p_->splitConnectedTriangles(other, t2, t3, t23);
+    p_->getConnectedTriangleIndices(t3, t2, &other);
+    p_->splitConnectedTriangles(other, t3, t2, t23);
+
+    p_->getConnectedTriangleIndices(t3, t1, &other);
+    p_->splitConnectedTriangles(other, t3, t1, t31);
+    p_->getConnectedTriangleIndices(t1, t3, &other);
+    p_->splitConnectedTriangles(other, t1, t3, t31);
 
     if (level > 1)
     {
         --level;
         tesselateTriangle(triIndex, level);
+        tesselateTriangle(tri1, level);
         tesselateTriangle(tri2, level);
         tesselateTriangle(tri3, level);
-        tesselateTriangle(tri4, level);
     }
 }
 

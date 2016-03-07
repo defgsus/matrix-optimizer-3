@@ -952,6 +952,30 @@ extern "C"
         Py_RETURN_NONE;
     }
 
+    MO_PY_DEF_DOC(geom_scale,
+        "scale(float|vec3) -> None\n"
+        "Multiply vertex position by factor."
+    )
+    static PyObject* geom_scale(PyObject* self, PyObject* args)
+    {
+        MO__GETGEOM(pgeom);
+        int len;
+        double v[4];
+        if (!get_vector_var(args, &len, v))
+            return NULL;
+        if (len == 1)
+            v[2] = v[1] = v[0];
+        else if (len == 2)
+            v[2] = 1;
+        else if (len != 3)
+        {
+            PyErr_Set(PyExc_TypeError, QString("expected 1 - 3 component vector, "
+                                               "got %1").arg(len));
+            return NULL;
+        }
+        pgeom->geometry->scale(v[0], v[1], v[2]);
+        Py_RETURN_NONE;
+    }
 
 #undef MO__GETGEOM
 #undef MO__GETGEOM0
@@ -1007,6 +1031,9 @@ extern "C"
         MO__METHOD(clear,                   METH_NOARGS)
         MO__METHOD(calc_normals,            METH_NOARGS)
         MO__METHOD(invert_normals,          METH_NOARGS)
+
+        MO__METHOD(scale,                   METH_VARARGS)
+
         MO__METHOD(tesselate_triangles,     METH_VARARGS)
         MO__METHOD(tesselate_triangle,      METH_VARARGS)
         MO__METHOD(tesselate_lines,         METH_VARARGS)

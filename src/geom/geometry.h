@@ -343,8 +343,12 @@ public:
 
     /** For unshared vertices, this duplicates the given vertex and
         returns the index of the duplicate. For shared vertices this simply
-        returns t. */
-    IndexType duplicateVertex(IndexType t);
+        returns t.
+        All attributes are copied. */
+    IndexType duplicateVertex(IndexType v);
+
+    IndexType addVertexBetween(IndexType v1, IndexType v2, float mix);
+    IndexType addVertexBetween(IndexType v1, IndexType v2, IndexType v3, Vec3 mixNorm);
 
     /** Connects three previously created indices to form a triangle.
         Returns primitive index.
@@ -358,6 +362,11 @@ public:
     IndexType addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
     IndexType addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3,
                      const Vec2& tex1, const Vec2& tex2, const Vec2& tex3);
+    /** Overwrite triangle corner indices */
+    void setTriangle(IndexType primIdx, IndexType new1, IndexType new2, IndexType new3);
+    void removeTriangle(IndexType primIndex);
+    void removeTriangle(IndexType p1, IndexType p2, IndexType p3);
+
     void addQuad(IndexType p1, IndexType p2, IndexType p3, IndexType p4);
     void addQuad(const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec3& p4);
 
