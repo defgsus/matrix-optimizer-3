@@ -346,14 +346,17 @@ public:
         returns t. */
     IndexType duplicateVertex(IndexType t);
 
-    /** Connects three previously created indices to form a triangle. */
-    void addTriangle(IndexType p1, IndexType p2, IndexType p3);
     /** Connects three previously created indices to form a triangle.
-        Uses checkTriangle() to discard degenerate triangles. */
-    void addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
+        Returns primitive index.
+    */
+    IndexType addTriangle(IndexType p1, IndexType p2, IndexType p3);
+    /** Connects three previously created indices to form a triangle.
+        Returns primitive index.
+        Uses checkTriangle() to discard degenerate triangles which returns -1. */
+    long addTriangleChecked(IndexType p1, IndexType p2, IndexType p3);
     /** Creates three vertices and connects them with a triangle. */
-    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
-    void addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3,
+    IndexType addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3);
+    IndexType addTriangle(const Vec3& p1, const Vec3& p2, const Vec3& p3,
                      const Vec2& tex1, const Vec2& tex2, const Vec2& tex3);
     void addQuad(IndexType p1, IndexType p2, IndexType p3, IndexType p4);
     void addQuad(const Vec3& p1, const Vec3& p2, const Vec3& p3, const Vec3& p4);
@@ -443,6 +446,8 @@ public:
         After this call, every triangle or line vertex will be unique. */
     void unGroupVertices();
 
+    /** Split one triangle into smaller ones. */
+    void tesselateTriangle(IndexType triIndex, uint level = 1);
     /** Split all triangles into smaller ones. */
     void tesselateTriangles(uint level = 1);
     /** Split all triangles into smaller ones. */

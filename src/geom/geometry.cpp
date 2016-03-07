@@ -137,20 +137,31 @@ struct Geometry::Private
         return false;
     }
 
-    bool checkTriHash(IndexType x, IndexType y, IndexType z)
+    // primitive index for corner vertex index, or -1
+    long getTriangleIndex(IndexType x, IndexType y, IndexType z)
     {
         MATH::THash3<IndexType> h(x, y, z);
-        if (triMap.find(h) != triMap.end())
-            return true;
-        triMap.insert(h);
-        return false;
+        auto i = triMap.find(h);
+        if (i != triMap.end())
+            return i->second;
+        return -1;
     }
+    void storeTriangleIndex(IndexType primIdx, IndexType x, IndexType y, IndexType z)
+    {
+        triMap.insert(std::make_pair(MATH::THash3<IndexType>(x, y, z), primIdx));
+    }
+    void removeTriangleIndex(IndexType x, IndexType y, IndexType z)
+    {
+        triMap.erase(MATH::THash3<IndexType>(x, y, z));
+    }
+
     Geometry* p;
 
     std::map<Key_, MapStruct_> indexMap;
     std::set<IndexType> pointMap;
     std::set<MATH::THash2<IndexType>> lineMap;
-    std::set<MATH::THash3<IndexType>> triMap;
+    // map from position to primitive index
+    std::map<MATH::THash3<IndexType>, IndexType> triMap;
 
     bool doSharedVertices;
 
@@ -758,21 +769,21 @@ void Geometry::setAttribute(const QString &name, IndexType idx,
         a->data[idx * a->numComponents + 3] = w;
 }
 
-void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
+Geometry::IndexType Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3)
 {
-    if (checkTriangle(p1, p2, p3))
+    //if (checkTriangle(p1, p2, p3))
     {        
         auto i1 = addVertex(p1.x, p1.y, p1.z),
              i2 = addVertex(p2.x, p2.y, p2.z),
              i3 = addVertex(p3.x, p3.y, p3.z);
-        addTriangle(i1, i2, i3);
+        return addTriangle(i1, i2, i3);
     }
 }
 
-void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3,
+Geometry::IndexType Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3,
                            const Vec2& tex1, const Vec2& tex2, const Vec2& tex3)
 {
-    if (checkTriangle(p1, p2, p3))
+    //if (checkTriangle(p1, p2, p3))
     {
         setTexCoord(tex1);
         auto i1 = addVertex(p1.x, p1.y, p1.z);
@@ -780,7 +791,7 @@ void Geometry::addTriangle(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3,
         auto i2 = addVertex(p2.x, p2.y, p2.z);
         setTexCoord(tex3);
         auto i3 = addVertex(p3.x, p3.y, p3.z);
-        addTriangle(i1, i2, i3);
+        return addTriangle(i1, i2, i3);
     }
 }
 
@@ -810,14 +821,16 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3,
 }
 #endif
 
-void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
+Geometry::IndexType Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
 {
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
     MO_ASSERT(p3 < numVertices(), "triangle index #3 out of range " << p3 << "/" << numVertices());
 
-    if (p_->checkTriHash(p1, p2, p3))
-        return;
+    auto idx = p_->getTriangleIndex(p1, p2, p3);
+    if (idx >= 0)
+        return idx;
+    p_->storeTriangleIndex(triIndex_.size()/3, p1, p2, p3);
 
     setChanged();
     triIndex_.push_back(p1);
@@ -828,9 +841,10 @@ void Geometry::addTriangle(IndexType p1, IndexType p2, IndexType p3)
         edgeFlags_.push_back(curEdge_);
         edgeFlags_.push_back(curEdge_);
 #endif
+    return triIndex_.size()/3 - 1;
 }
 
-void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
+long Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
 {
     MO_ASSERT(p1 < numVertices(), "triangle index #1 out of range " << p1 << "/" << numVertices());
     MO_ASSERT(p2 < numVertices(), "triangle index #2 out of range " << p2 << "/" << numVertices());
@@ -841,8 +855,10 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
             pos3 = getVertex(p3);
     if (checkTriangle(pos1, pos2, pos3))
     {
-        if (p_->checkTriHash(p1, p2, p3))
-            return;
+        auto idx = p_->getTriangleIndex(p1, p2, p3);
+        if (idx >= 0)
+            return idx;
+        p_->storeTriangleIndex(triIndex_.size()/3, p1, p2, p3);
 
         setChanged();
         triIndex_.push_back(p1);
@@ -853,7 +869,9 @@ void Geometry::addTriangleChecked(IndexType p1, IndexType p2, IndexType p3)
         edgeFlags_.push_back(curEdge_);
         edgeFlags_.push_back(curEdge_);
 #endif
+        return triIndex_.size() / 3 - 1;
     }
+    return -1;
 }
 
 void Geometry::addQuad(const Vec3 &p1, const Vec3 &p2, const Vec3 &p3, const Vec3 &p4)
@@ -2167,6 +2185,83 @@ void Geometry::tesselateLines(uint level)
     }
 
     *this = tess;
+}
+
+void Geometry::tesselateTriangle(IndexType triIndex, uint level)
+{
+    const IndexType
+            t1 = triIndex_[triIndex*3],
+            t2 = triIndex_[triIndex*3+1],
+            t3 = triIndex_[triIndex*3+2];
+
+    const Vec3
+            p1 = getVertex(t1),
+            p2 = getVertex(t2),
+            p3 = getVertex(t3),
+            p12 = 0.5f * (p1 + p2),
+            p13 = 0.5f * (p1 + p3),
+            p23 = 0.5f * (p2 + p3),
+
+            pn1 = getNormal(t1),
+            pn2 = getNormal(t2),
+            pn3 = getNormal(t3),
+            pn12 = 0.5f * (pn1 + pn2),
+            pn13 = 0.5f * (pn1 + pn3),
+            pn23 = 0.5f * (pn2 + pn3);
+
+    const Vec4
+            pc1 = getColor(t1),
+            pc2 = getColor(t2),
+            pc3 = getColor(t3),
+            pc12 = 0.5f * (pc1 + pc2),
+            pc13 = 0.5f * (pc1 + pc3),
+            pc23 = 0.5f * (pc2 + pc3);
+
+    const Vec2
+            pt1 = getTexCoord(t1),
+            pt2 = getTexCoord(t2),
+            pt3 = getTexCoord(t3),
+            pt12 = 0.5f * (pt1 + pt2),
+            pt13 = 0.5f * (pt1 + pt3),
+            pt23 = 0.5f * (pt2 + pt3);
+
+    const IndexType
+            // original triangle corners
+            n1 = t1,
+            n2 = t2,
+            n3 = t3,
+            // new tesselated corners
+            n12a = addVertex(p12[0], p12[1], p12[2], pn12[0], pn12[1], pn12[2], pc12[0], pc12[1], pc12[2], pc12[3], pt12[0], pt12[1]),
+            n13a = addVertex(p13[0], p13[1], p13[2], pn13[0], pn13[1], pn13[2], pc13[0], pc13[1], pc13[2], pc13[3], pt13[0], pt13[1]),
+            n23a = addVertex(p23[0], p23[1], p23[2], pn23[0], pn23[1], pn23[2], pc23[0], pc23[1], pc23[2], pc23[3], pt23[0], pt23[1]),
+            // copies for unshared vertex mode
+            // (same for shared vertex mode)
+            n12b = duplicateVertex(n12a),
+            n12c = duplicateVertex(n12a),
+            n13b = duplicateVertex(n13a),
+            n13c = duplicateVertex(n13a),
+            n23b = duplicateVertex(n23a),
+            n23c = duplicateVertex(n23a);
+
+    //tess.addTriangle(n1, n12a, n13a);
+    auto tri2 = addTriangle(n12b, n2, n23a);
+    auto tri3 = addTriangle(n12c, n23c, n13c);
+    auto tri4 = addTriangle(n13b, n23b, n3);
+    // (overwrite tesselated one)
+    p_->removeTriangleIndex(n1, n2, n3);
+    p_->storeTriangleIndex(triIndex_.size(), n1, n12a, n13a);
+    triIndex_[triIndex*3  ] = n1;
+    triIndex_[triIndex*3+1] = n12a;
+    triIndex_[triIndex*3+2] = n13a;
+
+    if (level > 1)
+    {
+        --level;
+        tesselateTriangle(triIndex, level);
+        tesselateTriangle(tri2, level);
+        tesselateTriangle(tri3, level);
+        tesselateTriangle(tri4, level);
+    }
 }
 
 /** @todo take care of edge flags */

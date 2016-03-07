@@ -639,7 +639,7 @@ extern "C"
 
     MO_PY_DEF_DOC(geom_set_tex_coord,
         "set_tex_coord(long, vec2) -> None\n"
-        "Changes the texuture coords of the vertex at the given index."
+        "Changes the texture coords of the vertex at the given index."
     )
     static PyObject* geom_set_tex_coord(PyObject* self, PyObject* arg)
     {
@@ -670,7 +670,7 @@ extern "C"
         auto attName = QString::fromUtf8(utf8);
         if (attName.isEmpty())
         {
-            PyErr_SetString(PyExc_TypeError, "empty attribute name is not allowed");
+            PyErr_SetString(PyExc_TypeError, "empty attribute name");
             return NULL;
         }
         if (!checkIndex(idx, pgeom->geometry->numVertices(), "vertex"))
@@ -691,6 +691,90 @@ extern "C"
             return NULL;
         }
         pgeom->geometry->setAttribute(attName, idx, v[0], v[1], v[2], v[3]);
+        Py_RETURN_NONE;
+    }
+
+
+    MO_PY_DEF_DOC(geom_set_cur_color,
+        "set_cur_color(vec4) -> None\n"
+        "Sets the current color, used on the next call to add_vertex()\n"
+    )
+    static PyObject* geom_set_cur_color(PyObject* self, PyObject* arg)
+    {
+        Vec4 v;
+        if (!py_get_vec4(arg, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->setColor(v.x, v.y, v.z, v.w);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_cur_normal,
+        "set_cur_normal(vec3) -> None\n"
+        "Sets the current normal, used on the next call to add_vertex()\n"
+    )
+    static PyObject* geom_set_cur_normal(PyObject* self, PyObject* arg)
+    {
+        Vec3 v;
+        if (!py_get_vec3(arg, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->setNormal(v.x, v.y, v.z);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_cur_tex_coord,
+        "set_cur_tex_coord(vec2) -> None\n"
+        "Sets the current texture, used on the next call to add_vertex()\n"
+    )
+    static PyObject* geom_set_cur_tex_coord(PyObject* self, PyObject* arg)
+    {
+        Vec2 v;
+        if (!py_get_vec2(arg, &v))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        pgeom->geometry->setTexCoord(v.x, v.y);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_set_cur_attribute,
+        "set_cur_attribute(str, vec) -> None\n"
+        "Sets the current user attribute, used on the next call to add_vertex()\n"
+        "First argument is the name of the attribute.\n"
+        "A vertex shader attribute can then be accessed with the same name.\n"
+        "The vector can be 1 to 4 components long.\n"
+        "If the attribute is already defined, the vector size must match."
+    )
+    static PyObject* geom_set_cur_attribute(PyObject* self, PyObject* arg)
+    {
+        const char* utf8;
+        PyObject * second;
+        if (!PyArg_ParseTuple(arg, "sO", &utf8, &second))
+            return NULL;
+        MO__GETGEOM(pgeom);
+        auto attName = QString::fromUtf8(utf8);
+        if (attName.isEmpty())
+        {
+            PyErr_SetString(PyExc_TypeError, "empty attribute name");
+            return NULL;
+        }
+        int num;
+        double v[4];
+        if (!get_vector_var(second, &num, v))
+            return NULL;
+        auto att = pgeom->geometry->getAttribute(attName);
+        // create attribute if not there already
+        if (!att)
+            att = pgeom->geometry->addAttribute(attName, num);
+        if ((int)att->numComponents != num)
+        {
+            PyErr_Set(PyExc_TypeError, QString("attribute '%1' is already "
+                                               "defined with %2 component(s), not %3")
+                      .arg(attName).arg(att->numComponents).arg(num));
+            return NULL;
+        }
+        pgeom->geometry->setAttribute(
+                    attName, float(v[0]), float(v[1]), float(v[2]), float(v[3]));
         Py_RETURN_NONE;
     }
 
@@ -730,12 +814,13 @@ extern "C"
     }
 
     MO_PY_DEF_DOC(geom_add_triangle,
-        "add_triangle(long, long, long) -> None\n"
-        "add_triangle(vec3, vec3, vec3) -> None\n"
+        "add_triangle(long, long, long) -> long\n"
+        "add_triangle(vec3, vec3, vec3) -> long\n"
         "Adds a triangle between the three vertex positions.\n"
         "Positions should be ordered counter-clockwise.\n"
         "Arguments can be either indices as returned by add_vertex() or 3d vectors\n"
-        "In case of vectors, the vertices are created/reused as if called add_vertex()"
+        "In case of vectors, the vertices are created/reused as if called add_vertex()\n"
+        "Returns the primitive index of the triangle (created or reused)"
     )
     static PyObject* geom_add_triangle(PyObject* self, PyObject* arg)
     {
@@ -743,8 +828,8 @@ extern "C"
         long idx[3];
         if (!py_get_index_make(pgeom->geometry, 3, arg, idx))
             return NULL;
-        pgeom->geometry->addTriangle(idx[0], idx[1], idx[2]);
-        Py_RETURN_NONE;
+        return PyLong_FromLong(
+                    pgeom->geometry->addTriangle(idx[0], idx[1], idx[2]) );
     }
 
     MO_PY_DEF_DOC(geom_add_quad,
@@ -799,8 +884,8 @@ extern "C"
         Py_RETURN_NONE;
     }
 
-    MO_PY_DEF_DOC(geom_tesselate,
-        "tesselate(int, float, float) -> None\n"
+    MO_PY_DEF_DOC(geom_tesselate_triangles,
+        "tesselate_triangles(int, float, float) -> None\n"
         "Tesselates all triangles of the geometry.\n"
         "All arguments are optional.\n"
         "The first is the level of tesselation, defaulting to one.\n"
@@ -808,7 +893,7 @@ extern "C"
         "Third is the shortest length of a triangle edge that is considered for\n"
         "tesselation. Each triangle edge is considered individually."
     )
-    static PyObject* geom_tesselate(PyObject* self, PyObject* arg)
+    static PyObject* geom_tesselate_triangles(PyObject* self, PyObject* arg)
     {
         MO__GETGEOM(pgeom);
         int level = 1;
@@ -819,6 +904,22 @@ extern "C"
             pgeom->geometry->tesselateTriangles(level);
         else
             pgeom->geometry->tesselateTriangles(minArea, minLength, level);
+        Py_RETURN_NONE;
+    }
+
+    MO_PY_DEF_DOC(geom_tesselate_triangle,
+        "tesselate_triangle(int, int) -> None\n"
+        "Tesselates one triangle given by the primitive index (first argument).\n"
+        "The second arg is the level of tesselation, defaulting to one."
+    )
+    static PyObject* geom_tesselate_triangle(PyObject* self, PyObject* arg)
+    {
+        MO__GETGEOM(pgeom);
+        long idx;
+        int level = 1;
+        if (!PyArg_ParseTuple(arg, "l|i", &idx, &level))
+            return NULL;
+        pgeom->geometry->tesselateTriangle(idx, level);
         Py_RETURN_NONE;
     }
 
@@ -867,43 +968,49 @@ extern "C"
 
     static PyMethodDef Python34Geom_methods[] =
     {
-        MO__METHOD(to_string,       METH_NOARGS)
-        MO__METHOD(is_empty,        METH_NOARGS)
-        MO__METHOD(is_shared,       METH_NOARGS)
-        MO__METHOD(num_vertices,    METH_NOARGS)
-        MO__METHOD(num_points,      METH_NOARGS)
-        MO__METHOD(num_lines,       METH_NOARGS)
-        MO__METHOD(num_triangles,   METH_NOARGS)
+        MO__METHOD(to_string,               METH_NOARGS)
+        MO__METHOD(is_empty,                METH_NOARGS)
+        MO__METHOD(is_shared,               METH_NOARGS)
+        MO__METHOD(num_vertices,            METH_NOARGS)
+        MO__METHOD(num_points,              METH_NOARGS)
+        MO__METHOD(num_lines,               METH_NOARGS)
+        MO__METHOD(num_triangles,           METH_NOARGS)
 
-        MO__METHOD(get_vertex,      METH_VARARGS)
-        MO__METHOD(get_color,       METH_VARARGS)
-        MO__METHOD(get_normal,      METH_VARARGS)
-        MO__METHOD(get_tex_coord,   METH_VARARGS)
-        MO__METHOD(get_attribute,   METH_VARARGS)
-        MO__METHOD(get_point,       METH_VARARGS)
-        MO__METHOD(get_line,        METH_VARARGS)
-        MO__METHOD(get_triangle,    METH_VARARGS)
+        MO__METHOD(get_vertex,              METH_VARARGS)
+        MO__METHOD(get_color,               METH_VARARGS)
+        MO__METHOD(get_normal,              METH_VARARGS)
+        MO__METHOD(get_tex_coord,           METH_VARARGS)
+        MO__METHOD(get_attribute,           METH_VARARGS)
+        MO__METHOD(get_point,               METH_VARARGS)
+        MO__METHOD(get_line,                METH_VARARGS)
+        MO__METHOD(get_triangle,            METH_VARARGS)
 
-        MO__METHOD(set_shared,      METH_VARARGS)
-        MO__METHOD(set_vertex,      METH_VARARGS)
-        MO__METHOD(set_color,       METH_VARARGS)
-        MO__METHOD(set_normal,      METH_VARARGS)
-        MO__METHOD(set_tex_coord,   METH_VARARGS)
-        MO__METHOD(set_attribute,   METH_VARARGS)
+        MO__METHOD(set_shared,              METH_VARARGS)
+        MO__METHOD(set_vertex,              METH_VARARGS)
+        MO__METHOD(set_color,               METH_VARARGS)
+        MO__METHOD(set_normal,              METH_VARARGS)
+        MO__METHOD(set_tex_coord,           METH_VARARGS)
+        MO__METHOD(set_attribute,           METH_VARARGS)
 
-        MO__METHOD(add_vertex,      METH_VARARGS)
-        MO__METHOD(add_vertices,    METH_VARARGS)
-        MO__METHOD(add_point,       METH_VARARGS)
-        MO__METHOD(add_line,        METH_VARARGS)
-        MO__METHOD(add_triangle,    METH_VARARGS)
-        MO__METHOD(add_quad,        METH_VARARGS)
+        MO__METHOD(set_cur_color,           METH_VARARGS)
+        MO__METHOD(set_cur_normal,          METH_VARARGS)
+        MO__METHOD(set_cur_tex_coord,       METH_VARARGS)
+        MO__METHOD(set_cur_attribute,       METH_VARARGS)
 
-        MO__METHOD(clear,           METH_NOARGS)
-        MO__METHOD(calc_normals,    METH_NOARGS)
-        MO__METHOD(invert_normals,  METH_NOARGS)
-        MO__METHOD(tesselate,       METH_VARARGS)
-        MO__METHOD(tesselate_lines, METH_VARARGS)
-        MO__METHOD(convert_to_lines,METH_NOARGS)
+        MO__METHOD(add_vertex,              METH_VARARGS)
+        MO__METHOD(add_vertices,            METH_VARARGS)
+        MO__METHOD(add_point,               METH_VARARGS)
+        MO__METHOD(add_line,                METH_VARARGS)
+        MO__METHOD(add_triangle,            METH_VARARGS)
+        MO__METHOD(add_quad,                METH_VARARGS)
+
+        MO__METHOD(clear,                   METH_NOARGS)
+        MO__METHOD(calc_normals,            METH_NOARGS)
+        MO__METHOD(invert_normals,          METH_NOARGS)
+        MO__METHOD(tesselate_triangles,     METH_VARARGS)
+        MO__METHOD(tesselate_triangle,      METH_VARARGS)
+        MO__METHOD(tesselate_lines,         METH_VARARGS)
+        MO__METHOD(convert_to_lines,        METH_NOARGS)
 
         { NULL, NULL, 0, NULL }
     };
