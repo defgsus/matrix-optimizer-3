@@ -15,6 +15,7 @@ bool streamColor::enabled = false;
 
 #ifdef Q_OS_UNIX
 
+    /** @todo could do all colors here.. */
     streamColor streamColor::Default = streamColor(9);
     streamColor streamColor::Debug = streamColor(4);
     streamColor streamColor::Warning = streamColor(1);

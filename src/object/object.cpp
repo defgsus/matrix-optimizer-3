@@ -1632,6 +1632,12 @@ void Object::setErrorMessage(const QString &errorString) const
     if (errorString.isEmpty())
         return;
 
+    if (pobj_->errorStr.contains(errorString))
+    {
+        MO_WARNING("Repeated errormsg to Object: " << errorString);
+        return;
+    }
+
     if (!pobj_->errorStr.isEmpty())
         pobj_->errorStr.append("\n");
 

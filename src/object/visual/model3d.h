@@ -114,7 +114,7 @@ private:
                 * u_tex_0_, *u_texn_0_, *u_tex_env_0_,
                 * u_env_map_amt_;
 
-    bool doRecompile_, envTexCompiledCube_;
+    bool doRecompile_;
     int loadedVersion_;
 };
 

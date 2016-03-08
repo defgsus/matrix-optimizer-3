@@ -644,6 +644,7 @@ namespace
     template <class ENUM>
     void texParamPopup_(QWidget* parent,
                         ParameterTexture* param,
+                        const QString& title,
                         const QStringList& names,
                         const QList<ENUM>& values,
                         ENUM curValue,
@@ -651,9 +652,14 @@ namespace
     {
         auto pop = new QMenu(parent);
         pop->setAttribute(Qt::WA_DeleteOnClose);
+        auto a = pop->addAction(title);
+        auto font = a->font();
+        font.setBold(true);
+        a->setFont(font);
+        pop->addSeparator();
         for (int i=0; i<values.size(); ++i)
         {
-            auto a = pop->addAction(names[i]);
+            a = pop->addAction(names[i]);
             a->setData(i);
             if (values[i] == curValue)
                 { a->setCheckable(true); a->setChecked(true); }
@@ -672,52 +678,84 @@ namespace
 void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* l)
 {
     auto but = new QToolButton(this);
-    but->setText("mag");
+    but->setText(param->inputTypeNames[param->inputType()]);
     l->addWidget(but);
     connect(but, &QToolButton::clicked, [=]()
     {
-        texParamPopup_<ParameterTexture::MagMode>(this, param,
+        texParamPopup_<ParameterTexture::InputType>(this, param, tr("texture source"),
+                       ParameterTexture::inputTypeNames,
+                       ParameterTexture::inputTypeValues,
+                       param->inputType(),
+                       [=](ParameterTexture::InputType m)
+        {
+            param->setInputType(m);
+            but->setText(param->inputTypeNames[param->inputType()]);
+        } );
+    });
+
+    but = new QToolButton(this);
+    but->setText(param->magModeNames[param->magMode()]);
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::MagMode>(this, param, tr("magnification"),
                        ParameterTexture::magModeNames,
                        ParameterTexture::magModeValues,
                        param->magMode(),
-                       [=](ParameterTexture::MagMode m) { param->setMagMode(m);} );
+                       [=](ParameterTexture::MagMode m)
+        {
+            param->setMagMode(m);
+            but->setText(param->magModeNames[param->magMode()]);
+        } );
     });
 
     but = new QToolButton(this);
-    but->setText("min");
+    but->setText(param->minModeNamesShort[param->minMode()]);
     l->addWidget(but);
     connect(but, &QToolButton::clicked, [=]()
     {
-        texParamPopup_<ParameterTexture::MinMode>(this, param,
+        texParamPopup_<ParameterTexture::MinMode>(this, param, tr("minification"),
                        ParameterTexture::minModeNames,
                        ParameterTexture::minModeValues,
                        param->minMode(),
-                       [=](ParameterTexture::MinMode m) { param->setMinMode(m);} );
+                       [=](ParameterTexture::MinMode m)
+        {
+            param->setMinMode(m);
+            but->setText(param->minModeNamesShort[param->minMode()]);
+        } );
     });
 
     but = new QToolButton(this);
-    but->setText("x");
+    but->setText(param->wrapModeNames[param->wrapModeX()]);
     l->addWidget(but);
     connect(but, &QToolButton::clicked, [=]()
     {
-        texParamPopup_<ParameterTexture::WrapMode>(this, param,
+        texParamPopup_<ParameterTexture::WrapMode>(this, param, tr("edge x"),
                        ParameterTexture::wrapModeNames,
                        ParameterTexture::wrapModeValues,
                        param->wrapModeX(),
-                       [=](ParameterTexture::WrapMode m) { param->setWrapModeX(m);} );
+                       [=](ParameterTexture::WrapMode m)
+        {
+            param->setWrapModeX(m);
+            but->setText(param->wrapModeNames[param->wrapModeX()]);
+        } );
     });
 
 
     but = new QToolButton(this);
-    but->setText("y");
+    but->setText(param->wrapModeNames[param->wrapModeY()]);
     l->addWidget(but);
     connect(but, &QToolButton::clicked, [=]()
     {
-        texParamPopup_<ParameterTexture::WrapMode>(this, param,
+        texParamPopup_<ParameterTexture::WrapMode>(this, param, tr("edge y"),
                        ParameterTexture::wrapModeNames,
                        ParameterTexture::wrapModeValues,
                        param->wrapModeY(),
-                       [=](ParameterTexture::WrapMode m) { param->setWrapModeY(m);} );
+                       [=](ParameterTexture::WrapMode m)
+        {
+            param->setWrapModeY(m);
+            but->setText(param->wrapModeNames[param->wrapModeY()]);
+        } );
     });
 
 }

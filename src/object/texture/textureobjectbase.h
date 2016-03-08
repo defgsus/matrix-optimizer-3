@@ -51,10 +51,12 @@ public:
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
+    virtual void getNeededFiles(IO::FileList& l) Q_DECL_OVERRIDE;
 
     virtual void initGl(uint thread) Q_DECL_OVERRIDE;
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     //virtual void renderGl(const GL::RenderSettings&, uint, Double) Q_DECL_OVERRIDE;
+
 
     // -------- TextureObject ------------
     // --- getter ----

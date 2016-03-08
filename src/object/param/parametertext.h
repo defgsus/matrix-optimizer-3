@@ -71,8 +71,8 @@ public:
 
     /** Opens a dialog to edit the text.
         Depending on the textType(), the dialog will be structured.
-        If a (valid) text change was done, the scene object will be called with
-        Scene::setParameterValue().
+        If a (valid) text change was done, the ObjectEditor will be
+        called with ObjectEditor::setParameterValue().
         This call immediately returns after opening the dialog.
         The parameter takes down the dialog on Parameter's destruction!
         @note The scene MUST be present in the object tree for this call!
@@ -82,8 +82,8 @@ public:
 
     /** Creates a widget for editing the text.
         Depending on the textType(), the dialog will be structured.
-        If a (valid) text change was done, the scene object will be called with
-        Scene::setParameterValue().
+        If a (valid) text change was done, the ObjectEditor will be
+        called with ObjectEditor::setParameterValue().
         The returned widget will issue a closeRequest() signal when the parameter disappears.
         @note The scene MUST be present in the object tree for this call!
         @note Don't let parent be the ParameterWidget as it would destroy the

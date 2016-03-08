@@ -25,6 +25,7 @@
 #include "object/param/parametertext.h"
 #include "object/util/scenesignals.h"
 #include "object/util/objecteditor.h"
+#include "object/util/objecttreesearch.h"
 #include "math/cubemapmatrix.h"
 #include "math/vector.h"
 #include "projection/projectionsystemsettings.h"
@@ -759,45 +760,6 @@ void Camera::drawFramebuffer(const RenderTime& time)
         screenQuad_->drawCentered(scenefbo->width(), scenefbo->height(), aspectRatio_);
 }
 
-namespace {
-
-    void getRenderObjects2(Object * root, QList<ObjectGl*>& list,
-                          const QList<QRegExp>& rInc, const QList<QRegExp>& rIgn)
-    {
-        for (Object* o : root->childObjects())
-        {
-            bool doinc = true;
-
-            // ignore objects
-            for (const auto & regx : rIgn)
-            if (regx.exactMatch(o->name()))
-            {
-                doinc = false;
-                break;
-            }
-            if (!doinc)
-                continue;
-
-            // check for type
-            if (auto ogl = dynamic_cast<ObjectGl*>(o))
-            {
-                // include objects
-                doinc = false;
-                for (const auto & regx : rInc)
-                if (regx.exactMatch(ogl->name()))
-                {
-                    doinc = true;
-                    break;
-                }
-                if (doinc)
-                    list << ogl;
-            }
-
-            getRenderObjects2(o, list, rInc, rIgn);
-        }
-    }
-
-}
 
 
 
@@ -815,31 +777,8 @@ QList<ObjectGl*> Camera::getRenderObjects()
             inc = p_wcInclude_->baseValue(),
             ign = p_wcIgnore_->baseValue();
 
-    // shortcut for default strings
-    if (inc == "*" && ign.isEmpty())
-        return s->findChildObjects<ObjectGl>(QString(), true);
+    ObjectTreeSearch::getObjectsWildcard(s, list, inc, ign);
 
-    // split by commas
-    auto listInc = inc.split(QChar(','), QString::SkipEmptyParts, Qt::CaseInsensitive);
-    auto listIgn = ign.split(QChar(','), QString::SkipEmptyParts, Qt::CaseInsensitive);
-#if 0
-    MO_PRINT("---");
-    for (auto s : listInc)
-        MO_PRINT(s);
-#endif
-    // create regexps
-    QList<QRegExp> rlistInc, rlistIgn;
-    for (const auto & s : listInc)
-        rlistInc << QRegExp(s.simplified(), Qt::CaseSensitive, QRegExp::WildcardUnix);
-    for (const auto & s : listIgn)
-        rlistIgn << QRegExp(s.simplified(), Qt::CaseSensitive, QRegExp::WildcardUnix);
-
-    getRenderObjects2(s, list, rlistInc, rlistIgn);
-#if 0
-    MO_PRINT("--camera '" << name() << "'--");
-    for (auto s : list)
-        MO_PRINT(s->name());
-#endif
     return list;
 }
 

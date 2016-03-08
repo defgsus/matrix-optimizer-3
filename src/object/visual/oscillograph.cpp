@@ -325,7 +325,7 @@ void Oscillograph::createParameters()
 
     params()->beginParameterGroup("texture", "texture");
 
-        p_->textureSet->createParameters("_col", TextureSetting::TEX_NONE, true);
+        p_->textureSet->createParameters("_col", ParameterTexture::IT_WHITE);
 
     params()->endParameterGroup();
 }
@@ -339,9 +339,6 @@ void Oscillograph::onParameterChanged(Parameter *p)
         || p == p_->paramNumPoints
         || p == p_->paramDrawMode
         || p == p_->paramMode)
-        requestReinitGl();
-
-    if (p_->textureSet->needsReinit(p))
         requestReinitGl();
 
     if (p == p_->paramEquation)
@@ -388,7 +385,7 @@ void Oscillograph::getNeededFiles(IO::FileList &files)
 {
     ObjectGl::getNeededFiles(files);
 
-    p_->textureSet->getNeededFiles(files, IO::FT_TEXTURE);
+    p_->textureSet->getNeededFiles(files);
 }
 
 void Oscillograph::Private::updateEquations()
@@ -419,8 +416,6 @@ Vec4 Oscillograph::modelColor(const RenderTime& time) const
 
 void Oscillograph::initGl(uint thread)
 {
-    p_->textureSet->initGl();
-
     p_->draw = new GL::Drawable(idName());
 
     // get number of input channels
@@ -497,7 +492,7 @@ void Oscillograph::Private::recompile()
 
     src->loadDefaultSource();
 
-    if (textureSet->isEnabled())
+    //if (textureSet->isEnabled())
     {
         src->addDefine("#define MO_ENABLE_TEXTURE");
         if (drawMode() == D_POINTS)

@@ -230,7 +230,7 @@ void Skybox::createParameters()
                     tr("Scales the content on the y axis"),
                     1.0, 0.1, true, true);
 
-        p_->textureSetting.createParameters("col", TextureSetting::TEX_NONE, true);
+        p_->textureSetting.createParameters("col", ParameterTexture::IT_INPUT);
         p_->textureSetting.textureParam()->setWrapMode(ParameterTexture::WM_REPEAT);
 
     params()->endParameterGroup();
@@ -296,7 +296,7 @@ void Skybox::onParameterChanged(Parameter *p)
             || p == p_->paramFade
             || p == p_->paramPoly
             || p == p_->paramPolySize
-            || p_->textureSetting.needsReinit(p)
+//            || p_->textureSetting.needsReinit(p)
             || p_->uniformSetting.needsReinit(p) )
     {
         p_->doRecompile = true;
@@ -323,7 +323,7 @@ void Skybox::getNeededFiles(IO::FileList &files)
 {
     ObjectGl::getNeededFiles(files);
 
-    p_->textureSetting.getNeededFiles(files, IO::FT_TEXTURE);
+    p_->textureSetting.getNeededFiles(files);
 }
 
 
@@ -426,17 +426,7 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
 
 bool Skybox::Private::updateGl()
 {
-    bool valid = false;
-    try
-    {
-        // load/create/querry textures
-        textureSetting.initGl();
-        valid = true;
-    }
-    catch (const Exception&)
-    {
-        p->setErrorMessage(textureSetting.errorString());
-    }
+    bool valid = true;
 
     if (drawable && drawable->isCreated())
         drawable->releaseOpenGl();

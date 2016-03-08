@@ -442,7 +442,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texture", tr("texture"));
 
-        texture_->createParameters("col", TextureSetting::TEX_NONE, true);
+        texture_->createParameters("col");
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
                      tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
@@ -464,7 +464,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
-        textureBump_->createParameters("bump", TextureSetting::TEX_NONE, true, true);
+        textureBump_->createParameters("bump", ParameterTexture::IT_NONE, true);
 
         bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),
@@ -508,7 +508,7 @@ void Model3d::createParameters()
                        "is opposite to the emergent angle."),
                     1.f, 0.05f, true, true);
 
-        textureEnv_->createParameters("_env", TextureSetting::TEX_NONE, true);
+        textureEnv_->createParameters("_env", ParameterTexture::IT_NONE);
 
     params()->endParameterGroup();
 
@@ -562,9 +562,9 @@ void Model3d::onParameterChanged(Parameter *p)
         requestRender();
     }
 
-    if (texture_->needsReinit(p) || textureBump_->needsReinit(p)
-        || textureEnv_->needsReinit(p)
-        || uniformSetting_->needsReinit(p))
+    if (//texture_->needsReinit(p) || textureBump_->needsReinit(p)
+        //|| textureEnv_->needsReinit(p)
+         uniformSetting_->needsReinit(p))
         requestReinitGl();
 }
 
@@ -605,9 +605,9 @@ void Model3d::getNeededFiles(IO::FileList &files)
 {
     ObjectGl::getNeededFiles(files);
 
-    texture_->getNeededFiles(files, IO::FT_TEXTURE);
-    textureBump_->getNeededFiles(files, IO::FT_NORMAL_MAP);
-    textureEnv_->getNeededFiles(files, IO::FT_TEXTURE);
+    texture_->getNeededFiles(files);
+    textureBump_->getNeededFiles(files);
+    textureEnv_->getNeededFiles(files);
 
     geomSettings_->getNeededFiles(files);
 }
@@ -636,14 +636,6 @@ const GEOM::GeometryFactorySettings& Model3d::getGeometrySettings() const
 void Model3d::initGl(uint /*thread*/)
 {
     MO_DEBUG_MODEL("Model3d::initGl()");
-
-    // load/create/querry textures
-    texture_->initGl();
-    setErrorMessage(texture_->errorString());
-    textureBump_->initGl();
-    setErrorMessage(textureBump_->errorString());
-    textureEnv_->initGl();
-    setErrorMessage(textureEnv_->errorString());
 
     // create geometry
     draw_ = new GL::Drawable(idName());
@@ -767,6 +759,12 @@ void Model3d::setupDrawable_()
 
     clearError();
 
+    if (!draw_ || !draw_->geometry())
+    {
+        setErrorMessage(QString("No geometry for Model3d"));
+        return;
+    }
+
     // -------- construct the GLSL source ----------
 
     GL::ShaderSource * src = new GL::ShaderSource();
@@ -797,7 +795,6 @@ void Model3d::setupDrawable_()
         // the first to actually read the texture input
         if (textureEnv_->isCube())
             src->addDefine("#define MO_ENV_MAP_IS_CUBE");
-        envTexCompiledCube_ = textureEnv_->isCube();
     }
     if (textureMorph_->isTransformEnabled())
         src->addDefine("#define MO_ENABLE_TEXTURE_TRANSFORMATION");
@@ -849,7 +846,7 @@ void Model3d::setupDrawable_()
     }
     catch (const Exception& e)
     {
-        MO_WARNING("Error on initializing model for '" << name() << "'\n" << e.what());
+        MO_WARNING("Model3d '" << name() << "'s createOpenGL for failed with\n" << e.what());
         for (const GL::Shader::CompileMessage & msg : draw_->shader()->compileMessages())
         {
             if (msg.program == GL::Shader::P_VERTEX
@@ -869,7 +866,7 @@ void Model3d::setupDrawable_()
                 glslNormal_->addErrorMessage(msg.line, msg.text);
             }
         }
-        setErrorMessage(tr("Failed to initialized model (%1)").arg(e.what()));
+        setErrorMessage(tr("Failed to initialize drawable (%1)").arg(e.what()));
         // XXX Should deinitialize or otherwise flag the object
         return;
     }
@@ -919,13 +916,17 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
     //MO_PRINT(applicationTime() << " was "
     //  << envTexCompiledCube_ << " is " << textureEnv_->texture()->isCube());
 
-    // recompile if 2d/cubemap change in environement texture
+    // recompile if enabled/disabled
+    // or 2d/cubemap change in environment texture
     // XXX Possibly for equirect/fisheye change too, once this is implemented
-    if (textureEnv_->isEnabled()
-        && textureEnv_->texture()
-        && textureEnv_->texture()->isCube() != envTexCompiledCube_)
+    if (texture_->checkEnabledChanged() ||
+        textureBump_->checkEnabledChanged() ||
+        (textureEnv_->checkEnabledChanged()
+            || (textureEnv_->isEnabled() && textureEnv_->checkCubeChanged()))
+       )
     {
-        doRecompile_ = true;
+        requestReinitGl();
+        return;
     }
 
     if (nextGeometry_)

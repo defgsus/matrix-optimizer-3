@@ -16,6 +16,7 @@
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parametertexture.h"
+#include "object/param/parameterfilename.h"
 #include "object/util/objecteditor.h"
 #include "gl/context.h"
 #include "gl/framebufferobject.h"
@@ -102,6 +103,7 @@ struct TextureObjectBase::PrivateTO
     ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
     ParameterText * p_fragment;
     QList<ParameterTexture*> p_textures;
+    QList<ParameterFilename*> p_textureFilenames;
 
     GL::Uniform
         * u_out_color, * u_out_resolution;
@@ -308,6 +310,15 @@ void TextureObjectBase::PrivateTO::createParameters()
                                             tr("A texture input")) );
 
             p_textures.back()->setVisibleGraph(true);
+
+            p_textureFilenames.push_back( to->params()->createFilenameParameter(
+                                              QString("to_tex_fn%1").arg(i),
+                                              tr("texture file"),
+                                              tr("The file to load"),
+                                              IO::FT_TEXTURE,
+                                              p_textures.back()->filename(),
+                                              true
+                                              ));
         }
 
     to->params()->endParameterGroup();
@@ -380,8 +391,12 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
         || p == p_to_->p_depth
         || p == p_to_->p_aa
         || p == p_to_->p_texFormat
-        || p == p_to_->p_texType)
+        || p == p_to_->p_texType
+        || dynamic_cast<ParameterTexture*>(p)
+        )
         requestReinitGl();
+    //if (auto pt = )
+
 }
 
 void TextureObjectBase::onParametersLoaded()
@@ -394,6 +409,10 @@ void TextureObjectBase::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
+    for (int i=0; i<p_to_->p_textures.size(); ++i)
+        p_to_->p_textureFilenames[i]->setVisible(
+                    p_to_->p_textures[i]->inputType() == ParameterTexture::IT_FILE);
+
     if (p_to_->hasInternalFbo)
     {
         const auto resMode = (ResolutionMode)p_to_->p_resMode->baseValue();
@@ -403,6 +422,15 @@ void TextureObjectBase::updateParameterVisibility()
         p_to_->p_res_scale->setVisible(resMode == RM_INPUT_SCALED);
         p_to_->p_depth->setVisible(res && false);
     }
+}
+
+void TextureObjectBase::getNeededFiles(IO::FileList &l)
+{
+    ObjectGl::getNeededFiles(l);
+
+    for (auto p : p_to_->p_textureFilenames)
+        if (!p->value().isEmpty())
+            l << IO::FileListEntry(p->value(), IO::FT_TEXTURE);
 }
 
 const QList<GL::Shader::CompileMessage>& TextureObjectBase::compileMessages() const
@@ -489,6 +517,9 @@ void TextureObjectBase::PrivateTO::releaseGl()
     delete fbo;
     fbo = 0;
     outputTex = 0;
+
+    for (auto p : p_textures)
+        p->releaseGl();
 }
 
 void TextureObjectBase::PrivateTO::createScreenQuad()

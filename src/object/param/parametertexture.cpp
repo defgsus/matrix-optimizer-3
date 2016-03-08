@@ -11,6 +11,7 @@
 #include "parametertexture.h"
 #include "modulatortexture.h"
 #include "object/scene.h"
+#include "tool/generalimage.h"
 #include "gl/texture.h"
 #include "gl/framebufferobject.h"
 #include "io/filemanager.h"
@@ -30,6 +31,7 @@ struct ParameterTexture::Private
     Private(ParameterTexture*p)
         : p             (p)
         , createdTex    (0)
+        , errorTex      (0)
         , lastTex       (0)
         , constTex      (0)
         , lastScene     (0)
@@ -46,14 +48,15 @@ struct ParameterTexture::Private
     {
     }
 
-    void releaseCreated();
-    const GL::Texture* getNoneTexture();
+    void releaseCreated(GL::Texture** tex);
+    const GL::Texture* getNoneTexture(bool white);
     const GL::Texture* getFileTexture();
     const GL::Texture* getMasterFrameTexture(bool depth);
+    const GL::Texture* getErrorTexture();
 
     ParameterTexture* p;
 
-    GL::Texture *createdTex;
+    GL::Texture *createdTex, *errorTex;
     const GL::Texture *lastTex, *constTex;
     std::vector<int> lastHash;
     Scene* lastScene;
@@ -76,17 +79,20 @@ ParameterTexture::ParameterTexture(Object * object, const QString& id, const QSt
 
 ParameterTexture::~ParameterTexture()
 {
+    delete p_->errorTex;
     delete p_->createdTex;
     delete p_;
 }
 
 const QStringList ParameterTexture::inputTypeIds =
-{ "none", "input", "file", "master", "master_depth" };
+{ "none", "black", "white", "input", "file", "master", "master_depth" };
 const QStringList ParameterTexture::inputTypeNames =
-{ QObject::tr("none"), QObject::tr("input"), QObject::tr("file"),
+{ QObject::tr("off"), QObject::tr("black"), QObject::tr("white"),
+  QObject::tr("input"), QObject::tr("file"),
   QObject::tr("master frame"), QObject::tr("master frame depth") };
 const QList<ParameterTexture::InputType> ParameterTexture::inputTypeValues =
-{ IT_NONE, IT_INPUT, IT_FILE, IT_MASTER_FRAME, IT_MASTER_FRAME_DEPTH };
+{ IT_NONE, IT_BLACK, IT_WHITE, IT_INPUT, IT_FILE,
+  IT_MASTER_FRAME, IT_MASTER_FRAME_DEPTH };
 
 const QStringList ParameterTexture::magModeIds =
 { "nearest", "linear" };
@@ -101,6 +107,10 @@ const QStringList ParameterTexture::minModeNames =
 { QObject::tr("nearest"), QObject::tr("linear"),
   QObject::tr("nearest mipmap nearest"), QObject::tr("linear mipmap nearest"),
   QObject::tr("nearest mipmap linear"), QObject::tr("linear mipmap linear") };
+const QStringList ParameterTexture::minModeNamesShort =
+{ QObject::tr("nearest"), QObject::tr("linear"),
+  QObject::tr("near/mm/near"), QObject::tr("lin/mm/near"),
+  QObject::tr("near/mm/linr"), QObject::tr("lin/mm/lin") };
 const QList<ParameterTexture::MinMode> ParameterTexture::minModeValues =
 { MIN_NEAREST, MIN_LINEAR,
   MIN_NEAREST_MIPMAP_NEAREST, MIN_LINEAR_MIPMAP_NEAREST,
@@ -119,6 +129,15 @@ ParameterTexture::WrapMode  ParameterTexture::wrapModeY() const { return p_->wra
 ParameterTexture::MagMode   ParameterTexture::magMode() const { return p_->magMode; }
 ParameterTexture::MinMode   ParameterTexture::minMode() const { return p_->minMode; }
                     QString ParameterTexture::filename() const { return p_->filename; }
+
+bool ParameterTexture::isMipmap() const
+{
+    return  minMode() != MIN_NEAREST
+         && minMode() != MIN_LINEAR
+         //&& paramMipmaps_->baseValue() > 0
+            ;
+
+}
 
 void ParameterTexture::setInputType(InputType t)
 {
@@ -170,7 +189,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
         io >> p_->filename;
     }
     else
-        p_->inputType = IT_INPUT;
+        p_->inputType = IT_NONE;
 
     p_->needChange = true;
 }
@@ -241,7 +260,9 @@ const GL::Texture * ParameterTexture::value(const RenderTime& time) const
 
     switch (p_->inputType)
     {
-        case IT_NONE: tex = p_->getNoneTexture(); break;
+        case IT_NONE: return 0;
+        case IT_BLACK:
+        case IT_WHITE: tex = p_->getNoneTexture(p_->inputType == IT_WHITE); break;
         case IT_FILE: tex = p_->getFileTexture(); break;
         case IT_MASTER_FRAME: tex = p_->getMasterFrameTexture(false); break;
         case IT_MASTER_FRAME_DEPTH: tex = p_->getMasterFrameTexture(true); break;
@@ -255,6 +276,10 @@ const GL::Texture * ParameterTexture::value(const RenderTime& time) const
             }
         break;
     }
+
+
+    if (!tex)
+        tex = p_->getErrorTexture();
 
     if (tex)
     {
@@ -305,28 +330,29 @@ Modulator * ParameterTexture::getModulator(const QString& id, const QString& out
 
 void ParameterTexture::releaseGl()
 {
-    p_->releaseCreated();
+    p_->releaseCreated(&p_->createdTex);
+    p_->releaseCreated(&p_->errorTex);
     p_->constTex = 0;
     p_->needChange = true;
 }
 
-void ParameterTexture::Private::releaseCreated()
+void ParameterTexture::Private::releaseCreated(GL::Texture** tex)
 {
-    if (createdTex && createdTex->isHandle())
-        createdTex->release();
-    delete createdTex;
-    createdTex = 0;
+    if (*tex && (*tex)->isHandle())
+        (*tex)->release();
+    delete *tex;
+    *tex = 0;
 }
 
-const GL::Texture* ParameterTexture::Private::getNoneTexture()
+const GL::Texture* ParameterTexture::Private::getNoneTexture(bool white)
 {
     if (!needChange)
         return createdTex;
-    releaseCreated();
+    releaseCreated(&createdTex);
     needChange = false;
 
     QImage img(4,4,QImage::Format_RGBA8888);
-    img.fill(Qt::white);
+    img.fill(white ? Qt::white : Qt::black);
     createdTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
     lastTex = 0;
     return createdTex;
@@ -336,7 +362,7 @@ const GL::Texture* ParameterTexture::Private::getFileTexture()
 {
     if (!needChange)
         return createdTex;
-    releaseCreated();
+    releaseCreated(&createdTex);
     needChange = false;
 
     auto fn = IO::fileManager().localFilename(filename);
@@ -382,6 +408,18 @@ const GL::Texture* ParameterTexture::Private::getMasterFrameTexture(bool depth)
     }
 
     return constTex;
+}
+
+const GL::Texture* ParameterTexture::Private::getErrorTexture()
+{
+    if (!errorTex)
+    {
+        QImage img = GeneralImage::getErrorImage(
+                    QObject::tr("no\ntexture"),
+                    QSize(128,128), QImage::Format_RGBA8888_Premultiplied);
+        errorTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
+    }
+    return errorTex;
 }
 
 

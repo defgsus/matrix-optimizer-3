@@ -135,7 +135,8 @@ HEADERS += \
     src/object/control/mouseobject.h \
     src/object/texture/neuroto.h \
     src/object/texture/cropto.h \
-    src/object/visual/skybox.h
+    src/object/visual/skybox.h \
+    $$PWD/util/objecttreesearch.h
 
 SOURCES += \
     src/object/object.cpp \

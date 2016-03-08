@@ -162,7 +162,8 @@ Texture::~Texture()
     MO_DEBUG_IMG("Texture::~Texture()");
 
     if (isHandle())
-        MO_GL_WARNING("destructor of bound texture '" << name() << "'");
+        MO_GL_WARNING("destructor of allocated texture '" << name() << "' - "
+                      "OpenGL resource leak");
 }
 
 Texture * Texture::constructFrom(const Texture * t)

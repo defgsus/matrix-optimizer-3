@@ -72,7 +72,8 @@ void ParameterText::deserialize(IO::DataStream &io)
 
 bool ParameterText::isOneliner() const
 {
-    return textType_ == TT_PLAIN_TEXT;
+    return textType_ == TT_PLAIN_TEXT
+        || textType_ == TT_OBJECT_WILDCARD;
 }
 
 void ParameterText::setVariableNames(const std::vector<std::string> &names)

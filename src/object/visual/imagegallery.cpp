@@ -366,8 +366,7 @@ void ImageGallery::createParameters()
 
     params()->beginParameterGroup("frametex", tr("frame texture"));
 
-        frameTexSet_->setNoneTextureProxy(true);
-        frameTexSet_->createParameters("_frametex", TextureSetting::TEX_NONE, true);
+        frameTexSet_->createParameters("_frametex", ParameterTexture::IT_WHITE);
 
     params()->endParameterGroup();
 
@@ -412,7 +411,8 @@ void ImageGallery::onParameterChanged(Parameter *p)
 
     if (p == imageList_
         || p == mipmaps_
-        || frameTexSet_->needsReinit(p))
+//        || frameTexSet_->needsReinit(p)
+            )
         requestReinitGl();
 
     if (   p == keepFrameAspect_
@@ -473,7 +473,7 @@ void ImageGallery::getNeededFiles(IO::FileList &files)
 {
     ObjectGl::getNeededFiles(files);
 
-    frameTexSet_->getNeededFiles(files, IO::FT_TEXTURE);
+    frameTexSet_->getNeededFiles(files);
 
     for (const QString& fn : imageList_->baseValue())
         files << IO::FileListEntry(fn, IO::FT_TEXTURE);
@@ -505,17 +505,6 @@ void ImageGallery::initGl(uint /*thread*/)
     MO_DEBUG_IG("initGl()");
 
     releaseAll_();
-
-    // get frame texture
-
-    try
-    {
-        frameTexSet_->initGl();
-    }
-    catch (const Exception& e)
-    {
-        setErrorMessage(e.what());
-    }
 
     // load image textures
 
@@ -775,6 +764,7 @@ void ImageGallery::releaseAll_()
 
     delete vaoFrame_;
     vaoFrame_ = 0;
+
 }
 
 void ImageGallery::renderGl(const GL::RenderSettings& rs, const RenderTime& time)

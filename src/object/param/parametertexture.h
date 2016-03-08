@@ -30,7 +30,9 @@ public:
 
     enum InputType
     {
-        IT_NONE,
+        IT_NONE,    //! Really no texture at all
+        IT_BLACK,
+        IT_WHITE,
         IT_INPUT,
         IT_FILE,
         IT_MASTER_FRAME,
@@ -60,6 +62,7 @@ public:
     };
     static const QStringList minModeIds;
     static const QStringList minModeNames;
+    static const QStringList minModeNamesShort;
     static const QList<MinMode> minModeValues;
 
     enum WrapMode
@@ -97,6 +100,10 @@ public:
     MagMode magMode() const;
     MinMode minMode() const;
     QString filename() const;
+
+    /** Returns true when at least one of the minifiying modes is set to
+        mip-mapping. */
+    bool isMipmap() const;
 
     // ---------------- setter -----------------
 
