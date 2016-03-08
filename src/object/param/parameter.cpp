@@ -17,7 +17,8 @@
 #include "types/properties.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_mod.h"
+#include "io/log_param.h"
 
 namespace MO {
 

@@ -22,7 +22,9 @@
 
 namespace MO {
 
-/** A wrapper for texture parameters and load/generation functions */
+/** A wrapper for ParamaterTexture and ParameterFilename.
+    Has some convenience functions for update and gui and
+    should always be used instead of pure ParameterTexture */
 class TextureSetting
 {
     Q_DECLARE_TR_FUNCTIONS(TextureSetting)
@@ -43,11 +45,9 @@ public:
     // ---------- parameters -----------
 
     /** Creates the texture-related parameters in parent Object.
-        Each parameter id is appended with @p id_suffix, to enable
-        more than one texture for an Object.
+        ParameterTexture will have id, the other will have id+"_filename".
         @p defaultType is the default type of texture source. */
-    void createParameters(
-            const QString& id_suffix,
+    void createParameters(const QString& id,
             const QString& name,
             ParameterTexture::InputType defaultType = ParameterTexture::IT_NONE,
             bool normalMap = false);
@@ -55,9 +55,13 @@ public:
 
     /** Sets the visibility of the parameters according to current settings. */
     void updateParameterVisibility();
+    /** Controls visibility of all parameters */
+    void setVisible(bool);
 
     /** Access to the actual texture parameter */
     ParameterTexture* textureParam() const { return paramTex_; }
+
+    void fixCompatibility();
 
     // ------------ getter ---------------
 
@@ -92,7 +96,7 @@ public:
     /** Binds the texture to the given slot.
         Does nothing if type is TT_NONE.
         @throws GlException */
-    void bind(const RenderTime & time, uint slot = 0);
+    void bind(const RenderTime & time, uint* slot = 0);
 
 private:
 
@@ -104,6 +108,7 @@ private:
     bool p_isCube_;
     mutable bool p_lastIsCube_, p_lastIsEnabled_;
     mutable QString p_lastFilename_;
+    int loaded_version;
 };
 
 } // namespace MO

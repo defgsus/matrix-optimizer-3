@@ -26,7 +26,8 @@
 
 #include "mainwidgetcontroller.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gui.h"
+#include "io/log_io.h"
 #include "io/settings.h"
 #include "io/application.h"
 #include "io/memory.h"

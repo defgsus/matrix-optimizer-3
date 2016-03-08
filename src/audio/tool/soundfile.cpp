@@ -20,7 +20,7 @@
 #include "math/interpol.h"
 #include "math/functions.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_snd.h"
 
 namespace MO {
 namespace AUDIO {

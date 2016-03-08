@@ -22,7 +22,7 @@
 #include "io/files.h"
 #include "io/application.h"
 #include "io/xmlstream.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 #include "io/isclient.h"
 
 #ifdef Q_OS_LINUX

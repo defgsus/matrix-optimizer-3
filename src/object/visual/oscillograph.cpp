@@ -326,7 +326,7 @@ void Oscillograph::createParameters()
     params()->beginParameterGroup("texture", "texture");
 
         p_->textureSet->createParameters(
-                    "_col", tr("color texture"), ParameterTexture::IT_WHITE);
+                    "color_tex", tr("color texture"), ParameterTexture::IT_WHITE);
 
     params()->endParameterGroup();
 }
@@ -339,7 +339,9 @@ void Oscillograph::onParameterChanged(Parameter *p)
         || p == p_->paramFftSize
         || p == p_->paramNumPoints
         || p == p_->paramDrawMode
-        || p == p_->paramMode)
+        || p == p_->paramMode
+        || p_->textureSet->onParameterChange(p)
+            )
         requestReinitGl();
 
     if (p == p_->paramEquation)

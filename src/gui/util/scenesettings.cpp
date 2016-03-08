@@ -17,7 +17,7 @@
 #include "scenesettings.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_io.h"
 #include "object/control/track.h"
 #include "object/control/sequence.h"
 #include "object/control/sequencefloat.h"

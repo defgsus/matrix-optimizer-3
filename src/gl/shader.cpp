@@ -12,7 +12,7 @@
 #include <QStringList>
 
 #include "shader.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "shadersource.h"
 
 using namespace gl;

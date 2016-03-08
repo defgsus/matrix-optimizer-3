@@ -18,7 +18,7 @@
 
 #include "audiodevice.h"
 #include "audiodevices.h"
-#include "io/log.h"
+#include "io/log_audio.h"
 #include "io/error.h"
 #include "io/settings.h"
 

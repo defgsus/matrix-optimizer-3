@@ -21,7 +21,7 @@
 #include "object/scene.h"
 #include "math/timeline1d.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {

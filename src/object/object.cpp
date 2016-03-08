@@ -26,10 +26,13 @@
 #include "util/objectconnectiongraph.h"
 #include "util/parameterevolution.h"
 #include "math/transformationbuffer.h"
+#include "tool/stringmanip.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "io/log.h"
-#include "tool/stringmanip.h"
+#include "io/log_io.h"
+#include "io/log_tree.h"
+#include "io/log_param.h"
+#include "io/log_mod.h"
 
 namespace MO {
 

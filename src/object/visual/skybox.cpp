@@ -231,7 +231,7 @@ void Skybox::createParameters()
                     1.0, 0.1, true, true);
 
         p_->textureSetting.createParameters(
-                    "col", tr("texture"), ParameterTexture::IT_INPUT);
+                    "color_tex", tr("texture"), ParameterTexture::IT_INPUT);
         p_->textureSetting.textureParam()->setWrapMode(ParameterTexture::WM_REPEAT);
 
     params()->endParameterGroup();
@@ -545,7 +545,11 @@ void Skybox::renderGl(const GL::RenderSettings &rs, const RenderTime &time)
     p_->uniformSetting.updateUniforms(time, texSlot);
 
     // bind the object specific textures
-    if (p_->u_tex_color) { p_->textureSetting.bind(time, texSlot); p_->u_tex_color->ints[0] = texSlot++; }
+    if (p_->u_tex_color)
+    {
+        p_->u_tex_color->ints[0] = texSlot;
+        p_->textureSetting.bind(time, &texSlot);
+    }
 
     p_->drawable->renderShader(
                 rs.cameraSpace().projectionMatrix(),

@@ -10,7 +10,7 @@
 
 #include "equationpreset.h"
 #include "io/xmlstream.h"
-#include "io/log.h"
+#include "io/log_io.h"
 #include "io/error.h"
 
 namespace MO {

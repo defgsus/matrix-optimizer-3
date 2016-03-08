@@ -79,8 +79,11 @@ void ColorTO::deserialize(IO::DataStream & io)
 
 void ColorTO::createParameters()
 {
+    MO_PRINT("CREATE BASE");
     TextureObjectBase::createParameters();
+    MO_PRINT("CREATE SELF");
     p_->createParameters();
+    MO_PRINT("CREATE FINISHED");
 }
 
 void ColorTO::initGl(uint thread)

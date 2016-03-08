@@ -16,19 +16,17 @@
     namespace MO {
     namespace Private {
 
-        static std::recursive_mutex* log_mutex_ = 0;
+        static std::recursive_mutex log_mutex_;
 
         IoLock::IoLock()
         {
-            if (!log_mutex_)
-                log_mutex_ = new std::recursive_mutex;
-            log_mutex_->lock();
+            log_mutex_.lock();
         }
 
         IoLock::~IoLock()
         {
-            assert(log_mutex_ && "unlock without lock in guard class");
-            log_mutex_->unlock();
+            //assert(log_mutex_ && "unlock without lock in guard class");
+            log_mutex_.unlock();
         }
 
     } // namespace Private

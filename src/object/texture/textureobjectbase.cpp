@@ -18,6 +18,7 @@
 #include "object/param/parametertexture.h"
 #include "object/param/parameterfilename.h"
 #include "object/util/objecteditor.h"
+#include "object/util/texturesetting.h"
 #include "gl/context.h"
 #include "gl/framebufferobject.h"
 #include "gl/texture.h"
@@ -102,8 +103,8 @@ struct TextureObjectBase::PrivateTO
                 * p_texType, * p_texFormat, *p_resMode;
     ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
     ParameterText * p_fragment;
-    QList<ParameterTexture*> p_textures;
-    QList<ParameterFilename*> p_textureFilenames;
+    QList<TextureSetting*> p_textures;
+    QList<ParameterTexture*> texParamsCopy;
 
     GL::Uniform
         * u_out_color, * u_out_resolution;
@@ -176,7 +177,7 @@ bool TextureObjectBase::hasTextureInput(uint index) const
 {
     if (index >= (uint)p_to_->p_textures.size())
         return false;
-    return p_to_->p_textures[index]->isModulated();
+    return p_to_->p_textures[index]->textureParam()->isModulated();
 }
 
 bool TextureObjectBase::isMasterOutputEnabled() const
@@ -239,7 +240,7 @@ void TextureObjectBase::init3dFramebuffer(uint depth)
 
 const QList<ParameterTexture*>& TextureObjectBase::textureParams() const
 {
-    return p_to_->p_textures;
+    return p_to_->texParamsCopy;
 }
 
 void TextureObjectBase::createParameters()
@@ -302,26 +303,17 @@ void TextureObjectBase::PrivateTO::createParameters()
 
         for (uint i=0; i<maxIns; ++i)
         {
-            p_textures.push_back( to->params()->createTextureParameter(
-                                            QString("to_tex%1").arg(i),
-                                            i < (uint)inpNames.size()
-                                                ? inpNames[i]
-                                                : tr("input %1").arg(i+1),
-                                            tr("Source for texture #%1").arg(i+1)) );
+            //MO_PRINT("TEXPARAM " << i);
+            auto tex = new TextureSetting(to);
+            p_textures.push_back(tex);
 
-            p_textures.back()->setVisibleGraph(true);
-            p_textures.back()->setInputType(ParameterTexture::IT_INPUT);
+            tex->createParameters(QString("to_tex%1").arg(i),
+                                  tr("texture #%1").arg(i+1),
+                                  ParameterTexture::IT_INPUT);
+            texParamsCopy.push_back(tex->textureParam());
 
-            p_textureFilenames.push_back( to->params()->createFilenameParameter(
-                                              QString("to_tex_fn%1").arg(i),
-                                              tr("texture file"),
-                                              tr("The file to load"),
-                                              IO::FT_TEXTURE,
-                                              p_textures.back()->filename(),
-                                              true
-                                              ));
-            p_textures.back()->setFilenameParameter(
-                        p_textureFilenames.back() );
+            tex->textureParam()->setVisibleGraph(true);
+            //MO_PRINT("TEXPARAM " << i << " done");
         }
 
     to->params()->endParameterGroup();
@@ -387,7 +379,12 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
 {
     ObjectGl::onParameterChanged(p);
 
-    if (p == p_to_->p_width
+    bool r = false;
+    for (auto set : p_to_->p_textures)
+        r |= set->onParameterChange(p);
+
+    if (r
+        || p == p_to_->p_width
         || p == p_to_->p_height
         || p == p_to_->p_res_scale
         || p == p_to_->p_resMode
@@ -395,12 +392,8 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
         || p == p_to_->p_aa
         || p == p_to_->p_texFormat
         || p == p_to_->p_texType
-        || dynamic_cast<ParameterTexture*>(p)
-        || dynamic_cast<ParameterFilename*>(p)
         )
         requestReinitGl();
-    //if (auto pt = )
-
 }
 
 void TextureObjectBase::onParametersLoaded()
@@ -413,9 +406,8 @@ void TextureObjectBase::updateParameterVisibility()
 {
     ObjectGl::updateParameterVisibility();
 
-    for (int i=0; i<p_to_->p_textures.size(); ++i)
-        p_to_->p_textureFilenames[i]->setVisible(
-                    p_to_->p_textures[i]->inputType() == ParameterTexture::IT_FILE);
+    for (auto set : p_to_->p_textures)
+        set->updateParameterVisibility();
 
     if (p_to_->hasInternalFbo)
     {
@@ -432,9 +424,8 @@ void TextureObjectBase::getNeededFiles(IO::FileList &l)
 {
     ObjectGl::getNeededFiles(l);
 
-    for (auto p : p_to_->p_textureFilenames)
-        if (!p->value().isEmpty())
-            l << IO::FileListEntry(p->value(), IO::FT_TEXTURE);
+    for (auto set : p_to_->p_textures)
+        set->getNeededFiles(l);
 }
 
 const QList<GL::Shader::CompileMessage>& TextureObjectBase::compileMessages() const
@@ -634,9 +625,9 @@ GL::Texture * TextureObjectBase::createTexture() const
 
 bool TextureObjectBase::hasInputTextureChanged(const RenderTime & time) const
 {
-    for (const ParameterTexture * t : p_to_->p_textures)
+    for (auto set : p_to_->p_textures)
     {
-        if (t->hasChanged(time))
+        if (set->isEnabled() && set->textureParam()->hasChanged(time))
             return true;
     }
     return false;
@@ -799,7 +790,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
         // -- find input resolution --
         for (int i=0; i<p_textures.length(); ++i)
         {
-            const GL::Texture * tex = p_textures[i]->value(time);
+            const GL::Texture * tex = p_textures[i]->textureParam()->value(time);
             if (tex)
             {
                 width = tex->width();
@@ -885,13 +876,13 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
         if (i == 0 && index > 0)
             tex = swapTex;
         else
-            tex = p_textures[i]->value(time);
+            tex = p_textures[i]->textureParam()->value(time);
         if (tex)
         {
             // bind to slot x
             GL::Texture::setActiveTexture(texSlot);
             tex->bind();
-            p_textures[i]->applyTextureParam(tex);
+            p_textures[i]->textureParam()->applyTextureParam(tex);
             // tell shader
             if (i < quad.u_tex.length() && quad.u_tex[i])
                 quad.u_tex[i]->ints[0] = texSlot;

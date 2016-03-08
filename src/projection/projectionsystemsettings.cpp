@@ -10,7 +10,7 @@
 
 #include "projectionsystemsettings.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_io.h"
 #include "io/xmlstream.h"
 #include "projectormapper.h"
 

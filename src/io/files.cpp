@@ -14,7 +14,7 @@
 
 #include "files.h"
 #include "io/settings.h"
-#include "io/log.h"
+#include "io/log_io.h"
 
 
 namespace MO {

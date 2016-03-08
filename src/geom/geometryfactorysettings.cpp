@@ -14,7 +14,7 @@
 #include "geometrymodifierchain.h"
 #include "io/datastream.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_geom.h"
 
 // for old file conversion
 #include "geom/geometrymodifierscale.h"

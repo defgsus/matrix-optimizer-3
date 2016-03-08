@@ -11,7 +11,7 @@
 #include "equationpresets.h"
 #include "equationpreset.h"
 #include "io/files.h"
-#include "io/log.h"
+#include "io/log_io.h"
 
 namespace MO {
 namespace IO {

@@ -11,7 +11,7 @@
 #include "trackfloat.h"
 #include "object/util/objectconnectiongraph.h"
 #include "io/datastream.h"
-#include "io/log.h"
+#include "io/log_mod.h"
 #include "sequencefloat.h"
 
 namespace MO {

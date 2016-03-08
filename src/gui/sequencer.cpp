@@ -20,7 +20,7 @@
 #include "ruler.h"
 #include "object/control/track.h"
 #include "object/control/sequence.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 #include "widget/timebar.h"
 #include "widget/spacer.h"
 

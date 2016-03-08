@@ -17,7 +17,7 @@
 #include "geom/geometryfactory.h"
 #include "geom/geometryfactorysettings.h"
 #include "geom/geometrymodifierchain.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 
 namespace MO {
 namespace GEOM {

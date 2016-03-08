@@ -33,7 +33,7 @@
 #include "object/util/useruniformsetting.h"
 #include "gui/geometrydialog.h"
 #include "io/application.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 
 #if 0
 #   define MO_DEBUG_MODEL(arg__) MO_DEBUG(arg__)
@@ -53,7 +53,7 @@ Model3d::Model3d()
       nextGeometry_ (0),
       texture_      (new TextureSetting(this)),
       textureBump_  (new TextureSetting(this)),
-      textureEnv_  (new TextureSetting(this)),
+      textureEnv_   (new TextureSetting(this)),
       texturePostProc_(new ColorPostProcessingSetting(this)),
       textureMorph_ (new TextureMorphSetting(this)),
       textureBumpMorph_(new TextureMorphSetting(this)),
@@ -71,6 +71,9 @@ Model3d::Model3d()
 
 Model3d::~Model3d()
 {
+    delete texture_;
+    delete textureBump_;
+    delete textureEnv_;
     resetCreator_();
 }
 
@@ -442,8 +445,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texture", tr("texture"));
 
-        texture_->createParameters(
-                    "col", tr("color texture"));
+        texture_->createParameters("_img_texcol", tr("color texture"));
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
                      tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
@@ -460,8 +462,8 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
-        textureBump_->createParameters(
-                    "bump", tr("normal-map texture"), ParameterTexture::IT_NONE, true);
+        textureBump_->createParameters("_img_texbump",
+                    tr("normal-map texture"), ParameterTexture::IT_NONE, true);
 
         bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),
@@ -474,8 +476,7 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("env_map", "environment map");
 
-        textureEnv_->createParameters(
-                "_env", tr("envmap texture"));
+        textureEnv_->createParameters("_img_tex_env", tr("envmap texture"));
 
         /*envMapType_ = params()->createSelectParameter("env_map_type", tr("input map type"),
                                     tr("Selects the type of texture to use"),
@@ -523,6 +524,9 @@ void Model3d::onParametersLoaded()
 {
     ObjectGl::onParametersLoaded();
     updateCodeVersion_();
+    texture_->fixCompatibility();
+    textureBump_->fixCompatibility();
+    textureEnv_->fixCompatibility();
 }
 
 void Model3d::onParameterChanged(Parameter *p)
@@ -1003,9 +1007,9 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
         uniformSetting_->updateUniforms(time, texSlot);
 
         // bind the model3d specific textures
-        if (u_tex_0_) { texture_->bind(time, texSlot); u_tex_0_->ints[0] = texSlot++; }
-        if (u_texn_0_) { textureBump_->bind(time, texSlot); u_texn_0_->ints[0] = texSlot++; }
-        if (u_tex_env_0_) { textureEnv_->bind(time, texSlot); u_tex_env_0_->ints[0] = texSlot++; }
+        if (u_tex_0_) { u_tex_0_->ints[0] = texSlot; texture_->bind(time, &texSlot); }
+        if (u_texn_0_) { u_texn_0_->ints[0] = texSlot; textureBump_->bind(time, &texSlot); }
+        if (u_tex_env_0_) { u_tex_env_0_->ints[0] = texSlot; textureEnv_->bind(time, &texSlot); }
 
         if (texture_->isEnabled())
         {

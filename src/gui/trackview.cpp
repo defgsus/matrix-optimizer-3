@@ -32,7 +32,7 @@
 #include "object/util/objectfactory.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 #include "io/application.h"
 #include "tool/enumnames.h"
 #include "util/scenesettings.h"

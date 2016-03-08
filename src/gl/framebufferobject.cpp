@@ -15,7 +15,7 @@
 #include "framebufferobject.h"
 #include "texture.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "io/streamoperators_glbinding.h"
 
 using namespace gl;

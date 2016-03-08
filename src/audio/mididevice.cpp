@@ -15,7 +15,7 @@
 #include "mididevice.h"
 #include "mididevices.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_midi.h"
 #include "io/settings.h"
 
 namespace MO {

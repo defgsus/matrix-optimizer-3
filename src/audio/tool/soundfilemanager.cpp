@@ -16,7 +16,7 @@
 #include "soundfilemanager.h"
 #include "soundfile.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_snd.h"
 #include "io/filemanager.h"
 
 namespace MO {

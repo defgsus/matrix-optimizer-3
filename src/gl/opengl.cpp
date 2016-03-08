@@ -10,7 +10,7 @@
 
 #include "opengl.h"
 #include "compatibility.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 
 namespace MO {
 namespace GL {

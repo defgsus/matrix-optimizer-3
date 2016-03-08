@@ -29,7 +29,7 @@
 #include "io/settings.h"
 #include "io/version.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 
 
 // usefull to catch the backtrace of exceptions in debugger

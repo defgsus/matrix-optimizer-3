@@ -14,7 +14,7 @@
 #include <QPaintEvent>
 
 #include "sequencewidget.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 #include "io/error.h"
 #include "gui/painter/valuecurve.h"
 #include "object/control/sequencefloat.h"

@@ -20,7 +20,7 @@
 #include "object/param/modulator.h"
 #include "object/util/objectfactory.h"
 #include "object/util/objecteditor.h"
-#include "io/log.h"
+#include "io/log_mod.h"
 #include "io/error.h"
 #include "io/settings.h"
 

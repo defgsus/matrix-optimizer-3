@@ -97,11 +97,11 @@ private:
         ParameterSelect * p_type;
         ParameterInt * p_length;
         ParameterFloat * p_timerange;
-        ParameterTexture * p_tex;
+        TextureSetting * p_texSet;
         QVector<ParameterFloat*> p_float;
 
         GL::Uniform * uniform;
-        GL::Texture * texture;
+        GL::Texture * ownTexture;
         std::vector<float> texBuf;
     };
 

@@ -15,7 +15,7 @@
 
 #include "drawable.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "geom/geometry.h"
 #include "shadersource.h"
 #include "shader.h"

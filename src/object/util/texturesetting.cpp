@@ -37,6 +37,7 @@ TextureSetting::TextureSetting(Object *parent)
     : object_       (parent)
     , paramTex_     (0)
     , paramFilename_(0)
+    , loaded_version(-1)
 {
 }
 
@@ -47,45 +48,56 @@ TextureSetting::~TextureSetting()
 
 void TextureSetting::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("texs", 1);
+    io.writeHeader("texs", 2);
+    // v2 moved most work to ParameterTexture
 }
 
 void TextureSetting::deserialize(IO::DataStream &io)
 {
-    io.readHeader("texs", 1);
+    loaded_version = io.readHeader("texs", 2);
 }
 
-void TextureSetting::createParameters(
-        const QString& id_suffix,
+void TextureSetting::createParameters(const QString& id,
         const QString& name,
         ParameterTexture::InputType defaultType,
         bool normalMap)
 {
+    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters");
     auto params = object_->params();
 
     params->beginEvolveGroup(false);
 
-    paramTex_ = params->createTextureParameter("_img_tex" + id_suffix,
-                                               name,
-                                               tr("Connects to a texture from somewhere else or "
-                                                  "creates a texture on-the-fly"));
+    paramTex_ = params->createTextureParameter(
+                id, name,
+                tr("Connects to a texture from somewhere else or "
+                   "creates a texture on-the-fly"));
     //paramTex_->setVisibleGraph(true);
     paramTex_->setInputType(defaultType);
     paramTex_->setDefaultInputType(defaultType);
 
     paramFilename_ = params->createFilenameParameter(
-                "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
+                id + "_filename", tr("image file"), tr("Filename of the image"),
                 normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
                 normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
     paramTex_->setFilenameParameter(paramFilename_);
 
     params->endEvolveGroup();
+
+    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters finish");
 }
 
 
 void TextureSetting::updateParameterVisibility()
 {
-    paramFilename_->setVisible( paramTex_->inputType() == ParameterTexture::IT_FILE );
+    paramFilename_->setVisible(
+                paramTex_->isVisible() &&
+                paramTex_->inputType() == ParameterTexture::IT_FILE );
+}
+
+void TextureSetting::setVisible(bool v)
+{
+    paramTex_->setVisible(v);
+    updateParameterVisibility();
 }
 
 void TextureSetting::getNeededFiles(IO::FileList& files)
@@ -95,6 +107,21 @@ void TextureSetting::getNeededFiles(IO::FileList& files)
     if (paramTex_->inputType() == ParameterTexture::IT_FILE)
         files.append(IO::FileListEntry(paramFilename_->value(),
                                        paramFilename_->fileType()));
+}
+
+void TextureSetting::fixCompatibility()
+{
+    // make a guess about the source of texture
+    if (loaded_version == 1)
+    {
+        if (!paramTex_->modulatorIds().isEmpty())
+            paramTex_->setInputType(ParameterTexture::IT_INPUT);
+        else
+        if (paramFilename_->value() != paramFilename_->defaultValue())
+            paramTex_->setInputType(ParameterTexture::IT_FILE);
+
+        loaded_version = -1;
+    }
 }
 
 // --------------- getter -------------------
@@ -172,7 +199,7 @@ void TextureSetting::releaseGl()
 }
 
 
-void TextureSetting::bind(const RenderTime& time, uint slot)
+void TextureSetting::bind(const RenderTime& time, uint* slot)
 {
     auto tex = paramTex_->value(time);
     if (!tex)
@@ -184,22 +211,12 @@ void TextureSetting::bind(const RenderTime& time, uint slot)
 
     // ---- bind ----
 
-    // set active slot
-    slot += (uint)GL_TEXTURE0;
-    GLint act;
-    MO_CHECK_GL_THROW( glGetIntegerv(GL_ACTIVE_TEXTURE, &act) );
-    if ((GLint)slot != act)
-        MO_CHECK_GL_THROW( glActiveTexture(GLenum(slot)) );
-
+    tex->setActiveTexture(*slot); (*slot)++;
     tex->bind();
 
     // ---- set texture params ----
 
     paramTex_->applyTextureParam(tex);
-
-    // set slot back
-    if ((GLint)slot != act)
-        MO_CHECK_GL_THROW( glActiveTexture(GLenum(act)) );
 }
 
 

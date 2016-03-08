@@ -251,7 +251,18 @@ HEADERS += \
     $$PWD/math/timelinend.h \
     $$PWD/model/python34model.h \
     $$PWD/python/34/py_tree.h \
-    $$PWD/math/vec_math.h
+    $$PWD/math/vec_math.h \
+    $$PWD/io/log_texture.h \
+    $$PWD/io/log_param.h \
+    $$PWD/io/log_gui.h \
+    $$PWD/io/log_gl.h \
+    $$PWD/io/log_io.h \
+    $$PWD/io/log_audio.h \
+    $$PWD/io/log_mod.h \
+    $$PWD/io/log_tree.h \
+    $$PWD/io/log_midi.h \
+    $$PWD/io/log_geom.h \
+    $$PWD/io/log_snd.h
 
 
 SOURCES += \

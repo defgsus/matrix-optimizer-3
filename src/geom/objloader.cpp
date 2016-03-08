@@ -26,7 +26,8 @@
 #include <QMutexLocker>
 
 #include "objloader.h"
-#include "io/log.h"
+#include "io/log_io.h"
+#include "io/log_geom.h"
 #include "io/error.h"
 #include "geometry.h"
 

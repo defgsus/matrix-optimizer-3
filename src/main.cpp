@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
 
         #ifdef NDEBUG
             MO::GUI::SplashScreen * splash = 0;
-            if (1)
+            if (0)
             {
                 splash = new MO::GUI::SplashScreen();
                 splash->show();

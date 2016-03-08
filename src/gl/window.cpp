@@ -31,7 +31,7 @@
 #include "io/application.h"
 #include "io/version.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 
 namespace MO {
 namespace GL {

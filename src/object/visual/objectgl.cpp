@@ -14,7 +14,8 @@
 
 #include "objectgl.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_gl.h"
+#include "io/log_tree.h"
 #include "gl/context.h"
 #include "io/datastream.h"
 #include "object/scene.h"

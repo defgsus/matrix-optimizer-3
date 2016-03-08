@@ -12,11 +12,12 @@
 
 #include "modulator.h"
 #include "io/datastream.h"
-#include "io/log.h"
+#include "io/log_mod.h"
 #include "io/error.h"
 #include "object/object.h"
 #include "object/param/parameter.h"
 #include "tool/stringmanip.h"
+
 namespace MO {
 
 

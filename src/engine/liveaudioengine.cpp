@@ -33,7 +33,7 @@
 #include "engine/audioengine.h"
 #include "io/time.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_audio.h"
 
 namespace MO {
 

@@ -18,7 +18,7 @@
 #include "gl/texture.h"
 #include "gl/screenquad.h"
 #include "gl/drawable.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "math/cubemapmatrix.h"
 #include "geom/geometryfactory.h"
 #include "geom/freecamera.h"

@@ -25,7 +25,7 @@
 #include "io/error.h"
 #include "io/applicationtime.h"
 #include "io/settings.h"
-#include "io/log.h"
+#include "io/log_midi.h"
 #include "tool/locklessqueue.h"
 
 namespace MO {

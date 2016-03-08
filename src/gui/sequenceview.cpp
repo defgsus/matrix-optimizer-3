@@ -29,7 +29,8 @@
 #include "widget/doublespinbox.h"
 #include "widget/timebar.h"
 #include "util/scenesettings.h"
-#include "io/log.h"
+#include "io/log_gui.h"
+#include "io/log_param.h"
 
 namespace MO {
 namespace GUI {

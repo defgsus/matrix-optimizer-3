@@ -16,7 +16,7 @@
 #include "scenerenderer.h"
 #include "object/scene.h"
 #include "object/util/scenesignals.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "io/error.h"
 #include "io/application.h"
 

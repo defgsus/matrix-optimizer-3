@@ -19,7 +19,7 @@
 #include "io/streamoperators_glbinding.h"
 #include "tool/stringmanip.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_texture.h"
 
 using namespace gl;
 
@@ -57,7 +57,7 @@ Texture::Texture()
         type_			(GL_NONE),
         hash_           (++init_hash_)
 {
-    MO_DEBUG_IMG("Texture::Texture()");
+    MO_DEBUG_TEX("Texture::Texture()");
     name_ = QString("tex%1").arg(tex_count_++);
 }
 
@@ -87,7 +87,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       type_             (type),
       hash_             (++init_hash_)
 {
-    MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height
+    MO_DEBUG_TEX("Texture::Texture(" << width << "x" << height
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
     name_ = QString("tex%1").arg(tex_count_++);
@@ -117,7 +117,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
       type_			(type),
       hash_           (++init_hash_)
 {
-    MO_DEBUG_IMG("Texture::Texture(" << width << "x" << height << "x" << depth
+    MO_DEBUG_TEX("Texture::Texture(" << width << "x" << height << "x" << depth
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
     name_ = QString("tex%1").arg(tex_count_++);
@@ -150,7 +150,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
       type_			(type),
       hash_         (++init_hash_)
 {
-    MO_DEBUG_IMG("Texture::Texture(" << width << ", " << height
+    MO_DEBUG_TEX("Texture::Texture(" << width << ", " << height
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_px << ", " << ptr_nx << ", "
                 << ptr_py << ", " << ptr_ny << ", " << ptr_pz << ", " << ptr_nz << ")");
@@ -159,7 +159,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height,
 
 Texture::~Texture()
 {
-    MO_DEBUG_IMG("Texture::~Texture()");
+    MO_DEBUG_TEX("Texture::~Texture()");
 
     if (isHandle())
         MO_GL_WARNING("destructor of allocated texture '" << name() << "' - "
@@ -236,7 +236,7 @@ void Texture::create(gl::GLsizei width,
                 gl::GLenum type,
                 void* ptr_to_data)
 {
-    MO_DEBUG_IMG("Texture::create(" << width
+    MO_DEBUG_TEX("Texture::create(" << width
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
 
@@ -272,7 +272,7 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height,
                 gl::GLenum type,
                 void* ptr_to_data)
 {
-    MO_DEBUG_IMG("Texture::create(" << width << ", " << height
+    MO_DEBUG_TEX("Texture::create(" << width << ", " << height
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
 
@@ -307,7 +307,7 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                 gl::GLenum type,
                 void* ptr_to_data)
 {
-    MO_DEBUG_IMG("Texture::create(" << width << "x" << height << "x" << depth
+    MO_DEBUG_TEX("Texture::create(" << width << "x" << height << "x" << depth
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_to_data << ")");
 
@@ -345,7 +345,7 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height,
                 void * ptr_py, void * ptr_ny,
                 void * ptr_pz, void * ptr_nz)
 {
-    MO_DEBUG_IMG("Texture::create(" << width << ", " << height
+    MO_DEBUG_TEX("Texture::create(" << width << ", " << height
                 << ", " << format << ", " << input_format
                 << ", " << type << ", " << ptr_px << ", " << ptr_nx << ", "
                 << ptr_py << ", " << ptr_ny << ", " << ptr_pz << ", " << ptr_nz << ")");
@@ -380,7 +380,7 @@ void Texture::create(gl::GLsizei width, gl::GLsizei height,
 
 GLuint Texture::genTexture_() const
 {
-    MO_DEBUG_IMG("Texture::genTexture_()");
+    MO_DEBUG_TEX("Texture::genTexture_()");
 
     GLuint tex;
 
@@ -391,7 +391,7 @@ GLuint Texture::genTexture_() const
 
 void Texture::releaseTexture_()
 {
-    MO_DEBUG_IMG("Texture::releaseTexture_()");
+    MO_DEBUG_TEX("Texture::releaseTexture_()");
 
     if (!isHandle()) return;
 
@@ -416,7 +416,7 @@ void Texture::setChanged()
 
 void Texture::bind() const
 {
-    //MO_DEBUG_IMG("Texture::bind(" << target_ << ", " << handle_ << ")");
+    //MO_DEBUG_TEX("Texture::bind(" << target_ << ", " << handle_ << ")");
 
     MO_CHECK_GL_THROW( glBindTexture(target_, handle_) );
 }
@@ -437,7 +437,7 @@ void Texture::setTexParameter(GLenum param, GLint value) const
 
 void Texture::create()
 {
-    MO_DEBUG_IMG("Texture::create()");
+    MO_DEBUG_TEX("Texture::create()");
 
     // delete previous
     if (handle_ != invalidGl)
@@ -530,7 +530,7 @@ void Texture::createMipmaps(uint max_level, gl::GLenum mode)
 
 void Texture::upload(gl::GLint mipmap_level)
 {
-    MO_DEBUG_IMG("Texture::upload(mipmap=" << mipmap_level << ")");
+    MO_DEBUG_TEX("Texture::upload(mipmap=" << mipmap_level << ")");
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
         upload_(ptr_, mipmap_level);
@@ -547,7 +547,7 @@ void Texture::upload(gl::GLint mipmap_level)
 
 void Texture::upload(void * ptr, gl::GLint mipmap_level)
 {
-    MO_DEBUG_IMG("Texture::upload(" << ptr << ", mipmap=" << mipmap_level << ")");
+    MO_DEBUG_TEX("Texture::upload(" << ptr << ", mipmap=" << mipmap_level << ")");
 
     if (target_ != GL_TEXTURE_CUBE_MAP)
         upload_(ptr, mipmap_level);
@@ -565,7 +565,7 @@ void Texture::upload(void * ptr, gl::GLint mipmap_level)
 /** @todo implement fast version (see hevc player source) */
 void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 {
-    MO_DEBUG_IMG("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level
+    MO_DEBUG_TEX("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level
                 << ", cubetgt=" << cube_target << ")");
 
     if (!isHandle())
@@ -735,7 +735,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         setTexParameter(GL_TEXTURE_WRAP_T, GLint( (repeat)? GL_REPEAT : GL_CLAMP) );
     }
 
-    MO_DEBUG_IMG("Texture::upload_() finished");
+    MO_DEBUG_TEX("Texture::upload_() finished");
 
     // bind again to check for errors
     bind();
@@ -744,7 +744,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
 void Texture::download(void * ptr, GLuint mipmap) const
 {
-    MO_DEBUG_IMG("Texture::download(" << ptr << ")");
+    MO_DEBUG_TEX("Texture::download(" << ptr << ")");
 
     MO_ASSERT(ptr && target_ != GL_TEXTURE_CUBE_MAP,
               "download of cubemap to single goal undefined");
@@ -765,7 +765,7 @@ void Texture::download(void * ptr, GLuint mipmap) const
 
 void Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) const
 {
-    MO_DEBUG_IMG("Texture::download_(" << ptr << ", " << mipmap
+    MO_DEBUG_TEX("Texture::download_(" << ptr << ", " << mipmap
                  << ", " << target << ", " << type << ")");
 
     MO_ASSERT(ptr, "download from texture to NULL");
@@ -786,7 +786,7 @@ void Texture::download_(void * ptr, GLuint mipmap, GLenum target, GLenum type) c
 
 void Texture::download(void * ptr, GLenum format, GLenum type, GLuint mipmap) const
 {
-    MO_DEBUG_IMG("Texture::download(" << ptr << ", " << format
+    MO_DEBUG_TEX("Texture::download(" << ptr << ", " << format
                  << ", " << type << ", " << mipmap << ")");
 
     MO_ASSERT(ptr, "download from texture to NULL");
@@ -824,7 +824,7 @@ QString Texture::info_str() const
 
 QImage Texture::toQImage() const
 {
-    MO_DEBUG_IMG("Texture::getImage()");
+    MO_DEBUG_TEX("Texture::getImage()");
 
     std::vector<GLfloat> buffer(width() * height() * 4);
     //float * buffer = (float*) aligned_alloc(32, width() * height() * 4);
@@ -876,7 +876,7 @@ void Texture::setActiveTexture(GLuint slot)
 
 Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, uint mipmap_levels)
 {
-    MO_DEBUG_IMG("Texture::createFromQImage(" << &img << ", " << gpu_format << ")");
+    MO_DEBUG_TEX("Texture::createFromQImage(" << &img << ", " << gpu_format << ")");
 
     if (img.isNull())
     {

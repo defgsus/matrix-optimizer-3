@@ -16,6 +16,7 @@
 #include "object/param/parametertext.h"
 #include "object/param/parametertexture.h"
 #include "object/param/parameterselect.h"
+#include "object/util/texturesetting.h"
 #include "gl/opengl.h"
 #include "gl/shader.h"
 #include "gl/texture.h"
@@ -51,6 +52,8 @@ UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
 
 UserUniformSetting::~UserUniformSetting()
 {
+    for (Uniform& u : uniforms_)
+        delete u.p_texSet;
 }
 
 void UserUniformSetting::serialize(IO::DataStream &io) const
@@ -71,7 +74,7 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
     {
         Uniform u;
         u.uniform = 0;
-        u.texture = 0;
+        u.ownTexture = 0;
 
 
         u.p_type = params->createSelectParameter(
@@ -93,7 +96,7 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
                                                tr("uniform%1 name").arg(i + 1),
                                                tr("The name of the uniform variable as it should go into the header of the shader"),
                                                TT_PLAIN_TEXT,
-                                               "",
+                                               QString("uu_%1").arg(i),
                                                true, false);
         u.p_name->setDefaultEvolvable(false);
 
@@ -111,10 +114,11 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
                                                 1., -10000., 10000.,
                                                 .1, true, true);
 
-        u.p_tex = params->createTextureParameter(("uniformtex%1_" + id_suffix).arg(i),
-                                                tr("uniform%1 texture").arg(i + 1),
-                                                tr("Source of texture uniform"));
-        u.p_tex->setVisibleGraph(true);
+        u.p_texSet = new TextureSetting(object_);
+        u.p_texSet->createParameters(("uniformtex%1_" + id_suffix).arg(i),
+                                     tr("uniform%1 texture").arg(i + 1),
+                                     ParameterTexture::IT_INPUT);
+        u.p_texSet->textureParam()->setVisibleGraph(true);
 
         static QString compName[] = { "x", "y", "z", "w" };
         for (int j=0; j<4; ++j)
@@ -134,13 +138,17 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
 
 bool UserUniformSetting::needsReinit(Parameter *p) const
 {
+    bool r = false;
+    for (const Uniform & u : uniforms_)
+        r |= u.p_texSet->onParameterChange(p);
+
     for (const Uniform & u : uniforms_)
     {
         if (u.p_name == p || u.p_type == p || u.p_length == p)
             return true;
     }
 
-    return false;
+    return r;
 }
 
 void UserUniformSetting::updateParameterVisibility()
@@ -176,7 +184,7 @@ void UserUniformSetting::updateParameterVisibility()
 
         u.p_name->setVisible(u.num_floats > 0 || u.isTextureInput());
 
-        u.p_tex->setVisible(u.isTextureInput());
+        u.p_texSet->setVisible(u.isTextureInput());
     }
 
     uploadTime_ = -1.12341212; // be sure to upload uniforms next time
@@ -240,12 +248,12 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
             // to set texture slot
             u.uniform = s->getUniform(u.p_name->value(), false);
             // update texture
-            if (!u.texture)
+            if (!u.ownTexture)
             {
-                u.texture = new GL::Texture();
-                u.texture->setName("float_input");
+                u.ownTexture = new GL::Texture();
+                u.ownTexture->setName("float_input");
             }
-            if ((int)u.texture->width() != u.p_length->baseValue())
+            if ((int)u.ownTexture->width() != u.p_length->baseValue())
             {
                 // find input format
                 gl::GLenum informat = gl::GL_RED;
@@ -256,7 +264,7 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
                     informat = gl::GL_RGB;
                 if (ut == UT_T4)
                     informat = gl::GL_RGBA;
-                u.texture->create(u.p_length->baseValue(), gl::GL_RGB32F, informat, gl::GL_FLOAT, 0);
+                u.ownTexture->create(u.p_length->baseValue(), gl::GL_RGB32F, informat, gl::GL_FLOAT, 0);
             }
         }
     }
@@ -277,21 +285,7 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
     {
         if (u.isTextureInput())
         {
-            if (const GL::Texture * tex = u.p_tex->value(time))
-            {
-                //MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
-                MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
-                tex->bind();
-                u.p_tex->applyTextureParam(tex);
-                u.uniform->ints[0] = texSlot;
-                ++texSlot;
-                /// @todo generalize texture read parameters for texture inputs
-                if (tex->isCube())
-                {
-                    tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
-                    tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
-                }
-            }
+            u.p_texSet->bind(time, &texSlot);
         }
         else
         if (!u.isBufferTexture())
@@ -302,7 +296,7 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
         }
         else
         {
-            uint len = u.texture->width(),
+            uint len = u.ownTexture->width(),
                  bsize = len * u.num_floats;
             // update buffer size
             if (u.texBuf.size() != bsize)
@@ -318,12 +312,12 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
                 ti -= rangeStep;
             }
 
-            MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
-            u.texture->bind();
+            u.ownTexture->setActiveTexture(texSlot);
+            u.ownTexture->bind();
             u.uniform->ints[0] = texSlot;
             ++texSlot;
 
-            u.texture->upload(&u.texBuf[0]);
+            u.ownTexture->upload(&u.texBuf[0]);
         }
     }
 }
@@ -333,13 +327,15 @@ void UserUniformSetting::releaseGl()
 {
     for (Uniform & u : uniforms_)
     {
-        if (u.texture)
+        if (u.ownTexture)
         {
-            if (u.texture->isAllocated())
-                u.texture->release();
-            delete u.texture;
-            u.texture = 0;
+            if (u.ownTexture->isAllocated())
+                u.ownTexture->release();
+            delete u.ownTexture;
+            u.ownTexture = 0;
         }
+
+        u.p_texSet->releaseGl();
     }
 }
 

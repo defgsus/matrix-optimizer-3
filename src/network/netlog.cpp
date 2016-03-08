@@ -16,7 +16,7 @@
 #include "io/applicationtime.h"
 #include "io/currentthread.h"
 #include "io/error.h"
-#include "io/log.h"
+#include "io/log_io.h"
 
 #undef ERROR // windows..
 

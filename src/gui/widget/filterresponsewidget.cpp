@@ -17,7 +17,7 @@
 #include "audio/tool/multifilter.h"
 #include "math/constants.h"
 #include "math/fft.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {

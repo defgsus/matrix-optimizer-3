@@ -57,7 +57,7 @@
 #include "io/files.h"
 #include "io/currenttime.h"
 #include "io/application.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 
 #include "object/util/parameterevolution.h"
 

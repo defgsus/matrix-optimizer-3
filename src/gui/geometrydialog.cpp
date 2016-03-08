@@ -39,7 +39,7 @@
 #include "tool/stringmanip.h"
 #include "widget/equationeditor.h"
 #include "io/files.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "io/settings.h"
 #include "geometryexportdialog.h"
 #include "gl/lightsettings.h"

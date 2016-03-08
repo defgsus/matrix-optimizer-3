@@ -23,7 +23,7 @@
 #include "tool/stringmanip.h"
 #include "io/application.h"
 #include "io/settings.h"
-#include "io/log.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {

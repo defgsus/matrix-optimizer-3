@@ -23,7 +23,7 @@
 #include "gl/shadersource.h"
 #include "gl/texture.h"
 #include "math/vector.h"
-#include "io/log.h"
+#include "io/log_gl.h"
 #include "io/settings.h"
 
 namespace MO {
