@@ -94,11 +94,18 @@ bool TextureMorphSetting::needsRecompile(Parameter *p) const
     return (p == pTrans_ || p == pSineMorph_);
 }
 
+void TextureMorphSetting::setVisible(bool v)
+{
+    pTrans_->setVisible(v);
+    pSineMorph_->setVisible(v);
+    updateParameterVisibility();
+}
+
 void TextureMorphSetting::updateParameterVisibility()
 {
     const bool
-            trans = pTrans_->baseValue(),
-            morph = pSineMorph_->baseValue();
+            trans = pTrans_->isVisible() && pTrans_->baseValue(),
+            morph = pSineMorph_->isVisible() && pSineMorph_->baseValue();
 
     pTransX_->setVisible( trans );
     pTransY_->setVisible( trans );

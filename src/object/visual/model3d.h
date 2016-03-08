@@ -103,8 +103,7 @@ private:
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_,
         *envMapAmt_, *envMapAmt2_, *envMapAmt3_;
     ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
-                    * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_,
-                    * doEnvMap_;
+                    * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_;
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_,
                 *glslNormal_, *glslLight_;
     ParameterInt * paramNumInstance_;

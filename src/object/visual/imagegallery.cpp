@@ -366,7 +366,8 @@ void ImageGallery::createParameters()
 
     params()->beginParameterGroup("frametex", tr("frame texture"));
 
-        frameTexSet_->createParameters("_frametex", ParameterTexture::IT_WHITE);
+        frameTexSet_->createParameters(
+                    "_frametex", tr("frame texture"), ParameterTexture::IT_WHITE);
 
     params()->endParameterGroup();
 

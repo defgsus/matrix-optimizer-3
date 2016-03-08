@@ -95,6 +95,7 @@ public:
     bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
     InputType inputType() const;
+    InputType defaultInputType() const;
     WrapMode wrapModeX() const;
     WrapMode wrapModeY() const;
     MagMode magMode() const;
@@ -105,18 +106,25 @@ public:
         mip-mapping. */
     bool isMipmap() const;
 
+    ParameterFilename* filenameParameter() const;
+
     // ---------------- setter -----------------
 
     void setInputType(InputType);
+    void setDefaultInputType(InputType);
     void setWrapMode(WrapMode m);
     void setWrapModeX(WrapMode m);
     void setWrapModeY(WrapMode m);
     void setMagMode(MagMode m);
     void setMinMode(MinMode m);
-    void setFilename(const QString&);
 
-    /** Applies the wrap and min/mag settings */
-    void setTextureParam(const GL::Texture*) const;
+    void setFilenameParameter(ParameterFilename*);
+
+    // -------- opengl ----------------
+
+    /** Applies the wrap and min/mag settings to the current
+        OpenGL state. @p tex MUST BE BOUND! */
+    void applyTextureParam(const GL::Texture* tex) const;
 
     /** Release any created textures */
     void releaseGl();

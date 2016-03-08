@@ -56,7 +56,8 @@ void TextureSetting::deserialize(IO::DataStream &io)
 }
 
 void TextureSetting::createParameters(
-        const QString &id_suffix,
+        const QString& id_suffix,
+        const QString& name,
         ParameterTexture::InputType defaultType,
         bool normalMap)
 {
@@ -65,16 +66,18 @@ void TextureSetting::createParameters(
     params->beginEvolveGroup(false);
 
     paramTex_ = params->createTextureParameter("_img_tex" + id_suffix,
-                                               tr("texture input"),
+                                               name,
                                                tr("Connects to a texture from somewhere else or "
                                                   "creates a texture on-the-fly"));
     //paramTex_->setVisibleGraph(true);
     paramTex_->setInputType(defaultType);
+    paramTex_->setDefaultInputType(defaultType);
 
     paramFilename_ = params->createFilenameParameter(
                 "_imgfile" + id_suffix, tr("image file"), tr("Filename of the image"),
                 normalMap? IO::FT_NORMAL_MAP : IO::FT_TEXTURE,
                 normalMap? ":/normalmap/01.png" : ":/texture/mo_black.png");
+    paramTex_->setFilenameParameter(paramFilename_);
 
     params->endEvolveGroup();
 }
@@ -118,17 +121,47 @@ bool TextureSetting::isEnabled() const
 bool TextureSetting::checkCubeChanged()
 {
     bool is = p_isCube_,
-         r = p_lastIsEnabled_ != is;
+         r = p_lastIsCube_ != is;
     p_lastIsCube_ = is;
     return r;
 }
 
 bool TextureSetting::checkEnabledChanged()
 {
-    bool is = paramTex_ && paramTex_->inputType() != ParameterTexture::IT_NONE,
+    if (!paramTex_)
+        return false;
+    bool is = paramTex_->inputType() != ParameterTexture::IT_NONE,
          r = p_lastIsEnabled_ != is;
     p_lastIsEnabled_ = is;
     return r;
+}
+
+bool TextureSetting::checkFilenameChanged()
+{
+    if (!paramFilename_)
+        return false;
+    bool r = p_lastFilename_ != paramFilename_->value();
+    p_lastFilename_ = paramFilename_->value();
+    return r;
+}
+
+bool TextureSetting::checkAnyChanged()
+{
+    // Important: compare bitwise to call each function and reset checked-states
+    return checkEnabledChanged() | checkFilenameChanged() | checkCubeChanged();
+}
+
+bool TextureSetting::onParameterChange(Parameter *p)
+{
+    if (p == paramFilename_)
+    {
+        return checkFilenameChanged();
+    }
+    if (p == paramTex_)
+    {
+        return checkAnyChanged();
+    }
+    return false;
 }
 
 // ------------- opengl ---------------------
@@ -162,7 +195,7 @@ void TextureSetting::bind(const RenderTime& time, uint slot)
 
     // ---- set texture params ----
 
-    paramTex_->setTextureParam(tex);
+    paramTex_->applyTextureParam(tex);
 
     // set slot back
     if ((GLint)slot != act)

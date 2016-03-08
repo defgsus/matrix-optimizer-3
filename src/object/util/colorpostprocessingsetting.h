@@ -42,6 +42,8 @@ public:
     /** Sets the visibility of the parameters according to current settings. */
     void updateParameterVisibility();
 
+    void setVisible(bool );
+
     // ---------- opengl ---------------
 
     /** Returns true if post-processing is enabled by the Parameter setting */

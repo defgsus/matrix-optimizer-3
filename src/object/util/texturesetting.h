@@ -48,8 +48,10 @@ public:
         @p defaultType is the default type of texture source. */
     void createParameters(
             const QString& id_suffix,
-            ParameterTexture::InputType defaultType = ParameterTexture::IT_WHITE,
+            const QString& name,
+            ParameterTexture::InputType defaultType = ParameterTexture::IT_NONE,
             bool normalMap = false);
+
 
     /** Sets the visibility of the parameters according to current settings. */
     void updateParameterVisibility();
@@ -75,6 +77,11 @@ public:
         call to isCube() or to this function. */
     bool checkCubeChanged();
     bool checkEnabledChanged();
+    bool checkFilenameChanged();
+    bool checkAnyChanged();
+
+    /** Applies filename and returns true when shader recompilation should happen */
+    bool onParameterChange(Parameter*p);
 
     // ------------ opengl ---------------
 
@@ -96,6 +103,7 @@ private:
 
     bool p_isCube_;
     mutable bool p_lastIsCube_, p_lastIsEnabled_;
+    mutable QString p_lastFilename_;
 };
 
 } // namespace MO

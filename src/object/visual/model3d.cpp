@@ -442,18 +442,14 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texture", tr("texture"));
 
-        texture_->createParameters("col");
+        texture_->createParameters(
+                    "col", tr("color texture"));
 
         usePointCoord_ = params()->createBooleanParameter("tex_use_pointcoord", tr("map on points"),
                      tr("Currently you need to decide wether to map the texture on triangles or on point sprites"),
                      tr("The texture coordinates are used as defined by the vertices in the geometry"),
                      tr("Calculated texture coordinates will be used for point sprites."),
                      false, true, false);
-
-    params()->endParameterGroup();
-
-
-    params()->beginParameterGroup("texturepp", tr("texture post-processing"));
 
         texturePostProc_->createParameters("tex");
 
@@ -464,16 +460,12 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("texturebump", tr("normal-map texture"));
 
-        textureBump_->createParameters("bump", ParameterTexture::IT_NONE, true);
+        textureBump_->createParameters(
+                    "bump", tr("normal-map texture"), ParameterTexture::IT_NONE, true);
 
         bumpScale_ = params()->createFloatParameter("bumpdepth", tr("bump scale"),
                             tr("The influence of the normal-map"),
-                            1.0, 0.05);
-
-    params()->endParameterGroup();
-
-
-    params()->beginParameterGroup("texturebumppp", tr("normal-map post-proc"));
+                            .1, 0.01);
 
         textureBumpMorph_->createParameters("bump");
 
@@ -482,12 +474,8 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("env_map", "environment map");
 
-        doEnvMap_ = params()->createBooleanParameter("do_env_map", tr("enable environment map"),
-                        tr("Enables environment mapping with a specific texture"),
-                                                     tr("No environment mapping"),
-                                                     tr("Environment mapping enabled"),
-                                                     false,
-                                                     true, false);
+        textureEnv_->createParameters(
+                "_env", tr("envmap texture"));
 
         /*envMapType_ = params()->createSelectParameter("env_map_type", tr("input map type"),
                                     tr("Selects the type of texture to use"),
@@ -507,8 +495,6 @@ void Model3d::createParameters()
                     tr("The amount of the environment mapping when the angle of incident "
                        "is opposite to the emergent angle."),
                     1.f, 0.05f, true, true);
-
-        textureEnv_->createParameters("_env", ParameterTexture::IT_NONE);
 
     params()->endParameterGroup();
 
@@ -554,6 +540,9 @@ void Model3d::onParameterChanged(Parameter *p)
             || p == glslLight_
             || p == usePointCoord_
             || p == pointSizeAuto_
+            || texture_->onParameterChange(p)
+            || textureBump_->onParameterChange(p)
+            || textureEnv_->onParameterChange(p)
             || texturePostProc_->needsRecompile(p)
             || textureMorph_->needsRecompile(p)
             || textureBumpMorph_->needsRecompile(p) )
@@ -574,11 +563,11 @@ void Model3d::updateParameterVisibility()
 
     texture_->updateParameterVisibility();
     textureBump_->updateParameterVisibility();
-    texturePostProc_->updateParameterVisibility();
-    textureMorph_->updateParameterVisibility();
-    textureBumpMorph_->updateParameterVisibility();
-    uniformSetting_->updateParameterVisibility();
     textureEnv_->updateParameterVisibility();
+    texturePostProc_->setVisible(texture_->isEnabled());
+    textureMorph_->setVisible(texture_->isEnabled());
+    textureBumpMorph_->setVisible(textureBump_->isEnabled());
+    uniformSetting_->updateParameterVisibility();
 
     diffAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
@@ -599,6 +588,15 @@ void Model3d::updateParameterVisibility()
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
     paramPointSizeDistFac_->setVisible(psdist);
+
+    bool doEnv = textureEnv_->isEnabled();
+    envMapAmt_->setVisible(doEnv);
+    envMapAmt2_->setVisible(doEnv);
+    envMapAmt3_->setVisible(doEnv);
+
+    bool doBump = textureBump_->isEnabled();
+    bumpScale_->setVisible(doBump);
+    textureBumpMorph_->setVisible(doBump);
 }
 
 void Model3d::getNeededFiles(IO::FileList &files)
@@ -916,13 +914,11 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
     //MO_PRINT(applicationTime() << " was "
     //  << envTexCompiledCube_ << " is " << textureEnv_->texture()->isCube());
 
-    // recompile if enabled/disabled
-    // or 2d/cubemap change in environment texture
+    // recompile 2d/cubemap change in environment texture
     // XXX Possibly for equirect/fisheye change too, once this is implemented
-    if (texture_->checkEnabledChanged() ||
-        textureBump_->checkEnabledChanged() ||
-        (textureEnv_->checkEnabledChanged()
-            || (textureEnv_->isEnabled() && textureEnv_->checkCubeChanged()))
+    if ( (texture_->isEnabled() && texture_->checkCubeChanged())
+      || (textureBump_->isEnabled() && textureBump_->checkCubeChanged())
+      || (textureEnv_->isEnabled() && textureEnv_->checkCubeChanged())
        )
     {
         requestReinitGl();

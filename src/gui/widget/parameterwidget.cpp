@@ -667,6 +667,22 @@ namespace
             {
                 func(values[i]);
 
+                // XXX Replicate an actual Parameter change
+                // We are only manipulating ParameterTexture values
+                // that are outside of the signal scope
+                // XXX This could be refactured into an interface
+                //     to Parameter/ObjectEditor
+                if (auto o = param->object())
+                {
+                    o->onParameterChanged(param);
+                    o->updateParameterVisibility();
+                    if (auto e = o->editor())
+                        emit e->parameterChanged(param);
+
+                    if (auto s = o->sceneObject())
+                        s->render();
+                }
+
                 if (ObjectGl* gl = dynamic_cast<ObjectGl*>(param->object()))
                     gl->requestRender();
             });

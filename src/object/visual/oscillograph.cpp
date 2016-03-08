@@ -325,7 +325,8 @@ void Oscillograph::createParameters()
 
     params()->beginParameterGroup("texture", "texture");
 
-        p_->textureSet->createParameters("_col", ParameterTexture::IT_WHITE);
+        p_->textureSet->createParameters(
+                    "_col", tr("color texture"), ParameterTexture::IT_WHITE);
 
     params()->endParameterGroup();
 }

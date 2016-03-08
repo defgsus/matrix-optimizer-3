@@ -230,7 +230,8 @@ void Skybox::createParameters()
                     tr("Scales the content on the y axis"),
                     1.0, 0.1, true, true);
 
-        p_->textureSetting.createParameters("col", ParameterTexture::IT_INPUT);
+        p_->textureSetting.createParameters(
+                    "col", tr("texture"), ParameterTexture::IT_INPUT);
         p_->textureSetting.textureParam()->setWrapMode(ParameterTexture::WM_REPEAT);
 
     params()->endParameterGroup();

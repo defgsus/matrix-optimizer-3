@@ -93,9 +93,15 @@ bool ColorPostProcessingSetting::needsRecompile(Parameter *p) const
     return (p == paramPost_);
 }
 
+void ColorPostProcessingSetting::setVisible(bool v)
+{
+    paramPost_->setVisible(v);
+    updateParameterVisibility();
+}
+
 void ColorPostProcessingSetting::updateParameterVisibility()
 {
-    bool act = isEnabled();
+    bool act = isEnabled() && paramPost_->isVisible();
 
     postAlpha_->setVisible( act );
     postAlphaR_->setVisible( act );

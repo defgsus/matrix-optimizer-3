@@ -307,9 +307,10 @@ void TextureObjectBase::PrivateTO::createParameters()
                                             i < (uint)inpNames.size()
                                                 ? inpNames[i]
                                                 : tr("input %1").arg(i+1),
-                                            tr("A texture input")) );
+                                            tr("Source for texture #%1").arg(i+1)) );
 
             p_textures.back()->setVisibleGraph(true);
+            p_textures.back()->setInputType(ParameterTexture::IT_INPUT);
 
             p_textureFilenames.push_back( to->params()->createFilenameParameter(
                                               QString("to_tex_fn%1").arg(i),
@@ -319,6 +320,8 @@ void TextureObjectBase::PrivateTO::createParameters()
                                               p_textures.back()->filename(),
                                               true
                                               ));
+            p_textures.back()->setFilenameParameter(
+                        p_textureFilenames.back() );
         }
 
     to->params()->endParameterGroup();
@@ -393,6 +396,7 @@ void TextureObjectBase::onParameterChanged(Parameter * p)
         || p == p_to_->p_texFormat
         || p == p_to_->p_texType
         || dynamic_cast<ParameterTexture*>(p)
+        || dynamic_cast<ParameterFilename*>(p)
         )
         requestReinitGl();
     //if (auto pt = )
@@ -887,7 +891,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
             // bind to slot x
             GL::Texture::setActiveTexture(texSlot);
             tex->bind();
-            p_textures[i]->setTextureParam(tex);
+            p_textures[i]->applyTextureParam(tex);
             // tell shader
             if (i < quad.u_tex.length() && quad.u_tex[i])
                 quad.u_tex[i]->ints[0] = texSlot;

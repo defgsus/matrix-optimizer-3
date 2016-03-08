@@ -113,7 +113,8 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
 
         u.p_tex = params->createTextureParameter(("uniformtex%1_" + id_suffix).arg(i),
                                                 tr("uniform%1 texture").arg(i + 1),
-                                                tr("Connects to a texture from somewhere else"));
+                                                tr("Source of texture uniform"));
+        u.p_tex->setVisibleGraph(true);
 
         static QString compName[] = { "x", "y", "z", "w" };
         for (int j=0; j<4; ++j)
@@ -281,7 +282,7 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
                 //MO_PRINT(object_->name() << ": bind " << tex->name() << " to slot " << texSlot);
                 MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
                 tex->bind();
-                u.p_tex->setTextureParam(tex);
+                u.p_tex->applyTextureParam(tex);
                 u.uniform->ints[0] = texSlot;
                 ++texSlot;
                 /// @todo generalize texture read parameters for texture inputs
