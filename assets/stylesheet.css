@@ -88,6 +88,8 @@ QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
 
 QPlainTextEdit, QTextBrowser { background-color: #111; }
 
+QLabel[editable="true"]:hover { color: #9c9; }
+
 /* ---- lists ---- */
 
 QListView::item:selected {

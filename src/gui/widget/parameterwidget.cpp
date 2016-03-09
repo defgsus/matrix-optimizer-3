@@ -27,6 +27,7 @@
 #include "parameterwidget.h"
 #include "spinbox.h"
 #include "doublespinbox.h"
+#include "editablelabel.h"
 #include "object/scene.h"
 #include "object/control/trackfloat.h"
 #include "object/control/sequencefloat.h"
@@ -181,6 +182,7 @@ void ParameterWidget::dropEvent(QDropEvent * e)
 #endif
 }
 
+/** Long and tedious routine.. */
 void ParameterWidget::createWidgets_()
 {
     if (!editor_)
@@ -222,11 +224,22 @@ void ParameterWidget::createWidgets_()
 #endif
 
     // label
-    QLabel * label = new QLabel(param_->name(), this);
+    /*QLabel * label = new QLabel(param_->name(), this);
     l->addWidget(label);
     label->setStatusTip(param_->statusTip().isEmpty()
                         ? tr("The name of the parameter")
+                        : param_->statusTip());*/
+    auto label = new EditableLabel(param_->userName().isEmpty()
+                                     ? param_->name() : param_->userName(), this);
+    l->addWidget(label);
+    label->setStatusTip(param_->statusTip().isEmpty()
+                        ? tr("The name of the parameter, double-click to change")
                         : param_->statusTip());
+    connect(label, &EditableLabel::editingFinished, [=]()
+    {
+        editor_->setParameterUserName(param_, label->text());
+    });
+
 
     QToolButton * but, * breset;
 

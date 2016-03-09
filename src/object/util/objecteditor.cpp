@@ -539,6 +539,12 @@ void ObjectEditor::setParameterValue(ParameterFont *p, const QFont& v)
     setParameterVal(this, p, v);
 }
 
+void ObjectEditor::setParameterUserName(Parameter* p, const QString& name)
+{
+    p->setUserName(name);
+    emit parameterChanged(p);
+}
+
 void ObjectEditor::setParameterVisibleInGraph(Parameter * p, bool enbale)
 {
     if (enbale != p->isVisibleInGraph())

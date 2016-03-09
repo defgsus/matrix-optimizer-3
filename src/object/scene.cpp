@@ -1065,12 +1065,14 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
 
         // initialize object gl resources
         for (auto o : p_glObjects_)
+        {
             if (o->needsInitGl(time.thread()))// && o->active(time))
             {
                 if (o->isGlInitialized(time.thread()))
                     o->p_releaseGl_(time.thread());
                 o->p_initGl_(time.thread());
             }
+        }
 
         // --------- render preparation --------------
 
@@ -1083,7 +1085,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     }
     catch (Exception & e)
     {
-        e << "\nin Scene::renderScene(" << time.thread() << ") preface";
+        e << "\n  in Scene::renderScene(" << time << ") preface";
         throw;
     }
 

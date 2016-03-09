@@ -11,8 +11,6 @@
 #ifndef MOSRC_OBJECT_AUDIO_DELAYAO_H
 #define MOSRC_OBJECT_AUDIO_DELAYAO_H
 
-#include <QObject>
-
 #include "object/audioobject.h"
 
 namespace MO {

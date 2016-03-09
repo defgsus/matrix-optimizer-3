@@ -62,7 +62,8 @@ void TextureSetting::createParameters(const QString& id,
         ParameterTexture::InputType defaultType,
         bool normalMap)
 {
-    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters");
+//    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters");
+
     auto params = object_->params();
 
     params->beginEvolveGroup(false);
@@ -83,7 +84,7 @@ void TextureSetting::createParameters(const QString& id,
 
     params->endEvolveGroup();
 
-    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters finish");
+//    MO_PRINT("TextureSetting(" << object_->name() << ") createParameters finish");
 }
 
 

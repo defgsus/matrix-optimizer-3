@@ -157,6 +157,8 @@ void SceneRenderer::render(bool renderToScreen)
     if (scene_->glContext() != context_)
         scene_->setGlContext(MO_GFX_THREAD, context_);
 
+    // -- get render time --
+
 #ifndef MO_DISABLE_AUDIO
     Double time = timeFunc_ ? timeFunc_() : 0.0;
     //Double time = scene_->sceneTime();
@@ -178,7 +180,19 @@ void SceneRenderer::render(bool renderToScreen)
                 MO_GFX_THREAD);
     lastTime_ = time;
 
-    scene_->renderScene(rtime, renderToScreen);
+    // -- render --
+    try
+    {
+        scene_->renderScene(rtime, renderToScreen);
+    }
+    catch (Exception& e)
+    {
+        MO_CHECK_GL( gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0) );
+        MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(), context_->size().height()) );
+        MO_CHECK_GL( gl::glClearColor(1,0,0,1) );
+        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
+        throw e << "\n  in SceneRenderer::render(" << rtime << ")";
+    }
 
     gl::glFlush();
     gl::glFinish();

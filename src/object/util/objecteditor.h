@@ -182,6 +182,8 @@ public slots:
     void setParameterValue(MO::ParameterImageList *, const QStringList& value);
     void setParameterValue(MO::ParameterFont*, const QFont& value);
 
+    void setParameterUserName(MO::Parameter*, const QString& name);
+
     void setParameterVisibleInGraph(MO::Parameter *, bool enbale);
     void setParameterVisibleInterface(MO::Parameter *, bool enbale);
 

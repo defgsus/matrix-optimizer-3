@@ -76,7 +76,13 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem
     setRect(-6, -6, 12, 12);
 
     setToolTip(param_->statusTip());
-    setText(param_->name());
+    setText(param_->userName().isEmpty() ? param_->name() : param_->userName());
+}
+
+void ObjectGraphConnectItem::updateName()
+{
+    if (param_)
+        setText(param_->userName().isEmpty() ? param_->name() : param_->userName());
 }
 
 void ObjectGraphConnectItem::setText(const QString & t)

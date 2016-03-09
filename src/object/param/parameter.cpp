@@ -46,7 +46,7 @@ Parameter::~Parameter()
 
 void Parameter::serialize(IO::DataStream &io) const
 {
-    io.writeHeader("par", 4);
+    io.writeHeader("par", 6);
 
     io << idName_;
 
@@ -62,14 +62,16 @@ void Parameter::serialize(IO::DataStream &io) const
 
     // v3
     io << isVisibleGraph_;
-    // v5
+    // v5 (removed)
 //    io << isVisibleInterface_;
 //    iProps_->serialize(io);
+    // v6
+    io << userName_;
 }
 
 void Parameter::deserialize(IO::DataStream &io)
 {
-    const int ver = io.readHeader("par", 5);
+    const int ver = io.readHeader("par", 6);
 
     io >> idName_;
 
@@ -111,11 +113,15 @@ void Parameter::deserialize(IO::DataStream &io)
     else
         isVisibleInterface_ = false;
 
+    if (ver >= 6)
+        io >> userName_;
+    else
+        userName_.clear();
 }
 
 QString Parameter::infoName() const
 {
-    QString s = name_;
+    QString s = userName_.isEmpty() ? name_ : userName_;
     if (!groupName().isEmpty())
         s.prepend(QString("(%1)").arg(groupName()));
 

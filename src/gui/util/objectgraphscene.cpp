@@ -2001,6 +2001,7 @@ void ObjectGraphScene::onParameterChanged_(Parameter* p)
     auto it = itemForObject(obj);
     if (it)
     {
+        it->updateLabels();
         it->updateControlItems();
         // and repaint the whole, in case paramter was activity
         if (p->idName() == "_activescope")

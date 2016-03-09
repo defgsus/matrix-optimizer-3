@@ -52,6 +52,9 @@ public:
 
     bool acceptsModulator(Object *) const;
 
+    /** If tied to a parameter or named output, updates via setText() */
+    void updateName();
+
     // ---------- QGraphicsItem interface --------------
 
     virtual int type() const Q_DECL_OVERRIDE { return Type; }

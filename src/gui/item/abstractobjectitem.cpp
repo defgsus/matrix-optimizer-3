@@ -851,6 +851,11 @@ void AbstractObjectItem::updateLabels()
     if (p_oi_->itemName)
         p_oi_->itemName->setText(object()->name());
 
+    for (auto i : p_oi_->inputItems)
+        i->updateName();
+    for (auto i : p_oi_->outputItems)
+        i->updateName();
+
     p_oi_->layoutChildItems();
 }
 

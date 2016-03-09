@@ -70,6 +70,8 @@ public:
 
     const QString& idName() const { return idName_; }
     const QString& name() const { return name_; }
+    /** Can be, and is by default, empty */
+    const QString& userName() const { return userName_; }
     const QString& statusTip() const { return statusTip_; }
     SpecificFlag specificFlag() const { return p_specFlag_; }
 
@@ -122,6 +124,7 @@ public:
     // -------------- setter --------------------
 
     void setName(const QString& name) { name_ = name; }
+    void setUserName(const QString& name) { userName_ = name; }
     void setStatusTip(const QString& tip) { statusTip_ = tip; }
     void setEditable(bool enable) { isEditable_ = enable; }
     void setModulateable(bool enable) { isModulateable_ = enable; }
@@ -227,7 +230,7 @@ private:
 
     Object * object_;
 
-    QString idName_, name_, statusTip_,
+    QString idName_, name_, userName_, statusTip_,
             groupId_, groupName_;
 
     bool isEditable_, isModulateable_,

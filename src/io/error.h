@@ -30,21 +30,37 @@
 #   define MO_ENABLE_ASSERT
 #endif
 
+/** Warnings are conceptually somewhere between
+    errors/exceptions and pure debug/developer info. */
 #define MO_ENABLE_WARNING
 
-/** *currently* adds a lot of infos to exceptions by means
-    of many catch/rethrow on different levels. */
-#define MO_EXTENDED_EXCEPTIONS
+/** Adds trace infos to exceptions by means
+    of catch/rethrows on different levels. */
+#define MO_ENABLE_EXTENDED_EXCEPTIONS
 
 
 
 namespace MO {
 
+/** Exception base class.
+    Use like, e.g.:
+    @code
+    throw Exception() << "my info " << error_code;
+    @endcode
+    The content of the text stream is returned from classic const char* what().
+    Encouraged use is:
+    @code
+    MO_GL_ERROR("information is " << whatever_helps);
+    MO_IO_ERROR(TYPE_MISMATCH, "wrong version, only " << ver << " supported");
+    @endcode
+    Especially io errors with IoException() will be reported to the user.
+    @todo Should be internationalized with tr()
+    */
 class Exception : public std::exception
 {
 public:
 
-    enum
+    enum Cause
     {
         /** Basic Exception, given no cause. */
         UNKNOWN,
@@ -87,6 +103,10 @@ protected:
 };
 
 
+/** MO_ASSERT or MO_LOGIC_ERROR.
+    MO_ASSERT doesn't abort but instead throws a LogicException.
+    So it's use might be a bit broader than assert()'s.
+    */
 class LogicException : public Exception
 {
 public:
@@ -97,6 +117,7 @@ public:
     LogicException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+/** File/Network/Parsing things, MO_IO_ERROR */
 class IoException : public Exception
 {
 public:
@@ -107,6 +128,8 @@ public:
     IoException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+/** Any OpenGL related errors, MO_GL_ERROR, MO_CHECK_GL_THROW.
+    Used widely, especially in MO_CHECK_GL_THROW */
 class GlException : public Exception
 {
 public:
@@ -117,6 +140,7 @@ public:
     GlException& operator << (const T& value) { addToStream(value); return *this; }
 };
 
+/** MO_AUDIO_ERROR. */
 class AudioException : public Exception
 {
 public:
@@ -129,28 +153,42 @@ public:
 
 // --------------- exception extension ----------------------
 
-#ifdef MO_EXTENDED_EXCEPTIONS
-#   define MO_EXTEND_EXCEPTION(command__, text__)                       \
-        try { command__; }                                              \
-        catch (::MO::Exception & e__) { e__ << "\n" << text__; throw; }
+/** Use like
+    @code
+    MO_EXTEND_EXEPTION( codeThatMightThrow(),
+                        "in my call to strangely named function" )
+    @endcode
+    */
+#ifdef MO_ENABLE_EXTENDED_EXCEPTIONS
+#   define MO_EXTEND_EXCEPTION(command__, text__)                           \
+        { try { command__; }                                                \
+          catch (::MO::Exception & e__) { e__ << "\n  " << text__; throw; } }
 #else
 #   define MO_EXTEND_EXCEPTION(command__, unused__) command__;
 #endif
 
 // ---------------------- error -----------------------------
 
+/** Throws Exception, @p text__ is a ostream argument chain */
 #define MO_ERROR(text__) \
 { throw ::MO::Exception() << text__; }
 
+/** Throws IoException,
+    @p text__ is a ostream argument chain.
+    @p cause__ is one of Exception::Cause (without the nesting) */
 #define MO_IO_ERROR(cause__, text__) \
 { throw ::MO::IoException(::MO::Exception::cause__) << text__; }
 
+/** Throws GlException, @p text__ is a ostream argument chain */
 #define MO_GL_ERROR(text__) \
 { throw ::MO::GlException() << text__; }
 
+/** Throws LogicException, @p text__ is a ostream argument chain */
 #define MO_LOGIC_ERROR(text__) \
 { throw ::MO::LogicException(::MO::Exception::LOGIC) << text__; }
 
+/** Throws AudioException, @p text__ is a ostream argument chain
+    @p cause__ is one of Exception::Cause (without the nesting) */
 #define MO_AUDIO_ERROR(cause__, text__) \
 { throw ::MO::AudioException(::MO::Exception::cause__) << text__; }
 
@@ -181,7 +219,7 @@ public:
     #define MO_ASSERT(cond__, text__) \
     if (!(cond__)) \
     { \
-        throw ::MO::Exception(::MO::Exception::ASSERT) \
+        throw ::MO::LogicException(::MO::Exception::ASSERT) \
             << "assertion '" << #cond__ << "' in " << __FILE__ << ":" << __LINE__ \
             << "\n" << text__; \
     }
