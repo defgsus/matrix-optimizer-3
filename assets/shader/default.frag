@@ -266,7 +266,7 @@ vec3 mo_env_map_color()
     // read from cube-map
     return f * texture(tex_env_0, refl).xyz;
 #else
-    // direction -> equirect
+    // sphere -> equirect
     vec2 equi = vec2(atan(refl.x, -refl.z) / PI,
                    1. - 2. * acos(refl.y) / PI);
     return f * texture(tex_env_0, .5+.5*equi).xyz;

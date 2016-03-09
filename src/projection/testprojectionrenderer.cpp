@@ -226,6 +226,7 @@ GL::Texture * TestProjectionRenderer::renderSliceTexture(uint index)
 
         Private::Projector & proj = p_->projector[index];
 
+        GL::Texture::setActiveTexture(0);
         proj.fbo->colorTexture()->bind();
 
         proj.warp->draw(fbo.width(), fbo.height());

@@ -103,7 +103,7 @@ void Parameter::deserialize(IO::DataStream &io)
     else
         isVisibleGraph_ = false;
 
-    if (ver >= 5) // dummy
+    if (ver == 5) // dummy
     {
         io >> isVisibleInterface_;
         Properties tmp;

@@ -73,7 +73,7 @@ private:
     Parameter * param_;
     ObjectEditor * editor_;
 
-    QToolButton * bmod_, *bvis_;
+    QToolButton * bmod_, *bvis_, *btexmm_;
 
     SpinBox * spinInt_;
     DoubleSpinBox * spinFloat_;

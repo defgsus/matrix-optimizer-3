@@ -143,6 +143,7 @@ void Sprite::renderGl(const GL::RenderSettings& rs, uint thread, Double orgtime)
 {
     if (draw_->isReady())
     {
+        GL::Texture::setActiveTexture(0);
         texture_->bind();
 
         const uint numrep = numRep_->value(orgtime, thread);

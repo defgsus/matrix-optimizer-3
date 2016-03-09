@@ -66,6 +66,7 @@ ParameterWidget::ParameterWidget(Parameter * p, QWidget *parent)
         param_      (p),
         editor_     (0),
         bmod_       (0),
+        btexmm_     (0),
         spinInt_    (0),
         spinFloat_  (0),
         comboSelect_(0),
@@ -73,7 +74,7 @@ ParameterWidget::ParameterWidget(Parameter * p, QWidget *parent)
         lineEdit_   (0),
         doChangeToCreatedMod_   (true)
 {
-    setObjectName("_" + param_->idName());
+    setObjectName("_PW_" + param_->idName());
     setFrameStyle(QFrame::Panel);
     setFrameShadow(QFrame::Sunken);
     setAcceptDrops(true);
@@ -719,6 +720,10 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
         {
             param->setInputType(m);
             but->setText(param->inputTypeNames[param->inputType()]);
+            //btexmm_->setVisible( m == ParameterTexture::IT_FILE );
+
+            //if (m == ParameterTexture::IT_INPUT)
+            //    param->setVisibleGraph(true);
         } );
     });
 
@@ -786,7 +791,34 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
             but->setText(param->wrapModeNames[param->wrapModeY()]);
         } );
     });
+    /*
+    {
+        QStringList names = { tr("no mipmap") };
+        QList<uint> values = { 0 };
+        for (uint i=1; i<10; ++i)
+        {
+            names << tr("%1").arg(i);
+            values << i;
+        }
 
+        but = btexmm_ = new QToolButton(this);
+        but->setText(names[param->mipmaps()]);
+        l->addWidget(but);
+        connect(but, &QToolButton::clicked, [=]()
+        {
+            texParamPopup_<uint>(this, param, tr("max generated mipmaps"),
+                           names, values,
+                           param->mipmaps(),
+                           [=](uint l)
+            {
+                param->setMipmaps(l);
+                but->setText(names[l]);
+            } );
+        });
+
+        but->setVisible(param->inputType() == ParameterTexture::IT_FILE);
+    }
+    */
 }
 
 void ParameterWidget::updateButtons()

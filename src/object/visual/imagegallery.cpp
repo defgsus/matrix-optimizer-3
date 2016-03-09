@@ -412,7 +412,7 @@ void ImageGallery::onParameterChanged(Parameter *p)
 
     if (p == imageList_
         || p == mipmaps_
-//        || frameTexSet_->needsReinit(p)
+        || frameTexSet_->onParameterChange(p)
             )
         requestReinitGl();
 
@@ -864,6 +864,8 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, const RenderTime& time
                                       rs.lightSettings().count(), rs.lightSettings().diffuseExponents()) );
     }
 
+    GL::Texture::setActiveTexture(0);
+
     // --- calc individual transformation ---
 
     calcEntityTransform_(time);
@@ -904,7 +906,6 @@ void ImageGallery::renderGl(const GL::RenderSettings& rs, const RenderTime& time
                 MO_CHECK_GL( glUniformMatrix4fv(uniformT_->location(), 1, GL_FALSE,
                                                 &(trans * v->transformFrame)[0][0]) );
             // bind frame texture
-            // (note: 'None' type binds a white picture)
             frameTexSet_->bind(time);
 
             // render frame

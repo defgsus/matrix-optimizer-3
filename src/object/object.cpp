@@ -322,7 +322,7 @@ Object * Object::PrivateObj::deserializeTree_(IO::DataStream & io)
         catch (Exception& e)
         {
             o->releaseRef("Object deserialize failed");
-            e << "\nobject creation failed for class '" << className << "'";
+            e << "\n  in object deserialization for class '" << className << "'";
             throw;
         }
 

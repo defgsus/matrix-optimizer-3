@@ -51,6 +51,7 @@ void EditableLabel::openEditor()
 
     connect(p_editor_, &QLineEdit::destroyed, [=]() { p_editor_ = nullptr; });
 
+    p_editor_->selectAll();
     p_editor_->show();
     p_editor_->setFocus();
 }

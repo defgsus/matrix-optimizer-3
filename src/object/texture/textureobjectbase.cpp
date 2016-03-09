@@ -890,7 +890,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
             ++texSlot;
         }
     }
-    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0) );
+    GL::Texture::setActiveTexture(0);
 
     // --- render ---
 
@@ -1013,7 +1013,7 @@ void TextureObjectBase::PrivateTO::drawFramebuffer(const RenderTime & time, int 
 
     // bind the color texture from the fbo
 
-    MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
+    GL::Texture::setActiveTexture(0);
     tex->bind();
 
     // set interpolation mode

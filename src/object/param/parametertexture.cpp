@@ -43,6 +43,7 @@ struct ParameterTexture::Private
         , wrapModeY     (WM_CLAMP)
         , magMode       (MAG_LINEAR)
         , minMode       (MIN_LINEAR)
+        , mipmaps       (0)
         , needChange    (true)
     { }
 
@@ -69,6 +70,7 @@ struct ParameterTexture::Private
     WrapMode wrapModeX, wrapModeY;
     MagMode magMode;
     MinMode minMode;
+    uint mipmaps;
 
     bool needChange;
 };
@@ -132,6 +134,7 @@ ParameterTexture::WrapMode  ParameterTexture::wrapModeX() const { return p_->wra
 ParameterTexture::WrapMode  ParameterTexture::wrapModeY() const { return p_->wrapModeY; }
 ParameterTexture::MagMode   ParameterTexture::magMode() const { return p_->magMode; }
 ParameterTexture::MinMode   ParameterTexture::minMode() const { return p_->minMode; }
+                       uint ParameterTexture::mipmaps() const { return p_->mipmaps; }
                     QString ParameterTexture::filename() const { return p_->paramFilename ? p_->paramFilename->value() : ""; }
 ParameterFilename* ParameterTexture::filenameParameter() const { return p_->paramFilename; }
 
@@ -151,6 +154,8 @@ void ParameterTexture::setWrapModeX(WrapMode m) { p_->wrapModeX = m; }
 void ParameterTexture::setWrapModeY(WrapMode m) { p_->wrapModeY = m; }
 void ParameterTexture::setMagMode(MagMode m) { p_->magMode = m; }
 void ParameterTexture::setMinMode(MinMode m) { p_->minMode = m; }
+void ParameterTexture::setMipmaps(uint level)
+    { p_->needChange = p_->mipmaps != level && p_->inputType == IT_FILE; p_->mipmaps = level; }
 void ParameterTexture::setFilenameParameter(ParameterFilename* p) { p_->paramFilename = p; p_->needChange = true; }
 
 void ParameterTexture::serialize(IO::DataStream &io) const
@@ -163,8 +168,8 @@ void ParameterTexture::serialize(IO::DataStream &io) const
     io << magModeIds[p_->magMode] << minModeIds[p_->minMode]
        << wrapModeIds[p_->wrapModeX] << wrapModeIds[p_->wrapModeY];
     // v3
-    io << inputTypeIds[p_->inputType] << QString();
-    // v4 removed filename
+    io << inputTypeIds[p_->inputType];
+    // v4 removed filename QString
 }
 
 void ParameterTexture::deserialize(IO::DataStream &io)
@@ -189,10 +194,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
     if (ver >= 3)
     {
         io.readEnum(p_->inputType, IT_INPUT, inputTypeIds, inputTypeValues);
-        if (ver == 3)
-        {
-            QString dummy; io >> dummy;
-        }
+        if (ver == 3) { QString dummy; io >> dummy; }
     }
     else
         p_->inputType = p_->defaultInputType;
@@ -398,9 +400,8 @@ const GL::Texture* ParameterTexture::Private::getFileTexture()
 
     // upload to GPU
     createdTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
-    //if (isMipmap())
-    //    texture_->createMipmaps(paramMipmaps_->baseValue(),
-    //                            (GLenum)paramMinify_->baseValue());
+    if (mipmaps > 0)
+        createdTex->createMipmaps(mipmaps);
 
     return createdTex;
 }

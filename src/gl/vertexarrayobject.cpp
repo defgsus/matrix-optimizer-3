@@ -67,11 +67,10 @@ void VertexArrayObject::create()
 void VertexArrayObject::release()
 {
     if (!isCreated())
-        MO_GL_WARNING("release on uninitialized vertex array object '" << name_ << "' - "
-                      "OpenGL resource leak");
+        MO_GL_WARNING("release on uninitialized vertex array object '" << name_ << "'");
 
     MO_CHECK_GL( glDeleteVertexArrays(1, &vao_) );
-    vao_ = invalidGl;
+    vao_ = invalidGl;    
 
     clear();
 }

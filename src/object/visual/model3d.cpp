@@ -35,8 +35,8 @@
 #include "io/application.h"
 #include "io/log_gl.h"
 
-#if 0
-#   define MO_DEBUG_MODEL(arg__) MO_DEBUG(arg__)
+#if 1
+#   define MO_DEBUG_MODEL(arg__) MO_PRINT("Model3d::" << arg__)
 #else
 #   define MO_DEBUG_MODEL(unused__) { }
 #endif
@@ -572,6 +572,7 @@ void Model3d::updateParameterVisibility()
     textureMorph_->setVisible(texture_->isEnabled());
     textureBumpMorph_->setVisible(textureBump_->isEnabled());
     uniformSetting_->updateParameterVisibility();
+    usePointCoord_->setVisible(texture_->isEnabled());
 
     diffAmt_->setVisible( lightMode_->baseValue() != LM_NONE );
     diffExp_->setVisible( lightMode_->baseValue() != LM_NONE );
@@ -637,7 +638,7 @@ const GEOM::GeometryFactorySettings& Model3d::getGeometrySettings() const
 
 void Model3d::initGl(uint /*thread*/)
 {
-    MO_DEBUG_MODEL("Model3d::initGl()");
+    MO_DEBUG_MODEL("initGl()");
 
     // create geometry
     draw_ = new GL::Drawable(idName());
@@ -670,7 +671,7 @@ void Model3d::initGl(uint /*thread*/)
         geomSettings_->setObject(this);
         creator_->setSettings(*geomSettings_);
         creator_->start();
-        MO_DEBUG_MODEL("Model3d::initGl() started creator");
+        MO_DEBUG_MODEL("initGl() started creator");
     }
 }
 
@@ -714,7 +715,7 @@ void Model3d::numberLightSourcesChanged(uint /*thread*/)
 
 void Model3d::geometryCreated_()
 {
-    MO_DEBUG_MODEL("Model3d::geometryCreated()");
+    MO_DEBUG_MODEL("geometryCreated()");
 
     nextGeometry_ = creator_->takeGeometry();
     creator_->deleteLater();
@@ -725,7 +726,7 @@ void Model3d::geometryCreated_()
 
 void Model3d::geometryFailed_(const QString& e)
 {
-    MO_DEBUG_MODEL("Model3d::geometryFailed()");
+    MO_DEBUG_MODEL("geometryFailed()");
 
     setErrorMessage(tr("Failed to create geometry:\n%1").arg(e));
 
@@ -757,7 +758,7 @@ GL::ShaderSource Model3d::shaderSource() const
 
 void Model3d::setupDrawable_()
 {
-    MO_DEBUG_MODEL("Model3d::setupDrawable()");
+    MO_DEBUG_MODEL("setupDrawable()");
 
     clearError();
 
@@ -773,52 +774,53 @@ void Model3d::setupDrawable_()
 
     src->loadDefaultSource();
 
+    QString defines;
     if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
-        src->addDefine("#define MO_ENABLE_LIGHTING");
+        defines += ("\n#define MO_ENABLE_LIGHTING");
     // still pass light info
-    src->addDefine(QString("#define MO_NUM_LIGHTS %1")
+    defines += (QString("\n#define MO_NUM_LIGHTS %1")
                    .arg(numberLightSources()));
     if (lightMode_->baseValue() == LM_PER_FRAGMENT)
-        src->addDefine("#define MO_FRAGMENT_LIGHTING");
+        defines += ("\n#define MO_FRAGMENT_LIGHTING");
     if (texture_->isEnabled())
-        src->addDefine("#define MO_ENABLE_TEXTURE");
+        defines += ("\n#define MO_ENABLE_TEXTURE");
     if (texturePostProc_->isEnabled())
-        src->addDefine("#define MO_ENABLE_TEXTURE_POST_PROCESS");
+        defines += ("\n#define MO_ENABLE_TEXTURE_POST_PROCESS");
     if (texture_->isCube())
-        src->addDefine("#define MO_TEXTURE_IS_FULLDOME_CUBE");
+        defines += ("\n#define MO_TEXTURE_IS_FULLDOME_CUBE");
     if (textureBump_->isEnabled())
-        src->addDefine("#define MO_ENABLE_NORMALMAP");
+        defines += ("\n#define MO_ENABLE_NORMALMAP");
     if (textureEnv_->isEnabled())
     {
-        src->addDefine("#define MO_ENABLE_ENV_MAP");
+        defines += ("\n#define MO_ENABLE_ENV_MAP");
         // XXX Note, when the texture is a tex-input,
         // this check only occures after the first render pass
         // because TextureSetting::bind() in renderGl() is
         // the first to actually read the texture input
         if (textureEnv_->isCube())
-            src->addDefine("#define MO_ENV_MAP_IS_CUBE");
+            defines += ("\n#define MO_ENV_MAP_IS_CUBE");
     }
     if (textureMorph_->isTransformEnabled())
-        src->addDefine("#define MO_ENABLE_TEXTURE_TRANSFORMATION");
+        defines += ("\n#define MO_ENABLE_TEXTURE_TRANSFORMATION");
     if (textureMorph_->isSineMorphEnabled())
-        src->addDefine("#define MO_ENABLE_TEXTURE_SINE_MORPH");
+        defines += ("\n#define MO_ENABLE_TEXTURE_SINE_MORPH");
     if (textureBumpMorph_->isTransformEnabled())
-        src->addDefine("#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
+        defines += ("\n#define MO_ENABLE_NORMALMAP_TRANSFORMATION");
     if (textureBumpMorph_->isSineMorphEnabled())
-        src->addDefine("#define MO_ENABLE_NORMALMAP_SINE_MORPH");
+        defines += ("\n#define MO_ENABLE_NORMALMAP_SINE_MORPH");
     if (usePointCoord_->baseValue() != 0)
-        src->addDefine("#define MO_USE_POINT_COORD");
+        defines += ("\n#define MO_USE_POINT_COORD");
     if (pointSizeAuto_->baseValue() != 0)
-        src->addDefine("#define MO_ENABLE_POINT_SIZE_DISTANCE");
+        defines += ("\n#define MO_ENABLE_POINT_SIZE_DISTANCE");
     if (vertexFx_->baseValue())
-        src->addDefine("#define MO_ENABLE_VERTEX_EFFECTS");
+        defines += ("\n#define MO_ENABLE_VERTEX_EFFECTS");
     // glsl injection
     if (glslDoOverride_->baseValue())
     {
-        src->addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
-        src->addDefine("#define MO_ENABLE_FRAGMENT_OVERRIDE");
-        src->addDefine("#define MO_ENABLE_NORMAL_OVERRIDE");
-        src->addDefine("#define MO_ENABLE_LIGHT_OVERRIDE");
+        defines += ("\n#define MO_ENABLE_VERTEX_OVERRIDE");
+        defines += ("\n#define MO_ENABLE_FRAGMENT_OVERRIDE");
+        defines += ("\n#define MO_ENABLE_NORMAL_OVERRIDE");
+        defines += ("\n#define MO_ENABLE_LIGHT_OVERRIDE");
         QString text =
                   "#line 1\n"
                 + glslVertex_->value() + "\n#line 1\n"
@@ -829,6 +831,8 @@ void Model3d::setupDrawable_()
         src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
         src->replace("//%mo_override_light%", "#line 1\n" + glslLight_->value() + "\n");
     }
+    src->addDefine(defines);
+
     // resolve includes
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
@@ -844,11 +848,12 @@ void Model3d::setupDrawable_()
 
     try
     {
+        MO_DEBUG_MODEL("Creating Shader and VAO");
         draw_->createOpenGl();
     }
     catch (const Exception& e)
     {
-        MO_WARNING("Model3d '" << name() << "'s createOpenGL for failed with\n" << e.what());
+        MO_WARNING("Model3d '" << name() << "'s createOpenGL failed with\n" << e.what());
         for (const GL::Shader::CompileMessage & msg : draw_->shader()->compileMessages())
         {
             if (msg.program == GL::Shader::P_VERTEX
@@ -910,13 +915,9 @@ void Model3d::setupDrawable_()
 
 void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 {
-    MO_DEBUG_MODEL("Model3d::renderGl(" << thread << ", " << time << ")");
+    MO_DEBUG_MODEL("renderGl(" << time << ")");
 
     /** @todo wireframe-mode for Model3d, eg. glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
-
-    //if (textureEnv_->texture())
-    //MO_PRINT(applicationTime() << " was "
-    //  << envTexCompiledCube_ << " is " << textureEnv_->texture()->isCube());
 
     // recompile 2d/cubemap change in environment texture
     // XXX Possibly for equirect/fisheye change too, once this is implemented
@@ -925,13 +926,12 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
       || (textureEnv_->isEnabled() && textureEnv_->checkCubeChanged())
        )
     {
-        requestReinitGl();
-        return;
+        doRecompile_ = true;
     }
 
     if (nextGeometry_)
     {
-        MO_DEBUG_MODEL("Model3d::renderGl: assigning next geometry");
+        MO_DEBUG_MODEL("renderGl: assigning next geometry");
 
         auto g = nextGeometry_;
         nextGeometry_ = 0;
@@ -941,7 +941,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 
     if (doRecompile_)
     {
-        MO_DEBUG_MODEL("Model3d::renderGl: recompiling shader");
+        MO_DEBUG_MODEL("renderGl: recompiling shader");
 
         doRecompile_ = false;
         setupDrawable_();
@@ -972,7 +972,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 
     if (draw_->isReady())
     {
-        MO_DEBUG_MODEL("Model3d::renderGl: drawing");
+        MO_DEBUG_MODEL("renderGl: drawing");
 
         const int numDup = paramNumInstance_->value(time);
 
@@ -1004,12 +1004,19 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
 
 
         uint texSlot = 0;
-        uniformSetting_->updateUniforms(time, texSlot);
+        uniformSetting_->updateUniforms(time, &texSlot);
 
         // bind the model3d specific textures
-        if (u_tex_0_) { u_tex_0_->ints[0] = texSlot; texture_->bind(time, &texSlot); }
-        if (u_texn_0_) { u_texn_0_->ints[0] = texSlot; textureBump_->bind(time, &texSlot); }
-        if (u_tex_env_0_) { u_tex_env_0_->ints[0] = texSlot; textureEnv_->bind(time, &texSlot); }
+        if (u_tex_0_ && texture_->isEnabled())
+            { u_tex_0_->ints[0] = texSlot; texture_->bind(time, &texSlot); }
+        if (u_texn_0_ && textureBump_->isEnabled())
+            { u_texn_0_->ints[0] = texSlot; textureBump_->bind(time, &texSlot); }
+        /** @bug cubetex here + a rect color or normal tex results
+            in GL_INVALID_OPERATION in Drawable's drawElements. */
+        if (u_tex_env_0_ && textureEnv_->isEnabled())
+            { u_tex_env_0_->ints[0] = texSlot; textureEnv_->bind(time, &texSlot); }
+
+        GL::Texture::setActiveTexture(0);
 
         if (texture_->isEnabled())
         {
@@ -1072,7 +1079,7 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
             GL::Properties::staticInstance().setPolygonSmooth(false);
     }
     else
-        MO_DEBUG_MODEL("Model3d::renderGl: drawable not ready");
+        MO_DEBUG_MODEL("renderGl: drawable not ready");
 }
 
 

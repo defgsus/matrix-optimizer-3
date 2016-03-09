@@ -386,7 +386,7 @@ void ShaderObject::renderGl(const GL::RenderSettings & , const RenderTime& time)
         u_transformation_->set(transformation());
 
     uint texSlot = 0, swapTexSlot = 0;
-    userUniforms_->updateUniforms(time, texSlot);
+    userUniforms_->updateUniforms(time, &texSlot);
 
     // exchange render target and bind previous frame
     if (u_fb_tex_)
@@ -400,10 +400,9 @@ void ShaderObject::renderGl(const GL::RenderSettings & , const RenderTime& time)
         swapTex_ = fbo_->swapColorTexture(swapTex_);
 
         // bind previous frame
-        MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + texSlot) );
+        GL::Texture::setActiveTexture(texSlot);
         swapTex_->bind();
         u_fb_tex_->ints[0] = swapTexSlot = texSlot;
-        //++texSlot;
     }
 
 
@@ -467,7 +466,7 @@ void ShaderObject::drawFramebuffer(const RenderTime & time, int width, int heigh
     // -- render fbo frame onto current context --
 
     // bind the color texture from the fbo
-    MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
+    GL::Texture::setActiveTexture(0);
     fbo_->colorTexture()->bind();
 
     // set blendmode

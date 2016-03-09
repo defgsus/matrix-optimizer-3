@@ -104,10 +104,11 @@ void Parameters::deserialize(IO::DataStream & io)
         }
         catch (Exception& e)
         {
-            e << "\nin param-id '" << id <<"'";
+            e << "\n  in param-id '" << id <<"'";
             throw;
         }
     }
+
 }
 
 const QString& Parameters::idName() const

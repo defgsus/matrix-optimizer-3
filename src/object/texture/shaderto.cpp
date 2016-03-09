@@ -300,7 +300,7 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
         u_samplerate->floats[0] = to->sampleRate();
 
     uint texSlot = 0;
-    uniformSetting->updateUniforms(time, texSlot);
+    uniformSetting->updateUniforms(time, &texSlot);
 
     to->renderShaderQuad(0, time, texSlot);
 }

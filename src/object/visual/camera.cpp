@@ -747,9 +747,9 @@ void Camera::drawFramebuffer(const RenderTime& time)
     // bind blend texture
     if (blendTexture_)
     {
-        MO_CHECK_GL( glActiveTexture(GL_TEXTURE1) );
+        GL::Texture::setActiveTexture(1);
         blendTexture_->bind();
-        MO_CHECK_GL( glActiveTexture(GL_TEXTURE0) );
+        GL::Texture::setActiveTexture(0);
     }
 
     /** @todo hack to stretch into projector slice -

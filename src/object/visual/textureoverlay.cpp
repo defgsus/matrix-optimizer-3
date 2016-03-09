@@ -257,6 +257,7 @@ void TextureOverlay::renderGl(const GL::RenderSettings& rs, uint thread, Double 
     if (postProc_->isEnabled())
         postProc_->updateUniforms(time, thread);
 
+    GL::Texture::setActiveTexture(0);
     texture_->bind();
 
     MO_CHECK_GL( glDepthMask(GL_FALSE) );

@@ -311,13 +311,17 @@ void ObjectGl::p_renderGl_(const GL::RenderSettings &rs, const RenderTime & time
             MO_CHECK_GL( glCullFace(GL_BACK) );
     }
 
-    MO_EXTEND_EXCEPTION(
-
+    try
+    {
         renderGl(rs, time);
         ++p_renderCount_;
-
-        , "in ObjectGl '" << idName() << "', thread=" << time.thread()
-    );
+    }
+    catch (Exception& e)
+    {
+        setErrorMessage(e.what());
+        e << "\n  in ObjectGl '" << idName() << "', thread=" << time.thread();
+        throw;
+    }
 
 }
 

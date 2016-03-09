@@ -272,7 +272,7 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
     uploadTime_ = -1.12341212;
 }
 
-void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
+void UserUniformSetting::updateUniforms(const RenderTime& time, uint* texSlot)
 {
 #if 0 // does not account for changes to incoming parameters
     if (uploadTime_ == time)
@@ -285,7 +285,7 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
     {
         if (u.isTextureInput())
         {
-            u.p_texSet->bind(time, &texSlot);
+            u.p_texSet->bind(time, texSlot);
         }
         else
         if (!u.isBufferTexture())
@@ -312,10 +312,10 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint & texSlot)
                 ti -= rangeStep;
             }
 
-            u.ownTexture->setActiveTexture(texSlot);
+            u.ownTexture->setActiveTexture(*texSlot);
             u.ownTexture->bind();
-            u.uniform->ints[0] = texSlot;
-            ++texSlot;
+            u.uniform->ints[0] = *texSlot;
+            ++(*texSlot);
 
             u.ownTexture->upload(&u.texBuf[0]);
         }

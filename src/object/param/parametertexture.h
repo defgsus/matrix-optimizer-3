@@ -100,6 +100,7 @@ public:
     WrapMode wrapModeY() const;
     MagMode magMode() const;
     MinMode minMode() const;
+    uint mipmaps() const;
     QString filename() const;
 
     /** Returns true when at least one of the minifiying modes is set to
@@ -117,6 +118,7 @@ public:
     void setWrapModeY(WrapMode m);
     void setMagMode(MagMode m);
     void setMinMode(MinMode m);
+    void setMipmaps(uint level);
 
     void setFilenameParameter(ParameterFilename*);
 

@@ -1114,7 +1114,8 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                     if (o->isShader() || o->isTexture())
                     {
                         if (o->updateMode() == ObjectGl::UM_ALWAYS
-                            || o->isUpdateRequest() || o->params()->haveInputsChanged(time))
+                            || o->isUpdateRequest()
+                            || o->params()->haveInputsChanged(time))
                         {
                             o->p_renderGl_(renderSet, time);
                         }
@@ -1182,7 +1183,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
         }
         catch (Exception & e)
         {
-            e << "\nin Scene::renderScene(" << time.thread() << "): frame-drawers";
+            e << "\n  in Scene::renderScene(" << time.thread() << "): frame-drawers";
             throw;
         }
     }

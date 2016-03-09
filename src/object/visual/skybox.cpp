@@ -297,7 +297,7 @@ void Skybox::onParameterChanged(Parameter *p)
             || p == p_->paramFade
             || p == p_->paramPoly
             || p == p_->paramPolySize
-//            || p_->textureSetting.needsReinit(p)
+            || p_->textureSetting.onParameterChange(p)
             || p_->uniformSetting.needsReinit(p) )
     {
         p_->doRecompile = true;
@@ -372,8 +372,8 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
 
         decl = QString("uniform %1 u_tex_color;")
                 .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
-        decl += QString("uniform %1 iChannel0;")
-                .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
+        //decl += QString("uniform %1 iChannel0;")
+        //        .arg(textureSetting.isCube() ? "samplerCube" : "sampler2D");
         src.replace("//%mo_user_uniforms%",
                     uniformSetting.getDeclarations() + "\n" + decl);
 
@@ -542,7 +542,7 @@ void Skybox::renderGl(const GL::RenderSettings &rs, const RenderTime &time)
     // --- bind textures ---
 
     uint texSlot = 0;
-    p_->uniformSetting.updateUniforms(time, texSlot);
+    p_->uniformSetting.updateUniforms(time, &texSlot);
 
     // bind the object specific textures
     if (p_->u_tex_color)

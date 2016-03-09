@@ -212,9 +212,10 @@ GL::Texture * ProjectorBlender::Private::renderBlendTexture(uint index, uint hei
         fbo = 0;
 
         // set texture edge settings
+        GL::Texture::setActiveTexture(0);
+        tex->bind();
         /** @todo not sure if this will stay until use...
                   [actually i'm never sure. Need to test that once!] */
-        tex->bind();
         tex->setTexParameter(gl::GL_TEXTURE_WRAP_S, gl::GLint(gl::GL_CLAMP_TO_EDGE));
         tex->setTexParameter(gl::GL_TEXTURE_WRAP_T, gl::GLint(gl::GL_CLAMP_TO_EDGE));
     }

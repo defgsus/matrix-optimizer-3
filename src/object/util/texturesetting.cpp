@@ -37,6 +37,9 @@ TextureSetting::TextureSetting(Object *parent)
     : object_       (parent)
     , paramTex_     (0)
     , paramFilename_(0)
+    , p_isCube_     (false)
+    , p_lastIsCube_ (false)
+    , p_lastIsEnabled_(false)
     , loaded_version(-1)
 {
 }
@@ -49,7 +52,7 @@ TextureSetting::~TextureSetting()
 void TextureSetting::serialize(IO::DataStream &io) const
 {
     io.writeHeader("texs", 2);
-    // v2 moved most work to ParameterTexture
+    // v2 moved most work to ParameterTexture (no binary change)
 }
 
 void TextureSetting::deserialize(IO::DataStream &io)
@@ -212,7 +215,11 @@ void TextureSetting::bind(const RenderTime& time, uint* slot)
 
     // ---- bind ----
 
-    tex->setActiveTexture(*slot); (*slot)++;
+    if (slot)
+    {
+        tex->setActiveTexture(*slot);
+        ++(*slot);
+    }
     tex->bind();
 
     // ---- set texture params ----

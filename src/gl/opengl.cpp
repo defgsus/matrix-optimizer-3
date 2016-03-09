@@ -37,6 +37,7 @@ const char * errorName(gl::GLenum error)
 
     switch (error)
     {
+        case gl::GLenum(0): return "NO_ERROR";
         case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
         case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
         case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
