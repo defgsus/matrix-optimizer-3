@@ -2,7 +2,6 @@
 
 // define INVERT 0,1
 
-uniform sampler2D   u_tex;
 uniform vec4        u_settings; // threshold, .., .., ..
 uniform vec4        u_color;
 

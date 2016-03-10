@@ -3,8 +3,6 @@
 // define DISTANCE: 1-1000
 // define DISTANCE_DIAG: diagonal of DISTANCE ( DISTANCE * sqrt(2) )
 
-uniform sampler2D   u_tex;
-
 void main()
 {
     float minD = DISTANCE_DIAG;

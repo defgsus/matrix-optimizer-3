@@ -1,6 +1,5 @@
 #include <to/header>
 
-uniform sampler2D   u_tex;
 uniform vec2        u_quant; // x=pos, y=color
 uniform float       u_tolerance; // for smoothstep
 

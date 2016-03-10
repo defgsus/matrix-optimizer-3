@@ -702,11 +702,10 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     // XXX hhacky
     RenderTime rtime(CurrentTime::time(), MO_GFX_THREAD);
     for (uint i=0; i<to->numberTextureInputs(); ++i)
-        to->inputTexture(i, rtime); // gets cube flag
+        to->inputTexture(i, rtime); // to get isCube flag
 
     src->replace("//%mo_texture_decl%",
                  to->getInputTextureDeclarations(texNames), true);
-    MO_PRINT(src->fragmentSource());
 
     // compile and vao
     try

@@ -628,12 +628,11 @@ void Camera::calculateTransformation(Mat4& matrix, const RenderTime& time) const
     //matrix = MATH::rotate(matrix, -90.f, Vec3(1,0,0));
 }
 
-
-void Camera::startGlFrame(const RenderTime& time, uint cubeMapIndex)
+void Camera::attachCubeTexture(uint cubeMapIndex)
 {
-    GL::FrameBufferObject * fbo = msFbo_ ? msFbo_ : fbo_;
+    using namespace gl;
 
-    fbo->bind();
+    GL::FrameBufferObject * fbo = msFbo_ ? msFbo_ : fbo_;
 
     // attach each cubemap texture
     if (renderMode_ == RM_FULLDOME_CUBE)
@@ -648,6 +647,15 @@ void Camera::startGlFrame(const RenderTime& time, uint cubeMapIndex)
             default: fbo->attachCubeTexture(GL_TEXTURE_CUBE_MAP_POSITIVE_Z); break;
         }
     }
+}
+
+void Camera::startGlFrame(const RenderTime& time, uint cubeMapIndex)
+{
+    GL::FrameBufferObject * fbo = msFbo_ ? msFbo_ : fbo_;
+
+    fbo->bind();
+
+    attachCubeTexture(cubeMapIndex);
 
     fbo->setViewport();
 

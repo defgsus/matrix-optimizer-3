@@ -4,7 +4,6 @@
 #include <color>
 #endif
 
-uniform sampler2D   u_tex;
 uniform vec3        u_color;
 uniform vec3        u_range;
 uniform vec3        u_mix;

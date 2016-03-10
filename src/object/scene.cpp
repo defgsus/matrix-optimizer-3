@@ -1144,6 +1144,9 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                         const Mat4 viewm = glm::inverse(cammat);
                         camSpace.setViewMatrix(viewm);
 
+// Render all objects per cube-face
+// This version seems *slightly* faster than the one below
+#if 1
                         // for each cubemap
                         const uint numCubeMaps = camera->numCubeTextures(time);
                         for (uint i=0; i<numCubeMaps; ++i)
@@ -1173,6 +1176,45 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                         }
 
                         camera->finishGlFrame(time);
+
+// Render each cube-face per object
+#else
+                        bool isFirst = true;
+                        // render each opengl object per camera & per cube-face
+                        for (ObjectGl * o : p_glObjectsPerCamera_[cindex])
+                        if (!o->isShader() && !o->isTexture() // don't render shader objects per camera
+                            && o->active(time))
+                        {
+                            if (o->updateMode() == ObjectGl::UM_ON_CHANGE
+                                && !(o->isUpdateRequest() || o->params()->haveInputsChanged(time)))
+                                    continue;
+
+                            // for each cubemap
+                            const uint numCubeMaps = camera->numCubeTextures(time);
+                            for (uint i=0; i<numCubeMaps; ++i)
+                            {
+                                // start camera frame
+                                // and attach correct render target texture
+                                if (isFirst)
+                                    camera->startGlFrame(time, i);
+                                else
+                                    camera->attachCubeTexture(i);
+
+                                camSpace.setCubeViewMatrix( camera->cameraViewMatrix(i) * viewm );
+
+                                o->p_renderGl_(renderSet, time);
+                            }
+                            isFirst = false;
+
+                            //YYY render debug objects
+                            /*if (p_debugRenderOptions_)
+                                p_debugRenderer_[time.thread()]
+                                        ->render(renderSet, time.thread(), p_debugRenderOptions_);
+                                        */
+                        }
+
+                        camera->finishGlFrame(time);
+#endif
                     }
 
                 } // active

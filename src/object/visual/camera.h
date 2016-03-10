@@ -81,8 +81,15 @@ public:
         Binds the framebuffer and clears it. */
     void startGlFrame(const RenderTime& time, uint cubeMapIndex = 0);
 
+    /** Attaches another cubemap side as the render target texture to fbo.
+        The camera fbo must be bound!.
+        To be called after startGlFrame().
+        Does nothing in non-cube mode. */
+    void attachCubeTexture(uint cubeMapIndex);
+
     /** Finishes rendering an openGl frame for this camera.
-        Only unbinds the framebuffer right now. */
+        Blits the multisample fbo to normal fbo in multisample mode.
+        Unbinds the fbo. */
     void finishGlFrame(const RenderTime& time);
 
     /** Initialize camera space with projection matrix */

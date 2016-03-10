@@ -4,7 +4,6 @@
 // define SIGNED 0,1
 // define MUL_APHA 0,1
 
-uniform sampler2D   u_tex;
 uniform vec2        u_eps;
 uniform vec4        u_color;
 

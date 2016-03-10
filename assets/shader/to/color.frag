@@ -2,7 +2,6 @@
 #include <constants>
 #include <color>
 
-uniform sampler2D   u_tex;
 uniform vec4        u_color;
 uniform vec3        u_hsv;
 uniform vec3        u_gamma_exp;

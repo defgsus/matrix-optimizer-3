@@ -6,7 +6,6 @@
 //define LENS_MODE 0,1,2
 //define CHROMATIC 0,1
 
-uniform sampler2D       u_tex;
 uniform vec3 		u_lens;         // def, per-spec, size
 uniform vec2		u_lens_set;     // exp, normal-radius
 uniform vec2		u_lens_center;

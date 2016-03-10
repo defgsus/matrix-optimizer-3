@@ -4,8 +4,6 @@
 // define USE_MASK 0,1
 // define USE_SIZE3 0,1
 
-uniform sampler2D   u_tex;          // input texture
-uniform sampler2D   u_tex_mask;     // texture mask
 uniform vec2        u_size_sigma;   // size, smoothness
 uniform vec3        u_size3;        // three sizes
 uniform vec2        u_direction;    // (1,0) or (0,1)

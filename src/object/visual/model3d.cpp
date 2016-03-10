@@ -35,7 +35,7 @@
 #include "io/application.h"
 #include "io/log_gl.h"
 
-#if 1
+#if 0
 #   define MO_DEBUG_MODEL(arg__) MO_PRINT("Model3d::" << arg__)
 #else
 #   define MO_DEBUG_MODEL(unused__) { }
@@ -821,6 +821,11 @@ void Model3d::setupDrawable_()
         defines += ("\n#define MO_ENABLE_FRAGMENT_OVERRIDE");
         defines += ("\n#define MO_ENABLE_NORMAL_OVERRIDE");
         defines += ("\n#define MO_ENABLE_LIGHT_OVERRIDE");
+    }
+    src->addDefine(defines);
+
+    if (glslDoOverride_->baseValue())
+    {
         QString text =
                   "#line 1\n"
                 + glslVertex_->value() + "\n#line 1\n"
@@ -831,7 +836,6 @@ void Model3d::setupDrawable_()
         src->replace("//%mo_override_normal%", "#line 1\n" + glslNormal_->value() + "\n");
         src->replace("//%mo_override_light%", "#line 1\n" + glslLight_->value() + "\n");
     }
-    src->addDefine(defines);
 
     // resolve includes
     src->replaceIncludes([this](const QString& url, bool do_search)

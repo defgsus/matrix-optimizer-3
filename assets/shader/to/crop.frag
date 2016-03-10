@@ -1,6 +1,5 @@
 #include <to/header>
 
-uniform sampler2D   u_tex;
 uniform vec4        u_tex_scale;
 
 void main(void)
