@@ -25,6 +25,7 @@
 #include "gl/screenquad.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
+#include "io/currenttime.h"
 #include "io/datastream.h"
 #include "io/log.h"
 
@@ -105,6 +106,7 @@ struct TextureObjectBase::PrivateTO
     ParameterText * p_fragment;
     QList<TextureSetting*> p_textures;
     QList<ParameterTexture*> texParamsCopy;
+    QList<bool> texIsCube;
 
     GL::Uniform
         * u_out_color, * u_out_resolution;
@@ -311,6 +313,7 @@ void TextureObjectBase::PrivateTO::createParameters()
                                   tr("texture #%1").arg(i+1),
                                   ParameterTexture::IT_INPUT);
             texParamsCopy.push_back(tex->textureParam());
+            texIsCube.push_back(false);
 
             tex->textureParam()->setVisibleGraph(true);
             //MO_PRINT("TEXPARAM " << i << " done");
@@ -638,10 +641,29 @@ const GL::Texture* TextureObjectBase::inputTexture(uint index, const RenderTime&
     if ((int)index >= textureParams().size())
         return 0;
     auto tex = textureParams()[index]->value(rt);
+    // update type flag
+    if (index < (uint)p_to_->texIsCube.size())
+        p_to_->texIsCube[index] = tex ? tex->isCube() : false;
+
     // XXX texture would need to be bound
     //if (tex)
     //    textureParams()[index]->setTextureParam(tex);
     return tex;
+}
+
+QString TextureObjectBase::getInputTextureDeclarations(const QStringList &names) const
+{
+    const int num = std::min(p_to_->p_textures.size(), names.size());
+    QString decl;
+    for (int i=0; i<num; ++i)
+    {
+        if (p_to_->p_textures[i]->isCube()
+            || p_to_->texIsCube[i])
+            decl += "uniform samplerCube " + names[i] + ";\n";
+        else
+            decl += "uniform sampler2D " + names[i] + ";\n";
+    }
+    return decl;
 }
 
 GL::ScreenQuad * TextureObjectBase::shaderQuad(uint index) const
@@ -675,6 +697,18 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
         return inc.isEmpty() ? inc : ("// ----- include '" + url + "' -----\n" + inc);
     });
 
+    // -- insert texture defs --
+
+    // XXX hhacky
+    RenderTime rtime(CurrentTime::time(), MO_GFX_THREAD);
+    for (uint i=0; i<to->numberTextureInputs(); ++i)
+        to->inputTexture(i, rtime); // gets cube flag
+
+    src->replace("//%mo_texture_decl%",
+                 to->getInputTextureDeclarations(texNames), true);
+    MO_PRINT(src->fragmentSource());
+
+    // compile and vao
     try
     {
         quad.quad->create(src, 0);

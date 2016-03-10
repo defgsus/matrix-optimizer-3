@@ -10,11 +10,6 @@ uniform vec4  iMouse;                   // (not defined yet)
 uniform vec4  iDate;                    // year, month, day, time in seconds
 uniform float iSampleRate;              // sound sampling rate in Hertz
 
-uniform sampler2D   iChannel0;
-uniform sampler2D   iChannel1;
-uniform sampler2D   iChannel2;
-uniform sampler2D   iChannel3;
-
 //%mo_user_code%
 
 void main(void)

@@ -33,7 +33,7 @@ namespace
 {
     QGLFormat createFormat() {
         QGLFormat format;
-        format.setVersion(3, 2);
+        format.setVersion(4, 3);
 #ifdef MO_USE_OPENGL_CORE
         format.setProfile(QGLFormat::CoreProfile);
 #else

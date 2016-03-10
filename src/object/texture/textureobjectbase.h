@@ -131,6 +131,13 @@ protected:
         respective last calls to ParameterTexture::value() */
     bool hasInputTextureChanged(const RenderTime& time) const;
 
+    /** Returns a string for defining the uniforms (sampler2D or samplerCube),
+        for connected inputs.
+        @note sampleCube can only be determined after the first renderpass
+        because inputTexture() or ParameterTexture::value() are the first
+        to see the actual texture. */
+    QString getInputTextureDeclarations(const QStringList& names) const;
+
     // ---------- opengl stuff -----------
 public:
 

@@ -24,6 +24,8 @@ uniform     vec4        u_color_range_max;
 
     out         vec4        fragColor;
 
+    //%mo_texture_decl%
+
     vec4 mo_color_range(in vec4 c)
     {
         return max(u_color_range_min, min(u_color_range_max, c ));

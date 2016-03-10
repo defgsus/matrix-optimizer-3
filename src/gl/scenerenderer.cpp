@@ -47,7 +47,7 @@ QSurfaceFormat SceneRenderer::defaultFormat()
 {
     QSurfaceFormat format;
 
-    format.setVersion(3, 3);
+    format.setVersion(4, 3);
 
 #ifdef MO_USE_OPENGL_CORE
     format.setProfile(QSurfaceFormat::CoreProfile);

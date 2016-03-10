@@ -136,7 +136,8 @@ HEADERS += \
     src/object/texture/neuroto.h \
     src/object/texture/cropto.h \
     src/object/visual/skybox.h \
-    $$PWD/util/objecttreesearch.h
+    $$PWD/util/objecttreesearch.h \
+    $$PWD/texture/cubemapto.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -267,4 +268,5 @@ SOURCES += \
     src/object/control/mouseobject.cpp \
     src/object/texture/neuroto.cpp \
     src/object/texture/cropto.cpp \
-    src/object/visual/skybox.cpp
+    src/object/visual/skybox.cpp \
+    $$PWD/texture/cubemapto.cpp

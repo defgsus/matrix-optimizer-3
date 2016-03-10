@@ -148,7 +148,7 @@ void TextureRenderer::render(const Texture * tex, bool bindTexture)
     // bind texture
     if (bindTexture)
     {
-        MO_CHECK_GL_THROW( glActiveTexture(GL_TEXTURE0) );
+        GL::Texture::setActiveTexture(0);
         tex->bind();
     }
 

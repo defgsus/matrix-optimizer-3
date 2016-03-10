@@ -14,10 +14,10 @@
 #include "objectoutputview.h"
 #include "object/object.h"
 #include "object/interface/valuetextureinterface.h"
+#include "tool/generalimage.h"
 #include "gl/texture.h"
 #include "gl/texturerenderer.h"
 #include "io/currenttime.h"
-
 
 namespace MO {
 namespace GUI {
@@ -126,8 +126,9 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
             MO_WARNING("In ObjectOutputView: " << e.what());
         }
 
-        // set black / XXX should say error or something
-        label->setPixmap(QPixmap(imgSize_));
+        // set error tex
+        label->setPixmap(QPixmap::fromImage(GeneralImage::getErrorImage(
+                                     tr(" error "), imgSize_)));
     }
     else
         label->clear();

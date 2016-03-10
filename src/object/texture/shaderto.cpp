@@ -197,15 +197,19 @@ void ShaderTO::Private::initGl()
 {
     // shader-quad
 
+    QStringList texnames = { "iChannel0", "iChannel1", "iChannel2", "iChannel3" };
+
     GL::ShaderSource src;
     try
     {
         src.loadVertexSource(":/shader/to/default.vert");
         src.loadFragmentSource(":/shader/to/shader.frag");
         src.pasteDefaultIncludes();
-        src.replace("//%mo_user_code%",
-                uniformSetting->getDeclarations()
-                + "\n#line 1\n" + p_glsl->baseValue());
+
+        QString code = uniformSetting->getDeclarations();
+        code += "\n#line 1\n" + p_glsl->baseValue();
+
+        src.replace("//%mo_user_code%", code);
     }
     catch (Exception& e)
     {
@@ -216,8 +220,7 @@ void ShaderTO::Private::initGl()
     GL::Shader * shader;
     try
     {
-        shader = to->createShaderQuad(
-                src, { "iChannel0", "iChannel1", "iChannel2", "iChannel3" })->shader();
+        shader = to->createShaderQuad(src, texnames)->shader();
     }
     catch (Exception& e)
     {
