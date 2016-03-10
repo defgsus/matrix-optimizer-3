@@ -15,6 +15,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
 #include "object/util/objecteditor.h"
 #include "gl/screenquad.h"
 #include "gl/shader.h"
@@ -55,6 +56,8 @@ struct KaliSetTO::Private
             *p_numIter, *p_AntiAlias_;
     ParameterSelect
             *p_numDim, *p_calcMode, *p_colMode, *p_outMode, *p_mono;
+    ParameterText
+            *p_param_glsl;
     GL::Uniform
             * u_kali_param,
             * u_offset,
@@ -147,13 +150,28 @@ void KaliSetTO::Private::createParameters()
         p_calcMode = to->params()->createSelectParameter(
                     "calc_mode", tr("mode"),
                     tr("The calculation mode"),
-        { "basic", "evolved" },
-        { tr("basic"), tr("evolved") },
+        { "basic", "user_func", "evolved" },
+        { tr("basic"), tr("user function"), tr("evolved") },
         { tr("Basic flexible kali renderer"),
+          tr("Same as basic but with a user function defining the kaliset parameter"),
           tr("Renderer based on interactive evolution") },
-        { 0, 1 },
+        { 0, 1, 2 },
                     0, true, false);
         p_calcMode->setDefaultEvolvable(false);
+
+        p_param_glsl = to->params()->createTextParameter(
+                    "param_func", tr("parameter function"),
+                    tr("A freely definable glsl function that returns the "
+                       "magic kali parameter"),
+                    TT_GLSL,
+        "// uv is [-1,1]\n"
+        "// cur is value of current iteration\n"
+        "// i is current iteration number\n"
+        "vec4 kali_user_param(in vec2 uv, in VEC cur, in int i)\n"
+        "{\n"
+        "\treturn u_kali_param;\n"
+        "}\n", true, false);
+        p_param_glsl->setDefaultEvolvable(false);
 
         p_numDim = to->params()->createSelectParameter(
                     "num_dim", tr("dimensions"),
@@ -283,7 +301,8 @@ void KaliSetTO::onParameterChanged(Parameter * p)
         || p == p_->p_numDim
         || p == p_->p_outMode
         || p == p_->p_mono
-        || p == p_->p_AntiAlias_)
+        || p == p_->p_AntiAlias_
+        || p == p_->p_param_glsl)
         requestReinitGl();
 }
 
@@ -297,7 +316,8 @@ void KaliSetTO::updateParameterVisibility()
 {
     TextureObjectBase::updateParameterVisibility();
 
-    bool evo = p_->p_calcMode->baseValue() == 1;
+    bool evo = p_->p_calcMode->baseValue() == 2,
+         userfunc = p_->p_calcMode->baseValue() == 1;
 
     int dim = evo ? 3 : p_->p_numDim->baseValue();
 
@@ -311,6 +331,8 @@ void KaliSetTO::updateParameterVisibility()
     p_->p_numDim->setVisible(!evo);
     p_->p_numIter->setVisible(!evo);
     p_->p_colMode->setVisible(!evo);
+
+    p_->p_param_glsl->setVisible(userfunc);
 }
 
 
@@ -381,10 +403,12 @@ void KaliSetTO::Private::initGl()
         src.addDefine(QString("#define SINE_OUT %1").arg(p_outMode->baseValue()), false);
         src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()), false);
         src.addDefine(QString("#define AA %1").arg(p_AntiAlias_->baseValue()), false);
-        if (p_calcMode->baseValue() != 1)
+        if (p_calcMode->baseValue() != 2)
         {
             src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
             src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
+            if (p_calcMode->baseValue() == 1)
+                src.replace("//%kali_user_param%", "#line 1\n" + p_param_glsl->baseValue(), true);
         }
         else
         {

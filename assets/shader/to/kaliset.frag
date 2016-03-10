@@ -7,7 +7,7 @@
 //#define COL_MODE 3
 //#define NUM_DIM 2,3,4
 //#define MONOCHROME 0,1
-//#define CALC_MODE basic,evo
+//#define CALC_MODE basic,userfunc,evo
 
 uniform vec4    u_kali_param;
 uniform vec4    u_offset;
@@ -27,12 +27,12 @@ uniform float   u_freq;
     vec3 toVec3(in vec4 v) { return v.xyz; }
 #endif
 
-
+//%kali_user_param%
 //%KaliSet%
 
 vec3 kali_color(in vec2 pos)
 {
-#if CALC_MODE == 1
+#if CALC_MODE == 2
     vec3 r = evolvedKaliSet(pos);
 #else
     #if NUM_DIM == 2
@@ -63,7 +63,11 @@ vec3 kali_color(in vec2 pos)
     #endif
 
             if (i < NUM_ITER - 1)
-                    p -= VEC(u_kali_param);
+    #if CALC_MODE == 0
+                p -= VEC(u_kali_param);
+    #elif CALC_MODE == 1
+                p -= VEC(kali_user_param(pos, p, i));
+    #endif
         }
 
     #if COL_MODE == 0
