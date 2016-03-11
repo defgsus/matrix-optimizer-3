@@ -25,6 +25,9 @@ AudioOutAO::AudioOutAO()
     setName("AudioOut");
 }
 
+AudioOutAO::~AudioOutAO() { }
+
+
 void AudioOutAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

@@ -25,6 +25,8 @@ TrackFloat::TrackFloat() :
     setNumberOutputs(ST_FLOAT, 1);
 }
 
+TrackFloat::~TrackFloat() { }
+
 void TrackFloat::serialize(IO::DataStream & io) const
 {
     Track::serialize(io);

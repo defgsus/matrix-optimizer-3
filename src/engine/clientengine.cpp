@@ -82,7 +82,8 @@ ClientEngine::~ClientEngine()
 {
     MO_NETLOG(CTOR, "ClientEngine::~ClientEngine()");
 
-    delete nextScene_;
+    if (nextScene_)
+        nextScene_->releaseRef("ClientEngine destructor");
 
 //    if (scene_)
 //        scene_->kill();
@@ -592,7 +593,7 @@ void ClientEngine::setClientIndex_(int index)
 void ClientEngine::onSceneReceived_(Scene * scene)
 {
     if (nextScene_)
-        delete nextScene_;
+        nextScene_->releaseRef("ClientEngine remove for new scene");
 
     // put on stack
     nextScene_ = scene;

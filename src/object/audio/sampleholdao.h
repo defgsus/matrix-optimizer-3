@@ -9,7 +9,6 @@ class SampleHoldAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(SampleHoldAO);
-    ~SampleHoldAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 

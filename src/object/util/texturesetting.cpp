@@ -210,8 +210,6 @@ void TextureSetting::bind(const RenderTime& time, uint* slot)
         return;
     p_isCube_ = tex->isCube();
 
-    if (!tex)
-        MO_GL_ERROR("No texture defined for TextureSetting::bind()");
 
     // ---- bind ----
 

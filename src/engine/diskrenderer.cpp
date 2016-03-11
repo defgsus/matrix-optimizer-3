@@ -324,7 +324,7 @@ bool DiskRenderer::Private::releaseScene()
     delete audio; audio = 0;
     delete renderer; renderer = 0;
     //delete context; context = 0;
-    delete scene; scene = 0;
+    scene->releaseRef("render finished"); scene = 0;
     delete sceneEditor; sceneEditor = 0;
 
     return true;

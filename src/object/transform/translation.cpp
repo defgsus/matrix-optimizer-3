@@ -24,6 +24,9 @@ Translation::Translation()
     setName("Translation");
 }
 
+Translation::~Translation() { }
+
+
 void Translation::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

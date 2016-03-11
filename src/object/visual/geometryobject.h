@@ -32,7 +32,6 @@ class GeometryObject
 public:
 
     MO_OBJECT_CONSTRUCTOR(GeometryObject);
-    ~GeometryObject();
 
     Type type() const Q_DECL_OVERRIDE { return T_GEOMETRY; }
     virtual bool isGeometry() const Q_DECL_OVERRIDE { return true; }

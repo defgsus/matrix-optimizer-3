@@ -19,6 +19,8 @@ Track::Track() :
 {
 }
 
+Track::~Track() { }
+
 void Track::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

@@ -39,7 +39,6 @@ public:
     };
 
     MO_OBJECT_CONSTRUCTOR(ImageGallery);
-    ~ImageGallery();
 
     Vec4 imageColor(const RenderTime & time) const;
     Vec4 frameColor(const RenderTime & time) const;

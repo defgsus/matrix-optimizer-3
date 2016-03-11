@@ -26,6 +26,8 @@ AudioInAO::AudioInAO()
     setNumberAudioOutputs(2);
 }
 
+AudioInAO::~AudioInAO() { }
+
 void AudioInAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

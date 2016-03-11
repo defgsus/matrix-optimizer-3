@@ -1223,7 +1223,7 @@ void MainWidgetController::onObjectDeleted_(const Object * o)
     objectView()->setObject(0);
     objectOutputView()->setObject(0);
     sequenceView()->setNothing();
-    sequencer()->setCurrentObject(0);
+    //sequencer()->setCurrentObject(0);
 
     onSceneChanged_();
 }
@@ -1238,7 +1238,7 @@ void MainWidgetController::onObjectsDeleted_(const QList<Object*>& l)
     objectView()->setObject(0);
     objectOutputView()->setObject(0);
     sequenceView()->setNothing();
-    sequencer()->setCurrentObject(0);
+    //sequencer()->setCurrentObject(0);
 
     onSceneChanged_();
 }
@@ -1311,6 +1311,12 @@ void MainWidgetController::showValueFloat_(ValueFloatInterface * iface)
 /** Shows or hides the sequence view and selects a sequence to display */
 void MainWidgetController::updateSequenceView_(Object * o)
 {
+    if (!o)
+    {
+        MO_WARNING("NULL in updateSequenceView_()");
+        return;
+    }
+
     // show the clicked-on sequence
     if (o->isSequence())
         showSequence_(true, static_cast<Sequence*>(o));

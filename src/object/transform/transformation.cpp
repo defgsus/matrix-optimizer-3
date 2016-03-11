@@ -21,6 +21,8 @@ Transformation::Transformation()
     setNumberOutputs(ST_TRANSFORMATION, 1);
 }
 
+Transformation::~Transformation() { }
+
 void Transformation::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

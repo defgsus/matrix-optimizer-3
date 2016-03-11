@@ -416,7 +416,7 @@ void Texture::setChanged()
 
 void Texture::bind() const
 {
-    //MO_DEBUG_TEX("Texture::bind(" << target_ << ", " << handle_ << ")");
+    //MO_PRINT("Texture::bind(" << target_ << ", " << handle_ << ")");
 
     MO_CHECK_GL_THROW( glBindTexture(target_, handle_) );
 }
@@ -709,11 +709,11 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
                 // ptr
                 ptr));
 
-            /** @todo fix memory count for cubemap */
+            /** @todo fix memory count for cubemap faces */
             if (!uploaded_)
             {
                 uploaded_ = true;
-                memory_ = width_ * GL::channelSize(format_) * GL::typeSize(type_);
+                memory_ = width_ * height_ * 6 * GL::channelSize(format_) * GL::typeSize(type_);
                 memory_used_ += memory_;
             }
         break;
@@ -871,7 +871,7 @@ void Texture::saveImageFile(const QString &fn) const
 
 void Texture::setActiveTexture(GLuint slot)
 {
-    MO_CHECK_GL( gl::glActiveTexture(gl::GL_TEXTURE0 + slot) );
+    MO_CHECK_GL_THROW( gl::glActiveTexture(gl::GL_TEXTURE0 + slot) );
 }
 
 Texture * Texture::createFromImage(const QImage & img, gl::GLenum gpu_format, uint mipmap_levels)

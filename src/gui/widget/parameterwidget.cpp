@@ -720,10 +720,10 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
         {
             param->setInputType(m);
             but->setText(param->inputTypeNames[param->inputType()]);
-            //btexmm_->setVisible( m == ParameterTexture::IT_FILE );
+            btexmm_->setVisible( m == ParameterTexture::IT_FILE );
 
-            //if (m == ParameterTexture::IT_INPUT)
-            //    param->setVisibleGraph(true);
+            if (m == ParameterTexture::IT_INPUT)
+                param->setVisibleGraph(true);
         } );
     });
 
@@ -791,7 +791,7 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
             but->setText(param->wrapModeNames[param->wrapModeY()]);
         } );
     });
-    /*
+
     {
         QStringList names = { tr("no mipmap") };
         QList<uint> values = { 0 };
@@ -818,7 +818,6 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
 
         but->setVisible(param->inputType() == ParameterTexture::IT_FILE);
     }
-    */
 }
 
 void ParameterWidget::updateButtons()

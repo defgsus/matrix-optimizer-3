@@ -45,6 +45,8 @@ TextureOverlay::TextureOverlay()
     deg90_ = MATH::rotate(Mat4(1), 90.f, Vec3(1,0,0));
 }
 
+TextureOverlay::~TextureOverlay() { }
+
 void TextureOverlay::serialize(IO::DataStream & io) const
 {
     ObjectGl::serialize(io);

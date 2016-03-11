@@ -25,6 +25,8 @@ ClearTrans::ClearTrans()
     setName("Clear");
 }
 
+ClearTrans::~ClearTrans() { }
+
 void ClearTrans::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

@@ -78,7 +78,6 @@ public:
     // -------------- ctor --------------
 
     MO_OBJECT_CONSTRUCTOR(SequenceFloat);
-    ~SequenceFloat();
 
     virtual Type type() const { return T_SEQUENCE_FLOAT; }
 

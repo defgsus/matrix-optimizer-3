@@ -21,7 +21,6 @@ class CropTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(CropTO);
-    ~CropTO();
 
     //virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 

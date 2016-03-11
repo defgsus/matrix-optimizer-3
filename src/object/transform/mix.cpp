@@ -23,6 +23,8 @@ Mix::Mix()
     setName("Mix");
 }
 
+Mix::~Mix() { }
+
 void Mix::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

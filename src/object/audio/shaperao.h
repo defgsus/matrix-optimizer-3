@@ -19,7 +19,6 @@ class ShaperAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(ShaperAO)
-    ~ShaperAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;

@@ -802,15 +802,20 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
     MO_ASSERT(obj, "missing object for parameter '" << param->idName() << "'");
 
 
+    // -- find a place for the modulation track --
 
-    // find a place for the modulation track
+    if (obj->parentObject())
+        obj = obj->parentObject();
+
     while (obj && !obj->canHaveChildren(Object::T_TRACK_FLOAT))
     {
         obj = obj->parentObject();
     }
     MO_ASSERT(obj, "Could not find an object to create a float track in.");
 
-    // create track
+
+    // -- create track --
+
     auto track = ObjectFactory::createObject("TrackFloat");
     track->setName(modulatorName(param, obj != param->object()));
 

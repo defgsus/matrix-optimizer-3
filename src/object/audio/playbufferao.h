@@ -9,7 +9,6 @@ class PlayBufferAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(PlayBufferAO);
-    ~PlayBufferAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter * p) Q_DECL_OVERRIDE;

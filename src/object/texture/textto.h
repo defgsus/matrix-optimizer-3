@@ -22,7 +22,6 @@ class TextTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(TextTO);
-    ~TextTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

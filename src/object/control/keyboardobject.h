@@ -21,7 +21,6 @@ class KeyboardObject : public Object, public ValueFloatInterface
 {
 public:
     MO_OBJECT_CONSTRUCTOR(KeyboardObject);
-    ~KeyboardObject();
 
     Type type() const { return T_CONTROL; }
 

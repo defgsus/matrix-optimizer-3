@@ -9,7 +9,6 @@ class PanAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(PanAO);
-    ~PanAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

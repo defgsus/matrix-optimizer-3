@@ -126,6 +126,11 @@ protected slots:
     /** Update from Scene */
     void onObjectChanged_(MO::Object *);
 
+    void onObjectAdded_(MO::Object*);
+    void onObjectsAdded_(const QList<MO::Object*>& list);
+    void onObjectDeleted_(const MO::Object*);
+    void onObjectsDeleted_(const QList<MO::Object*>& list);
+
 protected:
 
     void mouseDoubleClickEvent(QMouseEvent *);
@@ -165,6 +170,9 @@ private:
     void createSequenceWidgets_(Track *);
     void assignModulatingWidgets_();
     void createEditActions_();
+
+    void deleteTrackWidget_(Track*);
+    void deleteSequenceWidget_(SequenceWidget*);
 
     void selectSequenceWidget_(SequenceWidget *, SelectState_);
     void selectSequenceWidgets_(const QRect&, SelectState_);

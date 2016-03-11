@@ -146,6 +146,8 @@ void SequenceFloatView::updateSequence()
         layout_->setContentsMargins(0,0,0,0);
     }
 
+    bool handled = false;
+
     if (sequence_ && sequence_->sequenceType() == SequenceFloat::ST_TIMELINE)
     {
         MO_ASSERT(sequence_->timeline(), "No timeline in SequenceFloat with timeline mode");
@@ -163,31 +165,34 @@ void SequenceFloatView::updateSequence()
         static_cast<SequenceCurveData*>(sequenceCurveData_)->sequence = sequence_;
 
         timeline_->setVisible(true);
-
+        handled = true;
     }
     else
-    if (sequence_)
     {
-        if (timeline_ && timeline_->isVisible())
+        if (timeline_)
+        {
+            timeline_->setTimeline(0);
             timeline_->setVisible(false);
+        }
+    }
 
+    if (!handled && sequence_)
+    {
         createSequenceView_();
 
         seqView_->setSequence(sequence_);
         seqView_->setVisible(true);
+        handled = true;
     }
-    else
-    if (valueFloat_)
-    {
-        if (timeline_ && timeline_->isVisible())
-            timeline_->setVisible(false);
 
+    if (!handled && valueFloat_)
+    {
         createSequenceView_();
 
         seqView_->setValueFloat(valueFloat_);
         seqView_->setVisible(true);
+        handled = true;
     }
-
 
     // XXX forgot why
     //setViewSpace(view_->viewSpace());

@@ -187,7 +187,7 @@ void SceneConvertDialog::convert_()
             QDir().mkpath(newpath);
         }
 
-        Scene * scene;
+        Scene * scene = 0;
 
         try
         {
@@ -206,11 +206,11 @@ void SceneConvertDialog::convert_()
         catch (Exception & e)
         {
             tex.insertText("-> " + tr("saving failed") + " : " + e.what() + "\n\n");
-            delete scene;
             continue;
         }
 
-        delete scene;
+        if (scene)
+            scene->releaseRef("scene convert complete");
         item->setCheckState(Qt::Unchecked);
     }
 

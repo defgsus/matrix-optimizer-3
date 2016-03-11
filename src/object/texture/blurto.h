@@ -21,7 +21,6 @@ class BlurTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(BlurTO);
-    ~BlurTO();
 
     //virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 

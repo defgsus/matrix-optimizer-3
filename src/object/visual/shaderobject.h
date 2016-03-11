@@ -28,7 +28,6 @@ class ShaderObject
 public:
 
     MO_OBJECT_CONSTRUCTOR(ShaderObject);
-    ~ShaderObject();
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_SHADER; }
     virtual bool isShader() const Q_DECL_OVERRIDE { return true; }

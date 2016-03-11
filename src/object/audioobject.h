@@ -20,7 +20,6 @@ class AudioObject : public Object
 {
 public:
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(AudioObject)
-    ~AudioObject();
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_AUDIO_OBJECT; }
     virtual bool isAudioObject() const Q_DECL_OVERRIDE { return true; }

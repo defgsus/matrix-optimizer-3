@@ -21,7 +21,6 @@ class ColorTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(ColorTO);
-    ~ColorTO();
 
     //virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 

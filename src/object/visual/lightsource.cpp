@@ -26,6 +26,8 @@ LightSource::LightSource()
     setName("LightSource");
 }
 
+LightSource::~LightSource() { }
+
 void LightSource::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

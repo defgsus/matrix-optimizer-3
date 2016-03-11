@@ -19,7 +19,6 @@ class AScriptObject : public Object
 {
 public:
     MO_OBJECT_CONSTRUCTOR(AScriptObject);
-    ~AScriptObject();
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_ANGELSCRIPT; }
     virtual bool isScript() const Q_DECL_OVERRIDE { return true; }

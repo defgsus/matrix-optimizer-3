@@ -19,7 +19,6 @@ class DelayAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(DelayAO)
-    ~DelayAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;

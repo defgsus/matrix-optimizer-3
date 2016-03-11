@@ -21,6 +21,8 @@ Group::Group() :
     setName("Group");
 }
 
+Group::~Group() { }
+
 void Group::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

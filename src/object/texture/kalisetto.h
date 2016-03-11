@@ -23,7 +23,6 @@ class KaliSetTO
 public:
 
     MO_OBJECT_CONSTRUCTOR(KaliSetTO);
-    ~KaliSetTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

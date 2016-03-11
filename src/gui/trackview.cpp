@@ -213,6 +213,7 @@ void TrackView::clearTracks_(bool keep_alltracks)
         allObjects_.clear();
     tracks_.clear();
     trackY_.clear();
+    dragStartTrack_ = dragEndTrack_ = selTrack_ = 0;
 
     for (auto s : sequenceWidgets_)
         s->deleteLater();
@@ -258,7 +259,14 @@ void TrackView::setCurrentObject(Object * obj, bool send_signal)
                 this, SLOT(onSequenceChanged_(MO::Sequence*)));
         connect(editor_, SIGNAL(parameterChanged(MO::Parameter*)),
                 this, SLOT(onParameterChanged_(MO::Parameter*)));
-        //connect(editor_, &ObjectEditor::objectAdded)
+        connect(editor_, SIGNAL(objectAdded(MO::Object*)),
+                this, SLOT(onObjectAdded_(MO::Object*)));
+        connect(editor_, SIGNAL(objectsAdded(QList<MO::Object*>)),
+                this, SLOT(onObjectsAdded_(QList<MO::Object*>)));
+        connect(editor_, SIGNAL(objectDeleted(const MO::Object*)),
+                this, SLOT(onObjectDeleted_(const MO::Object*)));
+        connect(editor_, SIGNAL(objectsDeleted(QList<MO::Object*>)),
+                this, SLOT(onObjectsDeleted_(QList<MO::Object*>)));
     }
     scene_ = scene;
     currentObject_ = obj;
@@ -948,6 +956,71 @@ void TrackView::onObjectChanged_(Object * obj)
         }
 }
 
+void TrackView::onObjectAdded_(Object* o)
+{
+    if (auto seq = dynamic_cast<Sequence*>(o))
+    if (auto track = seq->parentTrack())
+    {
+        if (trackY_.contains(track))
+            updateTrack(track);
+    }
+}
+
+void TrackView::onObjectsAdded_(const QList<Object*>& list)
+{
+    for (auto o : list)
+        onObjectAdded_(o);
+}
+
+
+void TrackView::onObjectDeleted_(const Object* o)
+{
+    MO_DEBUG_GUI("TrackView::onObjectDeleted(" << (void*)o << ")");
+    if (currentObject_ == o)
+    {
+        MO_DEBUG_GUI("TrackView::onObjectDeleted(" << (void*)o << ") "
+                     "is currentObject_");
+        clearTracks();
+        return;
+    }
+    auto track = static_cast<Track*>(const_cast<Object*>(o));
+    deleteTrackWidget_(track);
+    auto seqw = widgetForSequence_(static_cast<Sequence*>(const_cast<Object*>(o)));
+    if (seqw)
+        deleteSequenceWidget_(seqw);
+}
+
+void TrackView::onObjectsDeleted_(const QList<Object*>& list)
+{
+    MO_DEBUG_GUI("TrackView::onObjectsDeleted(" << list.size() << ")");
+    for (auto o : list)
+    if (currentObject_ == o)
+    {
+        clearTracks();
+        return;
+    }
+    for (auto o : list)
+        onObjectDeleted_(o);
+}
+
+void TrackView::deleteTrackWidget_(Track* track)
+{
+    tracks_.removeOne(track);
+    trackY_.remove(track);
+    dragStartTrack_ = dragEndTrack_ = 0;
+    if (track == selTrack_)
+        selTrack_ = 0;
+}
+
+void TrackView::deleteSequenceWidget_(SequenceWidget* seqw)
+{
+    sequenceWidgets_.remove(seqw);
+    selectedWidgets_.removeAll(seqw);
+    framedWidgets_.removeAll(seqw);
+    seqw->deleteLater();
+}
+
+
 Track * TrackView::trackForY_(int y) const
 {
     y -= offsetY_;
@@ -1232,15 +1305,18 @@ bool TrackView::paste_(bool single_track)
                 nextFocusSequence_ = s;
 
                 if (editor_->addObject(selTrack_, s))
+                {
+                    if (o)
+                        o->releaseRef("trackview paste complete");
                     return true;
-
+                }
             }
             else
                 QMessageBox::warning(this, tr("Can not paste"), error);
         }
         nextFocusSequence_ = 0;
         if (o)
-            o->releaseRef("trackview paste complete");
+            o->releaseRef("trackview paste failed");
         return false;
     }
     // multi sequences
@@ -1272,7 +1348,6 @@ bool TrackView::paste_(bool single_track)
                     }
 
                 }
-                delete s;
                 objs[i] = 0;
             }
 
@@ -1281,6 +1356,9 @@ bool TrackView::paste_(bool single_track)
                 if (Sequence * s = dynamic_cast<Sequence*>(o))
                     if (auto w = widgetForSequence_(s))
                         selectSequenceWidget_(w, SELECT_);
+
+            for (auto o : objs)
+                o->releaseRef("trackview paste complete");
 
             if (!errors.isEmpty())
                 QMessageBox::warning(this, tr("Can not paste"), errors);
@@ -1341,7 +1419,6 @@ bool TrackView::paste_(bool single_track)
                         }
                             else MO_WARNING("skipping sequence '" << s->name() << "' "
                                             "because there is no track left");
-                        delete s;
                         objs[i] = 0;
                     }
                     // select
@@ -1349,6 +1426,9 @@ bool TrackView::paste_(bool single_track)
                         if (Sequence * s = dynamic_cast<Sequence*>(o))
                             if (auto w = widgetForSequence_(s))
                                 selectSequenceWidget_(w, SELECT_);
+
+                    for (auto o : objs)
+                        o->releaseRef("trackview paste complete");
 
                     if (!errors.isEmpty())
                         QMessageBox::warning(this, tr("Can not paste"), errors);

@@ -24,7 +24,6 @@ class OscInputObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(OscInputObject);
-    ~OscInputObject();
 
     Type type() const { return T_CONTROL; }
 

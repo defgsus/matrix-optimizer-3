@@ -36,6 +36,8 @@ ClipController::ClipController() :
         c = 0;
 }
 
+ClipController::~ClipController() { }
+
 void ClipController::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);

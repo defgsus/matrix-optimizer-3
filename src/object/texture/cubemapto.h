@@ -21,7 +21,6 @@ class CubemapTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(CubemapTO);
-    ~CubemapTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

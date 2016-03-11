@@ -52,7 +52,6 @@ public:
     };
 
     MO_OBJECT_CONSTRUCTOR(Skybox);
-    ~Skybox();
 
     /** Returns a copy of the shader code after replacements, includes, etc.. */
     GL::ShaderSource valueShaderSource(uint index) const override;

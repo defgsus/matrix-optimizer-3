@@ -9,7 +9,6 @@ class DustAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(DustAO);
-    ~DustAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;

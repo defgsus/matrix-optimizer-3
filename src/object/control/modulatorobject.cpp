@@ -19,6 +19,8 @@ ModulatorObject::ModulatorObject()
 {
 }
 
+ModulatorObject::~ModulatorObject() { }
+
 void ModulatorObject::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

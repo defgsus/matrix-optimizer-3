@@ -21,6 +21,8 @@ Dummy::Dummy()
     setName("Dummy");
 }
 
+Dummy::~Dummy() { }
+
 void Dummy::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

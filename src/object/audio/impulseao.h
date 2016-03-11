@@ -9,7 +9,6 @@ class ImpulseAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(ImpulseAO);
-    ~ImpulseAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

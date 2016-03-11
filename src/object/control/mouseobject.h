@@ -20,7 +20,6 @@ class MouseObject : public Object, public ValueFloatInterface
 {
 public:
     MO_OBJECT_CONSTRUCTOR(MouseObject);
-    ~MouseObject();
 
     Type type() const { return T_CONTROL; }
 

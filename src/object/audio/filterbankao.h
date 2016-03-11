@@ -19,7 +19,6 @@ class FilterBankAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(FilterBankAO)
-    ~FilterBankAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;

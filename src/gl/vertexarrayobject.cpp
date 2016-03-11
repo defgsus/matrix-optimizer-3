@@ -12,6 +12,7 @@
 
 #include "vertexarrayobject.h"
 #include "bufferobject.h"
+#include "gl_state.h"
 #include "io/error.h"
 #include "io/log.h"
 
@@ -278,6 +279,7 @@ void VertexArrayObject::drawElements(int instanceCount) const
             // bind element buffer
             ebuffer.buf->bind();
 
+            //MO_PRINT(GlState::current().toString());
             if (instanceCount <= 1)
                 MO_CHECK_GL_THROW( glDrawElements(
                                         ebuffer.primitiveType,
@@ -296,7 +298,9 @@ void VertexArrayObject::drawElements(int instanceCount) const
     }
     catch (Exception& e)
     {
+        MO_CHECK_GL_THROW(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
         MO_CHECK_GL( glBindVertexArray(0) );
+        e << "\n  in VertexArrayObject::drawElements(" << instanceCount << ")";
         throw;
     }
 

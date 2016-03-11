@@ -19,7 +19,6 @@ class OscillatorAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(OscillatorAO)
-    ~OscillatorAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;

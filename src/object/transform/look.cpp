@@ -25,6 +25,8 @@ Look::Look()
     setName("Look");
 }
 
+Look::~Look() { }
+
 void Look::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

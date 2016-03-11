@@ -31,6 +31,8 @@ ParameterAO::ParameterAO()
     setNumberAudioOutputs(1);
 }
 
+ParameterAO::~ParameterAO() { }
+
 void ParameterAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

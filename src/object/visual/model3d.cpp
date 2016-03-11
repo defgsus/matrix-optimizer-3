@@ -63,6 +63,10 @@ Model3d::Model3d()
       u_vertex_extrude_(0),
       doRecompile_  (false),
       loadedVersion_(0)
+    , xxx_2d        (0)
+    , xxx_cube      (0)
+    , xxx_u_2d        (0)
+    , xxx_u_cube      (0)
 {
     setName("Model3D");
     initDefaultUpdateMode(UM_ALWAYS, false);
@@ -913,6 +917,9 @@ void Model3d::setupDrawable_()
     }
 
     uniformSetting_->tieToShader(draw_->shader());
+
+    xxx_u_2d = draw_->shader()->getUniform("u_2d");
+    xxx_u_cube = draw_->shader()->getUniform("u_cube");
 }
 
 
@@ -922,6 +929,29 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
     MO_DEBUG_MODEL("renderGl(" << time << ")");
 
     /** @todo wireframe-mode for Model3d, eg. glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); */
+
+
+#if 0 // XXX debugging GL_INVALID_OPERATION in vao->drawElements()
+      //use these to trigger (needs use in shader)
+    if (!xxx_2d)
+    {
+        std::vector<gl::GLfloat> vec(1024*1024*4);
+        xxx_2d = new GL::Texture(1024,1024,gl::GL_RGBA,gl::GL_RGBA,gl::GL_FLOAT,
+                                 &vec[0]);
+        xxx_2d->create();
+        xxx_cube = new GL::Texture(1024,1024,gl::GL_RGBA,gl::GL_RGBA,gl::GL_FLOAT,
+                                 &vec[0],&vec[0],&vec[0],&vec[0],&vec[0],&vec[0]);
+        xxx_cube->create();
+    }
+
+    if (xxx_u_2d)
+        { xxx_u_2d->ints[0] = texSlot; GL::Texture::setActiveTexture(texSlot);
+            xxx_2d->bind(); ++texSlot; }
+
+    if (xxx_u_cube)
+        { xxx_u_cube->ints[0] = texSlot; GL::Texture::setActiveTexture(texSlot);
+            xxx_cube->bind(); ++texSlot; }
+#endif
 
     // recompile 2d/cubemap change in environment texture
     // XXX Possibly for equirect/fisheye change too, once this is implemented
@@ -1004,13 +1034,15 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
             u_env_map_amt_->setFloats(
                         envMapAmt_->value(time),
                         envMapAmt2_->value(time),
-                        envMapAmt3_->value(time));
-
-
-        uint texSlot = 0;
-        uniformSetting_->updateUniforms(time, &texSlot);
+                        envMapAmt3_->value(time));        
+        if (u_cam_pos_)
+        {
+            const Vec3& pos = rs.cameraSpace().position();
+            u_cam_pos_->setFloats(pos.x, pos.y, pos.z, 0.);
+        }
 
         // bind the model3d specific textures
+        uint texSlot = 0;
         if (u_tex_0_ && texture_->isEnabled())
             { u_tex_0_->ints[0] = texSlot; texture_->bind(time, &texSlot); }
         if (u_texn_0_ && textureBump_->isEnabled())
@@ -1019,6 +1051,9 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
             in GL_INVALID_OPERATION in Drawable's drawElements. */
         if (u_tex_env_0_ && textureEnv_->isEnabled())
             { u_tex_env_0_->ints[0] = texSlot; textureEnv_->bind(time, &texSlot); }
+
+        // update user uniforms and textures
+        uniformSetting_->updateUniforms(time, &texSlot);
 
         GL::Texture::setActiveTexture(0);
 
@@ -1033,12 +1068,6 @@ void Model3d::renderGl(const GL::RenderSettings& rs, const RenderTime& time)
         if (textureBump_->isEnabled())
         {
             textureBumpMorph_->updateUniforms(time);
-        }
-
-        if (u_cam_pos_)
-        {
-            const Vec3& pos = rs.cameraSpace().position();
-            u_cam_pos_->setFloats(pos.x, pos.y, pos.z, 0.);
         }
 
         // draw state

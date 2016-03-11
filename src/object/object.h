@@ -69,7 +69,8 @@ public:
     }
 
 #define MO_OBJECT_CONSTRUCTOR(Class__) \
-    explicit Class__(); \
+    protected: ~Class__(); \
+    public: explicit Class__(); \
     virtual Class__ * cloneClass() const Q_DECL_OVERRIDE { return new Class__(); } \
     static const QString& staticClassName() { static QString s(#Class__); return s; } \
     virtual const QString& className() const Q_DECL_OVERRIDE { return staticClassName(); } \
@@ -77,17 +78,20 @@ public:
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR(Class__) \
-    explicit Class__(); \
+    protected: ~Class__(); \
+    public: explicit Class__(); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR_2(Class__, p1__, p2__) \
-    explicit Class__(p1__, p2__); \
+    protected: ~Class__(); \
+    public: explicit Class__(p1__, p2__); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 
 #define MO_ABSTRACT_OBJECT_CONSTRUCTOR_3(Class__, p1__, p2__, p3__) \
-    explicit Class__(p1__, p2__, p3__); \
+    protected: ~Class__(); \
+    public: explicit Class__(p1__, p2__, p3__); \
     virtual void serialize(IO::DataStream &) const Q_DECL_OVERRIDE; \
     virtual void deserialize(IO::DataStream &) Q_DECL_OVERRIDE;
 

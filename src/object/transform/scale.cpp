@@ -24,6 +24,9 @@ Scale::Scale()
     setName("Scale");
 }
 
+Scale::~Scale() { }
+
+
 void Scale::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

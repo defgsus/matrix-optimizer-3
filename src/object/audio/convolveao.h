@@ -19,7 +19,6 @@ class ConvolveAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(ConvolveAO)
-    ~ConvolveAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;

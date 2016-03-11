@@ -21,7 +21,6 @@ class ImagesTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(ImagesTO);
-    ~ImagesTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

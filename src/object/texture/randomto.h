@@ -38,7 +38,6 @@ public:
     };
 
     MO_OBJECT_CONSTRUCTOR(RandomTO);
-    ~RandomTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

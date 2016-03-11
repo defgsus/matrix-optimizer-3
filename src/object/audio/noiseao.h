@@ -9,7 +9,6 @@ class NoiseAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(NoiseAO);
-    ~NoiseAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
 

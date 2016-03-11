@@ -21,7 +21,6 @@ class PosterizeTO : public TextureObjectBase
 public:
 
     MO_OBJECT_CONSTRUCTOR(PosterizeTO);
-    ~PosterizeTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

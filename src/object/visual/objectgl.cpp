@@ -54,6 +54,8 @@ ObjectGl::ObjectGl()
 {
 }
 
+ObjectGl::~ObjectGl() { }
+
 void ObjectGl::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

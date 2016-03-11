@@ -37,7 +37,6 @@ public:
     };
 
     MO_OBJECT_CONSTRUCTOR(MixTO);
-    ~MixTO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;

@@ -28,6 +28,8 @@ ModulatorObjectFloat::ModulatorObjectFloat()
     setNumberOutputs(ST_FLOAT, 1);
 }
 
+ModulatorObjectFloat::~ModulatorObjectFloat() { }
+
 void ModulatorObjectFloat::serialize(IO::DataStream & io) const
 {
     ModulatorObject::serialize(io);

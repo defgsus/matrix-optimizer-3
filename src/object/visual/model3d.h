@@ -37,7 +37,6 @@ public:
     };
 
     MO_OBJECT_CONSTRUCTOR(Model3d);
-    ~Model3d();
 
     /** Returns the current geometry settings. */
     const GEOM::GeometryFactorySettings& getGeometrySettings() const override;
@@ -115,6 +114,9 @@ private:
 
     bool doRecompile_;
     int loadedVersion_;
+
+    GL::Texture * xxx_2d, * xxx_cube;
+    GL::Uniform * xxx_u_2d, * xxx_u_cube;
 };
 
 } // namespace MO

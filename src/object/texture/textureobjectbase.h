@@ -40,7 +40,6 @@ public:
     };
 
     MO_ABSTRACT_OBJECT_CONSTRUCTOR(TextureObjectBase);
-    ~TextureObjectBase();
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_TEXTURE; }
     virtual bool isTexture() const Q_DECL_OVERRIDE { return true; }

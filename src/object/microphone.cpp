@@ -29,6 +29,8 @@ Microphone::Microphone()
     setNumberMicrophones(1);
 }
 
+Microphone::~Microphone() { }
+
 void Microphone::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

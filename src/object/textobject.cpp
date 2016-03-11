@@ -26,6 +26,8 @@ TextObject::TextObject()
     setNumberOutputs(ST_TEXT, 1);
 }
 
+TextObject::~TextObject() { }
+
 void TextObject::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

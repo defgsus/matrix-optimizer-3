@@ -33,6 +33,8 @@ Clip::Clip()
     setName("Clip");
 }
 
+Clip::~Clip() { }
+
 void Clip::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);

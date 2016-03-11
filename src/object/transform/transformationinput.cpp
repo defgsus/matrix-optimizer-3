@@ -25,6 +25,9 @@ TransformationInput::TransformationInput()
     setName("Input");
 }
 
+TransformationInput::~TransformationInput() { }
+
+
 void TransformationInput::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

@@ -24,7 +24,6 @@ class PluginAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(PluginAO);
-    ~PluginAO();
 
     /** Maximum plugin parameters to create */
     static const size_t maxParams;

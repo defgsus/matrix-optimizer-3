@@ -26,6 +26,8 @@ LookAt::LookAt()
     setName("LookAt");
 }
 
+LookAt::~LookAt() { }
+
 void LookAt::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

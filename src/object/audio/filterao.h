@@ -19,7 +19,6 @@ class FilterAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(FilterAO)
-    ~FilterAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;

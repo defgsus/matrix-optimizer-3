@@ -20,7 +20,6 @@ class WavePlayerAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(WavePlayerAO)
-    ~WavePlayerAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;

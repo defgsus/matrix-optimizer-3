@@ -19,7 +19,6 @@ class EnvelopeFollowerAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(EnvelopeFollowerAO)
-    ~EnvelopeFollowerAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;

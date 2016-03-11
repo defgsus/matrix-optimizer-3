@@ -21,7 +21,6 @@ class MicrophoneAO : public AudioObject
 {
 public:
     MO_OBJECT_CONSTRUCTOR(MicrophoneAO)
-    ~MicrophoneAO();
 
     // enable calculation of transformations
     virtual Type type() const Q_DECL_OVERRIDE { return T_SOUND_OBJECT; }

@@ -26,6 +26,8 @@ MirrorTrans::MirrorTrans()
     setName("Mirror");
 }
 
+MirrorTrans::~MirrorTrans() { }
+
 void MirrorTrans::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

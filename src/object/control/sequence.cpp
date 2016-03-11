@@ -26,6 +26,11 @@ Sequence::Sequence() :
     setName("*Sequence*");
 }
 
+Sequence::~Sequence()
+{
+
+}
+
 void Sequence::serialize(IO::DataStream &io) const
 {
     Object::serialize(io);

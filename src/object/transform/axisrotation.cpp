@@ -25,6 +25,8 @@ AxisRotation::AxisRotation()
     setName("Rotation");
 }
 
+AxisRotation::~AxisRotation() { }
+
 void AxisRotation::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

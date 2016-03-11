@@ -28,6 +28,8 @@ DerivativeObjectFloat::DerivativeObjectFloat()
     setNumberOutputs(ST_FLOAT, 1);
 }
 
+DerivativeObjectFloat::~DerivativeObjectFloat() { }
+
 void DerivativeObjectFloat::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

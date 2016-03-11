@@ -21,7 +21,6 @@ class FreeFloatTransform : public Transformation
 {
 public:
     MO_OBJECT_CONSTRUCTOR(FreeFloatTransform);
-    ~FreeFloatTransform();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;

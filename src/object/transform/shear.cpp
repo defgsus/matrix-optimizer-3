@@ -23,6 +23,8 @@ Shear::Shear()
     setName("Shear");
 }
 
+Shear::~Shear() { }
+
 void Shear::serialize(IO::DataStream & io) const
 {
     Transformation::serialize(io);

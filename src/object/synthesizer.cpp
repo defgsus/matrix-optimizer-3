@@ -87,6 +87,11 @@ Synthesizer::Synthesizer()
     setName("Synthesizer");
 }
 
+Synthesizer::~Synthesizer()
+{
+    delete synth_;
+}
+
 void Synthesizer::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);

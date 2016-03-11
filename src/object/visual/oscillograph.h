@@ -22,7 +22,6 @@ class Oscillograph : public ObjectGl
 public:
 
     MO_OBJECT_CONSTRUCTOR(Oscillograph);
-    ~Oscillograph();
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(const RenderTime & time) const;

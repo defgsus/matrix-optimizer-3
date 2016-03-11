@@ -30,6 +30,8 @@ SoundSourceAO::SoundSourceAO()
     setNumberSoundSources(1);
 }
 
+SoundSourceAO::~SoundSourceAO() { }
+
 void SoundSourceAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
