@@ -751,8 +751,9 @@ void SequenceFloat::setSoundFilename(const QString & fn)
 }
 
 
-Double SequenceFloat::fade_(const RenderTime & time) const
+Double SequenceFloat::fade_(const RenderTime & gtime) const
 {
+    auto time = gtime - start();
     // fade in/out
     Double fade = 1.0;
     const Double fadein = p_fadeIn_->value(time);

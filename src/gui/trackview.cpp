@@ -558,6 +558,15 @@ void TrackView::mouseDoubleClickEvent(QMouseEvent * e)
         e->accept();
         return;
     }
+
+    // doubleclick on track
+    if (selTrack_)
+    {
+        //if (auto scene = selTrack_->sceneObject())
+        emit sceneTimeChange( space_.mapXTo((Double)e->x() / width()) );
+        e->accept();
+        return;
+    }
 }
 
 void TrackView::mousePressEvent(QMouseEvent * e)
@@ -662,8 +671,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         clearSelection_();
 
     selTrack_ = trackForY_(e->y());
-    if (selTrack_)
-        MO_PRINT(selTrack_->name());
     setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
 
     if (selTrack_)
@@ -1026,7 +1033,6 @@ void TrackView::deleteSequenceWidget_(SequenceWidget* seqw)
 Track * TrackView::trackForY_(int y) const
 {
     y += offsetY_;
-    MO_PRINT(offsetY_);
 
     for (auto i = trackY_.begin(); i != trackY_.end(); ++i)
     {

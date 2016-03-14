@@ -63,6 +63,8 @@ void Sequencer::createWidgets_()
         gridLayout_->addWidget(trackView_, 1, 2);
         connect(trackView_, SIGNAL(sequenceSelected(Sequence*)),
                 this, SLOT(onSequenceSelected_(Sequence*)));
+        connect(trackView_, SIGNAL(sceneTimeChange(Double)),
+                this, SIGNAL(sceneTimeChanged(Double)));
 
         // trackview filter
         auto filterBut = new QToolButton(this);

@@ -90,6 +90,9 @@ signals:
     /** Tells Sequencer to adjust the scrollbar */
     void scrollTo(int y);
 
+    /** Request to set scene time */
+    void sceneTimeChange(Double t);
+
 public slots:
 
     /** Sets the horizontal view space of the widget */

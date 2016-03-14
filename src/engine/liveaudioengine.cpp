@@ -293,7 +293,7 @@ void LiveAudioEngine::seek(SamplePos pos)
     p_->curSample = pos;
 #else
     if (isPlayback())
-        p_->startTime = applicationTime() - p_->engine->second();
+        p_->startTime = applicationTime() - (p_->engine->second() + p_->timeOffset);
 #endif
 }
 
