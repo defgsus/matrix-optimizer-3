@@ -15,6 +15,7 @@
 #include "object/param/parameterint.h"
 #include "object/param/parametertext.h"
 #include "object/param/parametertexture.h"
+#include "object/param/parametertransformation.h"
 #include "object/param/parameterselect.h"
 #include "object/util/texturesetting.h"
 #include "gl/opengl.h"
@@ -35,6 +36,11 @@ bool UserUniformSetting::Uniform::isBufferTexture() const
 {
     int ut = p_type->baseValue();
     return ut == UT_T1 || ut == UT_T2 || ut == UT_T3 || ut == UT_T4;
+}
+
+bool UserUniformSetting::Uniform::isTransformation() const
+{
+    return p_type->baseValue() == UT_TRANS;
 }
 
 bool UserUniformSetting::Uniform::isTextureInput() const
@@ -82,13 +88,22 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
             tr("uniform%1 type").arg(i + 1),
             tr("The type of the uniform variable"),
             { "none", "float", "vec2", "vec3", "vec4",
+              "transform",
               "texture", "texturecube", "texture1D", "texture1D2", "texture1D3", "texture1D4" },
             { tr("none"), "float", "vec2", "vec3", "vec4",
-              "texture", "texture cube", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
+              tr("mat4"),
+              tr("texture"), tr("texture cube"),
+              tr("float texture1D"), tr("vec2 texture1D"), tr("vec3 texture1D"),
+              tr("vec4 texture1D") },
             { tr("none"), "float", "vec2", "vec3", "vec4",
-              "texture", "texture cube", "float texture1D", "vec2 texture1D", "vec3 texture1D", "vec4 texture1D" },
-            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4, UT_TEX, UT_TEX_C, UT_T1, UT_T2, UT_T3, UT_T4 },
-            0,
+              tr("mat4 transformation"),
+              tr("texture"), tr("texture cube"),
+              tr("float texture1D"), tr("vec2 texture1D"), tr("vec3 texture1D"),
+              tr("vec4 texture1D") },
+            { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4,
+              UT_TRANS,
+              UT_TEX, UT_TEX_C, UT_T1, UT_T2, UT_T3, UT_T4 },
+            UT_NONE,
             true, false);
         u.p_type->setDefaultEvolvable(false);
 
@@ -132,6 +147,11 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
             u.p_float.push_back(pf);
         }
 
+        u.p_trans = params->createTransformationParameter(
+                    ("uniform_transform%1_" + id_suffix).arg(i),
+                    tr("uniform%1 mat4").arg(i+1),
+                    tr("A 4-by-4 transformation matrix"));
+
         uniforms_.push_back(u);
     }
 }
@@ -167,6 +187,8 @@ void UserUniformSetting::updateParameterVisibility()
             u.num_floats = 3;
         if (type == UT_F4 || type == UT_T4)
             u.num_floats = 4;
+        if (type == UT_TRANS)
+            u.num_floats = 16;
 
         if (u.isBufferTexture())
         {
@@ -180,11 +202,13 @@ void UserUniformSetting::updateParameterVisibility()
         }
 
         for (uint i = 0; i<4; ++i)
-            u.p_float[i]->setVisible(i < u.num_floats);
+            u.p_float[i]->setVisible(i < u.num_floats
+                                     && !u.isTransformation());
 
         u.p_name->setVisible(u.num_floats > 0 || u.isTextureInput());
 
         u.p_texSet->setVisible(u.isTextureInput());
+        u.p_trans->setVisible(u.isTransformation());
     }
 
     uploadTime_ = -1.12341212; // be sure to upload uniforms next time
@@ -208,6 +232,7 @@ QString UserUniformSetting::getDeclarations() const
             case UT_F2: typestr = "vec2"; break;
             case UT_F3: typestr = "vec3"; break;
             case UT_F4: typestr = "vec4"; break;
+            case UT_TRANS: typestr = "mat4"; break;
             case UT_T1:
             case UT_T2:
             case UT_T3:
@@ -239,7 +264,9 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
                      || u.uniform->type() == gl::GL_FLOAT_VEC3
                      || u.uniform->type() == gl::GL_FLOAT_VEC4
                      || u.uniform->type() == gl::GL_SAMPLER_2D
-                     || u.uniform->type() == gl::GL_SAMPLER_CUBE))
+                     || u.uniform->type() == gl::GL_SAMPLER_CUBE
+                     || u.uniform->type() == gl::GL_FLOAT_MAT4
+                        ))
                 u.uniform = 0;
         }
         // create a texture
@@ -285,7 +312,12 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint* texSlot)
     {
         if (u.isTextureInput())
         {
+            u.uniform->ints[0] = *texSlot;
             u.p_texSet->bind(time, texSlot);
+        }
+        else if (u.isTransformation())
+        {
+            u.uniform->set( u.p_trans->value(time) );
         }
         else
         if (!u.isBufferTexture())

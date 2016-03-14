@@ -194,6 +194,7 @@ Object::Object()
     : RefCounted("Object")
     , pobj_         (new PrivateObj(this))
 {
+    setNumberOutputs(ST_TRANSFORMATION, 1);
 
     addEvolutionKey(tr("Parameters"));
 }

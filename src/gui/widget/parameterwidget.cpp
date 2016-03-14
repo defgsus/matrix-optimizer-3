@@ -44,6 +44,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "object/param/parametertexture.h"
+#include "object/param/parametertransformation.h"
 #include "object/param/parametertimeline1d.h"
 #include "object/param/modulator.h"
 #include "gui/modulatordialog.h"
@@ -636,6 +637,12 @@ void ParameterWidget::createWidgets_()
     else
     // --- geometry parameter ---
     if (/*ParameterGeometry* pt = */dynamic_cast<ParameterGeometry*>(param_))
+    {
+
+    }
+    else
+    // --- transformation parameter ---
+    if (/*ParameterTransformation* pt = */dynamic_cast<ParameterTransformation*>(param_))
     {
 
     }

@@ -33,6 +33,7 @@ public:
 
     virtual QPair<QString, TextType> valueText(uint channel, const RenderTime& time) const
                         Q_DECL_OVERRIDE;
+    virtual void valueTextAddErrorMessage(int line, const QString& msg) Q_DECL_OVERRIDE;
 
     /** Sets the text content and type */
     void setText(const QString& text, TextType type);

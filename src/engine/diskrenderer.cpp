@@ -173,7 +173,7 @@ void DiskRenderer::run()
     }
 
     // convert audio files
-    if (p_->rendSet.audioSplitEnable())
+    if (p_->rendSet.audioEnable() && p_->rendSet.audioSplitEnable())
     {
         try
         {
@@ -324,7 +324,8 @@ bool DiskRenderer::Private::releaseScene()
     delete audio; audio = 0;
     delete renderer; renderer = 0;
     //delete context; context = 0;
-    scene->releaseRef("render finished"); scene = 0;
+    if (scene)
+        scene->releaseRef("render finished"); scene = 0;
     delete sceneEditor; sceneEditor = 0;
 
     return true;
@@ -534,7 +535,7 @@ QString DiskRenderer::progressString() const
                          << " @ " << p_->rendSet.imageFps() << " fps"
                          << "; time " << time_to_string(p_->rendSet.frame2second(p_->curFrame), true);
 
-    if (p_->rendSet.imageEnable())
+    if (p_->rendSet.imageEnable() && p_->renderer && p_->threadPool)
     {
         Double spd = p_->renderer->renderSpeed();
         s << "\nimage time : render " << std::floor(spd/1000.)*1000 << "s";

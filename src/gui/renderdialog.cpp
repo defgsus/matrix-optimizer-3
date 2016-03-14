@@ -738,15 +738,13 @@ void RenderDialog::startRender()
 
     p_->render = new DiskRenderer(this);
     // on progress
-    connect(p_->render, &DiskRenderer::progress, [=](int p)
-    {
-        p_->progBar->setValue(p);
-        p_->labelProgress->setText(p_->render->progressString());
-    });
+    connect(p_->render, SIGNAL(progress(int)),
+            this, SLOT(p_onProgress_(int)), Qt::QueuedConnection);
     //connect(p_->render, SIGNAL(newImage(QImage)),
     //        this, SLOT(p_onImage_(QImage)), Qt::QueuedConnection);
     // on finished/failure
-    connect(p_->render, SIGNAL(finished()), this, SLOT(p_onFinished_()), Qt::QueuedConnection);
+    connect(p_->render, SIGNAL(finished()),
+            this, SLOT(p_onFinished_()), Qt::QueuedConnection);
 
     p_->render->setSettings(p_->rendSet);
     p_->render->setSceneFilename(p_->sceneFilename);
@@ -772,6 +770,12 @@ void RenderDialog::p_onFinished_()
             error(p_->render->errorString());
 
     p_shutDown_();
+}
+
+void RenderDialog::p_onProgress_(int p)
+{
+    p_->progBar->setValue(p);
+    p_->labelProgress->setText(p_->render->progressString());
 }
 
 void RenderDialog::p_shutDown_()

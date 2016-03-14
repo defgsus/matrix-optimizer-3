@@ -110,4 +110,10 @@ QPair<QString, TextType> TextObject::valueText(uint, const RenderTime& ) const
     return qMakePair(pText_->value(), pText_->textType());
 }
 
+void TextObject::valueTextAddErrorMessage(int line, const QString& msg)
+{
+    pText_->addErrorMessage(line, msg);
+}
+
+
 } // namespace MO

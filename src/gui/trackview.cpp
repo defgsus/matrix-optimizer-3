@@ -662,6 +662,8 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         clearSelection_();
 
     selTrack_ = trackForY_(e->y());
+    if (selTrack_)
+        MO_PRINT(selTrack_->name());
     setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
 
     if (selTrack_)
@@ -1023,11 +1025,13 @@ void TrackView::deleteSequenceWidget_(SequenceWidget* seqw)
 
 Track * TrackView::trackForY_(int y) const
 {
-    y -= offsetY_;
+    y += offsetY_;
+    MO_PRINT(offsetY_);
 
     for (auto i = trackY_.begin(); i != trackY_.end(); ++i)
     {
-        if (y >= i.value() && y <= i.value() + trackHeight(i.key()))
+        int h = trackHeight(i.key());
+        if (y >= i.value() && y <= i.value() + h)
             return i.key();
     }
 

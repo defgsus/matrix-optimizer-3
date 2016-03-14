@@ -409,10 +409,16 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         // user code
         src.replace("//%mo_user_function%", paramGlsl->baseValue(), true);
 
+        paramGlsl->clearIncludeObjects();
+
         // resolve all includes
         src.replaceIncludes([this](const QString& url, bool do_search)
         {
-            return p->getGlslInclude(url, do_search);
+            Object* object;
+            auto inc = p->getGlslInclude(url, do_search, &object);
+            if (object)
+                paramGlsl->addIncludeObject(object->idName());
+            return inc;
         });
 
 

@@ -227,10 +227,14 @@ void ShaderObject::initGl(uint thread)
     // declare user uniforms
     src->replace("//%user_uniforms%", userUniforms_->getDeclarations(), true);
     // resolve includes
+    p_fragment_->clearIncludeObjects();
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
-        QString inc = getGlslInclude(url, do_search);
-        return inc.isEmpty() ? inc : ("// ----- include '" + url + "' -----\n" + inc);
+        Object* object;
+        auto inc = getGlslInclude(url, do_search, &object);
+        if (object)
+            p_fragment_->addIncludeObject(object->idName());
+        return inc;
     });
 
     // create quad and compile shader

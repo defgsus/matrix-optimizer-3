@@ -39,6 +39,7 @@ private slots:
     void p_onWidget_();
     void p_onUnitChange_(int idx);
     void p_onFinished_();
+    void p_onProgress_(int);
     void p_onImage_(const QImage&);
     void p_shutDown_();
 

@@ -20,8 +20,7 @@
 namespace MO {
 namespace GL { class Texture; }
 
-/** A texture value output.
-    *Currently* single channel... */
+/** A texture value output. */
 class ValueTextInterface
 {
 public:
@@ -30,6 +29,8 @@ public:
     /** Return a text. */
     virtual QPair<QString, TextType> valueText(uint channel, const RenderTime& time) const = 0;
 
+    /** Respond with connected editors */
+    virtual void valueTextAddErrorMessage(int line, const QString& text) = 0;
 };
 
 } // namespace MO

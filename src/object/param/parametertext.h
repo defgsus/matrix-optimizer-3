@@ -90,11 +90,17 @@ public:
         Dialog when selecting another object. */
     GUI::TextEditWidget * createEditWidget(QWidget * parent = 0);
 
+    /** Adds an object that is referenced by a source text, if any.
+        @p idName is the Object::idName() of a ValueTextInterface. */
+    void addIncludeObject(const QString& idName);
+    void clearIncludeObjects();
+
 private:
 
     QString value_, defaultValue_;
     TextType textType_;
     QStringList varNames_, varDescs_;
+    QSet<QString> includeIds_;
 
     GUI::TextEditDialog * diag_;
     GUI::TextEditWidget * editor_;

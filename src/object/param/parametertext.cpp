@@ -9,16 +9,16 @@
 */
 
 #include "parametertext.h"
+#include "modulator.h"
+#include "object/scene.h"
+#include "object/util/objecteditor.h"
+#include "object/interface/valuetextinterface.h"
+#include "gui/texteditdialog.h"
+#include "gui/widget/texteditwidget.h"
+#include "io/files.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/control/trackfloat.h"
-#include "object/scene.h"
-#include "object/util/objecteditor.h"
-#include "modulator.h"
-#include "io/files.h"
-#include "gui/texteditdialog.h"
-#include "gui/widget/texteditwidget.h"
 
 // make ParameterText useable in QMetaObject::invokeMethod
 Q_DECLARE_METATYPE(MO::ParameterText*);
@@ -117,7 +117,7 @@ GUI::TextEditDialog* ParameterText::openEditDialog(QWidget *parent)
 
         diag_->connect(diag_, &GUI::TextEditDialog::textChanged, [this]()
         {
-            object()->sceneObject()->editor()->setParameterValue(this, diag_->getText());
+            object()->editor()->setParameterValue(this, diag_->getText());
         });
 
         diag_->connect(diag_, &GUI::TextEditDialog::destroyed, [this]()
@@ -162,7 +162,7 @@ GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
 
         editor_->connect(editor_, &GUI::TextEditWidget::textChanged, [this]()
         {
-            object()->sceneObject()->editor()->setParameterValue(this, editor_->getText());
+            object()->editor()->setParameterValue(this, editor_->getText());
         });
 
         editor_->connect(editor_, &GUI::TextEditWidget::destroyed, [this]()
@@ -181,6 +181,32 @@ void ParameterText::addErrorMessage(int line, const QString &text)
         editor_->addErrorMessage(line, text);
     if (diag_)
         diag_->addErrorMessage(line, text);
+
+    // -- follow includes --
+    /** @todo CAN RECURSE INDEFINITELY */
+    if (object())
+    if (auto s = object()->sceneObject())
+    {
+        for (auto id : includeIds_)
+        {
+            if (auto o = s->findChildObject(id, true))
+            if (auto tf = dynamic_cast<ValueTextInterface*>(o))
+            {
+                tf->valueTextAddErrorMessage(line, text);
+            }
+        }
+    }
 }
+
+void ParameterText::addIncludeObject(const QString &idName)
+{
+    includeIds_.insert(idName);
+}
+
+void ParameterText::clearIncludeObjects()
+{
+    includeIds_.clear();
+}
+
 
 } // namespace MO

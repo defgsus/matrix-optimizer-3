@@ -80,6 +80,7 @@ private:
     {
         UT_NONE,
         UT_F1, UT_F2, UT_F3, UT_F4,
+        UT_TRANS,
         UT_TEX, UT_TEX_C,
         UT_T1, UT_T2, UT_T3, UT_T4
     };
@@ -89,6 +90,7 @@ private:
         bool isUsed() const;
         bool isTextureInput() const;
         bool isBufferTexture() const;
+        bool isTransformation() const;
 
         uint gltype,
              num_floats;
@@ -97,6 +99,7 @@ private:
         ParameterSelect * p_type;
         ParameterInt * p_length;
         ParameterFloat * p_timerange;
+        ParameterTransformation* p_trans;
         TextureSetting * p_texSet;
         QVector<ParameterFloat*> p_float;
 

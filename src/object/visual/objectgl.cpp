@@ -168,8 +168,11 @@ void ObjectGl::onDependency(Object * o)
 }
 
 
-QString ObjectGl::getGlslInclude(const QString &url, bool do_search)
+QString ObjectGl::getGlslInclude(const QString &url, bool do_search, Object** object)
 {
+    if (object)
+        *object = nullptr;
+
     // --- built-in ---
 
     if (do_search)
@@ -191,12 +194,16 @@ QString ObjectGl::getGlslInclude(const QString &url, bool do_search)
     {
         auto to = static_cast<TextObject*>(o);
         auto tex = to->valueText(0, RenderTime(0, MO_GUI_THREAD));
+        if (object)
+            *object = o;
+
         if (tex.second == TT_GLSL)
         {
             if (sceneObject())
                 sceneObject()->installDependency(this, o);
-            return tex.first;
         }
+
+        return tex.first;
     }
 
     return QString();

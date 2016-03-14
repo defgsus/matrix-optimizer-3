@@ -693,8 +693,15 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     // resolve includes
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
-        QString inc = to->getGlslInclude(url, do_search);
-        return inc.isEmpty() ? inc : ("// ----- include '" + url + "' -----\n" + inc);
+        Object* src;
+        QString inc = to->getGlslInclude(url, do_search, &src);
+        if (inc.isEmpty())
+            return QString("/* empty */\n");
+        else
+        {
+            /** @todo add error chain via ParameterText */
+            return "/* " + url + " */\n" + inc;
+        }
     });
 
     // -- insert texture defs --

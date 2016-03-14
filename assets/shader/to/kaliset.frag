@@ -15,6 +15,7 @@ uniform vec2    u_scale;
 uniform vec2    u_bright; // x=brightness, y=exponent
 uniform float   u_freq;
 
+//%mo_user_uniforms%
 
 #if NUM_DIM == 2
     #define VEC vec2

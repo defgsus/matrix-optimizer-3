@@ -17,6 +17,7 @@
 #include "object/param/parameterselect.h"
 #include "object/param/parametertext.h"
 #include "object/util/objecteditor.h"
+#include "object/util/useruniformsetting.h"
 #include "gl/screenquad.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
@@ -35,7 +36,13 @@ struct KaliSetTO::Private
     Private(KaliSetTO * to)
         : to            (to)
         , evo           (0)
+        , p_uniforms    (new UserUniformSetting(to))
     { }
+
+    ~Private()
+    {
+        delete p_uniforms;
+    }
 
     void createParameters();
     QString createEvoShader(KaliSetEvolution*) const;
@@ -58,6 +65,7 @@ struct KaliSetTO::Private
             *p_numDim, *p_calcMode, *p_colMode, *p_outMode, *p_mono;
     ParameterText
             *p_param_glsl;
+    UserUniformSetting* p_uniforms;
     GL::Uniform
             * u_kali_param,
             * u_offset,
@@ -87,19 +95,21 @@ KaliSetTO::~KaliSetTO()
 void KaliSetTO::serialize(IO::DataStream & io) const
 {
     TextureObjectBase::serialize(io);
-    io.writeHeader("texkali", 2);
+    io.writeHeader("texkali", 3);
 
     // v2
     if (p_->evo)
         io << true << p_->evo->toJsonString();
     else
         io << false;
+    // v3
+    p_->p_uniforms->serialize(io);
 }
 
 void KaliSetTO::deserialize(IO::DataStream & io)
 {
     TextureObjectBase::deserialize(io);
-    const int ver = io.readHeader("texkali", 2);
+    const int ver = io.readHeader("texkali", 3);
 
     if (ver >= 2)
     {
@@ -116,6 +126,10 @@ void KaliSetTO::deserialize(IO::DataStream & io)
             p_->evo->releaseRef("KaliSetTO deserialize relprev");
         p_->evo = evo;
     }
+
+    if (ver >= 3)
+        p_->p_uniforms->deserialize(io);
+
 }
 
 void KaliSetTO::createParameters()
@@ -289,6 +303,13 @@ void KaliSetTO::Private::createParameters()
                     tr("Frequency of the sine transform"), 10., 0.1);
 
     to->params()->endParameterGroup();
+
+    to->params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        p_uniforms->createParameters("g");
+
+    to->params()->endParameterGroup();
+
 }
 
 void KaliSetTO::onParameterChanged(Parameter * p)
@@ -302,7 +323,8 @@ void KaliSetTO::onParameterChanged(Parameter * p)
         || p == p_->p_outMode
         || p == p_->p_mono
         || p == p_->p_AntiAlias_
-        || p == p_->p_param_glsl)
+        || p == p_->p_param_glsl
+        || p_->p_uniforms->needsReinit(p))
         requestReinitGl();
 }
 
@@ -333,6 +355,8 @@ void KaliSetTO::updateParameterVisibility()
     p_->p_colMode->setVisible(!evo);
 
     p_->p_param_glsl->setVisible(userfunc);
+
+    p_->p_uniforms->updateParameterVisibility();
 }
 
 
@@ -391,6 +415,7 @@ void KaliSetTO::Private::initGl()
 {
     // shader-quad
 
+    GL::Shader* shader;
     GL::ShaderSource src;
     try
     {
@@ -407,6 +432,7 @@ void KaliSetTO::Private::initGl()
         {
             src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
             src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
+            src.replace("//%mo_user_uniforms%", p_uniforms->getDeclarations());
             if (p_calcMode->baseValue() == 1)
                 src.replace("//%kali_user_param%", "#line 1\n" + p_param_glsl->baseValue(), true);
         }
@@ -420,16 +446,27 @@ void KaliSetTO::Private::initGl()
             src.replace("//%KaliSet%", createEvoShader(evo));
         }
 
-
     }
     catch (Exception& e)
     {
         to->setErrorMessage(e.what());
+        releaseGl();
         throw;
     }
 
-    auto shader = to->createShaderQuad(
+    shader = to->createShaderQuad(
                 src, { "u_tex" })->shader();
+
+    // send errors to editor widget
+    for (const GL::Shader::CompileMessage& msg : to->compileMessages())
+    {
+        if (msg.program == GL::Shader::P_FRAGMENT
+            || msg.program == GL::Shader::P_LINKER)
+        {
+            p_param_glsl->addErrorMessage(msg.line, msg.text);
+        }
+    }
+
 
     // uniforms
 
@@ -438,11 +475,13 @@ void KaliSetTO::Private::initGl()
     u_scale = shader->getUniform("u_scale", false);
     u_bright = shader->getUniform("u_bright", false);
     u_freq = shader->getUniform("u_freq", false);
+
+    p_uniforms->tieToShader(shader);
 }
 
 void KaliSetTO::Private::releaseGl()
 {
-
+    p_uniforms->releaseGl();
 }
 
 void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
@@ -486,6 +525,9 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
     {
         u_freq->floats[0] = p_freq->value(time);
     }
+
+    uint texSlot=0;
+    p_uniforms->updateUniforms(time, &texSlot);
 
     to->renderShaderQuad(time);
 }

@@ -842,9 +842,26 @@ void Model3d::setupDrawable_()
     }
 
     // resolve includes
+    glslFragmentOut_->clearIncludeObjects();
+    glslLight_->clearIncludeObjects();
+    glslNormal_->clearIncludeObjects();
+    glslTransform_->clearIncludeObjects();
+    glslVertexOut_->clearIncludeObjects();
+    glslVertex_->clearIncludeObjects();
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
-        return getGlslInclude(url, do_search);
+        Object* object;
+        auto inc = getGlslInclude(url, do_search, &object);
+        if (object)
+        {
+            glslFragmentOut_->addIncludeObject(object->idName());
+            glslLight_->addIncludeObject(object->idName());
+            glslNormal_->addIncludeObject(object->idName());
+            glslTransform_->addIncludeObject(object->idName());
+            glslVertexOut_->addIncludeObject(object->idName());
+            glslVertex_->addIncludeObject(object->idName());
+        }
+        return inc;
     });
     // declare user uniforms
     src->replace("//%user_uniforms%",
