@@ -18,6 +18,7 @@
 #include "trackheader.h"
 #include "trackview.h"
 #include "ruler.h"
+#include "object/scene.h"
 #include "object/control/track.h"
 #include "object/control/sequence.h"
 #include "io/log_gui.h"
@@ -135,7 +136,7 @@ void Sequencer::createWidgets_()
             this, SIGNAL(sceneTimeChanged(Double)));
 
     // spacer to playbar-update
-    connect(spacer_, SIGNAL(dragged()), this, SLOT(updatePlaybar_()));
+    connect(spacer_, SIGNAL(dragged()), this, SLOT(updateBars_()));
 
     // initialize viewspace
     UTIL::ViewSpace init(60, 1);
@@ -164,7 +165,7 @@ void Sequencer::resizeEvent(QResizeEvent * e)
     updateVScroll_();
     rulerFps_->setViewSpace(rulerFps_->viewSpace(), true);
 
-    updatePlaybar_();
+    updateBars_();
 }
 
 void Sequencer::updatePlaybar_()
@@ -177,6 +178,61 @@ void Sequencer::updatePlaybar_()
                 );
     // just to be sure
     playBar_->raise();
+}
+
+void Sequencer::updateLocatorBars()
+{
+    if (trackView_->currentObject())
+    if (auto s = trackView_->currentObject()->sceneObject())
+    {
+        auto list = s->locators();
+        for (auto i=list.begin(); i!=list.end(); ++i)
+        {
+            auto t = getLocatorBar_(i.key());
+            t->setTime(i.value());
+        }
+    }
+
+    for (auto t : locatorBars_)
+    {
+        t->setContainingRect(
+                    QRect(rulerSec_->pos(),
+                        QSize(rulerSec_->width(),
+                              // gridLayout_->geometry().height() is sometimes zero during resize!
+                              rulerFps_->geometry().bottom() - rulerSec_->geometry().top()))
+                    );
+        t->raise();
+    }
+}
+
+TimeBar* Sequencer::getLocatorBar_(const QString &name)
+{
+    auto i = locatorBars_.find(name);
+    if (i != locatorBars_.end())
+        return i.value();
+
+    auto t = new TimeBar(this);
+    t->setLocatorName("Locator");
+    t->setViewspace(rulerSec_->viewSpace());
+    locatorBars_.insert(name, t);
+
+    // connect views -> timebar
+    connect(rulerSec_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            t, SLOT(setViewspace(UTIL::ViewSpace)));
+    connect(rulerFps_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            t, SLOT(setViewspace(UTIL::ViewSpace)));
+    connect(trackView_, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
+            t, SLOT(setViewspace(UTIL::ViewSpace)));
+    // timebar -> locator time
+    connect(t, &TimeBar::timeChanged, [=](Double time)
+    {
+        if (trackView_->currentObject())
+        if (auto s = trackView_->currentObject()->sceneObject())
+            s->setLocatorTime(name, time);
+        t->setTime(time);
+    });
+
+    return t;
 }
 
 void Sequencer::onSequenceSelected_(Sequence * seq)
@@ -206,6 +262,8 @@ void Sequencer::setCurrentObject(Object * o)
     MO_DEBUG_GUI("Sequencer::setCurrentObject(" << o << ")");
 
     trackView_->setCurrentObject(o);
+    locatorBars_.clear();
+    updateLocatorBars();
 }
 
 

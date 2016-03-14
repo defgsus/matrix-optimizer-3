@@ -235,6 +235,8 @@ private:
     void setPredefinedResolution_(int index);
     void updateResolutionActions_();
 
+    Double getPrevLocatorTime_(Double time);
+
     QMainWindow * window_;
     Scene * scene_;
 

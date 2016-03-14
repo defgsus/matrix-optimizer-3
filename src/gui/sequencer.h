@@ -12,6 +12,7 @@
 #define MOSRC_GUI_SEQUENCER_H
 
 #include <QWidget>
+#include <QMap>
 
 #include "types/float.h"
 
@@ -61,6 +62,8 @@ public slots:
         This might change the track list according to filter settings. */
     void setCurrentObject(Object *);
 
+    void updateLocatorBars();
+
 protected:
 
     void resizeEvent(QResizeEvent *);
@@ -70,7 +73,11 @@ protected slots:
 
     void updateVScroll_();
     void updatePlaybar_();
+    void updateBars_() { updatePlaybar_(); updateLocatorBars(); }
     void onSequenceSelected_(Sequence *);
+
+    /** creates or returns current instance */
+    TimeBar* getLocatorBar_(const QString& name);
 private:
 
     void createWidgets_();
@@ -81,6 +88,7 @@ private:
     QScrollBar * vScroll_;
     Spacer * spacer_;
     TimeBar * playBar_;
+    QMap<QString,TimeBar*> locatorBars_;
 
     QGridLayout * gridLayout_;
 };

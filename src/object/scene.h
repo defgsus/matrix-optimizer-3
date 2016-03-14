@@ -140,6 +140,14 @@ public:
         If there was no interface saved with the scene, an empty string is returned. */
     QString frontSceneXml() const { return p_frontSceneXml_; }
 
+    // ------------ sequencing -----------------
+
+    const QMap<QString, double>& locators() const { return p_locators_; }
+    double locatorTime(const QString& id) const;
+    void setLocatorTime(const QString& id, double);
+    void renameLocator(const QString& id, const QString& newId);
+    void deleteLocator(const QString& id);
+
     // ------------- open gl -------------------
 
     /** Returns the currently active framebuffer resolution */
@@ -436,6 +444,8 @@ private:
 
     AudioObjectConnections
             * p_audioCon_;
+
+    QMap<QString,double> p_locators_;
 
     // ------------ runtime --------------------
 

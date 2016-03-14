@@ -34,6 +34,7 @@ TimeBar::TimeBar(QWidget *parent) :
     setFixedWidth(3);
 
     brushBar_ = QBrush(QColor(0,255,255,100));
+    brushLocatorBar_ = QBrush(QColor(255,255,0,100));
 
     if (parent)
         setContainingRect( parent->rect() );
@@ -105,6 +106,7 @@ void TimeBar::mousePressEvent(QMouseEvent * e)
         dragging_ = true;
         timeStart_ = time_;
         dragStart_ = mapToGlobal( e->pos() );
+        raise();
         e->accept();
     }
 }
@@ -154,8 +156,14 @@ void TimeBar::paintEvent(QPaintEvent * e)
     {
         QPainter p(this);
         p.setPen(Qt::NoPen);
-        p.setBrush(brushBar_);
+        p.setBrush(locatorName_.isEmpty() ? brushBar_ : brushLocatorBar_);
         p.drawRect(e->rect());
+
+        if (!locatorName_.isEmpty())
+        {
+            QRect r = rect();
+            p.drawText(r.right() + 3, r.top()+30, locatorName_);
+        }
     }
 }
 

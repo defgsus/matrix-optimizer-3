@@ -74,6 +74,7 @@ public:
     /** Returns a menu with the filter settings */
     QMenu * createFilterMenu();
 
+    Object* currentObject() const { return currentObject_; }
 signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
@@ -201,6 +202,9 @@ private:
     Object * getContainerObject_(Object*);
     /** Transforms alltracks_ into a changed list according to ObjectFilter */
     void getFilteredTracks_(QList<Track*>& list);
+
+    /** Snap to anything */
+    bool snapAuto_(Double* time) const;
 
     // editing
     bool deleteObject_(Object * seq);

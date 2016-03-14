@@ -1906,10 +1906,11 @@ void MainWidgetController::stop()
             audioEngine_->stop();
         else
         {
-            audioEngine_->seek(0.0);
+            Double time = getPrevLocatorTime_(audioEngine_->second());
+            audioEngine_->seek(time);
             // XXX hacky
             //onSceneTimeChanged_(0.0);
-            scene_->setSceneTime(0.0);
+            scene_->setSceneTime(time);
             scene_->render();
         }
     }
@@ -1933,6 +1934,20 @@ void MainWidgetController::closeAudio()
         audioEngine_->closeAudioDevice();
 }
 
+Double MainWidgetController::getPrevLocatorTime_(Double time)
+{
+    if (scene_->locators().isEmpty())
+        return time;
+    auto i = scene_->locators().end();
+    while (true)
+    {
+        --i;
+        if (i.value() < time)
+            return i.value();
+        if (i == scene_->locators().begin())
+            return 0.;
+    }
+}
 
 void MainWidgetController::moveTime(Double sec)
 {

@@ -49,6 +49,9 @@ public slots:
 
     void setMinimumTime(Double time) { minTime_ = time; }
     void setMaximumTime(Double time) { maxTime_ = time; }
+
+    void setLocatorName(const QString& n) { locatorName_ = n; update(); }
+
 protected:
 
     void mousePressEvent(QMouseEvent *);
@@ -65,10 +68,11 @@ protected:
     QPoint dragStart_;
     Double timeStart_;
     bool active_, dragging_;
+    QString locatorName_;
 
     // --- config ---
 
-    QBrush brushBar_;
+    QBrush brushBar_, brushLocatorBar_;
 };
 
 } // namespace GUI

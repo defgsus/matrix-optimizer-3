@@ -23,6 +23,7 @@
 #include "trackview.h"
 #include "trackviewoverpaint.h"
 #include "trackheader.h"
+#include "sequencer.h"
 #include "widget/sequencewidget.h"
 #include "object/control/sequencefloat.h"
 #include "object/control/trackfloat.h"
@@ -701,6 +702,25 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     }
 }
 
+bool TrackView::snapAuto_(Double* time) const
+{
+    if (!scene_)
+        return false;
+
+    Double pix = space_.mapXTo(1. / width()) - space_.mapXTo(0);
+    pix *= 4;
+    for (auto t : scene_->locators())
+    {
+        if (std::abs(t - *time) <= pix)
+        {
+            *time = t;
+            return true;
+        }
+    }
+
+    return false;
+}
+
 void TrackView::mouseMoveEvent(QMouseEvent * e)
 {
     if (action_ == A_NOTHING_)
@@ -715,10 +735,20 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
     {
         for (int i=0; i<selectedWidgets_.size(); ++i)
         {
-            Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
             Sequence * seq = selectedWidgets_[i]->sequence();
+            Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
+            if (!snapAuto_(&newstart))
+            {
+                Double newend = newstart + seq->length() / seq->speed(),
+                       diff = newend;
+                if (snapAuto_(&newend))
+                {
+                    diff = newend - diff;
+                    newstart += diff;
+                }
+            }
             ScopedSequenceChange lock(scene_, seq);
-                seq->setStart(newstart);
+            seq->setStart(newstart);
         }
 
         autoScrollView_(e->pos());
@@ -1249,6 +1279,18 @@ void TrackView::createEditActions_()
                 updateTrack(selTrack_);
                 assignModulatingWidgets_();
             }
+        });
+
+        a = editActions_.addAction(tr("New locator"), this);
+        a->setStatusTip(tr("Creates a new locator queue at the current time"));
+        connect(a, &QAction::triggered, [this]()
+        {
+            if (scene_)
+                scene_->setLocatorTime(QString::number(
+                                           scene_->locators().size()+1),
+                                       currentTime_);
+            if (auto seq = dynamic_cast<Sequencer*>(parent()))
+                seq->updateLocatorBars();
         });
 
         editActions_.addSeparator(this);

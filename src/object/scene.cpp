@@ -124,19 +124,22 @@ Scene::~Scene()
 void Scene::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("scene", 3);
+    io.writeHeader("scene", 4);
 
     // v2
     io << p_fbSize_ << p_doMatchOutputResolution_;
 
     // v3
     io << p_sceneDesc_ << p_showSceneDesc_;
+
+    // v4
+    io << p_locators_;
 }
 
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    const int ver = io.readHeader("scene", 3);
+    const int ver = io.readHeader("scene", 4);
 
     if (ver >= 2)
         io >> p_fbSizeRequest_ >> p_doMatchOutputResolution_;
@@ -149,6 +152,8 @@ void Scene::deserialize(IO::DataStream & io)
     if (ver >= 3)
         io >> p_sceneDesc_ >> p_showSceneDesc_;
 
+    if (ver >= 4)
+        io >> p_locators_;
 }
 
 
@@ -1510,6 +1515,35 @@ void Scene::setProjectorIndex(uint index)
 
     render_();
 }
+
+
+
+double Scene::locatorTime(const QString& id) const
+{
+    auto i = p_locators_.find(id);
+    return i == p_locators_.end() ? 0. : i.value();
+}
+
+void Scene::setLocatorTime(const QString& id, double t)
+{
+    p_locators_.insert(id, t);
+}
+
+void Scene::renameLocator(const QString& id, const QString& newId)
+{
+    auto i = p_locators_.find(id);
+    if (i == p_locators_.end())
+        return;
+    double t = i.value();
+    p_locators_.erase(i);
+    p_locators_.insert(newId, t);
+}
+
+void Scene::deleteLocator(const QString& id)
+{
+    p_locators_.remove(id);
+}
+
 
 
 } // namespace MO
