@@ -26,12 +26,12 @@ bool TestTimeline::run()
     }
 
     bool r = true;
-    for (int i=1; i<MATH::Timeline1d::Point::MAX; ++i)
-        r |= test((MATH::Timeline1d::Point::Type)i);
+    for (int i=1; i<MATH::TimelinePoint::MAX; ++i)
+        r |= test((MATH::TimelinePoint::Type)i);
     return r;
 }
 
-bool TestTimeline::test(MATH::Timeline1d::Point::Type pointType)
+bool TestTimeline::test(MATH::TimelinePoint::Type pointType)
 {
     const int num = values.size();
 
@@ -43,7 +43,7 @@ bool TestTimeline::test(MATH::Timeline1d::Point::Type pointType)
               << Timeline1D::Point::getName(pointType) << ")"
               << std::endl;*/
     std::cout << "num-points " << num << ", type "
-              << MATH::Timeline1d::Point::getName(pointType) << std::endl;
+              << MATH::TimelinePoint::getName(pointType) << std::endl;
 
     QTime m;
     m.start();

@@ -224,7 +224,7 @@ protected:
     void changeScale_(int screenX, int screenY, Double factorX, Double factorY);
     void fitToView_(Double tmin, Double tmax, bool fitX, bool fitY, int marginInPixels);
 
-    void changePointType_(MATH::Timeline1d::Point::Type t);
+    void changePointType_(MATH::TimelinePoint::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
 

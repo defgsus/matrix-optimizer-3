@@ -91,7 +91,7 @@ public:
             if (int(p.second.type) != type)
             {
                 type = p.second.type;
-                s << " " << WrappedClass::Point::getName(p.second.type);
+                s << " " << MATH::TimelinePoint::getName(p.second.type);
             }
         }
         s << ")";
@@ -111,8 +111,8 @@ public:
     void clear() { tl->clear(); }
     void update() { tl->setAutoDerivative(); }
     void add(double time, double value) { MO_DEBUG(time << " " << value); tl->add(time, value); }
-    void addType(double time, double value, WrappedClass::Point::Type type) { tl->add(time, value, type); }
-    void changeType(WrappedClass::Point::Type type)
+    void addType(double time, double value, MATH::TimelinePoint::Type type) { tl->add(time, value, type); }
+    void changeType(MATH::TimelinePoint::Type type)
     {
         auto & data = tl->getData();
         for (auto & p : data)
@@ -182,7 +182,7 @@ public:
             if (int(p.second.type) != type)
             {
                 type = p.second.type;
-                s << " " << WrappedClass::Point::getName(p.second.type);
+                s << " " << MATH::TimelinePoint::getName(p.second.type);
             }
         }
         s << ")";
@@ -222,9 +222,9 @@ public:
     void clear() { for (uint i=0; i<NUM; ++i) tl[i].clear(); }
     void update() { for (uint i=0; i<NUM; ++i) tl[i].setAutoDerivative(); }
     void add(double time, const Vec& v) { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i]); }
-    void addType(double time, const Vec& v, WrappedClass::Point::Type type)
+    void addType(double time, const Vec& v, MATH::TimelinePoint::Type type)
         { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i], type); }
-    void changeType(WrappedClass::Point::Type type)
+    void changeType(MATH::TimelinePoint::Type type)
     {
         for (uint i=0; i<NUM; ++i)
         {
@@ -283,14 +283,14 @@ void register_timeline_enums(asIScriptEngine * engine)
     std::string enumType = "TimelinePointType";
     int r; Q_UNUSED(r);
     r = engine->RegisterEnum(enumType.c_str()); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::Timeline1d::Point::CONSTANT); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::Timeline1d::Point::LINEAR); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::Timeline1d::Point::SMOOTH); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::Timeline1d::Point::SYMMETRIC); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::Timeline1d::Point::SYMMETRIC2); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::Timeline1d::Point::SPLINE4_SYM); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::Timeline1d::Point::SPLINE4); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::Timeline1d::Point::SPLINE6); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_CONSTANT",  MATH::TimelinePoint::CONSTANT); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::TimelinePoint::LINEAR); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::TimelinePoint::SMOOTH); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::TimelinePoint::SYMMETRIC); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::TimelinePoint::SYMMETRIC2); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::TimelinePoint::SPLINE4_SYM); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::TimelinePoint::SPLINE4); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::TimelinePoint::SPLINE6); assert( r >= 0 );
 }
 
 template <class Class>

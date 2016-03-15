@@ -263,7 +263,8 @@ HEADERS += \
     $$PWD/io/log_midi.h \
     $$PWD/io/log_geom.h \
     $$PWD/io/log_snd.h \
-    $$PWD/gl/gl_state.h
+    $$PWD/gl/gl_state.h \
+    $$PWD/math/timeline_point.h
 
 
 SOURCES += \
@@ -474,5 +475,6 @@ SOURCES += \
     $$PWD/model/python34model.cpp \
     $$PWD/python/34/py_tree.cpp \
     $$PWD/types/refcounted.cpp \
-    $$PWD/gl/gl_state.cpp
+    $$PWD/gl/gl_state.cpp \
+    $$PWD/math/timeline_point.cpp
 

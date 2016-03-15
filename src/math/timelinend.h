@@ -21,10 +21,13 @@
 #include "types/float.h"
 #include "types/refcounted.h"
 #include "math/arithmeticarray.h"
+#include "math/timeline_point.h"
 
 namespace MO {
 namespace IO { class DataStream; }
 namespace MATH {
+
+class Timeline1d;
 
 /**	a super-duper timeline component mapping seconds to values.
 
@@ -43,48 +46,8 @@ class TimelineNd : public RefCounted
     /** one que-point of a Timeline1D */
     struct Point
     {
-        Point() : t(0), val(0), d1(0), type(CONSTANT) { }
+        Point() : t(0), val(0), d1(0), type(TimelinePoint::CONSTANT) { }
 
-        /** possible types of points / interpolations */
-        enum Type
-        {
-            /** default is used only to signal to use the last type. <br>
-                it's no legal type to calculate with. */
-            DEFAULT,
-            /** the value will stay the same over time until
-                the next que-point */
-            CONSTANT,
-            /** the value will linearly fade between this and the next point */
-            LINEAR,
-            /** the value will nicely fade between this and the next point in a sigmoid fashion */
-            SMOOTH,
-            /** the value will be interpolated between user-adjustable symmetric derrivatives at each point. <br>
-                curve continuity at each point is granted. */
-            SYMMETRIC,
-            /** the value will be interpolated between user-adjustable symmetric derrivatives at each point. <br>
-                variation of hermite interpolation. */
-            SYMMETRIC2,
-            /** 4-point spline.
-                curve continuity at each point is granted. */
-            SPLINE4_SYM,
-            /** the value will describe the way of a nice spline (4 points are used) */
-            SPLINE4,
-            /** the value will describe the way of a very nice spline (6 points are used) */
-            SPLINE6,
-            /** this is no legal type, only the number of possible values */
-            MAX
-        };
-
-        /** returns the user-friendly name of the type. */
-        static const char *getName(Type type);
-
-        /** returns the <b>persistent</b> name of the type.
-            these names <b>must never change</b>!! */
-        static const char *getPersistentName(Type type);
-
-        /** Returns the type for the given persistent name,
-            or LINEAR if unknown. */
-        static Type getTypeForPersistentName(const QString& persistent_name);
 
         Double
             /** time of the que-point in seconds */
@@ -96,7 +59,7 @@ class TimelineNd : public RefCounted
             d1;
 
         /** type of this que-point, see Timeline1D::Point::Type */
-        Type type;
+        TimelinePoint::Type type;
 
         //bool operator == (const Point& o) const { return t == o.t && val == o.val && d1 == o.d1 && type == o.type; }
     };
@@ -119,7 +82,7 @@ class TimelineNd : public RefCounted
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
 
-    static bool hasAutoDerivative(Point::Type type);
+    static bool hasAutoDerivative(TimelinePoint::Type type);
 
     // ------- ctor / dtor -----------
 
@@ -235,6 +198,9 @@ class TimelineNd : public RefCounted
         exceeding the points is not considered. */
     void getMinMax(Double tStart, Double tEnd, ValueType& minimal, ValueType& maximal);
 
+    /** Returns a 1d copy of the given dimension */
+    Timeline1d* getTimeline1d(size_t dimension = 0);
+
     // ---------- modify -------------
 
     /** remove all points */
@@ -253,7 +219,8 @@ class TimelineNd : public RefCounted
 #endif
 
     /** adds a point if time is not already present */
-    Point* add(Double time, const ValueType& value, Point::Type typ = Point::DEFAULT);
+    Point* add(Double time, const ValueType& value,
+               TimelinePoint::Type typ = TimelinePoint::DEFAULT);
 #if 0
     /** adds a point if time is not already present and if the timeline at this point
         is not already 'value' +/- 'thresh' */
@@ -353,7 +320,7 @@ class TimelineNd : public RefCounted
     // ------------------- private functions -----------------------
 
     /** type of point at this location, or default. */
-    Point::Type p_currentType_(Double time);
+    TimelinePoint::Type p_currentType_(Double time);
 
     /** returns true if the iterator 'i' is the LAST element in data */
     bool p_isLastElement_(TpList::iterator i) const
@@ -387,10 +354,10 @@ class TimelineNd : public RefCounted
 
 };
 
-inline bool TimelineNd::hasAutoDerivative(Point::Type type)
+inline bool TimelineNd::hasAutoDerivative(TimelinePoint::Type type)
 {
-    return (type == Point::SYMMETRIC ||
-            type == Point::SYMMETRIC2);
+    return (type == TimelinePoint::SYMMETRIC ||
+            type == TimelinePoint::SYMMETRIC2);
 }
 
 

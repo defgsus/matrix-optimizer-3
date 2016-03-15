@@ -13,9 +13,13 @@
 #include "py_utils.h"
 
 #include "object/object.h"
+#include "object/control/sequencefloat.h"
 #include "object/util/objecteditor.h"
 #include "object/util/objectfactory.h"
 #include "python_object.h"
+#include "python_timeline.h"
+#include "math/timeline1d.h"
+#include "math/timelinend.h"
 #include "io/error.h"
 
 namespace MO {
@@ -153,8 +157,11 @@ extern "C" {
 
 
 
-    struct BaseObjectFuncs
+    namespace BaseObjectFuncs
     {
+        #define MO_PY_DEF_DOC(name__, str__) \
+            static const char* name__##_doc = str__;
+
         #define MO__GETOBJ0(name__) \
             if (self == nullptr) \
             { \
@@ -170,6 +177,10 @@ extern "C" {
 
         // ----------------- getter -----------------------
 
+        MO_PY_DEF_DOC(to_string,
+            "to_string() -> string\n"
+            "Returns an informative string"
+            );
         static PyObject* to_string(PyObject* self, PyObject* )
         {
             MO__GETOBJ0(pobj);
@@ -183,6 +194,10 @@ extern "C" {
         }
         static PyObject* repr(PyObject* self) { return to_string(self, nullptr); }
 
+        MO_PY_DEF_DOC(name,
+            "name() -> string\n"
+            "Returns the user-defined name of the object"
+            );
         static PyObject* name(PyObject* self, PyObject* )
         {
             MO__GETOBJ(pobj);
@@ -190,6 +205,10 @@ extern "C" {
                         pobj->object->name().toLatin1().constData());
         }
 
+        MO_PY_DEF_DOC(id,
+            "id() -> string\n"
+            "Returns the unique id of the object"
+            );
         static PyObject* id(PyObject* self, PyObject* )
         {
             MO__GETOBJ(pobj);
@@ -197,6 +216,10 @@ extern "C" {
                         pobj->object->idName().toLatin1().constData());
         }
 
+        MO_PY_DEF_DOC(name_path,
+            "name_path() -> string\n"
+            "Returns the full path using the user-defined names objects"
+            );
         static PyObject* name_path(PyObject* self, PyObject* )
         {
             MO__GETOBJ(pobj);
@@ -204,6 +227,10 @@ extern "C" {
                         pobj->object->namePath().toLatin1().constData());
         }
 
+        MO_PY_DEF_DOC(id_path,
+            "id_path() -> string\n"
+            "Returns the full path using the IDs of the objects"
+            );
         static PyObject* id_path(PyObject* self, PyObject* )
         {
             MO__GETOBJ(pobj);
@@ -211,6 +238,10 @@ extern "C" {
                         pobj->object->idNamePath().toLatin1().constData());
         }
 
+        MO_PY_DEF_DOC(class_name,
+            "class_name() -> string\n"
+            "Returns the name of the object class"
+            );
         static PyObject* class_name(PyObject* self, PyObject* )
         {
             MO__GETOBJ(pobj);
@@ -218,12 +249,21 @@ extern "C" {
                         pobj->object->className().toLatin1().constData());
         }
 
+        MO_PY_DEF_DOC(num_children,
+            "num_children() -> int\n"
+            "Returns the number of children objects"
+            );
         static PyObject* num_children(PyObject* self, PyObject* )
         {
             MO__GETOBJ(o);
             return Py_BuildValue("n", o->object->numChildren());
         }
 
+        MO_PY_DEF_DOC(children,
+            "children() -> list of Object\n"
+            "children(int) -> Object\n"
+            "Returns the list of all children or a specific children by index"
+            );
         static PyObject* children(PyObject* self, PyObject* args_)
         {
             MO__GETOBJ(o);
@@ -264,6 +304,36 @@ extern "C" {
             return list;
         }
 
+        MO_PY_DEF_DOC(find_by_name,
+            "find_by_name(name:string, recursive:bool) -> Object\n"
+            "Returns the child object who's name matches the given string.\n"
+            "Returns None otherwise.\n"
+            "If the second parameter is True (default), the childrens are\n"
+            "searched recursively, depth-first."
+            );
+        static PyObject* find_by_name(PyObject* self, PyObject* args, PyObject* kwds)
+        {
+            char* cstr;
+            int rec = 1;
+            static const char* keywords[] =
+            {
+                "name", "recursive", NULL
+            };
+            if (!PyArg_ParseTupleAndKeywords(
+                        args, kwds, "s|p", const_cast<char**>(keywords),
+                        &cstr, &rec))
+                return NULL;
+            QString str = QString::fromUtf8(cstr);
+            MO__GETOBJ(o);
+            auto c = o->object->findChildObject(
+                        [=](Object*o){ return o->name() == str; }
+                        , rec);
+            if (!c)
+                Py_RETURN_NONE;
+            return reinterpret_cast<PyObject*>(createObjectWrapper(c));
+        }
+
+
         static PyObject* get_iter(PyObject* self)
         {
             MO__GETOBJ(pobj);
@@ -287,6 +357,10 @@ extern "C" {
 
         // ----------------- setter ----------------
 
+        MO_PY_DEF_DOC(set_name,
+            "set_name(string) -> None\n"
+            "Sets the user-defined name of the object"
+            );
         static PyObject* set_name(PyObject* self, PyObject* arg)
         {
             char* cstr;
@@ -338,6 +412,14 @@ extern "C" {
             return true;
         }
 
+        MO_PY_DEF_DOC(add,
+            "add(Object|Sequence) -> Object\n"
+            "add(Object|Sequence, int) -> Object\n"
+            "Adds the the object or the sequence of objects as children.\n"
+            "If no index is given, the objects are appended, else they are inserted\n"
+            "before the given index.\n"
+            "The function returns the last added object\n"
+            );
         static PyObject* add(PyObject* self, PyObject* args_)
         {
             PyObject * arg;
@@ -392,6 +474,48 @@ extern "C" {
         }
 
 
+        // ------------- class specific --------------------
+
+        MO_PY_DEF_DOC(set_timeline,
+            "set_timeline(Timeline) -> None\n"
+            "If applicable, sets the object's timeline.\n"
+            "Timeline must be 1-dimensional.\n"
+            "Raises type exception when object can't handle the timeline."
+            );
+        static PyObject* set_timeline(PyObject* self, PyObject* arg)
+        {
+            auto tl = getTimeline(arg);
+            if (!tl)
+                return NULL;
+            MO__GETOBJ(o);
+            auto seq = dynamic_cast<SequenceFloat*>(o->object);
+            if (!seq)
+            {
+                PyErr_Set(PyExc_TypeError, QString(
+                          "object class %1 can not take a Timeline")
+                          .arg(o->object->className()));
+                return NULL;
+            }
+            if (tl->numDimensions() < 1)
+            {
+                PyErr_Set(PyExc_TypeError, QString(
+                              "timeline has no dimension"));
+                return NULL;
+            }
+
+            auto tl1 = tl->getTimeline1d(0);
+            seq->setTimeline(*tl1);
+            tl1->releaseRef("tmp finish");
+            if (!seq->sequenceType() == SequenceFloat::ST_TIMELINE)
+                seq->setSequenceType(SequenceFloat::ST_TIMELINE);
+            // gui signal
+            if (auto e = seq->editor())
+                emit e->sequenceChanged(seq);
+
+            Py_RETURN_NONE;
+        }
+
+
         #undef MO__GETOBJ
         #undef MO__GETOBJ0
     };
@@ -401,88 +525,30 @@ extern "C" {
         { NULL, 0, 0, 0, NULL }
     };
 
+#define MO__METHOD(name__, args__) \
+    { #name__, (PyCFunction)BaseObjectFuncs::name__, args__, \
+            BaseObjectFuncs::name__##_doc },
+
     PyMethodDef BaseObject_methods[] =
     {
-        { "to_string",
-          (PyCFunction)BaseObjectFuncs::to_string,
-          METH_NOARGS,
-          "to_string() -> string\n"
-          "Returns an informative string"
-        },
+        MO__METHOD(to_string,           METH_NOARGS)
+        MO__METHOD(class_name,          METH_NOARGS)
+        MO__METHOD(id,                  METH_NOARGS)
+        MO__METHOD(name,                METH_NOARGS)
+        MO__METHOD(id_path,             METH_NOARGS)
+        MO__METHOD(name_path,           METH_NOARGS)
+        MO__METHOD(num_children,        METH_NOARGS)
+        MO__METHOD(children,            METH_VARARGS)
+        MO__METHOD(find_by_name,        METH_VARARGS | METH_KEYWORDS)
 
-        { "name",
-          (PyCFunction)BaseObjectFuncs::name,
-          METH_NOARGS,
-          "name() -> string\n"
-          "Returns the user-defined name of the object"
-        },
+        MO__METHOD(set_name,            METH_O)
+        MO__METHOD(add,                 METH_VARARGS)
 
-        { "name_path",
-          (PyCFunction)BaseObjectFuncs::name_path,
-          METH_NOARGS,
-          "name_path() -> string\n"
-          "Returns the full path using the user-defined names objects"
-        },
-
-        { "id",
-          (PyCFunction)BaseObjectFuncs::id,
-          METH_NOARGS,
-          "id() -> string\n"
-          "Returns the unique id of the object"
-        },
-
-        { "id_path",
-          (PyCFunction)BaseObjectFuncs::id_path,
-          METH_NOARGS,
-          "id_path() -> string\n"
-          "Returns the full path using the IDs of the objects"
-        },
-
-        { "class_name",
-          (PyCFunction)BaseObjectFuncs::class_name,
-          METH_NOARGS,
-          "class_name() -> string\n"
-          "Returns the name of the object class"
-        },
-
-        { "num_children",
-          (PyCFunction)BaseObjectFuncs::num_children,
-          METH_NOARGS,
-          "num_children() -> int\n"
-          "Returns the number of children objects"
-        },
-
-        { "children",
-          (PyCFunction)BaseObjectFuncs::children,
-          METH_VARARGS,
-          "children() -> list of Object\n"
-          "children(int) -> Object\n"
-          "Returns the list of all children or a specific children by index"
-        },
-
-        // --------- setter ---------
-
-        { "set_name",
-          (PyCFunction)BaseObjectFuncs::set_name,
-          METH_O,
-          "set_name(string) -> None\n"
-          "Sets the user-defined name of the object"
-        },
-
-        { "add",
-          (PyCFunction)BaseObjectFuncs::add,
-          METH_VARARGS,
-          "add(Object|Sequence) -> Object\n"
-          "add(Object|Sequence, int) -> Object\n"
-          "Adds the the object or the sequence of objects as children.\n"
-          "If no index is given, the objects are appended, else they are inserted\n"
-          "before the given index.\n"
-          "The function returns the last added object\n"
-        },
+        MO__METHOD(set_timeline,        METH_O)
 
         { NULL, NULL, 0, NULL }
     };
-
+#undef MO__METHOD
 
 
     static PyTypeObject* BaseObject_type()

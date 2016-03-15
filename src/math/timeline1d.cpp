@@ -20,47 +20,6 @@
 namespace MO {
 namespace MATH {
 
-const char *Timeline1d::Point::getName(Point::Type type)
-{
-    switch (type)
-    {
-        default:
-        case Timeline1d::Point::DEFAULT:     return "default";    break;
-        case Timeline1d::Point::CONSTANT:    return "constant";   break;
-        case Timeline1d::Point::LINEAR:      return "linear";     break;
-        case Timeline1d::Point::SMOOTH:      return "smooth*";    break;
-        case Timeline1d::Point::SYMMETRIC:   return "symmetric*"; break;
-        case Timeline1d::Point::SYMMETRIC2:  return "hermite";    break;
-        case Timeline1d::Point::SPLINE4_SYM: return "symmetric4*";break;
-        case Timeline1d::Point::SPLINE4:     return "spline4";    break;
-        case Timeline1d::Point::SPLINE6:     return "spline6";    break;
-    }
-}
-
-const char *Timeline1d::Point::getPersistentName(Point::Type type)
-{
-    switch (type)
-    {
-        default:
-        case Timeline1d::Point::DEFAULT:     return "def";     break;
-        case Timeline1d::Point::CONSTANT:    return "const";   break;
-        case Timeline1d::Point::LINEAR:      return "linear";  break;
-        case Timeline1d::Point::SMOOTH:      return "smooth";  break;
-        case Timeline1d::Point::SYMMETRIC:   return "sym";     break;
-        case Timeline1d::Point::SYMMETRIC2:  return "hermite"; break;
-        case Timeline1d::Point::SPLINE4_SYM: return "sym4";    break;
-        case Timeline1d::Point::SPLINE4:     return "spline4"; break;
-        case Timeline1d::Point::SPLINE6:     return "spline6"; break;
-    }
-}
-
-Timeline1d::Point::Type Timeline1d::Point::getTypeForPersistentName(const QString& name)
-{
-    for (int i=DEFAULT; i<MAX; ++i)
-        if (name == getPersistentName((Type)i))
-            return (Type)i;
-    return LINEAR;
-}
 
 
 Timeline1d::Timeline1d()
@@ -164,12 +123,12 @@ Double Timeline1d::getNoLimit(Double time) const
     switch (i1->second.type)
     {
         default:
-        case Point::CONSTANT:
+        case TimelinePoint::CONSTANT:
             ret = i1->second.val;
             return ret;
         break;
 
-        case Point::LINEAR:
+        case TimelinePoint::LINEAR:
         {
             auto i2 = i1; i2++;
             if (i2==data_.end()) {
@@ -186,7 +145,7 @@ Double Timeline1d::getNoLimit(Double time) const
         }
         break;
 
-        case Point::SMOOTH:
+        case TimelinePoint::SMOOTH:
         {
             auto i2 = i1; i2++;
             if (i2==data_.end())
@@ -205,7 +164,7 @@ Double Timeline1d::getNoLimit(Double time) const
         }
         break;
 
-        case Point::SYMMETRIC:
+        case TimelinePoint::SYMMETRIC:
         {
             auto i2 = i1; i2++;
             if (i2==data_.end())
@@ -231,7 +190,7 @@ Double Timeline1d::getNoLimit(Double time) const
 
         /** a variation of hermite with arbitrary derivatives
             http://paulbourke.net/miscellaneous/interpolation/ */
-        case Point::SYMMETRIC2:
+        case TimelinePoint::SYMMETRIC2:
         {
             auto i2 = i1; i2++;
             if (i2==data_.end())
@@ -259,7 +218,7 @@ Double Timeline1d::getNoLimit(Double time) const
         break;
 
 
-        case Point::SPLINE4_SYM:
+        case TimelinePoint::SPLINE4_SYM:
         {
             auto i0=i1, i2 = i1; i2++;
             if (i2==data_.end())
@@ -298,7 +257,7 @@ Double Timeline1d::getNoLimit(Double time) const
         break;
 
 
-        case Point::SPLINE4:
+        case TimelinePoint::SPLINE4:
         {
             // get adjacent points
             TpList::const_iterator i0,i2,i3;
@@ -365,7 +324,7 @@ Double Timeline1d::getNoLimit(Double time) const
         break;
 
 
-        case Point::SPLINE6:
+        case TimelinePoint::SPLINE6:
         {
             // only one point?
             if (isFirst && isLast)
@@ -445,7 +404,7 @@ void Timeline1d::overwriteTimeline(const Timeline1d& tl, Double timeOffset)
     }
 }
 
-Timeline1d::Point* Timeline1d::add(Double time, Double value, Point::Type typ)
+Timeline1d::Point* Timeline1d::add(Double time, Double value, TimelinePoint::Type typ)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -462,7 +421,7 @@ Timeline1d::Point* Timeline1d::add(Double time, Double value, Point::Type typ)
     p.type = typ;
     p.d1 = 0.0;
 
-    if (typ == Point::DEFAULT)
+    if (typ == TimelinePoint::DEFAULT)
         p.type = currentType_(time);
     else
         p.type = typ;
@@ -483,7 +442,7 @@ Timeline1d::Point* Timeline1d::add(Double time, Double value, Point::Type typ)
 
 
 
-Timeline1d::Point* Timeline1d::add(Double time, Double value, Double thresh, Point::Type typ)
+Timeline1d::Point* Timeline1d::add(Double time, Double value, Double thresh, TimelinePoint::Type typ)
 {
     Double v = get(time);
     if (value>=v-thresh && value<=v+thresh) return 0;
@@ -500,9 +459,9 @@ Timeline1d::Point* Timeline1d::add(Point &p)
     return cur_;
 }
 
-Timeline1d::Point::Type Timeline1d::currentType_(Double time)
+TimelinePoint::Type Timeline1d::currentType_(Double time)
 {
-    if (data_.empty()) return Point::SPLINE4_SYM;
+    if (data_.empty()) return TimelinePoint::SPLINE4_SYM;
 
     TpList::iterator i = first(time);
     if (i==data_.end()) i--;
@@ -626,10 +585,10 @@ void Timeline1d::serialize(IO::DataStream & stream)
     stream.writeHeader("timeline", 1);
 
     // write type enums
-    stream << (quint8)Point::MAX;
-    for (quint8 i=0; i<Point::MAX; ++i)
+    stream << (quint8)TimelinePoint::MAX;
+    for (quint8 i=0; i<TimelinePoint::MAX; ++i)
     {
-        stream << QString(Point::getPersistentName((Point::Type)i));
+        stream << QString(TimelinePoint::getPersistentName((TimelinePoint::Type)i));
     }
 
     // number of points
@@ -652,12 +611,12 @@ void Timeline1d::deserialize(IO::DataStream & stream)
     quint8 numEnums;
     stream >> numEnums;
 
-    std::map<quint8, Point::Type> enumMap;
+    std::map<quint8, TimelinePoint::Type> enumMap;
     for (quint8 i=0; i<numEnums; ++i)
     {
         QString name;
         stream >> name;
-        enumMap.insert(std::make_pair(i, Point::getTypeForPersistentName(name)));
+        enumMap.insert(std::make_pair(i, TimelinePoint::getTypeForPersistentName(name)));
     }
 
     // read points

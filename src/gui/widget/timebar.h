@@ -32,7 +32,10 @@ public:
 
 signals:
 
+    /** During dragging */
     void timeChanged(Double time);
+    /** On mouse-release after drag */
+    void editingFinished();
 
 public slots:
 

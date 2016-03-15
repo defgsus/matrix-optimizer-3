@@ -1,24 +1,24 @@
-/** @file ascriptobject.h
+/** @file
 
     @brief
 
-    <p>(c) 2015, stefan.berke@modular-audio-graphics.com</p>
+    <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 1/1/2015</p>
+    <p>created 3/15/2016</p>
 */
 
-#ifndef MOSRC_OBJECT_ASCRIPTOBJECT_H
-#define MOSRC_OBJECT_ASCRIPTOBJECT_H
+#ifndef MOSRC_OBJECT_PYTHONOBJECT_H
+#define MOSRC_OBJECT_PYTHONOBJECT_H
 
 #include "object.h"
 
 namespace MO {
 
-class AScriptObject : public Object
+class PythonObject : public Object
 {
 public:
-    MO_OBJECT_CONSTRUCTOR(AScriptObject);
+    MO_OBJECT_CONSTRUCTOR(PythonObject);
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_ANGELSCRIPT; }
     virtual bool isScript() const Q_DECL_OVERRIDE { return true; }
@@ -42,4 +42,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_ASCRIPTOBJECT_H
+#endif // MOSRC_OBJECT_PYTHONOBJECT_H

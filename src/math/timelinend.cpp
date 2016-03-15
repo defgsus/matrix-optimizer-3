@@ -11,6 +11,7 @@
 #include <QFile>
 
 #include "math/timelinend.h"
+#include "math/timeline1d.h"
 #include "math/interpol.h"
 #include "io/datastream.h"
 #include "io/error.h"
@@ -18,47 +19,6 @@
 namespace MO {
 namespace MATH {
 
-const char *TimelineNd::Point::getName(Point::Type type)
-{
-    switch (type)
-    {
-        default:
-        case TimelineNd::Point::DEFAULT:     return "default";    break;
-        case TimelineNd::Point::CONSTANT:    return "constant";   break;
-        case TimelineNd::Point::LINEAR:      return "linear";     break;
-        case TimelineNd::Point::SMOOTH:      return "smooth*";    break;
-        case TimelineNd::Point::SYMMETRIC:   return "symmetric*"; break;
-        case TimelineNd::Point::SYMMETRIC2:  return "hermite";    break;
-        case TimelineNd::Point::SPLINE4_SYM: return "symmetric4*";break;
-        case TimelineNd::Point::SPLINE4:     return "spline4";    break;
-        case TimelineNd::Point::SPLINE6:     return "spline6";    break;
-    }
-}
-
-const char *TimelineNd::Point::getPersistentName(Point::Type type)
-{
-    switch (type)
-    {
-        default:
-        case TimelineNd::Point::DEFAULT:     return "def";     break;
-        case TimelineNd::Point::CONSTANT:    return "const";   break;
-        case TimelineNd::Point::LINEAR:      return "linear";  break;
-        case TimelineNd::Point::SMOOTH:      return "smooth";  break;
-        case TimelineNd::Point::SYMMETRIC:   return "sym";     break;
-        case TimelineNd::Point::SYMMETRIC2:  return "hermite"; break;
-        case TimelineNd::Point::SPLINE4_SYM: return "sym4";    break;
-        case TimelineNd::Point::SPLINE4:     return "spline4"; break;
-        case TimelineNd::Point::SPLINE6:     return "spline6"; break;
-    }
-}
-
-TimelineNd::Point::Type TimelineNd::Point::getTypeForPersistentName(const QString& name)
-{
-    for (int i=DEFAULT; i<MAX; ++i)
-        if (name == getPersistentName((Type)i))
-            return (Type)i;
-    return LINEAR;
-}
 
 
 TimelineNd::TimelineNd(size_t dim)
@@ -184,11 +144,11 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
     switch (i1->second.type)
     {
         default:
-        case Point::CONSTANT:
+        case TimelinePoint::CONSTANT:
             ret = i1->second.val;
             return ret;
 
-        case Point::LINEAR:
+        case TimelinePoint::LINEAR:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end()) {
@@ -204,7 +164,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             return ret;
         }
 
-        case Point::SMOOTH:
+        case TimelinePoint::SMOOTH:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end())
@@ -222,7 +182,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             return ret;
         }
 
-        case Point::SYMMETRIC:
+        case TimelinePoint::SYMMETRIC:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end())
@@ -247,7 +207,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
         /** a variation of hermite with arbitrary derivatives
             http://paulbourke.net/miscellaneous/interpolation/ */
-        case Point::SYMMETRIC2:
+        case TimelinePoint::SYMMETRIC2:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end())
@@ -274,7 +234,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         }
 
 
-        case Point::SPLINE4_SYM:
+        case TimelinePoint::SPLINE4_SYM:
         {
             auto i0=i1, i2 = i1; i2++;
             if (i2==p_data_.end())
@@ -312,7 +272,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         }
 
 
-        case Point::SPLINE4:
+        case TimelinePoint::SPLINE4:
         {
             // get adjacent points
             TpList::const_iterator i0,i2,i3;
@@ -381,7 +341,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         }
 
 
-        case Point::SPLINE6:
+        case TimelinePoint::SPLINE6:
         {
             // only one point?
             if (isFirst && isLast)
@@ -472,7 +432,7 @@ void TimelineNd::overwriteTimeline(const TimelineNd& tl, Double timeOffset)
 }
 #endif
 
-TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::Type typ)
+TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, TimelinePoint::Type typ)
 {
     // check if present
     TpList::iterator i = find(time);
@@ -489,7 +449,7 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::T
     p.type = typ;
     p.d1 = 0.0;
 
-    if (typ == Point::DEFAULT)
+    if (typ == TimelinePoint::DEFAULT)
         p.type = p_currentType_(time);
     else
         p.type = typ;
@@ -510,7 +470,7 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Point::T
 
 
 #if 0
-TimelineNd::Point* TimelineNd::add(Double time, Double value, Double thresh, Point::Type typ)
+TimelineNd::Point* TimelineNd::add(Double time, Double value, Double thresh, TimelinePoint::Type typ)
 {
     Double v = get(time);
     if (value>=v-thresh && value<=v+thresh) return 0;
@@ -526,9 +486,9 @@ TimelineNd::Point* TimelineNd::add(Point &p)
     return p_cur_;
 }
 
-TimelineNd::Point::Type TimelineNd::p_currentType_(Double time)
+TimelinePoint::Type TimelineNd::p_currentType_(Double time)
 {
-    if (p_data_.empty()) return Point::SPLINE4_SYM;
+    if (p_data_.empty()) return TimelinePoint::SPLINE4_SYM;
 
     TpList::iterator i = first(time);
     if (i==p_data_.end()) i--;
@@ -652,10 +612,10 @@ void TimelineNd::serialize(IO::DataStream & stream)
     stream.writeHeader("timeline", 1);
 
     // write type enums
-    stream << (quint8)Point::MAX;
-    for (quint8 i=0; i<Point::MAX; ++i)
+    stream << (quint8)TimelinePoint::MAX;
+    for (quint8 i=0; i<TimelinePoint::MAX; ++i)
     {
-        stream << QString(Point::getPersistentName((Point::Type)i));
+        stream << QString(TimelinePoint::getPersistentName((TimelinePoint::Type)i));
     }
 
     // number of points
@@ -678,12 +638,12 @@ void TimelineNd::deserialize(IO::DataStream & stream)
     quint8 numEnums;
     stream >> numEnums;
 
-    std::map<quint8, Point::Type> enumMap;
+    std::map<quint8, TimelinePoint::Type> enumMap;
     for (quint8 i=0; i<numEnums; ++i)
     {
         QString name;
         stream >> name;
-        enumMap.insert(std::make_pair(i, Point::getTypeForPersistentName(name)));
+        enumMap.insert(std::make_pair(i, TimelinePoint::getTypeForPersistentName(name)));
     }
 
     // read points
@@ -763,6 +723,16 @@ void TimelineNd::normalize(Double amp)
 }
 #endif
 
+
+Timeline1d* TimelineNd::getTimeline1d(size_t dimension)
+{
+    auto tl = new Timeline1d();
+
+    for (auto i = p_data_.begin(); i != p_data_.end(); ++i)
+        tl->add(i->second.t, i->second.val[dimension], 0., i->second.type);
+
+    return tl;
+}
 
 } // namespace MATH
 } // namespace MO

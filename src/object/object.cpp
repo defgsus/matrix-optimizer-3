@@ -815,14 +815,15 @@ Object * Object::findCommonParentObject(Object *other) const
     return 0;
 }
 
-Object * Object::findChildObject(std::function<bool (Object *)> selector)
+Object * Object::findChildObject(std::function<bool (Object *)> selector, bool recursive)
 {
     if (selector(this))
         return this;
-    for (auto c : childObjects())
-        if (auto o = c->findChildObject(selector))
-            return o;
-    return 0;
+    if (recursive)
+        for (auto c : childObjects())
+            if (auto o = c->findChildObject(selector))
+                return o;
+    return nullptr;
 }
 
 bool Object::isSaveToAdd(Object *o, QString &error) const

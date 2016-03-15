@@ -137,7 +137,8 @@ HEADERS += \
     src/object/texture/cropto.h \
     src/object/visual/skybox.h \
     $$PWD/util/objecttreesearch.h \
-    $$PWD/texture/cubemapto.h
+    $$PWD/texture/cubemapto.h \
+    $$PWD/pythonobject.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -269,4 +270,5 @@ SOURCES += \
     src/object/texture/neuroto.cpp \
     src/object/texture/cropto.cpp \
     src/object/visual/skybox.cpp \
-    $$PWD/texture/cubemapto.cpp
+    $$PWD/texture/cubemapto.cpp \
+    $$PWD/pythonobject.cpp

@@ -92,7 +92,7 @@ void TimeBar::update_()
 
     const int x = space_.mapXFrom(time_) * rect_.width();
 
-    move(x - 1 + rect_.x(), rect_.y());
+    move(x + rect_.x(), rect_.y());
 
     if (!isVisible() && isInContainingRect())
         setVisible(true);
@@ -132,14 +132,19 @@ void TimeBar::mouseMoveEvent(QMouseEvent * e)
 
 void TimeBar::mouseReleaseEvent(QMouseEvent * e)
 {
+    bool send = false;
+
     if (dragging_)
     {
         dragging_ = false;
         e->accept();
+        send = true;
     }
 
     if (!isInContainingRect())
         setVisible(false);
+    if (send)
+        emit editingFinished();
 }
 
 void TimeBar::paintEvent(QPaintEvent * e)

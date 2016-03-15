@@ -138,10 +138,11 @@ public:
         T_OSCILLATOR        = 1<<19,
         T_AUDIO_OBJECT      = 1<<20,
         T_ANGELSCRIPT       = 1<<21,
-        T_SHADER            = 1<<22,
-        T_TEXTURE           = 1<<23,
-        T_TEXT              = 1<<24, //! a text source of some kind
-        T_CONTROL           = 1<<25 //! generator of control signals, not specified otherwise
+        T_PYTHON            = 1<<22,
+        T_SHADER            = 1<<23,
+        T_TEXTURE           = 1<<24,
+        T_TEXT              = 1<<25, //! a text source of some kind
+        T_CONTROL           = 1<<26 //! generator of control signals, not specified otherwise
     };
     enum TypeGroups
     {
@@ -163,7 +164,7 @@ public:
 
         TG_TRANSFORMATION   = T_TRANSFORMATION | T_TRANSFORMATION_MIX,
 
-        TG_SCRIPT           = T_ANGELSCRIPT,
+        TG_SCRIPT           = T_ANGELSCRIPT | T_PYTHON,
 
         TG_ALL = 0xffffffff
     };
@@ -454,7 +455,7 @@ public:
 
     /** Returns the first object, including self, for which @p selector returns true,
         or NULL. */
-    Object * findChildObject(std::function<bool(Object*)> selector);
+    Object * findChildObject(std::function<bool(Object*)> selector, bool recursive = true);
 
     /** Returns the children with the given id, or NULL.
         If @p ignore is not NULL, this object will be ignored by search. */

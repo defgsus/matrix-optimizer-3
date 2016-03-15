@@ -267,10 +267,10 @@ void SswProject::Private::setTimelineType(MATH::Timeline1d * tl)
 
     for (auto & p : tl->getData())
     {
-        p.second.type = MATH::Timeline1d::Point::SMOOTH;
+        p.second.type = MATH::TimelinePoint::SMOOTH;
     }
 
-    tl->getData().rbegin()->second.type = MATH::Timeline1d::Point::CONSTANT;
+    tl->getData().rbegin()->second.type = MATH::TimelinePoint::CONSTANT;
 }
 
 void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& baseobj)
@@ -373,7 +373,7 @@ void SswProject::Private::createAnimation(SswSource *source, const QJsonObject& 
                                 Double val = name == "planewave"
                                         ? SswSource::T_PLANE
                                         : SswSource::T_POINT;
-                                am->type->add(ti, val, MATH::Timeline1d::Point::CONSTANT);
+                                am->type->add(ti, val, MATH::TimelinePoint::CONSTANT);
                             }
                         break;
                     }

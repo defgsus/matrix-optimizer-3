@@ -190,6 +190,7 @@ void Sequencer::updateLocatorBars()
         {
             auto t = getLocatorBar_(i.key());
             t->setTime(i.value());
+            t->setToolTip(QString("%1: %2").arg(i.key()).arg(i.value()));
         }
     }
 
@@ -226,12 +227,14 @@ TimeBar* Sequencer::getLocatorBar_(const QString &name)
     // timebar -> locator time
     connect(t, &TimeBar::timeChanged, [=](Double time)
     {
+        trackView_->clearSnap();
         trackView_->snapToSequences(&time);
         if (trackView_->currentObject())
         if (auto s = trackView_->currentObject()->sceneObject())
             s->setLocatorTime(name, time);
         t->setTime(time);
     });
+    connect(t, &TimeBar::editingFinished, [=](){ trackView_->clearSnap(); });
 
     return t;
 }
@@ -263,6 +266,9 @@ void Sequencer::setCurrentObject(Object * o)
     MO_DEBUG_GUI("Sequencer::setCurrentObject(" << o << ")");
 
     trackView_->setCurrentObject(o);
+
+    for (auto w : locatorBars_)
+        w->deleteLater();
     locatorBars_.clear();
     updateLocatorBars();
 }

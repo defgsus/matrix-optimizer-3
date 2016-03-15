@@ -183,8 +183,8 @@ void TrackView::setSnapTime_(Double t)
     if (snapTime_ < 0 && t < 0)
         return;
     Double x = space_.mapXFrom(snapTime_) * width();
-    update(x-3,0, x+3,height());
     snapTime_ = t;
+    update(x-3,0, x+3,height());
     x = space_.mapXFrom(snapTime_) * width();
     update(x-3,0, x+3,height());
 }

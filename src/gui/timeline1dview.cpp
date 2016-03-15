@@ -284,7 +284,7 @@ void Timeline1DView::updateAroundPoint_(const MATH::Timeline1d::Point &p)
     int expand_left = 2,
         expand_right = 2;
 
-    if (p.type == MATH::Timeline1d::Point::SPLINE6)
+    if (p.type == MATH::TimelinePoint::SPLINE6)
     {
         expand_left = expand_right = 3;
     }
@@ -1145,11 +1145,11 @@ void Timeline1DView::slotPointContextMenu_()
 
     // point type submenu
     QMenu * pointpop = new QMenu(pop);
-    for (int i=1; i<MATH::Timeline1d::Point::MAX; ++i)
+    for (int i=1; i<MATH::TimelinePoint::MAX; ++i)
     {
-        MATH::Timeline1d::Point::Type type = (MATH::Timeline1d::Point::Type)i;
+        auto type = (MATH::TimelinePoint::Type)i;
 
-        a = new QAction(MATH::Timeline1d::Point::getName(type), pointpop);
+        a = new QAction(MATH::TimelinePoint::getName(type), pointpop);
         pointpop->addAction(a);
         a->setCheckable(true);
         a->setChecked(pointIt->second.type == type);
@@ -1407,7 +1407,7 @@ void Timeline1DView::slotEmptyContextMenu_()
     pop->popup(QCursor::pos());
 }
 
-void Timeline1DView::changePointType_(MATH::Timeline1d::Point::Type t)
+void Timeline1DView::changePointType_(MATH::TimelinePoint::Type t)
 {
     if (!tl_ || !(options_ & O_ChangePointType))
         return;

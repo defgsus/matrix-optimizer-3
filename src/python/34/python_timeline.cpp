@@ -344,7 +344,7 @@ PySequenceMethods Timeline_SeqMethods = {
 
 #define MO__TYPE(name__, enum__, doc__) \
     { (char*)name__, (getter)tl_type_getter, (setter)NULL, \
-      (char*)"interpolation type: " doc__, (void*)MATH::TimelineNd::Point::enum__ },
+      (char*)"interpolation type: " doc__, (void*)MATH::TimelinePoint::enum__ },
 
 static PyGetSetDef Timeline_getseters[] = {
     MO__TYPE("CONSTANT"   , CONSTANT    , "no transition")
@@ -477,6 +477,22 @@ bool isTimeline(PyObject* obj)
     return PyObject_TypeCheck(obj, Timeline_Type());
 }
 
+bool expectTimeline(PyObject* obj)
+{
+    if (!obj)
+    {
+        PyErr_SetString(PyExc_TypeError, "expected Timeline, got NULL");
+        return false;
+    }
+    if (!isTimeline(obj))
+    {
+        PyErr_Set(PyExc_TypeError, QString("expected Timeline, got %1")
+                                    .arg(typeName(obj)));
+        return false;
+    }
+    return true;
+}
+
 PyObject* buildTimeline(MO::MATH::TimelineNd* tl)
 {
     auto obj = new_tl();
@@ -502,6 +518,14 @@ PyObject* buildList(const MO::MATH::ArithmeticArray<double>& a)
         PyList_SET_ITEM(list, i, v);
     }
     return list;
+}
+
+
+MATH::TimelineNd* getTimeline(PyObject* o)
+{
+    if (!expectTimeline(o))
+        return nullptr;
+    return reinterpret_cast<TimelineStruct*>(o)->tl;
 }
 
 } // namespace PYTHON34

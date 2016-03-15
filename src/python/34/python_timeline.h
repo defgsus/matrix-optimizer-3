@@ -23,9 +23,14 @@ namespace PYTHON34 {
     void initTimeline(PyObject* module);
 
     bool isTimeline(PyObject* obj);
+    bool expectTimeline(PyObject* obj);
 
     PyObject* buildTimeline(MATH::TimelineNd*);
     PyObject* buildList(const MATH::ArithmeticArray<double>&);
+
+    /** Returns the timeline of the wrapper, or NULL.
+        Sets PyErr state on failure */
+    MATH::TimelineNd* getTimeline(PyObject*);
 
 } // namespace PYTHON34
 } // namespace MO
