@@ -21,7 +21,7 @@ namespace MO {
 ModulatorGeometry::ModulatorGeometry(
         const QString &name, const QString &modulatorId, const QString& outputId,
         Parameter * p, Object *parent)
-    : Modulator     (name, modulatorId, outputId, p, parent)
+    : Modulator     (name, modulatorId, outputId, p, ST_GEOMETRY, parent)
     , geomFace_      (0)
 {
 }

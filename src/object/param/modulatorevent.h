@@ -8,6 +8,8 @@
     <p>created 10.12.2014</p>
 */
 
+#if 0
+
 #ifndef MOSRC_OBJECT_PARAM_MODULATOREVENT_H
 #define MOSRC_OBJECT_PARAM_MODULATOREVENT_H
 
@@ -105,3 +107,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_PARAM_MODULATOREVENT_H
+
+#endif

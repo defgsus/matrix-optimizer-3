@@ -533,51 +533,40 @@ void ParameterWidget::createWidgets_()
         edit->setStatusTip(ptxt->statusTip());
         edit->setText(ptxt->baseValue());
 
-        if (ptxt->isOneliner())
+        edit->setReadOnly( !ptxt->isOneliner() );
+
+        // edit button
+        QToolButton * butedit = new QToolButton(this);
+        l->addWidget(butedit);
+        butedit->setText("...");
+        butedit->setStatusTip(tr("Click to edit the text"));
+
+        setFocusProxy(ptxt->isOneliner() ? (QWidget*)butedit : (QWidget*)edit);
+
+        // edit button click
+        connect(butedit, &QToolButton::clicked, [=]()
         {
-            edit->setReadOnly(false);
-            setFocusProxy(edit);
+#if 1
+            ptxt->openEditDialog();// application()->mainWindow() );
+#else
+            // XXX works but is not fully integrated yet
+            auto w = ptxt->createEditWidget( application()->mainWindow() );
+            application()->createDockWidget("parameter " + ptxt->infoName(), w);
+#endif
+        });
 
-            connect(edit, &QLineEdit::editingFinished, [=]()
-            {
-                editor_->setParameterValue(ptxt, edit->text());
-            });
-
-            connect(breset, &QToolButton::pressed, [=]()
-            {
-                editor_->setParameterValue(ptxt, ptxt->defaultValue());
-            });
-        }
-        else
+        // pure edit
+        if (!edit->isReadOnly())
+        connect(edit, &QLineEdit::editingFinished, [=]()
         {
-            edit->setReadOnly(true);
+            editor_->setParameterValue(ptxt, edit->text());
+        });
 
-            // edit button
-            QToolButton * butedit = new QToolButton(this);
-            l->addWidget(butedit);
-            butedit->setText("...");
-            butedit->setStatusTip(tr("Click to edit the text"));
-
-            setFocusProxy(butedit);
-
-            // load button click
-            connect(butedit, &QToolButton::clicked, [=]()
-            {
-    #if 1
-                ptxt->openEditDialog();// application()->mainWindow() );
-    #else
-                // XXX works but is not fully integrated yet
-                auto w = ptxt->createEditWidget( application()->mainWindow() );
-                application()->createDockWidget("parameter " + ptxt->infoName(), w);
-    #endif
-            });
-
-            // reset to default
-            connect(breset, &QToolButton::pressed, [=]()
-            {
-                editor_->setParameterValue(ptxt, ptxt->defaultValue());
-            });
-        }
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            editor_->setParameterValue(ptxt, ptxt->defaultValue());
+        });
     }
 
     else

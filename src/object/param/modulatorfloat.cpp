@@ -22,7 +22,7 @@ namespace MO {
 
 ModulatorFloat::ModulatorFloat(const QString &name, const QString &modulatorId, const QString& outputId,
                                Parameter * p, Object *parent)
-    : Modulator     (name, modulatorId, outputId, p, parent),
+    : Modulator     (name, modulatorId, outputId, p, ST_FLOAT, parent),
       sourceType_   (ST_NONE),
       interface_    (0),
       amplitude_    (1.0),

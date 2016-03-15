@@ -19,7 +19,7 @@ namespace MO {
 
 ModulatorTexture::ModulatorTexture(const QString &name, const QString &modulatorId, const QString& outputId,
                                Parameter * p, Object *parent)
-    : Modulator     (name, modulatorId, outputId, p, parent)
+    : Modulator     (name, modulatorId, outputId, p, ST_TEXTURE, parent)
     , texFace_      (0)
 {
 }

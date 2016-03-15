@@ -52,6 +52,7 @@ ObjectGl::ObjectGl()
       p_paramUpdateMode_        (0),
       p_paramCullMode_          (0)
 {
+    setNumberOutputs(ST_TRANSFORMATION, 1);
 }
 
 ObjectGl::~ObjectGl() { }

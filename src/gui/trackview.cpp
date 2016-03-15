@@ -58,6 +58,7 @@ TrackView::TrackView(QWidget *parent) :
     currentTime_            (0),
     hoverWidget_            (0),
 
+    snapTime_               (-1.),
     filterCurrentObjectOnly_(true),
     filterAddModulatingObjects_(true),
     alwaysFullObject_       (true),
@@ -159,13 +160,33 @@ void TrackView::paintEvent(QPaintEvent * )
 {
     QPainter p(this);
 
-    // background
+    // track spacing
     p.setPen(QColor(70,70,70));
     for (auto t : tracks_)
     {
         const int y = trackY(t) + trackHeight(t) + trackSpacing_ / 2;
         p.drawLine(0, y, width(), y);
     }
+
+    if (snapTime_ >= 0)
+    {
+        Double x = space_.mapXFrom(snapTime_) * width();
+        QPen pen(QColor(255,255,255,130));
+        pen.setWidth(5);
+        p.setPen(pen);
+        p.drawLine(x,0, x,height());
+    }
+}
+
+void TrackView::setSnapTime_(Double t)
+{
+    if (snapTime_ < 0 && t < 0)
+        return;
+    Double x = space_.mapXFrom(snapTime_) * width();
+    update(x-3,0, x+3,height());
+    snapTime_ = t;
+    x = space_.mapXFrom(snapTime_) * width();
+    update(x-3,0, x+3,height());
 }
 
 SequenceWidget * TrackView::widgetForSequence_(Sequence * seq) const
@@ -702,20 +723,41 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     }
 }
 
-bool TrackView::snapAuto_(Double* time) const
+bool TrackView::snapToAll(Double* time)
+{
+    if (snapToLocators(time))
+        return true;
+    if (snapToSequences(time))
+        return true;
+    return false;
+}
+
+bool TrackView::snapToLocators(Double *time)
 {
     if (!scene_)
         return false;
+    Double pix = 4 * (space_.mapXTo(1. / width()) - space_.mapXTo(0));
 
-    Double pix = space_.mapXTo(1. / width()) - space_.mapXTo(0);
-    pix *= 4;
+    // snap to locators
     for (auto t : scene_->locators())
     {
-        if (std::abs(t - *time) <= pix)
-        {
-            *time = t;
-            return true;
-        }
+        if (std::abs(t - *time) <= pix) { *time = t; setSnapTime_(t); return true; }
+    }
+    return false;
+}
+
+bool TrackView::snapToSequences(Double *time)
+{
+    Double pix = 4 * (space_.mapXTo(1. / width()) - space_.mapXTo(0));
+
+    // snap to other clips
+    for (auto w : sequenceWidgets_)
+    if (!selectedWidgets_.contains(w))
+    {
+        Double t = w->sequence()->start();
+        if (std::abs(t - *time) <= pix) { *time = t; setSnapTime_(t); return true; }
+        t = w->sequence()->end();
+        if (std::abs(t - *time) <= pix) { *time = t; setSnapTime_(t); return true; }
     }
 
     return false;
@@ -733,15 +775,16 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
     if (action_ == A_DRAG_POS_)
     {
+        clearSnap();
         for (int i=0; i<selectedWidgets_.size(); ++i)
         {
             Sequence * seq = selectedWidgets_[i]->sequence();
             Double newstart = std::max((Double)0, dragStartTimes_[i] + deltaTime);
-            if (!snapAuto_(&newstart))
+            if (!snapToAll(&newstart))
             {
                 Double newend = newstart + seq->length() / seq->speed(),
                        diff = newend;
-                if (snapAuto_(&newend))
+                if (snapToAll(&newend))
                 {
                     diff = newend - diff;
                     newstart += diff;
@@ -764,11 +807,14 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
     if (action_ == A_DRAG_LEFT_)
     {
+        clearSnap();
+
         for (int i=0; i<selectedWidgets_.size(); ++i)
         {
             Sequence * seq = selectedWidgets_[i]->sequence();
             Double newstart = std::max((Double)0, std::min(seq->end() - Sequence::minimumLength(),
                                     dragStartTimes_[i] + deltaTime));
+            snapToAll(&newstart);
             Double change = (dragStartTimes_[i] - newstart) * seq->speed();
             Double newlength = std::max(Sequence::minimumLength(), dragStartLengths_[i] + change );
             Double newOffset = dragStartOffsets_[i];
@@ -793,11 +839,19 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
     if (action_ == A_DRAG_RIGHT_)
     {
+        clearSnap();
         for (int i=0; i<selectedWidgets_.size(); ++i)
         {
             Sequence * seq = selectedWidgets_[i]->sequence();
             Double newlength = std::max(Sequence::minimumLength(),
                                         dragStartLengths_[i] + deltaTime * seq->speed() );
+            Double newend = seq->start() + newlength / seq->speed(),
+                   diff = newend;
+            if (snapToAll(&newend))
+            {
+                diff = newend - diff;
+                newlength += diff;
+            }
             ScopedSequenceChange lock(scene_, seq);
             seq->setLength(newlength);
         }
@@ -867,6 +921,8 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
 
 void TrackView::mouseReleaseEvent(QMouseEvent * e)
 {
+    clearSnap();
+
     bool multisel = (e->modifiers() & modifierMultiSelect_);
 
     if (hoverWidget_)

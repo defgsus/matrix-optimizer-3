@@ -26,6 +26,7 @@ Microphone::Microphone()
     : Object()
 {
     setName("Microphone");
+    setNumberOutputs(ST_TRANSFORMATION, 1);
     setNumberMicrophones(1);
 }
 

@@ -19,6 +19,7 @@ Group::Group() :
     Object()
 {
     setName("Group");
+    setNumberOutputs(ST_TRANSFORMATION, 1);
 }
 
 Group::~Group() { }

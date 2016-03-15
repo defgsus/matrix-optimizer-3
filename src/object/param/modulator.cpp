@@ -23,12 +23,13 @@ namespace MO {
 
 Modulator::Modulator(const QString &name,
                      const QString &id, const QString& outputId,
-                     Parameter * p, Object *parent)
+                     Parameter * p, SignalType sigType, Object *parent)
     : parent_       (parent),
       name_         (name),
       modulatorId_  (id),
       outputId_     (outputId),
       channel_      (0),
+      signalType_   (sigType),
       param_        (p)
 {
     MO_DEBUG_MOD("Modulator::Modulator(" << id << ", " << outputId << ", " << parent << ")");

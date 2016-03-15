@@ -122,6 +122,7 @@ TextureObjectBase::TextureObjectBase()
 {
     initCreateRenderSettings(false);
     initDefaultUpdateMode(UM_ON_CHANGE);
+    setNumberOutputs(ST_TRANSFORMATION, 0); // undo ObjectGl
     setNumberOutputs(ST_TEXTURE, 1);
 }
 

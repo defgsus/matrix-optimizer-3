@@ -194,8 +194,6 @@ Object::Object()
     : RefCounted("Object")
     , pobj_         (new PrivateObj(this))
 {
-    setNumberOutputs(ST_TRANSFORMATION, 1);
-
     addEvolutionKey(tr("Parameters"));
 }
 
@@ -1599,9 +1597,13 @@ QString Object::getSignalName(SignalType t)
 QString Object::getOutputName(SignalType t, uint channel) const
 {
     if (t == ST_TRANSFORMATION)
-        return QString("transf. %1").arg(channel);
+        return getNumberOutputs(ST_TRANSFORMATION) > 1
+                ? QString("transf. %1").arg(channel+1)
+                : QString("transf.");
     else
-        return QString("%1 %2").arg(getSignalName(t)).arg(channel);
+        return getNumberOutputs(ST_TRANSFORMATION) > 1
+                ? QString("%1 %2").arg(getSignalName(t)).arg(channel+1)
+                : getSignalName(t);
 }
 
 void Object::setNumberOutputs(SignalType t, uint num, bool emitSignal)

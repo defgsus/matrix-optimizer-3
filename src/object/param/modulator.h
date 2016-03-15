@@ -23,7 +23,7 @@ class Parameter;
 
 /** @brief Internal abstract base class to link to modulating objects.
     This is the runtime structure that connects an object:output -> parameter.
-    The class is derived from, for each type of modulation.
+    The class is subclassed for each type of modulation.
 */
 class Modulator
 {
@@ -34,7 +34,9 @@ public:
     Modulator(const QString& name,
               const QString& modulatorId,
               const QString& outputId,
-              Parameter * parm, Object * parent = 0);
+              Parameter * parm,
+              SignalType sigType,
+              Object * parent = 0);
     virtual ~Modulator() { }
 
     // --------------- io ----------------
@@ -70,11 +72,11 @@ public:
     /** Returns if the object can be the modulating object */
     virtual bool canBeModulator(const Object *) const = 0;
 
-    // ---- following only work after the
+    // ---- following only works after the
     // ---- modulating object is assigned
 
     uint outputChannel() const { return channel_; }
-    //SignalType signalType() const { return signalType_; }
+    SignalType signalType() const { return signalType_; }
 
     /** Returns the modulating object */
     Object * modulator() const { return modulator_; }
@@ -110,7 +112,7 @@ protected:
 private:
 
     Object * parent_, * modulator_;
-
+    SignalType signalType_;
     QString name_, modulatorId_, outputId_;
     uint channel_;
 

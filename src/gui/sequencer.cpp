@@ -226,6 +226,7 @@ TimeBar* Sequencer::getLocatorBar_(const QString &name)
     // timebar -> locator time
     connect(t, &TimeBar::timeChanged, [=](Double time)
     {
+        trackView_->snapToSequences(&time);
         if (trackView_->currentObject())
         if (auto s = trackView_->currentObject()->sceneObject())
             s->setLocatorTime(name, time);

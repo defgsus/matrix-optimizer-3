@@ -8,6 +8,8 @@
     <p>created 10.12.2014</p>
 */
 
+#if 0
+
 #include "modulatorevent.h"
 #include "io/error.h"
 #include "io/datastream.h"
@@ -142,3 +144,5 @@ Double ModulatorEvent::valueFloat(const RenderTime& ti) const
 
 
 } // namespace MO
+
+#endif

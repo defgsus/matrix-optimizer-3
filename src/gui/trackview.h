@@ -75,6 +75,13 @@ public:
     QMenu * createFilterMenu();
 
     Object* currentObject() const { return currentObject_; }
+
+    /** Snap to anything */
+    bool snapToAll(Double* time);
+    bool snapToLocators(Double* time);
+    bool snapToSequences(Double* time);
+    void clearSnap() { setSnapTime_(-1); }
+
 signals:
 
     void viewSpaceChanged(const UTIL::ViewSpace&);
@@ -203,8 +210,7 @@ private:
     /** Transforms alltracks_ into a changed list according to ObjectFilter */
     void getFilteredTracks_(QList<Track*>& list);
 
-    /** Snap to anything */
-    bool snapAuto_(Double* time) const;
+    void setSnapTime_(Double);
 
     // editing
     bool deleteObject_(Object * seq);
@@ -246,7 +252,7 @@ private:
     Double dragStartTime_;
     Track * dragStartTrack_, * dragEndTrack_;
     QList<Double> dragStartTimes_, dragStartOffsets_, dragStartLengths_;
-
+    Double snapTime_;
     QRect selectRect_;
 
     QString statusSeqNormal,

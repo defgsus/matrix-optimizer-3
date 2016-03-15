@@ -1110,12 +1110,13 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
 
 QPointF AbstractObjectItem::outputPos(Modulator * m) const
 {
-//    if (m->isAudioToFloatConverter())
-//        return outputPos(static_cast<ModulatorFloat*>(m)->channel());
-    return outputPos(m->outputChannel());
+    for (auto i : p_oi_->outputItems)
+        if (i->signalType() == m->signalType() &&
+                i->channel() == m->outputChannel())
+            return i->pos();
 
-//    QRectF r(rect());
-//    return QPointF(r.right(), r.bottom() - 4);
+    QRectF r(rect());
+    return QPointF(r.right(), r.bottom() - 4);
 }
 
 QRectF AbstractObjectItem::rect() const
