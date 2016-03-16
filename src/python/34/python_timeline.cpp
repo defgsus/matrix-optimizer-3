@@ -36,7 +36,8 @@ struct TimelineStruct;
 
 bool set_tl_dim(TimelineStruct*, size_t num);
 
-bool py_get_time_and_vec(PyObject* args_, double* time, MATH::TimelineNd::ValueType* vec)
+bool py_get_time_and_vec(
+        PyObject* args_, double* time, MATH::TimelineNd::ValueType* vec)
 {
     if (vec->numDimensions() == 1)
     {
@@ -61,6 +62,41 @@ bool py_get_time_and_vec(PyObject* args_, double* time, MATH::TimelineNd::ValueT
     PyErr_Clear();
     PyObject * second;
     if (!PyArg_ParseTuple(args_, "dO", time, &second))
+        return false;
+    if (get_vector(second, vec->numDimensions(), &(*vec)[0]))
+        return true;
+    return false;
+}
+
+bool py_get_time_and_vec_and_pointtype(
+        PyObject* args_, double* time, MATH::TimelineNd::ValueType* vec,
+        int* ptype)
+{
+    if (vec->numDimensions() == 1)
+    {
+        if (PyArg_ParseTuple(args_, "ddi", time, &(*vec)[0], ptype))
+            return true;
+    }
+    else if (vec->numDimensions() == 2)
+    {
+        if (PyArg_ParseTuple(args_, "dddi", time, &(*vec)[0], &(*vec)[1], ptype))
+            return true;
+    }
+    else if (vec->numDimensions() == 3)
+    {
+        if (PyArg_ParseTuple(args_, "ddddi",
+                             time, &(*vec)[0], &(*vec)[1], &(*vec)[2], ptype))
+            return true;
+    }
+    else if (vec->numDimensions() == 4)
+    {
+        if (PyArg_ParseTuple(args_, "dddddi",
+                time, &(*vec)[0], &(*vec)[1], &(*vec)[2], &(*vec)[3], ptype))
+            return true;
+    }
+    PyErr_Clear();
+    PyObject * second;
+    if (!PyArg_ParseTuple(args_, "dOi", time, &second, ptype))
         return false;
     if (get_vector(second, vec->numDimensions(), &(*vec)[0]))
         return true;
@@ -270,8 +306,11 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
     MO_PY_DEF_DOC(tl_add,
         "add(float, vec) -> Timeline\n"
+        "add(float, vec, int) -> Timeline\n"
         "Adds a value/vector at the given time.\n"
-        "The vector size must fit the dimension of the timeline data."
+        "The vector size must fit the dimension of the timeline data.\n"
+        "The third argument can be on of the Timeline point types,\n"
+        "e.g. Timeline.CONSTANT, Timeline.SPLINE6, etc..\n"
         "Returns self."
     )
     static PyObject* tl_add(TimelineStruct* self, PyObject* arg)
@@ -281,9 +320,15 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         double time;
         MATH::TimelineNd::ValueType
                 val(self->tl->numDimensions(), MATH::TimelineNd::ValueType::NoInit);
-        if (!py_get_time_and_vec(arg, &time, &val))
-            return NULL;
-        self->tl->add(time, val);
+        int ptype = MATH::TimelinePoint::DEFAULT;
+        if (!py_get_time_and_vec_and_pointtype(arg, &time, &val, &ptype))
+        {
+            MO_PRINT("PTYPE not retrieved");
+            PyErr_Clear();
+            if (!py_get_time_and_vec(arg, &time, &val))
+                return NULL;
+        }
+        self->tl->add(time, val, (MATH::TimelinePoint::Type)ptype);
 
         Py_INCREF(self);
         return reinterpret_cast<PyObject*>(self);

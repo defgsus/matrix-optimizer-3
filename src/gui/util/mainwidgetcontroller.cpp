@@ -1937,7 +1937,7 @@ void MainWidgetController::closeAudio()
 Double MainWidgetController::getPrevLocatorTime_(Double time)
 {
     if (scene_->locators().isEmpty())
-        return time;
+        return 0.;
     auto i = scene_->locators().end();
     while (true)
     {
