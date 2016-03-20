@@ -34,8 +34,8 @@ public:
 public slots:
 
     /** Creates an offscreen surface and an QOpenGLContext associated to it.
-        Returns false when something went wrong. */
-    bool createGl();
+        @throws GlException on any error. */
+    void createGl();
 
     /** Destroys the context, or does nothing */
     void destroyGl();

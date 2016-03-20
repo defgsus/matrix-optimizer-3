@@ -247,8 +247,7 @@ void ProjectorBlender::Private::exportMaps(const QString &directory)
 {
     GL::OffscreenContext ctx;
 
-    if (!ctx.createGl())
-        MO_GL_ERROR("Could not create openGL context");
+    ctx.createGl();
 
     if (!ctx.makeCurrent())
         MO_GL_ERROR("Could not make openGL current");

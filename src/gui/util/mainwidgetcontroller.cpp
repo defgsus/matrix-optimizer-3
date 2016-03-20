@@ -196,6 +196,12 @@ MainWidgetController::~MainWidgetController()
 
     if (audioEngine_)
         audioEngine_->stop();
+
+    if (scene_)
+    {
+        scene_->kill();
+        scene_->releaseRef("gui shutdown");
+    }
 }
 
 void MainWidgetController::createObjects_()
@@ -1902,8 +1908,8 @@ void MainWidgetController::stop()
 
     if (audioEngine_)
     {
-        if (audioEngine_->isPlayback())
-            audioEngine_->stop();
+        if (audioEngine_->isPlayback() && !audioEngine_->isPause())
+            audioEngine_->pause(true);
         else
         {
             Double time = getPrevLocatorTime_(audioEngine_->second());

@@ -52,7 +52,7 @@ public:
     bool isAudioConfigured() const;
     bool isAudioInitialized() const;
     bool isPlayback() const;
-
+    bool isPause() const;
 
 signals:
 
@@ -79,7 +79,11 @@ public slots:
         Returns true when device is playing. */
     bool start();
 
+    /** Stops the audio thread and closes the device */
     void stop();
+
+    /** Puts the audio thread on idle */
+    void pause(bool enable);
 
 private:
 

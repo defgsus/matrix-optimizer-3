@@ -102,8 +102,7 @@ OffscreenContext * SceneRenderer::createOffscreenContext()
 
     auto ocontext = new OffscreenContext(this);
 
-    if (!ocontext->createGl())
-        MO_GL_ERROR("could not create opengl context");
+    ocontext->createGl();
 
     if (!ocontext->makeCurrent())
         MO_GL_ERROR("could not make opengl context current");

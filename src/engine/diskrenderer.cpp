@@ -149,7 +149,7 @@ void DiskRenderer::run()
     setCurrentThreadName("RENDER");
 
     // render audio/video
-    if (p_->rendSet.imageEnable() && p_->rendSet.audioEnable())
+    if (p_->rendSet.imageEnable() || p_->rendSet.audioEnable())
     {
 
         if (!p_->initScene())

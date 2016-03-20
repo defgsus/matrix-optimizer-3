@@ -319,13 +319,7 @@ void WaveTracerShader::Private::initGl()
         if (!context)
         {
             context = new GL::OffscreenContext;
-            if (!context->createGl())
-            {
-                addError(tr("Could not create offscreen opengl context"));
-
-                delete context;
-                context = 0;
-            }
+            context->createGl();
         }
 
         if (!fbo)

@@ -54,6 +54,7 @@ class ShaderAO::Private
         releaseGl();
     }
 
+    void getSource(GL::ShaderSource* src);
     void initGl();
     void releaseGl();
     void render(const RenderTime& time);
@@ -67,12 +68,15 @@ class ShaderAO::Private
     size_t texW, texH;
 
     bool needRecompile;
+    QString failedCode;
     ParameterText* paramGlsl;
 
     GL::Uniform
             *u_time,
             *u_resolution,
-            *u_samplerate;
+            *u_samplerate,
+            *u_buffersize,
+            *u_iSampleRate;
 };
 
 ShaderAO::ShaderAO()
@@ -111,6 +115,7 @@ void ShaderAO::createParameters()
                     "glsl", tr("shader source"),
                     tr("The glsl source to generate audio data"),
                     TT_GLSL,
+                    "// can return float, or vec2-4"
                     "vec4 mainSound(in float time)\n"
                     "{\n"
                     "\treturn vec4(sin(time * 440. * 3.14159265*2.));\n"
@@ -150,6 +155,21 @@ void ShaderAO::onCloseAudioThread()
 {
     AudioObject::onCloseAudioThread();
     p_->releaseGl();
+}
+
+GL::ShaderSource ShaderAO::valueShaderSource(uint channel) const
+{
+    GL::ShaderSource src;
+    if (channel == 0)
+        p_->getSource(&src);
+    return src;
+}
+
+void ShaderAO::Private::getSource(GL::ShaderSource *src)
+{
+    src->loadVertexSource(":/shader/shader_ao.vert");
+    src->loadFragmentSource(":/shader/shader_ao.frag");
+    src->replace("//%mo_user_function%", paramGlsl->baseValue());
 }
 
 void ShaderAO::Private::initGl()
@@ -192,17 +212,26 @@ void ShaderAO::Private::initGl()
                 shader->releaseGL();
 
         GL::ShaderSource src;
-        src.loadVertexSource(":/shader/shader_ao.vert");
-        src.loadFragmentSource(":/shader/shader_ao.frag");
-        src.replace("//%mo_user_function%", paramGlsl->baseValue());
+        getSource(&src);
 
         shader->setSource(src);
 
-        shader->compile();
+        try
+        {
+            failedCode.clear();
+            shader->compile();
+        }
+        catch (...)
+        {
+            failedCode = paramGlsl->baseValue();
+            throw;
+        }
 
         u_time = shader->getUniform("u_time", true);
         u_resolution = shader->getUniform("u_resolution", true);
         u_samplerate = shader->getUniform("u_samplerate", true);
+        u_buffersize = shader->getUniform("u_buffersize", true);
+        u_iSampleRate = shader->getUniform("iSampleRate");
 
         // --------------- quad geom -----------
 
@@ -274,6 +303,11 @@ void ShaderAO::Private::render(const RenderTime& time)
                     fbo->width(), fbo->height(), 1./fbo->width(), 1./fbo->height());
     if (u_samplerate)
         u_samplerate->setFloats(ao->sampleRate(), ao->sampleRateInv());
+    if (u_buffersize)
+        u_buffersize->ints[0] = time.bufferSize();
+
+    if (u_iSampleRate)
+        u_iSampleRate->floats[0] = ao->sampleRate();
 
     shader->activate();
     shader->sendUniforms();
@@ -290,19 +324,22 @@ void ShaderAO::processAudio(const RenderTime& time)
 {
     MO_DEBUG_SAO("processAudio(" << time << ")");
 
-    if (!p_->context
+    if ((!p_->context
         || p_->needRecompile)
+        && (p_->failedCode.isEmpty()
+            || p_->paramGlsl->baseValue() != p_->failedCode))
         p_->initGl();
 
     if (!p_->context)
     {
-        setErrorMessage("No OpenGL context");
+        if (p_->failedCode.isEmpty())
+            setErrorMessage("No OpenGL context");
         return;
     }
 
     if (p_->context->thread() != QThread::currentThread())
     {
-        setErrorMessage("Audio thread changed without notice");
+        setErrorMessage("Audio thread change without notice");
         return;
     }
 

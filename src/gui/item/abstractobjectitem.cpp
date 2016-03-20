@@ -733,9 +733,10 @@ void AbstractObjectItem::PrivateOI::createConnectors()
             if (it.key() == ST_AUDIO && dynamic_cast<AudioOutAO*>(object))
                 continue;
 
-            outputItems.append(
-                new ObjectGraphConnectItem(false, it.key(), i,
-                                           object->getOutputName(it.key(), i), item) );
+            auto coni = new ObjectGraphConnectItem(
+                                false, it.key(), i,
+                                object->getOutputName(it.key(), i), item);
+            outputItems.append(coni);
         }
     }
 
@@ -1111,9 +1112,15 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
 QPointF AbstractObjectItem::outputPos(Modulator * m) const
 {
     for (auto i : p_oi_->outputItems)
+    {
+        if (auto mf = dynamic_cast<ModulatorFloat*>(m))
+            if (mf->sourceType() == ModulatorFloat::ST_AUDIO_OBJECT)
+                return outputPos(mf->outputChannel());
+
         if (i->signalType() == m->signalType() &&
                 i->channel() == m->outputChannel())
             return i->pos();
+    }
 
     QRectF r(rect());
     return QPointF(r.right(), r.bottom() - 4);

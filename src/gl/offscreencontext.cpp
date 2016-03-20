@@ -45,7 +45,7 @@ OffscreenContext::~OffscreenContext()
     }
 }
 
-bool OffscreenContext::createGl()
+void OffscreenContext::createGl()
 {
     if (p_os_surface_ && p_os_surface_->isValid())
         p_os_surface_->destroy();
@@ -57,7 +57,7 @@ bool OffscreenContext::createGl()
     p_os_surface_->setFormat(SceneRenderer::defaultFormat());
     p_os_surface_->create();
     if (!p_os_surface_->isValid())
-        return false;
+        MO_GL_ERROR("Could not create offscreen surface");
 
     // set surface of base Context class
     setSurface(p_os_surface_);
@@ -74,14 +74,13 @@ bool OffscreenContext::createGl()
 //#endif
 
     if (!r)
-        return false;
+        MO_GL_ERROR("Could not create offscreen context");
 
     if (!qcontext()->makeCurrent(p_os_surface_))
-        return false;
+        MO_GL_ERROR("Could not make offscreen context current")
 
     glbinding::Binding::initialize(glbinding::getCurrentContext());
 
-    return true;
 }
 
 void OffscreenContext::destroyGl()

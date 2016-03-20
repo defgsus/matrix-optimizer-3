@@ -12,11 +12,14 @@
 #define MOSRC_OBJECT_AUDIO_SHADERAO_H
 
 #include "object/audioobject.h"
+#include "object/interface/valueshadersourceinterface.h"
 
 namespace MO {
 
 /** GLSL sample generator */
-class ShaderAO : public AudioObject
+class ShaderAO
+        : public AudioObject
+        , public ValueShaderSourceInterface
 {
 public:
     MO_OBJECT_CONSTRUCTOR(ShaderAO);
@@ -27,6 +30,9 @@ public:
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
+
+    // ValueShaderSourceInterface
+    virtual GL::ShaderSource valueShaderSource(uint channel) const Q_DECL_OVERRIDE;
 
 protected:
 

@@ -56,6 +56,7 @@ public:
           curSample     (0),
 #endif
           engine        (new AudioEngine()),
+          isPause       (false),
           engineChanged (false),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
@@ -86,7 +87,7 @@ public:
 
     LiveAudioEngine * parent;
     AudioEngine * engine;
-    bool engineChanged;
+    bool isPause, engineChanged;
     //Double lastBufferTime;
     Double startTime, timeOffset;
 
@@ -146,7 +147,7 @@ public:
         while (!stop_)
         {
             // calc buffers for next system-out callback
-            if (live->audioOutQueue.count() < numAhead)
+            if (live->audioOutQueue.count() < numAhead && !engine_->isPause())
             {
                 const F32 * inputFromDevice;
                 if (!live->audioInQueue.consume(inputFromDevice))
@@ -253,7 +254,7 @@ SamplePos LiveAudioEngine::pos() const
 
 Double LiveAudioEngine::second() const
 {
-    if (!isPlayback())
+    if (!isPlayback() || isPause())
         return p_->engine->second();
 
     /** @todo find best solution for gfx time between audo dsp-blocks.
@@ -388,6 +389,7 @@ bool LiveAudioEngine::isPlayback() const
     return p_->audioDevice && p_->audioDevice->isPlaying();
 }
 
+bool LiveAudioEngine::isPause() const { return p_->isPause; }
 
 bool LiveAudioEngine::initAudioDevice()
 {
@@ -436,6 +438,8 @@ void LiveAudioEngine::closeAudioDevice()
 
 bool LiveAudioEngine::start()
 {
+    p_->isPause = false;
+
     if (isPlayback())
         return true;
 
@@ -498,6 +502,12 @@ void LiveAudioEngine::stop()
 
     p_->audioDevice->stop();
 }
+
+void LiveAudioEngine::pause(bool enable)
+{
+    p_->isPause = enable;
+}
+
 
 void LiveAudioEngine::Private::audioCallback(
         const F32 * in, F32 * out, const AUDIO::AudioDevice::StreamTime &
