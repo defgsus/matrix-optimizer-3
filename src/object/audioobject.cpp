@@ -219,7 +219,14 @@ void AudioObject::processAudioBase(const RenderTime & time)
 #endif
 
     // call virtual function
-    processAudio(time);
+    try
+    {
+        processAudio(time);
+    }
+    catch (const Exception& e)
+    {
+        setErrorMessage(e.what());
+    }
 
     p_ao_->lastOutputSamplePos[time.thread()] = time.sample() + time.bufferSize() - 1;
 }

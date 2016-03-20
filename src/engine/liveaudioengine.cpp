@@ -188,6 +188,8 @@ public:
                 usleep(bufferTimeU);
         }
 
+        live->engine->sendCloseThread();
+
         MO_DEBUG("AudioOutThread::run() finished");
     }
 

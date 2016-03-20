@@ -84,4 +84,6 @@ OTHER_FILES += $$BISON_FILES \
     $$PWD/assets/shader/skybox.frag
 
 DISTFILES += \
-    $$PWD/assets/help/en/python34.html
+    $$PWD/assets/help/en/python34.html \
+    $$PWD/assets/shader/shader_ao.vert \
+    $$PWD/assets/shader/shader_ao.frag

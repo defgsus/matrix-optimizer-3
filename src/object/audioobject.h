@@ -73,6 +73,11 @@ public:
     void clientFakeAudio(const RenderTime & time);
 #endif
 
+    /** Called before the audio thread is going away.
+        Override to clear resources that might depend on the current thread.
+        Always call ancestor method in derived classes! */
+    virtual void onCloseAudioThread() { }
+
     // ------------------ modulator outputs -------------------
 
     /** Provides normal float values for the non-audio threads

@@ -37,9 +37,10 @@ public slots:
         Returns false when something went wrong. */
     bool createGl();
 
+    /** Destroys the context, or does nothing */
     void destroyGl();
 
-    void finish();
+    void swapBuffers();
 
 signals:
 

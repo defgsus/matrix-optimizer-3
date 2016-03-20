@@ -467,7 +467,7 @@ void WaveTracerShader::Private::renderQuad()
 
 void WaveTracerShader::Private::getBuffer(bool doSampleIr, bool doClear)
 {
-    context->finish();
+    context->swapBuffers();
 
     QWriteLocker lock(&bufferLock);
 

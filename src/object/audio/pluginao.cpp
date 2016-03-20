@@ -8,8 +8,6 @@
     <p>created 06.05.2015</p>
 */
 
-//#ifndef MO_DISABLE_LADSPA
-
 #include "pluginao.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"

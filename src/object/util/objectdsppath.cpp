@@ -307,6 +307,16 @@ void ObjectDspPath::calcTransformations(SamplePos pos)
     }
 }
 
+void ObjectDspPath::sendCloseThread()
+{
+    for (auto o : p_->audioObjects)
+        if (auto ao = dynamic_cast<AudioObject*>(o->object))
+            ao->onCloseAudioThread();
+    for (auto o : p_->audioOutObjects)
+        if (auto ao = dynamic_cast<AudioObject*>(o->object))
+            ao->onCloseAudioThread();
+}
+
 void ObjectDspPath::calcAudio(SamplePos pos)
 {
 #ifndef MO_DISABLE_SERVER
@@ -379,8 +389,9 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 
     // ---------- process virtual sound sources --------
 
-    // ZZZ add seconds!
+    // ZZZ add delta!
     RenderTime time(pos, config().sampleRate(), config().bufferSize(), p_->thread);
+    time.setSecond(Double(pos) / config().sampleRate());
 
 #ifndef MO_DISABLE_SPATIAL
     for (Private::ObjectBuffer * b : p_->soundsourceObjects)

@@ -43,11 +43,25 @@ private:
 };
 
 
+
+/** Takes a RefCounted object at creation and
+    releases the ref on destruction. */
+class ScopedRefCounted
+{
+    RefCounted* o_;
+    QString reason_;
+public:
+    ScopedRefCounted(RefCounted*o, const QString& reason)
+        : o_(o), reason_(reason) { }
+    ~ScopedRefCounted() { o_->releaseRef("AUTOREL " + reason_); }
+};
+
+
 /** Deleter for smart-pointer of RefCounted types */
 struct RefCountedDeleter
 {
     RefCountedDeleter(const QString& reason) : reason_(reason) { }
-    void operator()(RefCounted * r) { r->releaseRef("AUTODELETE " + reason_); }
+    void operator()(RefCounted * r) { r->releaseRef("AUTOREL " + reason_); }
     QString reason_;
 };
 

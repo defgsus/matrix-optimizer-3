@@ -130,7 +130,7 @@ void FrameBufferObject::setName(const QString &name)
     if (colorTex_[i])
         colorTex_[i]->setName(name + "_color" + QString::number(i));//_" + colorTex_->name());
     if (depthTex_)
-        depthTex_->setName(name + "_depth_");// + depthTex_->name());
+        depthTex_->setName(name + "_depth");// + depthTex_->name());
 }
 
 void FrameBufferObject::setChanged()

@@ -227,5 +227,9 @@ void AudioEngine::processForDevice(const F32 * inputs, F32 * outputs)
     p_->curSample += p_->conf.bufferSize();
 }
 
+void AudioEngine::sendCloseThread()
+{
+    p_->path.sendCloseThread();
+}
 
 } // namespace MO

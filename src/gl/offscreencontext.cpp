@@ -92,7 +92,7 @@ void OffscreenContext::destroyGl()
     p_os_surface_->destroy();
 }
 
-void OffscreenContext::finish()
+void OffscreenContext::swapBuffers()
 {
     MO_CHECK_GL( gl::glFlush() );
     MO_CHECK_GL( gl::glFinish() );

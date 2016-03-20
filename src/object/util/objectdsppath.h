@@ -48,6 +48,9 @@ public:
 
     void calcAudio(SamplePos pos);
 
+    /** Notify all objects that the current audio thread is going away */
+    void sendCloseThread();
+
     // ------------- audio io -----------------
 
     /** Audio input buffers, as requested by createPath() */

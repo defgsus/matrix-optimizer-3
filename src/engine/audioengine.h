@@ -73,6 +73,9 @@ public slots:
         @p outputs order is ch0/s0,ch1/s0,ch2/s0,ch3/s0,...ch0/s1,ch1/s1,ch2/s1,ch3/s1...*/
     void processForDevice(const F32 * inputs, F32 * outputs);
 
+    /** Call onCloseAudioThread() on all objects */
+    void sendCloseThread();
+
 private:
 
     class Private;

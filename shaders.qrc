@@ -21,6 +21,8 @@
         <file alias="neuro.frag">assets/shader/neuro.frag</file>
         <file alias="neuro.vert">assets/shader/neuro.vert</file>
         <file alias="skybox.frag">assets/shader/skybox.frag</file>
+        <file alias="shader_ao.frag">assets/shader/shader_ao.frag</file>
+        <file alias="shader_ao.vert">assets/shader/shader_ao.vert</file>
     </qresource>
     <qresource prefix="/shader/inc">
         <file alias="intersect">assets/shader/inc/intersect.glsl</file>
