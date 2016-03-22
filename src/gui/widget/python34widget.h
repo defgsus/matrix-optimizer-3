@@ -8,8 +8,6 @@
     <p>created 2/28/2016</p>
 */
 
-#ifdef MO_ENABLE_PYTHON34
-
 #ifndef MOSRC_GUI_WIDGET_PYTHON34WIDGET_H
 #define MOSRC_GUI_WIDGET_PYTHON34WIDGET_H
 
@@ -53,4 +51,3 @@ private:
 
 #endif // PYTHON34WIDGET_H
 
-#endif // MO_ENABLE_PYTHON34

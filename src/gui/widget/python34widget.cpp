@@ -9,8 +9,6 @@
 */
 
 
-#ifdef MO_ENABLE_PYTHON34
-
 #include "python34widget.h"
 #include "python/34/python.h"
 #include "tool/syntaxhighlighter.h"
@@ -65,8 +63,9 @@ void Python34Widget::Private::createObjects()
 {
     if (!syn)
         syn = new SyntaxHighlighter(widget);
+#ifdef MO_ENABLE_PYTHON34
     syn->initForPython(NULL);
-
+#endif
     widget->setSyntaxHighlighter(syn);
 }
 
@@ -93,6 +92,7 @@ bool Python34Widget::Private::compile()
 
 void Python34Widget::Private::execute()
 {
+#ifdef MO_ENABLE_PYTHON34
     PYTHON34::PythonInterpreter py;
 
     try
@@ -105,10 +105,13 @@ void Python34Widget::Private::execute()
         widget->setErrorFrom(&py);
         widget->addCompileMessage(0, M_ERROR, e.what());
     }
+#endif
 }
 
 void Python34Widget::setErrorFrom(const PYTHON34::PythonInterpreter* inter)
 {
+    Q_UNUSED(inter);
+#ifdef MO_ENABLE_PYTHON34
     QString outp = inter->errorOutput();
     if (outp.isEmpty())
         return;
@@ -129,11 +132,10 @@ void Python34Widget::setErrorFrom(const PYTHON34::PythonInterpreter* inter)
     }
 
     addCompileMessage(ln, M_ERROR, outp);
+#endif
 }
 
 } // namespace GUI
 } // namespace MO
 
-
-#endif // MO_ENABLE_PYTHON34
 
