@@ -199,7 +199,7 @@ Object::Object()
 
 Object::~Object()
 {
-    //MO_PRINT("Object(\"" << namePath() << "\")::~Object()");
+    MO_PRINT("Object(\"" << namePath() << "\")::~Object() " << (void*)this);
 
     delete pobj_;
 }
@@ -946,7 +946,7 @@ void Object::deleteObject_(Object * child, bool destroy)
     if (p_takeChild_(child))
     {
         if (destroy)
-            child->releaseRef(QString("deleteObject(%1)").arg(child->idName()));
+            child->releaseRef(QString("Object::deleteObject(%1)").arg(child->idName()));
         pobj_->childrenHaveChanged = true;
     }
 }

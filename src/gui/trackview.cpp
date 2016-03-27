@@ -1083,6 +1083,7 @@ void TrackView::onObjectDeleted_(const Object* o)
     auto seqw = widgetForSequence_(static_cast<Sequence*>(const_cast<Object*>(o)));
     if (seqw)
         deleteSequenceWidget_(seqw);
+    MO_DEBUG_GUI("TrackView::onObjectDeleted(" << (void*)o << ") finished");
 }
 
 void TrackView::onObjectsDeleted_(const QList<Object*>& list)

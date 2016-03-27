@@ -423,7 +423,7 @@ private:
     QList<ObjectGl*> p_glObjects_, p_frameDrawers_;
     QList<ShaderObject*> p_shaderObjects_;
     QList<LightSource*> p_lightSources_;
-    QList<Object*> p_deletedObjects_;
+    QList<Object*> p_deletedObjects_, p_deletedParentObjects_;
     QMap<QString, ModulatorObjectFloat*> p_uiModsFloat_;
 
     QMultiMap<Object*, Object*> p_dependMap_;

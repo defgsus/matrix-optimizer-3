@@ -13,7 +13,10 @@
 
 #include "log.h"
 
-#if (1) && defined(MO_ENABLE_DEBUG)
+#if 0
+#   define MO_DO_DEBUG_GUI
+#   define MO_DEBUG_GUI(stream_arg__) MO_PRINT(stream_arg__)
+#elif (1) && defined(MO_ENABLE_DEBUG)
 #   define MO_DO_DEBUG_GUI
 #   define MO_DEBUG_GUI(stream_arg__) MO_DEBUG_IMPL_(stream_arg__)
 #else

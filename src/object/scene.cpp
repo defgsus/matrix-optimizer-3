@@ -490,6 +490,7 @@ void Scene::deleteObject(Object *object)
         dellist.prepend(object);
         // memorize so we can free resources later
         p_deletedObjects_.append(dellist);
+        p_deletedParentObjects_.append(object);
 
         // get list of all remaining objects
         QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -535,6 +536,7 @@ void Scene::deleteObjects(const QList<Object*>& objects)
             dellist.prepend(object);
             // memorize so we can free resources later
             p_deletedObjects_.append(dellist);
+            p_deletedParentObjects_.append(object);
 
             // get list of all remaining objects
             QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -880,13 +882,28 @@ void Scene::endObjectChange()
 
 void Scene::destroyDeletedObjects_(bool releaseGl)
 {
+    // DEBUG
     //MO_PRINT("Scene::destroyDeletedObjects_(" << releaseGl <<")");
+#if 0
+    for (Object* o : p_deletedObjects_)
+        MO_PRINT("deletedObjects: " << o);
+#endif
+#if 0
+    QSet<Object*> unique;
+    for (Object* o : p_deletedObjects_)
+    {
+        if (unique.contains(o))
+            MO_WARNING("Object '" << o->idName() << "' is contained "
+                       "multiple times in Scene::p_deletedObjects_");
+        unique.insert(o);
+    }
+#endif
 
+    if (releaseGl)
     for (Object * o : p_deletedObjects_)
     {
         //MO_PRINT(":" << o->namePath());
 
-        if (releaseGl)
         if (ObjectGl * gl = dynamic_cast<ObjectGl*>(o))
         {
             for (uint i=0; i<gl->numberThreads(); ++i)
@@ -895,10 +912,11 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
         }
     }
 
-    for (Object * o : p_deletedObjects_)
+    for (Object * o : p_deletedParentObjects_)
         o->releaseRef("Scene::destroyDeletedObjects");
 
     p_deletedObjects_.clear();
+    p_deletedParentObjects_.clear();
 }
 
 

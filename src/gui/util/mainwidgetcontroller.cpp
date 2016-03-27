@@ -1222,6 +1222,8 @@ void MainWidgetController::onObjectAdded_(Object * o)
 
 void MainWidgetController::onObjectDeleted_(const Object * o)
 {
+    MO_DEBUG_GUI("MainWidgetController::onObjectDeleted_(" << (void*)o << ")");
+
     // update clipview
     clipView_->removeObject(o);
 

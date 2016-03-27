@@ -18,6 +18,7 @@
 #include "gl/texture.h"
 #include "gl/texturerenderer.h"
 #include "io/currenttime.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {
@@ -42,6 +43,8 @@ ObjectOutputView::~ObjectOutputView()
 
 void ObjectOutputView::setObject(Object * o)
 {
+    MO_DEBUG_GUI("ObjectOutputView::setObject(" << (void*)o << ")");
+
     object_ = o;
 
     updateLabels_();
