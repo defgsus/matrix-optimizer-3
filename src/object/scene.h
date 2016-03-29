@@ -94,6 +94,9 @@ public:
     /** Returns the one clip con, OR NULL */
     ClipController * clipController() const { return p_clipController_; }
 
+    /** Create space in time */
+    void insertTime(Double whereSecond, Double howMuchSeconds, bool emitSignals);
+
     // --------------- files -------------------
 
     /** Gets the needed files of ALL objects */

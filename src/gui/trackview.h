@@ -103,6 +103,10 @@ signals:
 
 public slots:
 
+    /** Opens dialog for inserting time.
+        Initial time is at @p where (in seconds). */
+    void insertTimeDialog(Double where = 0.);
+
     /** Sets the horizontal view space of the widget */
     void setViewSpace(const UTIL::ViewSpace&);
 
@@ -122,6 +126,9 @@ public slots:
 
     /** Updates the view for the given Track */
     void updateTrack(Track *);
+
+    /** Calls parent's updateLocatorsBars (if parent is Sequencer) */
+    void updateLocatorBars();
 
     /** Update from sequences */
     //void sequenceTimeChanged(MO::Sequence *);

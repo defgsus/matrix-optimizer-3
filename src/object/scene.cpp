@@ -1563,5 +1563,32 @@ void Scene::deleteLocator(const QString& id)
 }
 
 
+void Scene::insertTime(Double where, Double howMuch, bool emitSignals)
+{
+    // change sequences
+    auto seqs = findChildObjects<Sequence>(QString(), true);
+    for (Sequence* s : seqs)
+    {
+        if (s->start() >= where)
+            s->setStart(s->start() + howMuch);
+    }
+
+    // change locators
+    auto loc = p_locators_;
+    p_locators_.clear();
+    for (auto i = loc.begin(); i!=loc.end(); ++i)
+    {
+        if (i.value() >= where)
+            i.value() += howMuch;
+        setLocatorTime(i.key(), i.value());
+    }
+
+    if (emitSignals)
+    if (auto e = editor())
+    for (Sequence* s : seqs)
+        emit e->sequenceChanged(s);
+
+}
+
 
 } // namespace MO

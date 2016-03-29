@@ -199,7 +199,7 @@ Object::Object()
 
 Object::~Object()
 {
-    MO_PRINT("Object(\"" << namePath() << "\")::~Object() " << (void*)this);
+    //MO_PRINT("Object(\"" << namePath() << "\")::~Object() " << (void*)this);
 
     delete pobj_;
 }

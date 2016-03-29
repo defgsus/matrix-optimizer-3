@@ -32,6 +32,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/objectfactory.h"
 #include "model/objecttreemimedata.h"
+#include "gui/inserttimedialog.h"
 #include "io/error.h"
 #include "io/log_gui.h"
 #include "io/application.h"
@@ -548,6 +549,12 @@ void TrackView::updateTrack(Track * t)
     createSequenceWidgets_(t);
 
     updateWidgetsViewSpace_();
+}
+
+void TrackView::updateLocatorBars()
+{
+    if (auto seq = dynamic_cast<Sequencer*>(parent()))
+        seq->updateLocatorBars();
 }
 
 void TrackView::setCurrentTime_(Double t)
@@ -1346,8 +1353,16 @@ void TrackView::createEditActions_()
                 scene_->setLocatorTime(QString::number(
                                            scene_->locators().size()+1),
                                        currentTime_);
-            if (auto seq = dynamic_cast<Sequencer*>(parent()))
-                seq->updateLocatorBars();
+            updateLocatorBars();
+        });
+
+        editActions_.addSeparator(this);
+
+        a = editActions_.addAction(tr("Insert time"), this);
+        a->setStatusTip(tr("Inserts time at the given position"));
+        connect(a, &QAction::triggered, [this]()
+        {
+            insertTimeDialog(currentTime_);
         });
 
         editActions_.addSeparator(this);
@@ -1559,6 +1574,28 @@ bool TrackView::paste_(bool single_track)
 
     return false;
 }
+
+
+void TrackView::insertTimeDialog(Double where)
+{
+    if (!scene_)
+        return;
+
+    auto dia = new InsertTimeDialog(this);
+    dia->setAttribute(Qt::WA_DeleteOnClose);
+
+    dia->setScene(scene_);
+    dia->setWhere(where);
+
+    int r = dia->exec();
+    if (r == QDialog::Accepted)
+    if (dia->getHowMuch() > 0.)
+    {
+        scene_->insertTime(dia->getWhere(), dia->getHowMuch(), true);
+        updateLocatorBars();
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO
