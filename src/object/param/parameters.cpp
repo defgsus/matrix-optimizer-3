@@ -44,6 +44,15 @@ Parameters::~Parameters()
         delete p;
 }
 
+void Parameters::copyFrom(const Parameters* other)
+{
+    for (auto po : other->parameters_)
+    if (auto p = findParameter(po->idName()))
+    {
+        p->copyFrom(po);
+    }
+}
+
 
 void Parameters::serialize(IO::DataStream & io) const
 {

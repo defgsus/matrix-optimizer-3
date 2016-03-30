@@ -56,6 +56,19 @@ void ParameterFloat::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+void ParameterFloat::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterFloat*>(other);
+    if (!p)
+        return;
+    defaultValue_ = p->defaultValue_;
+    value_ = p->value_;
+    minValue_ = p->minValue_;
+    maxValue_ = p->maxValue_;
+    smallStep_ = p->smallStep_;
+}
+
+
 bool ParameterFloat::isMinLimit() const { return minValue()+10. > -infinity; }
 bool ParameterFloat::isMaxLimit() const { return maxValue()-10. < infinity; }
 

@@ -91,6 +91,8 @@ public:
 
     virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 
+    virtual SequenceFloat* splitSequence(Double localTime) Q_DECL_OVERRIDE;
+
     // ------------ getter --------------
 
     /** The sequence mode - one of the SequenceType enums */

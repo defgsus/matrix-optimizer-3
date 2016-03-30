@@ -163,6 +163,11 @@ public slots:
         they will be connected. */
     void appendTextureProcessor(Object * object, Object * newObject, int insert_index = -1);
 
+    /** Splits sequence @s at global time, creates new sequence.
+        @returns the second half of the sequence, or NULL if globalTime is
+        not within sequence time. */
+    Sequence* splitSequence(Sequence* s, Double globalTime);
+
     // ----------- properties ------------------
 
     /** Changes the objects name, emits objectNameChanged() */

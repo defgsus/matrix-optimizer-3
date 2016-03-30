@@ -995,6 +995,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
         renderEngine_->release();
 
     objectView_->setObject(0);
+    sequencer_->setNothing();
+
+    if (audioEngine_)
+        audioEngine_->stop();
 
     if (scene_)
     {

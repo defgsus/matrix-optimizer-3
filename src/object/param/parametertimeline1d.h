@@ -35,6 +35,8 @@ public:
     const QString& typeName() const { static QString s("timeline1d"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_TIMELINE1D; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     virtual Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 
     QString baseValueString(bool ) const override { return "XXX"; }

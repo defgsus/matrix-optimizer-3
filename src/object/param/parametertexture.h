@@ -84,6 +84,8 @@ public:
     const QString& typeName() const { static QString s("texture"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_TEXTURE; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     QString baseValueString(bool ) const override { return "XXX"; }
     QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
 

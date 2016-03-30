@@ -467,6 +467,23 @@ void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int
 
 
 
+Sequence* ObjectEditor::splitSequence(Sequence *s, Double globalTime)
+{
+    if (globalTime < s->start() || globalTime > s->end()
+        || s->parentObject() == 0)
+        return 0;
+
+    auto news = s->splitSequence(globalTime - s->start());
+    if (!news)
+        return 0;
+
+    emit sequenceChanged(s);
+    addObject( s->parentObject(), news,
+               s->parentObject()->childObjects().indexOf(s) + 1);
+
+    return news;
+}
+
 
 // ----------------------- params ---------------------------
 

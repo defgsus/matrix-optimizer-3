@@ -256,9 +256,12 @@ void Sequencer::wheelEvent(QWheelEvent * e)
         vScroll_->triggerAction(QScrollBar::SliderSingleStepSub);
 }
 
-void Sequencer::clearTracks()
+void Sequencer::setNothing()
 {
     trackView_->clearTracks();
+    for (auto w : locatorBars_)
+        w->deleteLater();
+    locatorBars_.clear();
 }
 
 void Sequencer::setCurrentObject(Object * o)

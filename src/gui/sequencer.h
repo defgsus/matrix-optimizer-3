@@ -56,7 +56,7 @@ public slots:
     void setSceneTime(Double);
 
     /** Remove everything from this view. */
-    void clearTracks();
+    void setNothing();
 
     /** Tell the sequencer which object is currently selected.
         This might change the track list according to filter settings. */

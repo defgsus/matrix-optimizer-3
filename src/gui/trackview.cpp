@@ -237,9 +237,15 @@ void TrackView::clearTracks_(bool keep_alltracks)
     tracks_.clear();
     trackY_.clear();
     dragStartTrack_ = dragEndTrack_ = selTrack_ = 0;
+    hoverWidget_ = 0;
+    nextFocusSequence_ = 0;
 
     for (auto s : sequenceWidgets_)
-        s->deleteLater();
+    {
+        // XXX deleteLater() does NOT work...
+        s->setParent(0);
+        delete s;
+    }
 
     sequenceWidgets_.clear();
     selectedWidgets_.clear();
@@ -730,6 +736,40 @@ void TrackView::mousePressEvent(QMouseEvent * e)
     }
 }
 
+bool TrackView::snapToAll(int* time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToAll(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
+bool TrackView::snapToLocators(int*time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToLocators(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
+bool TrackView::snapToSequences(int*time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToSequences(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
+
 bool TrackView::snapToAll(Double* time)
 {
     if (snapToLocators(time))
@@ -878,9 +918,12 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
     {
         QPoint ds(viewToScreen(dragStartPosV_));
         QRect r(selectRect_);
-        selectRect_.setLeft(std::min(ds.x(), e->pos().x()));
-        selectRect_.setRight(std::max(ds.x(), e->pos().x()));
-        selectRect_.setTop(std::min(ds.y(), e->pos().y()));
+        int x = e->pos().x();
+        clearSnap();
+        snapToAll(&x);
+        selectRect_.setLeft(  std::min(ds.x(), x));
+        selectRect_.setRight( std::max(ds.x(), x));
+        selectRect_.setTop(   std::min(ds.y(), e->pos().y()));
         selectRect_.setBottom(std::max(ds.y(), e->pos().y()));
 
         update(updateRect_(r, penSelectFrame_));
@@ -1178,8 +1221,7 @@ void TrackView::createEditActions_()
     if (hoverWidget_ && selectedWidgets_.size() < 2)
     {
         Sequence * seq = hoverWidget_->sequence();
-        // local copy of hoverWidget_
-        // ('cause it goes away in lambdas)
+        // local (value) copy of hoverWidget_ for lambdas
         SequenceWidget * widget = hoverWidget_;
 
         // title
@@ -1232,6 +1274,16 @@ void TrackView::createEditActions_()
         {
             if (deleteObject_(seq))
                 emit sequenceSelected(0);
+        });
+
+        editActions_.addSeparator(this);
+
+        // split
+        a = editActions_.addAction(tr("Split"), this);
+        a->setStatusTip(tr("Splits the sequence at the given location"));
+        connect(a, &QAction::triggered, [this, seq]()
+        {
+            editor_->splitSequence(seq, currentTime_);
         });
 
     }

@@ -51,6 +51,16 @@ void ParameterImageList::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+void ParameterImageList::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterImageList*>(other);
+    if (!p)
+        return;
+    value_ = p->value_;
+    defaultValue_ = p->defaultValue_;
+}
+
+
 void ParameterImageList::openFileDialog(QWidget * parent)
 {
     MO_ASSERT(object(), "no object for ParameterImageList::openFileDialog()");

@@ -30,6 +30,8 @@ public:
     const QString& typeName() const { static QString s("select"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_SELECT; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     virtual QString getDocType() const Q_DECL_OVERRIDE;
     virtual QString getDocValues() const Q_DECL_OVERRIDE;
 

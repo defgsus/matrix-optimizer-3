@@ -31,6 +31,8 @@ public:
     const QString& typeName() const { static QString s("int"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_INT; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 
     QString baseValueString(bool ) const override

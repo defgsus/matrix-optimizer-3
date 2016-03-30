@@ -30,6 +30,8 @@ public:
     const QString& typeName() const Q_DECL_OVERRIDE { static QString s("font"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_FONT; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     QString baseValueString(bool ) const override { return baseValue().family(); }
     QString valueString(const RenderTime& , bool ) const override
             { return baseValue().family(); }

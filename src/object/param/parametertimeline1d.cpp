@@ -72,6 +72,20 @@ void ParameterTimeline1D::deserialize(IO::DataStream &io)
     }
 }
 
+void ParameterTimeline1D::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterTimeline1D*>(other);
+    if (!p)
+        return;
+    *default_ = *p->default_;
+    *tl_ = *p->tl_;
+    minValue_ = p->minValue_;
+    maxValue_ = p->maxValue_;
+    minTime_ = p->minTime_;
+    maxTime_ = p->maxTime_;
+}
+
+
 MATH::Timeline1d * ParameterTimeline1D::timeline()
 {
     // create one?

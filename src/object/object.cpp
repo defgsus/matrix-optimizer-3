@@ -205,6 +205,19 @@ Object::~Object()
 }
 
 
+void Object::copyFrom(const Object *other)
+{
+    pobj_->parameters->copyFrom(other->pobj_->parameters);
+    pobj_->name = other->pobj_->name;
+    pobj_->visible = other->pobj_->visible;
+    pobj_->canBeDeleted = other->pobj_->canBeDeleted;
+    pobj_->p_attachedData_ = other->pobj_->p_attachedData_;
+    pobj_->numberMicrophones = other->pobj_->numberMicrophones;
+    pobj_->numberSoundSources = other->pobj_->numberSoundSources;
+    pobj_->sampleRate = other->pobj_->sampleRate;
+    pobj_->sampleRateInv = other->pobj_->sampleRateInv;
+    pobj_->currentActivityScope = other->pobj_->currentActivityScope;
+}
 
 // --------------------- io ------------------------
 

@@ -52,6 +52,16 @@ void ParameterSelect::deserialize(IO::DataStream &io)
     io.readEnum(value_, defaultValue_, valueIds_, valueList_);
 }
 
+void ParameterSelect::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterSelect*>(other);
+    if (!p)
+        return;
+    auto id = p->valueId();
+    int idx = valueIds_.contains(id);
+    if (idx >= 0)
+        setValueFromIndex(idx);
+}
 
 QString ParameterSelect::getDocType() const
 {

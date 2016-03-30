@@ -32,6 +32,11 @@ public:
     Parameters(Object * parent);
     ~Parameters();
 
+    /** Copies all settings from @p other.
+        Each parameter with the same id as in @p other is
+        assigned the value from @p other. */
+    void copyFrom(const Parameters* other);
+
     // ------------------- io --------------------
 
     /** Serializes all installed parameters */
@@ -42,6 +47,7 @@ public:
 
     // ----------------- getter ------------------
 
+    /** The object owning the set of parameters */
     Object * object() const { return object_; }
 
     /** Returns the parent object's idName() or empty string */

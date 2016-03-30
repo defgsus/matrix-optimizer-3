@@ -58,6 +58,20 @@ void ParameterInt::deserialize(IO::DataStream &io)
     value_ = v;
 }
 
+
+void ParameterInt::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterInt*>(other);
+    if (!p)
+        return;
+    defaultValue_ = p->defaultValue_;
+    value_ = p->value_;
+    minValue_ = p->minValue_;
+    maxValue_ = p->maxValue_;
+    smallStep_ = p->smallStep_;
+}
+
+
 bool ParameterInt::isMinLimit() const { return minValue() > -infinity; }
 bool ParameterInt::isMaxLimit() const { return maxValue() < infinity; }
 

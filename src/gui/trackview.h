@@ -76,11 +76,14 @@ public:
 
     Object* currentObject() const { return currentObject_; }
 
+    void clearSnap() { setSnapTime_(-1); }
     /** Snap to anything */
     bool snapToAll(Double* time);
     bool snapToLocators(Double* time);
     bool snapToSequences(Double* time);
-    void clearSnap() { setSnapTime_(-1); }
+    bool snapToAll(int* time);
+    bool snapToLocators(int* time);
+    bool snapToSequences(int* time);
 
 signals:
 

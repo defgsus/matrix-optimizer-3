@@ -123,6 +123,8 @@ SequenceFloat::~SequenceFloat()
         delete e;
 }
 
+
+
 void SequenceFloat::createParameters()
 {
     Sequence::createParameters();
@@ -1036,6 +1038,15 @@ void SequenceFloat::updateWavetable_()
         gen.setEquation(p_wtEquationText_->baseValue());
         gen.createWavetable(*wavetable_);
     }
+
+}
+
+
+SequenceFloat* SequenceFloat::splitSequence(Double localTime)
+{
+    if (localTime < 0. || localTime > length())
+        return nullptr;
+
 
 }
 

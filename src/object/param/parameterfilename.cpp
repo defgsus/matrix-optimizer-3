@@ -50,6 +50,16 @@ void ParameterFilename::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+void ParameterFilename::copyFrom(Parameter* other)
+{
+    auto p = dynamic_cast<ParameterFilename*>(other);
+    if (!p)
+        return;
+    defaultValue_ = p->defaultValue_;
+    value_ = p->value_;
+}
+
+
 QString ParameterFilename::getDocType() const
 {
     return IO::fileTypeNames.at(fileType_) + " " + QObject::tr("filename");

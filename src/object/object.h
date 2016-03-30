@@ -221,6 +221,10 @@ public:
         Always use ObjectFactory::createObject(). */
     virtual Object * cloneClass() const = 0;
 
+    /** Copies parameters and data from @p other.
+        Override to copy additional data. */
+    virtual void copyFrom(const Object* other);
+
     // ---------------- info --------------------
 
     void dumpTreeIds(std::ostream& out, const std::string &prefix = "") const;
