@@ -94,9 +94,13 @@ void PythonObject::onParameterChanged(Parameter *p)
 
 void PythonObject::Private::run()
 {
+#ifdef MO_ENABLE_PYTHON34
     PYTHON34::PythonInterpreter interp;
     interp.setObject(obj);
     interp.execute(scriptText->baseValue());
+#else
+    obj->setErrorMessage(QObject::tr("Python support is not enabled in this binary"));
+#endif
 }
 
 void PythonObject::runScript()

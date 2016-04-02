@@ -620,6 +620,7 @@ void HelpSystem::addAngelScriptInfo_(QString& doc)
 
 void HelpSystem::addPythonInfo_(QString &doc)
 {
+    Q_UNUSED(doc);
 #ifdef MO_ENABLE_PYTHON34
     if (doc.contains("!REFERENCE!"))
     {

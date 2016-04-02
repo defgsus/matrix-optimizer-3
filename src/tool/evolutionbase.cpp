@@ -136,24 +136,30 @@ void EvolutionBase::saveImage(const QString &fn, const QImage &img)
 
 // ----- factory -----
 
-std::map<QString, EvolutionBase*> EvolutionBase::p_reg_map_;
+std::map<QString, EvolutionBase*>& EvolutionBase::p_reg_map_()
+{
+    static std::map<QString, EvolutionBase*>* map = 0;
+    if (!map)
+        map = new std::map<QString, EvolutionBase*>;
+    return *map;
+}
 
 bool EvolutionBase::registerClass(EvolutionBase* evo)
 {
-    auto it = p_reg_map_.find(evo->className());
-    if (it != p_reg_map_.end())
+    auto it = p_reg_map_().find(evo->className());
+    if (it != p_reg_map_().end())
     {
         MO_WARNING("Duplicate evolution object registered '" << evo->className() << "'");
         return false;
     }
-    p_reg_map_.insert(std::make_pair(evo->className(), evo));
+    p_reg_map_().insert(std::make_pair(evo->className(), evo));
     return true;
 }
 
 EvolutionBase* EvolutionBase::createClass(const QString& cname)
 {
-    auto it = p_reg_map_.find(cname);
-    if (it == p_reg_map_.end())
+    auto it = p_reg_map_().find(cname);
+    if (it == p_reg_map_().end())
     {
         MO_WARNING("Request for unknown evolution class '" << cname << "'");
         return nullptr;
@@ -164,7 +170,7 @@ EvolutionBase* EvolutionBase::createClass(const QString& cname)
 QStringList EvolutionBase::registeredClassNames()
 {
     QStringList list;
-    for (const auto& evo : p_reg_map_)
+    for (const auto& evo : p_reg_map_())
         list << evo.first;
     return list;
 }

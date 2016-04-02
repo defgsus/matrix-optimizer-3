@@ -8,6 +8,8 @@
     <p>created 3/2/2016</p>
 */
 
+#ifdef MO_ENABLE_PYTHON34
+
 #ifndef MOSRC_TESTS_TESTPYTHON_H
 #define MOSRC_TESTS_TESTPYTHON_H
 
@@ -26,3 +28,5 @@ private:
 };
 
 #endif // TESTPYTHON_H
+
+#endif // #ifdef MO_ENABLE_PYTHON34

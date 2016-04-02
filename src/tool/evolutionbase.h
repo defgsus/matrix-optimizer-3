@@ -90,7 +90,7 @@ public:
 
 private:
     Properties* p_props_;
-    static std::map<QString, EvolutionBase*> p_reg_map_;
+    static std::map<QString, EvolutionBase*>& p_reg_map_();
 };
 
 

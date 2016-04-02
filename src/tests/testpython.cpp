@@ -8,6 +8,8 @@
     <p>created 3/2/2016</p>
 */
 
+#ifdef MO_ENABLE_PYTHON34
+
 #include <thread>
 #include <vector>
 
@@ -161,3 +163,5 @@ int TestPython::Private::testVector()
 
     return 0;
 }
+
+#endif // #ifdef MO_ENABLE_PYTHON34

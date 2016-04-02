@@ -269,10 +269,9 @@ void TextEditDialog::Private::createWidgets()
                 connect(scriptEdit, &AbstractScriptWidget::scriptTextChanged, [=]()
                 {
                     emit dialog->textChanged();
-                });
+                });              
             }
         }
-
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
 
@@ -328,11 +327,12 @@ AngelScriptWidget * TextEditDialog::getWidgetAngelScript() const
 }
 
 
+#ifdef MO_ENABLE_PYTHON34
 Python34Widget * TextEditDialog::getWidgetPython() const
 {
     return dynamic_cast<Python34Widget*>(p_->scriptEdit);
 }
-
+#endif
 
 void TextEditDialog::keyPressEvent(QKeyEvent * e)
 {

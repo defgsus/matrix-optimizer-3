@@ -54,7 +54,9 @@ public:
 
     /** Access to the angelscript widget (if text type was TT_ANGELSCRIPT in constructor) */
     AngelScriptWidget * getWidgetAngelScript() const;
+#ifdef MO_ENABLE_PYTHON34
     Python34Widget * getWidgetPython() const;
+#endif
 signals:
 
     /** The text was changed by the user.
