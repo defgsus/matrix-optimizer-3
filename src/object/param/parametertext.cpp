@@ -72,6 +72,7 @@ void ParameterText::deserialize(IO::DataStream &io)
 
 void ParameterText::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterText*>(other);
     if (!p)
         return;

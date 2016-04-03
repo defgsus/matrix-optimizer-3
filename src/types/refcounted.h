@@ -21,20 +21,33 @@ class RefCounted
 {
 public:
 
+    /** Initialize with a name. @p className is only used for debugging. */
     RefCounted(const QString& className);
 
-    const  QString refClassName() const;
-           QString refInstanceName() const;
-    static QString refInstanceName(const RefCounted*);
-    static QString refClassName(const RefCounted*);
-
+    /** Adds a reference */
     void addRef(const QString& reason);
 
+    /** Releases a reference */
     void releaseRef(const QString& reason);
 
+    /** Number of references on this object */
     int refCount() const;
 
+    // ------- debugging --------
+
+    /** Returns the name of this refcounted object */
+    const  QString refClassName() const;
+    static QString refClassName(const RefCounted*);
+    /** Returns the name and pointer of this refcounted object as string */
+           QString refInstanceName() const;
+    static QString refInstanceName(const RefCounted*);
+
+    /** Overwrites the name given in the RefCounted constructor */
+    void setRefClassName(const QString&);
+
 protected:
+    /** Non-public destructor.
+        Make sure that destructors in derived classes are also protected! */
     virtual ~RefCounted();
 
 private:

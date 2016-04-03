@@ -608,6 +608,8 @@ void TrackView::mousePressEvent(QMouseEvent * e)
 {
     bool multisel = (e->modifiers() & modifierMultiSelect_);
 
+    setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
+
     // --- clicked on sequence ---
 
     // !! a popup eats the hoverWidget_
@@ -620,7 +622,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         if (e->button() == Qt::LeftButton || e->button() == Qt::RightButton)
         {
             // change select state
-
             if (multisel)
                 selectSequenceWidget_(hoverWidget_, FLIP_);
             else
@@ -706,7 +707,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         clearSelection_();
 
     selTrack_ = trackForY_(e->y());
-    setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
 
     if (selTrack_)
     {

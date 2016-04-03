@@ -32,7 +32,7 @@ BulkRenameDialog::BulkRenameDialog(QWidget *parent) :
     QDialog(parent)
 {
     setObjectName("_BulkRenameDialog");
-    setWindowTitle(tr("Batch scene converter"));
+    setWindowTitle(tr("Bulk file renamer"));
     setMinimumSize(640,480);
     settings()->restoreGeometry(this);
 
@@ -98,7 +98,7 @@ void BulkRenameDialog::createWidgets_()
                     lh2->addWidget(label);
 
                     subStr_ = new QLineEdit(this);
-                    subStr_->setText("%name%_%n%%.ext%");
+                    subStr_->setText("%name_%n.%ext");
                     lh2->addWidget(subStr_);
                     connect(subStr_, SIGNAL(textChanged(QString)), this, SLOT(optionsChanged_()));
 
@@ -214,11 +214,12 @@ QString BulkRenameDialog::rename_(const QString &fn, int index) const
     const QString ext = QFileInfo(fn).completeSuffix();
 
     QString s = subStr_->text();
-    s = s.replace("%name%", f.baseName());
-    s = s.replace("%.ext%", "." + ext);
-    s = s.replace("%ext%", ext);
-    s = s.replace("%n%",
-            QString("%1").arg(index + seqStart_->value(), digitCount_->value(), 10, QChar('0')));
+    s = s.replace("%name", f.baseName());
+    //s = s.replace("%.ext", "." + ext);
+    s = s.replace("%ext", ext);
+    s = s.replace("%n",
+            QString("%1").arg(index + seqStart_->value(),
+                              digitCount_->value(), 10, QChar('0')));
 
     return s;
 }

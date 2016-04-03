@@ -53,6 +53,7 @@ void ParameterImageList::deserialize(IO::DataStream &io)
 
 void ParameterImageList::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterImageList*>(other);
     if (!p)
         return;

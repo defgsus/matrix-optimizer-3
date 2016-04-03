@@ -58,6 +58,7 @@ void ParameterFloat::deserialize(IO::DataStream &io)
 
 void ParameterFloat::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterFloat*>(other);
     if (!p)
         return;

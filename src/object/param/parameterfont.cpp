@@ -48,6 +48,7 @@ void ParameterFont::deserialize(IO::DataStream &io)
 
 void ParameterFont::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterFont*>(other);
     if (!p)
         return;

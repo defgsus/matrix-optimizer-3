@@ -54,13 +54,12 @@ void ParameterSelect::deserialize(IO::DataStream &io)
 
 void ParameterSelect::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterSelect*>(other);
     if (!p)
         return;
-    auto id = p->valueId();
-    int idx = valueIds_.contains(id);
-    if (idx >= 0)
-        setValueFromIndex(idx);
+    setDefaultValue(p->defaultValue());
+    setValue(p->baseValue());
 }
 
 QString ParameterSelect::getDocType() const

@@ -52,6 +52,7 @@ void ParameterFilename::deserialize(IO::DataStream &io)
 
 void ParameterFilename::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterFilename*>(other);
     if (!p)
         return;

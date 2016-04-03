@@ -204,6 +204,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
 
 void ParameterTexture::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterTexture*>(other);
     if (!p)
         return;

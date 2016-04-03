@@ -86,6 +86,7 @@ public:
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
+    virtual void copyFrom(const Object *other) Q_DECL_OVERRIDE;
 
     virtual void setNumberThreads(uint num) Q_DECL_OVERRIDE;
 
@@ -226,7 +227,7 @@ private:
     AUDIO::SoundFile * soundFile_;
 
     class SeqEquation;
-    std::vector<SeqEquation *> equation_;
+    std::vector<SeqEquation*> equation_;
 
     ParameterFilename * p_soundFile_;
 

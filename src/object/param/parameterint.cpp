@@ -61,6 +61,7 @@ void ParameterInt::deserialize(IO::DataStream &io)
 
 void ParameterInt::copyFrom(Parameter* other)
 {
+    Parameter::copyFrom(other);
     auto p = dynamic_cast<ParameterInt*>(other);
     if (!p)
         return;

@@ -407,7 +407,8 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         src.replace("//%mo_config_defines%", decl);
 
         // user code
-        src.replace("//%mo_user_function%", paramGlsl->baseValue(), true);
+        src.replace("//%mo_user_function%",
+                    "#line 1\n" + paramGlsl->baseValue(), true);
 
         paramGlsl->clearIncludeObjects();
 

@@ -1153,7 +1153,7 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
     QCoreApplication::postEvent(window_, new QKeyEvent(*e));
 
 #else
-    if (e->key() == Qt::Key_F7 && !isPlayback())
+    if (e->key() == Qt::Key_F7 && !isPlaying())
     {
         e->accept();
         start();
@@ -1178,7 +1178,7 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
     }
 
-    if (e->modifiers() & Qt::SHIFT
+    if (((e->modifiers() & Qt::SHIFT) || (e->modifiers() & Qt::CTRL))
             && (e->key() == Qt::Key_Left || e->key() == Qt::Key_Right))
     {
         Double ti = timeStep1_;
@@ -1838,6 +1838,12 @@ bool MainWidgetController::isPlayback() const
     return audioEngine_ && audioEngine_->isPlayback();
 }
 
+bool MainWidgetController::isPlaying() const
+{
+    return audioEngine_ && audioEngine_->isPlayback()
+                        && !audioEngine_->isPause();
+}
+
 void MainWidgetController::quit()
 {
     window_->close();
@@ -2012,7 +2018,9 @@ void MainWidgetController::newScene()
 
     // create a new scene with a group inside
     auto s = ObjectFactory::createSceneObject();
-    s->addObject( s, ObjectFactory::createObject("Group") );
+    auto group = ObjectFactory::createObject("Group");
+    s->addObject(s, group);
+    group->releaseRef("finished add-to-scene");
 
     setScene_( s );
     currentSceneFilename_.clear();
@@ -2348,25 +2356,6 @@ void MainWidgetController::renderToDisk()
 {
     auto diag = new RenderDialog(currentSceneFilename_, window_);
     diag->exec();
-    /*
-    auto ren = new Renderer(this);
-
-    ren->setScene(scene_);
-    ren->setOutputPath("/home/defgsus/prog/qt_project/mo/matrixoptimizer/render");
-
-    if (!ren->prepareRendering())
-    {
-        QMessageBox::critical(window_, tr("Render to disk"),
-                              tr("Sorry, but rendering to disk failed"));
-        ren->deleteLater();
-        return;
-    }
-
-    connect(ren, SIGNAL(finished()), ren, SLOT(deleteLater()));
-
-    MO_DEBUG_RENDER("starting renderer");
-    ren->start();
-    */
 }
 
 void MainWidgetController::exportPovray_()
