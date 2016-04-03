@@ -1489,7 +1489,10 @@ void ObjectGraphScene::Private::createNewObjectMenu(ActionList &actions, Object 
                 QString id = act->data().toString();
                 Object * onew = ObjectFactory::createObject(id);
                 if (onew)
+                {
                     editor->appendTextureProcessor(obj, onew);
+                    onew->releaseRef("finish add");
+                }
             });
         }
     }
@@ -2028,7 +2031,8 @@ void ObjectGraphScene::addObject(
     newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
     p_->nextSelectedObject = newObject;
-    p_->root->editor()->addObject(parent, newObject, insert_index);
+    if (p_->root->editor()->addObject(parent, newObject, insert_index))
+        newObject->releaseRef("finish add");
 }
 
 void ObjectGraphScene::addObjects(
@@ -2149,9 +2153,10 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
         return;
     }
 
-    // NOTE: dynamic_cast or dynamic_cast won't work between
+    // NOTE: dynamic_cast or won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast works alright after we checked the MimeType.
+    // a different instance. But static_cast works alright after a check
+    // of the MimeType.
     // It's important to not rely on class members of ObjectTreeMimeData
     // but to manage everything per QMimeData::data()
     auto objdata = static_cast<const ObjectTreeMimeData*>(data);

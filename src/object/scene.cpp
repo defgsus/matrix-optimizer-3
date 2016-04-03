@@ -428,7 +428,9 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     render_();
 }
 
-void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int insert_index)
+void Scene::addObjects(Object *parent,
+                       const QList<Object*>& newChilds,
+                       int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObjects(" << parent << ", " << newChilds.size() << ", " << insert_index << ")");
 
