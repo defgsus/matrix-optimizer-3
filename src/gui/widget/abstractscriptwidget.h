@@ -18,6 +18,7 @@
 class QSyntaxHighlighter;
 
 namespace MO {
+class SyntaxHighlighter;
 namespace GUI {
 
 /** Abstract source code editor.
@@ -48,7 +49,8 @@ public:
     /** Returns a runtime-unique id for each widget */
     int instanceId() const;
 
-    const QString scriptText() const;
+    QString scriptText() const;
+    QString wordUnderCursor() const;
 
     /** Returns true when the current text has been successfully compiled. */
     bool isScriptValid() const;
@@ -77,6 +79,16 @@ public slots:
     bool loadScript(const QString& fn);
     bool saveScript(const QString& fn);
 
+    /** Opens the text-find toolbar.
+        If @p text is not empty, it will be set as search word. */
+    void openFinder(const QString& text = QString());
+
+    /** Mark all occurences of @p text.
+        Pass empty @p text to unmark. */
+    void markText(const QString& text);
+    void findNext(const QString& text);
+    void findPrevious(const QString& text);
+
     /** Checks syntax when script was changed
         and always sends a scriptTextChanged() signal */
     void updateScript();
@@ -90,7 +102,7 @@ public slots:
         Call this even if you have installed it already instead of
         QSyntaxHighlighter::rehighlight() because this function
         avoids the internal textChanged() signal. */
-    void setSyntaxHighlighter(QSyntaxHighlighter * );
+    void setSyntaxHighlighter(SyntaxHighlighter* );
 
     /** If updates are optional, a checkbox and/or an update button is visible.
         Updates, e.g. scriptTextChanged() signal is then only emitted on user's request.

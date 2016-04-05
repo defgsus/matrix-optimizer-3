@@ -142,4 +142,5 @@ void Sequence::updateParameterVisibility()
     p_loopLength_->setVisible(loop);
 }
 
+
 } // namespace MO

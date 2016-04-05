@@ -244,7 +244,9 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
     return true;
 }
 
-bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, int insert_index)
+bool ObjectEditor::addObjects(Object *parent,
+                              const QList<Object*> newObjects,
+                              int insert_index, bool releaseRef)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects("
                         << parent << ", [" << newObjects.size() << "], " << insert_index << ")");
@@ -293,6 +295,9 @@ bool ObjectEditor::addObjects(Object *parent, const QList<Object*> newObjects, i
     if (!actualObjects.isEmpty())
     {
         scene_->addObjects(parent, actualObjects, insert_index);
+        if (releaseRef)
+            for (auto o : actualObjects)
+                o->releaseRef("finish add");
         emit objectsAdded(actualObjects);
     }
 
@@ -466,6 +471,23 @@ void ObjectEditor::appendTextureProcessor(Object *object, Object *newObject, int
 }
 
 
+
+Sequence* ObjectEditor::splitSequence(Sequence *s, Double globalTime)
+{
+    if (globalTime < s->start() || globalTime > s->end()
+        || s->parentObject() == 0)
+        return 0;
+
+    auto news = s->splitSequence(globalTime - s->start());
+    if (!news)
+        return 0;
+
+    emit sequenceChanged(s);
+    addObject( s->parentObject(), news,
+               s->parentObject()->childObjects().indexOf(s) + 1);
+
+    return news;
+}
 
 
 // ----------------------- params ---------------------------
@@ -821,6 +843,7 @@ TrackFloat * ObjectEditor::createFloatTrack(Parameter * param)
 
     // add to parent
     addObject(obj, track, -1);
+    track->releaseRef("finish add");
 
     // modulate parameter
     addModulator(param, track->idName(), "");
@@ -837,6 +860,7 @@ TrackFloat * ObjectEditor::wrapIntoTrack(SequenceFloat *seq)
 
     TrackFloat * track = ObjectFactory::createTrackFloat(seq->name());
     addObject(parent, track);
+    track->releaseRef("finish add");
 
     const QPoint pos = seq->getAttachedData(Object::DT_GRAPH_POS).toPoint();
     seq->setAttachedData(QPoint(1,1), Object::DT_GRAPH_POS);
@@ -884,6 +908,7 @@ Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip
 
     // add to clip
     addObject(parent, obj, -1);
+    obj->releaseRef("finish add");
 
     return obj;
 }
@@ -913,6 +938,7 @@ SequenceFloat * ObjectEditor::createFloatSequenceFor(MO::Parameter * param)
     auto seq = ObjectFactory::createSequenceFloat(modulatorName(param));
 
     addObject(parent, (Object*)seq, -1);
+    seq->releaseRef("finish add");
 
     return seq;
 }

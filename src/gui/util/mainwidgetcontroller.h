@@ -68,7 +68,10 @@ public:
     // --------------- getter ------------------
 
     bool isOkayToChangeScene();
+    /** True when audio engine is running, not necessarily playing */
     bool isPlayback() const;
+    /** True when audio engine is running AND playing */
+    bool isPlaying() const;
 
     Scene * scene() const { return scene_; }
     SceneSettings * sceneSettings() const { return sceneSettings_; }

@@ -32,6 +32,7 @@
 #include "object/util/objecteditor.h"
 #include "object/util/objectfactory.h"
 #include "model/objecttreemimedata.h"
+#include "gui/inserttimedialog.h"
 #include "io/error.h"
 #include "io/log_gui.h"
 #include "io/application.h"
@@ -236,9 +237,15 @@ void TrackView::clearTracks_(bool keep_alltracks)
     tracks_.clear();
     trackY_.clear();
     dragStartTrack_ = dragEndTrack_ = selTrack_ = 0;
+    hoverWidget_ = 0;
+    nextFocusSequence_ = 0;
 
     for (auto s : sequenceWidgets_)
-        s->deleteLater();
+    {
+        // XXX deleteLater() does NOT work...
+        s->setParent(0);
+        delete s;
+    }
 
     sequenceWidgets_.clear();
     selectedWidgets_.clear();
@@ -550,6 +557,12 @@ void TrackView::updateTrack(Track * t)
     updateWidgetsViewSpace_();
 }
 
+void TrackView::updateLocatorBars()
+{
+    if (auto seq = dynamic_cast<Sequencer*>(parent()))
+        seq->updateLocatorBars();
+}
+
 void TrackView::setCurrentTime_(Double t)
 {
     currentTime_ = t;
@@ -595,6 +608,8 @@ void TrackView::mousePressEvent(QMouseEvent * e)
 {
     bool multisel = (e->modifiers() & modifierMultiSelect_);
 
+    setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
+
     // --- clicked on sequence ---
 
     // !! a popup eats the hoverWidget_
@@ -607,7 +622,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         if (e->button() == Qt::LeftButton || e->button() == Qt::RightButton)
         {
             // change select state
-
             if (multisel)
                 selectSequenceWidget_(hoverWidget_, FLIP_);
             else
@@ -693,7 +707,6 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         clearSelection_();
 
     selTrack_ = trackForY_(e->y());
-    setCurrentTime_( space_.mapXTo((Double)e->x() / width()) );
 
     if (selTrack_)
     {
@@ -722,6 +735,40 @@ void TrackView::mousePressEvent(QMouseEvent * e)
         framedWidgets_.clear();
     }
 }
+
+bool TrackView::snapToAll(int* time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToAll(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
+bool TrackView::snapToLocators(int*time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToLocators(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
+bool TrackView::snapToSequences(int*time)
+{
+    Double t = space_.mapXTo(Double(*time)/width());
+    if (snapToSequences(&t))
+    {
+        *time = space_.mapXFrom(t) * width();
+        return true;
+    }
+    return false;
+}
+
 
 bool TrackView::snapToAll(Double* time)
 {
@@ -871,9 +918,12 @@ void TrackView::mouseMoveEvent(QMouseEvent * e)
     {
         QPoint ds(viewToScreen(dragStartPosV_));
         QRect r(selectRect_);
-        selectRect_.setLeft(std::min(ds.x(), e->pos().x()));
-        selectRect_.setRight(std::max(ds.x(), e->pos().x()));
-        selectRect_.setTop(std::min(ds.y(), e->pos().y()));
+        int x = e->pos().x();
+        clearSnap();
+        snapToAll(&x);
+        selectRect_.setLeft(  std::min(ds.x(), x));
+        selectRect_.setRight( std::max(ds.x(), x));
+        selectRect_.setTop(   std::min(ds.y(), e->pos().y()));
         selectRect_.setBottom(std::max(ds.y(), e->pos().y()));
 
         update(updateRect_(r, penSelectFrame_));
@@ -1083,6 +1133,7 @@ void TrackView::onObjectDeleted_(const Object* o)
     auto seqw = widgetForSequence_(static_cast<Sequence*>(const_cast<Object*>(o)));
     if (seqw)
         deleteSequenceWidget_(seqw);
+    MO_DEBUG_GUI("TrackView::onObjectDeleted(" << (void*)o << ") finished");
 }
 
 void TrackView::onObjectsDeleted_(const QList<Object*>& list)
@@ -1170,8 +1221,7 @@ void TrackView::createEditActions_()
     if (hoverWidget_ && selectedWidgets_.size() < 2)
     {
         Sequence * seq = hoverWidget_->sequence();
-        // local copy of hoverWidget_
-        // ('cause it goes away in lambdas)
+        // local (value) copy of hoverWidget_ for lambdas
         SequenceWidget * widget = hoverWidget_;
 
         // title
@@ -1224,6 +1274,16 @@ void TrackView::createEditActions_()
         {
             if (deleteObject_(seq))
                 emit sequenceSelected(0);
+        });
+
+        editActions_.addSeparator(this);
+
+        // split
+        a = editActions_.addAction(tr("Split"), this);
+        a->setStatusTip(tr("Splits the sequence at the given location"));
+        connect(a, &QAction::triggered, [this, seq]()
+        {
+            editor_->splitSequence(seq, currentTime_);
         });
 
     }
@@ -1345,8 +1405,16 @@ void TrackView::createEditActions_()
                 scene_->setLocatorTime(QString::number(
                                            scene_->locators().size()+1),
                                        currentTime_);
-            if (auto seq = dynamic_cast<Sequencer*>(parent()))
-                seq->updateLocatorBars();
+            updateLocatorBars();
+        });
+
+        editActions_.addSeparator(this);
+
+        a = editActions_.addAction(tr("Insert time"), this);
+        a->setStatusTip(tr("Inserts time at the given position"));
+        connect(a, &QAction::triggered, [this]()
+        {
+            insertTimeDialog(currentTime_);
         });
 
         editActions_.addSeparator(this);
@@ -1558,6 +1626,28 @@ bool TrackView::paste_(bool single_track)
 
     return false;
 }
+
+
+void TrackView::insertTimeDialog(Double where)
+{
+    if (!scene_)
+        return;
+
+    auto dia = new InsertTimeDialog(this);
+    dia->setAttribute(Qt::WA_DeleteOnClose);
+
+    dia->setScene(scene_);
+    dia->setWhere(where);
+
+    int r = dia->exec();
+    if (r == QDialog::Accepted)
+    if (dia->getHowMuch() > 0.)
+    {
+        scene_->insertTime(dia->getWhere(), dia->getHowMuch(), true);
+        updateLocatorBars();
+    }
+}
+
 
 } // namespace GUI
 } // namespace MO

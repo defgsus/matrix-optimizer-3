@@ -32,6 +32,8 @@ public:
     const QString& typeName() const { static QString s("text"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_TEXT; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
 
     QString baseValueString(bool inShort) const override

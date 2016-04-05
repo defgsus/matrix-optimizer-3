@@ -76,11 +76,14 @@ public:
 
     Object* currentObject() const { return currentObject_; }
 
+    void clearSnap() { setSnapTime_(-1); }
     /** Snap to anything */
     bool snapToAll(Double* time);
     bool snapToLocators(Double* time);
     bool snapToSequences(Double* time);
-    void clearSnap() { setSnapTime_(-1); }
+    bool snapToAll(int* time);
+    bool snapToLocators(int* time);
+    bool snapToSequences(int* time);
 
 signals:
 
@@ -103,6 +106,10 @@ signals:
 
 public slots:
 
+    /** Opens dialog for inserting time.
+        Initial time is at @p where (in seconds). */
+    void insertTimeDialog(Double where = 0.);
+
     /** Sets the horizontal view space of the widget */
     void setViewSpace(const UTIL::ViewSpace&);
 
@@ -122,6 +129,9 @@ public slots:
 
     /** Updates the view for the given Track */
     void updateTrack(Track *);
+
+    /** Calls parent's updateLocatorsBars (if parent is Sequencer) */
+    void updateLocatorBars();
 
     /** Update from sequences */
     //void sequenceTimeChanged(MO::Sequence *);

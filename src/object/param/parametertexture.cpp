@@ -202,6 +202,25 @@ void ParameterTexture::deserialize(IO::DataStream &io)
     p_->needChange = true;
 }
 
+void ParameterTexture::copyFrom(Parameter* other)
+{
+    Parameter::copyFrom(other);
+    auto p = dynamic_cast<ParameterTexture*>(other);
+    if (!p)
+        return;
+
+    if (p_->paramFilename && p->p_->paramFilename)
+        p_->paramFilename->copyFrom(p->p_->paramFilename);
+
+    p_->inputType = p->p_->inputType;
+    p_->defaultInputType = p->p_->defaultInputType;
+    p_->wrapModeX = p->p_->wrapModeX;
+    p_->wrapModeY = p->p_->wrapModeY;
+    p_->magMode = p->p_->magMode;
+    p_->minMode = p->p_->minMode;
+    p_->mipmaps = p->p_->mipmaps;
+    p_->needChange = true;
+}
 
 
 int ParameterTexture::getModulatorTypes() const

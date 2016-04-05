@@ -995,6 +995,10 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
         renderEngine_->release();
 
     objectView_->setObject(0);
+    sequencer_->setNothing();
+
+    if (audioEngine_)
+        audioEngine_->stop();
 
     if (scene_)
     {
@@ -1149,7 +1153,7 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
     QCoreApplication::postEvent(window_, new QKeyEvent(*e));
 
 #else
-    if (e->key() == Qt::Key_F7 && !isPlayback())
+    if (e->key() == Qt::Key_F7 && !isPlaying())
     {
         e->accept();
         start();
@@ -1174,7 +1178,7 @@ void MainWidgetController::onWindowKeyPressed_(QKeyEvent * e)
         scene_->setFreeCameraIndex(e->key() - Qt::Key_0 - 1);
     }
 
-    if (e->modifiers() & Qt::SHIFT
+    if (((e->modifiers() & Qt::SHIFT) || (e->modifiers() & Qt::CTRL))
             && (e->key() == Qt::Key_Left || e->key() == Qt::Key_Right))
     {
         Double ti = timeStep1_;
@@ -1222,6 +1226,8 @@ void MainWidgetController::onObjectAdded_(Object * o)
 
 void MainWidgetController::onObjectDeleted_(const Object * o)
 {
+    MO_DEBUG_GUI("MainWidgetController::onObjectDeleted_(" << (void*)o << ")");
+
     // update clipview
     clipView_->removeObject(o);
 
@@ -1832,6 +1838,12 @@ bool MainWidgetController::isPlayback() const
     return audioEngine_ && audioEngine_->isPlayback();
 }
 
+bool MainWidgetController::isPlaying() const
+{
+    return audioEngine_ && audioEngine_->isPlayback()
+                        && !audioEngine_->isPause();
+}
+
 void MainWidgetController::quit()
 {
     window_->close();
@@ -2007,8 +2019,8 @@ void MainWidgetController::newScene()
     // create a new scene with a group inside
     auto s = ObjectFactory::createSceneObject();
     auto group = ObjectFactory::createObject("Group");
-    s->addObject( s, group );
-    group->releaseRef("added to scene");
+    s->addObject(s, group);
+    group->releaseRef("finished add-to-scene");
 
     setScene_( s );
     currentSceneFilename_.clear();
@@ -2342,27 +2354,46 @@ void MainWidgetController::loadInterfacePresets()
 
 void MainWidgetController::renderToDisk()
 {
-    auto diag = new RenderDialog(currentSceneFilename_, window_);
-    diag->exec();
-    /*
-    auto ren = new Renderer(this);
+    bool isTemp = false;
+    QString fn = currentSceneFilename_;
 
-    ren->setScene(scene_);
-    ren->setOutputPath("/home/defgsus/prog/qt_project/mo/matrixoptimizer/render");
-
-    if (!ren->prepareRendering())
+    if (sceneNotSaved_)
     {
-        QMessageBox::critical(window_, tr("Render to disk"),
-                              tr("Sorry, but rendering to disk failed"));
-        ren->deleteLater();
-        return;
+        fn = IO::Files::getTempFilename(".mo3");
+        if (fn.isEmpty())
+        {
+            QMessageBox::critical(window_, tr("render to disk"),
+                tr("Could not create a temporary file.\n"
+                   "Please save the scene and try again."));
+            return;
+        }
+        isTemp = true;
+
+        try
+        {
+#ifndef MO_DISABLE_FRONT
+            // always store default preset
+            frontScene_->storePreset("default");
+            scene_->setFrontScene(frontScene_);
+#endif
+            // actually save the scene
+            ObjectFactory::saveScene(fn, scene_);
+        }
+        catch (const Exception & e)
+        {
+            QMessageBox::critical(window_, tr("render to disk"),
+                tr("Could not save a temporary scene file.\n%1\n"
+                   "Please save the scene and try again.").arg(e.what()));
+            QFile::remove(fn);
+            return;
+        }
+
     }
+    auto diag = new RenderDialog(fn, window_);
+    diag->exec();
 
-    connect(ren, SIGNAL(finished()), ren, SLOT(deleteLater()));
-
-    MO_DEBUG_RENDER("starting renderer");
-    ren->start();
-    */
+    if (isTemp)
+        QFile::remove(fn);
 }
 
 void MainWidgetController::exportPovray_()

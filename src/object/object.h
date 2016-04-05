@@ -221,6 +221,10 @@ public:
         Always use ObjectFactory::createObject(). */
     virtual Object * cloneClass() const = 0;
 
+    /** Copies parameters and data from @p other.
+        Override to copy additional data. */
+    virtual void copyFrom(const Object* other);
+
     // ---------------- info --------------------
 
     void dumpTreeIds(std::ostream& out, const std::string &prefix = "") const;
@@ -391,12 +395,10 @@ public:
 
     /** Returns the root object of this hierarchy, which may
         be the object itself. */
-    const Object * rootObject() const;
-          Object * rootObject();
+    Object * rootObject() const;
 
     /** Returns the Scene object (also for the scene itself), or NULL */
-    const Scene * sceneObject() const;
-          Scene * sceneObject();
+    Scene * sceneObject() const;
 
     /** Returns the editor attached to the tree, or NULL */
     ObjectEditor * editor() const;
@@ -639,6 +641,12 @@ public:
         when it gets added to the scene. */
     virtual QList<Object*> getFutureModulatingObjectsList(
             const Scene * scene, bool recursive) const;
+
+    /** Returns the source for the include url, or an empty string.
+        If @p object is non NULL the pointed-to pointer will be set to
+        the found object pointer. */
+    QString getGlslInclude(const QString& url, bool include_system_defaults,
+                           Object** object = 0) const;
 
     // ------------ modulator outputs ----------------
 

@@ -119,6 +119,12 @@ void Parameter::deserialize(IO::DataStream &io)
         userName_.clear();
 }
 
+void Parameter::copyFrom(Parameter* other)
+{
+    userName_ = other->userName();
+    isVisibleGraph_ = other->isVisibleGraph_;
+}
+
 QString Parameter::infoName() const
 {
     QString s = userName_.isEmpty() ? name_ : userName_;

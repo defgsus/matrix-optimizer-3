@@ -71,8 +71,8 @@ SequenceWidget::SequenceWidget(Track * track, Sequence * seq, QWidget *parent) :
 
 SequenceWidget::~SequenceWidget()
 {
-    if (curveData_)
-        delete curveData_;
+    //MO_PRINT("SequenceWidget::~SequenceWidget() " << this);
+    delete curveData_;
 }
 
 void SequenceWidget::setSelected(bool enable)

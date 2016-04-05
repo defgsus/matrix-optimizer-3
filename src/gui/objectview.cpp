@@ -29,6 +29,7 @@
 #include "gl/texture.h"
 #include "io/currenttime.h"
 #include "io/log.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {
@@ -93,6 +94,8 @@ ObjectView::~ObjectView()
 
 void ObjectView::setObject(Object * object)
 {
+    MO_DEBUG_GUI("ObjectView::setObject(" << (void*)object << ")");
+
     object_ = object;
 
     if (object_)
@@ -115,6 +118,8 @@ void ObjectView::setObject(Object * object)
     if (paramView_->object() != object_)
         paramView_->setObject(object_);
     list_->setParentObject(object_);
+
+    MO_DEBUG_GUI("ObjectView::setObject(" << (void*)object << ") finished");
 }
 
 void ObjectView::selectObject(Object * o)

@@ -44,6 +44,13 @@ public:
     /** The clip, this sequence is on, or NULL */
     Clip * parentClip() const;
 
+    // --------------- edit --------------------
+
+    /** Splits the sequence at the given time.
+        This sequence is shortened and the secand part is created as new Sequence.
+        @returns The new created sequence or NULL if @p localTime is out of range. */
+    virtual Sequence* splitSequence(Double localTime) = 0;
+
     // -------------- getter -------------------
 
     const QColor& color() const { return color_; }

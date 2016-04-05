@@ -18,7 +18,7 @@
 
 namespace MO {
 
-/** Could be useful, aber kein bock grad... */
+/** Currently only serves as input */
 class ParameterTransformation : public Parameter
 {
 public:
@@ -30,6 +30,8 @@ public:
 
     const QString& typeName() const { static QString s("transformation"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_TRANSFORMATION; }
+
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
 
     //virtual QString getDocType() const Q_DECL_OVERRIDE;
 

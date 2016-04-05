@@ -178,6 +178,21 @@ int RefCounted::refCount() const
 }
 
 
+void RefCounted::setRefClassName(const QString& n)
+{
+    Q_UNUSED(n);
+#ifdef MO_ENABLE_REF_STATS
+    QMutexLocker lock(&refMapMutex_);
+
+    auto i = refMap_().find(this);
+    if (i == refMap_().end())
+    {
+        MO_WARNING("REF setRefClassName on unknown instance");
+        return;
+    }
+    i.value().className = n;
+#endif
+}
 
 const  QString RefCounted::refClassName() const
 {
@@ -208,7 +223,6 @@ QString RefCounted::refClassName(const RefCounted* ref)
     if (i != refMap_().end())
         return i.value().className;
 #endif
-
     return "RefCounted";
 }
 

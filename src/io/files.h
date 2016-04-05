@@ -70,6 +70,11 @@ public:
 
     static void getDirectories(const QString& basePath, QStringList& directoryList,
                                bool recursive);
+
+    /** Returns a unique temporary filename.
+        Returns empty string on error.
+        @note The temporary file will be created automatically! */
+    static QString getTempFilename(const QString& ext = ".tmp");
 };
 
 

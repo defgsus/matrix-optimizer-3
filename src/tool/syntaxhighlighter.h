@@ -58,6 +58,10 @@ public slots:
     void initForPython(const PYTHON34::PythonInterpreter*);
 #endif
 
+    /** Sets text to highlight (e.g. for text-finder) */
+    void setMarkText(const QString& text);
+    void setMarkText(const QStringList& texts);
+
 protected:
 
     void highlightBlock(const QString &text);
@@ -70,9 +74,11 @@ private:
         QTextCharFormat format;
     };
 
-    QVector<HighlightingRule> rules_;
+    QVector<HighlightingRule>
+        rules_, markRules_;
 
-    QTextCharFormat commentFormat_;
+    QTextCharFormat commentFormat_,
+                    markFormat_;
 
     QRegExp commentStartExpression_;
     QRegExp commentEndExpression_;

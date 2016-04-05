@@ -19,6 +19,7 @@
 #include "object/util/objecteditor.h"
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
+#include "io/log_gui.h"
 
 namespace MO {
 namespace GUI {
@@ -47,6 +48,8 @@ ObjectListWidget::ObjectListWidget(QWidget *parent)
 
 void ObjectListWidget::setParentObject(Object *parent)
 {
+    MO_DEBUG_GUI("ObjectListWidget::setParentObject(" << (void*)parent << ")");
+
     Object * sel = 0;
 
     // rather display the parent if this object is empty
@@ -200,8 +203,11 @@ void ObjectListWidget::onObjectAdded_(Object * )
     updateList_();
 }
 
-void ObjectListWidget::onObjectDeleted_(const Object *)
+void ObjectListWidget::onObjectDeleted_(const Object * o)
 {
+    Q_UNUSED(o);
+    MO_DEBUG_GUI("ObjectListWidget::onObjectDeleted(" << (void*)o << ")");
+
     // XXX mhhh...
     setParentObject(0);
 }

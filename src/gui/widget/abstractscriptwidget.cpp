@@ -24,6 +24,8 @@
 
 #include "abstractscriptwidget.h"
 #include "gui/helpdialog.h"
+#include "gui/widget/textfindwidget.h"
+#include "tool/syntaxhighlighter.h"
 #include "io/files.h"
 #include "io/settings.h"
 #include "io/log.h"
@@ -43,6 +45,7 @@ public:
         , isUpdateOptional  (false)
         , isAlwaysUpdate    (false)
         , isChanged         (false)
+        , highlighter       (0)
     {
         QMutexLocker lock(&instanceMutex);
         instanceId = instanceCount++;
@@ -85,6 +88,7 @@ public:
     QPushButton * butUpdate;
     QLabel * lInfo;
     QTimer * timer;
+    TextFindWidget* textFinder;
 
     bool isValid, ignoreTextChange,
         isUpdateOptional, isAlwaysUpdate,
@@ -92,6 +96,7 @@ public:
 
     IO::FileType fileType;
     QString curText, curFilename;
+    SyntaxHighlighter* highlighter;
 
     QList<Message> messages;
 
@@ -173,12 +178,20 @@ void AbstractScriptWidget::setAlwaysUpdate(bool enable)
     p_sw_->isAlwaysUpdate = enable;
 }
 
-const QString AbstractScriptWidget::scriptText() const
+QString AbstractScriptWidget::scriptText() const
 {
     if (!p_sw_->timer->isActive())
         return p_sw_->curText;
     // return live content (when timer is still ticking)
     return p_sw_->editor->toPlainText();
+}
+
+QString AbstractScriptWidget::wordUnderCursor() const
+{
+    // get word under cursor
+    auto c = p_sw_->editor->textCursor();
+    c.select(QTextCursor::WordUnderCursor);
+    return c.selectedText();
 }
 
 void AbstractScriptWidget::setScriptText(const QString & t)
@@ -195,9 +208,10 @@ void AbstractScriptWidget::updateScript()
     p_sw_->onTextChanged(true);
 }
 
-void AbstractScriptWidget::setSyntaxHighlighter(QSyntaxHighlighter * s)
+void AbstractScriptWidget::setSyntaxHighlighter(SyntaxHighlighter* s)
 {
     p_sw_->ignoreTextChange = true;
+    p_sw_->highlighter = s;
 
     if (s->document() != p_sw_->editor->document())
         s->setDocument( p_sw_->editor->document() );
@@ -239,7 +253,22 @@ void AbstractScriptWidget::PrivateSW::createWidgets()
         f.setStyleHint(QFont::Monospace);
         widget->setEditorFont(f, false);
 
-        // --- bottom display ----
+        // --- text finder ---
+
+        textFinder = new TextFindWidget(widget);
+        textFinder->setVisible(false);
+        lv->addWidget(textFinder);
+        connect(textFinder, SIGNAL(textChanged(QString)),
+                widget, SLOT(markText(QString)));
+        connect(textFinder, SIGNAL(nextClick(QString)),
+                widget, SLOT(findNext(QString)));
+        connect(textFinder, SIGNAL(previousClick(QString)),
+                widget, SLOT(findPrevious(QString)));
+        connect(textFinder, &TextFindWidget::searchEnded, [=]()
+        {
+            widget->markText(""); textFinder->setVisible(false);
+        });
+        // --- bottom message display ----
 
         messageList = new QListWidget(widget);
         messageList->setVisible(false);
@@ -313,11 +342,8 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 
     if (e->key() == Qt::Key_F1)
     {
-        // get word under cursor
-        auto c = p_sw_->editor->textCursor();
-        c.select(QTextCursor::WordUnderCursor);
         // get help url
-        QString url = getHelpUrl( c.selectedText() );
+        QString url = getHelpUrl( wordUnderCursor() );
 
         HelpDialog::run(url);
 
@@ -347,6 +373,13 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
         return;
     }
 
+    if (ctrl && e->key() == Qt::Key_F)
+    {
+        openFinder(wordUnderCursor());
+        e->accept();
+        return;
+    }
+
     if (ctrl && (e->modifiers() & Qt::SHIFT) && e->key() == Qt::Key_S)
     {
         saveScriptAs();
@@ -363,14 +396,14 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 void AbstractScriptWidget::incFontSize()
 {
     auto font = p_sw_->editor->font();
-    font.setPointSizeF(font.pointSizeF() * 1.1);
+    font.setPointSizeF(font.pointSizeF() * 1.05);
     setEditorFont(font, true);
 }
 
 void AbstractScriptWidget::decFontSize()
 {
     auto font = p_sw_->editor->font();
-    font.setPointSizeF(font.pointSizeF() / 1.1);
+    font.setPointSizeF(font.pointSizeF() / 1.05);
     setEditorFont(font, true);
 }
 
@@ -383,6 +416,34 @@ void AbstractScriptWidget::setEditorFont(const QFont& f, bool doSave)
                 QString("ScriptEdit/%1/fontSize").arg(IO::fileTypeIds[p_sw_->fileType]),
                     f.pointSizeF());
 }
+
+void AbstractScriptWidget::openFinder(const QString& text)
+{
+    p_sw_->textFinder->setVisible(true);
+    if (!text.isEmpty())
+        p_sw_->textFinder->setText(text);
+    p_sw_->textFinder->setFocusEdit();
+}
+
+void AbstractScriptWidget::markText(const QString &text)
+{
+    if (p_sw_->highlighter)
+    {
+        p_sw_->highlighter->setMarkText(text);
+        p_sw_->highlighter->rehighlight();
+    }
+}
+
+void AbstractScriptWidget::findNext(const QString &text)
+{
+    p_sw_->editor->find(text);
+}
+
+void AbstractScriptWidget::findPrevious(const QString &text)
+{
+    p_sw_->editor->find(text, QTextDocument::FindBackward);
+}
+
 
 void AbstractScriptWidget::PrivateSW::updateEditorColor()
 {

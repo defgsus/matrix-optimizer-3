@@ -138,7 +138,8 @@ public slots:
     /** Adds the list of objects to @p parent.
         The items in @p newObjects are completely given away. If they can't be added to parent,
         they will be deleted and a message is displayed to the user. */
-    bool addObjects(Object * parent, const QList<Object*> newObjects, int insert_index = -1);
+    bool addObjects(Object * parent, const QList<Object*> newObjects,
+                    int insert_index = -1, bool releaseRef = true);
 
     bool deleteObject(Object * object);
 
@@ -162,6 +163,11 @@ public slots:
         If @p object is a ValueTextureInterface and @p newObject has a texture input,
         they will be connected. */
     void appendTextureProcessor(Object * object, Object * newObject, int insert_index = -1);
+
+    /** Splits sequence @s at global time, creates new sequence.
+        @returns the second half of the sequence, or NULL if globalTime is
+        not within sequence time. */
+    Sequence* splitSequence(Sequence* s, Double globalTime);
 
     // ----------- properties ------------------
 

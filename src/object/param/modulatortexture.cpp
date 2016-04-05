@@ -40,6 +40,7 @@ void ModulatorTexture::deserialize(IO::DataStream & io)
 
 }
 
+
 void ModulatorTexture::copySettingsFrom(const Modulator *other)
 {
     const ModulatorTexture * f = dynamic_cast<const ModulatorTexture*>(other);

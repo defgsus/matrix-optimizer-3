@@ -70,6 +70,16 @@ void ParameterText::deserialize(IO::DataStream &io)
     io >> value_;
 }
 
+void ParameterText::copyFrom(Parameter* other)
+{
+    Parameter::copyFrom(other);
+    auto p = dynamic_cast<ParameterText*>(other);
+    if (!p)
+        return;
+    defaultValue_ = p->defaultValue_;
+    value_ = p->value_;
+}
+
 bool ParameterText::isOneliner() const
 {
     return textType_ == TT_PLAIN_TEXT

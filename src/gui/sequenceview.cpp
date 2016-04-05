@@ -226,6 +226,8 @@ void SequenceView::setValueFloat(ValueFloatInterface *iface)
 
 void SequenceView::setNothing()
 {
+    MO_DEBUG_GUI("SequenceView::setNothing()");
+
     bool change = sequence_ || valueFloat_;
     sequence_ = 0;
     valueFloat_ = 0;

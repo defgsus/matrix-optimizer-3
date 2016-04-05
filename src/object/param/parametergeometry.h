@@ -33,6 +33,8 @@ public:
     const QString& typeName() const { static QString s("geometry"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_GEOMETRY; }
 
+    //virtual void copyFrom(Parameter* ) Q_DECL_OVERRIDE { }
+
     QString baseValueString(bool ) const override { return "XXX"; }
     QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
 

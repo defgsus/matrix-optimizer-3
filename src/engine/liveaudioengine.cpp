@@ -58,6 +58,8 @@ public:
           engine        (new AudioEngine()),
           isPause       (false),
           engineChanged (false),
+          startTime     (0.),
+          timeOffset    (0.),
           audioDevice   (0),
           defaultConf   (AUDIO::AudioDevice::defaultConfiguration()),
           audioOutThread(0)
@@ -254,7 +256,8 @@ SamplePos LiveAudioEngine::pos() const
 
 Double LiveAudioEngine::second() const
 {
-    if (!isPlayback() || isPause())
+    // XXX See below
+    //if (!isPlayback() || isPause())
         return p_->engine->second();
 
     /** @todo find best solution for gfx time between audo dsp-blocks.
@@ -265,7 +268,9 @@ Double LiveAudioEngine::second() const
         an offset to follow the actual audio time. Since the audio time
         is hopping (because of irregular buffer-request-times) we only follow
         *slightly*. That way the times will theoretically stay in sync for hours
-        and days and weeks.. */
+        and days and weeks..
+        XXX Still does not work! Time is not exact at start and continues on pause
+    */
 
 #ifdef MO_BUFFER_TRICK
     const Private::BufferTime bt = p_->lastBuffer;

@@ -428,7 +428,9 @@ void Scene::addObject(Object *parent, Object *newChild, int insert_index)
     render_();
 }
 
-void Scene::addObjects(Object *parent, const QList<Object*>& newChilds, int insert_index)
+void Scene::addObjects(Object *parent,
+                       const QList<Object*>& newChilds,
+                       int insert_index)
 {
     MO_DEBUG_TREE("Scene::addObjects(" << parent << ", " << newChilds.size() << ", " << insert_index << ")");
 
@@ -490,6 +492,7 @@ void Scene::deleteObject(Object *object)
         dellist.prepend(object);
         // memorize so we can free resources later
         p_deletedObjects_.append(dellist);
+        p_deletedParentObjects_.append(object);
 
         // get list of all remaining objects
         QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -535,6 +538,7 @@ void Scene::deleteObjects(const QList<Object*>& objects)
             dellist.prepend(object);
             // memorize so we can free resources later
             p_deletedObjects_.append(dellist);
+            p_deletedParentObjects_.append(object);
 
             // get list of all remaining objects
             QList<Object*> remainList = findChildObjectsStopAt<Object>(QString(), true, object);
@@ -880,13 +884,28 @@ void Scene::endObjectChange()
 
 void Scene::destroyDeletedObjects_(bool releaseGl)
 {
+    // DEBUG
     //MO_PRINT("Scene::destroyDeletedObjects_(" << releaseGl <<")");
+#if 0
+    for (Object* o : p_deletedObjects_)
+        MO_PRINT("deletedObjects: " << o);
+#endif
+#if 0
+    QSet<Object*> unique;
+    for (Object* o : p_deletedObjects_)
+    {
+        if (unique.contains(o))
+            MO_WARNING("Object '" << o->idName() << "' is contained "
+                       "multiple times in Scene::p_deletedObjects_");
+        unique.insert(o);
+    }
+#endif
 
+    if (releaseGl)
     for (Object * o : p_deletedObjects_)
     {
         //MO_PRINT(":" << o->namePath());
 
-        if (releaseGl)
         if (ObjectGl * gl = dynamic_cast<ObjectGl*>(o))
         {
             for (uint i=0; i<gl->numberThreads(); ++i)
@@ -895,10 +914,11 @@ void Scene::destroyDeletedObjects_(bool releaseGl)
         }
     }
 
-    for (Object * o : p_deletedObjects_)
+    for (Object * o : p_deletedParentObjects_)
         o->releaseRef("Scene::destroyDeletedObjects");
 
     p_deletedObjects_.clear();
+    p_deletedParentObjects_.clear();
 }
 
 
@@ -1544,6 +1564,33 @@ void Scene::deleteLocator(const QString& id)
     p_locators_.remove(id);
 }
 
+
+void Scene::insertTime(Double where, Double howMuch, bool emitSignals)
+{
+    // change sequences
+    auto seqs = findChildObjects<Sequence>(QString(), true);
+    for (Sequence* s : seqs)
+    {
+        if (s->start() >= where)
+            s->setStart(s->start() + howMuch);
+    }
+
+    // change locators
+    auto loc = p_locators_;
+    p_locators_.clear();
+    for (auto i = loc.begin(); i!=loc.end(); ++i)
+    {
+        if (i.value() >= where)
+            i.value() += howMuch;
+        setLocatorTime(i.key(), i.value());
+    }
+
+    if (emitSignals)
+    if (auto e = editor())
+    for (Sequence* s : seqs)
+        emit e->sequenceChanged(s);
+
+}
 
 
 } // namespace MO

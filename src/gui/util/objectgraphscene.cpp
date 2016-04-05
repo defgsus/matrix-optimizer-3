@@ -1489,7 +1489,10 @@ void ObjectGraphScene::Private::createNewObjectMenu(ActionList &actions, Object 
                 QString id = act->data().toString();
                 Object * onew = ObjectFactory::createObject(id);
                 if (onew)
+                {
                     editor->appendTextureProcessor(obj, onew);
+                    onew->releaseRef("finish add");
+                }
             });
         }
     }
@@ -1897,8 +1900,11 @@ void ObjectGraphScene::onObjectsAdded_(const QList<Object*>& list)
     p_->recreateModulatorItems();
 }
 
-void ObjectGraphScene::onObjectDeleted_(const Object *)
+void ObjectGraphScene::onObjectDeleted_(const Object* o)
 {
+    Q_UNUSED(o);
+    MO_DEBUG_GUI("ObjectGraphScene::onObjectDeleted(" << (void*)o << ")");
+
 #if 1
     setRootObject(p_->root);
 #else
@@ -1914,10 +1920,14 @@ void ObjectGraphScene::onObjectDeleted_(const Object *)
     // recreate all modulation items
     p_->recreateModulatorItems();
 #endif
+
+    MO_DEBUG_GUI("ObjectGraphScene::onObjectDeleted(" << (void*)o << ") finished");
 }
 
 void ObjectGraphScene::onObjectsDeleted_(const QList<Object*>& )
 {
+    MO_DEBUG_GUI("ObjectGraphScene::onObjectsDeleted()");
+
     // again, don't bother to modify existing structure
     // just rebuild everything
     setRootObject(p_->root);
@@ -1926,6 +1936,8 @@ void ObjectGraphScene::onObjectsDeleted_(const QList<Object*>& )
 
 void ObjectGraphScene::onObjectMoved_(Object * , Object *)
 {
+    MO_DEBUG_GUI("ObjectGraphScene::onObjectMoved_()");
+
     // XXX Something's not right with below code
     // segfaults in AbstractObjectItem::mapToScene
     //  here's the shortcut
@@ -2019,7 +2031,8 @@ void ObjectGraphScene::addObject(
     newObject->setAttachedData(gridPos, Object::DT_GRAPH_POS);
 
     p_->nextSelectedObject = newObject;
-    p_->root->editor()->addObject(parent, newObject, insert_index);
+    if (p_->root->editor()->addObject(parent, newObject, insert_index))
+        newObject->releaseRef("finish add");
 }
 
 void ObjectGraphScene::addObjects(
@@ -2140,9 +2153,10 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
         return;
     }
 
-    // NOTE: dynamic_cast or dynamic_cast won't work between
+    // NOTE: dynamic_cast or won't work between
     // application boundaries, e.g. after quit or pasting into
-    // a different instance. But static_cast works alright after we checked the MimeType.
+    // a different instance. But static_cast works alright after a check
+    // of the MimeType.
     // It's important to not rely on class members of ObjectTreeMimeData
     // but to manage everything per QMimeData::data()
     auto objdata = static_cast<const ObjectTreeMimeData*>(data);

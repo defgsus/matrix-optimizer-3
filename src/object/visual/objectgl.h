@@ -109,12 +109,6 @@ public:
     /** Number of times p_renderGl_() was called */
     unsigned long renderCount() const { return p_renderCount_; }
 
-    /** Returns the source for the include url, or an empty string.
-        If @p object is non NULL the pointed-to pointer will be set to
-        the found object pointer. */
-    QString getGlslInclude(const QString& url, bool include_system_defaults,
-                           Object** object = 0);
-
     // ------------- opengl virtual interface -----------
 
     /** Override to initialize opengl resources.

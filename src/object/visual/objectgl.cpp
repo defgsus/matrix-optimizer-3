@@ -169,46 +169,6 @@ void ObjectGl::onDependency(Object * o)
 }
 
 
-QString ObjectGl::getGlslInclude(const QString &url, bool do_search, Object** object)
-{
-    if (object)
-        *object = nullptr;
-
-    // --- built-in ---
-
-    if (do_search)
-    {
-        QFile f_(":/shader/inc/" + url);
-        if (f_.open(QFile::Text | QFile::ReadOnly))
-            return QString::fromUtf8(f_.readAll());
-    }
-
-
-    // in objects
-    Object * o = findObjectByNamePath(url);
-    if (!o && sceneObject())
-        o = sceneObject()->findObjectByNamePath(url);
-    if (!o)
-        return QString();
-
-    if (o->isText())
-    {
-        auto to = static_cast<TextObject*>(o);
-        auto tex = to->valueText(0, RenderTime(0, MO_GUI_THREAD));
-        if (object)
-            *object = o;
-
-        if (tex.second == TT_GLSL)
-        {
-            if (sceneObject())
-                sceneObject()->installDependency(this, o);
-        }
-
-        return tex.first;
-    }
-
-    return QString();
-}
 
 
 

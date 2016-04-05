@@ -31,6 +31,8 @@ public:
     const QString& typeName() const { static QString s("float"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_FLOAT; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }

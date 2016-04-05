@@ -50,6 +50,15 @@ void ParameterTransformation::deserialize(IO::DataStream &io)
 
 }
 
+void ParameterTransformation::copyFrom(Parameter* other)
+{
+    Parameter::copyFrom(other);
+    auto p = dynamic_cast<ParameterTransformation*>(other);
+    if (!p)
+        return;
+    defaultValue_ = p->defaultValue_;
+    value_ = p->value_;
+}
 
 int ParameterTransformation::getModulatorTypes() const
 {

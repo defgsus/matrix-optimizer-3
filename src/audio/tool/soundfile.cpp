@@ -270,6 +270,30 @@ Double SoundFile::value(Double time, uint channel) const
         return MATH::interpol_6(t, v0,v1, v2, v3,v4,v5);
 #endif
     }
+    else if (p_->bitSize == 32)
+    {
+#if 0
+        const F32 * ptr =
+                (const F32*)&p_->data[(frame * p_->channels + channel) << 2];
+        return (Double)*ptr;
+
+#else // interpolation
+
+        const long int fs = p_->channels * 4;
+        size_t pos = (frame * p_->channels + channel) * 4;
+        Double v0,v1,v2,v3,v4,v5;
+
+        v0 = frame > 1 ? Double(*((const F32*)&p_->data[pos-fs*2])) : 0.;
+        v1 = frame > 0 ? Double(*((const F32*)&p_->data[pos-fs])) : 0.;
+        v2 = Double(*((const F32*)&p_->data[pos]));
+        v3 = frame < (long int)p_->lenSam - 1 ? Double(*((const F32*)&p_->data[pos+fs])) : 0.;
+        v4 = frame < (long int)p_->lenSam - 2 ? Double(*((const F32*)&p_->data[pos+fs*2])) : 0.;
+        v5 = frame < (long int)p_->lenSam - 3 ? Double(*((const F32*)&p_->data[pos+fs*3])) : 0.;
+
+        Double t = MATH::fract(time * sampleRate());
+        return MATH::interpol_6(t, v0,v1, v2, v3,v4,v5);
+#endif
+    }
     else
         return 0.0;
 
@@ -300,7 +324,13 @@ Double SoundFile::value(size_t frame, uint channel) const
     {
         const int16_t * ptr = (const int16_t*)
                 &p_->data[(frame * p_->channels + channel) << 1];
-        return (Double)*ptr / 32768.;
+        return ((Double)*ptr) / 32768.;
+    }
+    else if (p_->bitSize == 32)
+    {
+        const F32 * ptr = (const F32*)
+                &p_->data[(frame * p_->channels + channel) << 2];
+        return (Double)*ptr;
     }
     else
         return 0.0;
@@ -394,12 +424,19 @@ void SoundFile::p_loadFile_(const QString & fn)
     p_->lenSam = info.frames;
     p_->lenSec = (Double)info.frames / info.samplerate;
 
-    // init storage
 
+#if 0
+    // init storage
     p_->bitSize = 16;
     p_->data.resize(p_->channels * p_->lenSam * 2);
 
     uint e = sf_readf_short(f, (int16_t*)&p_->data[0], p_->lenSam);
+#else
+    p_->bitSize = 32;
+    p_->data.resize(p_->channels * p_->lenSam * 4);
+
+    uint e = sf_readf_float(f, (F32*)&p_->data[0], p_->lenSam);
+#endif
 
     if (e != p_->lenSam)
     {

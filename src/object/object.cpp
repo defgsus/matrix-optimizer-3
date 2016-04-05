@@ -9,9 +9,11 @@
 */
 
 
-#include <QDebug>
+//#include <QDebug>
+#include <QFile>
 
 #include "object.h"
+#include "textobject.h"
 #include "util/objectfactory.h"
 #include "scene.h"
 #include "control/modulatorobjectfloat.h"
@@ -199,12 +201,25 @@ Object::Object()
 
 Object::~Object()
 {
-    //MO_PRINT("Object(\"" << namePath() << "\")::~Object()");
+    //MO_PRINT("Object(\"" << namePath() << "\")::~Object() " << (void*)this);
 
     delete pobj_;
 }
 
 
+void Object::copyFrom(const Object *other)
+{
+    pobj_->parameters->copyFrom(other->pobj_->parameters);
+    pobj_->name = other->pobj_->name;
+    pobj_->visible = other->pobj_->visible;
+    pobj_->canBeDeleted = other->pobj_->canBeDeleted;
+    pobj_->p_attachedData_ = other->pobj_->p_attachedData_;
+    pobj_->numberMicrophones = other->pobj_->numberMicrophones;
+    pobj_->numberSoundSources = other->pobj_->numberSoundSources;
+    pobj_->sampleRate = other->pobj_->sampleRate;
+    pobj_->sampleRateInv = other->pobj_->sampleRateInv;
+    pobj_->currentActivityScope = other->pobj_->currentActivityScope;
+}
 
 // --------------------- io ------------------------
 
@@ -722,40 +737,22 @@ void Object::setCurrentActivityScope(ActivityScope scope)
 
 Object * Object::parentObject() const { return pobj_->parentObject; }
 
-const Object * Object::rootObject() const
+
+Object * Object::rootObject() const
 {
 #if 0
     return pobj_->p_parentObject_ ? pobj_->p_parentObject_->rootObject() : this;
 #else
     auto root = pobj_->parentObject;
     if (!root)
-        return this;
+        return const_cast<Object*>(this);
     while (root && root->pobj_->parentObject)
         root = root->pobj_->parentObject;
     return root;
 #endif
 }
 
-Object * Object::rootObject()
-{
-#if 0
-    return pobj_->p_parentObject_ ? pobj_->p_parentObject_->rootObject() : this;
-#else
-    auto root = pobj_->parentObject;
-    if (!root)
-        return this;
-    while (root && root->pobj_->parentObject)
-        root = root->pobj_->parentObject;
-    return root;
-#endif
-}
-
-const Scene * Object::sceneObject() const
-{
-    return dynamic_cast<const Scene*>(rootObject());
-}
-
-Scene * Object::sceneObject()
+Scene * Object::sceneObject() const
 {
     return dynamic_cast<Scene*>(rootObject());
 }
@@ -946,7 +943,7 @@ void Object::deleteObject_(Object * child, bool destroy)
     if (p_takeChild_(child))
     {
         if (destroy)
-            child->releaseRef(QString("deleteObject(%1)").arg(child->idName()));
+            child->releaseRef(QString("Object::deleteObject(%1)").arg(child->idName()));
         pobj_->childrenHaveChanged = true;
     }
 }
@@ -1685,5 +1682,48 @@ void Object::setEvolution(const QString& key, const EvolutionBase* evobase)
         evo->applyParametersToObject(true);
     }
 }
+
+QString Object::getGlslInclude(const QString &url, bool do_search, Object** object) const
+{
+    if (object)
+        *object = nullptr;
+
+    // --- built-in ---
+
+    if (do_search)
+    {
+        QFile f_(":/shader/inc/" + url);
+        if (f_.open(QFile::Text | QFile::ReadOnly))
+            return QString::fromUtf8(f_.readAll());
+    }
+
+
+    // in objects
+    Object * o = findObjectByNamePath(url);
+    if (!o && sceneObject())
+        o = sceneObject()->findObjectByNamePath(url);
+    if (!o)
+        return QString();
+
+    if (o->isText())
+    {
+        auto to = static_cast<TextObject*>(o);
+        auto tex = to->valueText(0, RenderTime(0, MO_GUI_THREAD));
+        if (object)
+            *object = o;
+
+        if (tex.second == TT_GLSL)
+        {
+            if (sceneObject())
+                sceneObject()->installDependency(
+                            const_cast<Object*>(this), o);
+        }
+
+        return tex.first;
+    }
+
+    return QString();
+}
+
 
 } // namespace MO

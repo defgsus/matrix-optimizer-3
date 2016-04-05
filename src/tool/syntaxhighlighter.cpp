@@ -26,6 +26,8 @@ SyntaxHighlighter::SyntaxHighlighter(QObject * parent) :
     commentStartExpression_ = QRegExp("/\\*");
     commentEndExpression_ = QRegExp("\\*/");
     commentFormat_.setForeground(QBrush(QColor(140,140,140)));
+    markFormat_.setForeground(QBrush(Qt::white));
+    markFormat_.setBackground(QBrush(Qt::darkGreen));
 }
 
 
@@ -101,11 +103,30 @@ void SyntaxHighlighter::setNames(const QStringList &variables,
 
 }
 
+void SyntaxHighlighter::setMarkText(const QString& text)
+{
+    if (text.isEmpty())
+        setMarkText(QStringList());
+    else
+        setMarkText(QStringList() << text);
+}
+
+void SyntaxHighlighter::setMarkText(const QStringList& texts)
+{
+    markRules_.clear();
+
+    for (const QString& text : texts)
+    {
+        HighlightingRule rule;
+        rule.pattern = QRegExp( "\\b" + text + "\\b" );
+        markRules_.append(rule);
+    }
+}
 
 void SyntaxHighlighter::highlightBlock(const QString &text)
 {
     // apply rules
-    foreach (const HighlightingRule &rule, rules_)
+    for (const HighlightingRule& rule : rules_)
     {
         QRegExp expression(rule.pattern);
         // find the string
@@ -145,6 +166,24 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
         }
         setFormat(startIndex, commentLength, commentFormat_);
         startIndex = commentStartExpression_.indexIn(text, startIndex + commentLength);
+    }
+
+
+    // ---- marked text ----
+
+    for (const HighlightingRule& rule : markRules_)
+    {
+        QRegExp expression(rule.pattern);
+        // find the string
+        int index = expression.indexIn(text);
+        while (index >= 0)
+        {
+            int length = expression.matchedLength();
+            // set format
+            setFormat(index, length, markFormat_);
+            // find again
+            index = expression.indexIn(text, index + length);
+        }
     }
 }
 

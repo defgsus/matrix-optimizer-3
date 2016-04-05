@@ -31,6 +31,8 @@ public:
     const QString& typeName() const { static QString s("filename"); return s; }
     SignalType signalType() const Q_DECL_OVERRIDE { return ST_FILENAME; }
 
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
     Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;

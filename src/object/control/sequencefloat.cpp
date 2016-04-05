@@ -16,6 +16,7 @@
 #include "object/param/parametertext.h"
 #include "object/param/parameterint.h"
 #include "object/param/parametertimeline1d.h"
+#include "object/util/objectfactory.h"
 #include "audio/tool/waveform.h"
 #include "audio/tool/wavetablegenerator.h"
 #include "audio/tool/bandlimitwavetablegenerator.h"
@@ -122,6 +123,21 @@ SequenceFloat::~SequenceFloat()
     for (auto e : equation_)
         delete e;
 }
+
+void SequenceFloat::copyFrom(const Object *other)
+{
+    Sequence::copyFrom(other);
+    auto s = dynamic_cast<const SequenceFloat*>(other);
+    if (!s)
+        return;
+    if (s->timeline_)
+    {
+        if (!timeline_)
+            timeline_ = new MATH::Timeline1d;
+        *timeline_ = *s->timeline_;
+    }
+}
+
 
 void SequenceFloat::createParameters()
 {
@@ -1037,6 +1053,30 @@ void SequenceFloat::updateWavetable_()
         gen.createWavetable(*wavetable_);
     }
 
+}
+
+
+SequenceFloat* SequenceFloat::splitSequence(Double localTime)
+{
+    if (localTime < 0. || localTime > length())
+        return nullptr;
+
+    auto other = create_object<SequenceFloat>();
+    if (Q_UNLIKELY(!other))
+        return nullptr;
+    other->copyFrom(this);
+
+    // change self
+    setLength(localTime);
+    p_fadeOut_->setValue(0.);
+
+    // change other
+    other->setStart(other->start() + localTime);
+    other->setLength(other->length() - localTime);
+    other->setTimeOffset(other->timeOffset() + localTime);
+    p_fadeIn_->setValue(0.);
+
+    return other;
 }
 
 

@@ -45,6 +45,11 @@ public:
     virtual const QString& typeName() const = 0;
     virtual SignalType signalType() const = 0;
 
+    /** Copies values from @p other to this.
+        Override to copy actual values.
+        Base impl. copies common values. */
+    virtual void copyFrom(Parameter* other);
+
     // -------------- documentation -------------
 
     /** Returns the html documentation of this parameter. */
