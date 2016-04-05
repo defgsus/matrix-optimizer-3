@@ -11,6 +11,7 @@
 #include <QFileInfo>
 #include <QDir>
 #include <QFileDialog>
+#include <QTemporaryFile>
 
 #include "files.h"
 #include "io/settings.h"
@@ -316,6 +317,15 @@ void Files::getDirectories(const QString &basePath, QStringList &directoryList,
         for (auto & s : dirs)
             getDirectories(s, directoryList, true);
     }
+}
+
+QString Files::getTempFilename(const QString &ext)
+{
+    QTemporaryFile file("XXXXXX" + ext);
+    if (!file.open())
+        return QString();
+    file.setAutoRemove(false);
+    return file.fileName();
 }
 
 } // namespace IO

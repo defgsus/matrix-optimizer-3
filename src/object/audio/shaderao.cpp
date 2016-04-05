@@ -170,6 +170,19 @@ void ShaderAO::Private::getSource(GL::ShaderSource *src)
     src->loadVertexSource(":/shader/shader_ao.vert");
     src->loadFragmentSource(":/shader/shader_ao.frag");
     src->replace("//%mo_user_function%", paramGlsl->baseValue());
+    src->replaceIncludes([this](const QString& url, bool do_search)
+    {
+        Object* src;
+        QString inc = ao->getGlslInclude(url, do_search, &src);
+        if (inc.isEmpty())
+            return QString("/* empty */\n");
+        else
+        {
+            /** @todo add error chain via ParameterText */
+            return "/* " + url + " */\n" + inc;
+        }
+    });
+
 }
 
 void ShaderAO::Private::initGl()

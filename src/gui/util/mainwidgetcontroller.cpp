@@ -2354,8 +2354,46 @@ void MainWidgetController::loadInterfacePresets()
 
 void MainWidgetController::renderToDisk()
 {
-    auto diag = new RenderDialog(currentSceneFilename_, window_);
+    bool isTemp = false;
+    QString fn = currentSceneFilename_;
+
+    if (sceneNotSaved_)
+    {
+        fn = IO::Files::getTempFilename(".mo3");
+        if (fn.isEmpty())
+        {
+            QMessageBox::critical(window_, tr("render to disk"),
+                tr("Could not create a temporary file.\n"
+                   "Please save the scene and try again."));
+            return;
+        }
+        isTemp = true;
+
+        try
+        {
+#ifndef MO_DISABLE_FRONT
+            // always store default preset
+            frontScene_->storePreset("default");
+            scene_->setFrontScene(frontScene_);
+#endif
+            // actually save the scene
+            ObjectFactory::saveScene(fn, scene_);
+        }
+        catch (const Exception & e)
+        {
+            QMessageBox::critical(window_, tr("render to disk"),
+                tr("Could not save a temporary scene file.\n%1\n"
+                   "Please save the scene and try again.").arg(e.what()));
+            QFile::remove(fn);
+            return;
+        }
+
+    }
+    auto diag = new RenderDialog(fn, window_);
     diag->exec();
+
+    if (isTemp)
+        QFile::remove(fn);
 }
 
 void MainWidgetController::exportPovray_()
