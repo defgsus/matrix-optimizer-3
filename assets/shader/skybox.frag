@@ -262,7 +262,7 @@ void main()
 
     #if SKYBOX_CONTENT == SKYBOX_CONTENT_GLSL
         mainImage(o_out_color, direction, pos, uv);
-    #else SKYBOX_CONTENT == SKYBOX_CONTENT_TEXTURE
+    #elif SKYBOX_CONTENT == SKYBOX_CONTENT_TEXTURE
         o_out_color = skybox_texturePlane(uv);
     #endif
 

@@ -15,6 +15,9 @@ const float PI = 3.14159265358979;
  */
 
 //#define MO_FULLDOME_BEND
+#ifndef MO_NUM_LIGHTS
+#   define MO_NUM_LIGHTS 0
+#endif
 
 // --- vertex attributes ---
 
