@@ -65,6 +65,7 @@ windows { DEFINES += \
                 MO_DISABLE_NIFTI \
                 MO_DISABLE_SHP \
                 MO_DISABLE_GLU
+                #MO_ENABLE_PYTHON34
 }
 
 unix: { DEFINES += \
@@ -110,6 +111,7 @@ LIBS += -lkernel32 -lpsapi \
         -lportaudio -lPortMidi -lsndfile-1 \
         -ljpeg \
         -langelscript
+        #-lpython35
         #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
 

@@ -15,11 +15,12 @@
 #include <QMap>
 
 #include "refcounted.h"
+#include "refcounted_info.h"
 #include "io/error.h"
 #include "io/log.h"
 
 #if 0
-#   define MO_REF_DEBUG(arg__) MO_PRINT(arg__)
+#   define MO_REF_DEBUG(arg__) std::cout << arg__ << std::endl;
 #   define MO_ENABLE_REF_STATS
 #else
 #   define MO_REF_DEBUG(unused__) { }
@@ -34,11 +35,18 @@ namespace
     struct RefDesc_
     {
         QString className;
+        QStringList addReasons, releaseReasons;
     };
 
-    static QMutex refMapMutex_(QMutex::Recursive);
+    static QMutex* refMapMutex_()
+    {
+        static QMutex* m = 0;
+        if (!m)
+            m = new QMutex(QMutex::Recursive);
+        return m;
+    }
 
-    static QMap<const RefCounted*, struct RefDesc_> & refMap_()
+    static QMap<const RefCounted*, struct RefDesc_>& refMap_()
     {
         static QMap<const RefCounted*, struct RefDesc_> * refMap = 0;
         if (!refMap)
@@ -47,6 +55,33 @@ namespace
     }
 #endif
 }
+
+void dumpRefInfo(std::ostream& out)
+{
+    Q_UNUSED(out);
+
+#ifdef MO_ENABLE_REF_STATS
+    QMutexLocker lock(refMapMutex_());
+    const auto& map = refMap_();
+    for (auto i = map.begin(); i != map.end(); ++i)
+    {
+        out << RefCounted::refInstanceName(i.key()) << "\n";
+        for (const auto& j : i.value().addReasons)
+            out << "  + " << j << "\n";
+        for (const auto& j : i.value().releaseReasons)
+            out << "  - " << j << "\n";
+    }
+#endif
+}
+
+
+
+
+
+
+
+
+
 
 struct RefCounted::P_RefCountedPrivate
 {
@@ -62,11 +97,12 @@ RefCounted::RefCounted(const QString& className)
     : p_refcount_private_(new P_RefCountedPrivate)
 {
     Q_UNUSED(className);
+
 #ifdef MO_ENABLE_REF_STATS
     RefDesc_ info;
     info.className = className;
     {
-        QMutexLocker lock(&refMapMutex_);
+        QMutexLocker lock(refMapMutex_());
 
         if (refMap_().contains(this))
             MO_WARNING("DUPLICATE REF " << refInstanceName());
@@ -74,6 +110,7 @@ RefCounted::RefCounted(const QString& className)
         refMap_().insert(this, info);
     }
 #endif
+
     MO_REF_DEBUG("REF CREATE " << refInstanceName(this));
 }
 
@@ -84,7 +121,7 @@ RefCounted::~RefCounted()
     delete p_refcount_private_;
 
 #ifdef MO_ENABLE_REF_STATS
-    QMutexLocker lock(&refMapMutex_);
+    QMutexLocker lock(refMapMutex_());
     refMap_().remove(this);
 #endif
 }
@@ -92,16 +129,42 @@ RefCounted::~RefCounted()
 void RefCounted::addRef(const QString& reason)
 {
     Q_UNUSED(reason);
+
     MO_REF_DEBUG("REF ADD " << refInstanceName(this) << " '" << reason << "' NOW "
              << (p_refcount_private_->refcount+1));
+
+#ifdef MO_ENABLE_REF_STATS
+    {
+        QMutexLocker lock(refMapMutex_());
+        auto i = refMap_().find(this);
+        if (i != refMap_().end())
+        {
+            i.value().addReasons << reason;
+        }
+    }
+#endif
+
     ++p_refcount_private_->refcount;
 }
 
 void RefCounted::releaseRef(const QString& reason)
 {
     Q_UNUSED(reason);
+
     MO_REF_DEBUG("REF REL " << refInstanceName(this) << " '" << reason << "' NOW "
              << (p_refcount_private_->refcount-1));
+
+#ifdef MO_ENABLE_REF_STATS
+    {
+        QMutexLocker lock(refMapMutex_());
+        auto i = refMap_().find(this);
+        if (i != refMap_().end())
+        {
+            i.value().releaseReasons << reason;
+        }
+    }
+#endif
+
     if (--p_refcount_private_->refcount == 0)
     {
         p_refcount_private_->destroyReason = reason;
@@ -138,14 +201,15 @@ QString RefCounted::refInstanceName(const RefCounted* ref)
 QString RefCounted::refClassName(const RefCounted* ref)
 {
     Q_UNUSED(ref);
+
 #ifdef MO_ENABLE_REF_STATS
-    QMutexLocker lock(&refMapMutex_);
+    QMutexLocker lock(refMapMutex_());
     auto i = refMap_().find(ref);
     if (i != refMap_().end())
         return i.value().className;
-#else
-    return "RefCounted";
 #endif
+
+    return "RefCounted";
 }
 
 

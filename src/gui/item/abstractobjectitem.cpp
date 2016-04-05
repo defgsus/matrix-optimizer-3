@@ -118,15 +118,16 @@ namespace
         IMAGE_ACTIVE,
         IMAGE_INACTIVE
     };
-    static QMap<PixmapType, QPixmap> staticPixmaps;
+    static QMap<PixmapType, QPixmap>* staticPixmaps_ = 0;
 
     static QPixmap getPixmap(PixmapType img)
     {
-        if (staticPixmaps.isEmpty())
+        if (!staticPixmaps_)
         {
+            staticPixmaps_ = new QMap<PixmapType, QPixmap>;
             QSize size = ObjectGraphSettings::controlItemSize();
     #define MO__ADD(tag__, name__) \
-            staticPixmaps.insert(tag__, \
+            staticPixmaps_->insert(tag__, \
                 QPixmap::fromImage(QImage(name__).scaled(size, \
                     Qt::IgnoreAspectRatio, Qt::SmoothTransformation)))
 
@@ -138,7 +139,7 @@ namespace
     #undef MO__ADD
         }
 
-        return staticPixmaps.value(img);
+        return staticPixmaps_->value(img);
     }
 } // namespace
 

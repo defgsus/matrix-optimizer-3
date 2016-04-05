@@ -14,6 +14,8 @@
 #include "init.h"
 #include "python/34/python.h"
 #include "io/error.h"
+#include "io/memory.h"
+#include "types/refcounted_info.h"
 
 #ifdef Q_OS_LINUX
 #   include <X11/Xlib.h>
@@ -46,4 +48,23 @@ void startOfProgram()
 }
 
 
+
+void endOfProgram()
+{
+#ifdef MO_ENABLE_PYTHON34
+    MO::PYTHON34::finalizePython();
+#endif
+
+    MO::dumpRefInfo(std::cout);
+
+#if 0
+    std::cout
+        << "peak memory: " << MO::Memory::peak()
+        << ", lost = " << MO::Memory::lost() << std::endl;
+#endif
+
 }
+
+
+
+} // namespace MO

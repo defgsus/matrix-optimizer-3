@@ -16,7 +16,10 @@ namespace MO {
 /** Call this before anything else */
 void startOfProgram();
 
+/** The shutdown routine */
+void endOfProgram();
+
 } // namespace MO
 
 
-#endif // INIT_H
+#endif // MOSRC_IO_INIT_H

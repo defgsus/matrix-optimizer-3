@@ -25,7 +25,7 @@
 #include "engine/clientengine.h"
 #include "maincommandline.h"
 #include "io/diskrendersettings.h"
-#include "python/34/python.h"
+//#include "python/34/python.h"
 
 void showHelp()
 {
@@ -60,7 +60,7 @@ int renderToDisk()
 //#include "tests/testcommandlineparser.h"
 //#include "tests/testdirectedgraph.h"
 //#include "tests/testcsg.h"
-#include "tests/testpython.h"
+//#include "tests/testpython.h"
 //#include "math/arithmeticarray.h"
 
 //#include "types/vector.h"
@@ -207,15 +207,9 @@ int main(int argc, char *argv[])
 
     }
 
-#ifdef MO_ENABLE_PYTHON34
-    MO::PYTHON34::finalizePython();
-#endif
+    MO::endOfProgram();
 
     std::cout << std::endl
-#if (0)
-        << "peak memory: " << MO::Memory::peak()
-        << ", lost = " << MO::Memory::lost() << "\n"
-#endif
 //#ifndef NDEBUG
         << "bis später"
 //#endif

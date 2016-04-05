@@ -2006,7 +2006,9 @@ void MainWidgetController::newScene()
 
     // create a new scene with a group inside
     auto s = ObjectFactory::createSceneObject();
-    s->addObject( s, ObjectFactory::createObject("Group") );
+    auto group = ObjectFactory::createObject("Group");
+    s->addObject( s, group );
+    group->releaseRef("added to scene");
 
     setScene_( s );
     currentSceneFilename_.clear();

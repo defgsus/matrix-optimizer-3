@@ -264,7 +264,8 @@ HEADERS += \
     $$PWD/io/log_geom.h \
     $$PWD/io/log_snd.h \
     $$PWD/gl/gl_state.h \
-    $$PWD/math/timeline_point.h
+    $$PWD/math/timeline_point.h \
+    $$PWD/types/refcounted_info.h
 
 
 SOURCES += \
