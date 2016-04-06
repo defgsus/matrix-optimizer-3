@@ -15,6 +15,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parametertext.h"
 #include "audio/tool/audiobuffer.h"
+#include "object/util/useruniformsetting.h"
 #include "gl/offscreencontext.h"
 #include "gl/shader.h"
 #include "gl/shadersource.h"
@@ -47,11 +48,13 @@ class ShaderAO::Private
         , fbo       (0)
         , shader    (0)
         , vao       (0)
+        , userUniforms(new UserUniformSetting(ao))
     { }
 
     ~Private()
     {
         releaseGl();
+        delete userUniforms;
     }
 
     void getSource(GL::ShaderSource* src);
@@ -70,6 +73,7 @@ class ShaderAO::Private
     bool needRecompile;
     QString failedCode;
     ParameterText* paramGlsl;
+    UserUniformSetting* userUniforms;
 
     GL::Uniform
             *u_time,
@@ -115,13 +119,22 @@ void ShaderAO::createParameters()
                     "glsl", tr("shader source"),
                     tr("The glsl source to generate audio data"),
                     TT_GLSL,
-                    "// can return float, or vec2-4"
+                    "// Shadertoy compatible.\n"
+                    "\n"
+                    "// can return float, or vec2-4\n"
                     "vec4 mainSound(in float time)\n"
                     "{\n"
-                    "\treturn vec4(sin(time * 440. * 3.14159265*2.));\n"
+                    "\treturn vec4(sin(time * 437. * 3.14159265*2.));\n"
                     "}\n");
 
     params()->endParameterGroup();
+
+    params()->beginParameterGroup("useruniforms", tr("user uniforms"));
+
+        p_->userUniforms->createParameters("");
+
+    params()->endParameterGroup();
+
 }
 
 void ShaderAO::onParametersLoaded()
@@ -135,13 +148,15 @@ void ShaderAO::onParameterChanged(Parameter * p)
 {
     AudioObject::onParameterChanged(p);
 
-    if (p == p_->paramGlsl)
+    if (p == p_->paramGlsl
+       || p_->userUniforms->needsReinit(p))
         p_->needRecompile = true;
 }
 
 void ShaderAO::updateParameterVisibility()
 {
     AudioObject::updateParameterVisibility();
+    p_->userUniforms->updateParameterVisibility();
 }
 
 
@@ -169,7 +184,9 @@ void ShaderAO::Private::getSource(GL::ShaderSource *src)
 {
     src->loadVertexSource(":/shader/shader_ao.vert");
     src->loadFragmentSource(":/shader/shader_ao.frag");
-    src->replace("//%mo_user_function%", paramGlsl->baseValue());
+    src->replace("//%mo_user_function%",
+                 userUniforms->getDeclarations() + "\n" +
+                 paramGlsl->baseValue());
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
         Object* src;
@@ -207,12 +224,10 @@ void ShaderAO::Private::initGl()
 
         // ---------- framebuffer ---------
 
+        if (fbo && fbo->isCreated())
+            fbo->release();
         if (!fbo)
-            fbo = new GL::FrameBufferObject(
-                        texW, texH, gl::GL_RGBA16F, gl::GL_FLOAT);
-        else
-            if (fbo->isCreated())
-                fbo->release();
+            fbo = new GL::FrameBufferObject(texW, texH, gl::GL_RGBA16F, gl::GL_FLOAT);
         fbo->create();
         texData.resize(texW*texH*4);
 
@@ -245,6 +260,7 @@ void ShaderAO::Private::initGl()
         u_samplerate = shader->getUniform("u_samplerate", true);
         u_buffersize = shader->getUniform("u_buffersize", true);
         u_iSampleRate = shader->getUniform("iSampleRate");
+        userUniforms->tieToShader(shader);
 
         // --------------- quad geom -----------
 
@@ -280,6 +296,8 @@ void ShaderAO::Private::initGl()
 void ShaderAO::Private::releaseGl()
 {
     MO_DEBUG_SAO("releaseGl()");
+
+    userUniforms->releaseGl();
 
     if (vao && vao->isCreated())
         vao->release();
@@ -322,12 +340,16 @@ void ShaderAO::Private::render(const RenderTime& time)
     if (u_iSampleRate)
         u_iSampleRate->floats[0] = ao->sampleRate();
 
+    uint texslot = 0;
     shader->activate();
+    userUniforms->updateUniforms(time, &texslot);
     shader->sendUniforms();
     vao->drawElements();
     shader->deactivate();
 
     MO_DEBUG_SAO("download tex");
+    GL::Texture::setActiveTexture(0);
+    fbo->colorTexture(0)->bind();
     fbo->colorTexture(0)->download(&texData[0], gl::GL_RGBA, gl::GL_FLOAT);
 
     fbo->unbind();

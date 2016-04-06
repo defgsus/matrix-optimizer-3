@@ -22,7 +22,6 @@ namespace MO {
 namespace GL { class Shader; class Uniform; class Texture; }
 
 class UserUniformSetting
-        : public QObject
 {
     Q_DECLARE_TR_FUNCTIONS(UserUniformSetting)
 public:

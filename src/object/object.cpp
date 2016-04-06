@@ -9,7 +9,7 @@
 */
 
 
-//#include <QDebug>
+#include <QDebug>
 #include <QFile>
 
 #include "object.h"

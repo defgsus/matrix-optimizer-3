@@ -51,6 +51,7 @@ ShaderObject::ShaderObject()
 
 ShaderObject::~ShaderObject()
 {
+    delete userUniforms_;
 }
 
 void ShaderObject::serialize(IO::DataStream & io) const
