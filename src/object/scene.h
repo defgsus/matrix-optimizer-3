@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_SCENE_H
 #define MOSRC_OBJECT_SCENE_H
 
+#include <set>
+
 #include <QTimer>
 #include <QSize>
 
@@ -52,6 +54,13 @@ public:
         DD_MICROPHONES      = 1<<1,
         DD_CAMERAS          = 1<<2,
         DD_LIGHT_SOURCES    = 1<<3
+    };
+
+    struct Locator
+    {
+        Double time;
+        QString id;
+        bool operator < (const Locator& r) const { return time < r.time; }
     };
 
 
@@ -145,7 +154,7 @@ public:
 
     // ------------ sequencing -----------------
 
-    const QMap<QString, double>& locators() const { return p_locators_; }
+    const std::set<Locator>& locators() const { return p_locators_; }
     double locatorTime(const QString& id) const;
     void setLocatorTime(const QString& id, double);
     void renameLocator(const QString& id, const QString& newId);
@@ -448,7 +457,7 @@ private:
     AudioObjectConnections
             * p_audioCon_;
 
-    QMap<QString,double> p_locators_;
+    std::set<Locator> p_locators_;
 
     // ------------ runtime --------------------
 
@@ -490,8 +499,8 @@ public:
 };
 
 
-
-
+QDataStream& operator<<(QDataStream&, const std::set<Scene::Locator>&);
+QDataStream& operator>>(QDataStream&,       std::set<Scene::Locator>&);
 
 
 } // namespace MO

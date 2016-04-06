@@ -188,9 +188,9 @@ void Sequencer::updateLocatorBars()
         auto list = s->locators();
         for (auto i=list.begin(); i!=list.end(); ++i)
         {
-            auto t = getLocatorBar_(i.key());
-            t->setTime(i.value());
-            t->setToolTip(QString("%1: %2").arg(i.key()).arg(i.value()));
+            auto t = getLocatorBar_(i->id);
+            t->setTime(i->time);
+            t->setToolTip(QString("%1: %2").arg(i->id).arg(i->time));
         }
     }
 

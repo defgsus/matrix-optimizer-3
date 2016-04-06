@@ -788,7 +788,8 @@ bool TrackView::snapToLocators(Double *time)
     // snap to locators
     for (auto t : scene_->locators())
     {
-        if (std::abs(t - *time) <= pix) { *time = t; setSnapTime_(t); return true; }
+        if (std::abs(t.time - *time) <= pix)
+            { *time = t.time; setSnapTime_(t.time); return true; }
     }
     return false;
 }

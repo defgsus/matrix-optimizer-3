@@ -109,10 +109,10 @@ void InsertTimeDialog::setScene(Scene *scene)
     cbLocators_->clear();
     for (auto i = scene_->locators().begin(); i != scene_->locators().end(); ++i)
     {
-        if (cbLocators_->count() == 0 && i.value() != 0.)
+        if (cbLocators_->count() == 0 && i->time != 0.)
             cbLocators_->addItem(tr("beginning"), QVariant(0.));
-        cbLocators_->addItem(tr("locator '%1': %2").arg(i.key()).arg(i.value()),
-                             QVariant(i.value()));
+        cbLocators_->addItem(tr("locator '%1': %2").arg(i->id).arg(i->time),
+                             QVariant(i->time));
     }
     cbLocators_->setVisible(true);
 }

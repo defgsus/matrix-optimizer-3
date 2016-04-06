@@ -121,10 +121,33 @@ Scene::~Scene()
     delete p_sceneSignals_;
 }
 
+QDataStream& operator<<(QDataStream& io, const std::set<Scene::Locator>& loc)
+{
+    io << (quint64)loc.size();
+    for (auto l : loc)
+        io << l.id << l.time;
+    return io;
+}
+
+QDataStream& operator>>(QDataStream& io, std::set<Scene::Locator>& loc)
+{
+    quint64 num;
+    io >> num;
+    loc.clear();
+    for (quint64 i=0; i<num; ++i)
+    {
+        Scene::Locator l;
+        io >> l.id >> l.time;
+        loc.insert(l);
+    }
+    return io;
+}
+
+
 void Scene::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
-    io.writeHeader("scene", 4);
+    io.writeHeader("scene", 5);
 
     // v2
     io << p_fbSize_ << p_doMatchOutputResolution_;
@@ -134,12 +157,15 @@ void Scene::serialize(IO::DataStream & io) const
 
     // v4
     io << p_locators_;
+
+    // v5
+    // changed from map to set
 }
 
 void Scene::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
-    const int ver = io.readHeader("scene", 4);
+    const int ver = io.readHeader("scene", 5);
 
     if (ver >= 2)
         io >> p_fbSizeRequest_ >> p_doMatchOutputResolution_;
@@ -152,7 +178,15 @@ void Scene::deserialize(IO::DataStream & io)
     if (ver >= 3)
         io >> p_sceneDesc_ >> p_showSceneDesc_;
 
-    if (ver >= 4)
+    if (ver == 4)
+    {
+        QMap<QString, double> loc;
+        io >> loc;
+        p_locators_.clear();
+        for (auto i=loc.begin(); i!=loc.end(); ++i)
+            setLocatorTime(i.key(), i.value());
+    }
+    if (ver >= 5)
         io >> p_locators_;
 }
 
@@ -1540,28 +1574,56 @@ void Scene::setProjectorIndex(uint index)
 
 double Scene::locatorTime(const QString& id) const
 {
+    for (auto i = p_locators_.begin(); i != p_locators_.end(); ++i)
+        if (i->id == id)
+            return i->time;
+    return 0.;
+    /*
     auto i = p_locators_.find(id);
     return i == p_locators_.end() ? 0. : i.value();
+    */
 }
 
 void Scene::setLocatorTime(const QString& id, double t)
 {
-    p_locators_.insert(id, t);
+    for (auto i = p_locators_.begin(); i!= p_locators_.end(); ++i)
+        if (i->id == id)
+            { p_locators_.erase(i); break; }
+    Locator l;
+    l.id = id;
+    l.time = t;
+    p_locators_.insert(l);
 }
 
 void Scene::renameLocator(const QString& id, const QString& newId)
 {
+#if 1
+    for (auto i = p_locators_.begin(); i != p_locators_.end(); ++i)
+    if (i->id == id)
+    {
+        i->id == newId;
+        return;
+    }
+
+#else
     auto i = p_locators_.find(id);
     if (i == p_locators_.end())
         return;
     double t = i.value();
     p_locators_.erase(i);
     p_locators_.insert(newId, t);
+#endif
 }
 
 void Scene::deleteLocator(const QString& id)
 {
+#if 1
+    for (auto i = p_locators_.begin(); i != p_locators_.end(); ++i)
+        if (i->id == id)
+            { p_locators_.erase(i); return; }
+#else
     p_locators_.remove(id);
+#endif
 }
 
 
@@ -1575,14 +1637,15 @@ void Scene::insertTime(Double where, Double howMuch, bool emitSignals)
             s->setStart(s->start() + howMuch);
     }
 
-    // change locators
+    // adjust locators
     auto loc = p_locators_;
     p_locators_.clear();
     for (auto i = loc.begin(); i!=loc.end(); ++i)
     {
-        if (i.value() >= where)
-            i.value() += howMuch;
-        setLocatorTime(i.key(), i.value());
+        setLocatorTime(i->id,
+                      (i->time >= where)
+                            ? (i->time + howMuch)
+                            :  i->time );
     }
 
     if (emitSignals)

@@ -1954,14 +1954,19 @@ void MainWidgetController::closeAudio()
 
 Double MainWidgetController::getPrevLocatorTime_(Double time)
 {
-    if (scene_->locators().isEmpty())
+    if (scene_->locators().empty())
         return 0.;
+#if 0
+    MO_PRINT("--");
+    for (auto i : scene_->locators())
+        MO_PRINT(i.time << " " << i.id);
+#endif
     auto i = scene_->locators().end();
     while (true)
     {
         --i;
-        if (i.value() < time)
-            return i.value();
+        if (i->time < time)
+            return i->time;
         if (i == scene_->locators().begin())
             return 0.;
     }
