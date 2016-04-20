@@ -93,6 +93,11 @@ public:
     bool lazyFlag() const { return p_lazyFlag_; }
     void setLazyFlag(bool lazy) { p_lazyFlag_ = lazy; }
 
+    /** A flag if the scene is currently playedback live (false) or
+        rendered to disk (true) */
+    bool isRendering() const { return p_rendering_; }
+    void setRendering(bool enable) { p_rendering_ = enable; }
+
     static Scene* currentScene();
     static void setCurrentScene(Scene*);
 
@@ -463,7 +468,7 @@ private:
 
     QReadWriteLock * p_readWriteLock_;
 
-    bool p_isPlayback_, p_lazyFlag_;
+    bool p_isPlayback_, p_lazyFlag_, p_rendering_;
 
     Double p_sceneTime_;
     SamplePos p_samplePos_;

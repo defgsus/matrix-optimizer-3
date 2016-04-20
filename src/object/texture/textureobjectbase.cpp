@@ -11,6 +11,7 @@
 #include <QList>
 
 #include "textureobjectbase.h"
+#include "object/scene.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -690,6 +691,9 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
     quad.quad = new GL::ScreenQuad(qname);
 
     auto src = new GL::ShaderSource(csrc);
+    if (auto s = to->sceneObject())
+        if (s->isRendering())
+            src->addDefine("#ifndef MO_RENDER\n#define MO_RENDER\n#endif", false);
 
     // resolve includes
     src->replaceIncludes([this](const QString& url, bool do_search)

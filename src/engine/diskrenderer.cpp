@@ -225,6 +225,8 @@ bool DiskRenderer::Private::initScene()
 
     // request lazy resource creation instead of multi-threaded
     scene->setLazyFlag(true);
+    // tell everyone that disk rendering is requested (e.g. for quality)
+    scene->setRendering(true);
 
     // init samplerate
     scene->setSceneSampleRate(rendSet.audioConfig().sampleRate());

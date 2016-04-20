@@ -779,6 +779,11 @@ void Model3d::setupDrawable_()
     src->loadDefaultSource();
 
     QString defines;
+
+    if (auto s = sceneObject())
+        if (s->isRendering())
+            defines += "#define MO_RENDER";
+
     if (numberLightSources() > 0 && lightMode_->baseValue() != LM_NONE)
         defines += ("\n#define MO_ENABLE_LIGHTING");
     // still pass light info

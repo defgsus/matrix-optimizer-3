@@ -93,6 +93,7 @@ Scene::Scene() :
     p_audioCon_             (new AudioObjectConnections()),
     p_isPlayback_           (false),
     p_lazyFlag_             (false),
+    p_rendering_            (false),
     p_sceneTime_            (0),
     p_samplePos_            (0)
 {

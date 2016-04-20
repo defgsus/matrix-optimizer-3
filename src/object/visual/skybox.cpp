@@ -9,6 +9,7 @@
 */
 
 #include "skybox.h"
+#include "object/scene.h"
 #include "object/util/useruniformsetting.h"
 #include "object/util/texturesetting.h"
 #include "object/param/parameters.h"
@@ -368,6 +369,10 @@ GL::ShaderSource Skybox::Private::getShaderSource() const
         src.loadVertexSource(":/shader/default.vert");
         src.loadFragmentSource(":/shader/skybox.frag");
 
+        if (auto s = p->sceneObject())
+            if (s->isRendering())
+                src.addDefine("#define MO_RENDER", false);
+
         QString decl;
 
         decl = QString("uniform %1 u_tex_color;")
@@ -475,6 +480,7 @@ bool Skybox::Private::updateGl()
     {
         for (const GL::Shader::CompileMessage& msg : drawable->shader()->compileMessages())
         {
+            MO_GL_WARNING(msg.line << ": " << msg.text);
             if (msg.program == GL::Shader::P_FRAGMENT
                 || msg.program == GL::Shader::P_LINKER)
             {

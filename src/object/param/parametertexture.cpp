@@ -162,7 +162,7 @@ void ParameterTexture::serialize(IO::DataStream &io) const
 {
     Parameter::serialize(io);
 
-    io.writeHeader("partex", 4);
+    io.writeHeader("partex", 5);
 
     // v2
     io << magModeIds[p_->magMode] << minModeIds[p_->minMode]
@@ -170,13 +170,15 @@ void ParameterTexture::serialize(IO::DataStream &io) const
     // v3
     io << inputTypeIds[p_->inputType];
     // v4 removed filename QString
+    // v5
+    io << (qint64)p_->mipmaps;
 }
 
 void ParameterTexture::deserialize(IO::DataStream &io)
 {
     Parameter::deserialize(io);
 
-    const int ver = io.readHeader("partex", 4);
+    const int ver = io.readHeader("partex", 5);
 
     if (ver >= 2)
     {
@@ -198,6 +200,12 @@ void ParameterTexture::deserialize(IO::DataStream &io)
     }
     else
         p_->inputType = p_->defaultInputType;
+
+    if (ver >= 5)
+    {
+        qint64 mm;
+        io >> mm; p_->mipmaps = mm;
+    }
 
     p_->needChange = true;
 }
