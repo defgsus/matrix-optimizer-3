@@ -575,8 +575,8 @@ bool DiskRenderer::Private::prepareDir(const QString& dir1)
     {
         dir = dir.left(idx);
     }
-    else
-        return true;
+    //else
+    //    return true;
 
 //    MO_DEBUG("preparing dir [" << dir << "]");
 
