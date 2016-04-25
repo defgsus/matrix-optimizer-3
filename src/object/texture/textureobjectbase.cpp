@@ -67,7 +67,7 @@ struct TextureObjectBase::PrivateTO
     void createShaderQuad(const GL::ShaderSource& src, const QList<QString>& texNames);
     void createFbo(const QSize& s, uint depth = 1);
     void drawFramebuffer(const RenderTime& time, int width, int height);
-    void renderShaderQuad(uint index, const RenderTime& time, uint& texSlot);
+    void renderShaderQuad(uint index, const RenderTime& time, uint* texSlot);
     const QString& name() const { return to->name(); } // for debug
 
     /** A quad and shader with associated uniforms */
@@ -467,11 +467,12 @@ GL::ScreenQuad * TextureObjectBase::createShaderQuad(
     return p_to_->shaderQuads.back().quad;
 }
 
-void TextureObjectBase::drawFramebuffer(const RenderTime& time, int width, int height)
+void TextureObjectBase::drawFramebuffer(
+        const RenderTime& time, int width, int height)
 {
     p_to_->drawFramebuffer(time, width, height);
 }
-void TextureObjectBase::renderShaderQuad(uint index, const RenderTime& time, uint& texSlot)
+void TextureObjectBase::renderShaderQuad(uint index, const RenderTime& time, uint* texSlot)
 {
     p_to_->renderShaderQuad(index, time, texSlot);
 }
@@ -817,9 +818,11 @@ QSize TextureObjectBase::adjustResolution(const QSize& res) const
     }
 }
 
-void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime& time, uint& texSlot)
+void TextureObjectBase::PrivateTO::renderShaderQuad(
+        uint index, const RenderTime& time, uint* texSlot)
 {
-    MO_TO_DEBUG("renderShaderQuad(" << index << ", " << time << ", " << texSlot << ")");
+    MO_TO_DEBUG("renderShaderQuad(" << index << ", "
+                << time << ", " << *texSlot << ")");
 
     if (index >= (uint)shaderQuads.size()
         || !hasInternalFbo)
@@ -925,19 +928,21 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(uint index, const RenderTime
         if (tex)
         {
             // bind to slot x
-            GL::Texture::setActiveTexture(texSlot);
+            GL::Texture::setActiveTexture(*texSlot);
             tex->bind();
             p_textures[i]->textureParam()->applyTextureParam(tex);
             // tell shader
             if (i < quad.u_tex.length() && quad.u_tex[i])
-                quad.u_tex[i]->ints[0] = texSlot;
+                quad.u_tex[i]->ints[0] = *texSlot;
 
-            ++texSlot;
+            ++(*texSlot);
         }
     }
     GL::Texture::setActiveTexture(0);
 
     // --- render ---
+
+    //quad.quad->shader()->dumpUniforms();
 
     MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
 

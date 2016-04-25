@@ -185,12 +185,12 @@ protected:
         @p texSlot determines the first texture slot to bind the input textures to,
         and returns the next free slot.
         @note does nothing if initInternalFbo(false) */
-    void renderShaderQuad(uint index, const RenderTime & time, uint& texSlot);
+    void renderShaderQuad(uint index, const RenderTime & time, uint* texSlot);
 
     /** Renders the first quad, starting at texture slot 0.
         @note does nothing if initInternalFbo(false) */
     void renderShaderQuad(const RenderTime& time)
-        { uint texSlot = 0; renderShaderQuad(0, time, texSlot); }
+        { uint texSlot = 0; renderShaderQuad(0, time, &texSlot); }
 
     /** Render the index'th quad onto the given framebuffer.
         u_time, u_resolution and other uniforms are updated.

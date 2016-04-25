@@ -248,15 +248,17 @@ QString UserUniformSetting::getDeclarations() const
     return decl;
 }
 
-void UserUniformSetting::tieToShader(GL::Shader * s)
+void UserUniformSetting::tieToShader(GL::Shader * shader)
 {
     for (Uniform & u : uniforms_)
     if (u.isUsed() && !u.p_name->value().isEmpty())
     {
+        u.uniform = shader->getUniform(u.p_name->value(), false);
+        if (!u.uniform)
+            continue;
+
         if (!u.isBufferTexture())
         {
-            u.uniform = s->getUniform(u.p_name->value(), false);
-
             // check if type is compatible
             if (u.uniform && !(
                         u.uniform->type() == gl::GL_FLOAT
@@ -272,8 +274,6 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
         // create a texture
         else
         {
-            // to set texture slot
-            u.uniform = s->getUniform(u.p_name->value(), false);
             // update texture
             if (!u.ownTexture)
             {
@@ -291,7 +291,8 @@ void UserUniformSetting::tieToShader(GL::Shader * s)
                     informat = gl::GL_RGB;
                 if (ut == UT_T4)
                     informat = gl::GL_RGBA;
-                u.ownTexture->create(u.p_length->baseValue(), gl::GL_RGB32F, informat, gl::GL_FLOAT, 0);
+                u.ownTexture->create(u.p_length->baseValue(),
+                                     gl::GL_RGBA32F, informat, gl::GL_FLOAT, 0);
             }
         }
     }
@@ -335,7 +336,8 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint* texSlot)
                 u.texBuf.resize(bsize);
 
             // sample inputs
-            const Double rangeStep = u.p_timerange->value(time) / std::max(1, int(len)-1);
+            const Double rangeStep = u.p_timerange->value(time)
+                                     / std::max(1, int(len)-1);
             RenderTime ti(time);
             for (uint j=0; j<len; ++j)
             {
@@ -344,9 +346,10 @@ void UserUniformSetting::updateUniforms(const RenderTime& time, uint* texSlot)
                 ti -= rangeStep;
             }
 
-            u.ownTexture->setActiveTexture(*texSlot);
+            GL::Texture::setActiveTexture(*texSlot);
             u.ownTexture->bind();
             u.uniform->ints[0] = *texSlot;
+            //MO_PRINT("upload " << u.uniform->name() << " " << *texSlot);
             ++(*texSlot);
 
             u.ownTexture->upload(&u.texBuf[0]);
@@ -372,3 +375,5 @@ void UserUniformSetting::releaseGl()
 }
 
 } // namespace MO
+
+

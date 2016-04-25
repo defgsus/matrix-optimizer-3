@@ -432,51 +432,59 @@ void Shader::sendUniform(const Uniform * u)
 
     switch (u->type())
     {
-    case GL_SAMPLER_2D:
-    case GL_INT:
-        MO_CHECK_GL_THROW( glUniform1i(u->location_, u->ints[0]) );
-    break;
+        case GL_SAMPLER_1D:
+        case GL_SAMPLER_1D_SHADOW:
+        case GL_SAMPLER_2D:
+        case GL_SAMPLER_2D_SHADOW:
+        case GL_SAMPLER_2D_RECT:
+        case GL_SAMPLER_2D_RECT_SHADOW:
+        case GL_SAMPLER_3D:
+        case GL_SAMPLER_CUBE:
+        case GL_INT:
+            //MO_PRINT("INT " << u->name() << " " << u->location_ << " " << u->ints[0]);
+            MO_CHECK_GL_THROW( glUniform1i(u->location_, u->ints[0]) );
+        break;
 
-    case GL_INT_VEC2:
-        MO_CHECK_GL_THROW( glUniform2i(u->location_, u->ints[0], u->ints[1]) );
-    break;
-    case GL_INT_VEC3:
-        MO_CHECK_GL_THROW( glUniform3i(u->location_, u->ints[0], u->ints[1], u->ints[2]) );
-    break;
-    case GL_INT_VEC4:
-        MO_CHECK_GL_THROW( glUniform4i(u->location_, u->ints[0], u->ints[1], u->ints[2], u->ints[3]) );
-    break;
+        case GL_INT_VEC2:
+            MO_CHECK_GL_THROW( glUniform2i(u->location_, u->ints[0], u->ints[1]) );
+        break;
+        case GL_INT_VEC3:
+            MO_CHECK_GL_THROW( glUniform3i(u->location_, u->ints[0], u->ints[1], u->ints[2]) );
+        break;
+        case GL_INT_VEC4:
+            MO_CHECK_GL_THROW( glUniform4i(u->location_, u->ints[0], u->ints[1], u->ints[2], u->ints[3]) );
+        break;
 
-    case GL_FLOAT:
-        MO_CHECK_GL_THROW( glUniform1f(u->location_, u->floats[0]) );
-    break;
-    case GL_FLOAT_VEC2:
-        MO_CHECK_GL_THROW( glUniform2f(u->location_, u->floats[0], u->floats[1]) );
-    break;
-    case GL_FLOAT_VEC3:
-        MO_CHECK_GL_THROW( glUniform3f(u->location_, u->floats[0], u->floats[1], u->floats[2]) );
-    break;
-    case GL_FLOAT_VEC4:
-        //MO_DEBUG_GL(activated_ << "," << u->location_ << "," << u->floats[0] << ","
-        //                << u->floats[1] << "," << u->floats[2] << "," << u->floats[3]);
-        MO_CHECK_GL_THROW( glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
-    break;
+        case GL_FLOAT:
+            MO_CHECK_GL_THROW( glUniform1f(u->location_, u->floats[0]) );
+        break;
+        case GL_FLOAT_VEC2:
+            MO_CHECK_GL_THROW( glUniform2f(u->location_, u->floats[0], u->floats[1]) );
+        break;
+        case GL_FLOAT_VEC3:
+            MO_CHECK_GL_THROW( glUniform3f(u->location_, u->floats[0], u->floats[1], u->floats[2]) );
+        break;
+        case GL_FLOAT_VEC4:
+            //MO_DEBUG_GL(activated_ << "," << u->location_ << "," << u->floats[0] << ","
+            //                << u->floats[1] << "," << u->floats[2] << "," << u->floats[3]);
+            MO_CHECK_GL_THROW( glUniform4f(u->location_, u->floats[0], u->floats[1], u->floats[2], u->floats[3]) );
+        break;
 
-    case GL_FLOAT_MAT2:
-        MO_CHECK_GL_THROW( glUniformMatrix2fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
-    break;
+        case GL_FLOAT_MAT2:
+            MO_CHECK_GL_THROW( glUniformMatrix2fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        break;
 
-    case GL_FLOAT_MAT3:
-        MO_CHECK_GL_THROW( glUniformMatrix3fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
-    break;
+        case GL_FLOAT_MAT3:
+            MO_CHECK_GL_THROW( glUniformMatrix3fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        break;
 
-    case GL_FLOAT_MAT4:
-        //for (int i=0; i<16; ++i) MO_DEBUG(u->floats[i]);
-        MO_CHECK_GL_THROW( glUniformMatrix4fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
-    break;
+        case GL_FLOAT_MAT4:
+            //for (int i=0; i<16; ++i) MO_DEBUG(u->floats[i]);
+            MO_CHECK_GL_THROW( glUniformMatrix4fv(u->location_, 1, GL_FALSE, &u->floats[0]) );
+        break;
 
-    default:
-        //MO_GL_WARNING("unhandled uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
+        default:
+            //MO_GL_WARNING("unhandled uniform type '" << u->type_ << "' in Shader(" << name_ << ")");
         break;
     }
 }
@@ -503,8 +511,8 @@ void Shader::dumpUniforms(std::ostream &out) const
     for (Uniform * u : uniformList_)
     {
         out << "[" << u->name() << "] @ " << u->location() << " autosend "
-            << (u->autoSend() ? "on" : "off") << "\n"
-            << "ints(" << u->ints[0] << ", " << u->ints[1] << ", " << u->ints[2] << ", " << u->ints[3] << ") "
+            << (u->autoSend() ? "on" : "off")
+            << "\n  ints(" << u->ints[0] << ", " << u->ints[1] << ", " << u->ints[2] << ", " << u->ints[3] << ") "
             << "floats(" << u->floats[0] << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")"
             << std::endl;
     }

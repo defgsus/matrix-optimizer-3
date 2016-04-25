@@ -39,7 +39,8 @@ class FilterBankAO::Private
         * paramFreqAdd,
         * paramFreqMul,
         * paramReso,
-        * paramAmp;
+        * paramAmp,
+        * paramAmpHighBoost;
         //* paramReset;
     ParameterInt
         * paramOrder;
@@ -90,36 +91,48 @@ void FilterBankAO::createParameters()
     params()->beginParameterGroup("filter", tr("Filter"));
     initParameterGroupExpanded("filter");
 
-        p_->paramType = params()->createSelectParameter("_filter_type", tr("filter type"),
-                                                  tr("Selectes the type of filter"),
-                                                  AUDIO::MultiFilter::filterTypeIds,
-                                                  AUDIO::MultiFilter::filterTypeNames,
-                                                  AUDIO::MultiFilter::filterTypeStatusTips,
-                                                  AUDIO::MultiFilter::filterTypeEnums,
-                                                  AUDIO::MultiFilter::T_24_LOW, true, false);
+        p_->paramType = params()->createSelectParameter(
+                    "_filter_type", tr("filter type"),
+                  tr("Selectes the type of filter"),
+                  AUDIO::MultiFilter::filterTypeIds,
+                  AUDIO::MultiFilter::filterTypeNames,
+                  AUDIO::MultiFilter::filterTypeStatusTips,
+                  AUDIO::MultiFilter::filterTypeEnums,
+                  AUDIO::MultiFilter::T_24_LOW, true, false);
 
         p_->paramOrder = params()->createIntParameter("_filter_order", tr("order"),
-                                                   tr("The order (sharpness) of the filter for the 'nth order' types"),
-                                                   2,
-                                                   1, 10,
-                                                   1, true, false);
+           tr("The order (sharpness) of the filter for the 'nth order' types"),
+           2,
+           1, 10,
+           1, true, false);
 
-        p_->paramFreqStart = params()->createFloatParameter("_filter_freq_start", tr("start frequency"),
-                                                   tr("The first frequency of the filter in Hertz"),
-                                                   100.0, 10.0);
-        p_->paramFreqAdd = params()->createFloatParameter("_filter_freq_add", tr("+ frequency"),
-                                                   tr("The frequency to add to the start frequency for each channel in Hertz"),
-                                                   0.0, 10.0);
-        p_->paramFreqMul = params()->createFloatParameter("_filter_freq_mul", tr("* frequency"),
-                                                   tr("The factor to multiply the current frequency for the next channel"),
+        p_->paramFreqStart = params()->createFloatParameter(
+                    "_filter_freq_start", tr("start frequency"),
+                   tr("The first frequency of the filter in Hertz"),
+                                               100.0, 10.0);
+        p_->paramFreqAdd = params()->createFloatParameter(
+                    "_filter_freq_add", tr("+ frequency"),
+                    tr("The frequency to add to the start frequency for "
+                       "each channel in Hertz"),
+                    0.0, 10.0);
+        p_->paramFreqMul = params()->createFloatParameter(
+                    "_filter_freq_mul", tr("* frequency"),
+                    tr("The factor to multiply the current frequency "
+                       "for the next channel"),
                                                    1.0, 0.0625);
 
-        p_->paramReso = params()->createFloatParameter("_filter_reso", tr("resonance"),
-                                                   tr("The filter steepness [0,1]"),
-                                                   0.0, 0.02);
-        p_->paramAmp = params()->createFloatParameter("_filter_amp", tr("amplitude"),
-                                                   tr("The output amplitude of the filter"),
-                                                   1.0, 0.05);
+        p_->paramReso = params()->createFloatParameter(
+                    "_filter_reso", tr("resonance"),
+                    tr("The filter steepness [0,1]"),
+                    0.0, 0.02);
+        p_->paramAmp = params()->createFloatParameter(
+                    "_filter_amp", tr("amplitude"),
+                    tr("The output amplitude of the filter"),
+                    1.0, 0.05);
+        p_->paramAmpHighBoost = params()->createFloatParameter(
+                    "_filter_amp_highboost", tr("amplitude high-boost"),
+                    tr("Increase of amplitude per frequence band"),
+                    0.0, 0.05);
         //p_->paramReset = params()->createGateParameter
     params()->endParameterGroup();
 }
@@ -188,11 +201,13 @@ void FilterBankAO::Private::updateFilterCoeffs(const RenderTime& time)
             freqAdd = paramFreqAdd->value(time),
             freqMul = paramFreqMul->value(time),
             res = paramReso->value(time),
-            amp = paramAmp->value(time);
+            amp = paramAmp->value(time),
+            highBoost = paramAmpHighBoost->value(time);
     int     order = paramOrder->value(time);
     auto    type = (AUDIO::MultiFilter::FilterType)paramType->baseValue();
 
     // each filter per channel
+    int k = 0;
     for (auto & fp : filters[time.thread()].filters)
     {
         auto f = fp.get();
@@ -214,7 +229,8 @@ void FilterBankAO::Private::updateFilterCoeffs(const RenderTime& time)
         }
 
         // does not need MultiFilter::updateCoefficients()
-        f->setOutputAmplitude( amp );
+        f->setOutputAmplitude( amp + highBoost * k );
+        ++k;
 
         // get next frequency
         freq = std::max(Float(1), std::min(Float(ao->sampleRate()-1),

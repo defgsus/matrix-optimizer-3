@@ -304,7 +304,7 @@ void BlurTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& tim
         //s.u_alpha->shader()->dumpUniforms();
 
         uint texSlot = 0;
-        to->renderShaderQuad(s.index, time, texSlot);
+        to->renderShaderQuad(s.index, time, &texSlot);
     }
 }
 
