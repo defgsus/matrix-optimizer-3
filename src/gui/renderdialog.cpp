@@ -20,6 +20,8 @@
 #include <QCheckBox>
 #include <QImageWriter>
 #include <QKeyEvent>
+#include <QMainWindow>
+#include <QScrollArea>
 
 #include "renderdialog.h"
 #include "helpdialog.h"
@@ -79,6 +81,7 @@ struct RenderDialog::Private
         , scene         (0)
         , timeUnit      (0)
         , ignoreWidgets (false)
+        , outputWindow  (0)
     { }
 
     void createWidgets();
@@ -87,6 +90,7 @@ struct RenderDialog::Private
     void updateFromSettings();
     void updateInfoLabels();
     void updateActivity(); // set the widget groups enables according to rendSet
+    void createOutputWindow();
 
     RenderDialog * diag;
 
@@ -97,6 +101,8 @@ struct RenderDialog::Private
     int timeUnit;
     bool ignoreWidgets;
 
+    QMainWindow * outputWindow;
+    QLabel * outputLabel;
     QWidget
             * groupImage,
             * groupAudio,
@@ -163,6 +169,8 @@ RenderDialog::RenderDialog(const QString & sceneFilename, QWidget *parent)
 
 RenderDialog::~RenderDialog()
 {
+    if (p_->outputWindow)
+        settings()->storeGeometry(p_->outputWindow);
     settings()->storeGeometry(this);
 
     p_shutDown_();
@@ -717,6 +725,7 @@ void RenderDialog::error(const QString & e)
     QMessageBox::critical(0, tr("Disk renderer"), e);
 }
 
+
 void RenderDialog::stopRender()
 {
     if (!p_->render)
@@ -740,8 +749,8 @@ void RenderDialog::startRender()
     // on progress
     connect(p_->render, SIGNAL(progress(int)),
             this, SLOT(p_onProgress_(int)), Qt::QueuedConnection);
-    //connect(p_->render, SIGNAL(newImage(QImage)),
-    //        this, SLOT(p_onImage_(QImage)), Qt::QueuedConnection);
+    connect(p_->render, SIGNAL(newImage(QImage)),
+            this, SLOT(p_onImage_(QImage)), Qt::QueuedConnection);
     // on finished/failure
     connect(p_->render, SIGNAL(finished()),
             this, SLOT(p_onFinished_()), Qt::QueuedConnection);
@@ -775,7 +784,8 @@ void RenderDialog::p_onFinished_()
 void RenderDialog::p_onProgress_(int p)
 {
     p_->progBar->setValue(p);
-    p_->labelProgress->setText(p_->render->progressString());
+    if (p_->render)
+        p_->labelProgress->setText(p_->render->progressString());
 }
 
 void RenderDialog::p_shutDown_()
@@ -787,7 +797,28 @@ void RenderDialog::p_shutDown_()
 
 void RenderDialog::p_onImage_(const QImage & img)
 {
-    p_->labelImage->setPixmap(QPixmap::fromImage(img));
+    if (!p_->outputWindow)
+        p_->createOutputWindow();
+    if (p_->outputWindow->isVisible())
+        p_->outputLabel->setPixmap(QPixmap::fromImage(img));
+}
+
+void RenderDialog::Private::createOutputWindow()
+{
+    outputWindow = new QMainWindow(diag);
+    outputWindow->setObjectName(tr("_RendererOutput"));
+    outputWindow->setWindowTitle(tr("Renderer preview"));
+    outputWindow->setMinimumSize(200,200);
+    settings()->restoreGeometry(outputWindow);
+
+    auto s = new QScrollArea(outputWindow);
+    //outputWindow->setCentralWidget(s);
+
+    outputLabel = new QLabel(outputWindow);
+    //s->setWidget(outputLabel);
+    outputWindow->setCentralWidget(outputLabel);
+
+    outputWindow->show();
 }
 
 } // namespace GUI

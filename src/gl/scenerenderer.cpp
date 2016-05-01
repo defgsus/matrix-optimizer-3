@@ -159,9 +159,26 @@ void SceneRenderer::render(bool renderToScreen)
     // -- get render time --
 
 #ifndef MO_DISABLE_AUDIO
-    Double time = timeFunc_ ? timeFunc_() : 0.0;
-    //Double time = scene_->sceneTime();
+    RenderTime rtime;
+    if (timeFuncT_)
+    {
+        rtime = timeFuncT_();
+    }
+    else if (timeFuncD_)
+    {
+        Double time = timeFuncD_();
+        //Double time = scene_->sceneTime();
+        rtime = RenderTime(
+                    time,
+                    std::max(0., std::min(1., time - lastTime_)),
+                    time * scene_->sampleRate(),
+                    scene_->sampleRate(),
+                    256 /** @todo have correct buffer size here */,
+                    MO_GFX_THREAD);
+
+    }
 #else
+#error unmaintained
     Double time = scene_->isPlayback()
             ? CurrentTime::time()
             : scene_->sceneTime();
@@ -170,14 +187,7 @@ void SceneRenderer::render(bool renderToScreen)
     emit scene_->sceneTimeChanged(time);
 #endif
 
-    RenderTime rtime(
-                time,
-                std::max(0., std::min(1., time - lastTime_)),
-                time * scene_->sampleRate(),
-                scene_->sampleRate(),
-                256 /** @todo have correct buffer size here */,
-                MO_GFX_THREAD);
-    lastTime_ = time;
+    lastTime_ = rtime.second();
 
     // -- render --
     try

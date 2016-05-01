@@ -272,7 +272,14 @@ bool DiskRenderer::Private::initScene()
             renderer->setScene(scene);
             renderer->setTimeCallback([this]()
             {
-                return Double(curFrame) / rendSet.imageFps();
+                Double sec = Double(curFrame) / rendSet.imageFps();
+                return RenderTime(
+                            sec,
+                            1. / rendSet.imageFps(),
+                            sec * rendSet.audioConfig().sampleRate(),
+                            rendSet.audioConfig().sampleRate(),
+                            rendSet.audioConfig().bufferSize(),
+                            MO_GFX_THREAD);
             });
             scene->setResolution(QSize(rendSet.imageWidth(), rendSet.imageHeight()));
 
@@ -506,7 +513,7 @@ void DiskRenderer::Private::renderAll()
         }
 
         // emit progress every ms..
-        if (time.elapsed() > 1000 / 5)
+        if (time.elapsed() > 1000 / 2)
         {
             //MO_DEBUG("rendering frame " << f << "/" << rendSet.lengthFrame());
             progress = f * 100.f / rendSet.lengthFrame();

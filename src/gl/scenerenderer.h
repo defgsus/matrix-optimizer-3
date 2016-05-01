@@ -18,6 +18,7 @@
 #include <QSurfaceFormat>
 
 #include "types/float.h"
+#include "types/time.h"
 
 class QSurface;
 
@@ -46,7 +47,8 @@ public:
 
     void setScene(Scene * scene);
 
-    void setTimeCallback(std::function<Double()> timeFunc) { timeFunc_ = timeFunc; }
+    void setTimeCallback(std::function<Double()> timeFunc) { timeFuncD_ = timeFunc; }
+    void setTimeCallback(std::function<RenderTime()> timeFunc) { timeFuncT_ = timeFunc; }
 
     void setSize(const QSize& resolution);
 
@@ -73,7 +75,8 @@ private:
 
     QSize size_;
 
-    std::function<Double()> timeFunc_;
+    std::function<Double()> timeFuncD_;
+    std::function<RenderTime()> timeFuncT_;
 
     Double renderSpeed_, lastTime_;
 };

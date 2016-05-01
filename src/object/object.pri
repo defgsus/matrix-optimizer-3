@@ -140,7 +140,9 @@ HEADERS += \
     $$PWD/texture/cubemapto.h \
     $$PWD/pythonobject.h \
     $$PWD/audio/synthao.h \
-    $$PWD/audio/shaderao.h
+    $$PWD/audio/shaderao.h \
+    $$PWD/control/counterco.h \
+    $$PWD/audio/counterao.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -275,4 +277,6 @@ SOURCES += \
     $$PWD/texture/cubemapto.cpp \
     $$PWD/pythonobject.cpp \
     $$PWD/audio/synthao.cpp \
-    $$PWD/audio/shaderao.cpp
+    $$PWD/audio/shaderao.cpp \
+    $$PWD/control/counterco.cpp \
+    $$PWD/audio/counterao.cpp

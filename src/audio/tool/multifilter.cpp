@@ -454,7 +454,9 @@ void MultiFilter::updateCoefficients()
                 fixed_->setBandType(FixedFilter::BT_HIGHPASS);
             break;
             case T_NTH_BESSEL_BAND:
-                fixed_->setType(FixedFilter::FT_BESSEL); fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                fixed_->setType(FixedFilter::FT_BESSEL);
+                fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                /// @todo Use of samplerate here is maybe bad
                 fixed_->setBandpassSize(10 + (1.0-reso_) * sr_ / 3);
             break;
             case T_NTH_CHEBYCHEV_LOW:
@@ -466,7 +468,8 @@ void MultiFilter::updateCoefficients()
                 fixed_->setBandType(FixedFilter::BT_HIGHPASS);
             break;
             case T_NTH_CHEBYCHEV_BAND:
-                fixed_->setType(FixedFilter::FT_CHEBYCHEV); fixed_->setBandType(FixedFilter::BT_BANDPASS);
+                fixed_->setType(FixedFilter::FT_CHEBYCHEV);
+                fixed_->setBandType(FixedFilter::BT_BANDPASS);
                 fixed_->setBandpassSize(10 + (1.0-reso_) * sr_ / 3);
             break;
             case T_NTH_BUTTERWORTH_LOW:

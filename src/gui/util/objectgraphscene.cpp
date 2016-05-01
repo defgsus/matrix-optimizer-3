@@ -1523,7 +1523,7 @@ void ObjectGraphScene::Private::createClipboardMenu(
         // delete
         a = actions.addAction(plural ? tr("Delete objects") : tr("Delete"), scene);
         a->setStatusTip(tr("Deletes the object(s) from the scene"));
-        a->setShortcut(Qt::CTRL + Qt::Key_Delete);
+        //a->setShortcut(Qt::CTRL + Qt::Key_Delete);
         connect(a, &QAction::triggered, [this, items]()
         {
             if (items.size() == 1)

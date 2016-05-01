@@ -7,7 +7,7 @@
 
     <p>created 13.12.2014</p>
 */
-
+#include <QDebug>
 #include <memory>
 
 #include "filterbankao.h"
