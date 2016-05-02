@@ -33,6 +33,10 @@ public:
     virtual void releaseGl(uint thread) Q_DECL_OVERRIDE;
     virtual void renderGl(const GL::RenderSettings&, const RenderTime& time) Q_DECL_OVERRIDE;
 
+    // ---- ValueShaderSourceInterface -----
+
+    virtual GL::ShaderSource valueShaderSource(uint channel) const override;
+
     // ---- EvolutionEditInterface ---------
 
     virtual const EvolutionBase* getEvolution(const QString& key) const override;

@@ -72,7 +72,7 @@ void MouseObject::createParameters()
                 "range", tr("position range"),
                 tr("Selects the range of the mouse coordinate output"),
                 { "pixel", "norm", "norm_signed" },
-                { tr("pixels"), tr("normalized"), tr("normalized signed") },
+                { tr("pixels"), tr("normalized [0,1]"), tr("normalized signed [-1,1]") },
                 { tr("The coordinates are output as true pixel value"),
                   tr("The coordiantes are output in the range [0,1]"),
                   tr("The coordinates are output in the range [-1,1]")},

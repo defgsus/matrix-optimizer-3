@@ -46,6 +46,7 @@ struct KaliSetTO::Private
 
     void createParameters();
     QString createEvoShader(KaliSetEvolution*) const;
+    GL::ShaderSource createSource();
     void initGl();
     void releaseGl();
     void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
@@ -57,12 +58,14 @@ struct KaliSetTO::Private
     ParameterFloat
             *p_paramX, *p_paramY, *p_paramZ, *p_paramW,
             *p_offsetX, *p_offsetY, *p_offsetZ, *p_offsetW,
-            *p_scale, *p_scaleX, *p_scaleY,
-            *p_bright, *p_exponent, *p_freq;
+            *p_scale, *p_scaleX, *p_scaleY, *p_scaleZ,
+            *p_bright, *p_exponent, *p_freq,
+            *p_fisheye_ang;
     ParameterInt
             *p_numIter, *p_AntiAlias_;
     ParameterSelect
-            *p_numDim, *p_calcMode, *p_colMode, *p_outMode, *p_mono;
+            *p_numDim, *p_calcMode, *p_posMode, *p_colMode,
+            *p_rgbMode, *p_outMode, *p_mono;
     ParameterText
             *p_param_glsl;
     UserUniformSetting* p_uniforms;
@@ -71,7 +74,8 @@ struct KaliSetTO::Private
             * u_offset,
             * u_scale,
             * u_bright,
-            * u_freq;
+            * u_freq,
+            * u_fisheye_ang;
 };
 
 
@@ -187,6 +191,23 @@ void KaliSetTO::Private::createParameters()
         "}\n", true, false);
         p_param_glsl->setDefaultEvolvable(false);
 
+        p_posMode = to->params()->createSelectParameter(
+                    "pos_mode", tr("slice"),
+                    tr("The shape of the slice through kali-set space"),
+                    { "planar", "fisheye", "cylinder_y", "cylinder_x" },
+                    { tr("planar"), tr("fisheye"), tr("cylinder Y"), tr("cylinder X") },
+                    { tr("Planar slice"),
+                      tr("Spherical slice (only visible with >2 dimensions)"),
+                      tr("Cylindrical slice (only visible with >2 dimensions)"),
+                      tr("Cylindrical slice (only visible with >2 dimensions)") },
+                    { 0, 1, 2, 3 },
+                    0, true, false);
+        p_posMode->setDefaultEvolvable(false);
+
+        p_fisheye_ang = to->params()->createFloatParameter(
+                    "slice_angle", tr("slice angle"),
+                    tr("The angle of the fisheye or cylinder in degree"), 180., 1.);
+
         p_numDim = to->params()->createSelectParameter(
                     "num_dim", tr("dimensions"),
                     tr("The number of dimensions to use in the formula"),
@@ -248,6 +269,9 @@ void KaliSetTO::Private::createParameters()
                     "scale_y", tr("scale y"),
                     tr("Scale on y-axis"), 1., 0.01);
 
+        p_scaleZ = to->params()->createFloatParameter(
+                    "scale_z", tr("scale z"),
+                    tr("Scale on z-axis"), 1., 0.01);
 
     to->params()->endParameterGroup();
 
@@ -271,6 +295,16 @@ void KaliSetTO::Private::createParameters()
               tr("The maximum of all values"),
               tr("The minimum of all values") },
             { 0, 1, 2, 3 },
+            0, true, false);
+
+        p_rgbMode = to->params()->createSelectParameter(
+            "rgb_mode", tr("rgb values"),
+            tr("How the kaliset values are intepreted to rgb"),
+            { "rgb", "hsv" },
+            { tr("as-is"), tr("hsv") },
+            { tr("The values are interpreted as RGB"),
+              tr("The values are interpreted as HSV") },
+            { 0, 1 },
             0, true, false);
 
         p_mono = to->params()->createBooleanParameter("mono", tr("monochrome"),
@@ -318,6 +352,8 @@ void KaliSetTO::onParameterChanged(Parameter * p)
 
     if (p == p_->p_calcMode
         || p == p_->p_colMode
+        || p == p_->p_posMode
+        || p == p_->p_rgbMode
         || p == p_->p_numIter
         || p == p_->p_numDim
         || p == p_->p_outMode
@@ -342,19 +378,24 @@ void KaliSetTO::updateParameterVisibility()
          userfunc = p_->p_calcMode->baseValue() == 1;
 
     int dim = evo ? 3 : p_->p_numDim->baseValue();
+    int posMode = p_->p_posMode->baseValue();
 
     p_->p_paramZ->setVisible(dim >= 3);
     p_->p_paramW->setVisible(dim >= 4);
     p_->p_offsetZ->setVisible(dim >= 3);
     p_->p_offsetW->setVisible(dim >= 4);
+    p_->p_scaleZ->setVisible(dim >= 3 && posMode != 0);
 
-    p_->p_freq->setVisible( p_->p_outMode->baseValue() != 0);
+    p_->p_freq->setVisible( p_->p_outMode->baseValue() == 1);
 
     p_->p_numDim->setVisible(!evo);
     p_->p_numIter->setVisible(!evo);
     p_->p_colMode->setVisible(!evo);
 
     p_->p_param_glsl->setVisible(userfunc);
+
+    //p_->p_posMode->setVisible(!evo);
+    p_->p_fisheye_ang->setVisible(posMode != 1);
 
     p_->p_uniforms->updateParameterVisibility();
 }
@@ -376,7 +417,7 @@ QString KaliSetTO::Private::createEvoShader(KaliSetEvolution* evo) const
             << evo->pMinAmtX() << ", " << evo->pMinAmtY() << ", " << evo->pMinAmtZ() << ");\n"
         "\tconst float minExp = " << evo->pMinExp() << ";\n"
         "\n\t// start pos + random scale and offset\n"
-        "\tvec3 po = vec3(uv * u_scale, 0.) + u_offset.xyz;\n"
+        "\tvec3 po = kali_slice_pos(uv) * u_scale + u_offset.xyz;\n"
         "\n\tvec3 col = vec3(0.);\n"
         "\tfloat md = 1000.;\n"
         "\tconst int numIter = " << evo->pNumIter() << ";\n"
@@ -411,48 +452,48 @@ QString KaliSetTO::Private::createEvoShader(KaliSetEvolution* evo) const
     return str;
 }
 
+GL::ShaderSource KaliSetTO::Private::createSource()
+{
+    GL::ShaderSource src;
+
+    src.loadVertexSource(":/shader/to/default.vert");
+    src.loadFragmentSource(":/shader/to/kaliset.frag");
+    src.pasteDefaultIncludes();
+
+    src.addDefine(QString("#define CALC_MODE %1").arg(p_calcMode->baseValue()), false);
+    src.addDefine(QString("#define POS_MODE %1").arg(p_posMode->baseValue()), false);
+    src.addDefine(QString("#define RGB_MODE %1").arg(p_rgbMode->baseValue()), false);
+    src.addDefine(QString("#define NUM_DIM %1").arg(p_numDim->baseValue()), false);
+    src.addDefine(QString("#define SINE_OUT %1").arg(p_outMode->baseValue()), false);
+    src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()), false);
+    src.addDefine(QString("#define AA %1").arg(p_AntiAlias_->baseValue()), false);
+    if (p_calcMode->baseValue() != 2)
+    {
+        src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
+        src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
+        src.replace("//%mo_user_uniforms%", p_uniforms->getDeclarations());
+        if (p_calcMode->baseValue() == 1)
+            src.replace("//%kali_user_param%", "#line 1\n" + p_param_glsl->baseValue(), true);
+    }
+    else
+    {
+        if (!evo)
+        {
+            evo = new KaliSetEvolution();
+            evo->randomize();
+        }
+        src.replace("//%KaliSet%", createEvoShader(evo));
+    }
+
+    return src;
+}
+
 void KaliSetTO::Private::initGl()
 {
     // shader-quad
 
     GL::Shader* shader;
-    GL::ShaderSource src;
-    try
-    {
-        src.loadVertexSource(":/shader/to/default.vert");
-        src.loadFragmentSource(":/shader/to/kaliset.frag");
-        src.pasteDefaultIncludes();
-
-        src.addDefine(QString("#define CALC_MODE %1").arg(p_calcMode->baseValue()), false);
-        src.addDefine(QString("#define NUM_DIM %1").arg(p_numDim->baseValue()), false);
-        src.addDefine(QString("#define SINE_OUT %1").arg(p_outMode->baseValue()), false);
-        src.addDefine(QString("#define MONOCHROME %1").arg(p_mono->baseValue()), false);
-        src.addDefine(QString("#define AA %1").arg(p_AntiAlias_->baseValue()), false);
-        if (p_calcMode->baseValue() != 2)
-        {
-            src.addDefine(QString("#define NUM_ITER %1").arg(p_numIter->baseValue()), false);
-            src.addDefine(QString("#define COL_MODE %1").arg(p_colMode->baseValue()), false);
-            src.replace("//%mo_user_uniforms%", p_uniforms->getDeclarations());
-            if (p_calcMode->baseValue() == 1)
-                src.replace("//%kali_user_param%", "#line 1\n" + p_param_glsl->baseValue(), true);
-        }
-        else
-        {
-            if (!evo)
-            {
-                evo = new KaliSetEvolution();
-                evo->randomize();
-            }
-            src.replace("//%KaliSet%", createEvoShader(evo));
-        }
-
-    }
-    catch (Exception& e)
-    {
-        to->setErrorMessage(e.what());
-        releaseGl();
-        throw;
-    }
+    GL::ShaderSource src = createSource();
 
     shader = to->createShaderQuad(
                 src, { "u_tex" })->shader();
@@ -475,6 +516,7 @@ void KaliSetTO::Private::initGl()
     u_scale = shader->getUniform("u_scale", false);
     u_bright = shader->getUniform("u_bright", false);
     u_freq = shader->getUniform("u_freq", false);
+    u_fisheye_ang = shader->getUniform("u_fisheye_ang", false);
 
     p_uniforms->tieToShader(shader);
 }
@@ -483,6 +525,15 @@ void KaliSetTO::Private::releaseGl()
 {
     p_uniforms->releaseGl();
 }
+
+GL::ShaderSource KaliSetTO::valueShaderSource(uint channel) const
+{
+    GL::ShaderSource src;
+    if (channel == 0)
+        src = p_->createSource();
+    return src;
+}
+
 
 void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
 {
@@ -511,7 +562,8 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
         Float s = p_scale->value(time);
         u_scale->setFloats(
                     p_scaleX->value(time) * s,
-                    p_scaleY->value(time) * s);
+                    p_scaleY->value(time) * s,
+                    p_scaleZ->value(time) * s);
     }
 
     if (u_bright)
@@ -525,6 +577,9 @@ void KaliSetTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& 
     {
         u_freq->floats[0] = p_freq->value(time);
     }
+
+    if (u_fisheye_ang)
+        u_fisheye_ang->floats[0] = p_fisheye_ang->value(time);
 
     uint texSlot=0;
     p_uniforms->updateUniforms(time, &texSlot);
@@ -557,7 +612,7 @@ void KaliSetTO::setEvolution(const QString& key, const EvolutionBase* evo)
     auto k = dynamic_cast<const KaliSetEvolution*>(evo);
     p_->evo = k ? k->createClone() : nullptr;
 
-    if (p_->p_calcMode->baseValue() == 1 && k)
+    if (p_->p_calcMode->baseValue() == 2 && k)
     {
         p_->p_paramZ->setValue(0.);
         p_->p_offsetX->setValue(k->pPosX());

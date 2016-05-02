@@ -30,7 +30,7 @@
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  3
-#define MO_VERSION_MICRO 8
+#define MO_VERSION_MICRO 9
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */

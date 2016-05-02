@@ -5,15 +5,20 @@
 //#define NUM_ITER 1-x
 // 0 final, 1 average, 2 max, 3 min
 //#define COL_MODE 3
+// 0 rgb, 1 hsv
+//#define RGB_MODE 0,1
 //#define NUM_DIM 2,3,4
 //#define MONOCHROME 0,1
 //#define CALC_MODE basic,userfunc,evo
+// 0 = planar, 1 = spherical/fisheye, 2 cylinder-y, 3 cylinder-x
+//#define POS_MODE 0,1,2,3
 
 uniform vec4    u_kali_param;
 uniform vec4    u_offset;
-uniform vec2    u_scale;
+uniform vec3    u_scale;
 uniform vec2    u_bright; // x=brightness, y=exponent
 uniform float   u_freq;
+uniform float   u_fisheye_ang;
 
 //%mo_user_uniforms%
 
@@ -28,7 +33,35 @@ uniform float   u_freq;
     vec3 toVec3(in vec4 v) { return v.xyz; }
 #endif
 
+vec3 uv_to_sphere(in vec2 st, in float angle)
+{
+    // distance from center
+    float dist = length(st);
+
+    // cartesian screen-space to spherical
+    float theta = dist * 3.14159265 * angle / 360.0,
+          phi = atan(st.y, st.x);
+
+    // spherical-to-cartesian
+    return vec3(sin(theta) * cos(phi),
+                sin(theta) * sin(phi),
+                cos(theta));
+}
+
 //%kali_user_param%
+
+#if POS_MODE == 0
+vec3 kali_slice_pos(in vec2 pos) { return vec3(pos, 0.); }
+#elif POS_MODE == 1
+vec3 kali_slice_pos(in vec2 pos) { return uv_to_sphere(pos, u_fisheye_ang); }
+#elif POS_MODE == 2
+vec3 kali_slice_pos(in vec2 pos)
+    { vec3 p = uv_to_sphere(pos * vec2(1,0), u_fisheye_ang); p.y = pos.y; return p; }
+#elif POS_MODE == 3
+vec3 kali_slice_pos(in vec2 pos)
+    { vec3 p = uv_to_sphere(pos * vec2(0,1), u_fisheye_ang); p.x = pos.x; return p; }
+#endif
+
 //%KaliSet%
 
 vec3 kali_color(in vec2 pos)
@@ -37,11 +70,11 @@ vec3 kali_color(in vec2 pos)
     vec3 r = evolvedKaliSet(pos);
 #else
     #if NUM_DIM == 2
-        vec2 p = pos * u_scale + u_offset.xy;
+        vec2 p = kali_slice_pos(pos).xy * u_scale.xy + u_offset.xy;
     #elif NUM_DIM == 3
-        vec3 p = vec3(pos * u_scale, 0.) + u_offset.xyz;
+        vec3 p = kali_slice_pos(pos) * u_scale + u_offset.xyz;
     #elif NUM_DIM == 4
-        vec4 p = vec4(pos * u_scale, 0., 0.) + u_offset;
+        vec4 p = vec4(kali_slice_pos(pos) * u_scale, 0.) + u_offset;
     #endif
 
 
@@ -89,6 +122,15 @@ vec3 kali_color(in vec2 pos)
     return r;
 }
 
+#if RGB_MODE == 1
+// http://lolengine.net/blog/2013/07/27/rgb-to-hsv-in-glsl
+vec3 kali_hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+#endif
 
 void main()
 {
@@ -103,6 +145,12 @@ void main()
     }
     col /= (AA * AA);
 #endif
+
+#if RGB_MODE == 1
+    col = kali_hsv2rgb(col);
+#endif
+
+    // brightness/contrast
     col = pow(max(col * u_bright.x, vec3(0.)), vec3(u_bright.y));
 
 #if MONOCHROME
