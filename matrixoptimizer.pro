@@ -100,7 +100,8 @@ LIBS += -lglbinding \
         # numpy
         #-L/home/defgsus/.local/lib/ -lnpymath-1.8 \
         -lshp -latomic \
-#        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
+        -lavutil -lavcodec -lavformat -lswscale \
+        -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
         -ldl    # dynamic linking
 #        -lCGAL \
 }

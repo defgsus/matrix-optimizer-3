@@ -25,6 +25,7 @@ namespace IO {
         FT_OBJECT_TEMPLATE,
         FT_TEXTURE,
         FT_NORMAL_MAP,
+        FT_VIDEO,
         FT_MODEL,
         FT_SHAPEFILE,
         FT_GEOMETRY_SETTINGS,
