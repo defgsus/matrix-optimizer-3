@@ -287,7 +287,7 @@ void AudioDevice::init(int inDeviceIndex,
             MO_AUDIO_ERROR(API, "can not get audio device info for input device " << inDeviceId_);
         }
     }
-    else if (outDeviceIndex >= 0)
+    else if (outDeviceIndex >= 0 && numInputChannels > 0)
     {
         ipainf = Pa_GetDeviceInfo(outDeviceIndex);
         if (!ipainf && numInputChannels > 0)
@@ -344,7 +344,7 @@ void AudioDevice::init(int inDeviceIndex,
 
     // ---- open stream ----
 
-    MO_DEBUG("opening audio stream"
+    MO_PRINT("opening audio stream"
                    << "\nindevice   " << inDeviceIndex << " " << (ipainf ? ipainf->name : "-")
                    << "\noutdevice  " << outDeviceIndex << " " << (opainf ? opainf->name : "-")
                    << "\nsamplerate " << sampleRate

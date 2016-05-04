@@ -265,7 +265,10 @@ HEADERS += \
     $$PWD/io/log_snd.h \
     $$PWD/gl/gl_state.h \
     $$PWD/math/timeline_point.h \
-    $$PWD/types/refcounted_info.h
+    $$PWD/types/refcounted_info.h \
+    $$PWD/video/ffm/ffmpeg.h \
+    $$PWD/video/ffm/videostream.h \
+    $$PWD/video/decoderframe.h
 
 
 SOURCES += \
@@ -477,5 +480,7 @@ SOURCES += \
     $$PWD/python/34/py_tree.cpp \
     $$PWD/types/refcounted.cpp \
     $$PWD/gl/gl_state.cpp \
-    $$PWD/math/timeline_point.cpp
+    $$PWD/math/timeline_point.cpp \
+    $$PWD/video/ffm/ffmpeg.cpp \
+    $$PWD/video/ffm/videostream.cpp
 

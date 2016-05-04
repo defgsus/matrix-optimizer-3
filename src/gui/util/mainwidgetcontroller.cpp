@@ -2078,6 +2078,7 @@ void MainWidgetController::initScene()
         {
             // clear filename temporarily (against continous crash-on-load)
             IO::Files::setFilename(IO::FT_SCENE, "");
+            settings()->sync();
             loadScene_(fn);
             // and set back
             IO::Files::setFilename(IO::FT_SCENE, fn);
