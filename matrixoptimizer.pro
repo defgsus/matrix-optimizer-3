@@ -111,9 +111,9 @@ LIBS += -lkernel32 -lpsapi \
         -lopengl32 -lglu32 -lglbinding \
         -lportaudio -lPortMidi -lsndfile-1 \
         -ljpeg \
-        -langelscript \
+        -langelscript
         # ffmpeg
-        avutil.lib avcodec.lib avformat.lib swscale.lib \
+        #avutil.lib avcodec.lib avformat.lib swscale.lib \
         #-lpython35
         #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0
 }
