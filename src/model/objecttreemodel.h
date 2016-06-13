@@ -26,7 +26,8 @@ public:
     void setRootObject(Object * rootObject);
     Object * rootObject() const;
 
-    Object * itemForIndex(const QModelIndex& index) const;
+    Object * objectForIndex(const QModelIndex& index) const;
+    QModelIndex indexForObject(Object*);
 
     // --- interface impl. ---
 
@@ -40,6 +41,9 @@ public:
             int section, Qt::Orientation orientation, int role) const override;
     virtual QVariant data(const QModelIndex &index, int role) const override;
     virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+    virtual bool setData(const QModelIndex &index, const QVariant&,
+                         int role = Qt::EditRole) override;
 
 signals:
 

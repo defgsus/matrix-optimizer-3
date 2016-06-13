@@ -580,7 +580,8 @@ QString Object::makeUniqueName(const QString &name) const
     return ret;
 }
 
-void Object::setAttachedData(const QVariant &value, DataType type, const QString &id)
+void Object::setAttachedData(
+        const QVariant &value, DataType type, const QString &id)
 {
     // remove entry
     if (value.isNull())

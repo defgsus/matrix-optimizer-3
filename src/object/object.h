@@ -200,7 +200,9 @@ public:
         /** Height of a track in TrackView (int) */
         DT_TRACK_HEIGHT,
         /** Value of vertical scrollbar in ParmaterView (int) */
-        DT_PARAM_VIEW_Y
+        DT_PARAM_VIEW_Y,
+        /** Expanded or collapsed in ObjectTreeView (bool) */
+        DT_TREE_VIEW_EXPANDED
     };
 
     // -------------- ctor -------------------
@@ -326,7 +328,8 @@ public:
     virtual bool hasAudioOutput() const { return false; }
 
     /** Returns true when there are transformation objects among the children. */
-    bool hasTransformationObjects() const { return !transformationObjects().isEmpty(); }
+    bool hasTransformationObjects() const
+        { return !transformationObjects().isEmpty(); }
 
     /** Returns true when the object can be deleted by the ObjectTreeView */
     bool canBeDeleted() const;
@@ -339,7 +342,8 @@ public:
     /** Attaches data to the object.
         The data is saved with the object.
         A null QVariant removes the entry */
-    void setAttachedData(const QVariant& value, DataType type, const QString& id = "");
+    void setAttachedData(
+            const QVariant& value, DataType type, const QString& id = "");
 
     /** Returns the attached data, or a null QVariant */
     QVariant getAttachedData(DataType type, const QString& id = "") const;

@@ -1002,7 +1002,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (renderEngine_)
         renderEngine_->release();
 
-    objectTreeView_->setObject(nullptr);
+    objectTreeView_->setRootObject(nullptr);
     objectView_->setObject(nullptr);
     sequencer_->setNothing();
 
@@ -1117,7 +1117,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
-    objectTreeView_->setObject(scene_);
+    objectTreeView_->setRootObject(scene_);
     objectGraphView_->setRootObject(scene_);
     objectView_->setObject(scene_);
     objectOutputView()->setObject(0);
@@ -1393,6 +1393,8 @@ void MainWidgetController::onObjectSelectedTree_(Object * o)
 
     // update object editor
     objectView_->setObject(o);
+    objectOutputView()->setObject(o);
+    objectGraphView_->setFocusObject(o);
 
     if (!o)
     {
@@ -1436,6 +1438,7 @@ void MainWidgetController::onObjectSelectedGraphView_(Object * o)
     // update object editor
     objectView_->setObject(o);
     objectOutputView()->setObject(o);
+    objectTreeView_->selectObject(o);
 
     if (!o)
     {

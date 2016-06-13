@@ -24,13 +24,18 @@ public:
     explicit ObjectTreeView(QWidget *parent = 0);
     ~ObjectTreeView();
 
+    Object* rootObject() const;
+    Object* selectedObject() const;
+
 signals:
 
     void objectSelected(MO::Object*);
 
 public slots:
 
-    void setObject(Object*);
+    void setRootObject(Object*);
+    void selectObject(Object*);
+    void selectNone();
 
 private:
     struct Private;

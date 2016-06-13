@@ -17,6 +17,7 @@
 #include "object/object.h"
 #include "gui/util/appicons.h"
 #include "object/util/objectfactory.h"
+#include "object/util/objecteditor.h"
 #include "io/error.h"
 
 namespace MO {
@@ -63,7 +64,7 @@ void ObjectTreeModel::setRootObject(Object *rootObject)
     endResetModel();
 }
 
-Object * ObjectTreeModel::itemForIndex(const QModelIndex &index) const
+Object * ObjectTreeModel::objectForIndex(const QModelIndex &index) const
 {
     if (index.isValid())
     {
@@ -76,18 +77,25 @@ Object * ObjectTreeModel::itemForIndex(const QModelIndex &index) const
     return p_->rootObject;
 }
 
+QModelIndex ObjectTreeModel::indexForObject(Object* obj)
+{
+    if (!obj || !obj->parentObject())
+        return QModelIndex();
+    auto p = obj->parentObject();
+    int row = p->childObjects().indexOf(obj);
+    return createIndex(row, 0, obj);
+}
 
 QModelIndex ObjectTreeModel::index(
         int row, int column, const QModelIndex &parent) const
 {
     // sanity check
     if (!p_->rootObject || row < 0 || column < 0
-            || column >= p_->headerNames.size()
-            //|| (parent.isValid() && column != 0)
-            )
+        || column >= p_->headerNames.size()
+        )
         return QModelIndex();
 
-    Object * obj = itemForIndex(parent);
+    Object * obj = objectForIndex(parent);
     MO_ASSERT(obj, "no object for index <"
               << parent.row() << "," << parent.column() << ">");
 
@@ -104,7 +112,7 @@ QModelIndex ObjectTreeModel::parent(const QModelIndex &child) const
     if (!child.isValid() || !p_->rootObject)
         return QModelIndex();
 
-    if (Object * obj = itemForIndex(child))
+    if (Object * obj = objectForIndex(child))
     {
         // find parent object
         Object * parent = obj->parentObject();
@@ -129,7 +137,7 @@ int ObjectTreeModel::rowCount(const QModelIndex &parent) const
     if (!p_->rootObject)
         return 0;
 
-    if (Object * obj = itemForIndex(parent))
+    if (Object * obj = objectForIndex(parent))
         return obj->childObjects().size();
 
     return 0;
@@ -149,7 +157,7 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
             || index.column() >= p_->headerNames.size())
         return QVariant();
 
-    if (Object * obj = itemForIndex(index))
+    if (Object * obj = objectForIndex(index))
     {
         // return text
         if (role == Qt::DisplayRole || role == Qt::EditRole)
@@ -192,13 +200,43 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
+bool ObjectTreeModel::setData(
+        const QModelIndex &index, const QVariant& val, int role)
+{
+    if (!p_->rootObject || !index.isValid() || index.column() < 0
+            || index.column() >= p_->headerNames.size())
+        return false;
+
+    Object * obj = objectForIndex(index);
+    if (!obj)
+        return false;
+
+    auto editor = obj->editor();
+
+    if (role == Qt::EditRole)
+    {
+        if (index.column() == 0)
+        {
+            if (editor)
+                editor->setObjectName(obj, val.toString());
+            else
+                obj->setName(val.toString());
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
 {
     Qt::ItemFlags flag = QAbstractItemModel::flags(index);
 
     if (p_->rootObject && index.isValid())
     {
-        flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled;
+        flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled
+                | Qt::ItemIsEditable;
     }
     return flag;
 }
