@@ -2,21 +2,12 @@
 
 QWidget {
         background-color: #111;
-        alternate-background-color: #121;
+        alternate-background-color: #181;
         selection-background-color: #555;
         selection-color: #fff;
         color: #aaa;
         dialogbuttonbox-buttons-have-icons: 1;
 }
-
-QWidget:disabled {
-        background-color: #181818;
-        alternate-background-color: #081008;
-        selection-background-color: #444;
-        selection-color: #eee;
-        color: #555;
-}
-
 
 QFrame {
         background-color: #181818;
@@ -24,7 +15,7 @@ QFrame {
 
 QTabBar {
         background-color: #111;
-        color: #ccc;
+        color: #000;
 }
 
 QStatusBar{
@@ -57,16 +48,39 @@ QToolButton[GroupHeader="true"] {
         background-color: #344350;
 }
 
+/* ---- table view ---- */
+
+QTreeView::branch:has-siblings:!adjoins-item {
+    border-image: url(:/icon/branch_vline.png) 0;
+}
+QTreeView::branch:has-siblings:adjoins-item {
+    border-image: url(:/icon/branch_more.png) 0;
+}
+QTreeView::branch:!has-children:!has-siblings:adjoins-item {
+    border-image: url(:/icon/branch_end.png) 0;
+}
+QTreeView::branch:has-children:!has-siblings:closed,
+QTreeView::branch:closed:has-children:has-siblings {
+        border-image: none;
+        image: url(:/icon/branch_closed.png);
+}
+QTreeView::branch:open:has-children:!has-siblings,
+QTreeView::branch:open:has-children:has-siblings  {
+        border-image: none;
+        image: url(:/icon/branch_open.png);
+}
+
 
 /* ---- buttons --------- */
 
 QPushButton, QToolButton {
-        background-color: #444;
+        background-color: #555;
         color: #fff;
 }
 
 QPushButton:disabled, QToolButton:disabled {
         background-color: #222;
+        color: #000;
 }
 
 
@@ -86,6 +100,8 @@ QSpinBox[readOnly="true"],
 QDoubleSpinBox[readOnly="true"],
 QLineEdit[readOnly="true"] { color: #888; border-color: #555; }
 
+QLineEdit[invalid="true"] { background-color: #433; color: #f88; }
+
 QPlainTextEdit, QTextBrowser { background-color: #111; }
 
 QLabel[editable="true"]:hover { color: #9c9; }
@@ -101,6 +117,7 @@ QComboBox {
         color: #fff;
         border: 1px solid #777;
 }
+
 
 /*QComboBox::drop-down { background-color: #333; }*/
 

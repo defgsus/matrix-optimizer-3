@@ -303,7 +303,8 @@ QString Geometry::infoString() const
         s += QObject::tr(", %1 lines").arg(numLines());
     if (numPoints())
         s += QObject::tr(", %1 points").arg(numPoints());
-
+    if (!attributes_.empty())
+        s += QObject::tr(", %1 attributes").arg(attributes_.size());
     s += QObject::tr(", memory: %1").arg(byte_to_string(memory()));
 
     return s;
@@ -1137,8 +1138,36 @@ const Geometry::VertexType * Geometry::point(IndexType pointIndex) const
 
 void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
 {
-    /** @todo Geometry::addGeometry() doesn't copy attributes! */
     setChanged();
+
+    auto copyVert = [=](const Geometry& other, IndexType idx)
+    {
+        for (auto& i : other.attributes_)
+        {
+            UserAttribute* a = i.second;
+            if (!getAttribute(a->attributeName))
+                addAttribute(a->attributeName, a->numComponents);
+            size_t p = a->numComponents * idx;
+            setAttribute(a->attributeName,
+                         a->data[p],
+                         a->numComponents > 1 ? a->data[p+1] : 0.,
+                         a->numComponents > 2 ? a->data[p+2] : 0.,
+                         a->numComponents > 3 ? a->data[p+3] : 0.);
+        }
+        return addVertex(
+            other.vertex_[idx * other.numVertexComponents()] + offset.x,
+            other.vertex_[idx * other.numVertexComponents() + 1] + offset.y,
+            other.vertex_[idx * other.numVertexComponents() + 2] + offset.z,
+            other.normal_[idx * other.numNormalComponents()],
+            other.normal_[idx * other.numNormalComponents() + 1],
+            other.normal_[idx * other.numNormalComponents() + 2],
+            other.color_[idx * other.numColorComponents()],
+            other.color_[idx * other.numColorComponents() + 1],
+            other.color_[idx * other.numColorComponents() + 2],
+            other.color_[idx * other.numColorComponents() + 3],
+            other.texcoord_[idx * other.numTextureCoordComponents()],
+            other.texcoord_[idx * other.numTextureCoordComponents() + 1]);
+    };
 
     // copy triangles
     for (uint i=0; i<other.numTriangles(); ++i)
@@ -1148,48 +1177,9 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
                 ot2 = other.triIndex_[i * 3 + 1],
                 ot3 = other.triIndex_[i * 3 + 2],
 
-                t1 = addVertex(
-                    other.vertex_[ot1 * other.numVertexComponents()] + offset.x,
-                    other.vertex_[ot1 * other.numVertexComponents() + 1] + offset.y,
-                    other.vertex_[ot1 * other.numVertexComponents() + 2] + offset.z,
-                    other.normal_[ot1 * other.numNormalComponents()],
-                    other.normal_[ot1 * other.numNormalComponents() + 1],
-                    other.normal_[ot1 * other.numNormalComponents() + 2],
-                    other.color_[ot1 * other.numColorComponents()],
-                    other.color_[ot1 * other.numColorComponents() + 1],
-                    other.color_[ot1 * other.numColorComponents() + 2],
-                    other.color_[ot1 * other.numColorComponents() + 3],
-                    other.texcoord_[ot1 * other.numTextureCoordComponents()],
-                    other.texcoord_[ot1 * other.numTextureCoordComponents() + 1]),
-                t2 = addVertex(
-                    other.vertex_[ot2 * other.numVertexComponents()] + offset.x,
-                    other.vertex_[ot2 * other.numVertexComponents() + 1] + offset.y,
-                    other.vertex_[ot2 * other.numVertexComponents() + 2] + offset.z,
-                    other.normal_[ot2 * other.numNormalComponents()],
-                    other.normal_[ot2 * other.numNormalComponents() + 1],
-                    other.normal_[ot2 * other.numNormalComponents() + 2],
-                    other.color_[ot2 * other.numColorComponents()],
-                    other.color_[ot2 * other.numColorComponents() + 1],
-                    other.color_[ot2 * other.numColorComponents() + 2],
-                    other.color_[ot2 * other.numColorComponents() + 3],
-                    other.texcoord_[ot2 * other.numTextureCoordComponents()],
-                    other.texcoord_[ot2 * other.numTextureCoordComponents() + 1]),
-                t3 = addVertex(
-                    other.vertex_[ot3 * other.numVertexComponents()] + offset.x,
-                    other.vertex_[ot3 * other.numVertexComponents() + 1] + offset.y,
-                    other.vertex_[ot3 * other.numVertexComponents() + 2] + offset.z,
-                    other.normal_[ot3 * other.numNormalComponents()],
-                    other.normal_[ot3 * other.numNormalComponents() + 1],
-                    other.normal_[ot3 * other.numNormalComponents() + 2],
-                    other.color_[ot3 * other.numColorComponents()],
-                    other.color_[ot3 * other.numColorComponents() + 1],
-                    other.color_[ot3 * other.numColorComponents() + 2],
-                    other.color_[ot3 * other.numColorComponents() + 3],
-                    other.texcoord_[ot3 * other.numTextureCoordComponents()],
-                    other.texcoord_[ot3 * other.numTextureCoordComponents() + 1]);
-
-        //for (auto a : other.attributes_)
-        //    setAttribute();
+                t1 = copyVert(other, ot1),
+                t2 = copyVert(other, ot2),
+                t3 = copyVert(other, ot3);
 
         addTriangle(t1, t2, t3
 #ifndef MO_DISABLE_EDGEFLAG
@@ -1206,41 +1196,27 @@ void Geometry::addGeometry(const Geometry &other, const Vec3& offset)
                 ol1 = other.lineIndex_[i * 2],
                 ol2 = other.lineIndex_[i * 2 + 1],
 
-                l1 = addVertex(
-                    other.vertex_[ol1 * other.numVertexComponents()] + offset.x,
-                    other.vertex_[ol1 * other.numVertexComponents() + 1] + offset.y,
-                    other.vertex_[ol1 * other.numVertexComponents() + 2] + offset.z,
-                    other.normal_[ol1 * other.numNormalComponents()],
-                    other.normal_[ol1 * other.numNormalComponents() + 1],
-                    other.normal_[ol1 * other.numNormalComponents() + 2],
-                    other.color_[ol1 * other.numColorComponents()],
-                    other.color_[ol1 * other.numColorComponents() + 1],
-                    other.color_[ol1 * other.numColorComponents() + 2],
-                    other.color_[ol1 * other.numColorComponents() + 3],
-                    other.texcoord_[ol1 * other.numTextureCoordComponents()],
-                    other.texcoord_[ol1 * other.numTextureCoordComponents() + 1]),
-                l2 = addVertex(
-                    other.vertex_[ol2 * other.numVertexComponents()] + offset.x,
-                    other.vertex_[ol2 * other.numVertexComponents() + 1] + offset.y,
-                    other.vertex_[ol2 * other.numVertexComponents() + 2] + offset.z,
-                    other.normal_[ol2 * other.numNormalComponents()],
-                    other.normal_[ol2 * other.numNormalComponents() + 1],
-                    other.normal_[ol2 * other.numNormalComponents() + 2],
-                    other.color_[ol2 * other.numColorComponents()],
-                    other.color_[ol2 * other.numColorComponents() + 1],
-                    other.color_[ol2 * other.numColorComponents() + 2],
-                    other.color_[ol2 * other.numColorComponents() + 3],
-                    other.texcoord_[ol2 * other.numTextureCoordComponents()],
-                    other.texcoord_[ol2 * other.numTextureCoordComponents() + 1]);
+                l1 = copyVert(other, ol1),
+                l2 = copyVert(other, ol2);
 
         addLine(l1, l2);
+    }
+    // copy points
+    for (uint i=0; i<other.numPoints(); ++i)
+    {
+        IndexType
+                op1 = other.pointIndex_[i],
+                p1 = copyVert(other, op1);
+        addPoint(p1);
     }
 }
 
 void Geometry::addGeometry(const Geometry& other, const Vec3& offset,
                  bool doTri, bool doLine, bool doPoint,
-                 bool doColor, bool doNormal, bool doTex, bool doAttr)
+                 bool doColor, bool doNormal, bool doTex, bool /*doAttr*/)
 {
+    /** @todo Geometry::addGeometry() doesn't copy attributes! */
+
     auto foo = [=](const int num, const IndexType otherVert[], IndexType vert[])
     {
         for (int corner = 0; corner < num; ++corner)
@@ -2910,7 +2886,7 @@ void Geometry::getVertexArrayObject(GL::VertexArrayObject * vao, GL::Shader * s)
 
 
 QString Geometry::toJavaScriptArray(
-        const QString &baseName2, bool, bool /*bool withNormals, bool withTexCoords*/) const
+        const QString &baseName2, bool withNormals, bool withTexCoords) const
 {
     QString script;
     QTextStream s(&script);
@@ -2920,19 +2896,51 @@ QString Geometry::toJavaScriptArray(
         baseName.append("_");
 
     // verts
-    s << baseName << "vertices = [ ";
-
+    s << "/* " << (vertex_.size() / numVertexComponents())
+      << " x " << numVertexComponents()
+      << "*/\n" << baseName << "vertices = [ ";
     for (size_t i = 0; i<vertex_.size(); ++i)
     {
         if (i != 0)
             s << ", ";
         s << vertex_[i];
     }
-
     s << " ];\n";
 
+    // normals
+    if (withNormals)
+    {
+        s << "/* " << (normal_.size() / numNormalComponents())
+          << " x " << numNormalComponents()
+          << "*/\n" << baseName << "normals = [ ";
+        for (size_t i = 0; i<normal_.size(); ++i)
+        {
+            if (i != 0)
+                s << ", ";
+            s << normal_[i];
+        }
+        s << " ];\n";
+    }
+
+    // texcoords
+    if (withTexCoords)
+    {
+        s << "/* " << (texcoord_.size() / numTextureCoordComponents())
+          << " x " << numTextureCoordComponents()
+          << "*/\n" << baseName << "texCoords = [ ";
+        for (size_t i = 0; i<texcoord_.size(); ++i)
+        {
+            if (i != 0)
+                s << ", ";
+            s << texcoord_[i];
+        }
+        s << " ];\n";
+    }
+
     // indices
-    s << baseName << "indices = [ ";
+    s << "/* triangles: " << (triIndex_.size() / numTriangleIndexComponents())
+      << " x " << numTriangleIndexComponents()
+      << "*/\n" << baseName << "indices = [ ";
 
     for (size_t i = 0; i<triIndex_.size(); ++i)
     {

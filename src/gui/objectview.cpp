@@ -21,6 +21,8 @@
 #include "parameterview.h"
 #include "objectinfodialog.h"
 #include "widget/objectlistwidget.h"
+#include "widget/objecttreeview.h"
+#include "model/objecttreemodel.h"
 #include "object/object.h"
 #include "object/util/objectfactory.h"
 #include "object/control/trackfloat.h"
@@ -72,6 +74,12 @@ ObjectView::ObjectView(QWidget *parent) :
                 this, SLOT(onObjectListSelected(MO::Object*)));
         connect(list_, SIGNAL(objectClicked(MO::Object*)),
                 this, SLOT(onObjectListClicked(MO::Object*)));
+        list_->setVisible(false);
+
+        treeView_ = new ObjectTreeView(this);
+        treeModel_ = new ObjectTreeModel(nullptr, this);
+        treeView_->setModel(treeModel_);
+        layout_->addWidget(treeView_);
 
         paramView_ = new ParameterView(this);
         paramView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -118,6 +126,7 @@ void ObjectView::setObject(Object * object)
     if (paramView_->object() != object_)
         paramView_->setObject(object_);
     list_->setParentObject(object_);
+    treeModel_->setRootObject(object_);
 
     MO_DEBUG_GUI("ObjectView::setObject(" << (void*)object << ") finished");
 }

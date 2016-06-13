@@ -20,11 +20,13 @@ class QLabel;
 namespace MO {
 class Object;
 class Parameter;
+class ObjectTreeModel;
 namespace GL { class TextureRenderer; }
 namespace GUI {
 
 class ParameterView;
 class ObjectListWidget;
+class ObjectTreeView;
 
 class ObjectView : public QWidget
 {
@@ -91,6 +93,8 @@ private:
     QToolButton * icon_;
     QLabel * label_, *label2_, *labelImg_;
     ObjectListWidget * list_;
+    ObjectTreeView* treeView_;
+    ObjectTreeModel* treeModel_;
 };
 
 } // namespace GUI

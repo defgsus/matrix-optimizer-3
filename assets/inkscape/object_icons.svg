@@ -171,9 +171,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.959798"
-     inkscape:cx="647.19562"
-     inkscape:cy="324.74191"
+     inkscape:zoom="2.8"
+     inkscape:cx="436.94766"
+     inkscape:cy="128.20821"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -3682,5 +3682,95 @@
        inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/disk.png"
        inkscape:export-xdpi="164.57001"
        inkscape:export-ydpi="164.57001" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect3856"
+       width="68.188736"
+       height="68.188736"
+       x="868.71088"
+       y="-183.9827"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_closed.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="fill:#00ff00;fill-opacity:0.7123288;stroke:#000000;stroke-width:2.70000005;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 129.32587,872.7532 -0.14794,59.95614 46.61015,-30.14132 z"
+       id="path3858"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_closed.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_open.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-269.19699"
+       x="868.28217"
+       height="68.188736"
+       width="68.188736"
+       id="rect3860"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_open.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path3862"
+       d="m 265.29413,881.68584 -59.95626,-0.0856 30.18975,46.57879 z"
+       style="fill:#00ff00;fill-opacity:0.7123288;stroke:#000000;stroke-width:2.70000005;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect3864"
+       width="68.188736"
+       height="68.188736"
+       x="868.63928"
+       y="-359.55414"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_vline.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#3bff27;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.9202745;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans"
+       d="m 325.69764,866.25568 0,1.93859 0,68.70521 0,1.9386 3.60472,0 0,-1.9386 0,-68.70521 0,-1.93859 -3.60472,0 z"
+       id="path3868"
+       inkscape:connector-curvature="0" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_more.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-454.19699"
+       x="868.63928"
+       height="68.188736"
+       width="68.188736"
+       id="rect4690"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       inkscape:connector-curvature="0"
+       id="path4692"
+       d="m 420.3405,866.25568 0,1.93859 0,68.70521 0,1.9386 3.60472,0 0,-1.9386 0,-32.39444 26.9643,-0.0822 0.17856,-4.20347 -27.14286,0 0,-32.02506 0,-1.93859 z"
+       style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#3bff27;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.9202745;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans"
+       sodipodi:nodetypes="ccccccccccccc" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect4694"
+       width="68.188736"
+       height="68.188736"
+       x="868.28217"
+       y="-544.19696"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/branch_end.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
+    <path
+       sodipodi:nodetypes="ccccccccc"
+       style="font-size:medium;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:normal;letter-spacing:normal;word-spacing:normal;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#3bff27;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.9202745;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Sans;-inkscape-font-specification:Sans"
+       d="m 510.3405,865.89854 0,1.93859 -0.12141,36.31548 30.69043,-0.0869 0.17856,-4.20347 -27.14286,0 0,-32.02506 0,-1.93859 z"
+       id="path4696"
+       inkscape:connector-curvature="0" />
   </g>
 </svg>

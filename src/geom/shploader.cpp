@@ -128,6 +128,8 @@ QRectF ShpLoader::getBoundingRect() const
 
 void ShpLoader::Private::getShpObject(SHPObject * shp)
 {
+    geometry->setAttribute("a_shapeId", shp->nShapeId);
+
     bool hasZ = false;
     switch (shp->nSHPType)
     {

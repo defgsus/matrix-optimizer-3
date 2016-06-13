@@ -77,5 +77,10 @@
         <file alias="ctrl_masterout_off.png">assets/icon/ctrl_masterout_off.png</file>
         <file alias="ctrl_masterout_on.png">assets/icon/ctrl_masterout_on.png</file>
         <file alias="disk.png">assets/icon/disk.png</file>
+        <file alias="branch_closed.png">assets/icon/branch_closed.png</file>
+        <file alias="branch_open.png">assets/icon/branch_open.png</file>
+        <file alias="branch_end.png">assets/icon/branch_end.png</file>
+        <file alias="branch_more.png">assets/icon/branch_more.png</file>
+        <file alias="branch_vline.png">assets/icon/branch_vline.png</file>
     </qresource>
 </RCC>

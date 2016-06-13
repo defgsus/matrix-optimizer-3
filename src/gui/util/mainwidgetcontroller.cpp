@@ -128,7 +128,7 @@
 namespace MO {
 namespace GUI {
 
-const int MAX_RECENT_FILES = 23;
+const int MAX_RECENT_FILES = 42;
 
 
 MainWidgetController::MainWidgetController(QMainWindow * win)

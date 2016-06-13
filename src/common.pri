@@ -268,7 +268,8 @@ HEADERS += \
     $$PWD/types/refcounted_info.h \
     $$PWD/video/ffm/ffmpeg.h \
     $$PWD/video/ffm/videostream.h \
-    $$PWD/video/decoderframe.h
+    $$PWD/video/decoderframe.h \
+    $$PWD/model/objecttreemodel.h
 
 
 SOURCES += \
@@ -482,5 +483,6 @@ SOURCES += \
     $$PWD/gl/gl_state.cpp \
     $$PWD/math/timeline_point.cpp \
     $$PWD/video/ffm/ffmpeg.cpp \
-    $$PWD/video/ffm/videostream.cpp
+    $$PWD/video/ffm/videostream.cpp \
+    $$PWD/model/objecttreemodel.cpp
 

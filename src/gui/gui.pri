@@ -134,7 +134,8 @@ HEADERS += \
     $$PWD/widget/python34widget.h \
     $$PWD/widget/editablelabel.h \
     $$PWD/inserttimedialog.h \
-    $$PWD/widget/textfindwidget.h
+    $$PWD/widget/textfindwidget.h \
+    $$PWD/widget/objecttreeview.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -268,4 +269,5 @@ SOURCES += \
     $$PWD/widget/python34widget.cpp \
     $$PWD/widget/editablelabel.cpp \
     $$PWD/inserttimedialog.cpp \
-    $$PWD/widget/textfindwidget.cpp
+    $$PWD/widget/textfindwidget.cpp \
+    $$PWD/widget/objecttreeview.cpp
