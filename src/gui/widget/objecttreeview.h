@@ -12,6 +12,7 @@
 #define MOSRC_GUI_WIDGET_OBJECTTREEVIEW_H
 
 #include <QTreeView>
+#include "object/object_fwd.h"
 
 namespace MO {
 namespace GUI {
@@ -21,10 +22,19 @@ class ObjectTreeView : public QTreeView
     Q_OBJECT
 public:
     explicit ObjectTreeView(QWidget *parent = 0);
+    ~ObjectTreeView();
 
 signals:
 
+    void objectSelected(MO::Object*);
+
 public slots:
+
+    void setObject(Object*);
+
+private:
+    struct Private;
+    Private* p_;
 };
 
 

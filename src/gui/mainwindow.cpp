@@ -32,6 +32,7 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/widget/assetbrowser.h"
 #include "gui/widget/spacer.h"
+#include "gui/widget/objecttreeview.h"
 #include "gui/oscview.h"
 #include "object/scene.h"
 #include "io/keyboardstate.h"
@@ -127,7 +128,8 @@ void MainWindow::createWidgets_()
             auto rightContainer = new QWidget(this);
             l0->addWidget(rightContainer);
             rightContainer->setObjectName("_right_container");
-            rightContainer->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Expanding);
+            rightContainer->setSizePolicy(
+                        QSizePolicy::Preferred, QSizePolicy::Expanding);
             rightContainer->setMinimumWidth(320);
 
             auto ll = new QHBoxLayout(rightContainer);
@@ -150,6 +152,9 @@ void MainWindow::createDockWidgets_()
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Scene"), controller_->objectGraphView());
+    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+
+    dock = createDockWidget(tr("Tree"), controller_->objectTreeView());
     addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
 
 #ifndef MO_DISABLE_FRONT

@@ -92,9 +92,9 @@ private:
     QVBoxLayout * layout_;
     QToolButton * icon_;
     QLabel * label_, *label2_, *labelImg_;
-    ObjectListWidget * list_;
+    /*ObjectListWidget * list_;
     ObjectTreeView* treeView_;
-    ObjectTreeModel* treeModel_;
+    ObjectTreeModel* treeModel_;*/
 };
 
 } // namespace GUI

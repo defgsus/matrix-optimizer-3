@@ -79,6 +79,8 @@
 #include "gui/widget/transportwidget.h"
 #include "gui/bulkrenamedialog.h"
 #include "gui/oscview.h"
+#include "gui/widget/objecttreeview.h"
+#include "model/objecttreemodel.h"
 #ifndef MO_DISABLE_ANGLESCRIPT
 #   include "gui/widget/angelscriptwidget.h"
 #   include "script/angelscript.h"
@@ -143,6 +145,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       glWindow_         (0),
       objectEditor_     (0),
       sceneSettings_    (0),
+      objectTreeView_   (0),
       objectView_       (0),
       sequencer_        (0),
       clipView_         (0),
@@ -253,6 +256,11 @@ void MainWidgetController::createObjects_()
     {
         setEditActions_(objectGraphView_, a);
     });
+
+    // tree view
+    objectTreeView_ = new ObjectTreeView(window_);
+    connect(objectTreeView_, SIGNAL(objectSelected(MO::Object*)),
+            this, SLOT(onObjectSelectedTree_(MO::Object*)));
 
     // object (parameter) View
     objectView_ = new ObjectView(window_);
@@ -994,7 +1002,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     if (renderEngine_)
         renderEngine_->release();
 
-    objectView_->setObject(0);
+    objectTreeView_->setObject(nullptr);
+    objectView_->setObject(nullptr);
     sequencer_->setNothing();
 
     if (audioEngine_)
@@ -1108,6 +1117,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
             SIGNAL(parameterVisibilityChanged(MO::Parameter*)),
             objectView_, SLOT(updateParameterVisibility(MO::Parameter*)));
 
+    objectTreeView_->setObject(scene_);
     objectGraphView_->setRootObject(scene_);
     objectView_->setObject(scene_);
     objectOutputView()->setObject(0);

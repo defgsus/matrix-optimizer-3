@@ -15,6 +15,7 @@
 
 #include "objecttreemodel.h"
 #include "object/object.h"
+#include "gui/util/appicons.h"
 #include "object/util/objectfactory.h"
 #include "io/error.h"
 
@@ -44,6 +45,11 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
             //<< "class"
                ;
     setRootObject(rootObject);
+}
+
+ObjectTreeModel::~ObjectTreeModel()
+{
+    delete p_;
 }
 
 Object* ObjectTreeModel::rootObject() const { return p_->rootObject; }
@@ -162,6 +168,17 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
             return (index.column() == 0)?
                         (int)(Qt::AlignLeft | Qt::AlignVCenter)
                     :   (int)(Qt::AlignRight | Qt::AlignVCenter);
+
+        if (role == Qt::ForegroundRole)
+        {
+            return ObjectFactory::colorForObject(obj);
+        }
+
+        if (role == Qt::DecorationRole && index.column() == 0)
+        {
+            return AppIcons::iconForObject(obj);
+        }
+
         /*
         if (role == Qt::BackgroundRole)
         {

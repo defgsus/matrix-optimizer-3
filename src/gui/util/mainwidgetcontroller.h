@@ -77,6 +77,7 @@ public:
     SceneSettings * sceneSettings() const { return sceneSettings_; }
     GL::Manager * glManager() const { return glManager_; }
     GL::Window * glWindow() const { return glWindow_; }
+    ObjectTreeView* objectTreeView() const { return objectTreeView_; }
     ObjectView * objectView() const { return objectView_; }
     ObjectEditor * objectEditor() const { return objectEditor_; }
     ObjectGraphView * objectGraphView() const { return objectGraphView_; }
@@ -257,6 +258,7 @@ private:
 
     SceneSettings * sceneSettings_;
 
+    ObjectTreeView* objectTreeView_;
     ObjectView * objectView_;
     ObjectGraphView * objectGraphView_;
     Sequencer * sequencer_;

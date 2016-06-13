@@ -49,7 +49,9 @@ QToolButton[GroupHeader="true"] {
 }
 
 /* ---- table view ---- */
-
+QTreeView::item:selected {
+        background-color: #444;
+}
 QTreeView::branch:has-siblings:!adjoins-item {
     border-image: url(:/icon/branch_vline.png) 0;
 }
@@ -115,12 +117,9 @@ QListView::item:selected {
 
 QComboBox {
         color: #fff;
+        selection-color: #fff;
         border: 1px solid #777;
 }
-
-
-/*QComboBox::drop-down { background-color: #333; }*/
-
 
 
 /* ----- scollbars ------ */

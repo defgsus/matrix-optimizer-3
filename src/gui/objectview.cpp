@@ -66,7 +66,7 @@ ObjectView::ObjectView(QWidget *parent) :
 
         label2_ = new QLabel(this);
         layout_->addWidget(label2_);
-
+        /*
         list_ = new ObjectListWidget(this);
         list_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
         layout_->addWidget(list_);
@@ -75,11 +75,13 @@ ObjectView::ObjectView(QWidget *parent) :
         connect(list_, SIGNAL(objectClicked(MO::Object*)),
                 this, SLOT(onObjectListClicked(MO::Object*)));
         list_->setVisible(false);
-
+        */
+        /*
         treeView_ = new ObjectTreeView(this);
         treeModel_ = new ObjectTreeModel(nullptr, this);
         treeView_->setModel(treeModel_);
         layout_->addWidget(treeView_);
+        */
 
         paramView_ = new ParameterView(this);
         paramView_->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -125,15 +127,15 @@ void ObjectView::setObject(Object * object)
 
     if (paramView_->object() != object_)
         paramView_->setObject(object_);
-    list_->setParentObject(object_);
-    treeModel_->setRootObject(object_);
+    //list_->setParentObject(object_);
+    //treeModel_->setRootObject(object_);
 
     MO_DEBUG_GUI("ObjectView::setObject(" << (void*)object << ") finished");
 }
 
 void ObjectView::selectObject(Object * o)
 {
-    list_->setSelectedObject(o);
+    //list_->setSelectedObject(o);
 }
 
 void ObjectView::updateParameterVisibility(Parameter * p)

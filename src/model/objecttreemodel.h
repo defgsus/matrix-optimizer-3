@@ -21,6 +21,7 @@ class ObjectTreeModel : public QAbstractItemModel
     Q_OBJECT
 public:
     explicit ObjectTreeModel(Object * rootObject = 0, QObject *parent = 0);
+    ~ObjectTreeModel();
 
     void setRootObject(Object * rootObject);
     Object * rootObject() const;
