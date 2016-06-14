@@ -45,6 +45,12 @@ public:
 
     // ------------ store --------------
 
+    /** Returns only the toplevel objects from the given list.
+        Any object that is a children of another object is
+        not included. */
+    static QList<Object*> filterTopLevel(const QList<Object*>&);
+    static QList<Object*> filterTopLevel(const QSet<Object*>&);
+
     /** Store a single tree/branch */
     void storeObjectTree(const Object * o);
     /** Store multiple trees/branches */

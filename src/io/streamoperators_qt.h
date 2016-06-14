@@ -26,6 +26,17 @@ std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QString& s)
     return o;
 }
 
+/** std::ostream << QStringList */
+template <typename T>
+std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QList<QString>& l)
+{
+    o << "{";
+    for (auto& s : l)
+        o << s.toStdString() << " ";
+    o << "}";
+    return o;
+}
+
 /** std::ostream << QRect */
 template <typename T>
 std::basic_ostream<T>& operator << (std::basic_ostream<T>& o, const QRect& r)

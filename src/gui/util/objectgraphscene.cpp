@@ -52,6 +52,7 @@
 #include "io/currenttime.h"
 #include "io/application.h"
 #include "io/log_gui.h"
+#include "io/streamoperators_qt.h"
 
 #include "object/util/parameterevolution.h"
 
@@ -105,7 +106,8 @@ public:
     void addModItemMap(Object *, ModulatorItem *);
     void addConItemMap(Object *, AudioConnectionItem *);
     /// Recursively get the item below @p localGridPos
-    AbstractObjectItem * childItemAt(AbstractObjectItem * parent, const QPoint& localGridPos);
+    AbstractObjectItem * childItemAt(
+            AbstractObjectItem * parent, const QPoint& localGridPos);
     ObjectGraphConnectItem * connectorAt(const QPointF& scenePos);
     /// Raises all ModulatorItems of the item and it's childs
     void raiseModItems(AbstractObjectItem*);
@@ -115,7 +117,9 @@ public:
 
     void clearActions();
     void showPopup(); ///< Runs popup after actions have been created
-    void createClipboardMenu(ActionList& actions, Object * parent, const QList<AbstractObjectItem*>& items);
+    void createClipboardMenu(
+            ActionList& actions, Object * parent,
+            const QList<AbstractObjectItem*>& items);
 
     void snapToEndConnect(const QPointF& scenePos);
     void endConnection();
@@ -975,6 +979,9 @@ void ObjectGraphScene::dropEvent(QGraphicsSceneDragDropEvent * e)
 
 void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * parent)
 {
+    MO_DEBUG_GUI("ObjectGraphScene::dropAction() "
+                 << e->mimeData()->formats());
+
     QPointF ePos = e->pos();
     if (!parent)
     {
@@ -1034,9 +1041,11 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
         // analyze further
         if (!desc.isSameApplicationInstance())
         {
-            QMessageBox::information(0,
-                                     QMessageBox::tr("drop object"),
-                                     QMessageBox::tr("Can't drop an object from another application instance."));
+            QMessageBox::information(
+                        0,
+                        QMessageBox::tr("drop object"),
+                        QMessageBox::tr("Can't drop an object "
+                                        "from another application instance."));
             return;
         }
 
@@ -1047,11 +1056,21 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
         return;
     }
 
+    // drop of object trees
+    if (e->mimeData()->formats().contains(ObjectTreeMimeData::objectMimeType))
+    {
+        dropMimeData(e->mimeData(), mapToGrid(e->scenePos()));
+
+        e->accept();
+        return;
+    }
+
     // drop of object from toolbar
     if (e->mimeData()->hasFormat(ObjectMenu::NewObjectMimeType))
     {
         // get object type
-        auto classn = QString::fromUtf8(e->mimeData()->data(ObjectMenu::NewObjectMimeType));
+        auto classn = QString::fromUtf8(
+                    e->mimeData()->data(ObjectMenu::NewObjectMimeType));
         int typ = ObjectFactory::typeForClass(classn);
         // check if dropable
         if (typ < 0 || !parent->canHaveChildren(Object::Type(typ)))
@@ -1442,72 +1461,11 @@ void ObjectGraphScene::popupObjectDrag(
 }
 
 
-#if 0
-void ObjectGraphScene::Private::createNewObjectMenu(ActionList &actions, Object * obj)
-{
-    actions.addSeparator(scene);
-
-    if (!root)
-    {
-        MO_WARNING("Can't edit");
-        return;
-    }
-
-    if (!obj)
-        obj = root;
-
-    QPoint objPos = QPoint(0, 0);
-    if (obj != root)
-        if (auto item = scene->itemForObject(obj))
-            objPos = item->globalGridPos();
-
-    QAction * a;
-
-    // create new child
-    actions.append( a = new QAction(obj && obj != root ?
-                tr("new child object") : tr("new object"), scene) );
-
-    QMenu * menu = createObjectsMenu(obj, true, false);
-    a->setMenu(menu);
-    connect(menu, &QMenu::triggered, [=](QAction*act)
-    {
-        QString id = act->data().toString();
-        Object * onew;
-        if (id == "_template_")
-            onew = ObjectFactory::loadObjectTemplate();
-        else
-            onew = ObjectFactory::createObject(id);
-        if (onew)
-            scene->addObject(obj, onew, popupGridPos - objPos);
-    });
-
-    // append texture processor
-    if (dynamic_cast<ValueTextureInterface*>(obj))
-    {
-        menu = createObjectsMenu(obj, true, false, false, Object::T_SHADER | Object::T_TEXTURE);
-        if (menu)
-        {
-            actions.append( a = new QAction(tr("append texture processor"), scene) );
-            a->setMenu(menu);
-
-            connect(menu, &QMenu::triggered, [=](QAction*act)
-            {
-                QString id = act->data().toString();
-                Object * onew = ObjectFactory::createObject(id);
-                if (onew)
-                {
-                    editor->appendTextureProcessor(obj, onew);
-                    onew->releaseRef("finish add");
-                }
-            });
-        }
-    }
-}
-#endif
 
 
 void ObjectGraphScene::Private::createClipboardMenu(
-        ActionList& actions, Object * /*parent*/, const QList<AbstractObjectItem*>& items)
+        ActionList& actions, Object * /*parent*/,
+        const QList<AbstractObjectItem*>& items)
 {
     actions.addSeparator(scene);
 
@@ -1520,7 +1478,8 @@ void ObjectGraphScene::Private::createClipboardMenu(
     {
         // copy
         a = actions.addAction(plural ? tr("Copy objects") : tr("Copy"), scene);
-        a->setStatusTip(tr("Copies the selected object(s) and all it's children to the clipboard"));
+        a->setStatusTip(tr("Copies the selected object(s) and "
+                           "all it's children to the clipboard"));
         a->setShortcut(Qt::CTRL + Qt::Key_C);
         connect(a, &QAction::triggered, [this, items]()
         {
@@ -1840,22 +1799,7 @@ QMimeData * ObjectGraphScene::mimeData(const QList<AbstractObjectItem *> & list)
 
     // filter only top-level objects
     // we don't want to copy the children of a copied object
-    QList<Object*> toplevel;
-    for (Object * o : objects)
-    {
-        Object * tl = o;
-        while ((o = o->parentObject()))
-        {
-            if (objects.contains(o))
-            {
-                tl = 0;
-                break;
-            }
-        }
-
-        if (tl)
-            toplevel << tl;
-    }
+    auto toplevel = ObjectTreeMimeData::filterTopLevel(objects);
 
     auto data = new ObjectTreeMimeData();
     data->storeObjectTrees(toplevel);
@@ -1864,7 +1808,8 @@ QMimeData * ObjectGraphScene::mimeData(const QList<AbstractObjectItem *> & list)
 
 void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPos)
 {
-    MO_DEBUG_GUI("ObjectGraphScene::dropMimeData()");
+    MO_DEBUG_GUI("ObjectGraphScene::dropMimeData() "
+                 << data->formats());
 
     if (!p_->root)
     {
@@ -1878,7 +1823,7 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
         return;
     }
 
-    // NOTE: dynamic_cast or won't work between
+    // NOTE: dynamic_cast won't work between
     // application boundaries, e.g. after quit or pasting into
     // a different instance. But static_cast works alright after a check
     // of the MimeType.

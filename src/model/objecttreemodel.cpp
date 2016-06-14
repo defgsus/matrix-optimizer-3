@@ -18,7 +18,12 @@
 #include "gui/util/appicons.h"
 #include "object/util/objectfactory.h"
 #include "object/util/objecteditor.h"
+#include "model/objectmimedata.h"
+#include "model/objecttreemimedata.h"
 #include "io/error.h"
+
+#include "io/log.h"
+#include "io/streamoperators_qt.h"
 
 namespace MO {
 
@@ -226,7 +231,7 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
     if (p_->rootObject && index.isValid())
     {
         flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled
-                | Qt::ItemIsEditable;
+                | Qt::ItemIsEditable | Qt::ItemIsDragEnabled;
     }
     return flag;
 }
@@ -245,5 +250,92 @@ QVariant ObjectTreeModel::headerData(
     return QVariant();
 }
 
+
+Qt::DropActions ObjectTreeModel::supportedDropActions() const
+{
+    return //Qt::CopyAction |
+            Qt::MoveAction;
+}
+
+QStringList ObjectTreeModel::mimeTypes() const
+{
+    return QStringList()
+            << ObjectMimeData::mimeTypeString
+            << ObjectTreeMimeData::objectMimeType;
+}
+
+QMimeData* ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
+{
+    QSet<Object*> objs;
+    for (auto& i : indexes)
+        if (auto o = objectForIndex(i))
+            objs << o;
+
+    auto toplevel = ObjectTreeMimeData::filterTopLevel(objs);
+    if (toplevel.isEmpty())
+        return nullptr;
+
+    auto data = new ObjectTreeMimeData();
+    data->storeObjectTrees(toplevel);
+
+    return data;
+}
+
+bool ObjectTreeModel::dropMimeData(
+        const QMimeData *data, Qt::DropAction /*action*/,
+        int row, int /*column*/, const QModelIndex &parent)
+{
+    // check mime type
+    if (!data->formats().contains(ObjectTreeMimeData::objectMimeType))
+    {
+        MO_WARNING("ObjectTreeModel::dropMimeData() mimedata is unsupported");
+        return false;
+    }
+
+    // get parent to drop into
+    auto parentObj = objectForIndex(parent);
+    if (!parentObj)
+        parentObj = rootObject();
+    if (!parentObj)
+    {
+        MO_WARNING("ObjectTreeModel::dropMimeData() no parent to drop into");
+        return false;
+    }
+    auto editor = parentObj->editor();
+    if (!editor)
+    {
+        MO_WARNING("ObjectTreeModel::dropMimeData() no ObjectEditor");
+        return false;
+    }
+
+    auto objdata = static_cast<const ObjectTreeMimeData*>(data);
+
+    // deserialize object
+    QList<Object*> copies = objdata->getObjectTrees();
+
+    editor->addObjects(parentObj, copies, row);
+
+    return true;
+}
+
+
+bool ObjectTreeModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    auto pobj = objectForIndex(parent);
+    if (!pobj || !pobj->editor())
+        return false;
+
+    QList<Object*> objs;
+    for (int i=0; i<count && row < pobj->numChildren(); ++i, ++row)
+        objs << pobj->childObjects()[row];
+    if (objs.isEmpty())
+        return false;
+
+    beginResetModel();
+    pobj->editor()->deleteObjects(objs);
+    endResetModel();
+
+    return true;
+}
 
 } // namespace MO

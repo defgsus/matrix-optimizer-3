@@ -122,7 +122,8 @@ public slots:
     QMimeData * mimeData(const QList<AbstractObjectItem*>&) const;
 
     /** Put clipboard data into scene.
-        @p gridPos is global and will be retranslated to parent's local coords if necessary. */
+        @p gridPos is global and will be retranslated to parent's
+        local coords if necessary. */
     void dropMimeData(const QMimeData*, const QPoint& gridPos);
 
     /** Drop from mouse. Implementation used by AbstractObjectItem

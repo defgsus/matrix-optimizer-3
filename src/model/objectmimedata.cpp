@@ -20,7 +20,8 @@
 
 namespace MO {
 
-const QString ObjectMimeData::mimeTypeString = "application/matrixoptimizer.3.object-description";
+const QString ObjectMimeData::mimeTypeString =
+        "application/matrixoptimizer.3.object-description";
 
 
 ObjectDescription::ObjectDescription(Object * o)

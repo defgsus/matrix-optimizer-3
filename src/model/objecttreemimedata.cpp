@@ -29,6 +29,33 @@ const QString ObjectTreeMimeData::orderMimeType = "matrixoptimizer/object-tree-o
 const QString ObjectTreeMimeData::audioConMimeType = "matrixoptimizer/audio-connections";
 
 
+QList<Object*> ObjectTreeMimeData::filterTopLevel(const QList<Object*>& list)
+{
+    return filterTopLevel(list.toSet());
+}
+
+QList<Object*> ObjectTreeMimeData::filterTopLevel(const QSet<Object*>& list)
+{
+    QList<Object*> toplevel;
+    for (Object * o : list)
+    {
+        Object * tl = o;
+        while ((o = o->parentObject()))
+        {
+            if (list.contains(o))
+            {
+                tl = nullptr;
+                break;
+            }
+        }
+
+        if (tl)
+            toplevel << tl;
+    }
+    return toplevel;
+}
+
+
 ObjectTreeMimeData::ObjectTreeMimeData() :
     QMimeData   ()
 {

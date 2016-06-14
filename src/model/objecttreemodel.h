@@ -31,19 +31,29 @@ public:
 
     // --- interface impl. ---
 
-    virtual QModelIndex index(
-            int row, int column, const QModelIndex &parent) const override;
-    virtual QModelIndex parent(const QModelIndex &index) const override;
-    virtual int rowCount(const QModelIndex &parent) const override;
-    virtual int columnCount(const QModelIndex &parent) const override;
+    QModelIndex index(
+    int row, int column, const QModelIndex &parent) const override;
+    QModelIndex parent(const QModelIndex &index) const override;
+    int rowCount(const QModelIndex &parent) const override;
+    int columnCount(const QModelIndex &parent) const override;
 
-    virtual QVariant headerData(
-            int section, Qt::Orientation orientation, int role) const override;
-    virtual QVariant data(const QModelIndex &index, int role) const override;
-    virtual Qt::ItemFlags flags(const QModelIndex &index) const override;
+    QVariant headerData(
+    int section, Qt::Orientation orientation, int role) const override;
+    QVariant data(const QModelIndex &index, int role) const override;
+    Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-    virtual bool setData(const QModelIndex &index, const QVariant&,
+    bool setData(const QModelIndex &index, const QVariant&,
                          int role = Qt::EditRole) override;
+
+    Qt::DropActions supportedDropActions() const override;
+
+    QStringList mimeTypes() const override;
+    QMimeData* mimeData(const QModelIndexList &indexes) const override;
+    bool dropMimeData(const QMimeData *data, Qt::DropAction action,
+                      int row, int column, const QModelIndex &parent) override;
+
+    // Needed to implement for drag-move
+    bool removeRows(int row, int count, const QModelIndex &parent) override;
 
 signals:
 

@@ -67,6 +67,9 @@ ObjectTreeView::ObjectTreeView(QWidget *parent)
     setObjectName("ObjectTreeView");
     setHeaderHidden(true);
     //setColumnHidden(1, true);
+    setDragDropMode(DragDrop);
+    setDropIndicatorShown(true);
+
     setModel(p_->model);
 
     connect(this, &ObjectTreeView::clicked, [=](const QModelIndex& idx)
