@@ -777,7 +777,7 @@ int Object::numChildren(bool recursive) const
     return n;
 }
 
-bool Object::hasParentObject(Object *o) const
+bool Object::hasParentObject(const Object *o) const
 {
     if (!pobj_->parentObject)
         return false;

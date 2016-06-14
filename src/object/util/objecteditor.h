@@ -91,6 +91,14 @@ signals:
         The object pointers will not point to valid objects. */
     void objectsDeleted(const QList<MO::Object*>&);
 
+    /** Emitted before the object is deleted.
+        The object pointer points to a still valid object. */
+    void objectAboutToDelete(const MO::Object *);
+
+    /** Emitted before the objects are deleted.
+        The object pointers point to still valid objects. */
+    void objectsAboutToDelete(const QList<MO::Object*>&);
+
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
 

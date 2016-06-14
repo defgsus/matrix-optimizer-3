@@ -323,6 +323,8 @@ bool ObjectEditor::deleteObject(Object *object)
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObject(" << object << ")");
     MO__CHECK_SCENE
 
+    emit objectAboutToDelete(object);
+
     scene_->deleteObject(object);
 
     emit objectDeleted(object);
@@ -335,6 +337,8 @@ bool ObjectEditor::deleteObjects(const QList<Object*>& list)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObjects(" << list.size() << ")");
     MO__CHECK_SCENE
+
+    emit objectsAboutToDelete(list);
 
     scene_->deleteObjects(list);
 

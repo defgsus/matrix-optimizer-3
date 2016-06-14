@@ -411,7 +411,7 @@ public:
     Object * parentObject() const;
 
     /** See if this object has a parent object @p o. */
-    bool hasParentObject(Object * o) const;
+    bool hasParentObject(const Object * o) const;
 
     /** Returns the first parent object matching given Type mask, or NULL */
     Object * findParentObject(int typeFlags) const;

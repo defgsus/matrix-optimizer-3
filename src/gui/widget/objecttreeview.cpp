@@ -40,7 +40,6 @@ struct ObjectTreeView::Private
     void updateExpansion();
     void updateExpansion(const QModelIndex& idx);
 
-    void onModelReset();
     void updateModel();
 
     void setCurIndex(const QModelIndex& idx);
@@ -106,6 +105,8 @@ Object* ObjectTreeView::selectedObject() const
 
 void ObjectTreeView::setRootObject(Object* o)
 {
+    if (!o)
+        selectNone();
     p_->model->setRootObject(o);
     p_->connect();
     p_->updateExpansion();
@@ -121,6 +122,7 @@ void ObjectTreeView::selectObject(Object* o)
 void ObjectTreeView::selectNone()
 {
     setCurrentIndex(QModelIndex());
+    p_->selObjectTemp = nullptr;
 }
 
 void ObjectTreeView::Private::setCurIndex(const QModelIndex& idx)
@@ -173,24 +175,35 @@ void ObjectTreeView::Private::connect()
         return;
 
     QObject::connect(editor, &ObjectEditor::objectAdded, [=](){ updateModel(); });
-    QObject::connect(editor, &ObjectEditor::objectChanged, [=](){ updateModel(); });
-    QObject::connect(editor, &ObjectEditor::objectColorChanged, [=](){ updateModel(); });
-    QObject::connect(editor, &ObjectEditor::objectDeleted, [=](const Object*o)
-    {
-        // XXX Doesn't catch deletion of parent of selection
-        //if (p->selectedObject() == o)
-        //    p->selectNone();
-        updateModel();
-    });
+    QObject::connect(editor, &ObjectEditor::objectChanged, [=](){ p->update(); });
+    QObject::connect(editor, &ObjectEditor::objectColorChanged, [=](){ p->update(); });
     QObject::connect(editor, &ObjectEditor::objectMoved, [=](){ updateModel(); });
     QObject::connect(editor, &ObjectEditor::objectNameChanged, [=](){ p->update(); });
     QObject::connect(editor, &ObjectEditor::objectsAdded, [=](){ updateModel(); });
-    QObject::connect(editor, &ObjectEditor::objectsDeleted, [=](const QList<Object*>& os)
-    {
-        updateModel();
-    });
+    QObject::connect(editor, &ObjectEditor::objectDeleted, [=](){ updateModel(); });
+    QObject::connect(editor, &ObjectEditor::objectsDeleted, [=](){ updateModel(); });
     QObject::connect(editor, &ObjectEditor::parameterChanged, [=](){ p->update(); });
     QObject::connect(editor, &ObjectEditor::parametersChanged, [=](){ p->update(); });
+
+    // Deselect objects that are about to be deleted
+    // so onModelReset does not re-select deleted objects
+    QObject::connect(editor, &ObjectEditor::objectAboutToDelete, [=](const Object*o)
+    {
+        if (p->selectedObject() == o
+            || p->selectedObject()->hasParentObject(o))
+            p->selectNone();
+    });
+    QObject::connect(editor, &ObjectEditor::objectsAboutToDelete,
+                     [=](const QList<Object*>& os)
+    {
+        auto sel = p->selectedObject();
+        for (auto o : os)
+        if (sel == o || sel->hasParentObject(o))
+        {
+            p->selectNone();
+            break;
+        }
+    });
 }
 
 void ObjectTreeView::Private::updateModel()
