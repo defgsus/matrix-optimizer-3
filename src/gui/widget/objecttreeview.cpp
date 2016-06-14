@@ -288,19 +288,16 @@ void ObjectTreeView::Private::showPopup()
     {
         ObjectActions::createEditActions(actions, sel, p);
         actions.addSeparator(p);
-        ObjectActions::createNewObjectActions(actions, sel, p, [=](Object* o)
+    }
+
+    auto par = sel;
+    if (!par)
+        par = model->rootObject();
+    if (par)
+        ObjectActions::createNewObjectActions(actions, par, p, nullptr, [=](Object* o)
         {
             p->selectObject(o);
         });
-    }
-    else if (model->rootObject())
-    {
-        ObjectActions::createNewObjectActions(
-                    actions, model->rootObject(), p, [=](Object* o)
-        {
-            p->selectObject(o);
-        });
-    }
 
     auto menu = new QMenu(p);
     menu->addActions(actions);

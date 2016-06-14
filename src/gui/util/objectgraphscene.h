@@ -132,7 +132,8 @@ public slots:
     // ------------------- editing --------------------
 
     /** Adds an object to object-tree and item-tree.
-        @p newObject is completely given away. If it can't be added to parent, it will be deleted
+        @p newObject is completely given away.
+        If it can't be added to parent, it will be deleted
         and a message is displayed to the user.
         @p gridPos is local inside parent. */
     void addObject(Object * parent, Object * newObject,

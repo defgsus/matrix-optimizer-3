@@ -35,7 +35,8 @@ public:
     static void createNewObjectActions(
             ActionList& actions, Object * obj,
             QObject* parent = nullptr,
-            std::function<void(Object*)> newObjectFunc = nullptr);
+            std::function<void(Object*)> onCreated = nullptr,
+            std::function<void(Object*)> onAdded = nullptr);
 
 
     // --- low level bits ----

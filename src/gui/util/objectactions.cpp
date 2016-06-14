@@ -48,7 +48,9 @@ namespace {
 
 void ObjectActions::createNewObjectActions(
         ActionList &actions, Object * obj,
-        QObject* parent, std::function<void(Object*)> newObjectFunc)
+        QObject* parent,
+        std::function<void(Object*)> onCreated,
+        std::function<void(Object*)> onAdded)
 {
     auto editor = obj->editor();
     if (!editor)
@@ -84,10 +86,12 @@ void ObjectActions::createNewObjectActions(
             onew = ObjectFactory::createObject(id);
         if (onew)
         {
+            if (onCreated)
+                onCreated(onew);
             editor->addObject(obj, onew);//, popupGridPos - objPos);
             onew->releaseRef("finish add");
-            if (newObjectFunc)
-                newObjectFunc(onew);
+            if (onAdded)
+                onAdded(onew);
         }
     });
 
@@ -108,10 +112,12 @@ void ObjectActions::createNewObjectActions(
                 Object * onew = ObjectFactory::createObject(id);
                 if (onew)
                 {
+                    if (onCreated)
+                        onCreated(onew);
                     editor->appendTextureProcessor(obj, onew);
                     onew->releaseRef("finish add");
-                    if (newObjectFunc)
-                        newObjectFunc(onew);
+                    if (onAdded)
+                        onAdded(onew);
                 }
             });
         }
