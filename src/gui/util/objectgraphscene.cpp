@@ -1673,8 +1673,9 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         });
     }
 
-    // Model3d specific
-    if (Model3d * model = dynamic_cast<Model3d*>(obj))
+    // display ShaderSource
+    if (ValueShaderSourceInterface* ssrc =
+            dynamic_cast<ValueShaderSourceInterface*>(obj))
     {
         // show source code
         auto sub = new QMenu(tr("Show shader source"));
@@ -1688,33 +1689,7 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
         a = sub->addAction(tr("fragment shader"));
         a->setData(1);
 
-        connect(sub, &QMenu::triggered, [=](QAction * a)
-        {
-            QString src = a->data().toInt() == 0
-                    ? model->shaderSource().vertexSource()
-                    : model->shaderSource().fragmentSource();
-
-            auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
-            diag->setAttribute(Qt::WA_DeleteOnClose, true);
-            diag->show();
-        });
-    }
-
-    // TextureObject specific
-    if (ValueShaderSourceInterface* ssrc = dynamic_cast<ValueShaderSourceInterface*>(obj))
-    {
-        // show source code
-        auto sub = new QMenu(tr("Show shader source"));
-        a = actions.addMenu(sub, scene);
-        a->setIcon(QIcon(":/icon/obj_glsl.png"));
-        a->setStatusTip(tr("Shows the full shader source code including user-code, "
-                           "automatic defines and overrides, and include files"));
-
-        a = sub->addAction(tr("vertex shader"));
-        a->setData(0);
-        a = sub->addAction(tr("fragment shader"));
-        a->setData(1);
-
+        /** @todo Does not account for ShaderSource channels */
         connect(sub, &QMenu::triggered, [=](QAction * a)
         {
             QString src = a->data().toInt() == 0
@@ -1725,7 +1700,6 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
             diag->setAttribute(Qt::WA_DeleteOnClose, true);
             diag->show();
         });
-
     }
 
     // wrap float sequence in float track
@@ -1745,8 +1719,10 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
     {
         for (int i=0; i<evo->evolutionKeys().size(); ++i)
         {
-            a = actions.addAction(tr("Evolve %1").arg(evo->evolutionKeys()[i]), scene);
-            a->setStatusTip(tr("Opens the evolution dialog for editing the specimen"));
+            a = actions.addAction(tr("Evolve %1")
+                                  .arg(evo->evolutionKeys()[i]), scene);
+            a->setStatusTip(tr("Opens the evolution dialog for editing "
+                               "the specimen"));
             connect(a, &QAction::triggered, [=]()
             {
                 EvolutionDialog::openForInterface(evo, evo->evolutionKeys()[i]);
@@ -1757,8 +1733,10 @@ void ObjectGraphScene::Private::createObjectEditMenu(ActionList &actions, Object
 
     actions.addSeparator(scene);
 
-    a = actions.addAction(QIcon(":/icon/disk.png"), tr("Save as template ..."), scene);
-    a->setStatusTip(tr("Saves the object and it's sub-tree to a file for later reuse"));
+    a = actions.addAction(QIcon(":/icon/disk.png"),
+                          tr("Save as template ..."), scene);
+    a->setStatusTip(tr("Saves the object and it's sub-tree to a "
+                       "file for later reuse"));
     connect(a, &QAction::triggered, [=]()
     {
         ObjectFactory::storeObjectTemplate(obj);

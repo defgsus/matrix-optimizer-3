@@ -37,6 +37,10 @@ public slots:
     void selectObject(Object*);
     void selectNone();
 
+protected:
+
+    void mousePressEvent(QMouseEvent*) override;
+
 private:
     struct Private;
     Private* p_;

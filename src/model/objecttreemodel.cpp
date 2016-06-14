@@ -171,30 +171,20 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
             }
         }
 
-        // text alignment
-        if (role == Qt::TextAlignmentRole)
-            return (index.column() == 0)?
-                        (int)(Qt::AlignLeft | Qt::AlignVCenter)
-                    :   (int)(Qt::AlignRight | Qt::AlignVCenter);
-
         if (role == Qt::ForegroundRole)
         {
-            return ObjectFactory::colorForObject(obj);
+            if (obj->hasError())
+                return QColor(255,0,0);
+            else
+                return ObjectFactory::colorForObject(obj);
         }
 
         if (role == Qt::DecorationRole && index.column() == 0)
         {
-            return AppIcons::iconForObject(obj);
+            return AppIcons::iconForObject(
+                        obj, ObjectFactory::colorForObject(obj));
         }
 
-        /*
-        if (role == Qt::BackgroundRole)
-        {
-            if (index.column() == 2)
-                return QBrush(Qt::gray);
-            if (index.column() == 1)
-                return QBrush(Qt::green);
-        }*/
     }
 
     return QVariant();

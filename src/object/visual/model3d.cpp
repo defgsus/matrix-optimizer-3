@@ -753,11 +753,11 @@ void Model3d::setGeometry(const GEOM::Geometry & g)
     requestRender();
 }
 
-GL::ShaderSource Model3d::shaderSource() const
+GL::ShaderSource Model3d::valueShaderSource(uint channel) const
 {
-    if (!draw_)
+    if (!draw_ || channel > 0)
         return GL::ShaderSource();
-    return GL::ShaderSource(*draw_->shaderSource());
+    return *draw_->shaderSource();
 }
 
 void Model3d::setupDrawable_()

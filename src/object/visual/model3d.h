@@ -14,6 +14,7 @@
 
 #include "objectgl.h"
 #include "object/interface/valuegeometryinterface.h"
+#include "object/interface/valueshadersourceinterface.h"
 #include "object/interface/geometryeditinterface.h"
 #include "gl/shadersource.h"
 
@@ -25,6 +26,7 @@ class UserUniformSetting;
 class Model3d
         : public ObjectGl
         , public ValueGeometryInterface
+        , public ValueShaderSourceInterface
         , public GeometryEditInterface
 {
 
@@ -49,8 +51,9 @@ public:
 
     const GEOM::Geometry * geometry() const;
     Vec4 modelColor(const RenderTime & time) const;
-    /** Returns a copy of the shader code after replacements, includes, etc.. */
-    GL::ShaderSource shaderSource() const;
+
+    /** Shadersource interface */
+    GL::ShaderSource valueShaderSource(uint channel) const override;
 
     /** Geometry interface */
     const GEOM::Geometry * valueGeometry(

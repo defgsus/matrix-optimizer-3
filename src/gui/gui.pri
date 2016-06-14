@@ -135,7 +135,8 @@ HEADERS += \
     $$PWD/widget/editablelabel.h \
     $$PWD/inserttimedialog.h \
     $$PWD/widget/textfindwidget.h \
-    $$PWD/widget/objecttreeview.h
+    $$PWD/widget/objecttreeview.h \
+    $$PWD/util/objectactions.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -270,4 +271,5 @@ SOURCES += \
     $$PWD/widget/editablelabel.cpp \
     $$PWD/inserttimedialog.cpp \
     $$PWD/widget/textfindwidget.cpp \
-    $$PWD/widget/objecttreeview.cpp
+    $$PWD/widget/objecttreeview.cpp \
+    $$PWD/util/objectactions.cpp
