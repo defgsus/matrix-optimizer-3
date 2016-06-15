@@ -243,7 +243,11 @@ private:
     void releaseTexture_();
 
     /** Creates or uploads the texture */
-    void upload_(const void * ptr, gl::GLint mipmap_level, gl::GLenum cube_target = gl::GLenum(0));
+    void upload_(const void * ptr, gl::GLint mipmap_level,
+                 gl::GLenum cube_target = gl::GLenum(0));
+    /** Updates the data for already allocated texture */
+    void uploadFast_(const void * ptr_to_data, gl::GLint mipmap_level,
+                     gl::GLenum cube_target = gl::GLenum(0));
     /** Downloads to ptr (must be non-NULL) */
     void download_(void * ptr, gl::GLuint mipmap, gl::GLenum target, gl::GLenum type) const;
 

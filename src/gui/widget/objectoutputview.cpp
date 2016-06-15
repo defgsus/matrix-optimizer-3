@@ -113,6 +113,7 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
 
         try
         {
+#if 1
             // gl-resize
             texRender_->render(tex, true);
             // download image
@@ -123,6 +124,7 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
                 label->setPixmap(QPixmap::fromImage(img));
                 return;
             }
+#endif
         }
         catch (const Exception& e)
         {

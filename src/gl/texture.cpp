@@ -205,7 +205,7 @@ QString Texture::infoString() const
         if (is3d())
             s << "x" << depth();
     }
-    s << ", format=" << format();
+    s << ", format=" << format() << "(in=" << input_format_ << ")";
     //s << ", type=" << type();
     if (numMipmapLevels())
         s << ", mipmaps=" << numMipmapLevels();
@@ -562,7 +562,6 @@ void Texture::upload(void * ptr, gl::GLint mipmap_level)
     };
 }
 
-/** @todo implement fast version (see hevc player source) */
 void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 {
     MO_DEBUG_TEX("Texture::upload_(" << ptr << ", mipmap=" << mipmap_level
@@ -570,6 +569,14 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
 
     if (!isHandle())
         MO_GL_ERROR("Texture::upload() on uninitialized Texture");
+
+#if 1
+    if (isAllocated() && !isMultiSample())
+    {
+        uploadFast_(ptr, mipmap_level, cube_target);
+        return;
+    }
+#endif
 
     switch (target_)
     {
@@ -740,6 +747,113 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
     // bind again to check for errors
     bind();
 }
+
+
+
+void Texture::uploadFast_(const void * ptr, GLint mipmap_level, GLenum cube_target)
+{
+    MO_DEBUG_TEX("uploadFast_(" << ptr << ", mipmap=" << mipmap_level
+                << ", cubetgt=" << cube_target << ")");
+
+    MO_ASSERT(isHandle(), "upload() on uninitialized Texture");
+    MO_ASSERT(isAllocated(), "uploadFast() non-allocated texture");
+
+    switch (target_)
+    {
+        case GL_TEXTURE_1D:
+
+            MO_CHECK_GL_THROW(
+            glTexSubImage1D(
+                target_,
+                // mipmap level
+                mipmap_level,
+                // offset
+                0,
+                // size
+                width_,
+                // input format and type
+                input_format_,
+                // data type
+                type_,
+                // pixel data
+                ptr));
+        break;
+
+
+        case GL_TEXTURE_2D:
+
+            MO_CHECK_GL_THROW_TEXT(
+            glTexSubImage2D(
+                target_,
+                // mipmap level
+                mipmap_level,
+                // offset
+                0, 0,
+                // size
+                width_, height_,
+                // input format
+                input_format_,
+                // data type
+                type_,
+                // ptr
+                ptr)
+                , "when uploading texture\n"
+                  "target="<<target_<<" mipmap_level="<<mipmap_level
+                  <<" input_format="<<input_format_<<" type="<<type_ );
+
+        break;
+
+        //case GL_TEXTURE_2D_MULTISAMPLE:
+        //break;
+
+        case GL_TEXTURE_3D:
+
+            MO_CHECK_GL_THROW(
+            glTexSubImage3D(
+                target_,
+                // mipmap level
+                mipmap_level,
+                // offset
+                0, 0, 0,
+                // size
+                width_, height_, depth_,
+                // input format
+                input_format_,
+                // data type
+                type_,
+                // ptr
+                ptr));
+
+        break;
+
+        case GL_TEXTURE_CUBE_MAP:
+
+            MO_CHECK_GL_THROW(
+            glTexSubImage2D(
+                cube_target,
+                // mipmap level
+                mipmap_level,
+                // offset
+                0, 0,
+                // size
+                width_, height_,
+                // input format
+                input_format_,
+                // data type
+                type_,
+                // ptr
+                ptr));
+        break;
+
+        default:
+            MO_LOGIC_ERROR("Unhandled texture target "
+                          << (int)target_ << " in Texture::uploadFast_()");
+        break;
+    }
+
+}
+
+
 
 
 void Texture::download(void * ptr, GLuint mipmap) const
