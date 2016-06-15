@@ -86,6 +86,7 @@ public:
     Private(ObjectGraphScene * scene)
         :   scene   (scene),
             editor  (0),
+            modDiag (0),
             zStack  (0),
             action  (A_NONE),
             connectStartConnectItem (0),
@@ -131,6 +132,7 @@ public:
     ObjectGraphScene * scene;
     Scene * root;
     ObjectEditor * editor;
+    ModulatorDialog* modDiag;
     std::map<Object*, AbstractObjectItem*> itemMap;
     std::map<Object*, QList<ModulatorItem*>> modItemMap;
     std::map<Object*, QList<AudioConnectionItem*>> conItemMap;
@@ -1022,7 +1024,8 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
         // print errors
         if (!notworking.isEmpty())
         {
-            QString msg = QObject::tr("The following urls could not be wrapped into an object.");
+            QString msg = QObject::tr(
+                        "The following urls could not be wrapped into an object.");
             for (const auto & text : notworking)
             {
                 msg.append("\n" + text);
@@ -1376,10 +1379,7 @@ void ObjectGraphScene::popup(Modulator * mod)
     a->setStatusTip(tr("Opens a dialog to edit the properties of the modulation"));
     connect(a, &QAction::triggered, [this, mod]()
     {
-        ModulatorDialog diag;
-        diag.setModulators(QList<Modulator*>() << mod, mod);
-        diag.move(QCursor::pos());
-        diag.exec();
+        openModulatorDialog(mod);
     });
 
     p_->actions.addSeparator(this);
@@ -1460,6 +1460,30 @@ void ObjectGraphScene::popupObjectDrag(
     p_->showPopup();
 }
 
+
+void ObjectGraphScene::openModulatorDialog(Modulator* mod)
+{
+#if 0
+    // XXX Does not track existence of modulators yet
+    if (!p_->modDiag)
+        p_->modDiag = new ModulatorDialog();
+    p_->modDiag->setModulators(QList<Modulator*>() << mod, mod);
+    p_->modDiag->move(QCursor::pos());
+    p_->modDiag->show();
+    p_->modDiag->raise();
+#else
+    QList<Modulator*> list;
+    if (mod->parent())
+        list = mod->parent()->getModulators();
+    if (!list.contains(mod))
+        list << mod;
+
+    ModulatorDialog diag;
+    diag.setModulators(list, mod);
+    diag.move(QCursor::pos());
+    diag.exec();
+#endif
+}
 
 
 

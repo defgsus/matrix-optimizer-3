@@ -34,12 +34,16 @@ signals:
 public slots:
 
     void setRootObject(Object*);
+
     void selectObject(Object*);
+    void selectObjects(const QList<Object*>&);
     void selectNone();
 
 protected:
 
     void mousePressEvent(QMouseEvent*) override;
+    void dragEnterEvent(QDragEnterEvent *event) override;
+    void dragMoveEvent(QDragMoveEvent *event) override;
 
 private:
     struct Private;

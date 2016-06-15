@@ -107,13 +107,16 @@ public slots:
     void popup(MO::Modulator*);
     /** Popup with parameter select to create a modulation.
         @p dropPoint is in scene coords */
-    void popupObjectDrag(MO::Object * source, MO::Object * goal, const QPointF &dropPoint);
+    void popupObjectDrag(
+            MO::Object * source, MO::Object * goal, const QPointF &dropPoint);
 
     /** Focus and select the item for the object. */
     void setFocusObject(MO::Object * o);
 
     /** Starts the connection drag mode */
     bool startConnection(ObjectGraphConnectItem*);
+
+    void openModulatorDialog(MO::Modulator*);
 
     // ------------------- clipboard ------------------
 

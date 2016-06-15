@@ -45,14 +45,18 @@ public:
     bool setData(const QModelIndex &index, const QVariant&,
                          int role = Qt::EditRole) override;
 
+    // -- drag/drop impl --
+
     Qt::DropActions supportedDropActions() const override;
 
     QStringList mimeTypes() const override;
     QMimeData* mimeData(const QModelIndexList &indexes) const override;
+    bool canDropMimeData(const QMimeData *data, Qt::DropAction action,
+                         int row, int column, const QModelIndex &parent) const override;
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent) override;
 
-    // Needed to implement for drag-move
+    // Needed for drag-move
     bool removeRows(int row, int count, const QModelIndex &parent) override;
 
 signals:

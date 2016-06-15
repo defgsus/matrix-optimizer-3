@@ -125,14 +125,14 @@ void FreeFloatTransform::applyTransformation(Mat4 &matrix, const RenderTime& tim
         freefloat_->setMatrix(Mat4(1.));
         doReset_ = false;
     }
-
+    //MO_PRINT(time.delta());
     const Float
-            acc_x = acc_x_->value(time),
-            acc_y = acc_y_->value(time),
-            acc_z = acc_z_->value(time),
-            rot_x = rx_->value(time),
-            rot_y = ry_->value(time),
-            rot_z = rz_->value(time);
+            acc_x = time.delta() * acc_x_->value(time),
+            acc_y = time.delta() * acc_y_->value(time),
+            acc_z = time.delta() * acc_z_->value(time),
+            rot_x = time.delta() * rx_->value(time),
+            rot_y = time.delta() * ry_->value(time),
+            rot_z = time.delta() * rz_->value(time);
 
     freefloat_->moveX(acc_x);
     freefloat_->moveY(acc_y);

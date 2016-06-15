@@ -11,6 +11,7 @@
 #include <QMouseEvent>
 #include <QMenu>
 #include <QAction>
+#include <QMimeData>
 
 #include "objecttreeview.h"
 #include "model/objecttreemodel.h"
@@ -67,7 +68,12 @@ ObjectTreeView::ObjectTreeView(QWidget *parent)
     setObjectName("ObjectTreeView");
     setHeaderHidden(true);
     //setColumnHidden(1, true);
+
+    setSelectionMode(ExtendedSelection);
     setDragDropMode(DragDrop);
+    setDragEnabled(true);
+    setAcceptDrops(true);
+    viewport()->setAcceptDrops(true);
     setDropIndicatorShown(true);
 
     setModel(p_->model);
@@ -112,7 +118,11 @@ ObjectTreeView::~ObjectTreeView()
 Object* ObjectTreeView::rootObject() const { return p_->model->rootObject(); }
 Object* ObjectTreeView::selectedObject() const
 {
-    return p_->model->objectForIndex( currentIndex() );
+    //return p_->model->objectForIndex( currentIndex() );
+    auto idxs = selectedIndexes();
+    if (idxs.isEmpty())
+        return nullptr;
+    return p_->model->objectForIndex( idxs.first() );
 }
 
 void ObjectTreeView::setRootObject(Object* o)
@@ -131,6 +141,16 @@ void ObjectTreeView::setRootObject(Object* o)
 void ObjectTreeView::selectObject(Object* o)
 {
     auto idx = p_->model->indexForObject(o);
+    if (idx.isValid())
+        setCurrentIndex(idx);
+}
+
+/** @todo this only selects the first object in list */
+void ObjectTreeView::selectObjects(const QList<Object*>& list)
+{
+    if (list.isEmpty())
+        return;
+    auto idx = p_->model->indexForObject(list.first());
     if (idx.isValid())
         setCurrentIndex(idx);
 }
@@ -193,12 +213,14 @@ void ObjectTreeView::Private::connectEditor()
     if (!editor)
         return;
 
-    connect(editor, &ObjectEditor::objectAdded, [=](){ updateModel(); });
+    connect(editor, &ObjectEditor::objectAdded, [=](Object*o)
+        { updateModel(); p->selectObject(o); });
     connect(editor, &ObjectEditor::objectChanged, [=](){ p->update(); });
     connect(editor, &ObjectEditor::objectColorChanged, [=](){ p->update(); });
     connect(editor, &ObjectEditor::objectMoved, [=](){ updateModel(); });
     connect(editor, &ObjectEditor::objectNameChanged, [=](){ p->update(); });
-    connect(editor, &ObjectEditor::objectsAdded, [=](){ updateModel(); });
+    connect(editor, &ObjectEditor::objectsAdded, [=](const QList<Object*>& os)
+        { updateModel(); p->selectObjects(os); });
     connect(editor, &ObjectEditor::objectDeleted, [=](){ updateModel(); });
     connect(editor, &ObjectEditor::objectsDeleted, [=](){ updateModel(); });
     connect(editor, &ObjectEditor::parameterChanged, [=](){ p->update(); });
@@ -297,10 +319,7 @@ void ObjectTreeView::Private::showPopup()
     if (!par)
         par = model->rootObject();
     if (par)
-        ObjectActions::createNewObjectActions(actions, par, p, nullptr, [=](Object* o)
-        {
-            p->selectObject(o);
-        });
+        ObjectActions::createNewObjectActions(actions, par, p);
 
     auto menu = new QMenu(p);
     menu->addActions(actions);
@@ -308,6 +327,20 @@ void ObjectTreeView::Private::showPopup()
     menu->popup(QCursor::pos());
 }
 
+void ObjectTreeView::dragEnterEvent(QDragEnterEvent *event)
+{
+    //MO_PRINT(event->mimeData()->formats());
+    QTreeView::dragEnterEvent(event);
+    //event->accept();
+}
+
+void ObjectTreeView::dragMoveEvent(QDragMoveEvent *event)
+{
+    QTreeView::dragMoveEvent(event);
+    //event->accept();
+    //MO_PRINT("M " << event->mimeData()->formats());
+    //event->accept();
+}
 
 } // namespace GUI
 } // namespace MO

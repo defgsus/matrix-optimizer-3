@@ -188,6 +188,15 @@ void ModulatorItem::mousePressEvent(QGraphicsSceneMouseEvent * e)
     }
 }
 
+void ModulatorItem::mouseDoubleClickEvent(QGraphicsSceneMouseEvent* e)
+{
+    if (e->button() == Qt::LeftButton)
+    {
+        setSelected(true);
+        objectScene()->openModulatorDialog(mod_);
+    }
+}
+
 void ModulatorItem::paint(QPainter *p, const QStyleOptionGraphicsItem *, QWidget *)
 {
     const bool sel = (from_ && from_->isSelected())
