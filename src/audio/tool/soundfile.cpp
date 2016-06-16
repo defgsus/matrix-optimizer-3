@@ -178,12 +178,15 @@ std::vector<F32> SoundFile::getResampled(uint sr, uint channel, uint len) const
     return ret;
 }
 
-void SoundFile::getResampled(const QList<AudioBuffer*> channels, SamplePos frame, uint sr, F32 amp)
+void SoundFile::getResampled(
+        const QList<AudioBuffer*> channels, SamplePos frame, uint sr, F32 amp)
 {
     if (channels.isEmpty())
         return;
 
-    const Double invSr = 1.0 / sr;
+    const Double
+            invSr = 1.0 / sr,
+            invSrThis = 1. / std::max((uint)1, sampleRate());
     size_t i, num = std::min((int)numberChannels(), channels.size());
 
     // read from stream
@@ -219,7 +222,7 @@ void SoundFile::getResampled(const QList<AudioBuffer*> channels, SamplePos frame
         // XXX poor eff.
         for (size_t j=0; j<channels[i]->blockSize(); ++j)
         {
-            Double time = Double(frame + j) * invSr;
+            Double time = Double(frame) * invSrThis + Double(j) * invSr;
             channels[i]->write(j, value(time, i) * amp);
         }
     }

@@ -242,9 +242,6 @@ void WavePlayerAO::processAudio(const RenderTime& time)
 
 void WavePlayerAO::Private::processAudio(const RenderTime& time)
 {
-    const QList<AUDIO::AudioBuffer*>&
-            outputs = ao->audioOutputs(time.thread());
-
     // lazy exchange file
     if (newWave)
     {
@@ -264,8 +261,13 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     }
 
     bool    doLoop = paramLoop->value(time);
-    Double  dtime = time.second(), // playback time
-            blength = ao->sampleRateInv() * time.bufferSize(); // bufferlength in seconds
+    Double  // playback time
+            dtime = time.second(),
+            // bufferlength in seconds
+            blength = ao->sampleRateInv() * time.bufferSize();
+
+    const QList<AUDIO::AudioBuffer*>&
+            outputs = ao->audioOutputs(time.thread());
 
     // synced time
     if (mode == M_SYNCED)
@@ -310,10 +312,23 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     // sample from wave data
     if (dtime > blength && dtime < wlen + blength)
     {
+#if 1
         wave->getResampled(outputs,
                        dtime * wave->sampleRate(),
                        ao->sampleRate(),
                        paramAmp->value(time));
+#else
+        for (int j=0; j<outputs.size(); ++j)
+        {
+            if (outputs[j] == nullptr)
+                continue;
+            for (int i=0; i<outputs[j]->blockSize(); ++i)
+            {
+                Double t = dtime + ao->sampleRateInv() * i;
+                outputs[j]->write(i, wave->value(t, j));
+            }
+        }
+#endif
     }
     // zero output when outside file length
     else
