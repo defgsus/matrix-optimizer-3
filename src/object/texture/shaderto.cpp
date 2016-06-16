@@ -304,8 +304,6 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
 
     uint texSlot = 0;
     uniformSetting->updateUniforms(time, &texSlot);
-    //GL::Texture::setActiveTexture(0);
-
     to->renderShaderQuad(0, time, &texSlot);
 }
 

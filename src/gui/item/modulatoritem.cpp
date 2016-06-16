@@ -140,9 +140,11 @@ void ModulatorItem::updatePos_()
 {
     // get positions of modulator and goal item
     if (from_)
-        fromPos_ = mapToParent(mapFromScene(from_->mapToScene(from_->outputPos(mod_))));
+        fromPos_ = mapToParent(mapFromScene(
+                                   from_->mapToScene(from_->outputPos(mod_))));
     if (to_)
-        toPos_ = mapToParent(mapFromScene(to_->mapToScene(to_->inputPos(mod_->parameter()))));
+        toPos_ = mapToParent(mapFromScene(
+                                 to_->mapToScene(to_->inputPos(mod_->parameter()))));
 
     // bounding rect of the two positions
     QRect rect( std::min(fromPos_.x(), toPos_.x()),

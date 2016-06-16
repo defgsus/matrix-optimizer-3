@@ -719,26 +719,16 @@ void GeometryDialog::updatePresetList_()
 
     // search directory for preset files
 
-    const QString path = IO::Files::directory(IO::FT_GEOMETRY_SETTINGS);
-    QDir dir(path);
-    QStringList filters;
-    for (auto &ext : IO::fileTypeExtensions[IO::FT_GEOMETRY_SETTINGS])
-        filters << ("*." + ext);
-    QStringList names =
-        dir.entryList(
-                filters,
-                QDir::Files | QDir::Readable | QDir::NoDotAndDotDot,
-                QDir::Name | QDir::IgnoreCase | QDir::LocaleAware
-                );
+    QStringList names;
+    IO::Files::findFiles(IO::FT_GEOMETRY_SETTINGS, true, names);
 
     // fill combo-box
     comboPreset_->addItem("-");
 
     int sel = -1;
-    for (auto &n : names)
+    for (auto& filename : names)
     {
-        QString filename = path + QDir::separator() + n;
-        QString display = n;
+        QString display = QFileInfo(filename).fileName();
         display.replace("."+IO::fileTypeExtensions[IO::FT_GEOMETRY_SETTINGS][0], "");
         comboPreset_->addItem(display, filename);
 

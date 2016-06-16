@@ -16,6 +16,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametercallback.h"
 #include "math/constants.h"
 #include "audio/tool/multifilter.h"
 #include "io/datastream.h"
@@ -46,6 +47,8 @@ class FilterBankAO::Private
         * paramOrder;
     ParameterSelect
         * paramType;
+    ParameterCallback
+        * paramReset;
 
     // filters for all channels
     struct Filters
@@ -55,6 +58,7 @@ class FilterBankAO::Private
 
     // per thread
     std::vector<Filters> filters;
+    bool doReset;
 };
 
 FilterBankAO::FilterBankAO()
@@ -90,6 +94,11 @@ void FilterBankAO::createParameters()
 
     params()->beginParameterGroup("filter", tr("Filter"));
     initParameterGroupExpanded("filter");
+
+        p_->paramReset = params()->createCallbackParameter(
+                "reset", tr("reset"),
+                tr("Resets the filter (useful in case of internal overflow"),
+                [=](){ p_->doReset = true; });
 
         p_->paramType = params()->createSelectParameter(
                     "_filter_type", tr("filter type"),
@@ -133,7 +142,7 @@ void FilterBankAO::createParameters()
                     "_filter_amp_highboost", tr("amplitude high-boost"),
                     tr("Increase of amplitude per frequence band"),
                     0.0, 0.05);
-        //p_->paramReset = params()->createGateParameter
+
     params()->endParameterGroup();
 }
 
@@ -197,6 +206,14 @@ void FilterBankAO::Private::makeFilters(uint num)
 
 void FilterBankAO::Private::updateFilterCoeffs(const RenderTime& time)
 {
+    paramReset->fireIfInput(time);
+    if (doReset)
+    {
+        doReset = false;
+        for (auto & fp : filters[time.thread()].filters)
+            fp.get()->reset();
+    }
+
     Float   freq = paramFreqStart->value(time),
             freqAdd = paramFreqAdd->value(time),
             freqMul = paramFreqMul->value(time),

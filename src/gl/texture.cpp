@@ -571,7 +571,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         MO_GL_ERROR("Texture::upload() on uninitialized Texture");
 
 #if 1
-    if (isAllocated() && !isMultiSample())
+    if (isAllocated() && !isMultiSample() && !isCube())
     {
         uploadFast_(ptr, mipmap_level, cube_target);
         return;
@@ -826,6 +826,7 @@ void Texture::uploadFast_(const void * ptr, GLint mipmap_level, GLenum cube_targ
 
         break;
 
+        /** @todo Texture::uploadFast_() for cube maps not working */
         case GL_TEXTURE_CUBE_MAP:
 
             MO_CHECK_GL_THROW(

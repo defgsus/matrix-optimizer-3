@@ -80,7 +80,8 @@ class ShaderAO::Private
             *u_resolution,
             *u_samplerate,
             *u_buffersize,
-            *u_iSampleRate;
+            *u_iSampleRate,
+            *u_iChannelRes;
 };
 
 ShaderAO::ShaderAO()
@@ -260,6 +261,10 @@ void ShaderAO::Private::initGl()
         u_samplerate = shader->getUniform("u_samplerate", true);
         u_buffersize = shader->getUniform("u_buffersize", true);
         u_iSampleRate = shader->getUniform("iSampleRate");
+        u_iChannelRes = shader->getUniform("iChannelResolution[0]");
+        if (u_iChannelRes)
+            u_iChannelRes->setAutoSend(false);
+
         userUniforms->tieToShader(shader);
 
         // --------------- quad geom -----------
@@ -339,6 +344,9 @@ void ShaderAO::Private::render(const RenderTime& time)
 
     if (u_iSampleRate)
         u_iSampleRate->floats[0] = ao->sampleRate();
+
+    //if (u_iChannelRes)
+    //    gl::glUniform3fv
 
     uint texslot = 0;
     shader->activate();
