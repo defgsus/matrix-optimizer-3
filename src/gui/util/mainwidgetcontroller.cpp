@@ -109,8 +109,6 @@
 #include "gl/scenerenderer.h" // deprecated
 #include "gl/compatibility.h"
 #include "audio/configuration.h"
-#include "engine/renderer.h" // should be (audio) disk renderer
-#include "engine/renderengine.h"
 #include "engine/audioengine.h"
 #include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
@@ -140,7 +138,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       updateTimer_      (0),
       outputSize_       (512, 512),
       audioEngine_      (0),
-      renderEngine_     (0),
+      //renderEngine_     (0),
       glManager_        (0),
       glWindow_         (0),
       objectEditor_     (0),
@@ -194,11 +192,13 @@ MainWidgetController::~MainWidgetController()
 
     // shut down
 
-    if (renderEngine_)
-        renderEngine_->release();
+    //if (renderEngine_)
+    //    renderEngine_->release();
+    //delete renderEngine_;
 
     if (audioEngine_)
         audioEngine_->stop();
+    delete audioEngine_;
 
     if (scene_)
     {
@@ -999,8 +999,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     MO_ASSERT(s, "MainWidgetController::setScene_() with NULL scene");
     MO_ASSERT(s != scene_, "MainWidgetController::setScene_() with same scene");
 
-    if (renderEngine_)
-        renderEngine_->release();
+    //if (renderEngine_)
+    //    renderEngine_->release();
 
     objectTreeView_->setRootObject(nullptr);
     objectView_->setObject(nullptr);

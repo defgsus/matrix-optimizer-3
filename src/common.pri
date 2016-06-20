@@ -44,7 +44,6 @@ HEADERS += \
     src/types/int.h \
     src/audio/audiodevices.h \
     src/audio/audiodevice.h \
-    src/engine/renderer.h \
     src/gl/drawable.h \
     src/gl/shader.h \
     src/gl/shadersource.h \
@@ -181,7 +180,6 @@ HEADERS += \
     src/geom/builtinlinefont.h \
     src/script/angelscript_timeline.h \
     src/geom/pointcloud.h \
-    src/engine/renderengine.h \
     src/geom/marchingcubes.h \
     src/network/udpconnection.h \
     src/script/angelscript_network.h \
@@ -309,7 +307,6 @@ SOURCES += \
     src/io/settings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
-    src/engine/renderer.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
@@ -425,7 +422,6 @@ SOURCES += \
     src/geom/builtinlinefont.cpp \
     src/script/angelscript_timeline.cpp \
     src/geom/pointcloud.cpp \
-    src/engine/renderengine.cpp \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \

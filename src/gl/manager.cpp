@@ -23,11 +23,28 @@
 namespace MO {
 namespace GL {
 
-Manager::Manager(QObject *parent) :
-    QObject(parent),
-    scene_      (0),
-    window_     (0),
-    renderer_   (0)
+struct Manager::Private
+{
+    Private(Manager* p)
+        : p         (p)
+        , scene     (nullptr)
+        , window    (nullptr)
+        , renderer  (nullptr)
+    { }
+
+    Manager* p;
+
+    Scene * scene;
+    Window * window;
+    SceneRenderer * renderer;
+
+    std::function<Double()> timeFunc;
+
+};
+
+Manager::Manager(QObject *parent)
+    : QObject   (parent)
+    , p_        (new Private(this))
 {
     MO_DEBUG_GL("Manager::Manager()");
 }
@@ -36,60 +53,65 @@ Manager::~Manager()
 {
     MO_DEBUG_GL("Manager::~Manager()");
 
-    if (window_)
-        window_->close();
+    if (p_->window)
+        p_->window->close();
+
+    delete p_;
 }
+
+SceneRenderer * Manager::renderer() const { return p_->renderer; }
+
 
 Window * Manager::createGlWindow(uint /*thread*/)
 {
-    if (!window_)
+    if (!p_->window)
     {
-        window_ = new Window();
+        p_->window = new Window();
 
-        connect(window_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
+        connect(p_->window, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                     this, SLOT(onCameraMatrixChanged_(MO::Mat4)));
 
-        connect(window_, SIGNAL(sizeChanged(QSize)),
+        connect(p_->window, SIGNAL(sizeChanged(QSize)),
                     this, SIGNAL(outputSizeChanged(QSize)));
     }
 
-    if (!renderer_)
+    if (!p_->renderer)
     {
-        renderer_ = new SceneRenderer();
-        renderer_->setTimeCallback(timeFunc_);
+        p_->renderer = new SceneRenderer();
+        p_->renderer->setTimeCallback(p_->timeFunc);
 
-        if (scene_)
-            renderer_->setScene(scene_);
+        if (p_->scene)
+            p_->renderer->setScene(p_->scene);
 
-        window_->setRenderer(renderer_);
+        p_->window->setRenderer(p_->renderer);
     }
 
-    return window_;
+    return p_->window;
 }
 
 void Manager::setScene(Scene * scene)
 {
-    bool changed = (scene != scene_);
+    bool changed = (scene != p_->scene);
 
-    scene_ = scene;
+    p_->scene = scene;
 
     // XXX Would not work if window was not created yet
-    if (changed && scene_ && window_)
+    if (changed && p_->scene && p_->window)
     {
         // connect events from scene to window
-        connect(scene_->sceneSignals(), SIGNAL(renderRequest()),
+        connect(p_->scene->sceneSignals(), SIGNAL(renderRequest()),
                     //this, SLOT(onRenderRequest_()));
-                    window_, SLOT(renderLater()));
+                    p_->window, SLOT(renderLater()));
     }
 
-    renderer_->setScene(scene);
+    p_->renderer->setScene(scene);
 }
 
 void Manager::setTimeCallback(std::function<Double ()> timeFunc)
 {
-    timeFunc_ = timeFunc;
-    if (renderer_)
-        renderer_->setTimeCallback(timeFunc_);
+    p_->timeFunc = timeFunc;
+    if (p_->renderer)
+        p_->renderer->setTimeCallback(p_->timeFunc);
 }
 
 void Manager::onCameraMatrixChanged_(const Mat4 & mat)
@@ -108,19 +130,19 @@ void Manager::onRenderRequest_()
 
 bool Manager::isAnimating() const
 {
-    return window_ && window_->isAnimating();
+    return p_->window && p_->window->isAnimating();
 }
 
 void Manager::startAnimate()
 {
-    if (window_)
-        window_->startAnimation();
+    if (p_->window)
+        p_->window->startAnimation();
 }
 
 void Manager::stopAnimate()
 {
-    if (window_)
-        window_->stopAnimation();
+    if (p_->window)
+        p_->window->stopAnimation();
 }
 
 } // namespace GL

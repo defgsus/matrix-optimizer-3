@@ -44,7 +44,7 @@ public:
 
     void setTimeCallback(std::function<Double()> timeFunc);
 
-    SceneRenderer * renderer() const { return renderer_; }
+    SceneRenderer * renderer() const;
 
     bool isAnimating() const;
 
@@ -73,11 +73,8 @@ private slots:
 
 private:
 
-    Scene * scene_;
-    Window * window_;
-    SceneRenderer * renderer_;
-
-    std::function<Double()> timeFunc_;
+    struct Private;
+    Private* p_;
 };
 
 } // namespace GL
