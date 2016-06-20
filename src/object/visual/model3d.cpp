@@ -424,6 +424,51 @@ void Model3d::createParameters()
                        "void mo_modify_fragment_output()\n{\n\t\n}\n"
                     , true, false);
 
+        glslDoGeometry_ = params()->createBooleanParameter(
+                    "glsl_do_geometry", tr("geometry shader"),
+                 tr("Enables the geometry shader code"),
+                 tr("Overrides are enabled for the shader of this model"),
+                 tr("No overrides"),
+                 false,
+                 true, false);
+        glslDoGeometry_->setDefaultEvolvable(false);
+
+
+        glslGeometry_ = params()->createTextParameter(
+                    "glsl_geometry", tr("geometry shader"),
+                    tr("A piece of glsl code to generate primitives"),
+                    TT_GLSL,
+       "// " + tr("Please be aware that this interface is likely to change in the future!") +
+       "\n\n"
+       "// " + tr("You have access to these values (! means: if available)") + ":\n"
+       "// -- uniforms --\n"
+       "// float u_time\n"
+       "// vec3 u_cam_pos\n"
+       "// float u_bump_scale\n"
+       "// sampler2D tex_0 !\n"
+       "// sampler2D tex_norm_0 !\n"
+       "// -- input from vertex stage --\n"
+       "// vec3 v_instance\n"
+       "// vec3 v_pos\n"
+       "// vec3 v_pos_world\n"
+       "// vec3 v_pos_eye\n"
+       "// vec3 v_normal\n"
+       "// vec3 v_normal_eye\n"
+       "// mat3 v_normal_space\n"
+       "// vec3 v_texCoord\n"
+       "// vec3 v_cam_dir\n"
+       "// vec4 v_color\n"
+       "// vec4 v_ambient_color\n"
+       "// -- lighting --\n"
+       "// vec3 mo_normal\n"
+       "// vec4 mo_light_color\n"
+       "// ... todo\n"
+       "// -- output to rasterizer --\n"
+       "// vec4 out_color\n"
+       "\n"
+       "void main()\n{\n\t\n}\n"
+                    , true, false);
+
     params()->endParameterGroup();
 
 
@@ -540,12 +585,14 @@ void Model3d::onParameterChanged(Parameter *p)
     if (p == lightMode_
             || p == vertexFx_
             || p == glslDoOverride_
+            || p == glslDoGeometry_
             || p == glslVertex_
             || p == glslTransform_
             || p == glslVertexOut_
             || p == glslFragmentOut_
             || p == glslNormal_
             || p == glslLight_
+            || p == glslGeometry_
             || p == usePointCoord_
             || p == pointSizeAuto_
             || texture_->onParameterChange(p)
@@ -593,6 +640,8 @@ void Model3d::updateParameterVisibility()
     glslFragmentOut_->setVisible(glsl);
     glslNormal_->setVisible(glsl);
     glslLight_->setVisible(glsl);
+    glslDoGeometry_->setVisible(glsl);
+    glslGeometry_->setVisible(glsl && glslDoGeometry_->baseValue());
 
     bool psdist = pointSizeAuto_->baseValue() != 0;
     paramPointSizeMax_->setVisible(psdist);
@@ -777,6 +826,8 @@ void Model3d::setupDrawable_()
     GL::ShaderSource * src = new GL::ShaderSource();
 
     src->loadDefaultSource();
+    if (glslDoGeometry_->baseValue())
+        src->setGeometrySource(glslGeometry_->baseValue());
 
     QString defines;
 
@@ -853,6 +904,7 @@ void Model3d::setupDrawable_()
     glslTransform_->clearIncludeObjects();
     glslVertexOut_->clearIncludeObjects();
     glslVertex_->clearIncludeObjects();
+    glslGeometry_->clearIncludeObjects();
     src->replaceIncludes([this](const QString& url, bool do_search)
     {
         Object* object;
@@ -865,6 +917,7 @@ void Model3d::setupDrawable_()
             glslTransform_->addIncludeObject(object->idName());
             glslVertexOut_->addIncludeObject(object->idName());
             glslVertex_->addIncludeObject(object->idName());
+            glslGeometry_->addIncludeObject(object->idName());
         }
         return inc;
     });
@@ -886,6 +939,11 @@ void Model3d::setupDrawable_()
         MO_WARNING("Model3d '" << name() << "'s createOpenGL failed with\n" << e.what());
         for (const GL::Shader::CompileMessage & msg : draw_->shader()->compileMessages())
         {
+            if (msg.program == GL::Shader::P_GEOMETRY
+                || msg.program == GL::Shader::P_LINKER)
+            {
+                glslGeometry_->addErrorMessage(msg.line, msg.text);
+            }
             if (msg.program == GL::Shader::P_VERTEX
                 || msg.program == GL::Shader::P_LINKER)
             {

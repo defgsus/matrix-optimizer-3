@@ -81,6 +81,17 @@ void ShaderSource::loadVertexSource(const QString &filename)
     finalized_ = false;
 }
 
+void ShaderSource::loadGeometrySource(const QString &filename)
+{
+    QFile f(filename);
+    if (!f.open(QIODevice::ReadOnly))
+        MO_IO_ERROR(READ, "Could not load geometry source from '" << filename << "'\n"
+                    << f.errorString());
+
+    geom_ = f.readAll();
+    finalized_ = false;
+}
+
 void ShaderSource::loadDefaultSource()
 {
 #if 0
@@ -90,12 +101,15 @@ void ShaderSource::loadDefaultSource()
     loadVertexSource(":/shader/default.vert");
     loadFragmentSource(":/shader/default.frag");
 #endif
+    geom_.clear();
 }
 
 void ShaderSource::addDefine(const QString &defineCommand, bool addAfter)
 {
     p_addDefine_(vert_, defineCommand, !addAfter);
     p_addDefine_(frag_, defineCommand, !addAfter);
+    if (!geom_.isEmpty())
+        p_addDefine_(geom_, defineCommand, !addAfter);
 }
 
 void ShaderSource::finalize()
@@ -105,21 +119,26 @@ void ShaderSource::finalize()
 
     p_addDefine_(vert_, "#define MO_VERTEX", true);
     p_addDefine_(frag_, "#define MO_FRAGMENT", true);
+    if (!geom_.isEmpty())
+        p_addDefine_(geom_, "#define MO_GEOMETRY", true);
     //MO_PRINT(frag_);
     finalized_ = true;
 }
 
-void ShaderSource::replace(const QString &before, const QString &after, bool adjustLineNumber)
+void ShaderSource::replace(
+        const QString &before, const QString &after, bool adjustLineNumber)
 {
     if (!adjustLineNumber)
     {
         vert_.replace(before, after);
         frag_.replace(before, after);
+        geom_.replace(before, after);
     }
     else
     {
         replaceWithLineNumber(vert_, before, after);
         replaceWithLineNumber(frag_, before, after);
+        replaceWithLineNumber(geom_, before, after);
     }
 }
 
@@ -127,6 +146,7 @@ void ShaderSource::replaceIncludes(std::function<QString (const QString &, bool)
 {
     p_pasteIncludes_(vert_, func, 0);
     p_pasteIncludes_(frag_, func, 0);
+    p_pasteIncludes_(geom_, func, 0);
 
     //MO_PRINT("[" + frag_ + "]");
 

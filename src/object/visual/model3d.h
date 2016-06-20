@@ -104,10 +104,11 @@ private:
         *vertexExtrude_, *paramLineWidth_,
         *paramPointSize_, *paramPointSizeMax_, *paramPointSizeDistFac_,
         *envMapAmt_, *envMapAmt2_, *envMapAmt3_;
-    ParameterSelect * fixPosition_, * lightMode_, *vertexFx_, *glslDoOverride_, *paramLineSmooth_,
+    ParameterSelect * fixPosition_, * lightMode_, *vertexFx_,
+        *glslDoOverride_, *glslDoGeometry_, *paramLineSmooth_,
                     * usePointCoord_, *pointSizeAuto_, *paramPolySmooth_;
     ParameterText * glslVertex_, *glslTransform_, *glslVertexOut_, *glslFragmentOut_,
-                *glslNormal_, *glslLight_;
+                *glslNormal_, *glslLight_, *glslGeometry_;
     ParameterInt * paramNumInstance_;
 
     GL::Uniform * u_cam_pos_, * u_light_amt_, * u_bump_scale_,

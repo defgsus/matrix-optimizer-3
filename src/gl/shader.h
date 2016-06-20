@@ -139,6 +139,7 @@ public:
     {
         P_VERTEX,
         P_FRAGMENT,
+        P_GEOMETRY,
         P_LINKER
     };
 
