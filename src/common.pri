@@ -269,8 +269,20 @@ HEADERS += \
     $$PWD/video/ffm/ffmpeg.h \
     $$PWD/video/ffm/videostream.h \
     $$PWD/video/decoderframe.h \
-    $$PWD/model/objecttreemodel.h
-
+    $$PWD/model/objecttreemodel.h \
+    src/gl/glcontext.h \
+    src/gl/glcontext_private.h \
+    src/gl/glwindow.h \
+    src/gl/glwindow_private.h \
+    src/gl/x11/glcontext_x11.h \
+    src/gl/x11/glwindow_x11.h \
+    src/gl/win32/glcontext_win32.h \
+    src/gl/win32/glwindow_win32.h \
+    src/gl/win32/winerror.h \
+    src/gl/win32/wm_codes.def \
+    src/gl/win32/wglext.def \
+    src/gl/win32/wm_codes.inl \
+    $$PWD/gl/x11/include_x11.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -484,5 +496,12 @@ SOURCES += \
     $$PWD/math/timeline_point.cpp \
     $$PWD/video/ffm/ffmpeg.cpp \
     $$PWD/video/ffm/videostream.cpp \
-    $$PWD/model/objecttreemodel.cpp
+    $$PWD/model/objecttreemodel.cpp \
+    src/gl/glcontext_common.cpp \
+    src/gl/glwindow_common.cpp \
+    src/gl/x11/glcontext_x11.cpp \
+    src/gl/x11/glwindow_x11.cpp \
+    src/gl/win32/glcontext_win32.cpp \
+    src/gl/win32/glwindow_win32.cpp \
+    src/gl/win32/winerror.cpp
 

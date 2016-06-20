@@ -6,7 +6,7 @@
 
 #include <string>
 
-#ifdef MCW_USE_QT
+#ifdef MO_USE_QT
 #include <QImage>
 #endif
 
@@ -81,7 +81,7 @@ public:
     DecoderFrame* getVideoFrame();
 
 
-#ifdef MCW_USE_QT
+#ifdef MO_USE_QT
     /** Like currentFrame().
         Not very efficient and more for debugging purposes. */
     QImage getQImage() const;
