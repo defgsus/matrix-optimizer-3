@@ -52,7 +52,7 @@ public:
     void setSize(const QSize& resolution);
 
     void createContext(QSurface *surface);
-    void createContext(GlWindow *window);
+    Context* createContext(GlWindow *window);
     OffscreenContext * createOffscreenContext();
 
     /** @p renderToScreen is a current hack.

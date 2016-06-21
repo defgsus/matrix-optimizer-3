@@ -96,7 +96,7 @@ void SceneRenderer::createContext(QSurface * surface)
     //emit contextCreated();
 }
 
-void SceneRenderer::createContext(GlWindow* window)
+GL::Context* SceneRenderer::createContext(GlWindow* window)
 {
     MO_ASSERT(!context_, "context already created");
 
@@ -108,6 +108,8 @@ void SceneRenderer::createContext(GlWindow* window)
         updateSceneGlContext_();
 
     //emit contextCreated();
+
+    return context_;
 }
 
 
@@ -213,7 +215,7 @@ void SceneRenderer::render(bool renderToScreen)
     {
         MO_CHECK_GL( gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0) );
         MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(),
-                                    context_->size().height()) );
+                                         context_->size().height()) );
         MO_CHECK_GL( gl::glClearColor(1,0,0,1) );
         MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
         throw e << "\n  in SceneRenderer::render(" << rtime << ")";
@@ -222,7 +224,7 @@ void SceneRenderer::render(bool renderToScreen)
     gl::glFlush();
     gl::glFinish();
 
-    context_->swapBuffers();
+    //context_->swapBuffers();
 
     Double fps = tm.time();
     if (fps > 0.)

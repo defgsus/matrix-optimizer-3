@@ -13,14 +13,17 @@
 #include "manager.h"
 #include "glwindow.h"
 #include "glcontext.h"
+#include "gl/opengl.h"
 #include "scenerenderer.h"
 #include "object/scene.h"
 #include "object/util/scenesignals.h"
 #include "io/application.h"
 #include "io/time.h"
+#include "io/mousestate.h"
+#include "io/keyboardstate.h"
 #include "io/error.h"
 #include "io/log_gl.h"
-#include "gl/opengl.h"
+
 
 namespace MO {
 namespace GL {
@@ -34,7 +37,11 @@ struct Manager::Private
         , window        (nullptr)
         , renderer      (nullptr)
         , thread        (nullptr)
+        , doStop        (false)
+        , doAnimate     (false)
+        , doSingleAnimate(false)
         , setNewScene   (false)
+        , messuredFps   (0.)
     { }
 
     void startThread();
@@ -50,7 +57,12 @@ struct Manager::Private
     std::function<Double()> timeFunc;
 
     std::thread* thread;
-    volatile bool doStop, setNewScene;
+    volatile bool
+        doStop,
+        doAnimate,
+        doSingleAnimate,
+        setNewScene;
+    volatile Double messuredFps;
 };
 
 Manager::Manager(QObject *parent)
@@ -82,6 +94,7 @@ void Manager::setWindowVisible(bool e)
     {
         if (!p_->thread)
             p_->startThread();
+        render();
     }
     else
     {
@@ -90,10 +103,7 @@ void Manager::setWindowVisible(bool e)
     }
 }
 
-void Manager::render()
-{
-
-}
+void Manager::render() { p_->doSingleAnimate = true; }
 
 #if 0
 Window * Manager::createGlWindow(uint /*thread*/)
@@ -126,26 +136,25 @@ Window * Manager::createGlWindow(uint /*thread*/)
 
 void Manager::setScene(Scene * scene)
 {
-    //bool changed = (scene != p_->scene);
+    bool changed = (scene != p_->scene && scene != p_->newScene);
 
     p_->newScene = scene;
     if (p_->newScene)
         p_->newScene->addRef("Manager:setScene");
     p_->setNewScene = true;
 
-    /*
     // XXX Would not work if window was not created yet
-    if (changed && p_->scene && p_->window)
+    if (changed && p_->newScene)
     {
         // connect events from scene to window
-        connect(p_->scene->sceneSignals(), SIGNAL(renderRequest()),
-                    //this, SLOT(onRenderRequest_()));
-                    p_->window, SLOT(renderLater()));
-    }
+        connect(p_->newScene->sceneSignals(), &SceneSignals::renderRequest, [=]()
+        {
+            if (p_->scene && p_->timeFunc)
+                p_->scene->setSceneTime(p_->timeFunc(), false);
 
-    if (p_->renderer)
-        p_->renderer->setScene(scene);
-    */
+            render();
+        });
+    }
 }
 
 void Manager::setTimeCallback(std::function<Double ()> timeFunc)
@@ -159,32 +168,19 @@ void Manager::onCameraMatrixChanged_(const Mat4 & mat)
 {
     emit cameraMatrixChanged(mat);
 }
-/*
-void Manager::onRenderRequest_()
-{
-    if (timeFunc_)
-        scene_->setSceneTime(timeFunc_(), false);
-
-    window_->renderLater();
-}
-*/
 
 bool Manager::isAnimating() const
 {
-    return false;//p_->window && p_->window->isAnimating();
+    return p_->doAnimate;
 }
 
-void Manager::startAnimate()
+Double Manager::messuredFps() const
 {
-    //if (p_->window)
-    //    p_->window->startAnimation();
+    return p_->messuredFps;
 }
 
-void Manager::stopAnimate()
-{
-    //if (p_->window)
-    //    p_->window->stopAnimation();
-}
+void Manager::startAnimate() { p_->doAnimate = true; }
+void Manager::stopAnimate() { p_->doAnimate = false; }
 
 void Manager::Private::startThread()
 {
@@ -213,28 +209,72 @@ void Manager::Private::renderLoop()
     renderer->createContext(window);
     renderer->setTimeCallback(timeFunc);
 
-    while (!doStop)
-    {
-        try
-        {
-            if (setNewScene)
-            {
-                if (scene)
-                {
-                    scene->destroyGl();
-                    scene->releaseRef("Manager:release-prev");
-                }
-                renderer->setScene(scene = newScene);
-                setNewScene = false;
-            }
+    Double prevTime = systemTime(),
+           headerUpdateTime = prevTime;
 
-            renderer->setSize(QSize(window->width(), window->height()));
-            renderer->render(true);
-        }
-        catch (const Exception& e)
+    TimeMessure fpsCount;
+
+    while (!doStop && window->update())
+    {
+        if (!doAnimate && !doSingleAnimate)
         {
-            MO_WARNING("EXCEPTION IN OPENGL THREAD: " << e.what());
+            sleep_seconds_lowres(.1);
         }
+        else
+        {
+            try
+            {
+                if (setNewScene)
+                {
+                    if (scene)
+                    {
+                        scene->destroyGl();
+                        scene->releaseRef("Manager:release-prev");
+                    }
+                    renderer->setScene(scene = newScene);
+                    newScene = nullptr;
+                    setNewScene = false;
+                }
+
+                renderer->setSize(QSize(window->width(), window->height()));
+                renderer->render(true);
+
+            }
+            catch (const Exception& e)
+            {
+                MO_WARNING("EXCEPTION IN OPENGL THREAD: " << e.what());
+            }
+        }
+
+        auto time = systemTime(),
+             delta = time - prevTime,
+             ddelta = 1. / 60.;
+
+        if (delta < ddelta)
+        {
+            //MO_PRINT("SLEEP " << (ddelta - delta));
+            sleep_seconds(ddelta - delta);
+        }
+
+        prevTime = systemTime();
+
+        if (time - headerUpdateTime > 1.)
+        {
+            headerUpdateTime = time;
+            window->setTitle(QString("%1 fps").arg(messuredFps).toStdString().c_str());
+        }
+
+        if (doAnimate || doSingleAnimate)
+        {
+            //MO_PRINT("SWAP " << time << " " << delta);
+            window->swapBuffers();
+        }
+        doSingleAnimate = false;
+
+        delta = fpsCount.time();
+        fpsCount.start();
+        if (delta > 0.)
+            messuredFps += std::min(1., delta*2.) * (1. / delta - messuredFps);
     }
 
     if (scene)

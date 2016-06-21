@@ -32,7 +32,7 @@ Context::Context(GlWindow* win)
     , qcontext_     (nullptr)
     , surface_      (nullptr)
 {
-
+    glContext_->setSyncMode(GlContext::SYNC_NONE);
 }
 
 Context::~Context()

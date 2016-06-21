@@ -38,7 +38,7 @@ namespace
 /** window callback for a (GL)X window */
 static int WindowProc( Display* /*dpy*/, XEvent *event, XPointer arg )
 {
-    MO_PRINT( "etype " << event->type );
+    //MO_PRINT( "etype " << event->type );
 
 	// acknowledge mapping event
     return ( (event->type == XX::X_MapNotify)
@@ -133,7 +133,7 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
 
     auto event = static_cast<XEvent*>(xevent);
 
-    MO_PRINT("event " << event->type);
+    //MO_PRINT("event " << event->type);
 
     // remap events
     switch (event->type)

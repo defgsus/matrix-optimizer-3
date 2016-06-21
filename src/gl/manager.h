@@ -42,7 +42,6 @@ public:
 #endif
 
     bool isWindowVisible() const;
-    void setWindowVisible(bool e);
 
     void render();
 
@@ -54,6 +53,7 @@ public:
 
     bool isAnimating() const;
 
+    Double messuredFps() const;
 signals:
 
     /* This will signal the creation of a new Context */
@@ -67,6 +67,8 @@ signals:
     void outputSizeChanged(const QSize&);
 
 public slots:
+
+    void setWindowVisible(bool e);
 
     void startAnimate();
     void stopAnimate();

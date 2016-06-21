@@ -1615,10 +1615,7 @@ void MainWidgetController::onSceneTimeChanged_(Double time)
     if (sequencer_->isVisible())
         sequencer_->setSceneTime(time);
 
-    /*
-    Double fps = glManager_->renderer() ?
-                glManager_->renderer()->renderSpeed() : 0;*/
-    Double fps = 1.;//glWindow_->messuredFps();
+    Double fps = glManager_->messuredFps();
     transportWidget_->setSceneTime(time, fps);
 }
 

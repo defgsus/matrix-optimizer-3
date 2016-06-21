@@ -15,8 +15,10 @@
 
 namespace MO {
 
-/** High resolution current time in seconds */
-Double systemTime();
+void testClock();
+
+/** High resolution current system-up time in seconds */
+double systemTime();
 
 /** Simple class to messure time.
     Constructor and start() store the current time.
@@ -39,6 +41,13 @@ private:
     /** disable copy */ TimeMessure(const TimeMessure&);
     /** disable copy */ TimeMessure& operator=(const TimeMessure&);
 };
+
+
+/** High-res sleep */
+void sleep_seconds(double sec);
+
+/** Common low-res sleep (~16ms on Win) */
+void sleep_seconds_lowres(double sec);
 
 } // namespace MO
 
