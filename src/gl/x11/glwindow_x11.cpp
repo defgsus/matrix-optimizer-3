@@ -17,28 +17,32 @@
 namespace MO {
 namespace GL {
 
-// ---------------------------- callbacks ------------------------------------------
-
-	/** predefined attribute for double buffered frame buffer */
+namespace
+{
+    /** predefined attribute for double buffered frame buffer */
     int fb_attrib[] = {
-		GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-		GLX_RENDER_TYPE,   GLX_RGBA_BIT,
-		GLX_DOUBLEBUFFER,  True,
-		// max bits
-		GLX_RED_SIZE,      1,
-		GLX_GREEN_SIZE,    1,
-		GLX_BLUE_SIZE,     1,
+        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
+        GLX_RENDER_TYPE,   GLX_RGBA_BIT,
+        GLX_DOUBLEBUFFER,  True,
+        // max bits
+        GLX_RED_SIZE,      1,
+        GLX_GREEN_SIZE,    1,
+        GLX_BLUE_SIZE,     1,
         XX::X_None
-	};
+    };
+}
+
+// ---------------------------- callbacks ------------------------------------------
 
 
 /** window callback for a (GL)X window */
 static int WindowProc( Display* /*dpy*/, XEvent *event, XPointer arg )
 {
-	//std::cout << "etype " << event->type << "\n";
+    MO_PRINT( "etype " << event->type );
 
 	// acknowledge mapping event
-    return ( (event->type == XX::X_MapNotify) &&  (event->xmap.window == (::Window) arg));
+    return ( (event->type == XX::X_MapNotify)
+             && (event->xmap.window == (::Window) arg) );
 }
 
 /** maps an XKeySym to an I::Key::Code */
@@ -128,6 +132,8 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
         return;
 
     auto event = static_cast<XEvent*>(xevent);
+
+    MO_PRINT("event " << event->type);
 
     // remap events
     switch (event->type)
@@ -240,7 +246,14 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
 		break;
 
         case XX::X_ResizeRequest:
-            win->p_w_->onResize();
+        {
+            XWindowAttributes wa;
+            XGetWindowAttributes(win->p_w_->info.display, win->p_w_->info.win, &wa);
+            win->p_w_->curX = wa.x; // XXX These are wrong
+            win->p_w_->curY = wa.y;
+            win->p_w_->curWidth = wa.width;
+            win->p_w_->curHeight = wa.height;
+        }
 		break;
 
         case XX::X_ConfigureNotify:

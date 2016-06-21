@@ -8,17 +8,19 @@
     <p>created 6/29/2014</p>
 */
 
-#include <QThread>
+#include <thread>
 
 #include "manager.h"
-#include "window.h"
-#include "context.h"
+#include "glwindow.h"
+#include "glcontext.h"
 #include "scenerenderer.h"
 #include "object/scene.h"
 #include "object/util/scenesignals.h"
-#include "io/log_gl.h"
-#include "io/error.h"
 #include "io/application.h"
+#include "io/time.h"
+#include "io/error.h"
+#include "io/log_gl.h"
+#include "gl/opengl.h"
 
 namespace MO {
 namespace GL {
@@ -26,20 +28,29 @@ namespace GL {
 struct Manager::Private
 {
     Private(Manager* p)
-        : p         (p)
-        , scene     (nullptr)
-        , window    (nullptr)
-        , renderer  (nullptr)
+        : p             (p)
+        , scene         (nullptr)
+        , newScene      (nullptr)
+        , window        (nullptr)
+        , renderer      (nullptr)
+        , thread        (nullptr)
+        , setNewScene   (false)
     { }
+
+    void startThread();
+    void stopThread(bool wait = true);
+    void renderLoop();
 
     Manager* p;
 
-    Scene * scene;
-    Window * window;
+    Scene * scene, *newScene;
+    GlWindow * window;
     SceneRenderer * renderer;
 
     std::function<Double()> timeFunc;
 
+    std::thread* thread;
+    volatile bool doStop, setNewScene;
 };
 
 Manager::Manager(QObject *parent)
@@ -53,15 +64,38 @@ Manager::~Manager()
 {
     MO_DEBUG_GL("Manager::~Manager()");
 
-    if (p_->window)
-        p_->window->close();
+    p_->stopThread(true);
 
     delete p_;
 }
 
 SceneRenderer * Manager::renderer() const { return p_->renderer; }
 
+bool Manager::isWindowVisible() const
+{
+    return p_->thread != nullptr;
+}
 
+void Manager::setWindowVisible(bool e)
+{
+    if (e)
+    {
+        if (!p_->thread)
+            p_->startThread();
+    }
+    else
+    {
+        if (p_->thread)
+            p_->stopThread(true);
+    }
+}
+
+void Manager::render()
+{
+
+}
+
+#if 0
 Window * Manager::createGlWindow(uint /*thread*/)
 {
     if (!p_->window)
@@ -88,13 +122,18 @@ Window * Manager::createGlWindow(uint /*thread*/)
 
     return p_->window;
 }
+#endif
 
 void Manager::setScene(Scene * scene)
 {
-    bool changed = (scene != p_->scene);
+    //bool changed = (scene != p_->scene);
 
-    p_->scene = scene;
+    p_->newScene = scene;
+    if (p_->newScene)
+        p_->newScene->addRef("Manager:setScene");
+    p_->setNewScene = true;
 
+    /*
     // XXX Would not work if window was not created yet
     if (changed && p_->scene && p_->window)
     {
@@ -104,7 +143,9 @@ void Manager::setScene(Scene * scene)
                     p_->window, SLOT(renderLater()));
     }
 
-    p_->renderer->setScene(scene);
+    if (p_->renderer)
+        p_->renderer->setScene(scene);
+    */
 }
 
 void Manager::setTimeCallback(std::function<Double ()> timeFunc)
@@ -130,20 +171,83 @@ void Manager::onRenderRequest_()
 
 bool Manager::isAnimating() const
 {
-    return p_->window && p_->window->isAnimating();
+    return false;//p_->window && p_->window->isAnimating();
 }
 
 void Manager::startAnimate()
 {
-    if (p_->window)
-        p_->window->startAnimation();
+    //if (p_->window)
+    //    p_->window->startAnimation();
 }
 
 void Manager::stopAnimate()
 {
-    if (p_->window)
-        p_->window->stopAnimation();
+    //if (p_->window)
+    //    p_->window->stopAnimation();
 }
+
+void Manager::Private::startThread()
+{
+    MO_ASSERT(!thread, "duplicate Manager::Private::startThread()");
+    thread = new std::thread([=](){ renderLoop(); });
+}
+
+void Manager::Private::stopThread(bool wait)
+{
+    if (!thread || doStop)
+        return;
+    doStop = true;
+    if (wait && thread && thread->joinable())
+        thread->join();
+    delete thread;
+    thread = nullptr;
+}
+
+void Manager::Private::renderLoop()
+{
+    doStop = false;
+
+    window = new GlWindow();
+
+    renderer = new SceneRenderer();
+    renderer->createContext(window);
+    renderer->setTimeCallback(timeFunc);
+
+    while (!doStop)
+    {
+        try
+        {
+            if (setNewScene)
+            {
+                if (scene)
+                {
+                    scene->destroyGl();
+                    scene->releaseRef("Manager:release-prev");
+                }
+                renderer->setScene(scene = newScene);
+                setNewScene = false;
+            }
+
+            renderer->setSize(QSize(window->width(), window->height()));
+            renderer->render(true);
+        }
+        catch (const Exception& e)
+        {
+            MO_WARNING("EXCEPTION IN OPENGL THREAD: " << e.what());
+        }
+    }
+
+    if (scene)
+    {
+        scene->destroyGl();
+        scene->releaseRef("Manager:thread-close");
+    }
+
+    delete window; window = nullptr;
+    delete renderer; renderer = nullptr;
+}
+
+
 
 } // namespace GL
 } // namespace MO

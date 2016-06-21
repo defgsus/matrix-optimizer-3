@@ -1079,7 +1079,7 @@ GL::FrameBufferObject * Scene::fboCamera(uint , uint camera_index) const
 
 void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
 {
-    //MO_DEBUG_GL("Scene::renderScene("<<time<<", "<<thread<<")");
+    MO_DEBUG_GL("Scene::renderScene("<<time<<")");
 
     MO_ASSERT(p_glContext_, "renderScene() without context");
 
@@ -1494,7 +1494,7 @@ void Scene::unlock_()
     p_readWriteLock_->unlock();
 }
 
-void Scene::kill()
+void Scene::destroyGl()
 {
     if (!p_glContext_)
         return;

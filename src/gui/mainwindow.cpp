@@ -277,8 +277,8 @@ void MainWindow::closeEvent(QCloseEvent * e)
 
         saveAllGeometry_();
 
-        if (controller_->scene())
-            controller_->scene()->kill();
+        //if (controller_->scene())
+        //    controller_->scene()->kill();
     }
     else
         e->ignore();

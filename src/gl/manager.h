@@ -33,12 +33,18 @@ public:
     ~Manager();
 
     // ---------------- opengl ---------------------
-
+#if 0
     /** Creates an OpenGL Window.
         The window is initally hidden.
         When the window is shown, it's Context will be created
         and Manager::contextCreated() will be emitted. */
     Window * createGlWindow(uint thread);
+#endif
+
+    bool isWindowVisible() const;
+    void setWindowVisible(bool e);
+
+    void render();
 
     void setScene(Scene *);
 

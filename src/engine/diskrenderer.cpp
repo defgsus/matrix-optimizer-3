@@ -318,13 +318,10 @@ bool DiskRenderer::Private::releaseScene()
     // release gl resources
     if (scene)
     {
-        try { scene->kill(); }
-#ifndef NDEBUG
+        try { scene->destroyGl(); }
         catch (const Exception& e)
-            { MO_DEBUG("DiskRenderer::releaseScene() ERROR:\n" << e.what()); }
-#else
+            { MO_WARNING("DiskRenderer::releaseScene() ERROR:\n" << e.what()); }
         catch (...) { }
-#endif
     }
 
     delete bufIn; bufIn = 0;

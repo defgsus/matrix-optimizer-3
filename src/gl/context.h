@@ -20,27 +20,38 @@ class QSurface;
 namespace MO {
 namespace GL {
 
-/** Wrapper for a QOpenGLContext with associated size */
-class Context : public QObject
+class GlContext;
+class GlWindow;
+
+/** Wrapper for a QOpenGLContext or GlContext with associated size */
+class Context
 {
-    Q_OBJECT
 public:
-    explicit Context(QObject * parent);
+    /** Creates a QOpenGLContext */
+    explicit Context();
+    /** Creates a GlContext */
+    explicit Context(GlWindow*);
+
     ~Context();
 
+    GlContext* glContext() const { return glContext_; }
     QOpenGLContext * qcontext() const { return qcontext_; }
 
     const QSize& size() const { return size_; }
     void setSize(const QSize& size) { size_ = size; }
-    void setSurface(QSurface* s) { surface_ = s; }
 
     bool isValid() const;
 
     bool makeCurrent();
+    bool swapBuffers();
+
+    void setSurface(QSurface* s) { surface_ = s; }
 
 protected:
 
     QSize size_;
+    GlContext* glContext_;
+    GlWindow* glWindow_;
     QOpenGLContext * qcontext_;
     QSurface * surface_;
 };

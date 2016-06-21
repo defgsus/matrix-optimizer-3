@@ -13,7 +13,6 @@
 
 #include <functional>
 
-#include <QObject>
 #include <QSize>
 #include <QSurfaceFormat>
 
@@ -28,12 +27,12 @@ namespace GL {
 
 class Context;
 class OffscreenContext;
+class GlWindow;
 
-class SceneRenderer : public QObject
+class SceneRenderer
 {
-    Q_OBJECT
 public:
-    explicit SceneRenderer(QObject *parent = 0);
+    explicit SceneRenderer();
     ~SceneRenderer();
 
     static QSurfaceFormat defaultFormat();
@@ -53,17 +52,14 @@ public:
     void setSize(const QSize& resolution);
 
     void createContext(QSurface *surface);
+    void createContext(GlWindow *window);
     OffscreenContext * createOffscreenContext();
 
     /** @p renderToScreen is a current hack.
         Can be set to false, to just render the Scene::fboFinal() */
     void render(bool renderToScreen);
 
-signals:
-
-    void contextCreated();
-
-public slots:
+    //signal void contextCreated();
 
 private:
 

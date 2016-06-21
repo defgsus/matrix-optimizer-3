@@ -23,13 +23,14 @@ namespace Private {
         // little macro that puts the define 'expr'
         // into the map with "expr" as string
         // checks for clashes
-        #define X(expr)                                                                         \
-            i = event_name_.find(expr);                                                         \
-            if (i==event_name_.end())                                                           \
-                event_name_[expr] = #expr;                                                      \
-            else                                                                                \
-                MO__DEBUG("WM_MESSAGE clash: " << i->second                                    \
-                           << " <- " << #expr << " (" << std::hex << expr << std::dec << ")");
+        #define X(expr)                                              \
+            i = event_name_.find(expr);                              \
+            if (i==event_name_.end())                                \
+                event_name_[expr] = #expr;                           \
+            else                                                     \
+                MO__DEBUG("WM_MESSAGE clash: " << i->second          \
+                            << " <- " << #expr << " ("               \
+                            << std::hex << expr << std::dec << ")");
 
         #include "wm_codes.def"
 
@@ -37,7 +38,8 @@ namespace Private {
 
         // print list
         // for (auto i=event_name_.begin(); i!=event_name_.end(); ++i)
-        //    std::cout << i->second << "\t" << std::hex << "0x" << i->first << std::endl;
+        //    std::cout << i->second << "\t"
+        //              << std::hex << "0x" << i->first << std::endl;
 
         return true;
     }
@@ -46,7 +48,7 @@ namespace Private {
 }
 
 
-/** returns the name a WM_-event or "unknown(0x'event')" */
+/** returns the name of a WM_-event or "unknown(0x'event')" */
 std::string get_event_name_(UINT event)
 {
     std::stringstream s;

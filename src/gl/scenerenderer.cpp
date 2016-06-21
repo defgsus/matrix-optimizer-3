@@ -27,9 +27,8 @@ namespace MO {
 namespace GL {
 
 
-SceneRenderer::SceneRenderer(QObject *parent)
-    : QObject       (parent),
-      scene_        (0),
+SceneRenderer::SceneRenderer()
+    : scene_        (0),
       context_      (0),
       surface_      (0),
       renderSpeed_  (0.)
@@ -39,8 +38,7 @@ SceneRenderer::SceneRenderer(QObject *parent)
 
 SceneRenderer::~SceneRenderer()
 {
-    // XXX
-    //delete context_;
+    delete context_;
 }
 
 QSurfaceFormat SceneRenderer::defaultFormat()
@@ -64,7 +62,7 @@ void SceneRenderer::setScene(Scene *scene)
     scene_ = scene;
     lastTime_ = 0;
 
-    if (context_)
+    if (context_ && scene_)
         updateSceneGlContext_();
 }
 
@@ -82,7 +80,7 @@ void SceneRenderer::createContext(QSurface * surface)
     MO_ASSERT(!context_, "context already created");
 
     surface_ = surface;
-    context_ = new MO::GL::Context(this);
+    context_ = new MO::GL::Context();
 
     context_->setSurface(surface);
     context_->qcontext()->setFormat(surface_->format());
@@ -90,22 +88,41 @@ void SceneRenderer::createContext(QSurface * surface)
     if (!context_->qcontext()->create())
         MO_GL_ERROR("could not create opengl context");
 
+    moInitGl();
+
     if (scene_)
         updateSceneGlContext_();
 
-    emit contextCreated();
+    //emit contextCreated();
 }
+
+void SceneRenderer::createContext(GlWindow* window)
+{
+    MO_ASSERT(!context_, "context already created");
+
+    context_ = new MO::GL::Context(window);
+
+    moInitGl();
+
+    if (scene_)
+        updateSceneGlContext_();
+
+    //emit contextCreated();
+}
+
 
 OffscreenContext * SceneRenderer::createOffscreenContext()
 {
     MO_ASSERT(!context_, "context already created");
 
-    auto ocontext = new OffscreenContext(this);
+    auto ocontext = new OffscreenContext();
 
     ocontext->createGl();
 
     if (!ocontext->makeCurrent())
         MO_GL_ERROR("could not make opengl context current");
+
+    moInitGl();
 
     context_ = ocontext;
     surface_ = ocontext->qsurface();
@@ -113,7 +130,7 @@ OffscreenContext * SceneRenderer::createOffscreenContext()
     if (scene_)
         updateSceneGlContext_();
 
-    emit contextCreated();
+    //emit contextCreated();
 
     return ocontext;
 }
@@ -139,15 +156,13 @@ void SceneRenderer::render(bool renderToScreen)
 
     TimeMessure tm;
 
-    if (!context_->qcontext()->makeCurrent(surface_))
+    if (!context_->makeCurrent())
         MO_GL_ERROR("could not make context current");
 
     // update size request
     // XXX This is stupid XXX
     if (context_->size() != size_)
         context_->setSize(size_);
-
-    moInitGl();
 
     MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(), context_->size().height()) );
     MO_CHECK_GL( gl::glClearColor(0.1f, 0.1f, 0.1f, 1.0f) );
@@ -197,7 +212,8 @@ void SceneRenderer::render(bool renderToScreen)
     catch (Exception& e)
     {
         MO_CHECK_GL( gl::glBindFramebuffer(gl::GL_FRAMEBUFFER, 0) );
-        MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(), context_->size().height()) );
+        MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(),
+                                    context_->size().height()) );
         MO_CHECK_GL( gl::glClearColor(1,0,0,1) );
         MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
         throw e << "\n  in SceneRenderer::render(" << rtime << ")";
@@ -206,7 +222,7 @@ void SceneRenderer::render(bool renderToScreen)
     gl::glFlush();
     gl::glFinish();
 
-    context_->qcontext()->swapBuffers(surface_);
+    context_->swapBuffers();
 
     Double fps = tm.time();
     if (fps > 0.)

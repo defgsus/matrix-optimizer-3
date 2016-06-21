@@ -380,11 +380,11 @@ void ShaderAO::processAudio(const RenderTime& time)
         return;
     }
 
-    if (p_->context->thread() != QThread::currentThread())
+    /*if (p_->context->thread() != QThread::currentThread())
     {
         setErrorMessage("Audio thread change without notice");
         return;
-    }
+    }*/
 
     p_->render(time);
 
