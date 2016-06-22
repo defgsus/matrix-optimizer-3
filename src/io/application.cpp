@@ -187,4 +187,18 @@ void Application::showChanges(QWidget * parent)
     diag->show();
 }
 
+void Application::checkVersionUpdate()
+{
+    int32_t curVer = MO_VERSION;
+    int32_t lastVer = settings()->value("AppVersion").toInt();
+
+    // update stylesheet
+    if (curVer >= MO_VERSION_COMBINE(3, 0, 3, 9) &&
+        curVer > lastVer)
+    {
+        /** @todo update stylesheet for newer version */
+    }
+}
+
+
 } // namespace MO

@@ -45,6 +45,10 @@ signals:
 
 public slots:
 
+    /** Tests for changed version since last run
+        and does the appropriate updates to the app settings */
+    void checkVersionUpdate();
+
     void setPaletteFor(QWidget*);
 
     /** Creates a dockwidget for the widget and installs it in the mainwindow */

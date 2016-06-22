@@ -35,6 +35,7 @@
 #include "gui/widget/objecttreeview.h"
 #include "gui/oscview.h"
 #include "object/scene.h"
+#include "io/application.h"
 #include "io/keyboardstate.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -246,12 +247,13 @@ bool MainWindow::event(QEvent* e)
     return QMainWindow::event(e);
 }*/
 
-/*
+
 void MainWindow::showEvent(QShowEvent * e)
 {
     QMainWindow::showEvent(e);
+    application()->checkVersionUpdate();
 }
-*/
+
 
 void MainWindow::saveAllGeometry_()
 {

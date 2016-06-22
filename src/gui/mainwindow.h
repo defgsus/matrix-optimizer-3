@@ -47,11 +47,13 @@ private slots:
 
 protected:
 
+    void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
+
+
     void closeEvent(QCloseEvent *) Q_DECL_OVERRIDE;
     void keyPressEvent(QKeyEvent *) Q_DECL_OVERRIDE;
     void keyReleaseEvent(QKeyEvent *) Q_DECL_OVERRIDE;
     //void resizeEvent(QResizeEvent *);
-    //void showEvent(QShowEvent *) Q_DECL_OVERRIDE;
     //bool event(QEvent *event) Q_DECL_OVERRIDE; /* debug */
 
 private:
