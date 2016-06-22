@@ -11,14 +11,24 @@
 #ifndef MOSRC_GL_GLWINDOW_PRIVATE_H
 #define MOSRC_GL_GLWINDOW_PRIVATE_H
 
-#ifdef MO_OS_WIN
-#   include "win32/glwindow.h"
+#include "io/architecture.h"
 
-    // check the types of the Window friend processEvent_()
+#ifdef MO_OS_WIN
+#   include "win32/glwindow_win32.h"
+
+
+// check the types of the GlWindow friend processEvent_()
+#ifdef MO_OS_64BIT
     static_assert(sizeof(LRESULT) == sizeof(int64_t), "type mismatch");
     static_assert(sizeof(UINT) == sizeof(unsigned int), "type mismatch");
     static_assert(sizeof(WPARAM) == sizeof(uint64_t), "type mismatch");
     static_assert(sizeof(LPARAM) == sizeof(int64_t), "type mismatch");
+#elif defined(MO_OS_32BIT)
+    static_assert(sizeof(LRESULT) == sizeof(int32_t), "type mismatch");
+    static_assert(sizeof(UINT) == sizeof(unsigned int), "type mismatch");
+    static_assert(sizeof(WPARAM) == sizeof(uint32_t), "type mismatch");
+    static_assert(sizeof(LPARAM) == sizeof(int32_t), "type mismatch");
+#endif
 
 #elif MO_OS_UNIX
 #   include "x11/glwindow_x11.h"

@@ -4,7 +4,7 @@
 #include "gl/glcontext.h"
 
 #ifdef MO_OS_WIN
-#   include "gl/win32/glcontext.h"
+#   include "gl/win32/glcontext_win32.h"
 #elif defined(MO_OS_UNIX)
 #   include "gl/x11/glcontext_x11.h"
 #else

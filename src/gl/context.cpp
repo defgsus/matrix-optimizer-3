@@ -14,6 +14,7 @@
 #include "glcontext.h"
 #include "glwindow.h"
 #include "io/error.h"
+#include "io/log_gl.h"
 
 namespace MO {
 namespace GL {
@@ -21,17 +22,22 @@ namespace GL {
 Context::Context()
     : glContext_    (nullptr)
     , glWindow_     (nullptr)
-    , qcontext_     (new QOpenGLContext())
+    , qcontext_     (nullptr)
     , surface_      (nullptr)
 {
+    qcontext_ = new QOpenGLContext();
 }
 
 Context::Context(GlWindow* win)
-    : glContext_    (new GlContext(win))
+    : glContext_    (nullptr)
     , glWindow_     (win)
     , qcontext_     (nullptr)
     , surface_      (nullptr)
 {
+    MO_DEBUG_GL("SceneRenderer: GlContext ready");
+
+    glContext_ = new GlContext(win);
+
     glContext_->setSyncMode(GlContext::SYNC_NONE);
 }
 

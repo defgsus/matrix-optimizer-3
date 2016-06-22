@@ -187,7 +187,7 @@ GLenum FrameBufferObject::format() const
 
 void FrameBufferObject::setViewport() const
 {
-    MO_DEBUG_GL("FrameBufferObject::setViewport()")
+    //MO_DEBUG_GL("FrameBufferObject::setViewport()")
     MO_CHECK_GL_THROW( glViewport(0,0, width(), height()) );
 }
 

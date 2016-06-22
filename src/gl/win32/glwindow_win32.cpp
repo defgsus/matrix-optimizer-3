@@ -22,21 +22,21 @@
 #include <vector>
 
 #include <Windows.h>
-#include "gl/window.h"
-#include "gl/window_private.h"
-#include "tool/mutexlocker.h"
+#include "gl/glwindow.h"
+#include "gl/glwindow_private.h"
 #include "winerror.h"
-#include "tool/time.h"
-#include "tool/exception.h"
-#include "mcw/log.h"
+#include "io/time.h"
+#include "io/error.h"
+#include "io/log_gl.h"
 
 // ---------------------------- callbacks ------------------------------------------
 
+namespace MO {
 namespace GL {
 
 // forward
 int64_t processEvent_(
-        Window * win,
+        GlWindow * win,
         unsigned int uMsg,	// message identifier
         uint64_t wParam,	// first message parameter
         int64_t  lParam 	// second message parameter
@@ -51,23 +51,23 @@ namespace Private {
 
     static std::mutex hwnd_impl_map_mutex_;
 
-    static std::map<const HWND, Window*> hwnd_impl_map_;
+    static std::map<const HWND, GlWindow*> hwnd_impl_map_;
 
-    void install_hwnd_(const HWND hwnd, Window* win)
+    void install_hwnd_(const HWND hwnd, GlWindow* win)
     {
-        MutexLocker lock(hwnd_impl_map_mutex_, "HWND:insert-map");
+        std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
         hwnd_impl_map_[hwnd] = win;
     }
 
     void uninstall_hwnd_(const HWND hwnd)
     {
-        MutexLocker lock(hwnd_impl_map_mutex_, "HWND:release-map");
+        std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
         hwnd_impl_map_.erase(hwnd);
     }
 
-    Window* get_impl_(const HWND hwnd)
+    GlWindow* get_impl_(const HWND hwnd)
     {
-        MutexLocker lock(hwnd_impl_map_mutex_, "HWND:get-map");
+        std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
         auto i = hwnd_impl_map_.find(hwnd);
         return (i==hwnd_impl_map_.end())? 0 : i->second;
     }
@@ -149,10 +149,10 @@ LRESULT CALLBACK userWindowProc(
    )
 {
     // find the associated WindowImpl
-    Window* win = Private::get_impl_(hwnd);
+    GlWindow* win = Private::get_impl_(hwnd);
 
     return (win)
-    // dispatch the message to Window class
+    // dispatch the message to GlWindow class
             ? processEvent_(win, uMsg, wParam, lParam)
     // or to default dispatcher
             : DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -260,14 +260,22 @@ MouseKeyCode mapMouseButton(const UINT but)
 	}
 }
 
-
+#ifdef MO_OS_64BIT
 /** dispatch events for a win32 window. */
-int64_t processEvent_(
-        Window * win,
+int64_t processEvent_(GlWindow* win,
         unsigned int uMsg,      // message identifier
         uint64_t wParam,        // first message parameter
         int64_t lParam          // second message parameter
-		)
+        )
+#elif defined(MO_OS_32BIT)
+/** dispatch events for a win32 window. */
+int32_t processEvent_(GlWindow* win,
+        unsigned int uMsg,      // message identifier
+        uint32_t wParam,        // first message parameter
+        int32_t lParam          // second message parameter
+        )
+#endif
+
 {
 //	std::cout << "dispatch " << get_event_name_(uMsg) << " " << wParam << " " << lParam << "\n";
 
@@ -450,9 +458,9 @@ int64_t processEvent_(
 
 
 
-void Window::PrivateW::createWindow()
+void GlWindow::PrivateW::createWindow()
 {
-    MO_DEBUG2("Creating Window");
+    MO_DEBUG_GL("Creating Window");
 
 	// generate runtime-unique class-name
     // XXX The class name remains 100% unique
@@ -506,7 +514,7 @@ void Window::PrivateW::createWindow()
 
 	// try to add
 	if (!RegisterClass(&info.wc))
-        MO_EXCEPTION("Could not register window class");
+        MO_GL_ERROR("Could not register window class");
 
 	// style and exstyle
 	info.dwExStyle = 0;//WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;
@@ -551,7 +559,7 @@ void Window::PrivateW::createWindow()
         NULL);
 
 	if (!info.hwnd)
-        MO_EXCEPTION("Could not create Window");
+        MO_GL_ERROR("Could not create Window");
 
     // As suggested by Elvithari
     // http://stackoverflow.com/questions/2656531/tearing-in-opengl
@@ -586,7 +594,7 @@ void Window::PrivateW::createWindow()
 
 
 
-void Window::PrivateW::destroyWindow()
+void GlWindow::PrivateW::destroyWindow()
 {
     if (!isValid)
         return;
@@ -614,7 +622,7 @@ void Window::PrivateW::destroyWindow()
 
 
 
-void Window::PrivateW::onResize()
+void GlWindow::PrivateW::onResize()
 {
 	// get window attributes
 	// and copy to local
@@ -642,7 +650,7 @@ void Window::PrivateW::onResize()
 
 
 
-void Window::show()
+void GlWindow::show()
 {
     if (!p_w_->isValid)
         return;
@@ -651,7 +659,7 @@ void Window::show()
     UpdateWindow(p_w_->info.hwnd);
 }
 
-void Window::hide()
+void GlWindow::hide()
 {
     if (!p_w_->isValid)
         return;
@@ -659,9 +667,9 @@ void Window::hide()
     ShowWindow(p_w_->info.hwnd, SW_MINIMIZE);
 }
 
-void Window::setPosition(int x, int y)
+void GlWindow::setPosition(int x, int y)
 {
-    MO_DEBUG2("Window::setPosition(" << x << ", " << y << ")");
+    MO_DEBUG_GL("GlWindow::setPosition(" << x << ", " << y << ")");
 
     if (!p_w_->isValid)
         return;
@@ -672,9 +680,9 @@ void Window::setPosition(int x, int y)
                  SWP_ASYNCWINDOWPOS | SWP_NOSIZE);
 }
 
-void Window::setSize(int newWidth, int newHeight)
+void GlWindow::setSize(int newWidth, int newHeight)
 {
-    MO_DEBUG2("Window::setSize(" << newWidth << ", " << newHeight << ")");
+    MO_DEBUG_GL("GlWindow::setSize(" << newWidth << ", " << newHeight << ")");
 
     if (!p_w_->isValid)
         return;
@@ -684,27 +692,30 @@ void Window::setSize(int newWidth, int newHeight)
                  SWP_ASYNCWINDOWPOS | SWP_NOMOVE);
 }
 
-void Window::setDesktop(unsigned int index)
+/** @todo GlWindow::monitorInfo() and setDesktop() */
+void GlWindow::setDesktop(unsigned int index)
 {
+#if 0
     auto list = getMonitors();
     if (index >= list.size())
     {
-        MO_WARN("Desktop index out of range "
+        MO_WARNING("Desktop index out of range "
                  << index << "/" << list.size());
         return;
     }
 
     setPosition(list[index].x, list[index].y);
+#endif
 }
 
-void Window::setFullscreen(bool enable)
+void GlWindow::setFullscreen(bool enable)
 {
     if (!p_w_->isValid)
         return;
 
     if (enable)
     {
-        MO_DEBUG2("Set window to fullscreen");
+        MO_DEBUG_GL("Set window to fullscreen");
 
         // get window style
         DWORD style = GetWindowLong(p_w_->info.hwnd, GWL_STYLE);
@@ -723,9 +734,11 @@ void Window::setFullscreen(bool enable)
         // get desktop dimensions
         HMONITOR hmon = MonitorFromWindow(
                     p_w_->info.hwnd, MONITOR_DEFAULTTONEAREST);
-        MONITORINFO mi = { sizeof(MONITORINFO) };
+        MONITORINFO mi;
+        memset(&mi, 0, sizeof(MONITORINFO));
+
         if (!GetMonitorInfo(hmon, &mi))
-            MO_EXCEPTION("Could not get monitor info");
+            MO_GL_ERROR("Could not get monitor info");
 
         // store current dimensions
         RECT rect;
@@ -753,7 +766,7 @@ void Window::setFullscreen(bool enable)
     }
     else
     {
-        MO_DEBUG2("Restore window from fullscreen");
+        MO_DEBUG_GL("Restore window from fullscreen");
         // return to previous style
         SetWindowLong(p_w_->info.hwnd, GWL_STYLE, p_w_->info.dwStyle);
         // and previous size
@@ -771,7 +784,7 @@ void Window::setFullscreen(bool enable)
 
 
 
-bool Window::update()
+bool GlWindow::update()
 {
     if (!p_w_->isValid)
         return false;
@@ -802,13 +815,13 @@ bool Window::update()
 	return true;
 }
 
-void Window::swapBuffers()
+void GlWindow::swapBuffers()
 {
     if (!p_w_->isValid)
         return;
 
     if (!SwapBuffers(p_w_->info.deviceContext))
-        MO_EXCEPTION("Error on SwapBuffers(): '" << getLastWinErrorString() << "'");
+        MO_GL_ERROR("Error on SwapBuffers(): '" << getLastWinErrorString() << "'");
 
     // count fps
 
@@ -825,7 +838,7 @@ void Window::swapBuffers()
 }
 
 
-void Window::setTitle(const char *title)
+void GlWindow::setTitle(const char *title)
 {
     p_w_->title = title;
     if (!p_w_->isValid)
@@ -835,6 +848,7 @@ void Window::setTitle(const char *title)
 }
 
 
+#if 0
 BOOL CALLBACK monitorInfoProc_(HMONITOR, HDC, LPRECT rect, LPARAM data)
 {
     std::vector<MonitorInfo>* infos = (std::vector<MonitorInfo>*)(data);
@@ -850,7 +864,7 @@ BOOL CALLBACK monitorInfoProc_(HMONITOR, HDC, LPRECT rect, LPARAM data)
     return TRUE;
 };
 
-std::vector<MonitorInfo> Window::getMonitors()
+std::vector<MonitorInfo> GlWindow::getMonitors()
 {
     std::vector<MonitorInfo> infos;
 
@@ -894,8 +908,9 @@ std::vector<MonitorInfo> Window::getMonitors()
 
     return infos;
 }
-
+#endif
 
 } // namespace GL
+} // namespace MO
 
 #endif // MO_OS_WIN

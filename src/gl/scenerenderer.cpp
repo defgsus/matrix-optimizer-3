@@ -19,6 +19,7 @@
 #include "io/currenttime.h"
 #include "io/time.h"
 #include "io/error.h"
+#include "io/log_gl.h"
 
 #include <QOpenGLContext>
 #include "gl/opengl_undef.h"
@@ -102,12 +103,14 @@ GL::Context* SceneRenderer::createContext(GlWindow* window)
 
     context_ = new MO::GL::Context(window);
 
-    moInitGl();
+    //moInitGl();
 
     if (scene_)
         updateSceneGlContext_();
 
     //emit contextCreated();
+
+    MO_DEBUG_GL("SceneRenderer: GlContext ready");
 
     return context_;
 }

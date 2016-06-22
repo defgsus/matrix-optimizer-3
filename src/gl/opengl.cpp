@@ -24,6 +24,8 @@ void moInitGl()
 
         glbinding::Binding::initialize();
 
+        MO_DEBUG_GL("Initializing glBinding done");
+
         checkCompatibility();
 
         init = true;

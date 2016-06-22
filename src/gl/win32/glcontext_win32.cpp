@@ -1,33 +1,36 @@
 
 #ifdef MO_OS_WIN
 
-#include "gl/context_private.h"
-#include "gl/win32/window.h"
+#include "gl/glcontext_private.h"
+#include "gl/glwindow.h"
+#include "gl/win32/glwindow_win32.h"
 #include "gl/win32/wglext.h"
 #include "gl/win32/winerror.h"
 #include "gl/opengl.h"
-#include "gl/checkgl.h"
-#include "tool/time.h"
+#include "io/time.h"
+#include "io/error.h"
+#include "io/log_gl.h"
 
 #ifdef _MSC_VER
 // argument conversion, possible loss of data
 #pragma warning(disable : 4267)
 #endif
 
+namespace MO {
 namespace GL {
 
 
-void Context::makeCurrent()
+void GlContext::makeCurrent()
 {
     if (!p_->isValid)
         return;
 
     if (!wglMakeCurrent(p_->info.hdc, p_->info.hrc))
-        MO_EXCEPTION("Could not make wgl context current '"
+        MO_GL_ERROR("Could not make wgl context current '"
                       << getLastWinErrorString() << "'");
 }
 
-void Context::makeCurrent(Window * win)
+void GlContext::makeCurrent(GlWindow * win)
 {
     if (!p_->isValid || !win || !win->isOk())
         return;
@@ -49,28 +52,28 @@ void Context::makeCurrent(Window * win)
         // set pixel format for dc
         if (!SetPixelFormat(p_->info.hdc, p_->info.pfdnr, &p_->info.pfd))
         {
-            MO_EXCEPTION("Could not set pixel format: '" << getLastWinErrorString() << "'");
+            MO_GL_ERROR("Could not set pixel format: '" << getLastWinErrorString() << "'");
         }
         p_->info.assignedHdc.insert(p_->info.hdc);
     }
 
     if (!wglMakeCurrent(p_->info.hdc, p_->info.hrc))
-        MO_EXCEPTION("Could not make wgl context current to window '"
+        MO_GL_ERROR("Could not make wgl context current to window '"
                       << win->title() << "': '" << getLastWinErrorString() << "'");
 }
 
 #if 0
-void Context::swapBuffers()
+void GlContext::swapBuffers()
 {
     p_->swapBuffers(p_->info.hdc);
 }
 
-void Context::swapBuffers(Window* win)
+void GlContext::swapBuffers(Window* win)
 {
     p_->swapBuffers(win->info().deviceContext);
 }
 
-void Context::Private::swapBuffers(HDC hdc)
+void GlContext::Private::swapBuffers(HDC hdc)
 {
     if (!isValid)
         return;
@@ -81,7 +84,7 @@ void Context::Private::swapBuffers(HDC hdc)
     //CHECK_GL( glFinish() );
 
     if (!SwapBuffers(hdc))
-        MO_EXCEPTION("Error on SwapBuffers(): '" << getLastWinErrorString() << "'");
+        MO_GL_ERROR("Error on SwapBuffers(): '" << getLastWinErrorString() << "'");
 
     // count fps
 
@@ -101,7 +104,7 @@ void Context::Private::swapBuffers(HDC hdc)
 namespace
 {
     /** Loads the wgl extensions, once a context is loaded */
-    void getWglFunctions(ContextTech& info)
+    void getWglFunctions(GlContextTech& info)
     {
     #ifdef KATJA_WAS_HERE
     --------------------------------------------------------------------------------
@@ -115,7 +118,7 @@ namespace
     #define WGL__GETFUNC(name__, require__) \
         info.wglExt->name__ = (WglExt::PFN##name__)wglGetProcAddress(#name__); \
         if (require__ && !info.wglExt->name__) \
-            MO_EXCEPTION(#name__ " is not supported");
+            MO_GL_ERROR(#name__ " is not supported");
 
         WGL__GETFUNC(wglCreateContextAttribsARB, true);
         WGL__GETFUNC(wglSwapIntervalEXT, false);
@@ -130,7 +133,7 @@ namespace
     #undef WGL__GETFUNC
     }
 
-    HGLRC createVersionedContext(const ContextTech& info, int major, int minor)
+    HGLRC createVersionedContext(const GlContextTech& info, int major, int minor)
     {
         // max 8 attributes plus terminator
         int attribs[9] = {
@@ -139,10 +142,10 @@ namespace
             0
         };
 
-        MO_DEBUG2("Context: wglCreateContextAttribsARB()");
+        MO_DEBUG_GL("GlContext: wglCreateContextAttribsARB()");
         auto context = info.wglExt->wglCreateContextAttribsARB(info.hdc, 0, attribs);
         if (!context)
-            MO_EXCEPTION("Could not create extended wgl OpenGL "
+            MO_GL_ERROR("Could not create extended wgl OpenGL "
                           << major << "." << minor << " context");
         // delete non-unneeded older context
         wglDeleteContext(info.hrc);
@@ -152,12 +155,12 @@ namespace
 
 } // namespace
 
-void Context::create(Window *win, int major, int minor)
+void GlContext::create(GlWindow *win, int major, int minor)
 {
-    MO_DEBUG2("Creating OpenGL Context " << major << "." << minor);
+    MO_DEBUG_GL("Creating OpenGL Context " << major << "." << minor);
 
     if (!win->isOk())
-        MO_EXCEPTION("Can not create context for invalid window");
+        MO_GL_ERROR("Can not create context for invalid window");
 
     // release any existing context
     release();
@@ -172,7 +175,7 @@ void Context::create(Window *win, int major, int minor)
     // check
     if (p_->info.hdc == 0)
     {
-        MO_EXCEPTION("Could not get device context from window");
+        MO_GL_ERROR("Could not get device context from window");
     }
 
     // make pixelformat structure
@@ -188,7 +191,7 @@ void Context::create(Window *win, int major, int minor)
     p_->info.pfd.cStencilBits = 8;
     p_->info.pfd.iLayerType = PFD_MAIN_PLANE;
 
-    MO_DEBUG2("Context: ChoosePixelFormat()");
+    MO_DEBUG_GL("GlContext: ChoosePixelFormat()");
 
     // find closest match
     p_->info.pfdnr = ChoosePixelFormat(p_->info.hdc, &p_->info.pfd);
@@ -196,27 +199,27 @@ void Context::create(Window *win, int major, int minor)
     // check
     if (p_->info.pfdnr == 0)
     {
-        MO_EXCEPTION("Could not find pixel format for descriptor");
+        MO_GL_ERROR("Could not find pixel format for descriptor");
     }
 
     // set pixel format for dc
-    MO_DEBUG2("Context: SetPixelFormat()");
+    MO_DEBUG_GL("GlContext: SetPixelFormat()");
     if (!SetPixelFormat(p_->info.hdc, p_->info.pfdnr, &p_->info.pfd))
     {
-        MO_EXCEPTION("Could not set pixel format: '" << getLastWinErrorString() << "'");
+        MO_GL_ERROR("Could not set pixel format: '" << getLastWinErrorString() << "'");
     }
 
     // context
-    MO_DEBUG2("Context: wglCreateContext()");
+    MO_DEBUG_GL("GlContext: wglCreateContext()");
     p_->info.hrc = wglCreateContext(p_->info.hdc);
 
     // check
     if (!p_->info.hrc)
-        MO_EXCEPTION("Could not create wgl context");
+        MO_GL_ERROR("Could not create wgl context");
 
     // make current
     if (!wglMakeCurrent(p_->info.hdc, p_->info.hrc))
-        MO_EXCEPTION("Could not make wgl context current");
+        MO_GL_ERROR("Could not make wgl context current");
 
     // get wgl extensions
     getWglFunctions(p_->info);
@@ -224,19 +227,22 @@ void Context::create(Window *win, int major, int minor)
     if (major > 1 || minor > 1)
         p_->info.hrc = createVersionedContext(p_->info, major, minor);
 
-    MO_DEBUG2("Context: created..");
+    MO_DEBUG_GL("GlContext: created..");
 
     p_->isValid = true;
 
     makeCurrent();
-    init_gl();
+
+    moInitGl();
 
     setSyncMode(p_->syncMode);
+
+    MO_DEBUG_GL("GlContext: creation finished");
 }
 
 
 
-void Context::release()
+void GlContext::release()
 {
     if (!p_->isValid)
         return;
@@ -244,17 +250,20 @@ void Context::release()
     try
     {
         if (!wglMakeCurrent(p_->info.hdc, p_->info.hrc))
-            MO_EXCEPTION("Could not make context current: " << getLastWinErrorString());
+            MO_GL_ERROR("Could not make context current: "
+                        << getLastWinErrorString());
 
         if (!ReleaseDC(p_->info.hwnd, p_->info.hdc))
-            MO_EXCEPTION("Could not release device context: " << getLastWinErrorString());
+            MO_GL_ERROR("Could not release device context: "
+                        << getLastWinErrorString());
 
         if (!wglDeleteContext(p_->info.hrc))
-            MO_EXCEPTION("Could not delete context: " << getLastWinErrorString());
+            MO_GL_ERROR("Could not delete context: "
+                        << getLastWinErrorString());
     }
     catch (const Exception& e)
     {
-        MO_ERROR(e.what());
+        MO_WARNING(e.what());
     }
 
     p_->info.hdc = 0;
@@ -265,32 +274,35 @@ void Context::release()
     delete p_->info.wglExt; p_->info.wglExt = 0;
 }
 
-void Context::setSyncMode(Sync mode)
+void GlContext::setSyncMode(Sync mode)
 {
+    MO_DEBUG_GL("GlContext::setSyncMode(" << mode << ")");
+
     p_->syncMode = mode;
 
     if (p_->isValid && p_->info.wglExt->wglSwapIntervalEXT)
         p_->info.wglExt->wglSwapIntervalEXT(mode);
 }
 
-void Context::setViewport()
+void GlContext::setViewport()
 {
-    CHECK_GL_THROW( glViewport(0, 0, width(), height()) );
+    MO_CHECK_GL_THROW( gl::glViewport(0, 0, width(), height()) );
 }
 
-unsigned Context::getMaxSwapGroups() const
+#if 0
+unsigned GlContext::getMaxSwapGroups() const
 {
     if (!p_->info.wglExt->wglQueryMaxSwapGroupsNV)
         return 0;
 
-    GLuint groups, barriers;
+    gl::GLuint groups, barriers;
     if (!p_->info.wglExt->wglQueryMaxSwapGroupsNV(p_->info.hdc, &groups, &barriers))
         return 0;
 
     return groups;
 }
 
-void Context::joinSwapGroup(unsigned g)
+void GlContext::joinSwapGroup(unsigned g)
 {
     // http://oss.sgi.com/projects/performer/mail/info-performer/perf-06-01/0049.html
 
@@ -307,7 +319,7 @@ void Context::joinSwapGroup(unsigned g)
         MO_ERROR("BindSwapBarrier failed");
 }
 
-void Context::swapBuffers(const std::vector<Context*>& contexts)
+void GlContext::swapBuffers(const std::vector<Context*>& contexts)
 {
     std::vector<WGLSWAP> swaps(contexts.size());
     for (size_t i=0; i<contexts.size(); ++i)
@@ -316,10 +328,13 @@ void Context::swapBuffers(const std::vector<Context*>& contexts)
         swaps[i].uiFlags = 0;
     }
 
-    MO_DEBUG("SwapMultipleBuffers(" << swaps.size() << ", " << &swaps[0] << ")");
+    MO_DEBUG_GL("SwapMultipleBuffers(" << swaps.size() << ", " << &swaps[0] << ")");
     wglSwapMultipleBuffers(swaps.size(), &swaps[0]);
 }
+#endif
+
 
 } // namespace GL
+} // namespace MO
 
 #endif // MO_OS_WIN

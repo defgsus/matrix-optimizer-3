@@ -285,6 +285,8 @@ void Manager::Private::renderLoop()
 
     TimeMessure fpsCount;
 
+    MO_DEBUG_GL("Starting render-loop");
+
     while (!doStop && window->update())
     {
         bool doSwap = false;

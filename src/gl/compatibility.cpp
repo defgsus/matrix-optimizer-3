@@ -11,9 +11,7 @@
 #include <sstream>
 
 #include "compatibility.h"
-#include "io/log.h"
-
-using namespace gl;
+#include "io/log_gl.h"
 
 namespace MO {
 namespace GL {
@@ -22,6 +20,8 @@ namespace
 {
     void dumpExtensions()
     {
+        using namespace gl;
+
         GLint num=0;
         glGetIntegerv(GL_NUM_EXTENSIONS, &num);
 
@@ -37,10 +37,12 @@ namespace
 
 bool checkCompatibility()
 {
+    MO_DEBUG_GL("Checking OpenGL compatibility");
+
     Properties& p = Properties::staticInstance();
     p.getProperties();
 
-    MO_DEBUG("OPENGL PROPERTIES:\n" << p.toString());
+    MO_DEBUG_GL("OPENGL PROPERTIES:\n" << p.toString());
 
     return p.versionMajor >= 3;
 }
@@ -57,6 +59,10 @@ Properties& Properties::staticInstance()
 
 void Properties::getProperties()
 {
+    MO_DEBUG_GL("Getting OpenGL properties");
+
+    using namespace gl;
+
     // clear any previous errors
     glGetError();
 
@@ -149,6 +155,8 @@ QString Properties::toString() const
 
 void Properties::setLineSmooth(bool enable)
 {
+    using namespace gl;
+
     if (!canLineSmooth)
         return;
 
@@ -160,6 +168,8 @@ void Properties::setLineSmooth(bool enable)
 
 void Properties::setPolygonSmooth(bool enable)
 {
+    using namespace gl;
+
     if (!canPolygonSmooth)
         return;
 
@@ -169,8 +179,10 @@ void Properties::setPolygonSmooth(bool enable)
         MO_CHECK_GL( glDisable(GL_POLYGON_SMOOTH) );
 }
 
-void Properties::setLineWidth(GLfloat width)
+void Properties::setLineWidth(gl::GLfloat width)
 {
+    using namespace gl;
+
     if (!canLineWidth)
         return;
 
@@ -197,11 +209,13 @@ void Properties::setLineWidth(GLfloat width)
 #endif
 }
 
-void Properties::setPointSize(GLfloat s)
+void Properties::setPointSize(gl::GLfloat s)
 {
+    using namespace gl;
+
     s = std::max(GLfloat(pointSize[0]), std::min(GLfloat(pointSize[1]), s ));
 
-    MO_CHECK_GL( gl::glPointSize(s) );
+    MO_CHECK_GL( glPointSize(s) );
 }
 
 } // namespace GL

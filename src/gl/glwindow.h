@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include "io/architecture.h"
+
 namespace MO {
 namespace GL {
 
@@ -332,8 +334,14 @@ private:
     /** disable copy */	void operator=(GlWindow&) = delete;
 
 #ifdef MO_OS_WIN
-    friend int64_t processEvent_(
+    #ifdef MO_OS_64BIT
+        friend int64_t processEvent_(
             GlWindow * win, unsigned int uMsg, uint64_t wParam, int64_t lParam);
+    #elif defined(MO_OS_32BIT)
+        friend int32_t processEvent_(
+            GlWindow * win, unsigned int uMsg, uint32_t wParam, int32_t lParam);
+    #endif
+
 #elif defined(MO_OS_UNIX)
     friend void XWindowEventDispatcher(void* xevent, GlWindow* win);
 #endif

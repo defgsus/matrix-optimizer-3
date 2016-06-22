@@ -280,7 +280,8 @@ HEADERS += \
     $$PWD/gl/win32/wm_codes.def \
     $$PWD/gl/win32/wglext.h \
     $$PWD/gl/win32/wm_codes.inl \
-    $$PWD/gl/x11/include_x11.h
+    $$PWD/gl/x11/include_x11.h \
+    $$PWD/io/architecture.h
 
 SOURCES += \
     src/math/timeline1d.cpp \

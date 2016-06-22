@@ -1,7 +1,6 @@
 #ifdef MO_OS_WIN
 
 #include <sstream>
-#include <codecvt>
 #include <locale>
 
 #include <Windows.H>
@@ -38,9 +37,18 @@ std::string getWinErrorString(DWORD err)
         s << "error " << err;
         return s.str();
     }
+#if defined(__GNUC__) && defined(MO_OS_WIN)
+    /** @todo wstring_convert and codecvt not really found in my MinGW */
+    {
+        std::stringstream s;
+        s << "error " << err;
+        return s.str();
+    }
 
+#else
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> conv;
     return conv.to_bytes(&buf[0]);
+#endif
 }
 
 #endif

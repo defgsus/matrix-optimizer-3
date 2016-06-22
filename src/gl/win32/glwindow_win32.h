@@ -16,10 +16,11 @@
 #include <winuser.h>
 #include <windowsx.h>
 
+namespace MO {
 namespace GL {
 
 /** Structure holding states for the system interaction on win32 */
-struct WindowTech
+struct GlWindowTech
 {
 	/** window handle */
 	HWND		hwnd;
@@ -54,6 +55,7 @@ struct WindowTech
 
 
 } // namespace GL
+} // namespace MO
 
 #endif // MO_OS_WIN
 

@@ -10,6 +10,7 @@
 #include <set>
 #include <Windows.h>
 
+namespace MO {
 namespace GL {
 
 struct WglExt;
@@ -36,5 +37,6 @@ struct GlContextTech
 };
 
 } // namespace GL
+} // namespace MO
 
 #endif // MAG_GL_WIN32_CONTEXT_H_INCLUDED
