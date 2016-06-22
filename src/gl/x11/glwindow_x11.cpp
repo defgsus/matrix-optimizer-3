@@ -214,7 +214,7 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
                 win->p_w_->isMouseOver = true;
                 win->mouseEnterEvent();
             }
-            win->p_w_->mouseKeys |= mk;
+            win->p_w_->setMouseKey(mk, true);
             // call user event
             win->mouseDownEvent( mk );
         }
@@ -225,7 +225,7 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
             // translate button
             auto mk = mapXMouseButton(event->xbutton.button);
             // update window state
-            win->p_w_->mouseKeys &= ~mk;
+            win->p_w_->setMouseKey(mk, false);
             // call user event
             win->mouseUpEvent( mk );
         }
@@ -246,14 +246,7 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
 		break;
 
         case XX::X_ResizeRequest:
-        {
-            XWindowAttributes wa;
-            XGetWindowAttributes(win->p_w_->info.display, win->p_w_->info.win, &wa);
-            win->p_w_->curX = wa.x; // XXX These are wrong
-            win->p_w_->curY = wa.y;
-            win->p_w_->curWidth = wa.width;
-            win->p_w_->curHeight = wa.height;
-        }
+            //win->p_w_->onResize();
 		break;
 
         case XX::X_ConfigureNotify:

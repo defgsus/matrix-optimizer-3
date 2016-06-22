@@ -179,6 +179,7 @@ enum MouseKeyCode
 typedef int MouseKeyCodes;
 
 
+
 // forward
 struct GlWindowTech;
 struct MonitorInfo;
@@ -206,6 +207,11 @@ public: // ------------- ctor --------------------
 
     //static std::vector<MonitorInfo> getMonitors();
 
+    /** translation to Qt codes */
+    static long keyToQt(KeyCode);
+    /** translation to Qt codes */
+    static long mouseKeyToQt(MouseKeyCode);
+
     // -------------- getter ---------------------
 
     /** Returns true when the window is created */
@@ -213,6 +219,9 @@ public: // ------------- ctor --------------------
 
     /** Returns true when the mouse is currently inside the client area */
     bool isMouseOver() const;
+
+    /** Returns true when any of the mouse buttons is currently pressed. */
+    bool isMouseDown() const { return mouseKeys() != 0; }
 
     /** Returns true when this window has input/keyboard focus */
     bool isFocus() const;
@@ -231,16 +240,17 @@ public: // ------------- ctor --------------------
     /** Returns the current title of the window */
     const std::string& title() const;
 
-    /** Returns a struct with system specific information.
-        WindowTech is defined in gl/win32/window.h or gl/x11/window.h */
-    const GlWindowTech& info() const;
-
     /** Returns current mouse x in pixels */
     int mouseX() const;
     /** Returns current mouse y in pixels */
     int mouseY() const;
     /** Returns or combination of currently pressed mouse keys */
     MouseKeyCodes mouseKeys() const;
+
+    /** Returns a struct with system specific information.
+        GlWindowTech is defined in either
+        @ref gl/win32/glwindow_win32.h or @ref gl/x11/glwindow_x11.h */
+    const GlWindowTech& info() const;
 
     // ------------ setter ---------------------
 
@@ -269,7 +279,8 @@ public: // ------------- ctor --------------------
     void setCloseable(bool enable);
 
     /** Returns a writeable struct with system specific information.
-        WindowTech is defined in gl/win32/window.h or gl/x11/window.h */
+        GlWindowTech is defined in either
+        @ref gl/win32/glwindow_win32.h or @ref gl/x11/glwindow_x11.h */
     GlWindowTech& info();
 
     // ------------- events -----------------

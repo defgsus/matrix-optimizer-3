@@ -103,7 +103,7 @@ void ObjectOutputView::updateLabels_()
 
 void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uint channel, Double time)
 {
-    if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GUI_THREAD)))
+    if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GFX_THREAD)))
     {
         // create resampler
         if (!texRender_)
@@ -113,7 +113,7 @@ void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uin
 
         try
         {
-#if 1
+#if 0
             // gl-resize
             texRender_->render(tex, true);
             // download image

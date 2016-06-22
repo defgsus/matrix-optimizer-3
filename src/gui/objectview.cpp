@@ -233,7 +233,8 @@ void ObjectView::updateImage()
     // object has texture?
     if (auto ti = dynamic_cast<ValueTextureInterface*>(object_))
     {
-        if (auto tex = ti->valueTexture(channel, RenderTime(CurrentTime::time(), MO_GUI_THREAD)))
+        if (auto tex = ti->valueTexture(
+                    channel, RenderTime(CurrentTime::time(), MO_GFX_THREAD)))
         {
             // create resampler
             if (!texRender_)
@@ -243,6 +244,7 @@ void ObjectView::updateImage()
 
             try
             {
+#if 0
                 // gl-resize
                 texRender_->render(tex, true);
                 // download image
@@ -253,6 +255,7 @@ void ObjectView::updateImage()
                     labelImg_->setPixmap(QPixmap::fromImage(img));
                     return;
                 }
+#endif
             }
             catch (const Exception& e)
             {

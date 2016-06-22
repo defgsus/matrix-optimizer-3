@@ -178,17 +178,20 @@ void Properties::setLineWidth(GLfloat width)
     MO_CHECK_GL( glGetBooleanv(GL_LINE_SMOOTH, &isSmooth) );
 
     if (isSmooth == GL_TRUE)
-        width = std::max(GLfloat(lineWidthSmooth[0]), std::min(GLfloat(lineWidthSmooth[1]), width ));
+        width = std::max(GLfloat(lineWidthSmooth[0]),
+                         std::min(GLfloat(lineWidthSmooth[1]), width ));
     else
-        width = std::max(GLfloat(lineWidth[0]), std::min(GLfloat(lineWidth[1]), width ));
+        width = std::max(GLfloat(lineWidth[0]),
+                         std::min(GLfloat(lineWidth[1]), width ));
 
 #if 0
     MO_CHECK_GL( glLineWidth(width) );
 #else
-    MO_DEBUG("width " << width);
+    //MO_DEBUG("width " << width);
     glLineWidth(width);
     if (glGetError() != GL_NO_ERROR)
-        MO_DEBUG("glLineWidth(" << width << ") failed, smooth = " << int(isSmooth) << ", range = "
+        MO_DEBUG("glLineWidth(" << width << ") failed, smooth = "
+                 << int(isSmooth) << ", range = "
                  << lineWidth[0] << "-" << lineWidth[1] << ", srange = "
                  << lineWidthSmooth[0] << "-" << lineWidthSmooth[1]);
 #endif

@@ -46,6 +46,9 @@ struct GlWindow::PrivateW
         , oldY      (0)
         , oldWidth  (0)
         , oldHeight (0)
+        , mouseX    (0)
+        , mouseY    (0)
+        , mouseKeys (0)
         , parent    (0)
         , isValid   (false)
         , isDestroyed(false)
@@ -79,6 +82,15 @@ struct GlWindow::PrivateW
     /** called whenever the window got resized,
         it updates the x,y,width and height fields */
     void onResize();
+
+    /** Convenience function to set mouseKeys state */
+    void setMouseKey(MouseKeyCode k, bool down)
+    {
+        if (!down)
+            mouseKeys &= ~int(k);
+        else
+            mouseKeys |= int(k);
+    }
 
     /** Link to class */
     GlWindow * pwin;

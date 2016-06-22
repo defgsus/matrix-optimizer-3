@@ -28,6 +28,72 @@
 namespace MO {
 namespace GL {
 
+namespace {
+
+class RenderWindow : public GlWindow
+{
+public:
+    RenderWindow(Manager* mgr, int w, int h)
+        : GlWindow  (w, h)
+        , manager   (mgr)
+    { }
+
+    Manager* manager;
+
+protected:
+
+    bool closeEvent() override { return false; }
+    void resizeEvent() override { manager->render(); }
+
+    bool mouseMoveEvent(int x, int y) override
+    {
+        if (isMouseDown())
+        {
+            MouseState::globalInstance().setDragPos(
+                        QPoint(x, y), QSize(width(), height()));
+            manager->render();
+        }
+        else
+            MouseState::globalInstance().setPos(
+                        QPoint(x, y), QSize(width(), height()));
+        return true;
+    }
+
+    bool mouseDownEvent(MouseKeyCode k) override
+    {
+        MouseState::globalInstance().keyDown(mouseKeyToQt(k));
+        manager->render();
+        return true;
+    }
+
+    bool mouseUpEvent(MouseKeyCode k) override
+    {
+        MouseState::globalInstance().keyUp(mouseKeyToQt(k));
+        manager->render();
+        return true;
+    }
+
+    bool keyDownEvent(KeyCode k) override
+    {
+        KeyboardState::globalInstance().keyDown(k);
+        manager->render();
+        return true;
+    }
+
+    bool keyUpEvent(KeyCode k) override
+    {
+        KeyboardState::globalInstance().keyUp(k);
+        manager->render();
+        return true;
+    }
+};
+
+
+} // namespace
+
+
+
+
 struct Manager::Private
 {
     Private(Manager* p)
@@ -41,6 +107,7 @@ struct Manager::Private
         , doAnimate     (false)
         , doSingleAnimate(false)
         , setNewScene   (false)
+        , desiredFps    (60.)
         , messuredFps   (0.)
     { }
 
@@ -62,7 +129,9 @@ struct Manager::Private
         doAnimate,
         doSingleAnimate,
         setNewScene;
-    volatile Double messuredFps;
+    volatile Double
+        desiredFps,
+        messuredFps;
 };
 
 Manager::Manager(QObject *parent)
@@ -149,12 +218,14 @@ void Manager::setScene(Scene * scene)
         // connect events from scene to window
         connect(p_->newScene->sceneSignals(), &SceneSignals::renderRequest, [=]()
         {
-            if (p_->scene && p_->timeFunc)
-                p_->scene->setSceneTime(p_->timeFunc(), false);
+            //if (p_->scene && p_->timeFunc)
+            //    p_->scene->setSceneTime(p_->timeFunc(), false);
 
             render();
         });
     }
+
+    render();
 }
 
 void Manager::setTimeCallback(std::function<Double ()> timeFunc)
@@ -203,7 +274,7 @@ void Manager::Private::renderLoop()
 {
     doStop = false;
 
-    window = new GlWindow();
+    window = new RenderWindow(p, 320, 320);
 
     renderer = new SceneRenderer();
     renderer->createContext(window);
@@ -216,9 +287,10 @@ void Manager::Private::renderLoop()
 
     while (!doStop && window->update())
     {
+        bool doSwap = false;
         if (!doAnimate && !doSingleAnimate)
         {
-            sleep_seconds_lowres(.1);
+            sleep_seconds_lowres(1./60.);
         }
         else
         {
@@ -238,7 +310,8 @@ void Manager::Private::renderLoop()
 
                 renderer->setSize(QSize(window->width(), window->height()));
                 renderer->render(true);
-
+                doSwap = true;
+                doSingleAnimate = false;
             }
             catch (const Exception& e)
             {
@@ -248,7 +321,7 @@ void Manager::Private::renderLoop()
 
         auto time = systemTime(),
              delta = time - prevTime,
-             ddelta = 1. / 60.;
+             ddelta = 1. / desiredFps;
 
         if (delta < ddelta)
         {
@@ -258,18 +331,22 @@ void Manager::Private::renderLoop()
 
         prevTime = systemTime();
 
+        // update header
         if (time - headerUpdateTime > 1.)
         {
             headerUpdateTime = time;
-            window->setTitle(QString("%1 fps").arg(messuredFps).toStdString().c_str());
+            if (doAnimate)
+                window->setTitle(QString("%1 fps").arg(messuredFps)
+                                 .toStdString().c_str());
+            else
+                window->setTitle("stopped");
         }
 
-        if (doAnimate || doSingleAnimate)
+        if (doSwap)
         {
             //MO_PRINT("SWAP " << time << " " << delta);
             window->swapBuffers();
         }
-        doSingleAnimate = false;
 
         delta = fpsCount.time();
         fpsCount.start();
