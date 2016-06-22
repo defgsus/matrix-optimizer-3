@@ -44,7 +44,6 @@ HEADERS += \
     src/types/int.h \
     src/audio/audiodevices.h \
     src/audio/audiodevice.h \
-    src/engine/renderer.h \
     src/gl/drawable.h \
     src/gl/shader.h \
     src/gl/shadersource.h \
@@ -181,7 +180,6 @@ HEADERS += \
     src/geom/builtinlinefont.h \
     src/script/angelscript_timeline.h \
     src/geom/pointcloud.h \
-    src/engine/renderengine.h \
     src/geom/marchingcubes.h \
     src/network/udpconnection.h \
     src/script/angelscript_network.h \
@@ -269,8 +267,20 @@ HEADERS += \
     $$PWD/video/ffm/ffmpeg.h \
     $$PWD/video/ffm/videostream.h \
     $$PWD/video/decoderframe.h \
-    $$PWD/model/objecttreemodel.h
-
+    $$PWD/model/objecttreemodel.h \
+    $$PWD/gl/glcontext.h \
+    $$PWD/gl/glcontext_private.h \
+    $$PWD/gl/glwindow.h \
+    $$PWD/gl/glwindow_private.h \
+    $$PWD/gl/x11/glcontext_x11.h \
+    $$PWD/gl/x11/glwindow_x11.h \
+    $$PWD/gl/win32/glcontext_win32.h \
+    $$PWD/gl/win32/glwindow_win32.h \
+    $$PWD/gl/win32/winerror.h \
+    $$PWD/gl/win32/wm_codes.def \
+    $$PWD/gl/win32/wglext.h \
+    $$PWD/gl/win32/wm_codes.inl \
+    $$PWD/gl/x11/include_x11.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -297,7 +307,6 @@ SOURCES += \
     src/io/settings.cpp \
     src/audio/audiodevices.cpp \
     src/audio/audiodevice.cpp \
-    src/engine/renderer.cpp \
     src/gl/drawable.cpp \
     src/gl/shader.cpp \
     src/gl/shadersource.cpp \
@@ -413,7 +422,6 @@ SOURCES += \
     src/geom/builtinlinefont.cpp \
     src/script/angelscript_timeline.cpp \
     src/geom/pointcloud.cpp \
-    src/engine/renderengine.cpp \
     src/geom/marchingcubes.cpp \
     src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \
@@ -484,5 +492,12 @@ SOURCES += \
     $$PWD/math/timeline_point.cpp \
     $$PWD/video/ffm/ffmpeg.cpp \
     $$PWD/video/ffm/videostream.cpp \
-    $$PWD/model/objecttreemodel.cpp
+    $$PWD/model/objecttreemodel.cpp \
+    src/gl/glcontext_common.cpp \
+    src/gl/glwindow_common.cpp \
+    src/gl/x11/glcontext_x11.cpp \
+    src/gl/x11/glwindow_x11.cpp \
+    src/gl/win32/glcontext_win32.cpp \
+    src/gl/win32/glwindow_win32.cpp \
+    src/gl/win32/winerror.cpp
 

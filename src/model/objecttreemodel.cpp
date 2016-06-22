@@ -12,11 +12,16 @@
 #include <QColor>
 #include <QBrush>
 #include <QIcon>
+#include <QFileInfo>
+#include <QUrl>
+#include <QMessageBox>
 
 #include "objecttreemodel.h"
 #include "object/object.h"
 #include "gui/util/appicons.h"
+#include "gui/util/objectmenu.h"
 #include "object/util/objectfactory.h"
+//#include "object/interface/masteroutinterface.h"
 #include "object/util/objecteditor.h"
 #include "model/objectmimedata.h"
 #include "model/objecttreemimedata.h"
@@ -47,7 +52,9 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
     p_                  (new Private(this))
 {
     p_->headerNames
-            << "name"
+//            << "" // active
+//            << "" // draw
+            << tr("name")
             //<< "class"
                ;
     setRootObject(rootObject);
@@ -169,8 +176,16 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
         {
             switch (index.column())
             {
+                /*
+                case 0: return obj->activeAtAll();
+                case 1:
+                    if (auto mo = dynamic_cast<MasterOutInterface*>(obj))
+                        return mo->isMasterOutputEnabled();
+                    else
+                        return false;
+                */
                 case 0: return obj->name();
-                case 1: return obj->className();
+                //case 1: return obj->className();
                 default: MO_LOGIC_ERROR("no DisplayRole defined for column "
                                         << index.column());
             }
@@ -231,7 +246,8 @@ Qt::ItemFlags ObjectTreeModel::flags(const QModelIndex &index) const
     if (p_->rootObject && index.isValid())
     {
         flag |= Qt::ItemIsSelectable | Qt::ItemIsEnabled
-                | Qt::ItemIsEditable | Qt::ItemIsDragEnabled;
+                | Qt::ItemIsEditable | Qt::ItemIsDragEnabled
+                | Qt::ItemIsDropEnabled;
     }
     return flag;
 }
@@ -253,15 +269,17 @@ QVariant ObjectTreeModel::headerData(
 
 Qt::DropActions ObjectTreeModel::supportedDropActions() const
 {
-    return //Qt::CopyAction |
+    return Qt::CopyAction |
             Qt::MoveAction;
 }
 
 QStringList ObjectTreeModel::mimeTypes() const
 {
     return QStringList()
+            << GUI::ObjectMenu::NewObjectMimeType
             << ObjectMimeData::mimeTypeString
-            << ObjectTreeMimeData::objectMimeType;
+            << ObjectTreeMimeData::objectMimeType
+            << "text/uri-list";
 }
 
 QMimeData* ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
@@ -281,41 +299,126 @@ QMimeData* ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
     return data;
 }
 
-bool ObjectTreeModel::dropMimeData(
+bool ObjectTreeModel::canDropMimeData(
         const QMimeData *data, Qt::DropAction /*action*/,
-        int row, int /*column*/, const QModelIndex &parent)
+        int row, int /*column*/, const QModelIndex &parent) const
 {
-    // check mime type
-    if (!data->formats().contains(ObjectTreeMimeData::objectMimeType))
-    {
-        MO_WARNING("ObjectTreeModel::dropMimeData() mimedata is unsupported");
+    //MO_PRINT(data->formats());
+    if (!rootObject())
         return false;
-    }
+
+    // check mime type
+    bool sup = false;
+    for (const auto& t : mimeTypes())
+        sup |= data->formats().contains(t);
+    if (!sup)
+        return false;
 
     // get parent to drop into
     auto parentObj = objectForIndex(parent);
     if (!parentObj)
         parentObj = rootObject();
-    if (!parentObj)
+    if (!parentObj || !parentObj->editor())
+        return false;
+
+    // row out of range
+    if (row >= 0 && parentObj->numChildren() >= 0
+        && row+1 >= parentObj->numChildren())
     {
-        MO_WARNING("ObjectTreeModel::dropMimeData() no parent to drop into");
+        MO_WARNING("ObjectTreeModel::dropMimeData() row out of range: "
+                   << row << "/" << parentObj->numChildren());
         return false;
     }
-    auto editor = parentObj->editor();
-    if (!editor)
+
+    // see if object fits
+    if (data->formats().contains(GUI::ObjectMenu::NewObjectMimeType))
     {
-        MO_WARNING("ObjectTreeModel::dropMimeData() no ObjectEditor");
-        return false;
+        // get object type
+        auto classn = QString::fromUtf8(
+                    data->data(GUI::ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !parentObj->canHaveChildren(Object::Type(typ)))
+            return false;
     }
-
-    auto objdata = static_cast<const ObjectTreeMimeData*>(data);
-
-    // deserialize object
-    QList<Object*> copies = objdata->getObjectTrees();
-
-    editor->addObjects(parentObj, copies, row);
 
     return true;
+}
+
+bool ObjectTreeModel::dropMimeData(
+        const QMimeData *data, Qt::DropAction action,
+        int row, int column, const QModelIndex &parent)
+{
+    if (!canDropMimeData(data, action, row, column, parent))
+        return false;
+
+    auto parentObj = objectForIndex(parent);
+    if (!parentObj)
+        parentObj = rootObject();
+
+    QList<Object*> newObjects;
+    QStringList errors;
+
+    // drop object trees
+    if (data->formats().contains(ObjectTreeMimeData::objectMimeType))
+    {
+        auto objdata = static_cast<const ObjectTreeMimeData*>(data);
+        newObjects = objdata->getObjectTrees();
+    }
+    // drop new-object
+    else if (data->formats().contains(GUI::ObjectMenu::NewObjectMimeType))
+    {
+        // get object type
+        auto classn = QString::fromUtf8(
+                    data->data(GUI::ObjectMenu::NewObjectMimeType));
+        int typ = ObjectFactory::typeForClass(classn);
+        // check if dropable
+        if (typ < 0 || !parentObj->canHaveChildren(Object::Type(typ)))
+            return false;
+        if (auto obj = ObjectFactory::createObject(classn))
+            newObjects << obj;
+    }
+    // drop urls
+    if (data->hasUrls())
+    {
+        const auto list = data->urls();
+        for (const QUrl& url : list)
+        {
+            QString shortfn = QFileInfo(url.toString()).fileName();
+            try
+            {
+                if (auto o = ObjectFactory::createObjectFromUrl(url))
+                    newObjects << o;
+                else
+                    errors << QObject::tr("%1: format not supported")
+                                  .arg(shortfn);
+            }
+            catch (const Exception& e)
+            {
+                errors << QObject::tr("%1: %2")
+                              .arg(shortfn)
+                              .arg(e.what());
+            }
+        }
+    }
+
+
+    if (!newObjects.isEmpty())
+        parentObj->editor()->addObjects(parentObj, newObjects, row);
+
+    // print errors
+    if (!errors.isEmpty())
+    {
+        QString msg = QObject::tr(
+                    "The following urls could not be wrapped into an object.");
+        for (const auto & text : errors)
+        {
+            msg.append("\n" + text);
+        }
+        QMessageBox::information(0, QObject::tr("File drop"), msg);
+    }
+
+    return !newObjects.empty();
 }
 
 

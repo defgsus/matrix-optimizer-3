@@ -155,10 +155,16 @@ void Shader::compile()
     }
 
     // compile the vertex shader
-    compileShader_(GL_VERTEX_SHADER, P_VERTEX, "vertex shader", source_->vertexSource());
+    compileShader_(GL_VERTEX_SHADER, P_VERTEX,
+                   "vertex shader", source_->vertexSource());
 
     // compile the fragment shader
-    compileShader_(GL_FRAGMENT_SHADER, P_FRAGMENT, "fragment shader", source_->fragmentSource());
+    compileShader_(GL_FRAGMENT_SHADER, P_FRAGMENT,
+                   "fragment shader", source_->fragmentSource());
+
+    if (!source_->geometrySource().isEmpty())
+        compileShader_(GL_GEOMETRY_SHADER, P_GEOMETRY,
+                       "geometry shader", source_->geometrySource());
 
     // link program object
     MO_CHECK_GL_THROW( glLinkProgram(prog_) );
@@ -427,9 +433,12 @@ void Shader::getAttributes_()
 
 void Shader::sendUniform(const Uniform * u)
 {
-    MO_DEBUG_GL("Shader('" << name_ << ")::sendUniform(" << u->name() << ", " << u->floats[0]
-            << ", " << u->floats[1] << ", " << u->floats[2] << ", " << u->floats[3] << ")");
-
+#if 0
+    MO_DEBUG_GL("Shader('" << name_ << ")::sendUniform("
+                << u->name() << ", " << u->floats[0]
+                << ", " << u->floats[1] << ", " << u->floats[2]
+                << ", " << u->floats[3] << ")");
+#endif
     switch (u->type())
     {
         case GL_SAMPLER_1D:

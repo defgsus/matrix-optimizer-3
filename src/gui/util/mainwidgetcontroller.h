@@ -249,7 +249,7 @@ private:
     QSize outputSize_;
 
     LiveAudioEngine * audioEngine_;
-    RenderEngine * renderEngine_;
+    //RenderEngine * renderEngine_;
 
     GL::Manager * glManager_;
     GL::Window * glWindow_;

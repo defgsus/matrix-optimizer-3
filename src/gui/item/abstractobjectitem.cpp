@@ -1080,7 +1080,7 @@ bool AbstractObjectItem::hasConnectors() const
 QPointF AbstractObjectItem::inputPos(uint c) const
 {
     for (auto i : p_oi_->inputItems)
-        if (//i->signalType() == ST_AUDIO &&
+        if (i->signalType() == ST_AUDIO &&
                 i->channel() == c)
             return i->pos();
 

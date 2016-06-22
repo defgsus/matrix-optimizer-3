@@ -109,8 +109,6 @@
 #include "gl/scenerenderer.h" // deprecated
 #include "gl/compatibility.h"
 #include "audio/configuration.h"
-#include "engine/renderer.h" // should be (audio) disk renderer
-#include "engine/renderengine.h"
 #include "engine/audioengine.h"
 #include "engine/liveaudioengine.h"
 #include "engine/serverengine.h"
@@ -140,7 +138,7 @@ MainWidgetController::MainWidgetController(QMainWindow * win)
       updateTimer_      (0),
       outputSize_       (512, 512),
       audioEngine_      (0),
-      renderEngine_     (0),
+      //renderEngine_     (0),
       glManager_        (0),
       glWindow_         (0),
       objectEditor_     (0),
@@ -194,17 +192,22 @@ MainWidgetController::~MainWidgetController()
 
     // shut down
 
-    if (renderEngine_)
-        renderEngine_->release();
+    //if (renderEngine_)
+    //    renderEngine_->release();
+    //delete renderEngine_;
 
     if (audioEngine_)
         audioEngine_->stop();
+    delete audioEngine_;
 
     if (scene_)
     {
-        scene_->kill();
+        glManager_->setScene(nullptr);
+        //scene_->kill();
         scene_->releaseRef("gui shutdown");
     }
+
+    delete glManager_;
 }
 
 void MainWidgetController::createObjects_()
@@ -346,15 +349,17 @@ void MainWidgetController::createObjects_()
     glManager_ = new GL::Manager(this);
     connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
             this, SLOT(onOutputSizeChanged_(QSize)));
-    glManager_->setTimeCallback([this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
+    glManager_->setTimeCallback(
+                [this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
 
+    /*
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
     connect(glWindow_, SIGNAL(visibleChanged(bool)),
             this, SLOT(onGlWindowVisibleChanged_(bool)));
     connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
             this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
-
     glWindow_->show();
+    */
 
     // object output view
     objectOutputView_ = new ObjectOutputView(window_);
@@ -936,11 +941,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
         a = aGlWindowVisible_ = new QAction(tr("Output window"), m);
         a->setCheckable(true);
-        a->setChecked(glWindow_->isVisible());
+        a->setChecked(glManager_->isWindowVisible());
         m->addAction(a);
         connect(a, &QAction::triggered, [=](bool check)
         {
-            glWindow_->setVisible(check);
+            glManager_->setWindowVisible(check);
         });
 
     // ######### HELP MENU #########
@@ -999,8 +1004,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     MO_ASSERT(s, "MainWidgetController::setScene_() with NULL scene");
     MO_ASSERT(s != scene_, "MainWidgetController::setScene_() with same scene");
 
-    if (renderEngine_)
-        renderEngine_->release();
+    //if (renderEngine_)
+    //    renderEngine_->release();
 
     objectTreeView_->setRootObject(nullptr);
     objectView_->setObject(nullptr);
@@ -1011,7 +1016,8 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     if (scene_)
     {
-        scene_->kill();
+        glManager_->setScene(nullptr);
+        //scene_->kill();
         scene_->releaseRef("MainWidgetController release scene");
     }
 
@@ -1070,7 +1076,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 #endif
     // ---------- opengl stuff ----------
 
-    MO_ASSERT(glManager_ && glWindow_, "");
+    MO_ASSERT(glManager_, "");
 
     // set current resolution
     if (scene_->doMatchOutputResolution())
@@ -1135,7 +1141,7 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     frontScene_->loadPreset("default");
 #endif
 
-    glWindow_->renderLater();
+    glManager_->render();
 
     updateSystemInfo_();
     updateResolutionActions_();
@@ -1609,10 +1615,7 @@ void MainWidgetController::onSceneTimeChanged_(Double time)
     if (sequencer_->isVisible())
         sequencer_->setSceneTime(time);
 
-    /*
-    Double fps = glManager_->renderer() ?
-                glManager_->renderer()->renderSpeed() : 0;*/
-    Double fps = glWindow_->messuredFps();
+    Double fps = glManager_->messuredFps();
     transportWidget_->setSceneTime(time, fps);
 }
 

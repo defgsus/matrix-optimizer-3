@@ -366,12 +366,12 @@ void Basic3DWidget::initializeGL()
 {
     MO_DEBUG_GL("Basic3DWidget::initializeGL()");
     makeCurrent();
-    //glbinding::Binding::initialize(false);
+    glbinding::Binding::initialize(true);
 
     const QString
-            vendor = (const char *)glGetString(gl::GL_VENDOR),
-            version = (const char *)glGetString(gl::GL_VERSION),
-            renderer = (const char *)glGetString(gl::GL_RENDERER);
+            vendor = (const char *)gl::glGetString(gl::GL_VENDOR),
+            version = (const char *)gl::glGetString(gl::GL_VERSION),
+            renderer = (const char *)gl::glGetString(gl::GL_RENDERER);
 
     MO_DEBUG(     "vendor   " << vendor
                 << "\nversion  " << version
@@ -467,14 +467,14 @@ void Basic3DWidget::updateProjection_()
 
     if (renderMode_ == RM_FRAMEBUFFER)
     {
-        projectionMatrix_ =
-                MATH::perspective(angle, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
+        projectionMatrix_ = MATH::perspective(
+                    angle, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     if (renderMode_ == RM_FULLDOME_CUBE)
     {
-        projectionMatrix_ =
-                MATH::perspective(90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
+        projectionMatrix_ = MATH::perspective(
+                    90.f, (float)fbo_->width()/fbo_->height(), 0.01f, 1000.0f);
     }
     else
     if (renderMode_ == RM_DIRECT_ORTHO)

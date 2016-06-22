@@ -167,7 +167,7 @@ void ClientEngine::createGlObjects_()
             this, SLOT(renderWindowSizeChanged_(QSize)));
 
     // window
-    glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
+    //glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
 }
 
 void ClientEngine::shutDown_()
@@ -498,7 +498,8 @@ void ClientEngine::setSceneObject(Scene * scene)
     // delete previous scene
     if (scene_)
     {
-        scene_->kill();
+        glManager_->setScene(nullptr);
+        //scene_->destroyGl();
         scene_->releaseRef("ClientEngine relprev scene");
     }
 

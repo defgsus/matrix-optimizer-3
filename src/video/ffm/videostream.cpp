@@ -306,9 +306,9 @@ DecoderFrame* VideoStream::Private::createVideoFrame()
 {
     double pts = double(av_frame_get_best_effort_timestamp(videoFrame))
             * videoStream->time_base.num / videoStream->time_base.den;
-    //MCW_INFO("GOT " << pts);
+    //MO_INFO("GOT " << pts);
 #if 0
-    MCW_DEBUG("frame width: " << videoFrame->width
+    MO_DEBUG("frame width: " << videoFrame->width
               << " ls " <<videoFrame->linesize[0]
               << " " << videoFrame->linesize[1]
               << " " << videoFrame->linesize[2]
@@ -393,7 +393,7 @@ DecoderFrame* VideoStream::Private::createVideoFrame()
     lastDecodedPts = pts;
 
 
-#ifndef MCW_PLANE_UNIFY
+#ifndef MO_PLANE_UNIFY
     f->fillPlaneY(videoFrame->data[0]);
     f->fillPlaneU(videoFrame->data[1]);
     f->fillPlaneV(videoFrame->data[2]);

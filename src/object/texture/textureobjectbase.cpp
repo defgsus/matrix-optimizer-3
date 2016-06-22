@@ -79,7 +79,8 @@ struct TextureObjectBase::PrivateTO
                 * u_time,
                 * u_transformation,
                 * u_color_range_min,
-                * u_color_range_max;
+                * u_color_range_max,
+                * u_tex_res;
         QList<GL::Uniform*> u_tex;
     };
 
@@ -472,7 +473,8 @@ void TextureObjectBase::drawFramebuffer(
 {
     p_to_->drawFramebuffer(time, width, height);
 }
-void TextureObjectBase::renderShaderQuad(uint index, const RenderTime& time, uint* texSlot)
+void TextureObjectBase::renderShaderQuad(
+        uint index, const RenderTime& time, uint* texSlot)
 {
     p_to_->renderShaderQuad(index, time, texSlot);
 }
@@ -932,8 +934,11 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
             tex->bind();
             p_textures[i]->textureParam()->applyTextureParam(tex);
             // tell shader
-            if (i < quad.u_tex.length() && quad.u_tex[i])
-                quad.u_tex[i]->ints[0] = *texSlot;
+            if (i < quad.u_tex.length())
+            {
+                if (quad.u_tex[i])
+                    quad.u_tex[i]->ints[0] = *texSlot;
+            }
 
             ++(*texSlot);
         }

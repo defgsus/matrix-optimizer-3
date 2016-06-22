@@ -45,7 +45,7 @@ DEFINES += MO_DISABLE_GST
 DEFINES += MO_DISABLE_CGAL
 
 # dear macies, see for yourself if you need those features
-mac { DEFINES += \
+mac { DEFINES += MO_OS_MAC \
 #require audio input and output devices to be separate devices
                 MO_REQUIRE_SEPARATE_AUDIO \
 #                MO_DISABLE_ANGELSCRIPT \
@@ -59,7 +59,7 @@ mac { DEFINES += \
                 MO_DISABLE_SHP
 }
 
-windows { DEFINES += \
+windows { DEFINES += MO_OS_WIN \
                 MO_DISABLE_LADSPA \
                 MO_DISABLE_DUMB \
                 MO_DISABLE_NIFTI \
@@ -68,7 +68,7 @@ windows { DEFINES += \
                 #MO_ENABLE_PYTHON34
 }
 
-unix: { DEFINES += \
+unix: { DEFINES += MO_OS_UNIX \
 # for optirun bug (XXX old and obsolete by now)
         MO_DISABLE_OBJECT_TREE_DRAG \
         MO_ENABLE_PYTHON34

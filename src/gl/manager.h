@@ -33,21 +33,27 @@ public:
     ~Manager();
 
     // ---------------- opengl ---------------------
-
+#if 0
     /** Creates an OpenGL Window.
         The window is initally hidden.
         When the window is shown, it's Context will be created
         and Manager::contextCreated() will be emitted. */
     Window * createGlWindow(uint thread);
+#endif
+
+    bool isWindowVisible() const;
+
+    void render();
 
     void setScene(Scene *);
 
     void setTimeCallback(std::function<Double()> timeFunc);
 
-    SceneRenderer * renderer() const { return renderer_; }
+    SceneRenderer * renderer() const;
 
     bool isAnimating() const;
 
+    Double messuredFps() const;
 signals:
 
     /* This will signal the creation of a new Context */
@@ -62,6 +68,8 @@ signals:
 
 public slots:
 
+    void setWindowVisible(bool e);
+
     void startAnimate();
     void stopAnimate();
 
@@ -73,11 +81,8 @@ private slots:
 
 private:
 
-    Scene * scene_;
-    Window * window_;
-    SceneRenderer * renderer_;
-
-    std::function<Double()> timeFunc_;
+    struct Private;
+    Private* p_;
 };
 
 } // namespace GL

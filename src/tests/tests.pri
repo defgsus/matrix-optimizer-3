@@ -8,7 +8,8 @@ HEADERS += \
     src/tests/testdirectedgraph.h \
     src/tests/test_angelscript.h \
     $$PWD/testcsg.h \
-    $$PWD/testpython.h
+    $$PWD/testpython.h \
+    $$PWD/testglwindow.h
 
 SOURCES += \
     src/tests/testtesselator.cpp \
@@ -20,4 +21,5 @@ SOURCES += \
     src/tests/testdirectedgraph.cpp \
     src/tests/test_angelscript.cpp \
     $$PWD/testcsg.cpp \
-    $$PWD/testpython.cpp
+    $$PWD/testpython.cpp \
+    $$PWD/testglwindow.cpp

@@ -281,12 +281,14 @@ public:
     bool isPlaying() const { return p_isPlayback_; }
 
     /** Call before deleting the scene.
-        OpenGL resources will be released a short while later from their particular thead.
+        OpenGL resources will be released a short
+        while later from their particular thead.
         */
-    void kill();
+    void destroyGl();
 
     /** Sets the scope for enabling all the objects */
-    void setSceneActivityScope(ActivityScope scope) { setCurrentActivityScope(scope); render_(); }
+    void setSceneActivityScope(ActivityScope scope)
+        { setCurrentActivityScope(scope); render_(); }
 
     void setSceneTime(Double time, bool send_signal = true);
     void setSceneTime(SamplePos pos, bool send_signal = true);

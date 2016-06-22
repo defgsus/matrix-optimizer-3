@@ -16,6 +16,7 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametercallback.h"
 #include "math/constants.h"
 #include "audio/tool/multifilter.h"
 #include "io/datastream.h"
@@ -34,13 +35,15 @@ class FilterAO::Private
         * paramFreq,
         * paramReso,
         * paramAmp;
-        //* paramReset;
     ParameterInt
         * paramOrder;
     ParameterSelect
         * paramType;
+    ParameterCallback
+        * paramReset;
 
     std::vector<std::shared_ptr<AUDIO::MultiFilter>> filters;
+    bool doReset;
 };
 
 FilterAO::FilterAO()
@@ -77,6 +80,11 @@ void FilterAO::createParameters()
     params()->beginParameterGroup("filter", tr("Filter"));
     initParameterGroupExpanded("filter");
 
+        p_->paramReset = params()->createCallbackParameter(
+                "reset", tr("reset"),
+                tr("Resets the filter (useful in case of internal overflow"),
+                [=](){ p_->doReset = true; });
+
         p_->paramType = params()->createSelectParameter("_filter_type", tr("filter type"),
                                                   tr("Selectes the type of filter"),
                                                   AUDIO::MultiFilter::filterTypeIds,
@@ -100,7 +108,7 @@ void FilterAO::createParameters()
         p_->paramAmp = params()->createFloatParameter("_filter_amp", tr("amplitude"),
                                                    tr("The output amplitude of the filter"),
                                                    1.0, 0.05);
-        //p_->paramReset = params()->createGateParameter
+
     params()->endParameterGroup();
 }
 
@@ -165,9 +173,16 @@ void FilterAO::Private::updateFilters()
 }
 
 void FilterAO::processAudio(const RenderTime& time)
-{
+{   
     // update filter
     AUDIO::MultiFilter * filter = p_->filters[time.thread()].get();
+
+    p_->paramReset->fireIfInput(time);
+    if (p_->doReset)
+    {
+        p_->doReset = false;
+        filter->reset();
+    }
 
     Float   freq = p_->paramFreq->value(time),
             res = p_->paramReso->value(time),

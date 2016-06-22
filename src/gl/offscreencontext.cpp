@@ -28,8 +28,8 @@ namespace GL {
 
 
 
-OffscreenContext::OffscreenContext(QObject *parent)
-    : Context       (parent)
+OffscreenContext::OffscreenContext()
+    : Context       ()
     , p_os_surface_ (0)
 {
 }

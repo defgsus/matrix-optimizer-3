@@ -8,26 +8,135 @@
     <p>created 6/29/2014</p>
 */
 
-#include <QThread>
+#include <thread>
 
 #include "manager.h"
-#include "window.h"
-#include "context.h"
+#include "glwindow.h"
+#include "glcontext.h"
+#include "gl/opengl.h"
 #include "scenerenderer.h"
 #include "object/scene.h"
 #include "object/util/scenesignals.h"
-#include "io/log_gl.h"
-#include "io/error.h"
 #include "io/application.h"
+#include "io/time.h"
+#include "io/mousestate.h"
+#include "io/keyboardstate.h"
+#include "io/error.h"
+#include "io/log_gl.h"
+
 
 namespace MO {
 namespace GL {
 
-Manager::Manager(QObject *parent) :
-    QObject(parent),
-    scene_      (0),
-    window_     (0),
-    renderer_   (0)
+namespace {
+
+class RenderWindow : public GlWindow
+{
+public:
+    RenderWindow(Manager* mgr, int w, int h)
+        : GlWindow  (w, h)
+        , manager   (mgr)
+    { }
+
+    Manager* manager;
+
+protected:
+
+    bool closeEvent() override { return false; }
+    void resizeEvent() override { manager->render(); }
+
+    bool mouseMoveEvent(int x, int y) override
+    {
+        if (isMouseDown())
+        {
+            MouseState::globalInstance().setDragPos(
+                        QPoint(x, y), QSize(width(), height()));
+            manager->render();
+        }
+        else
+            MouseState::globalInstance().setPos(
+                        QPoint(x, y), QSize(width(), height()));
+        return true;
+    }
+
+    bool mouseDownEvent(MouseKeyCode k) override
+    {
+        MouseState::globalInstance().keyDown(mouseKeyToQt(k));
+        manager->render();
+        return true;
+    }
+
+    bool mouseUpEvent(MouseKeyCode k) override
+    {
+        MouseState::globalInstance().keyUp(mouseKeyToQt(k));
+        manager->render();
+        return true;
+    }
+
+    bool keyDownEvent(KeyCode k) override
+    {
+        KeyboardState::globalInstance().keyDown(k);
+        manager->render();
+        return true;
+    }
+
+    bool keyUpEvent(KeyCode k) override
+    {
+        KeyboardState::globalInstance().keyUp(k);
+        manager->render();
+        return true;
+    }
+};
+
+
+} // namespace
+
+
+
+
+struct Manager::Private
+{
+    Private(Manager* p)
+        : p             (p)
+        , scene         (nullptr)
+        , newScene      (nullptr)
+        , window        (nullptr)
+        , renderer      (nullptr)
+        , thread        (nullptr)
+        , doStop        (false)
+        , doAnimate     (false)
+        , doSingleAnimate(false)
+        , setNewScene   (false)
+        , desiredFps    (60.)
+        , messuredFps   (0.)
+    { }
+
+    void startThread();
+    void stopThread(bool wait = true);
+    void renderLoop();
+
+    Manager* p;
+
+    Scene * scene, *newScene;
+    GlWindow * window;
+    SceneRenderer * renderer;
+
+    std::function<Double()> timeFunc;
+
+    std::thread* thread;
+    volatile bool
+        doStop,
+        doAnimate,
+        doSingleAnimate,
+        setNewScene;
+    volatile Double
+        desiredFps,
+        messuredFps;
+};
+
+Manager::Manager(QObject *parent)
+    : QObject   (parent)
+    , p_        (new Private(this))
 {
     MO_DEBUG_GL("Manager::Manager()");
 }
@@ -36,92 +145,226 @@ Manager::~Manager()
 {
     MO_DEBUG_GL("Manager::~Manager()");
 
-    if (window_)
-        window_->close();
+    p_->stopThread(true);
+
+    delete p_;
 }
 
+SceneRenderer * Manager::renderer() const { return p_->renderer; }
+
+bool Manager::isWindowVisible() const
+{
+    return p_->thread != nullptr;
+}
+
+void Manager::setWindowVisible(bool e)
+{
+    if (e)
+    {
+        if (!p_->thread)
+            p_->startThread();
+        render();
+    }
+    else
+    {
+        if (p_->thread)
+            p_->stopThread(true);
+    }
+}
+
+void Manager::render() { p_->doSingleAnimate = true; }
+
+#if 0
 Window * Manager::createGlWindow(uint /*thread*/)
 {
-    if (!window_)
+    if (!p_->window)
     {
-        window_ = new Window();
+        p_->window = new Window();
 
-        connect(window_, SIGNAL(cameraMatrixChanged(MO::Mat4)),
+        connect(p_->window, SIGNAL(cameraMatrixChanged(MO::Mat4)),
                     this, SLOT(onCameraMatrixChanged_(MO::Mat4)));
 
-        connect(window_, SIGNAL(sizeChanged(QSize)),
+        connect(p_->window, SIGNAL(sizeChanged(QSize)),
                     this, SIGNAL(outputSizeChanged(QSize)));
     }
 
-    if (!renderer_)
+    if (!p_->renderer)
     {
-        renderer_ = new SceneRenderer();
-        renderer_->setTimeCallback(timeFunc_);
+        p_->renderer = new SceneRenderer();
+        p_->renderer->setTimeCallback(p_->timeFunc);
 
-        if (scene_)
-            renderer_->setScene(scene_);
+        if (p_->scene)
+            p_->renderer->setScene(p_->scene);
 
-        window_->setRenderer(renderer_);
+        p_->window->setRenderer(p_->renderer);
     }
 
-    return window_;
+    return p_->window;
 }
+#endif
 
 void Manager::setScene(Scene * scene)
 {
-    bool changed = (scene != scene_);
+    bool changed = (scene != p_->scene && scene != p_->newScene);
 
-    scene_ = scene;
+    p_->newScene = scene;
+    if (p_->newScene)
+        p_->newScene->addRef("Manager:setScene");
+    p_->setNewScene = true;
 
     // XXX Would not work if window was not created yet
-    if (changed && scene_ && window_)
+    if (changed && p_->newScene)
     {
         // connect events from scene to window
-        connect(scene_->sceneSignals(), SIGNAL(renderRequest()),
-                    //this, SLOT(onRenderRequest_()));
-                    window_, SLOT(renderLater()));
+        connect(p_->newScene->sceneSignals(), &SceneSignals::renderRequest, [=]()
+        {
+            //if (p_->scene && p_->timeFunc)
+            //    p_->scene->setSceneTime(p_->timeFunc(), false);
+
+            render();
+        });
     }
 
-    renderer_->setScene(scene);
+    render();
 }
 
 void Manager::setTimeCallback(std::function<Double ()> timeFunc)
 {
-    timeFunc_ = timeFunc;
-    if (renderer_)
-        renderer_->setTimeCallback(timeFunc_);
+    p_->timeFunc = timeFunc;
+    if (p_->renderer)
+        p_->renderer->setTimeCallback(p_->timeFunc);
 }
 
 void Manager::onCameraMatrixChanged_(const Mat4 & mat)
 {
     emit cameraMatrixChanged(mat);
 }
-/*
-void Manager::onRenderRequest_()
-{
-    if (timeFunc_)
-        scene_->setSceneTime(timeFunc_(), false);
-
-    window_->renderLater();
-}
-*/
 
 bool Manager::isAnimating() const
 {
-    return window_ && window_->isAnimating();
+    return p_->doAnimate;
 }
 
-void Manager::startAnimate()
+Double Manager::messuredFps() const
 {
-    if (window_)
-        window_->startAnimation();
+    return p_->messuredFps;
 }
 
-void Manager::stopAnimate()
+void Manager::startAnimate() { p_->doAnimate = true; }
+void Manager::stopAnimate() { p_->doAnimate = false; }
+
+void Manager::Private::startThread()
 {
-    if (window_)
-        window_->stopAnimation();
+    MO_ASSERT(!thread, "duplicate Manager::Private::startThread()");
+    thread = new std::thread([=](){ renderLoop(); });
 }
+
+void Manager::Private::stopThread(bool wait)
+{
+    if (!thread || doStop)
+        return;
+    doStop = true;
+    if (wait && thread && thread->joinable())
+        thread->join();
+    delete thread;
+    thread = nullptr;
+}
+
+void Manager::Private::renderLoop()
+{
+    doStop = false;
+
+    window = new RenderWindow(p, 320, 320);
+
+    renderer = new SceneRenderer();
+    renderer->createContext(window);
+    renderer->setTimeCallback(timeFunc);
+
+    Double prevTime = systemTime(),
+           headerUpdateTime = prevTime;
+
+    TimeMessure fpsCount;
+
+    while (!doStop && window->update())
+    {
+        bool doSwap = false;
+        if (!doAnimate && !doSingleAnimate)
+        {
+            sleep_seconds_lowres(1./60.);
+        }
+        else
+        {
+            try
+            {
+                if (setNewScene)
+                {
+                    if (scene)
+                    {
+                        scene->destroyGl();
+                        scene->releaseRef("Manager:release-prev");
+                    }
+                    renderer->setScene(scene = newScene);
+                    newScene = nullptr;
+                    setNewScene = false;
+                }
+
+                renderer->setSize(QSize(window->width(), window->height()));
+                renderer->render(true);
+                doSwap = true;
+                doSingleAnimate = false;
+            }
+            catch (const Exception& e)
+            {
+                MO_WARNING("EXCEPTION IN OPENGL THREAD: " << e.what());
+            }
+        }
+
+        auto time = systemTime(),
+             delta = time - prevTime,
+             ddelta = 1. / desiredFps;
+
+        if (delta < ddelta)
+        {
+            //MO_PRINT("SLEEP " << (ddelta - delta));
+            sleep_seconds(ddelta - delta);
+        }
+
+        prevTime = systemTime();
+
+        // update header
+        if (time - headerUpdateTime > 1.)
+        {
+            headerUpdateTime = time;
+            if (doAnimate)
+                window->setTitle(QString("%1 fps").arg(messuredFps)
+                                 .toStdString().c_str());
+            else
+                window->setTitle("stopped");
+        }
+
+        if (doSwap)
+        {
+            //MO_PRINT("SWAP " << time << " " << delta);
+            window->swapBuffers();
+        }
+
+        delta = fpsCount.time();
+        fpsCount.start();
+        if (delta > 0.)
+            messuredFps += std::min(1., delta*2.) * (1. / delta - messuredFps);
+    }
+
+    if (scene)
+    {
+        scene->destroyGl();
+        scene->releaseRef("Manager:thread-close");
+    }
+
+    delete window; window = nullptr;
+    delete renderer; renderer = nullptr;
+}
+
+
 
 } // namespace GL
 } // namespace MO

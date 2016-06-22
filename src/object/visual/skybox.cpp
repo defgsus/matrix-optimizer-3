@@ -190,12 +190,13 @@ void Skybox::createParameters()
                     tr("A user-defined glsl function to generate the output color"),
                     TT_GLSL,
                     "// -- uniforms --\n"
-                    "// float u_time                // scene time in seconds\n"
+                    "// float u_time;               // scene time in seconds\n"
                     "// mat4 u_projection;          // projection matrix\n"
                     "// mat4 u_cubeViewTransform;   // cube-map * view * transform\n"
                     "// mat4 u_viewTransform;       // view * transform\n"
                     "// mat4 u_transform;           // transformation only\n"
-                    "// vec3 u_cam_pos       		// world position of camera\n"
+                    "// vec3 u_cam_pos;             // world position of camera\n"
+                    "// sampler2D/Cube u_tex_color; // the input texture\n"
                     "\n"
                     "// -- write to fragColor --\n"
                     "// dir = normalized camera ray\n"

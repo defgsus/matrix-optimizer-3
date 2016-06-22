@@ -20,9 +20,8 @@ namespace GL {
 
 class OffscreenContext : public Context
 {
-    Q_OBJECT
 public:
-    explicit OffscreenContext(QObject *parent = 0);
+    explicit OffscreenContext();
     ~OffscreenContext();
 
     // --------- getter --------------
@@ -30,8 +29,6 @@ public:
     QOffscreenSurface * qsurface() const { return p_os_surface_; }
 
     // ---------- opengl -------------
-
-public slots:
 
     /** Creates an offscreen surface and an QOpenGLContext associated to it.
         @throws GlException on any error. */
@@ -41,9 +38,6 @@ public slots:
     void destroyGl();
 
     void swapBuffers();
-
-signals:
-
 
 protected:
 

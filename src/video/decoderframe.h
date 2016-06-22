@@ -17,10 +17,10 @@
 
 //#include "config.h"
 
-//MCW_BEGIN_NAMESPACE
+//MO_BEGIN_NAMESPACE
 
 
-#define MCW_PLANE_UNIFY
+#define MO_PLANE_UNIFY
 
 
 /** One YUV (or YCbCr) frame with timing information.
@@ -35,7 +35,7 @@ struct DecoderFrame
         , p_consec_     (false)
         , p_size_       (0)
         , p_planeY_     (0)
-#ifdef MCW_PLANE_UNIFY
+#ifdef MO_PLANE_UNIFY
         , p_planeUV_    (0)
 #else
         , p_planeU_     (0)
@@ -57,7 +57,7 @@ struct DecoderFrame
     {
         // aligned memory
         p_planeY_ = (uint8_t*)( size_t(&p_data_[0] + 15) & ~size_t(15) );
-#ifndef MCW_PLANE_UNIFY
+#ifndef MO_PLANE_UNIFY
         p_planeU_ = p_planeY_ + planeYSize();
         p_planeV_ = p_planeU_ + planeUSize();
 #else
@@ -86,7 +86,7 @@ struct DecoderFrame
     double presentationTime() const { return p_pts_; }
 
     const uint8_t * planeY() const { return p_planeY_; }
-#ifndef MCW_PLANE_UNIFY
+#ifndef MO_PLANE_UNIFY
     const uint8_t * planeU() const { return p_planeU_; }
     const uint8_t * planeV() const { return p_planeV_; }
 #else
@@ -105,7 +105,7 @@ struct DecoderFrame
 
     uint8_t * planeY() { return p_planeY_; }
     void fillPlaneY(const uint8_t* srcY) { memcpy(planeY(), srcY, planeYSize()); }
-#ifndef MCW_PLANE_UNIFY
+#ifndef MO_PLANE_UNIFY
     uint8_t * planeU() { return p_planeU_; }
     uint8_t * planeV() { return p_planeV_; }
     void fillPlaneU(const uint8_t* srcU) { memcpy(planeU(), srcU, planeUSize()); }
@@ -134,7 +134,7 @@ private:
     bool p_consec_;
     size_t p_size_;
     uint8_t *p_planeY_
-#ifndef MCW_PLANE_UNIFY
+#ifndef MO_PLANE_UNIFY
         , *p_planeU_, *p_planeV_;
 #else
         , *p_planeUV_;
@@ -143,7 +143,7 @@ private:
 };
 
 
-//MCW_END_NAMESPACE
+//MO_END_NAMESPACE
 
 
 #endif // MCWSRC_DECODERFRAME

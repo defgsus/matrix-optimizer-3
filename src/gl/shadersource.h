@@ -40,6 +40,7 @@ public:
 
     const QString& vertexSource() const { return vert_; }
     const QString& fragmentSource() const { return frag_; }
+    const QString& geometrySource() const { return geom_; }
 
     bool operator == (const ShaderSource& rhs) const;
     bool operator != (const ShaderSource& rhs) const { return !(*this == rhs); }
@@ -71,6 +72,7 @@ public:
 
     void setVertextSource(const QString& s) { vert_ = s; }
     void setFragmentSource(const QString& s) { frag_ = s; }
+    void setGeometrySource(const QString& s) { geom_ = s; }
 
     void setAttributeNamePosition(const QString& s) { anPos_ = s; }
     void setAttributeNameColor(const QString& s) { anCol_ = s; }
@@ -79,6 +81,7 @@ public:
 
     void loadVertexSource(const QString& filename);
     void loadFragmentSource(const QString& filename);
+    void loadGeometrySource(const QString& filename);
 
     /** loads the default shader for, e.g., a Model3d */
     void loadDefaultSource();
@@ -113,7 +116,7 @@ private:
     void p_addDefine_(QString& src, const QString& def_line, bool addBefore = false) const;
     void p_pasteIncludes_(QString& src, std::function<QString(const QString&, bool)> func, int lvl);
 
-    QString vert_, frag_,
+    QString vert_, frag_, geom_,
         unSceneTime_,
         unProj_, unCVT_, unVT_, unT_,
         unLightAmt_, unBumpScale_,

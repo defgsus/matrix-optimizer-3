@@ -75,8 +75,9 @@ public:
     std::vector<F32> getResampled(uint sampleRate, uint channel = 0, uint lengthSamples = 0) const;
 
     /** Fills the audiobuffers,
-        aware of NULL buffers in @p channels. */
-    void getResampled(const QList<AudioBuffer*> channels, SamplePos frame, uint sampleRate, F32 amplitude = 1.f);
+        is aware of NULL buffers in @p channels. */
+    void getResampled(const QList<AudioBuffer*> channels,
+                      SamplePos frame, uint sampleRate, F32 amplitude = 1.f);
 
     // --------- setter ---------------
 
