@@ -85,6 +85,11 @@ public:
     /** Returns the editor that is assigned to this scene. */
     ObjectEditor * editor() const { return p_editor_; }
 
+    /** Simply stores a pointer to the active GL::Manager */
+    void setManager(GL::Manager* m) { p_manager_ = m; }
+    /** Currently set GL::Manager */
+    GL::Manager* manager() const { return p_manager_; }
+
     /** A flag to be queried by object when they create runtime resources.
         If this returns true, all resources should be created lazily, so
         that, e.g. a call to ObjectGl::renderGl() always works.
@@ -400,6 +405,7 @@ private:
     // -------------- model --------------------
 
     ObjectEditor * p_editor_;
+    GL::Manager* p_manager_;
     GUI::FrontScene * p_frontScene_;
     QString p_frontSceneXml_;
     static Scene* p_currentScene_;

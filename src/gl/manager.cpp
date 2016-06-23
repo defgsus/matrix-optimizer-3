@@ -9,12 +9,21 @@
 */
 
 #include <thread>
+#include <mutex>
+
+#include <QPixmap>
+#include <QImage>
+#include <QList>
+#include <QPair>
 
 #include "manager.h"
 #include "glwindow.h"
 #include "glcontext.h"
 #include "gl/opengl.h"
+#include "gl/texture.h"
+#include "gl/texturerenderer.h"
 #include "scenerenderer.h"
+#include "tool/generalimage.h"
 #include "object/scene.h"
 #include "object/util/scenesignals.h"
 #include "io/application.h"
@@ -110,6 +119,7 @@ struct Manager::Private
         , newScene      (nullptr)
         , window        (nullptr)
         , renderer      (nullptr)
+        , texRenderer   (nullptr)
         , thread        (nullptr)
         , doStop        (false)
         , doAnimate     (false)
@@ -122,12 +132,14 @@ struct Manager::Private
     void startThread();
     void stopThread(bool wait = true);
     void renderLoop();
+    QImage renderImage(const GL::Texture*, const QSize&);
 
     Manager* p;
 
     Scene * scene, *newScene;
     GlWindow * window;
     SceneRenderer * renderer;
+    TextureRenderer* texRenderer;
 
     std::function<Double()> timeFunc;
 
@@ -140,6 +152,9 @@ struct Manager::Private
     volatile Double
         desiredFps,
         messuredFps;
+
+    std::mutex imageRequestMutex;
+    QList<QPair<const GL::Texture*, QSize>> imageRequests;
 };
 
 Manager::Manager(QObject *parent)
@@ -149,9 +164,14 @@ Manager::Manager(QObject *parent)
     MO_DEBUG_GL("Manager::Manager()");
 
     connect(this, SIGNAL(sendResize_(QSize)),
-            this, SIGNAL(outputSizeChanged(QSize)), Qt::QueuedConnection);
+            this, SIGNAL(outputSizeChanged(QSize)),
+            Qt::QueuedConnection);
     connect(this, SIGNAL(sendKeyPressed_(QKeyEvent*)),
-            this, SIGNAL(keyPressed(QKeyEvent*)), Qt::QueuedConnection);
+            this, SIGNAL(keyPressed(QKeyEvent*)),
+            Qt::QueuedConnection);
+    connect(this, SIGNAL(sendImage(const GL::Texture*,QImage)),
+            this, SIGNAL(imageFinished(const GL::Texture*,QImage)),
+            Qt::QueuedConnection);
 }
 
 Manager::~Manager()
@@ -306,6 +326,18 @@ void Manager::Private::renderLoop()
 
     while (!doStop && window->update())
     {
+        {
+            std::lock_guard<std::mutex> lock(imageRequestMutex);
+            while (!imageRequests.isEmpty())
+            {
+                auto img = renderImage(imageRequests.front().first,
+                                       imageRequests.front().second);
+                emit p->sendImage(imageRequests.front().first, img);
+                imageRequests.pop_front();
+            }
+        }
+
+
         bool doSwap = false;
         if (!doAnimate && !doSingleAnimate)
         {
@@ -323,6 +355,7 @@ void Manager::Private::renderLoop()
                         scene->releaseRef("Manager:release-prev");
                     }
                     renderer->setScene(scene = newScene);
+                    scene->setManager(p);
                     newScene = nullptr;
                     setNewScene = false;
                 }
@@ -380,10 +413,54 @@ void Manager::Private::renderLoop()
         scene->setGlContext(MO_GFX_THREAD, nullptr);
     }
 
+    if (texRenderer && texRenderer->isGlInitialized())
+        texRenderer->releaseGl();
+    delete texRenderer;
+    texRenderer = nullptr;
+
     moCloseGl();
 
     delete window; window = nullptr;
     delete renderer; renderer = nullptr;
+}
+
+QImage Manager::Private::renderImage(const Texture* tex, const QSize& res)
+{
+    // create resampler
+    if (!texRenderer)
+    {
+        texRenderer = new GL::TextureRenderer(res.width(), res.height());
+    }
+    else
+        texRenderer->setSize(res.width(), res.height());
+
+    QString errText = tr("error");
+
+    try
+    {
+        // gl-resize
+        texRenderer->render(tex, true);
+        // download image
+        if (auto stex = texRenderer->texture())
+        {
+            stex->bind();
+            return stex->toQImage();
+        }
+    }
+    catch (const Exception& e)
+    {
+        // set error tex
+        errText = errText + "\n" + e.what();
+    }
+
+    return GeneralImage::getErrorImage(errText, res);
+}
+
+void Manager::renderImage(const Texture *tex, const QSize &s)
+{
+    std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
+    p_->imageRequests
+            << QPair<const Texture*, QSize>(tex, s);
 }
 
 

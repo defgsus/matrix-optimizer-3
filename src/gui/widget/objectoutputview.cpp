@@ -13,10 +13,11 @@
 
 #include "objectoutputview.h"
 #include "object/object.h"
+#include "object/scene.h"
 #include "object/interface/valuetextureinterface.h"
 #include "tool/generalimage.h"
 #include "gl/texture.h"
-#include "gl/texturerenderer.h"
+#include "gl/manager.h"
 #include "io/currenttime.h"
 #include "io/log_gui.h"
 
@@ -26,19 +27,17 @@ namespace GUI {
 
 ObjectOutputView::ObjectOutputView(QWidget *parent)
     : QWidget       (parent)
-    , texRender_    (0)
+    , object_       (nullptr)
+    , manager_      (nullptr)
     , imgSize_      (devicePixelRatio() * QSize(128, 128))
 {
     setObjectName("ObjectOutputView");
     createWidgets_();
-    setObject(0);
+    setObject(nullptr);
 }
 
 ObjectOutputView::~ObjectOutputView()
 {
-    if (texRender_)
-        texRender_->releaseGl();
-    delete texRender_;
 }
 
 void ObjectOutputView::setObject(Object * o)
@@ -46,6 +45,27 @@ void ObjectOutputView::setObject(Object * o)
     MO_DEBUG_GUI("ObjectOutputView::setObject(" << (void*)o << ")");
 
     object_ = o;
+    if (!object_)
+        manager_ = nullptr;
+    else
+    if (auto s = object_->sceneObject())
+    {
+        auto m = s->manager();
+        if (m && m != manager_)
+        {
+            connect(m, &GL::Manager::imageFinished, [=](const GL::Texture* tex,
+                                                        const QImage& img)
+            {
+                for (auto& p : labels_)
+                if (p.second == tex)
+                {
+                    p.first->setPixmap(QPixmap::fromImage(img));
+                    break;
+                }
+            });
+            manager_ = m;
+        }
+    }
 
     updateLabels_();
 }
@@ -60,11 +80,11 @@ void ObjectOutputView::createWidgets_()
 {
     auto l0 = new QHBoxLayout(this);
 
-    for (int i=0; i<20; ++i)
+    for (int i=0; i<16; ++i)
     {
         auto l = new QLabel(this);
         l0->addWidget(l);
-        labels_ << l;
+        labels_ << QPair<QLabel*, const GL::Texture*>(l, nullptr);
     }
 
     l0->addStretch(2);
@@ -90,53 +110,34 @@ void ObjectOutputView::updateLabels_()
             for (uint i=0; i<num && label != labels_.end(); ++i, ++label)
             {
                 setLabel_(*label, ti, i, time);
-                (*label)->setVisible(true);
+                (*label).first->setVisible(true);
             }
         }
     }
 
     for (; label != labels_.end(); ++label)
-        (*label)->setVisible(false);
+        (*label).first->setVisible(false);
 
     setUpdatesEnabled(true);
 }
 
-void ObjectOutputView::setLabel_(QLabel * label, ValueTextureInterface * ti, uint channel, Double time)
+void ObjectOutputView::setLabel_(QPair<QLabel*,const GL::Texture*>& label,
+                                 ValueTextureInterface * ti,
+                                 uint channel, Double time)
 {
+    if (!manager_)
+    {
+        label.first->clear();
+        return;
+    }
+
     if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GFX_THREAD)))
     {
-        // create resampler
-        if (!texRender_)
-        {
-            texRender_ = new GL::TextureRenderer(imgSize_.width(), imgSize_.height() );
-        }
-
-        try
-        {
-#if 0
-            // gl-resize
-            texRender_->render(tex, true);
-            // download image
-            if (auto stex = texRender_->texture())
-            {
-                stex->bind();
-                QImage img = stex->toQImage();
-                label->setPixmap(QPixmap::fromImage(img));
-                return;
-            }
-#endif
-        }
-        catch (const Exception& e)
-        {
-            MO_WARNING("In ObjectOutputView: " << e.what());
-        }
-
-        // set error tex
-        label->setPixmap(QPixmap::fromImage(GeneralImage::getErrorImage(
-                                     tr(" error "), imgSize_)));
+        label.second = tex;
+        manager_->renderImage(tex, imgSize_);
     }
     else
-        label->clear();
+        label.first->clear();
 }
 
 

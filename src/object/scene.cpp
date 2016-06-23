@@ -67,35 +67,36 @@ MO_REGISTER_OBJECT(Scene)
 
 Scene* Scene::p_currentScene_ = 0;
 
-Scene::Scene() :
-    Object                  (),
-    p_editor_               (0),
-    p_frontScene_           (0),
-    p_sceneSignals_         (new SceneSignals()),
-    p_showSceneDesc_        (false),
-    p_glContext_            (0),
-    p_releaseAllGlRequested_(false),
-    p_fbSize_               (1024, 1024),
-    p_fbFormat_             ((int)gl::GL_RGBA),
-    p_fbSizeRequest_        (p_fbSize_),
-    p_fbFormatRequest_      (p_fbFormat_),
-    p_doMatchOutputResolution_(false),
-    p_isShutDown_           (false),
-    p_fboFinal_             (0),
-    p_debugRenderOptions_   (0),
-    p_freeCameraIndex_      (-1),
-    p_freeCameraMatrix_     (1.0),
-    p_projectionSettings_   (new ProjectionSystemSettings()),
-    p_projectorIndex_       (0),
-    p_clipController_       (0),
-    p_sceneNumberThreads_   (3),
-    p_sceneSampleRate_      (44100),
-    p_audioCon_             (new AudioObjectConnections()),
-    p_isPlayback_           (false),
-    p_lazyFlag_             (false),
-    p_rendering_            (false),
-    p_sceneTime_            (0),
-    p_samplePos_            (0)
+Scene::Scene()
+    : Object                  ()
+    , p_editor_               (0)
+    , p_manager_              (0)
+    , p_frontScene_           (0)
+    , p_sceneSignals_         (new SceneSignals())
+    , p_showSceneDesc_        (false)
+    , p_glContext_            (0)
+    , p_releaseAllGlRequested_(false)
+    , p_fbSize_               (1024,1024)
+    , p_fbFormat_             ((int)gl::GL_RGBA)
+    , p_fbSizeRequest_        (p_fbSize_)
+    , p_fbFormatRequest_      (p_fbFormat_)
+    , p_doMatchOutputResolution_(false)
+    , p_isShutDown_           (false)
+    , p_fboFinal_             (0)
+    , p_debugRenderOptions_   (0)
+    , p_freeCameraIndex_      (-1)
+    , p_freeCameraMatrix_     (1.0)
+    , p_projectionSettings_   (new ProjectionSystemSettings())
+    , p_projectorIndex_       (0)
+    , p_clipController_       (0)
+    , p_sceneNumberThreads_   (3)
+    , p_sceneSampleRate_      (44100)
+    , p_audioCon_             (new AudioObjectConnections())
+    , p_isPlayback_           (false)
+    , p_lazyFlag_             (false)
+    , p_rendering_            (false)
+    , p_sceneTime_            (0)
+    , p_samplePos_            (0)
 {
     MO_DEBUG_TREE("Scene::Scene()");
 

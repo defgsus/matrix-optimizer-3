@@ -17,6 +17,7 @@
 #include <QKeyEvent>
 
 #include "types/vector.h"
+#include "opengl_fwd.h"
 
 namespace MO {
 class Scene;
@@ -64,12 +65,19 @@ signals:
 
     void keyPressed(QKeyEvent*);
 
+    void imageFinished(const GL::Texture* tex, const QImage& img);
+
 public slots:
 
     void setWindowVisible(bool e);
 
     void startAnimate();
     void stopAnimate();
+
+    /** Will render the texture to a QImage of dimension @p s.
+        @p tex MUST be a texture of the Manager's thread/context.
+        Emits imageFinished() when ready. */
+    void renderImage(const GL::Texture* tex, const QSize& s);
 
 private slots:
 
@@ -78,6 +86,7 @@ private slots:
 signals:
     void sendResize_(const QSize&);
     void sendKeyPressed_(QKeyEvent*);
+    void sendImage(const GL::Texture* tex, const QImage& img);
 
 private:
 

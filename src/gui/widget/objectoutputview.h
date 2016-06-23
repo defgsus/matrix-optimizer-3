@@ -46,11 +46,12 @@ private:
 
     void createWidgets_();
     void updateLabels_();
-    void setLabel_(QLabel*, ValueTextureInterface*, uint channel, Double time);
+    void setLabel_(QPair<QLabel*, const GL::Texture*>&,
+                   ValueTextureInterface*, uint channel, Double time);
 
     Object * object_;
-    class GL::TextureRenderer * texRender_;
-    QList<QLabel*> labels_;
+    GL::Manager* manager_;
+    QList<QPair<QLabel*, const GL::Texture*>> labels_;
     QSize imgSize_;
 };
 
