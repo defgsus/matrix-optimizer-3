@@ -318,7 +318,7 @@ bool DiskRenderer::Private::releaseScene()
     // release gl resources
     if (scene)
     {
-        try { scene->destroyGl(); }
+        try { scene->destroyGlNow(); }
         catch (const Exception& e)
             { MO_WARNING("DiskRenderer::releaseScene() ERROR:\n" << e.what()); }
         catch (...) { }

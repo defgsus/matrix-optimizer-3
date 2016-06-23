@@ -8,7 +8,6 @@
 #include "io/error.h"
 #include "io/log_gl.h"
 
-
 // -------------------- system independent implementation ------------------
 
 namespace MO {
@@ -25,7 +24,7 @@ GlContext::GlContext(GlWindow * win, int major, int minor)
 }
 
 GlContext::~GlContext()
-{
+{    
     release();
     delete p_;
 }

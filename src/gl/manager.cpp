@@ -43,7 +43,11 @@ public:
 protected:
 
     bool closeEvent() override { return false; }
-    void resizeEvent() override { manager->render(); }
+    void resizeEvent() override
+    {
+        emit manager->sendResize_(QSize(width(), height()));
+        manager->render();
+    }
 
     bool mouseMoveEvent(int x, int y) override
     {
@@ -76,6 +80,10 @@ protected:
     bool keyDownEvent(KeyCode k) override
     {
         KeyboardState::globalInstance().keyDown(k);
+        auto e = new QKeyEvent(QKeyEvent::KeyPress,
+                               GlWindow::keyToQt(KeyCode(k)),
+                               0);
+        emit manager->sendKeyPressed_(e);
         manager->render();
         return true;
     }
@@ -139,6 +147,11 @@ Manager::Manager(QObject *parent)
     , p_        (new Private(this))
 {
     MO_DEBUG_GL("Manager::Manager()");
+
+    connect(this, SIGNAL(sendResize_(QSize)),
+            this, SIGNAL(outputSizeChanged(QSize)), Qt::QueuedConnection);
+    connect(this, SIGNAL(sendKeyPressed_(QKeyEvent*)),
+            this, SIGNAL(keyPressed(QKeyEvent*)), Qt::QueuedConnection);
 }
 
 Manager::~Manager()
@@ -146,6 +159,9 @@ Manager::~Manager()
     MO_DEBUG_GL("Manager::~Manager()");
 
     p_->stopThread(true);
+
+    if (p_->scene)
+        p_->scene->releaseRef("Manager: destroy");
 
     delete p_;
 }
@@ -212,7 +228,6 @@ void Manager::setScene(Scene * scene)
         p_->newScene->addRef("Manager:setScene");
     p_->setNewScene = true;
 
-    // XXX Would not work if window was not created yet
     if (changed && p_->newScene)
     {
         // connect events from scene to window
@@ -279,6 +294,8 @@ void Manager::Private::renderLoop()
     renderer = new SceneRenderer();
     renderer->createContext(window);
     renderer->setTimeCallback(timeFunc);
+    if (!setNewScene && scene)
+        renderer->setScene(scene);
 
     Double prevTime = systemTime(),
            headerUpdateTime = prevTime;
@@ -302,7 +319,7 @@ void Manager::Private::renderLoop()
                 {
                     if (scene)
                     {
-                        scene->destroyGl();
+                        scene->destroyGlRequest();
                         scene->releaseRef("Manager:release-prev");
                     }
                     renderer->setScene(scene = newScene);
@@ -318,6 +335,7 @@ void Manager::Private::renderLoop()
             catch (const Exception& e)
             {
                 MO_WARNING("EXCEPTION IN OPENGL THREAD: " << e.what());
+                sleep_seconds_lowres(1.);
             }
         }
 
@@ -358,14 +376,15 @@ void Manager::Private::renderLoop()
 
     if (scene)
     {
-        scene->destroyGl();
-        scene->releaseRef("Manager:thread-close");
+        scene->destroyGlNow();
+        scene->setGlContext(MO_GFX_THREAD, nullptr);
     }
+
+    moCloseGl();
 
     delete window; window = nullptr;
     delete renderer; renderer = nullptr;
 }
-
 
 
 } // namespace GL

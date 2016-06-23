@@ -147,7 +147,8 @@ FrameBufferObject::~FrameBufferObject()
     MO_DEBUG_GL("FrameBufferObject::~FrameBufferObject()");
 
     if (isCreated())
-        MO_GL_WARNING("destructor of unreleased FrameBufferObject - OpenGL resource leak");
+        MO_GL_WARNING("destructor of unreleased FrameBufferObject"
+                      " - OpenGL resource leak");
 
     delete depthTex_;
     for (auto tex : colorTex_)

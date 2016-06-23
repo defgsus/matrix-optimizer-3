@@ -14,6 +14,7 @@
 #include <functional>
 
 #include <QObject>
+#include <QKeyEvent>
 
 #include "types/vector.h"
 
@@ -21,8 +22,6 @@ namespace MO {
 class Scene;
 namespace GL {
 
-class Window;
-class Context;
 class SceneRenderer;
 
 class Manager : public QObject
@@ -59,12 +58,11 @@ signals:
     /* This will signal the creation of a new Context */
     //void contextCreated(uint thread, MO::GL::Context *);
 
-    /** Context is current, please render. */
-    void renderRequest(uint thread);
-
     void cameraMatrixChanged(const MO::Mat4&);
 
     void outputSizeChanged(const QSize&);
+
+    void keyPressed(QKeyEvent*);
 
 public slots:
 
@@ -77,7 +75,9 @@ private slots:
 
     void onCameraMatrixChanged_(const MO::Mat4&);
 
-    //void onRenderRequest_();
+signals:
+    void sendResize_(const QSize&);
+    void sendKeyPressed_(QKeyEvent*);
 
 private:
 

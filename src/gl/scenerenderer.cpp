@@ -34,11 +34,14 @@ SceneRenderer::SceneRenderer()
       surface_      (0),
       renderSpeed_  (0.)
 {
+    MO_DEBUG_GL("SceneRenderer::SceneRenderer()");
 
 }
 
 SceneRenderer::~SceneRenderer()
 {
+    MO_DEBUG_GL("SceneRenderer::~SceneRenderer()");
+
     delete context_;
 }
 
@@ -60,6 +63,8 @@ QSurfaceFormat SceneRenderer::defaultFormat()
 
 void SceneRenderer::setScene(Scene *scene)
 {
+    MO_DEBUG_GL("SceneRenderer::setScene(" << scene << ")");
+
     scene_ = scene;
     lastTime_ = 0;
 
@@ -78,6 +83,8 @@ void SceneRenderer::setSize(const QSize &resolution)
 
 void SceneRenderer::createContext(QSurface * surface)
 {
+    MO_DEBUG_GL("SceneRenderer::createContext(QSurface " << surface << ")");
+
     MO_ASSERT(!context_, "context already created");
 
     surface_ = surface;
@@ -99,18 +106,20 @@ void SceneRenderer::createContext(QSurface * surface)
 
 GL::Context* SceneRenderer::createContext(GlWindow* window)
 {
+    MO_DEBUG_GL("SceneRenderer::createContext(GlWindow " << window << ")");
+
     MO_ASSERT(!context_, "context already created");
 
     context_ = new MO::GL::Context(window);
 
-    //moInitGl();
+    moInitGl();
 
     if (scene_)
         updateSceneGlContext_();
 
     //emit contextCreated();
 
-    MO_DEBUG_GL("SceneRenderer: GlContext ready");
+    MO_DEBUG_GL("SceneRenderer(" << this << "): GlContext ready " << context_);
 
     return context_;
 }
@@ -118,6 +127,8 @@ GL::Context* SceneRenderer::createContext(GlWindow* window)
 
 OffscreenContext * SceneRenderer::createOffscreenContext()
 {
+    MO_DEBUG_GL("SceneRenderer::createOffscreenContext()");
+
     MO_ASSERT(!context_, "context already created");
 
     auto ocontext = new OffscreenContext();
@@ -142,6 +153,8 @@ OffscreenContext * SceneRenderer::createOffscreenContext()
 
 void SceneRenderer::updateSceneGlContext_()
 {
+    MO_DEBUG_GL("SceneRenderer::updateSceneGlContext_()");
+
     MO_ASSERT(context_ && scene_, "");
 
     // XXX here would be a good point to

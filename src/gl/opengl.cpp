@@ -8,6 +8,10 @@
     <p>created 7/27/2014</p>
 */
 
+#include <map>
+#include <mutex>
+#include <thread>
+
 #include "opengl.h"
 #include "compatibility.h"
 #include "io/log_gl.h"
@@ -15,21 +19,42 @@
 namespace MO {
 namespace GL {
 
+namespace
+{
+    static std::mutex initMutex_;
+    static std::map<std::thread::id, bool> isInitMap_;
+}
+
 void moInitGl()
 {
+    std::lock_guard<std::mutex> lock(initMutex_);
+
+    auto id = std::this_thread::get_id();
+    if (isInitMap_.find(id) == isInitMap_.end())
+    {
+        MO_DEBUG_GL("Initializing glBinding");
+        glbinding::Binding::initialize();
+        isInitMap_.insert(std::make_pair(id, true));
+    }
+
     static bool init = false;
     if (!init)
     {
-        MO_DEBUG_GL("Initializing glBinding");
-
-        glbinding::Binding::initialize();
-
-        MO_DEBUG_GL("Initializing glBinding done");
-
         checkCompatibility();
 
         init = true;
     }
+}
+
+void moCloseGl()
+{
+    MO_DEBUG_GL("moCloseGl()");
+
+    std::lock_guard<std::mutex> lock(initMutex_);
+
+    auto id = std::this_thread::get_id();
+    isInitMap_.erase(id);
+    glbinding::Binding::releaseCurrentContext();
 }
 
 

@@ -151,7 +151,7 @@ void Shader::compile()
     if (glIsProgram(prog_) == GL_FALSE)
     {
         log_ += "could not create ProgramObject\n";
-        MO_GL_ERROR("Could not create ProgramObject");
+        MO_GL_ERROR("Could not create ProgramObject (" << prog_ << ")");
     }
 
     // compile the vertex shader
@@ -181,13 +181,17 @@ void Shader::compile()
     // (only works when linking succeeded)
     if (linked)
     {
+        // generate more description
+        glValidateProgram(prog_);
+
         GLint blen = 0;
         GLsizei slen = 0;
         MO_CHECK_GL_THROW( glGetProgramiv(prog_, GL_INFO_LOG_LENGTH , &blen) );
         if (blen > 1)
         {
             std::vector<GLchar> compiler_log(blen+1);
-            MO_CHECK_GL_THROW( glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
+            MO_CHECK_GL_THROW(
+                glGetProgramInfoLog(prog_, blen, &slen, &compiler_log[0]) );
             log_ += "linker log:\n" + QString(&compiler_log[0]) + "\n";
         }
     }
@@ -208,7 +212,8 @@ void Shader::compile()
 }
 
 
-void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName, const QString &source)
+void Shader::compileShader_(GLenum type, ProgramType pt,
+                            const QString& typeName, const QString &source)
 {
     if (source.isEmpty())
         return;
@@ -258,7 +263,8 @@ void Shader::compileShader_(GLenum type, ProgramType pt, const QString& typeName
     if (blen > 1)
     {
         std::vector<GLchar> compiler_log(blen+1);
-        MO_CHECK_GL_THROW( glGetShaderInfoLog(shadername, blen, &slen, &compiler_log[0]) );
+        MO_CHECK_GL_THROW(
+            glGetShaderInfoLog(shadername, blen, &slen, &compiler_log[0]) );
         QString log = QString(&compiler_log[0]);
         parseLog_(log, pt);
         log_ += "compiler log:\n" + log + "\n";

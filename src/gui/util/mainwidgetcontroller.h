@@ -212,7 +212,7 @@ private slots:
     void updateNumberOutputEnvelopes_(uint);
     void updateOutputEnvelope_(const F32*);
 
-    void onWindowKeyPressed_(QKeyEvent *);
+    void onWindowKeyPressed_(QKeyEvent*);
 
     void onResolutionOutput_();
     void onResolutionCustom_();

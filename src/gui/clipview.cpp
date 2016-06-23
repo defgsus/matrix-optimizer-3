@@ -175,7 +175,7 @@ void ClipView::setScene(Scene * scene)
         if (editor_)
         {
             connect(editor_, SIGNAL(objectAdded(MO::Object*)), this, SLOT(onObjectAdded_(MO::Object*)));
-            connect(editor_, SIGNAL(objectDeleted(const MO::Object*)), this, SLOT(onObjectDeleted_(const MO::Object*)));
+            connect(editor_, SIGNAL(objectAboutToDelete(const MO::Object*)), this, SLOT(onObjectAboutToDelete_(const MO::Object*)));
             connect(editor_, SIGNAL(objectColorChanged(MO::Object*)), this, SLOT(onObjectColorChanged_(MO::Object*)));
         }
     }
@@ -607,7 +607,7 @@ void ClipView::onObjectAdded_(Object * o)
     updateAllClips();
 }
 
-void ClipView::onObjectDeleted_(const Object* o)
+void ClipView::onObjectAboutToDelete_(const Object* o)
 {
     if (o->isClipController() && scene_)
         clipCon_ = scene_->clipController();

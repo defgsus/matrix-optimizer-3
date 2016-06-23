@@ -164,6 +164,8 @@ namespace GL {
 
     /** Need to be called, once a context is ready */
     void moInitGl();
+    /** To be called if a threaded context is going away */
+    void moCloseGl();
 
     /** Returns the readable name of the error */
     const char * errorName(gl::GLenum error);

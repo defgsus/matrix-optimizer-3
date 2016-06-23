@@ -280,11 +280,14 @@ public:
     void setPlaying(bool playing) { p_isPlayback_ = playing; }
     bool isPlaying() const { return p_isPlayback_; }
 
-    /** Call before deleting the scene.
+    /** Request to wipe out OpenGL resources.
         OpenGL resources will be released a short
-        while later from their particular thead.
+        while later from their particular thread.
         */
-    void destroyGl();
+    void destroyGlRequest();
+    /** Immidiately releases all OpenGL resources.
+        Must be called by OpenGL thread */
+    void destroyGlNow();
 
     /** Sets the scope for enabling all the objects */
     void setSceneActivityScope(ActivityScope scope)
@@ -295,6 +298,8 @@ public:
 
     // ------------- open gl -------------------
 
+    /** True after destroyGlNow(),
+        set to false again in setGlContext */
     bool isShutDown() const { return p_isShutDown_; }
 
     /** Returns currently set opengl context of all objects in scene. */

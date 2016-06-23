@@ -349,15 +349,16 @@ void MainWidgetController::createObjects_()
     glManager_ = new GL::Manager(this);
     connect(glManager_, SIGNAL(outputSizeChanged(QSize)),
             this, SLOT(onOutputSizeChanged_(QSize)));
+    connect(glManager_, SIGNAL(keyPressed(QKeyEvent*)),
+            this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
     glManager_->setTimeCallback(
                 [this](){ return audioEngine_ ? audioEngine_->second() : 0.0; });
+    glManager_->setWindowVisible(true);
 
     /*
     glWindow_ = glManager_->createGlWindow(MO_GFX_THREAD);
     connect(glWindow_, SIGNAL(visibleChanged(bool)),
             this, SLOT(onGlWindowVisibleChanged_(bool)));
-    connect(glWindow_, SIGNAL(keyPressed(QKeyEvent*)),
-            this, SLOT(onWindowKeyPressed_(QKeyEvent*)));
     glWindow_->show();
     */
 
@@ -1018,16 +1019,13 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
     {
         glManager_->setScene(nullptr);
         //scene_->kill();
-        scene_->releaseRef("MainWidgetController release scene");
+        scene_->releaseRef("MainWidgetController:setScene release prev");
     }
 
     scene_ = s;
 
     scene_->setObjectEditor(objectEditor_);
     scene_->setCurrentScene(scene_);
-
-    /** @todo When to run startup scripts? */
-    scene_->runScripts();
 
     // clear or init scene gui settings
     if (!set)
@@ -1099,11 +1097,14 @@ void MainWidgetController::setScene_(Scene * s, const SceneSettings * set)
 
     // connect to render window
     glManager_->setScene(scene_);
-    connect(glManager_, &GL::Manager::cameraMatrixChanged, [=](const Mat4& m)
+    // XXX TODO put this into Manager
+    /*connect(glManager_, &GL::Manager::cameraMatrixChanged, [=](const Mat4& m)
     {
         scene_->setFreeCameraMatrix(m);
-    });
+    });*/
 
+    /** @todo When to run startup scripts? */
+    scene_->runScripts();
 
     // widgets -> scenetime
     connect(seqView_, SIGNAL(sceneTimeChanged(Double)),

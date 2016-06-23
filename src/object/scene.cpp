@@ -964,6 +964,8 @@ void Scene::setGlContext(uint thread, GL::Context *context)
     MO_DEBUG_GL("Scene::setGlContext(" << thread << ", " << context << ")");
 
     p_glContext_ = context;
+    if (context)
+        p_isShutDown_ = false;
 
     MO_DEBUG_GL("setting gl context for objects");
     for (auto o : p_glObjects_)
@@ -1004,21 +1006,21 @@ void Scene::releaseSceneGl_(uint thread)
     {
         p_fboFinal_[thread]->release();
         delete p_fboFinal_[thread];
-        p_fboFinal_[thread] = 0;
+        p_fboFinal_[thread] = nullptr;
     }
 
     if (p_screenQuad_[thread])
     {
         p_screenQuad_[thread]->release();
         delete p_screenQuad_[thread];
-        p_screenQuad_[thread] = 0;
+        p_screenQuad_[thread] = nullptr;
     }
 
     if (p_debugRenderer_[thread])
     {
         p_debugRenderer_[thread]->releaseGl();
         delete p_debugRenderer_[thread];
-        p_debugRenderer_[thread] = 0;
+        p_debugRenderer_[thread] = nullptr;
     }
 }
 
@@ -1494,23 +1496,33 @@ void Scene::unlock_()
     p_readWriteLock_->unlock();
 }
 
-void Scene::destroyGl()
+void Scene::destroyGlRequest()
 {
+    MO_DEBUG_GL("Scene::destroyGlRequest()");
+
     if (!p_glContext_)
         return;
 
     // release opengl resources later in their thread
     p_releaseAllGlRequested_ = true;
 
-#if 1
-    // kill now (The calling thread must be GUI thread!)
+    // move to later (Window must repaint!)
+    render_();
+}
+
+void Scene::destroyGlNow()
+{
+    MO_DEBUG_GL("Scene::destroyGlNow()");
+
+    if (!p_glContext_)
+        return;
+
+    p_releaseAllGlRequested_ = true;
+
+    // kill now (The calling thread must be GFX thread!)
     p_glContext_->makeCurrent();
     renderScene(RenderTime(sceneTime(), MO_GFX_THREAD));
     p_isShutDown_ = true;
-#else
-    // move to later (Window must repaint!)
-    render_();
-#endif
 }
 
 void Scene::setSceneTime(Double time, bool send_signal)

@@ -25,6 +25,8 @@ Context::Context()
     , qcontext_     (nullptr)
     , surface_      (nullptr)
 {
+    MO_DEBUG_GL("Context::Context(QOpenGLContext)");
+
     qcontext_ = new QOpenGLContext();
 }
 
@@ -34,7 +36,7 @@ Context::Context(GlWindow* win)
     , qcontext_     (nullptr)
     , surface_      (nullptr)
 {
-    MO_DEBUG_GL("SceneRenderer: GlContext ready");
+    MO_DEBUG_GL("Context::Context(GlWindow " << win << ")");
 
     glContext_ = new GlContext(win);
 
@@ -43,13 +45,16 @@ Context::Context(GlWindow* win)
 
 Context::~Context()
 {
+    MO_DEBUG_GL("Context::~Context()");
+
     delete glContext_;
     delete qcontext_;
 }
 
 bool Context::isValid() const
 {
-    return glContext_->isOk() || qcontext_->isValid();
+    return (glContext_ && glContext_->isOk())
+         || (qcontext_ && qcontext_->isValid());
 }
 
 bool Context::makeCurrent()
