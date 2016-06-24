@@ -333,24 +333,11 @@ void Manager::Private::renderLoop()
 
     while (!doStop && window->update())
     {
-        // fulfill image render requests
-        {
-            std::lock_guard<std::mutex> lock(imageRequestMutex);
-            while (!imageRequests.isEmpty())
-            {
-                auto img = renderImage(imageRequests.front());
-                emit p->sendImage(imageRequests.front().tex,
-                                  imageRequests.front().id,
-                                  img);
-                imageRequests.pop_front();
-            }
-        }
-
-
+        // render scene, or sleep
         bool doSwap = false;
         if (!doAnimate && !doSingleAnimate)
         {
-            sleep_seconds_lowres(1./60.);
+            sleep_seconds_lowres(1./desiredFps);
         }
         else
         {
@@ -381,6 +368,20 @@ void Manager::Private::renderLoop()
             }
         }
 
+        // fulfill image render requests
+        {
+            std::lock_guard<std::mutex> lock(imageRequestMutex);
+            while (!imageRequests.isEmpty())
+            {
+                auto img = renderImage(imageRequests.front());
+                emit p->sendImage(imageRequests.front().tex,
+                                  imageRequests.front().id,
+                                  img);
+                imageRequests.pop_front();
+            }
+        }
+
+
         auto time = systemTime(),
              delta = time - prevTime,
              ddelta = 1. / desiredFps;
@@ -393,7 +394,7 @@ void Manager::Private::renderLoop()
 
         prevTime = systemTime();
 
-        // update header
+        // update window header
         if (time - headerUpdateTime > 1.)
         {
             headerUpdateTime = time;
@@ -444,8 +445,10 @@ QImage Manager::Private::renderImage(const ImageRequest& req)
         // return texture data as-is
         if ((int)req.tex->width() == req.res.width()
          && (int)req.tex->height() == req.res.height())
+        {
+            req.tex->bind();
             return req.tex->toQImage();
-
+        }
         // find resampler with match resolution
         GL::TextureRenderer* renderer = nullptr;
         for (auto t : texRenderers)

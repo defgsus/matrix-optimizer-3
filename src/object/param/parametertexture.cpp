@@ -37,6 +37,7 @@ struct ParameterTexture::Private
         , lastTex       (0)
         , constTex      (0)
         , lastScene     (0)
+        , isInputSelectable(true)
         , inputType     (IT_INPUT)
         , defaultInputType(IT_INPUT)
         , wrapModeX     (WM_CLAMP)
@@ -66,6 +67,7 @@ struct ParameterTexture::Private
     std::vector<int> lastHash;
     Scene* lastScene;
 
+    bool isInputSelectable;
     InputType inputType, defaultInputType;
     WrapMode wrapModeX, wrapModeY;
     MagMode magMode;
@@ -128,6 +130,7 @@ const QStringList ParameterTexture::wrapModeNames =
 const QList<ParameterTexture::WrapMode> ParameterTexture::wrapModeValues =
 { WM_CLAMP, WM_REPEAT, WM_MIRROR };
 
+bool ParameterTexture::isInputTypeSelectable() const { return p_->isInputSelectable; }
 ParameterTexture::InputType ParameterTexture::inputType() const { return p_->inputType; }
 ParameterTexture::InputType ParameterTexture::defaultInputType() const { return p_->defaultInputType; }
 ParameterTexture::WrapMode  ParameterTexture::wrapModeX() const { return p_->wrapModeX; }
@@ -147,7 +150,9 @@ bool ParameterTexture::isMipmap() const
 
 }
 
-void ParameterTexture::setInputType(InputType t) { p_->inputType = t; p_->needChange = true; }
+void ParameterTexture::setInputTypeSelectable(bool e) { p_->isInputSelectable = e; }
+void ParameterTexture::setInputType(InputType t)
+    { p_->inputType = t; p_->needChange = true; }
 void ParameterTexture::setDefaultInputType(InputType t) { p_->defaultInputType = t; }
 void ParameterTexture::setWrapMode(WrapMode m) { setWrapModeX(m); setWrapModeY(m); }
 void ParameterTexture::setWrapModeX(WrapMode m) { p_->wrapModeX = m; }
@@ -162,13 +167,21 @@ void ParameterTexture::serialize(IO::DataStream &io) const
 {
     Parameter::serialize(io);
 
-    io.writeHeader("partex", 5);
+    io.writeHeader("partex", 6);
 
     // v2
     io << magModeIds[p_->magMode] << minModeIds[p_->minMode]
        << wrapModeIds[p_->wrapModeX] << wrapModeIds[p_->wrapModeY];
-    // v3
-    io << inputTypeIds[p_->inputType];
+    // v6
+    if (p_->inputType == IT_INTERNAL)
+        io << (qint8)0;
+    else
+    {
+        // v6
+        io << (qint8)1;
+        // v3
+        io << inputTypeIds[p_->inputType];
+    }
     // v4 removed filename QString
     // v5
     io << (qint64)p_->mipmaps;
@@ -178,7 +191,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
 {
     Parameter::deserialize(io);
 
-    const int ver = io.readHeader("partex", 5);
+    const int ver = io.readHeader("partex", 6);
 
     if (ver >= 2)
     {
@@ -195,7 +208,13 @@ void ParameterTexture::deserialize(IO::DataStream &io)
     }
     if (ver >= 3)
     {
-        io.readEnum(p_->inputType, IT_INPUT, inputTypeIds, inputTypeValues);
+        qint8 hasType = 1;
+        if (ver >= 6)
+            io >> hasType;
+        if (hasType)
+            io.readEnum(p_->inputType, IT_INPUT, inputTypeIds, inputTypeValues);
+        else
+            p_->inputType = IT_INTERNAL;
         if (ver == 3) { QString dummy; io >> dummy; }
     }
     else
@@ -295,7 +314,8 @@ const GL::Texture* ParameterTexture::Private::value(const RenderTime& time)
 
     switch (inputType)
     {
-        case IT_NONE: return 0;
+        case IT_INTERNAL:
+        case IT_NONE: return nullptr;
         case IT_BLACK:
         case IT_WHITE: tex = getNoneTexture(inputType == IT_WHITE); break;
         case IT_FILE: tex = getFileTexture(); break;

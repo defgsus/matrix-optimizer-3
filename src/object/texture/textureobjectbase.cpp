@@ -80,7 +80,8 @@ struct TextureObjectBase::PrivateTO
                 * u_transformation,
                 * u_color_range_min,
                 * u_color_range_max,
-                * u_tex_res;
+                * u_tex_res,
+                * u_tex_feedback;
         QList<GL::Uniform*> u_tex;
     };
 
@@ -106,6 +107,7 @@ struct TextureObjectBase::PrivateTO
                 * p_texType, * p_texFormat, *p_resMode;
     ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
     ParameterText * p_fragment;
+    ParameterTexture* p_feedbackTex;
     QList<TextureSetting*> p_textures;
     QList<ParameterTexture*> texParamsCopy;
     QList<bool> texIsCube;
@@ -321,6 +323,12 @@ void TextureObjectBase::PrivateTO::createParameters()
             tex->textureParam()->setVisibleGraph(true);
             //MO_PRINT("TEXPARAM " << i << " done");
         }
+
+        p_feedbackTex = to->params()->createTextureParameter(
+                    "to_tex_feedback", tr("feedback texture"),
+                    tr("Parameters of the feedback texture (the previous frame)"));
+
+        p_feedbackTex->setInputType(ParameterTexture::IT_INTERNAL);
 
     to->params()->endParameterGroup();
 
@@ -681,19 +689,17 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
 {
     MO_TO_DEBUG("createShaderQuad() curnum == " << shaderQuads.size());
 
-    // create framebuffer if we havn't already
-    //if (!fbo)
-        //createFbo(16, 16);
-
     lastMessages.clear();
 
     // create quad and compile shader
 
     ShaderQuad quad;
-    const QString qname = to->name() + QString("_shaderquad%1").arg(shaderQuads.size());
+    const QString qname = to->name()
+            + QString("_shaderquad%1").arg(shaderQuads.size());
     quad.quad = new GL::ScreenQuad(qname);
 
     auto src = new GL::ShaderSource(csrc);
+    // render-flag
     if (auto s = to->sceneObject())
         if (s->isRendering())
             src->addDefine("#ifndef MO_RENDER\n#define MO_RENDER\n#endif", false);
@@ -735,6 +741,7 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
         quad.u_transformation = shader->getUniform("u_transformation", false);
         quad.u_color_range_min = shader->getUniform("u_color_range_min", false);
         quad.u_color_range_max = shader->getUniform("u_color_range_max", false);
+        quad.u_tex_feedback = shader->getUniform("u_tex_feedback", false);
 
         // pre-init the texture slots in order of the supplied uniform names
         int texSlot = 0;
@@ -863,7 +870,7 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
     {
         fbo->release();
         delete fbo;
-        fbo = 0;
+        fbo = nullptr;
         createFbo(QSize(width, height), fboDepth);
     }
 
@@ -875,7 +882,9 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
     fbo->bind();
 
     // exchange render target for multi-stage rendering
-    if (shaderQuads.size() > 1 && index > 0)
+    // or when u_tex_feedback is used
+    if ((shaderQuads.size() > 1 && index > 0)
+       || quad.u_tex_feedback != nullptr)
     {
         // create a swap buffer
         if (!swapTex)
@@ -943,6 +952,20 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
             ++(*texSlot);
         }
     }
+    // bind feedback texture
+    if (quad.u_tex_feedback && swapTex)
+    {
+        GL::Texture::setActiveTexture(*texSlot);
+        quad.u_tex_feedback->ints[0] = *texSlot;
+
+        GL::Texture* fbtex = swapTex;
+
+        fbtex->bind();
+        p_feedbackTex->applyTextureParam(fbtex);
+
+        ++(*texSlot);
+    }
+
     GL::Texture::setActiveTexture(0);
 
     // --- render ---

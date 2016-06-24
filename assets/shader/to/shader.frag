@@ -1,6 +1,7 @@
 #include <to/header>
 
 uniform vec4  u_color;
+uniform sampler2D u_tex_feedback;
 
 uniform vec3  iResolution;              // resolution of output texture in pixels
 uniform float iGlobalTime;              // scene time in seconds

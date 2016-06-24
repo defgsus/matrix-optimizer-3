@@ -1066,20 +1066,9 @@ GL::FrameBufferObject * Scene::fboMaster(uint thread) const
         return 0;
 }
 
-GL::FrameBufferObject * Scene::fboCamera(uint , uint camera_index) const
-{
-    if ((int)camera_index >= p_cameras_.size())
-    {
-        MO_WARNING("request for camera fbo " << camera_index
-                   << " is out of range (" << p_cameras_.size() << ")");
-        return 0;
-    }
-    return p_cameras_[camera_index]->fbo();
-}
 
 
-/// @todo this is all to be moved out of this class REALLY!
-
+/// @todo Rendering is to be moved out of the Scene class REALLY!
 void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
 {
     MO_DEBUG_GL("Scene::renderScene("<<time<<")");

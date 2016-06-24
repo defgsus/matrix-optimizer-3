@@ -102,9 +102,6 @@ public:
     /** Draws the contents of the framebuffer on a [-1,1] quad. */
     void drawFramebuffer(const RenderTime& time);
 
-    /** Returns the framebuffer on which the camera renders, or NULL */
-    GL::FrameBufferObject * fbo() const;
-
     /** Texture output interface */
     const GL::Texture * valueTexture(uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
 

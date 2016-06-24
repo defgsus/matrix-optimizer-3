@@ -36,7 +36,11 @@ public:
         IT_INPUT,
         IT_FILE,
         IT_MASTER_FRAME,
-        IT_MASTER_FRAME_DEPTH
+        IT_MASTER_FRAME_DEPTH,
+        /** Special type for just setting texture parameters,
+            allows no input selection.
+            @note MUST BE LAST enum */
+        IT_INTERNAL
     };
     static const QStringList inputTypeIds;
     static const QStringList inputTypeNames;
@@ -96,6 +100,7 @@ public:
     /** Returns true when the texture is different since the last call to value() */
     bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
+    bool isInputTypeSelectable() const;
     InputType inputType() const;
     InputType defaultInputType() const;
     WrapMode wrapModeX() const;
@@ -113,6 +118,7 @@ public:
 
     // ---------------- setter -----------------
 
+    void setInputTypeSelectable(bool);
     void setInputType(InputType);
     void setDefaultInputType(InputType);
     void setWrapMode(WrapMode m);

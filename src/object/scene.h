@@ -331,9 +331,6 @@ public:
     /** Returns the framebuffer of the final master frame, or NULL */
     GL::FrameBufferObject * fboMaster(uint thread) const;
 
-    /** Returns the framebuffer of the camera frame, or NULL */
-    GL::FrameBufferObject * fboCamera(uint thread, uint camera_index) const;
-
     /** Render the whole scene on the current context.
         If @p fbo is set, the scene will be rendered into the framebuffer object. */
     void renderScene(const RenderTime & time, bool paintToScreen = true);//, GL::FrameBufferObject * fbo = 0);

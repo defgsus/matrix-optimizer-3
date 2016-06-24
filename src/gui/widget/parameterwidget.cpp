@@ -703,27 +703,32 @@ namespace
 
 void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* l)
 {
-    auto but = new QToolButton(this);
-    but->setText(param->inputTypeNames[param->inputType()]);
-    l->addWidget(but);
-    connect(but, &QToolButton::clicked, [=]()
+    if (param->inputType() != ParameterTexture::IT_INTERNAL)
     {
-        texParamPopup_<ParameterTexture::InputType>(this, param, tr("texture source"),
-                       ParameterTexture::inputTypeNames,
-                       ParameterTexture::inputTypeValues,
-                       param->inputType(),
-                       [=](ParameterTexture::InputType m)
+        auto but = new QToolButton(this);
+        but->setText(param->inputTypeNames[param->inputType()]);
+        l->addWidget(but);
+        if (param->isInputTypeSelectable())
+        connect(but, &QToolButton::clicked, [=]()
         {
-            param->setInputType(m);
-            but->setText(param->inputTypeNames[param->inputType()]);
-            btexmm_->setVisible( m == ParameterTexture::IT_FILE );
+            texParamPopup_<ParameterTexture::InputType>(
+                            this, param, tr("texture source"),
+                            ParameterTexture::inputTypeNames,
+                            ParameterTexture::inputTypeValues,
+                            param->inputType(),
+                            [=](ParameterTexture::InputType m)
+            {
+                param->setInputType(m);
+                but->setText(param->inputTypeNames[param->inputType()]);
+                btexmm_->setVisible( m == ParameterTexture::IT_FILE );
 
-            if (m == ParameterTexture::IT_INPUT)
-                param->setVisibleGraph(true);
-        } );
-    });
+                if (m == ParameterTexture::IT_INPUT)
+                    param->setVisibleGraph(true);
+            } );
+        });
+    }
 
-    but = new QToolButton(this);
+    auto but = new QToolButton(this);
     but->setText(param->magModeNames[param->magMode()]);
     l->addWidget(but);
     connect(but, &QToolButton::clicked, [=]()
@@ -788,6 +793,7 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
         } );
     });
 
+    if (param->inputType() != ParameterTexture::IT_INTERNAL)
     {
         QStringList names = { tr("no mipmap") };
         QList<uint> values = { 0 };

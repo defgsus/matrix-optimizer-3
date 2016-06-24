@@ -230,8 +230,9 @@ void ObjectTreeView::Private::connectEditor()
     // so onModelReset does not re-select deleted objects
     connect(editor, &ObjectEditor::objectAboutToDelete, [=](const Object*o)
     {
-        if (p->selectedObject() == o
-            || p->selectedObject()->hasParentObject(o))
+        auto sel = p->selectedObject();
+        if (sel == o
+            || (sel && sel->hasParentObject(o)))
             p->selectNone();
     });
     connect(editor, &ObjectEditor::objectsAboutToDelete,
@@ -239,7 +240,7 @@ void ObjectTreeView::Private::connectEditor()
     {
         auto sel = p->selectedObject();
         for (auto o : os)
-        if (sel == o || sel->hasParentObject(o))
+        if (sel == o || (sel && sel->hasParentObject(o)))
         {
             p->selectNone();
             break;

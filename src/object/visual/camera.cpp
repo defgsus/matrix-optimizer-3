@@ -514,7 +514,8 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, const RenderTime& time) const
         if (mix > 0.f)
         {
             const Float sc = p_cameraOrthoScale_->value(time);
-            const Mat4 mat2 = glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far);
+            const Mat4 mat2 = glm::ortho(
+                        -sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far);
 
             cam.setProjectionMatrix(mat1 + std::min(1.f, mix) * (mat2 - mat1));
         }
@@ -528,7 +529,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, const RenderTime& time) const
         const Float sc = p_cameraOrthoScale_->value(time);
         cam.setFieldOfView(90.); // XXX ???
         cam.setProjectionMatrix(
-                    glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far));
+            glm::ortho(-sc * aspectRatio_, sc * aspectRatio_, -sc, sc, near, far));
     }
 
 
@@ -694,13 +695,6 @@ void Camera::finishGlFrame(const RenderTime &)
     fbo_->unbind();
 }
 
-/** @todo this interface is to be removed in favour for valueTexture() */
-GL::FrameBufferObject * Camera::fbo() const
-{
-    if (!fbo_)
-        MO_WARNING("request for camera fbo but fbo is not created yet");
-    return fbo_;
-}
 
 const GL::Texture * Camera::valueTexture(uint channel, const RenderTime& ) const
 {
@@ -748,7 +742,8 @@ void Camera::drawFramebuffer(const RenderTime& time)
         fbo->colorTexture()->setTexParameter(GL_TEXTURE_MAG_FILTER, GLint(GL_NEAREST));
 
     // set edge-clamp
-    // (mainly important for cube maps, so the seams disappear as opposed to GL_REPEAT mode)
+    // (mainly important for cube maps, so the seams disappear
+    //  as opposed to GL_REPEAT mode)
     fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
     fbo->colorTexture()->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
 
