@@ -65,7 +65,7 @@ signals:
 
     void keyPressed(QKeyEvent*);
 
-    void imageFinished(const GL::Texture* tex, const QImage& img);
+    void imageFinished(const GL::Texture* tex, const QString& id, const QImage& img);
 
 public slots:
 
@@ -77,7 +77,7 @@ public slots:
     /** Will render the texture to a QImage of dimension @p s.
         @p tex MUST be a texture of the Manager's thread/context.
         Emits imageFinished() when ready. */
-    void renderImage(const GL::Texture* tex, const QSize& s);
+    void renderImage(const GL::Texture* tex, const QSize& s, const QString& id);
 
 private slots:
 
@@ -86,7 +86,7 @@ private slots:
 signals:
     void sendResize_(const QSize&);
     void sendKeyPressed_(QKeyEvent*);
-    void sendImage(const GL::Texture* tex, const QImage& img);
+    void sendImage(const GL::Texture* tex, const QString& id, const QImage& img);
 
 private:
 

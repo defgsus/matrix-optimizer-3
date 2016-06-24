@@ -119,7 +119,6 @@ struct Manager::Private
         , newScene      (nullptr)
         , window        (nullptr)
         , renderer      (nullptr)
-        , texRenderer   (nullptr)
         , thread        (nullptr)
         , doStop        (false)
         , doAnimate     (false)
@@ -129,17 +128,25 @@ struct Manager::Private
         , messuredFps   (0.)
     { }
 
+    struct ImageRequest
+    {
+        const GL::Texture* tex;
+        QSize res;
+        QString id;
+    };
+
     void startThread();
     void stopThread(bool wait = true);
     void renderLoop();
-    QImage renderImage(const GL::Texture*, const QSize&);
+    QImage renderImage(const ImageRequest&);
 
     Manager* p;
 
     Scene * scene, *newScene;
     GlWindow * window;
     SceneRenderer * renderer;
-    TextureRenderer* texRenderer;
+    QList<TextureRenderer*> texRenderers;
+    static const int maxTextureRenderers = 3;
 
     std::function<Double()> timeFunc;
 
@@ -154,7 +161,7 @@ struct Manager::Private
         messuredFps;
 
     std::mutex imageRequestMutex;
-    QList<QPair<const GL::Texture*, QSize>> imageRequests;
+    QList<ImageRequest> imageRequests;
 };
 
 Manager::Manager(QObject *parent)
@@ -169,8 +176,8 @@ Manager::Manager(QObject *parent)
     connect(this, SIGNAL(sendKeyPressed_(QKeyEvent*)),
             this, SIGNAL(keyPressed(QKeyEvent*)),
             Qt::QueuedConnection);
-    connect(this, SIGNAL(sendImage(const GL::Texture*,QImage)),
-            this, SIGNAL(imageFinished(const GL::Texture*,QImage)),
+    connect(this, SIGNAL(sendImage(const GL::Texture*,QString,QImage)),
+            this, SIGNAL(imageFinished(const GL::Texture*,QString,QImage)),
             Qt::QueuedConnection);
 }
 
@@ -326,13 +333,15 @@ void Manager::Private::renderLoop()
 
     while (!doStop && window->update())
     {
+        // fulfill image render requests
         {
             std::lock_guard<std::mutex> lock(imageRequestMutex);
             while (!imageRequests.isEmpty())
             {
-                auto img = renderImage(imageRequests.front().first,
-                                       imageRequests.front().second);
-                emit p->sendImage(imageRequests.front().first, img);
+                auto img = renderImage(imageRequests.front());
+                emit p->sendImage(imageRequests.front().tex,
+                                  imageRequests.front().id,
+                                  img);
                 imageRequests.pop_front();
             }
         }
@@ -413,10 +422,12 @@ void Manager::Private::renderLoop()
         scene->setGlContext(MO_GFX_THREAD, nullptr);
     }
 
-    if (texRenderer && texRenderer->isGlInitialized())
-        texRenderer->releaseGl();
-    delete texRenderer;
-    texRenderer = nullptr;
+    for (auto t : texRenderers)
+    {
+        t->releaseGl();
+        delete t;
+    }
+    texRenderers.clear();
 
     moCloseGl();
 
@@ -424,24 +435,60 @@ void Manager::Private::renderLoop()
     delete renderer; renderer = nullptr;
 }
 
-QImage Manager::Private::renderImage(const Texture* tex, const QSize& res)
+QImage Manager::Private::renderImage(const ImageRequest& req)
 {
-    // create resampler
-    if (!texRenderer)
-    {
-        texRenderer = new GL::TextureRenderer(res.width(), res.height());
-    }
-    else
-        texRenderer->setSize(res.width(), res.height());
-
     QString errText = tr("error");
 
     try
     {
+        // return texture data as-is
+        if ((int)req.tex->width() == req.res.width()
+         && (int)req.tex->height() == req.res.height())
+            return req.tex->toQImage();
+
+        // find resampler with match resolution
+        GL::TextureRenderer* renderer = nullptr;
+        for (auto t : texRenderers)
+        if ((int)t->width() == req.res.width()
+         && (int)t->height() == req.res.height())
+        {
+            renderer = t;
+            break;
+        }
+
+        // none found
+        if (!renderer)
+        {
+            // create one
+            if (texRenderers.size() < maxTextureRenderers)
+            {
+                renderer = new GL::TextureRenderer(req.res.width(), req.res.height());
+                texRenderers << renderer;
+            }
+            else
+            {
+                // change the one with closest resolution
+                int mind = 8000000;
+                renderer = texRenderers.front();
+                for (auto t : texRenderers)
+                {
+                    int d = std::abs(t->width()-req.res.width())
+                            + std::abs(t->height()-req.res.height());
+                    if (d < mind)
+                    {
+                        renderer = t;
+                        mind = d;
+                    }
+                }
+
+                renderer->setSize(req.res.width(), req.res.height());
+            }
+        }
+
         // gl-resize
-        texRenderer->render(tex, true);
+        renderer->render(req.tex, true);
         // download image
-        if (auto stex = texRenderer->texture())
+        if (auto stex = renderer->texture())
         {
             stex->bind();
             return stex->toQImage();
@@ -453,14 +500,17 @@ QImage Manager::Private::renderImage(const Texture* tex, const QSize& res)
         errText = errText + "\n" + e.what();
     }
 
-    return GeneralImage::getErrorImage(errText, res);
+    return GeneralImage::getErrorImage(errText, req.res);
 }
 
-void Manager::renderImage(const Texture *tex, const QSize &s)
+void Manager::renderImage(const Texture *tex, const QSize &s, const QString& id)
 {
+    Private::ImageRequest r;
+    r.tex = tex;
+    r.res = s;
+    r.id = id;
     std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
-    p_->imageRequests
-            << QPair<const Texture*, QSize>(tex, s);
+    p_->imageRequests << r;
 }
 
 

@@ -54,8 +54,11 @@ void ObjectOutputView::setObject(Object * o)
         if (m && m != manager_)
         {
             connect(m, &GL::Manager::imageFinished, [=](const GL::Texture* tex,
+                                                        const QString& id,
                                                         const QImage& img)
             {
+                if (id != "objectoutputview")
+                    return;
                 for (auto& p : labels_)
                 if (p.second == tex)
                 {
@@ -63,8 +66,8 @@ void ObjectOutputView::setObject(Object * o)
                     break;
                 }
             });
-            manager_ = m;
         }
+        manager_ = m;
     }
 
     updateLabels_();
@@ -134,7 +137,7 @@ void ObjectOutputView::setLabel_(QPair<QLabel*,const GL::Texture*>& label,
     if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GFX_THREAD)))
     {
         label.second = tex;
-        manager_->renderImage(tex, imgSize_);
+        manager_->renderImage(tex, imgSize_, "objectoutputview");
     }
     else
         label.first->clear();

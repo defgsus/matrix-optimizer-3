@@ -24,10 +24,11 @@
 #include "widget/objecttreeview.h"
 #include "model/objecttreemodel.h"
 #include "object/object.h"
+#include "object/scene.h"
 #include "object/util/objectfactory.h"
 #include "object/control/trackfloat.h"
 #include "object/interface/valuetextureinterface.h"
-#include "gl/texturerenderer.h"
+#include "gl/manager.h"
 #include "gl/texture.h"
 #include "io/currenttime.h"
 #include "io/log.h"
@@ -37,10 +38,10 @@ namespace MO {
 namespace GUI {
 
 
-ObjectView::ObjectView(QWidget *parent) :
-    QWidget         (parent),
-    object_         (0),
-    texRender_      (0)
+ObjectView::ObjectView(QWidget *parent)
+    : QWidget         (parent)
+    , object_         (nullptr)
+    , manager_        (nullptr)
 {
     setObjectName("_ObjectView");
 
@@ -96,10 +97,7 @@ ObjectView::ObjectView(QWidget *parent) :
 
 ObjectView::~ObjectView()
 {
-    if (texRender_)
-        texRender_->releaseGl();
 
-    delete texRender_;
 }
 
 void ObjectView::setObject(Object * object)
@@ -116,9 +114,27 @@ void ObjectView::setObject(Object * object)
         icon_->setPalette(p);
         */
         icon_->setIcon(AppIcons::iconForObject(object_));
+
+        // get GL::Manager
+        if (auto s = object_->sceneObject())
+        {
+            auto m = s->manager();
+            if (m && m != manager_)
+            {
+                connect(m, &GL::Manager::imageFinished, [=](const GL::Texture* ,
+                                                            const QString& id,
+                                                            const QImage& img)
+                {
+                    if (id == "objectview")
+                        labelImg_->setPixmap(QPixmap::fromImage(img));
+                });
+            }
+            manager_ = m;
+        }
     }
     else
     {
+        manager_ = nullptr;
         icon_->setIcon(QIcon());
     }
 
@@ -233,34 +249,12 @@ void ObjectView::updateImage()
     // object has texture?
     if (auto ti = dynamic_cast<ValueTextureInterface*>(object_))
     {
+        if (manager_ && manager_->isWindowVisible())
         if (auto tex = ti->valueTexture(
                     channel, RenderTime(CurrentTime::time(), MO_GFX_THREAD)))
         {
-            // create resampler
-            if (!texRender_)
-            {
-                texRender_ = new GL::TextureRenderer(imgs.width(), imgs.height());
-            }
-
-            try
-            {
-#if 0
-                // gl-resize
-                texRender_->render(tex, true);
-                // download image
-                if (auto stex = texRender_->texture())
-                {
-                    stex->bind();
-                    QImage img = stex->toQImage();
-                    labelImg_->setPixmap(QPixmap::fromImage(img));
-                    return;
-                }
-#endif
-            }
-            catch (const Exception& e)
-            {
-                MO_WARNING("in ObjectView: " << e.what());
-            }
+            manager_->renderImage(tex, imgs, "objectview");
+            return;
         }
 
         // set black
@@ -269,7 +263,7 @@ void ObjectView::updateImage()
     }
 
     // set empty
-    labelImg_->setPixmap(QPixmap());
+    labelImg_->clear();
 }
 
 } // namespace GUI

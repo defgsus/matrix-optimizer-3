@@ -488,7 +488,7 @@ void Camera::initCameraSpace(GL::CameraSpace &cam, const RenderTime& time) const
 
     const Float
             near = p_near_->value(time),
-            far = p_far_->value(time);
+            far = std::max(near+0.0001f, (Float)p_far_->value(time));
 
     if (renderMode_ == RM_FULLDOME_CUBE)
     {

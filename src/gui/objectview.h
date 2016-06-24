@@ -21,7 +21,7 @@ namespace MO {
 class Object;
 class Parameter;
 class ObjectTreeModel;
-namespace GL { class TextureRenderer; }
+namespace GL { class Manager; }
 namespace GUI {
 
 class ParameterView;
@@ -87,7 +87,7 @@ private:
 
     Object * object_;
 
-    GL::TextureRenderer * texRender_;
+    GL::Manager* manager_;
     ParameterView * paramView_;
     QVBoxLayout * layout_;
     QToolButton * icon_;

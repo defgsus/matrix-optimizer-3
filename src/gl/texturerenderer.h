@@ -24,6 +24,9 @@ public:
     TextureRenderer(uint w = 256, uint h = 256);
     ~TextureRenderer();
 
+    uint width() const { return w_; }
+    uint height() const { return h_; }
+
     /** Requests a new size.
         Which is applied on createGl() or render() */
     void setSize(uint w, uint h);
