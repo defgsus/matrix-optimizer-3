@@ -283,23 +283,36 @@ QRect Timeline1DView::derivativeHandleRect_(
         case RS_NORMAL: break;
     }
 
-    Double x = p.t, y = p.val,
+    Double xo = 0., yo = 0.,
            tw = screen2time(30) - screen2time(0),
-           th = screen2value(30) - screen2value(0);
+           th = -tw;
     if (idx == 0)
     {
-        x -= tw;
-        y += p.d1 * th * tw;
+        xo -= tw;
+        yo += p.d1 * th;
     }
     else
     {
-        x += tw;
-        y -= p.d1 * th * tw;
+        xo += tw;
+        yo -= p.d1 * th;
     }
 
+    // limit height of handle
+    int Y = value2screen(p.val),
+        curH = std::max(20, std::min(70, std::abs(value2screen(p.val+yo)-Y)));
+    Double lim = screen2value(std::max(5,Y-curH)) - p.val;
+
+    if (yo > lim)
+        xo = xo / yo * lim, yo = lim;
+    lim = screen2value(std::min(height()-6-r*2, Y+curH)) - p.val;
+    if (yo < lim)
+        xo = xo / yo * lim, yo = lim;
+
     QRect rect(0,0,r*2,r*2);
-    rect.moveTo(time2screen(x) - r,
-                value2screen(y) - r);
+    rect.moveTo(time2screen(p.t + xo) - r,
+                value2screen(p.val + yo) - r
+                //std::max(5, std::min(height()-6-r*2, value2screen(y) - r ))
+                );
     return rect;
 
 }
@@ -403,18 +416,23 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     // -- handles --
 
-    const int i0 = e->rect().left() - 1,
-              i1 = e->rect().right() + 2;
-
     p.setPen(Qt::NoPen);
     p.setBrush(QBrush(QColor(255,255,0,200)));
 
+    // get handles vertically on screen
+    const int i0 = e->rect().left() - 1,
+              i1 = e->rect().right() + 2;
     auto it0 = tl_->first(screen2time(i0-handleRadiusSelected_)),
          it1 = tl_->first(screen2time(i1+handleRadiusSelected_));
 
+    Double ylim1 = screen2value(0),
+           ylim0 = screen2value(height()-1);
     for (auto it = it0; it != it1 && it != tl_->getData().end(); ++it)
     {
         const MATH::Timeline1d::Point& po = it->second;
+
+        if (po.val < ylim0 || po.val > ylim1)
+            continue;
 
         const bool
                 hovered = (hoverHash_ == it->first),
@@ -766,7 +784,8 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         {
             {
                 Locker_ lock(this);
-                changeDerivativesSelected_(dx, dy);
+                changeDerivativesSelected_(dx, dy
+                                           / (screen2time(30)-screen2time(0)));
             }
             emit timelineChanged();
         }
@@ -806,12 +825,17 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         // hover over derivative rects?
         if (isSelected() && (options_ & O_ChangeDerivative))
         {
+            Double ylim1 = screen2value(0),
+                   ylim0 = screen2value(height()-1);
             for (const auto& h : selectHashSet_)
             {
                 auto it1 = tl_->getData().lower_bound(h);
                 if (it1 != tl_->getData().end())
                 {
                     const MATH::Timeline1d::Point& po = it1->second;
+                    if (po.val < ylim0 || po.val > ylim1)
+                        continue;
+
                     auto r1 = derivativeHandleRect_(po, 0, RS_NORMAL),
                          r2 = derivativeHandleRect_(po, 1, RS_NORMAL);
                     if (r1.contains(e->pos()))
@@ -1105,6 +1129,13 @@ void Timeline1DView::mouseDoubleClickEvent(QMouseEvent * e)
         return;
     }
 
+    // --- double-click on derivative handle ---
+    if (isDerivativeHover_())
+    {
+        e->accept();
+        return;
+    }
+
     // --- double-click in empty space ---
 
     if (e->button() == Qt::LeftButton)
@@ -1243,7 +1274,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         return;
 
     // only move vertically?
-    if (fabs(dx) < MATH::Timeline1d::timeQuantum())
+    if (std::abs(dx) < MATH::Timeline1d::timeQuantum())
     {
         for (auto &p : dragPoints_)
         {
@@ -1295,6 +1326,8 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         }
         else
         {
+            // also copy these values
+            // TODO because they are not in the Timeline1d interface
             newp->d1 = p.oldp.d1;
         }
 
@@ -1331,7 +1364,7 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
     }
 }
 
-void Timeline1DView::changeDerivativesSelected_(Double dx, Double dy)
+void Timeline1DView::changeDerivativesSelected_(Double /*dx*/, Double dy)
 {
     if (!tl_)
         return;
@@ -1355,7 +1388,7 @@ void Timeline1DView::changeDerivativesSelected_(Double dx, Double dy)
         const MATH::Timeline1d::Point& oldPo = it1->second;
 
         po.d1 = oldPo.d1 + dy;
-        qDebug() << po.d1;
+        //qDebug() << po.d1;
 
         updateAroundPoint_(po);
     }

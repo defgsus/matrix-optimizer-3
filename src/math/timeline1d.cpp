@@ -105,6 +105,7 @@ Double Timeline1d::getNoLimit(Double time) const
             default:
                 ret = i1->second.val;
                 return ret;
+            case TimelinePoint::CONSTANT_USER:
             case TimelinePoint::SYMMETRIC_USER:
             {
                 const Timeline1d::Point *t1 = &i1->second;
@@ -129,6 +130,7 @@ Double Timeline1d::getNoLimit(Double time) const
         default:
             ret = i1->second.val;
             return ret;
+        case TimelinePoint::CONSTANT_USER:
         case TimelinePoint::SYMMETRIC_USER:
         {
             const Timeline1d::Point *t1 = &i1->second;
@@ -147,12 +149,9 @@ Double Timeline1d::getNoLimit(Double time) const
 
         case TimelinePoint::CONSTANT_USER:
         {
-            auto i2 = i1; ++i2;
-            const Timeline1d::Point
-                *t1 = &i1->second,
-                *t2 = &i2->second;
+            const Timeline1d::Point *t1 = &i1->second;
             Double
-                t = (time - t1->t),// / (t2->t - t1->t),
+                t = (time - t1->t),
                 f = t;
             ret = (t1->val + t1->d1 * f);
 
@@ -191,13 +190,16 @@ Double Timeline1d::getNoLimit(Double time) const
         {
             auto i2 = i1; ++i2;
             const Timeline1d::Point
-                *t1 = &i1->second,
-                *t2 = &i2->second;
+                *p1 = &i1->second,
+                *p2 = &i2->second;
             Double
-                t = (time - t1->t),// / (t2->t - t1->t),
-                f = t;
-            ret = (t1->val + t1->d1 * f);
-
+                t1 = (time - p1->t),         // second since 1st cue
+                t2 = (p2->t - time),         // second to 2nd cue
+                f = t1 / (p2->t - p1->t);    // linear transition 1st->2nd
+                f = f*f*(3.-2.*f);
+            ret = (p1->val + p1->d1 * t1) * (1. - f)
+                + (p2->val - p2->d1 * t2) * f
+                    ;
             return ret;
         }
         break;
@@ -400,6 +402,10 @@ Double Timeline1d::getNoLimit(Double time) const
     }
 }
 
+Double Timeline1d::derivative(Double time, Double h) const
+{
+    return (get(time+h*.5) - get(time-h*.5)) / h;
+}
 
 
 
@@ -442,12 +448,13 @@ Timeline1d::Point* Timeline1d::add(Double time, Double value, TimelinePoint::Typ
     p.t = time;
     p.val = value;
     p.type = typ;
-    p.d1 = 0.0;
 
     if (typ == TimelinePoint::DEFAULT)
         p.type = currentType_(time);
     else
         p.type = typ;
+
+    p.d1 = p.isUserDerivative() ? derivative(time) : 0.0;
 
     // insert as element
     cur_ = &data_[hash(time)];
