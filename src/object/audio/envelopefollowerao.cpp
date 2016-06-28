@@ -34,6 +34,7 @@ class EnvelopeFollowerAO::Private
         * paramOutAmp,
         * paramTimeUp,
         * paramTimeDown,
+        * paramNormal,
         * paramThreshold,
         * paramAverage;
 
@@ -98,6 +99,11 @@ void EnvelopeFollowerAO::createParameters()
                                                    tr("The time in seconds to gather the average amplitude used for thresholding"),
                                                    1.0, 0.05);
 
+        p_->paramNormal = params()->createFloatParameter(
+                    "_envf_normal", tr("normalize"),
+                    tr("Normalization of input according to average [0,1]"),
+                                                   0.0, 0.0, 1.0, 0.05);
+
         params()->endParameterGroup();
 }
 
@@ -147,6 +153,7 @@ void EnvelopeFollowerAO::processAudio(const RenderTime& time)
         fadeOut = p_->paramTimeDown->value(time),
         ampIn = p_->paramInAmp->value(time),
         ampOut = p_->paramOutAmp->value(time),
+        norm = p_->paramNormal->value(time),
         thres = p_->paramThreshold->value(time),
         average = p_->paramAverage->value(time);
 
@@ -170,6 +177,7 @@ void EnvelopeFollowerAO::processAudio(const RenderTime& time)
         env->setThreshold(thres);
         env->setInputAmplitude(ampIn);
         env->setOutputAmplitude(ampOut);
+        env->setNormalization(norm);
 
         // process a block
         //F32 val =

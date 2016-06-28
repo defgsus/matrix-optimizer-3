@@ -21,7 +21,6 @@ namespace MO {
 namespace MATH {
 
 
-
 Timeline1d::Timeline1d()
     : RefCounted("Timeline1d")
 {
@@ -101,8 +100,18 @@ Double Timeline1d::getNoLimit(Double time) const
     // before first
     if ( (isFirst) && htime < i1->first )
     {
-        ret = i1->second.val;
-        return ret;
+        switch (i1->second.type)
+        {
+            default:
+                ret = i1->second.val;
+                return ret;
+            case TimelinePoint::SYMMETRIC_USER:
+            {
+                const Timeline1d::Point *t1 = &i1->second;
+                ret = t1->val + t1->d1 * (time - t1->t);
+                return ret;
+            }
+        }
     }
     else
     // after last
@@ -115,9 +124,17 @@ Double Timeline1d::getNoLimit(Double time) const
     else
     // on last
     if (isLast)
+    switch (i1->second.type)
     {
-        ret = i1->second.val;
-        return ret;
+        default:
+            ret = i1->second.val;
+            return ret;
+        case TimelinePoint::SYMMETRIC_USER:
+        {
+            const Timeline1d::Point *t1 = &i1->second;
+            ret = t1->val + t1->d1 * (time - t1->t);
+            return ret;
+        }
     }
 
     switch (i1->second.type)
@@ -128,13 +145,24 @@ Double Timeline1d::getNoLimit(Double time) const
             return ret;
         break;
 
+        case TimelinePoint::CONSTANT_USER:
+        {
+            auto i2 = i1; ++i2;
+            const Timeline1d::Point
+                *t1 = &i1->second,
+                *t2 = &i2->second;
+            Double
+                t = (time - t1->t),// / (t2->t - t1->t),
+                f = t;
+            ret = (t1->val + t1->d1 * f);
+
+            return ret;
+        }
+        break;
+
         case TimelinePoint::LINEAR:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end()) {
-                ret = i1->second.val;
-                return ret;
-            }
             const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
@@ -148,11 +176,6 @@ Double Timeline1d::getNoLimit(Double time) const
         case TimelinePoint::SMOOTH:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
-            {
-                ret = i1->second.val;
-                return ret;
-            }
             const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
@@ -164,14 +187,24 @@ Double Timeline1d::getNoLimit(Double time) const
         }
         break;
 
+        case TimelinePoint::SYMMETRIC_USER:
+        {
+            auto i2 = i1; ++i2;
+            const Timeline1d::Point
+                *t1 = &i1->second,
+                *t2 = &i2->second;
+            Double
+                t = (time - t1->t),// / (t2->t - t1->t),
+                f = t;
+            ret = (t1->val + t1->d1 * f);
+
+            return ret;
+        }
+        break;
+
         case TimelinePoint::SYMMETRIC:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
-            {
-                ret = i1->second.val;
-                return ret;
-            }
             const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
@@ -193,11 +226,6 @@ Double Timeline1d::getNoLimit(Double time) const
         case TimelinePoint::SYMMETRIC2:
         {
             auto i2 = i1; i2++;
-            if (i2==data_.end())
-            {
-                ret = i1->second.val;
-                return ret;
-            }
             const Timeline1d::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
@@ -221,11 +249,6 @@ Double Timeline1d::getNoLimit(Double time) const
         case TimelinePoint::SPLINE4_SYM:
         {
             auto i0=i1, i2 = i1; i2++;
-            if (i2==data_.end())
-            {
-                ret = i1->second.val;
-                return ret;
-            }
 
             Double d1 = 0, d2 = 0;
 
@@ -431,7 +454,7 @@ Timeline1d::Point* Timeline1d::add(Double time, Double value, TimelinePoint::Typ
     *cur_ = p;
 
     // automatically set the derivative
-    if (hasAutoDerivative(p.type))
+    if (p.isAutoDerivative())
     {
         TpList::iterator i = first(p.t);
         setAutoDerivative(i);

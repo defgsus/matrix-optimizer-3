@@ -28,6 +28,7 @@ void MouseState::clear()
     p_posNorm = QPointF();
     p_dragPos = QPoint();
     p_dragPosNorm = QPointF();
+    p_size = QSize();
 }
 
 void MouseState::keyDown(int keycode)
@@ -42,6 +43,7 @@ void MouseState::keyUp(int keycode)
 
 void MouseState::setPos(const QPoint &pos, const QSize &size)
 {
+    p_size = size;
     p_pos = pos;
     p_posNorm.rx() = size.width() > 0 ? qreal(pos.x()) / size.width() : 0.;
     p_posNorm.ry() = size.height() > 0 ? qreal(pos.y()) / size.height() : 0.;
@@ -49,6 +51,7 @@ void MouseState::setPos(const QPoint &pos, const QSize &size)
 
 void MouseState::setDragPos(const QPoint &pos, const QSize &size)
 {
+    p_size = size;
     p_dragPos = pos;
     p_dragPosNorm.rx() = size.width() > 0 ? qreal(pos.x()) / size.width() : 0.;
     p_dragPosNorm.ry() = size.height() > 0 ? qreal(pos.y()) / size.height() : 0.;

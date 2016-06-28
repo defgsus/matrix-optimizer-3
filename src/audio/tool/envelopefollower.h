@@ -42,6 +42,8 @@ public:
         Requires updateCoefficients() to be called. */
     void setAverageSpeed(F32 speed) { fadeAv_ = speed; }
 
+    void setNormalization(F32 norm) { norm_ = norm; }
+
     /** Sets the step value of how much the input signal
         must raise above the current average, default == 0.
         No updateCoefficients() required. */
@@ -62,6 +64,7 @@ public:
     F32 fadeIn() const { return fadeIn_; }
     F32 fadeOut() const { return fadeOut_; }
     F32 averageSpeed() const { return fadeAv_; }
+    F32 normalization() const { return norm_; }
     F32 threshold() const { return threshold_; }
     F32 inputAmplitude() const { return ampIn_; }
     F32 outputAmplitude() const { return ampOut_; }
@@ -109,7 +112,7 @@ public:
 private:
 
     uint sr_;
-    F32 fadeIn_, fadeOut_, fadeAv_,
+    F32 fadeIn_, fadeOut_, fadeAv_, norm_,
         threshold_,
         ampIn_, ampOut_,
         qIn_, qOut_, qAv_,

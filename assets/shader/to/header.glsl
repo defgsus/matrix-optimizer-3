@@ -1,6 +1,8 @@
 #version 330
 
-uniform     float       u_time;
+uniform     float       u_time;             // second
+uniform     float       u_time_delta;       // seconds since last frame
+uniform     int         u_pass;             // current render pass
 uniform     vec4        u_resolution;       // <xres,yres,1/xres,1/yres>
 uniform     vec4        u_color_range_min;
 uniform     vec4        u_color_range_max;

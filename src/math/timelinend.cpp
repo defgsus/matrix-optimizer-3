@@ -183,6 +183,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         }
 
         case TimelinePoint::SYMMETRIC:
+        case TimelinePoint::SYMMETRIC_USER:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end())

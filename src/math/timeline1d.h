@@ -48,8 +48,14 @@ class Timeline1d : public RefCounted
             /** first derrivative of the point, user-adjustable */
             d1;
 
-        /** type of this que-point, see Timeline1D::TimelinePoint::Type */
+        /** type of this que-point, see MO::MATH::TimelinePoint::Type */
         TimelinePoint::Type type;
+
+        /** Has the type user adjustable derivatives */
+        bool isUserDerivative() const { return TimelinePoint::isUserDerivative(type); }
+        bool isAutoDerivative() const { return TimelinePoint::isAutoDerivative(type); }
+        bool hasDerivative() const { return TimelinePoint::hasDerivative(type); }
+        bool isContinuous() const { return TimelinePoint::isContinuous(type); }
 
         bool operator == (const Point& o) const { return t == o.t && val == o.val && d1 == o.d1 && type == o.type; }
     };
@@ -71,8 +77,6 @@ class Timeline1d : public RefCounted
 
     /** the default container mapping between hashvalues and points */
     typedef std::map<TpHash, Point> TpList;
-
-    static bool hasAutoDerivative(TimelinePoint::Type type);
 
     // ------- ctor / dtor -----------
 
@@ -323,12 +327,6 @@ class Timeline1d : public RefCounted
     }
 
 };
-
-inline bool Timeline1d::hasAutoDerivative(TimelinePoint::Type type)
-{
-    return (type == TimelinePoint::SYMMETRIC ||
-            type == TimelinePoint::SYMMETRIC2);
-}
 
 
 } // namespace MATH

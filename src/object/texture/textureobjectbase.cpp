@@ -53,6 +53,7 @@ struct TextureObjectBase::PrivateTO
         , fboDepth      (1)
         , hasColorRange (false)
         , hasInternalFbo(true)
+        , doAllowMultiPass(true)
         , p_resMode     (0)
         , p_width       (0)
         , p_height      (0)
@@ -68,6 +69,8 @@ struct TextureObjectBase::PrivateTO
     void createFbo(const QSize& s, uint depth = 1);
     void drawFramebuffer(const RenderTime& time, int width, int height);
     void renderShaderQuad(uint index, const RenderTime& time, uint* texSlot);
+    void exchangeFeedbackTexture();
+
     const QString& name() const { return to->name(); } // for debug
 
     /** A quad and shader with associated uniforms */
@@ -76,12 +79,13 @@ struct TextureObjectBase::PrivateTO
         GL::ScreenQuad * quad;
         GL::Uniform
                 * u_resolution,
-                * u_time,
+                * u_time, * u_time_delta,
                 * u_transformation,
                 * u_color_range_min,
                 * u_color_range_max,
                 * u_tex_res,
-                * u_tex_feedback;
+                * u_tex_feedback,
+                * u_pass;
         QList<GL::Uniform*> u_tex;
     };
 
@@ -94,7 +98,7 @@ struct TextureObjectBase::PrivateTO
     const GL::Texture * outputTex;
     uint maxIns, fboDepth;
     QStringList inpNames;
-    bool hasColorRange, hasInternalFbo;
+    bool hasColorRange, hasInternalFbo, doAllowMultiPass;
     QList<GL::Shader::CompileMessage> lastMessages;
 
     ParameterFloat  * p_out_r, * p_out_g, * p_out_b, * p_out_a,
@@ -105,7 +109,8 @@ struct TextureObjectBase::PrivateTO
                     * p_res_scale;
     ParameterSelect * p_magInterpol, * p_enableOut,
                 * p_texType, * p_texFormat, *p_resMode;
-    ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split;
+    ParameterInt * p_width, * p_height, * p_depth, * p_aa, * p_split,
+                    * p_numPasses;
     ParameterText * p_fragment;
     ParameterTexture* p_feedbackTex;
     QList<TextureSetting*> p_textures;
@@ -245,6 +250,12 @@ void TextureObjectBase::init3dFramebuffer(uint depth)
     p_to_->fboDepth = depth;
 }
 
+void TextureObjectBase::initAllowMultiPass(bool a)
+{
+    p_to_->doAllowMultiPass = a;
+}
+
+
 const QList<ParameterTexture*>& TextureObjectBase::textureParams() const
 {
     return p_to_->texParamsCopy;
@@ -299,6 +310,12 @@ void TextureObjectBase::PrivateTO::createParameters()
                                         1, 1, 4096, 1, true, false);
             /** @todo fix split/segmentation in TextureObjectBase */
             p_split->setZombie(true);
+
+            p_numPasses = to->params()->createIntParameter(
+                        "to_num_passes", tr("number of passes"),
+                tr("Iterates a number of times over the u_tex_feedback texture."),
+                    1, 1, 1024, 1, true, false);
+            p_numPasses->setVisible(doAllowMultiPass);
 
         to->params()->endEvolveGroup();
         to->params()->endParameterGroup();
@@ -357,28 +374,36 @@ void TextureObjectBase::PrivateTO::createParameters()
     to->params()->beginParameterGroup("to_output", tr("master output"));
     to->params()->beginEvolveGroup(false);
 
-        p_enableOut = to->params()->createBooleanParameter("to_master_out", tr("enable"),
-                           tr("Enables or disables rendering the output to the main framebuffer"),
-                           tr("The texture object will render internally but not contribute to the main framebuffer"),
-                           tr("The texture object will render it's output ontop the main framebuffer"),
-                           false, true, true);
+        p_enableOut = to->params()->createBooleanParameter(
+            "to_master_out", tr("enable"),
+            tr("Enables or disables rendering the output to the main framebuffer"),
+            tr("The texture object will render internally but not contribute "
+               "to the main framebuffer"),
+            tr("The texture object will render it's output ontop the main "
+               " framebuffer"),
+            false, true, true);
 
-        p_out_r = to->params()->createFloatParameter("to_red", tr("red"), tr("Red amount of output color"), 1.0, 0.1);
-        p_out_g = to->params()->createFloatParameter("to_green", tr("green"), tr("Green amount of output color"), 1.0, 0.1);
-        p_out_b = to->params()->createFloatParameter("to_blue", tr("blue"), tr("Blue amount of output color"), 1.0, 0.1);
-        p_out_a = to->params()->createFloatParameter("to_alpha", tr("alpha"),
-                      tr("Defines the opaqueness/transparency of the output [0,1]"),
-                      1.0,
-                      0.0, 1.0, 0.05);
+        p_out_r = to->params()->createFloatParameter(
+            "to_red", tr("red"), tr("Red amount of output color"), 1.0, 0.1);
+        p_out_g = to->params()->createFloatParameter(
+            "to_green", tr("green"), tr("Green amount of output color"), 1.0, 0.1);
+        p_out_b = to->params()->createFloatParameter(
+            "to_blue", tr("blue"), tr("Blue amount of output color"), 1.0, 0.1);
+        p_out_a = to->params()->createFloatParameter
+                ("to_alpha", tr("alpha"),
+                tr("Defines the opaqueness/transparency of the output [0,1]"),
+                1.0,
+                0.0, 1.0, 0.05);
 
         alphaBlend.createParameters(AlphaBlendSetting::M_MIX, false, "to_", "");
 
-        p_magInterpol = to->params()->createBooleanParameter("to_cammaginterpol", tr("interpolation"),
-                                                tr("The interpolation mode for pixel magnification"),
-                                                tr("No interpolation"),
-                                                tr("Linear interpolation"),
-                                                true,
-                                                true, false);
+        p_magInterpol = to->params()->createBooleanParameter(
+                "to_cammaginterpol", tr("interpolation"),
+                tr("The interpolation mode for pixel magnification"),
+                tr("No interpolation"),
+                tr("Linear interpolation"),
+                true,
+                true, false);
 
         p_aa = to->params()->createIntParameter("to_outaa", tr("anti-aliasing"),
                       tr("Sets the super-sampling when drawing the rendered frame onto the output"),
@@ -737,6 +762,8 @@ void TextureObjectBase::PrivateTO::createShaderQuad(
         // uniforms
 
         quad.u_time = shader->getUniform("u_time", false);
+        quad.u_time_delta = shader->getUniform("u_time_delta", false);
+        quad.u_pass = shader->getUniform("u_pass", false);
         quad.u_resolution = shader->getUniform("u_resolution", false);
         quad.u_transformation = shader->getUniform("u_transformation", false);
         quad.u_color_range_min = shader->getUniform("u_color_range_min", false);
@@ -883,17 +910,13 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
 
     // exchange render target for multi-stage rendering
     // or when u_tex_feedback is used
-    if ((shaderQuads.size() > 1 && index > 0)
-       || quad.u_tex_feedback != nullptr)
-    {
-        // create a swap buffer
-        if (!swapTex)
-        {
-            swapTex = GL::Texture::constructFrom(fbo->colorTexture());
-            swapTex->create();
-        }
-        swapTex = fbo->swapColorTexture(swapTex);
-    }
+    bool doSwap =
+            (shaderQuads.size() > 1 && index > 0)
+            || quad.u_tex_feedback != nullptr;
+
+    if (doSwap)
+        exchangeFeedbackTexture();
+
 
     //if (index == 0)
     {
@@ -904,8 +927,8 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
 
     // --- set shader uniforms ---
 
-    if (quad.u_time)
-        quad.u_time->floats[0] = time.second();
+    // (Time is set later)
+
     if (quad.u_resolution)
         quad.u_resolution->setFloats(res.width(), res.height(),
                                      1.f / res.width(), 1.f / res.height());
@@ -952,31 +975,52 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
             ++(*texSlot);
         }
     }
-    // bind feedback texture
-    if (quad.u_tex_feedback && swapTex)
-    {
-        GL::Texture::setActiveTexture(*texSlot);
-        quad.u_tex_feedback->ints[0] = *texSlot;
-
-        GL::Texture* fbtex = swapTex;
-
-        fbtex->bind();
-        p_feedbackTex->applyTextureParam(fbtex);
-
-        ++(*texSlot);
-    }
-
-    GL::Texture::setActiveTexture(0);
 
     // --- render ---
 
     //quad.quad->shader()->dumpUniforms();
 
     MO_CHECK_GL( gl::glDisable(gl::GL_BLEND) );
+    MO_CHECK_GL( gl::glDisable(gl::GL_DEPTH_TEST) );
 
-    MO_EXTEND_EXCEPTION(
-        quad.quad->draw(res.width(), res.height(), p_split->baseValue())
-                , "in TextureObjectBase::renderGl()")
+    auto dtime = time;
+    const int numPass = p_numPasses->value(time);
+    dtime.setDelta(dtime.delta() / numPass);
+    for (int i=0; i<numPass; ++i)
+    {
+        if (quad.u_time)
+            quad.u_time->floats[0] = dtime.second();
+        if (quad.u_time_delta)
+            quad.u_time_delta->floats[0] = dtime.delta();
+        dtime += dtime.delta();
+        if (quad.u_pass)
+            quad.u_pass->ints[0] = i;
+
+        // multi-pass things
+        if (i > 0)
+        {
+            exchangeFeedbackTexture();
+        }
+
+        // bind feedback texture
+        if (quad.u_tex_feedback && swapTex)
+        {
+            GL::Texture::setActiveTexture(*texSlot);
+            quad.u_tex_feedback->ints[0] = *texSlot;
+
+            GL::Texture* fbtex = swapTex;
+            fbtex->bind();
+            if (i < 2)
+                p_feedbackTex->applyTextureParam(fbtex);
+        }
+
+        MO_EXTEND_EXCEPTION(
+            quad.quad->draw(res.width(), res.height(), p_split->baseValue())
+                    , "in TextureObjectBase::renderGl()")
+    }
+
+    if (quad.u_tex_feedback && swapTex)
+        ++(*texSlot); // skip feedback texture slot
 
     gl::glFlush();
     gl::glFinish();
@@ -986,9 +1030,27 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
     outputTex = fbo->colorTexture();
 
     fbo->unbind();
+
+    GL::Texture::setActiveTexture(0);
 }
 
+void TextureObjectBase::PrivateTO::exchangeFeedbackTexture()
+{
+    MO_ASSERT(fbo, "");
 
+    // create a swap buffer
+    if (!swapTex)
+    {
+        swapTex = GL::Texture::constructFrom(fbo->colorTexture());
+        swapTex->create();
+    }
+    swapTex = fbo->swapColorTexture(swapTex);
+}
+
+/** @todo multi-pass not defined/implemented for
+    multiple different shader stages (multiple calls to createShaderQuad()).
+    And a few other things are different here, especially
+    regarding texture inputs/binding. */
 void TextureObjectBase::renderShaderQuad(
         GL::FrameBufferObject* fbo, uint index, const RenderTime& time,
         bool doClear) const

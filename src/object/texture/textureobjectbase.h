@@ -120,6 +120,10 @@ protected:
         a 3d texture. Default is 1 (2d texture). */
     void init3dFramebuffer(uint depth);
 
+    /** Call in constructor to allow number of passes
+        to be adjusted by user, default is false. */
+    void initAllowMultiPass(bool = true);
+
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams() const;
 

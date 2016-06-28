@@ -34,6 +34,7 @@ public:
     void clear();
 
     bool isDown(int key) const;
+    const QSize& size() const { return p_size; }
     const QPoint& pos() const { return p_pos; }
     QPointF posNorm() const { return p_posNorm; }
     QPointF posNormSigned() const { return p_posNorm * 2. - QPointF(1., 1.); }
@@ -48,6 +49,7 @@ private:
     QSet<int> p_down;
     QPoint p_pos, p_dragPos;
     QPointF p_posNorm, p_dragPosNorm;
+    QSize p_size;
 };
 
 } // namespace MO

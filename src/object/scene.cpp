@@ -1071,7 +1071,7 @@ GL::FrameBufferObject * Scene::fboMaster(uint thread) const
 /// @todo Rendering is to be moved out of the Scene class REALLY!
 void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::FrameBufferObject * outputFbo)
 {
-    MO_DEBUG_GL("Scene::renderScene("<<time<<")");
+    //MO_DEBUG_GL("Scene::renderScene("<<time<<")");
 
     MO_ASSERT(p_glContext_, "renderScene() without context");
 

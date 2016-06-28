@@ -22,6 +22,7 @@ EnvelopeFollower::EnvelopeFollower()
       fadeIn_   (0.02),
       fadeOut_  (0.5),
       fadeAv_   (8.0),
+      norm_     (0.),
       threshold_(0.0),
       ampIn_    (1.0),
       ampOut_   (1.0),
@@ -35,6 +36,8 @@ EnvelopeFollower::EnvelopeFollower()
 void EnvelopeFollower::reset()
 {
     env_ = 0;
+    av_ = 0.;
+
 }
 
 void EnvelopeFollower::updateCoefficients()
@@ -50,10 +53,12 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride, uint blockSize
 {
     for (uint i=0; i<blockSize; ++i, input += inputStride)
     {
-        const F32 in = ampIn_ * std::abs(*input);
+        F32 in = ampIn_ * std::abs(*input);
 
         // get average
         av_ += qAv_ * (in - av_);
+
+        in += norm_ * (in / std::max(0.0001f, av_) - in);
 
         if (in >= 0.99)
             // XXX always indicate clipping
@@ -76,10 +81,12 @@ F32 EnvelopeFollower::process(const F32 *input, uint inputStride,
             input += inputStride,
             output += outputStride)
     {
-        const F32 in = ampIn_ * std::abs(*input);
+        F32 in = ampIn_ * std::abs(*input);
 
         // get average
         av_ += qAv_ * (in - av_);
+
+        in += norm_ * (in / std::max(0.0001f, av_) - in);
 
         if (in >= 0.99)
             // XXX always indicate clipping

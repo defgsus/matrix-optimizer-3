@@ -59,7 +59,6 @@ struct ShaderTO::Private
             * u_color,
             * u_res,
             * u_chan_res,
-            * u_time,
             * u_date,
             * u_mouse,
             * u_samplerate;
@@ -73,6 +72,7 @@ ShaderTO::ShaderTO()
     setName("Shader");
     initDefaultUpdateMode(UM_ALWAYS);
     initMaximumTextureInputs(4);
+    initAllowMultiPass(true);
 }
 
 ShaderTO::~ShaderTO()
@@ -124,11 +124,12 @@ void ShaderTO::Private::createParameters()
         p_glsl = to->params()->createTextParameter("glsl", tr("glsl source"),
                tr("A piece of glsl code to calculate the pixel output"),
                TT_GLSL,
-    "/* Compatible to single-buffer Shadertoy.com!\n"
+    "/* Shadertoy compatible!\n"
     "\n"
     " uniforms:\n"
     "   vec3  iResolution;              // resolution of output texture in pixels\n"
     "   float iGlobalTime;              // scene time in seconds\n"
+    "   float iGlobalDelta;             // seconds between last and this frame\n"
     "   float iChannelTime[4];          // playback of channel in seconds (not defined yet)\n"
     "   vec3  iChannelResolution[4];    // resolution per channel in pixels\n"
     "   vec4  iMouse;                   // xy=mouse position in pixels, zw = click\n"
@@ -152,10 +153,14 @@ void ShaderTO::Private::createParameters()
     "}\n\n"
                , true, false);
 
-        p_r = to->params()->createFloatParameter("red", tr("red"), tr("Red amount of output"), 1.0,  0.,1.,  0.025);
-        p_g = to->params()->createFloatParameter("green", tr("green"), tr("Green amount of output"), 1.0,  0.,1.,  0.025);
-        p_b = to->params()->createFloatParameter("blue", tr("blue"), tr("Blue amount of output"), 1.0,  0.,1.,  0.025);
-        p_a = to->params()->createFloatParameter("alpha", tr("alpha"), tr("Alpha amount of output"), 1.0,  0.,1.,  0.025);
+        p_r = to->params()->createFloatParameter(
+            "red", tr("red"), tr("Red amount of output"), 1.0,  0.,1.,  0.025);
+        p_g = to->params()->createFloatParameter(
+            "green", tr("green"), tr("Green amount of output"), 1.0,  0.,1.,  0.025);
+        p_b = to->params()->createFloatParameter(
+            "blue", tr("blue"), tr("Blue amount of output"), 1.0,  0.,1.,  0.025);
+        p_a = to->params()->createFloatParameter(
+            "alpha", tr("alpha"), tr("Alpha amount of output"), 1.0,  0.,1.,  0.025);
         p_a->setDefaultEvolvable(false);
 
     to->params()->endParameterGroup();
@@ -234,7 +239,6 @@ void ShaderTO::Private::initGl()
     // uniforms
 
     u_color = shader->getUniform("u_color", false);
-    u_time = shader->getUniform("iGlobalTime");
     u_res = shader->getUniform("iResolution");
     u_chan_res = shader->getUniform("iChannelResolution[0]");
     u_date = shader->getUniform("iDate");
@@ -258,9 +262,6 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
             p_g->value(time),
             p_b->value(time),
             p_a->value(time));
-
-    if (u_time)
-        u_time->floats[0] = time.second();
 
     if (u_res)
     {
@@ -286,8 +287,16 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
 
     if (u_mouse)
     {
-        u_mouse->setFloats(MouseState::globalInstance().dragPos().x(),
-                           MouseState::globalInstance().dragPos().y(),
+        Float x = MouseState::globalInstance().dragPos().x(),
+              y = MouseState::globalInstance().size().height() - 1
+                  - MouseState::globalInstance().dragPos().y();
+        QSize res = to->resolution();
+        if (!res.isEmpty())
+        {
+            x = MouseState::globalInstance().dragPosNorm().x() * res.width();
+            y = (1. - MouseState::globalInstance().dragPosNorm().y()) * res.height();
+        }
+        u_mouse->setFloats(x, y,
                            MouseState::globalInstance().isDown(Qt::LeftButton),
                            MouseState::globalInstance().isDown(Qt::RightButton)
                     );

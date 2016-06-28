@@ -24,17 +24,26 @@ struct TimelinePoint
         /** default is used only to signal to use the last type. <br>
             it's no legal type to calculate with. */
         DEFAULT,
-        /** the value will stay the same over time until
-            the next que-point */
+        /** the value stays unchanged over time until
+            the next cue-point */
         CONSTANT,
+        /** Linear user-defined derivative after each cue-point */
+        CONSTANT_USER,
         /** the value will linearly fade between this and the next point */
         LINEAR,
-        /** the value will nicely fade between this and the next point in a sigmoid fashion */
+        /** the value will nicely fade between this and the next point
+            in a sigmoid fashion */
         SMOOTH,
-        /** the value will be interpolated between user-adjustable symmetric derrivatives at each point. <br>
+        /** the value will be interpolated between calculated
+            symmetric derivatives at each point. <br>
             curve continuity at each point is granted. */
         SYMMETRIC,
-        /** the value will be interpolated between user-adjustable symmetric derrivatives at each point. <br>
+        /** the value will be interpolated between user-adjustable
+            symmetric derivatives at each point. <br>
+            curve continuity at each point is granted. */
+        SYMMETRIC_USER,
+        /** the value will be interpolated between user-adjustable
+            symmetric derivatives at each point. <br>
             variation of hermite interpolation. */
         SYMMETRIC2,
         /** 4-point spline.
@@ -58,6 +67,17 @@ struct TimelinePoint
     /** Returns the type for the given persistent name,
         or LINEAR if unknown. */
     static Type getTypeForPersistentName(const QString& persistent_name);
+
+    /** Is this type continuous at the actual cue-point */
+    static bool isContinuous(Type);
+    /** Has the type user adjustable derivatives */
+    static bool isUserDerivative(Type);
+    /** Has the derivatives that need to be calculated first */
+    static bool isAutoDerivative(Type);
+    /** Uses the type user adjustable or automatic derivatives */
+    static bool hasDerivative(Type t)
+        { return isUserDerivative(t) || isAutoDerivative(t); }
+
 };
 
 } // namespace MATH

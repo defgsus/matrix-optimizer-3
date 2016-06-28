@@ -68,6 +68,7 @@ Timeline1DView::Timeline1DView(MATH::Timeline1d * tl, QWidget *parent)
 
         hoverHash_              (MATH::Timeline1d::InvalidHash),
         hoverCurveHash_         (MATH::Timeline1d::InvalidHash),
+        derivativeHoverIndex_   (-1),
         action_                 (A_NOTHING)
 {
     space_.setScaleX(10);
@@ -268,6 +269,52 @@ QRect Timeline1DView::handleRect_(const MATH::Timeline1d::Point& p, RectStyle_ r
 
 }
 
+
+QRect Timeline1DView::derivativeHandleRect_(
+        const MATH::Timeline1d::Point& p, int idx, RectStyle_ rs)
+{
+    int r = handleRadius_ * .8;
+
+    switch (rs)
+    {
+        case RS_HOVER: r = handleRadiusHovered_; break;
+        case RS_SELECTED: r = handleRadiusSelected_; break;
+        case RS_UPDATE: r = handleRadiusSelected_+1; break;
+        case RS_NORMAL: break;
+    }
+
+    Double x = p.t, y = p.val,
+           tw = screen2time(30) - screen2time(0),
+           th = screen2value(30) - screen2value(0);
+    if (idx == 0)
+    {
+        x -= tw;
+        y += p.d1 * th * tw;
+    }
+    else
+    {
+        x += tw;
+        y -= p.d1 * th * tw;
+    }
+
+    QRect rect(0,0,r*2,r*2);
+    rect.moveTo(time2screen(x) - r,
+                value2screen(y) - r);
+    return rect;
+
+}
+
+void Timeline1DView::updateHandles_(const MATH::Timeline1d::Point& po)
+{
+    update(handleRect_(po, RS_UPDATE));
+    if (po.hasDerivative())
+    {
+        auto r1 = derivativeHandleRect_(po, 0, RS_UPDATE),
+             r2 = derivativeHandleRect_(po, 1, RS_UPDATE);
+        update(r1.united(r2));
+    }
+}
+
 void Timeline1DView::updateAroundPoint_(const MATH::Timeline1d::Point &p)
 {
     if (!tl_)
@@ -367,8 +414,12 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 
     for (auto it = it0; it != it1 && it != tl_->getData().end(); ++it)
     {
-        const bool hovered = (hoverHash_ == it->first);
-        const bool selected = (selectHashSet_.contains(it->first));
+        const MATH::Timeline1d::Point& po = it->second;
+
+        const bool
+                hovered = (hoverHash_ == it->first),
+                derHovered = (derivativeHoverHash_ == it->first),
+                selected = (selectHashSet_.contains(it->first));
 
         if (selected)
             p.setBrush(QBrush(QColor(200,255,200)));
@@ -378,14 +429,39 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
         else
             p.setBrush(QBrush(QColor(200,200,100,200)));
 
-        p.drawRect(handleRect_(it->second, hovered? RS_HOVER : RS_NORMAL));
+        auto hr = handleRect_(po, hovered? RS_HOVER : RS_NORMAL);
+        p.drawRect(hr);
 
+        // derivative handle rects/positions
+        auto dr1 = derivativeHandleRect_(
+                        po, 0, derHovered && derivativeHoverIndex_ == 0
+                                                     ? RS_HOVER : RS_NORMAL),
+             dr2 = derivativeHandleRect_(
+                        po, 1, derHovered && derivativeHoverIndex_ == 1
+                                                     ? RS_HOVER : RS_NORMAL);
         if (selected)
         {
+            // selection frame around handle
             p.setBrush(Qt::NoBrush);
             p.setPen(QPen(QColor(200,255,200)));
-            p.drawRect(handleRect_(it->second, RS_SELECTED));
-            p.setPen(Qt::NoPen);
+            p.drawRect(handleRect_(po, RS_SELECTED));
+
+            // derivative lines
+            if (po.hasDerivative())
+            {
+                p.setPen(QPen(QColor(255,255,255,100)));
+                p.drawLine(hr.center(), dr1.center());
+                p.drawLine(hr.center(), dr2.center());
+                p.setPen(Qt::NoPen);
+            }
+
+            // derivative handles
+            if (po.isUserDerivative())
+            {
+                p.setBrush(QBrush(QColor(255,255,255,100)));
+                p.drawRect(dr1);
+                p.drawRect(dr2);
+            }
         }
     }
 
@@ -417,32 +493,55 @@ void Timeline1DView::clearHover_()
     {
         auto it1 = tl_->getData().lower_bound(wasHash);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, RS_UPDATE));
+            updateHandles_(it1->second);
     }
 }
 
-void Timeline1DView::setHover_(const MATH::Timeline1d::Point & p)
+void Timeline1DView::setHover_(const MATH::Timeline1d::Point & p, bool setDeriv)
 {
     auto hash = MATH::Timeline1d::hash(p.t);
 
-    if (hash == hoverHash_)
-        return;
+    if (!setDeriv)
+    {
+        if (hash == hoverHash_)
+            return;
+    }
+    else
+    {
+        if (hash == derivativeHoverHash_)
+            return;
+    }
 
-    if (isHover_() && tl_)
+    if ((isHover_() || isDerivativeHover_()) && tl_)
     {
         // remove old flag
         auto it1 = tl_->getData().lower_bound(hoverHash_);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, RS_UPDATE));
+            updateHandles_(it1->second);
+        it1 = tl_->getData().lower_bound(derivativeHoverHash_);
+        if (it1 != tl_->getData().end())
+            updateHandles_(it1->second);
     }
 
-    hoverHash_ = hash;
+    if (setDeriv)
+        derivativeHoverHash_ = hash;
+    else
+        hoverHash_ = hash;
+
     update(handleRect_(p, RS_UPDATE));
+    update(derivativeHandleRect_(p, 0, RS_UPDATE));
+    update(derivativeHandleRect_(p, 1, RS_UPDATE));
 }
 
 bool Timeline1DView::isHover_() const
 {
     return hoverHash_ != MATH::Timeline1d::InvalidHash;
+}
+
+bool Timeline1DView::isDerivativeHover_() const
+{
+    return derivativeHoverHash_ != MATH::Timeline1d::InvalidHash
+            && derivativeHoverIndex_ >= 0;
 }
 
 MATH::Timeline1d::TpList::iterator Timeline1DView::hoverPoint_()
@@ -471,7 +570,7 @@ void Timeline1DView::clearSelect_()
     {
         auto it1 = tl_->getData().lower_bound(i);
         if (it1 != tl_->getData().end())
-            update(handleRect_(it1->second, RS_UPDATE));
+            updateHandles_(it1->second);
     }
     selectHashSet_.clear();
 }
@@ -485,14 +584,14 @@ void Timeline1DView::addSelect_(const MATH::Timeline1d::Point & p, bool do_swap)
         if (do_swap)
         {
             selectHashSet_.remove(hash);
-            update(handleRect_(p, RS_UPDATE));
+            updateHandles_(p);
         }
         return;
     }
 
     selectHashSet_.insert(hash);
 
-    update(handleRect_(p, RS_UPDATE));
+    updateHandles_(p);
 }
 
 void Timeline1DView::addSelect_(const QRect &rect, bool do_swap)
@@ -652,6 +751,32 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         return;
     }
 
+    // --- change derivatives ---
+
+    if (action_ == A_DRAG_DERIVATIVE)
+    {
+        // mouse delta in timeline space
+        Double dx = screen2time(e->x()) - screen2time(dragStart_.x()),
+               dy = screen2value(e->y()) - screen2value(dragStart_.y());
+
+        // only move vertically on CTRL
+        if (e->modifiers() & modifierMoveVert_)
+            dx = 0;
+
+        {
+            {
+                Locker_ lock(this);
+                changeDerivativesSelected_(dx, dy);
+            }
+            emit timelineChanged();
+        }
+
+        e->accept();
+        return;
+    }
+
+    // --- select frame ---
+
     if (action_ == A_SELECT_FRAME)
     {
         update(selRect_.adjusted(-1,-1,1,1));
@@ -671,9 +796,53 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
     // --------- on hover over --------------
 
+    auto oldDerivativeHoverHash = derivativeHoverHash_;
+
+    derivativeHoverIndex_ = -1;
+    hoverCurveHash_ = MATH::Timeline1d::InvalidHash;
+
     if (options_ & O_EditAll)
     {
-        hoverCurveHash_ = MATH::Timeline1d::InvalidHash;
+        // hover over derivative rects?
+        if (isSelected() && (options_ & O_ChangeDerivative))
+        {
+            for (const auto& h : selectHashSet_)
+            {
+                auto it1 = tl_->getData().lower_bound(h);
+                if (it1 != tl_->getData().end())
+                {
+                    const MATH::Timeline1d::Point& po = it1->second;
+                    auto r1 = derivativeHandleRect_(po, 0, RS_NORMAL),
+                         r2 = derivativeHandleRect_(po, 1, RS_NORMAL);
+                    if (r1.contains(e->pos()))
+                        derivativeHoverIndex_ = 0;
+                    else if (r2.contains(e->pos()))
+                        derivativeHoverIndex_ = 1;
+                    if (derivativeHoverIndex_ >= 0)
+                    {
+                        setHover_(po, true);
+                        setCursor(Qt::OpenHandCursor);
+                        setStatusTip(
+                            tr("Left-click & drag to change derivative"));
+                        e->accept();
+                        return;
+                    }
+                }
+            }
+
+            // update old derivative hover state
+            derivativeHoverHash_ = MATH::Timeline1d::InvalidHash;
+            if (oldDerivativeHoverHash != MATH::Timeline1d::InvalidHash)
+            {
+                auto it1 = tl_->getData().lower_bound(derivativeHoverHash_);
+                if (it1 != tl_->getData().end())
+                    updateHandles_(it1->second);
+            }
+            setCursor(Qt::ArrowCursor);
+        }
+
+
+        // hover over points?
 
         auto oldHoverHash = hoverHash_;
 
@@ -683,6 +852,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
         // iterate over all of them
         for (; it != tl_->getData().end() && it != last; ++it)
         {
+            // hover a handle?
             if (x >= it->second.t - rx
              && x <= it->second.t + rx
              && y >= it->second.val - ry
@@ -692,7 +862,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
                     return;
 
                 // set new hover point
-                setHover_(it->second);
+                setHover_(it->second, false);
 
                 setCursor(Qt::OpenHandCursor);
 
@@ -809,6 +979,34 @@ void Timeline1DView::mousePressEvent(QMouseEvent * e)
         else
             return;
 
+    }
+
+    // ---- click on derivative handle ---
+
+    if (isDerivativeHover_())
+    {
+        if (e->button() == Qt::LeftButton
+            && (options_ & O_ChangeDerivative))
+        {
+            /*
+            auto it1 = tl_->getData().lower_bound(derivativeHoverHash_);
+            if (it1 != tl_->getData().end())
+            {
+                const MATH::Timeline1d::Point& po = it1->second;
+            }*/
+            action_ = A_DRAG_DERIVATIVE;
+            dragStart_ = e->pos();
+            derivativeOriginalList_.clear();
+            for (auto &h : selectHashSet_)
+            {
+                auto it = tl_->getData().lower_bound(h);
+                if (it != tl_->getData().end())
+                    derivativeOriginalList_.insert(
+                                std::make_pair(it->first, it->second));
+            }
+            e->accept();
+            return;
+        }
     }
 
     // ---- click on point ----
@@ -1075,7 +1273,8 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
         if (!p.valid) continue;
 
         // create a new point
-        auto newp = tl_->add(limitX_(p.oldp.t + dx), limitY_(p.oldp.val + dy), p.oldp.type);
+        auto newp = tl_->add(limitX_(p.oldp.t + dx),
+                             limitY_(p.oldp.val + dy), p.oldp.type);
 
         // was there a point already?
         if (newp == 0)
@@ -1086,12 +1285,17 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             if (it2 == p.it)
             {
                 p.it->second.val = limitY_( p.oldp.val + dy );
+                //p.it->second.d1 = p.oldp.d1;
                 updateAroundPoint_(p.it->second);
             }
 
             // update selection hash
             selectHashSet_.insert(p.it->first);
             continue;
+        }
+        else
+        {
+            newp->d1 = p.oldp.d1;
         }
 
         // delete previous point
@@ -1126,6 +1330,37 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             updateDerivatives_(p.it);
     }
 }
+
+void Timeline1DView::changeDerivativesSelected_(Double dx, Double dy)
+{
+    if (!tl_)
+        return;
+
+    if (!(options_ & O_ChangeDerivative))
+        return;
+
+    if (derivativeHoverIndex_ == 0)
+        dy = -dy;
+
+    for (const auto& it : selectHashSet_)
+    {
+        auto it1 = tl_->getData().lower_bound(it);
+        if (it1 == tl_->getData().end())
+            continue;
+        MATH::Timeline1d::Point& po = it1->second;
+
+        it1 = derivativeOriginalList_.lower_bound(it);
+        if (it1 == derivativeOriginalList_.end())
+            continue;
+        const MATH::Timeline1d::Point& oldPo = it1->second;
+
+        po.d1 = oldPo.d1 + dy;
+        qDebug() << po.d1;
+
+        updateAroundPoint_(po);
+    }
+}
+
 
 void Timeline1DView::slotPointContextMenu_()
 {
@@ -1447,7 +1682,7 @@ void Timeline1DView::addPoint_(Double t, Double v)
 
     clearSelect_();
     addSelect_(*p);
-    setHover_(*p);
+    setHover_(*p, false);
     hoverCurveHash_ = MATH::Timeline1d::InvalidHash;
 
     setCursor(Qt::OpenHandCursor);
@@ -1466,7 +1701,7 @@ void Timeline1DView::updateDerivatives_(MATH::Timeline1d::TpList::iterator p, in
 
     while (it != tl_->getData().end() && (i++) <= lr)
     {
-        if (MATH::Timeline1d::hasAutoDerivative(it->second.type))
+        if (it->second.isAutoDerivative())
             tl_->setAutoDerivative(it);
 
         if (it == tl_->getData().begin())
@@ -1479,7 +1714,7 @@ void Timeline1DView::updateDerivatives_(MATH::Timeline1d::TpList::iterator p, in
 
     while (it != tl_->getData().end() && (i++) <= lr)
     {
-        if (MATH::Timeline1d::hasAutoDerivative(it->second.type))
+        if (it->second.isAutoDerivative())
             tl_->setAutoDerivative(it);
         ++it;
     }

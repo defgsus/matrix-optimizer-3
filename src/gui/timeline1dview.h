@@ -37,6 +37,7 @@ public:
         O_MovePointsY = 1<<1,
         O_AddRemovePoints = 1<<2,
         O_ChangePointType = 1<<3,
+        O_ChangeDerivative = 1<<4,
 
         O_MoveViewX = 1<<8,
         O_MoveViewY = 1<<9,
@@ -50,7 +51,8 @@ public:
         O_ChangeViewAll = O_ChangeViewX | O_ChangeViewY,
 
         O_MovePoints = O_MovePointsX | O_MovePointsY,
-        O_EditAll = O_MovePoints | O_AddRemovePoints | O_ChangePointType,
+        O_EditAll = O_MovePoints | O_AddRemovePoints
+                    | O_ChangePointType | O_ChangeDerivative,
 
         O_EnableAll = 0xffffffff
     };
@@ -130,13 +132,16 @@ public slots:
 
     /** Sets new viewspaces for the timeline and the overpainter and sequence-curve. */
     void setViewSpace(const UTIL::ViewSpace &timelineSpace,
-                      const UTIL::ViewSpace &overpainterSpace, bool send_signal = false);
+                      const UTIL::ViewSpace &overpainterSpace,
+                      bool send_signal = false);
 
     /** Fits the whole curve into view */
-    void fitToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
+    void fitToView(bool fitX = true, bool fitY = true,
+                   int marginInPixels = 10);
 
     /** Fits the selected curve into view */
-    void fitSelectionToView(bool fitX = true, bool fitY = true, int marginInPixels = 10);
+    void fitSelectionToView(bool fitX = true, bool fitY = true,
+                            int marginInPixels = 10);
 
     /** Clear any selections previously made.
         This should be called when a timeline was loaded. */
@@ -161,6 +166,7 @@ protected:
         A_START_DRAG_SPACE,
         A_DRAG_SPACE,
         A_DRAG_SELECTED,
+        A_DRAG_DERIVATIVE,
         A_START_SELECT_FRAME,
         A_SELECT_FRAME
     };
@@ -206,8 +212,9 @@ protected:
     void setStatusTip_(const QString&);
 
     void clearHover_();
-    void setHover_(const MATH::Timeline1d::Point&);
+    void setHover_(const MATH::Timeline1d::Point&, bool setDeriv);
     bool isHover_() const;
+    bool isDerivativeHover_() const;
     MATH::Timeline1d::TpList::iterator hoverPoint_();
 
     void clearSelect_();
@@ -218,6 +225,8 @@ protected:
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const MATH::Timeline1d::Point&, RectStyle_ rs);
+    QRect derivativeHandleRect_(const MATH::Timeline1d::Point&, int idx, RectStyle_ rs);
+    void updateHandles_(const MATH::Timeline1d::Point&);
     void updateAroundPoint_(const MATH::Timeline1d::Point&);
     void updateDerivatives_(MATH::Timeline1d::TpList::iterator it, int leftRight = 1);
 
@@ -227,6 +236,7 @@ protected:
     void changePointType_(MATH::TimelinePoint::Type t);
     void moveSelected_(Double dx, Double dy);
     void addPoint_(Double t, Double v);
+    void changeDerivativesSelected_(Double dx, Double dy);
 
     QCursor defaultCursor_() const;
 
@@ -267,13 +277,17 @@ protected:
 
     MATH::Timeline1d::TpHash
         hoverHash_,
-        hoverCurveHash_;
+        hoverCurveHash_,
+        derivativeHoverHash_;
 
     QSet<MATH::Timeline1d::TpHash>
         selectHashSet_;
+    MATH::Timeline1d::TpList
+        derivativeOriginalList_;
 
     QVector<DragPoint_>
         dragPoints_;
+    int derivativeHoverIndex_;
 
     UTIL::ViewSpace dragStartSpace_;
 
