@@ -208,7 +208,7 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
 
         /** a variation of hermite with arbitrary derivatives
             http://paulbourke.net/miscellaneous/interpolation/ */
-        case TimelinePoint::SYMMETRIC2:
+        case TimelinePoint::HERMITE:
         {
             auto i2 = i1; i2++;
             if (i2==p_data_.end())
@@ -235,42 +235,6 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
         }
 
 
-        case TimelinePoint::SPLINE4_SYM:
-        {
-            auto i0=i1, i2 = i1; i2++;
-            if (i2==p_data_.end())
-            {
-                ret = i1->second.val;
-                return ret;
-            }
-
-            ValueType d1(p_dim_), d2(p_dim_);
-
-            if (i0!=p_data_.begin())
-            {
-                i0--;
-                d1 = (i2->second.val-i0->second.val)/(i2->second.t-i0->second.t);
-            }
-            auto i3=i2; i3++;
-            if (i3!=p_data_.end())
-            {
-                d2 = (i3->second.val-i1->second.val)/(i3->second.t-i1->second.t);
-            }
-
-            const TimelineNd::Point
-                *t1 = &i1->second,
-                *t2 = &i2->second;
-            Double
-                tt = (time-t1->t),
-                t = tt/(t2->t - t1->t),
-                tq = t*t,
-                f = -2.0*tq*t + 3.0*tq;
-            ret =
-                  (1.0 - f) * (t1->val + d1 * tt)
-                +        f  * (t2->val - d2 * (t2->t-time));
-
-            return ret;
-        }
 
 
         case TimelinePoint::SPLINE4:
@@ -489,7 +453,8 @@ TimelineNd::Point* TimelineNd::add(Point &p)
 
 TimelinePoint::Type TimelineNd::p_currentType_(Double time)
 {
-    if (p_data_.empty()) return TimelinePoint::SPLINE4_SYM;
+    if (p_data_.empty())
+        return TimelinePoint::SYMMETRIC;
 
     TpList::iterator i = first(time);
     if (i==p_data_.end()) i--;

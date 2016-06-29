@@ -67,6 +67,7 @@ Timeline1DView::Timeline1DView(MATH::Timeline1d * tl, QWidget *parent)
         modifierMoveVert_       (Qt::CTRL),
 
         hoverHash_              (MATH::Timeline1d::InvalidHash),
+        moveHoverHash_          (MATH::Timeline1d::InvalidHash),
         hoverCurveHash_         (MATH::Timeline1d::InvalidHash),
         derivativeHoverIndex_   (-1),
         action_                 (A_NOTHING)
@@ -269,6 +270,14 @@ QRect Timeline1DView::handleRect_(const MATH::Timeline1d::Point& p, RectStyle_ r
 
 }
 
+QRect Timeline1DView::handleNumberRect_(
+        const MATH::Timeline1d::Point& p)
+{
+    auto r = handleRect_(p, RS_NORMAL);
+    r.moveTo(r.topLeft() + QPoint(12,-10));
+    r.setSize(QSize(96,32));
+    return r;
+}
 
 QRect Timeline1DView::derivativeHandleRect_(
         const MATH::Timeline1d::Point& p, int idx, RectStyle_ rs)
@@ -326,6 +335,7 @@ void Timeline1DView::updateHandles_(const MATH::Timeline1d::Point& po)
              r2 = derivativeHandleRect_(po, 1, RS_UPDATE);
         update(r1.united(r2));
     }
+    update(handleNumberRect_(po));
 }
 
 void Timeline1DView::updateAroundPoint_(const MATH::Timeline1d::Point &p)
@@ -435,17 +445,19 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             continue;
 
         const bool
-                hovered = (hoverHash_ == it->first),
+                hovered = (hoverHash_ == it->first || moveHoverHash_ == it->first),
                 derHovered = (derivativeHoverHash_ == it->first),
                 selected = (selectHashSet_.contains(it->first));
+        const int red = po.isDifferentiable() ? 0 : 35;
+        const QColor selCol(200+red,255-red,150);
 
         if (selected)
-            p.setBrush(QBrush(QColor(200,255,200)));
+            p.setBrush(QBrush(selCol));
         else
         if (hovered)
-            p.setBrush(QBrush(QColor(250,250,150,200)));
+            p.setBrush(QBrush(QColor(220+red,220-red/2,150,200)));
         else
-            p.setBrush(QBrush(QColor(200,200,100,200)));
+            p.setBrush(QBrush(QColor(200+red,200-red/2,100,200)));
 
         auto hr = handleRect_(po, hovered? RS_HOVER : RS_NORMAL);
         p.drawRect(hr);
@@ -461,7 +473,7 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
         {
             // selection frame around handle
             p.setBrush(Qt::NoBrush);
-            p.setPen(QPen(QColor(200,255,200)));
+            p.setPen(QPen(selCol));
             p.drawRect(handleRect_(po, RS_SELECTED));
 
             // derivative lines
@@ -480,6 +492,18 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
                 p.drawRect(dr1);
                 p.drawRect(dr2);
             }
+        }
+
+        // -- show numbers --
+
+        if ((hovered && !derHovered))
+        {
+            auto r = handleNumberRect_(po);
+            p.setPen(QPen(Qt::white));
+            p.setBrush(Qt::NoBrush);
+            //p.drawRect(r);
+            p.drawText(r, 0, QString("t %1\nv %2").arg(po.t).arg(po.val));
+            p.setPen(Qt::NoPen);
         }
     }
 
@@ -504,7 +528,7 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
 void Timeline1DView::clearHover_()
 {
     auto wasHash = hoverHash_;
-    hoverHash_ = MATH::Timeline1d::InvalidHash;
+    hoverHash_ = moveHoverHash_ = MATH::Timeline1d::InvalidHash;
 
     // remove old flag
     if (wasHash != hoverHash_)
@@ -546,9 +570,10 @@ void Timeline1DView::setHover_(const MATH::Timeline1d::Point & p, bool setDeriv)
     else
         hoverHash_ = hash;
 
+    updateHandles_(p);/*
     update(handleRect_(p, RS_UPDATE));
     update(derivativeHandleRect_(p, 0, RS_UPDATE));
-    update(derivativeHandleRect_(p, 1, RS_UPDATE));
+    update(derivativeHandleRect_(p, 1, RS_UPDATE));*/
 }
 
 bool Timeline1DView::isHover_() const
@@ -1173,6 +1198,7 @@ void Timeline1DView::mouseReleaseEvent(QMouseEvent * e)
         setCursor(Qt::OpenHandCursor);
 
     action_ = A_NOTHING;
+    moveHoverHash_ = MATH::Timeline1d::InvalidHash;
 
     // update status tips
     mouseMoveEvent(e);
@@ -1299,12 +1325,14 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
     // we need to rebuild the selection hash
     selectHashSet_.clear();
 
+
     for (auto &p : dragPoints_)
     {
         if (!p.valid) continue;
 
         // create a new point
-        auto newp = tl_->add(limitX_(p.oldp.t + dx),
+        Double newTime;
+        auto newp = tl_->add(newTime = limitX_(p.oldp.t + dx),
                              limitY_(p.oldp.val + dy), p.oldp.type);
 
         // was there a point already?
@@ -1329,6 +1357,11 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
             // also copy these values
             // TODO because they are not in the Timeline1d interface
             newp->d1 = p.oldp.d1;
+
+            if (hoverHash_ == p.oldp.hash())
+            {
+                moveHoverHash_ = newp->hash();
+            }
         }
 
         // delete previous point
@@ -1351,7 +1384,6 @@ void Timeline1DView::moveSelected_(Double dx, Double dy)
 
             // update selection hash
             selectHashSet_.insert(p.it->first);
-
             updateAroundPoint_(p.it->second);
         }
     }

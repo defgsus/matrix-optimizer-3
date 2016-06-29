@@ -20,13 +20,13 @@ const char *TimelinePoint::getName(Type type)
         default:
         case DEFAULT:           return "default";               break;
         case CONSTANT:          return "constant";              break;
-        case CONSTANT_USER:     return "constant-derivative";   break;
+        case CONSTANT_USER:     return "constant user";         break;
         case LINEAR:            return "linear";                break;
-        case SMOOTH:            return "smooth*";               break;
-        case SYMMETRIC:         return "symmetric*";            break;
-        case SYMMETRIC_USER:    return "symmetric-derivative*"; break;
-        case SYMMETRIC2:        return "hermite";               break;
-        case SPLINE4_SYM:       return "symmetric4*";           break;
+        case SMOOTH:            return "smooth *";               break;
+        case SYMMETRIC:         return "symmetric *";            break;
+        case SYMMETRIC_USER:    return "symmetric user *";      break;
+        case HERMITE:           return "hermite";               break;
+        case HERMITE_USER:      return "hermite user";          break;
         case SPLINE4:           return "spline4";               break;
         case SPLINE6:           return "spline6";               break;
     }
@@ -44,8 +44,8 @@ const char *TimelinePoint::getPersistentName(Type type)
         case SMOOTH:            return "smooth";        break;
         case SYMMETRIC:         return "sym";           break;
         case SYMMETRIC_USER:    return "sym_der";       break;
-        case SYMMETRIC2:        return "hermite";       break;
-        case SPLINE4_SYM:       return "sym4";          break;
+        case HERMITE:           return "hermite";       break;
+        case HERMITE_USER:      return "hermite_der";   break;
         case SPLINE4:           return "spline4";       break;
         case SPLINE6:           return "spline6";       break;
     }
@@ -63,22 +63,21 @@ TimelinePoint::Type TimelinePoint::getTypeForPersistentName(const QString& name)
 bool TimelinePoint::isUserDerivative(Type type)
 {
     return type == TimelinePoint::CONSTANT_USER
-        || type == TimelinePoint::SYMMETRIC_USER;
+        || type == TimelinePoint::SYMMETRIC_USER
+        || type == TimelinePoint::HERMITE_USER;
 }
 
 bool TimelinePoint::isAutoDerivative(Type type)
 {
     return (type == TimelinePoint::SYMMETRIC ||
-            type == TimelinePoint::SYMMETRIC2);
-
+            type == TimelinePoint::HERMITE);
 }
 
-bool TimelinePoint::isContinuous(Type type)
+bool TimelinePoint::isDifferentiable(Type type)
 {
     return (type == TimelinePoint::SMOOTH ||
             type == TimelinePoint::SYMMETRIC ||
-            type == TimelinePoint::SYMMETRIC_USER ||
-            type == TimelinePoint::SPLINE4_SYM
+            type == TimelinePoint::SYMMETRIC_USER
             );
 }
 

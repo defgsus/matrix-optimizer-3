@@ -170,11 +170,12 @@ void ShaperAO::createParameters()
         // -- adjustable curve --
 
         MATH::Timeline1d deftl;
-        deftl.add(-1, -1, MATH::TimelinePoint::SPLINE4_SYM);
+        deftl.add(-1, -1, MATH::TimelinePoint::SYMMETRIC_USER);
         deftl.add(1, 1);
-        p_->paramCurve = params()->createTimeline1DParameter("_shaper_curve", tr("input->output curve"),
-                                                    tr("The curve mapping from input value to output value"),
-                                                    &deftl, true);
+        p_->paramCurve = params()->createTimeline1DParameter(
+                    "_shaper_curve", tr("input->output curve"),
+                    tr("The curve mapping from input value to output value"),
+                    &deftl, true);
         // create timeline component now (instead of in audio-thread)
         p_->paramCurve->timeline();
 

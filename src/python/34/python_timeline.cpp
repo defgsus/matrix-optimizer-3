@@ -396,11 +396,15 @@ static PyGetSetDef Timeline_getseters[] = {
     MO__TYPE("LINEAR"     , LINEAR      , "two-point linear transition")
     MO__TYPE("SMOOTH"     , SMOOTH      , "two-point sigmoid transition")
     MO__TYPE("SYMMETRIC"  , SYMMETRIC   , "two-point smooth transition"
-                                          "using defined derivatives (differentiable)")
-    MO__TYPE("HERMITE"    , SYMMETRIC2  , "two-point hermite-like transition "
+                                          "using calculated derivatives "
+                                          " (differentiable)")
+    MO__TYPE("SYMMETRIC_USER", SYMMETRIC_USER, "two-point smooth transition"
+                                          "using user derivatives (differentiable)")
+    MO__TYPE("HERMITE"    , HERMITE  ,    "two-point hermite-like transition "
+                                          "using calculated derivatives")
+    MO__TYPE("HERMITE_USER", HERMITE_USER, "two-point hermite-like transition "
                                           "using defined derivatives")
-    MO__TYPE("SPLINE4"    , SPLINE4_SYM , "four-point spline (differentiable)")
-    MO__TYPE("SPLINE4_2"  , SPLINE4     , "four-point spline")
+    MO__TYPE("SPLINE4"    , SPLINE4     , "four-point spline")
     MO__TYPE("SPLINE6"    , SPLINE6     , "six-point spline")
 
     { NULL, NULL, NULL, NULL, NULL }

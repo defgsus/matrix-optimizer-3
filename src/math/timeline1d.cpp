@@ -96,6 +96,7 @@ Double Timeline1d::getNoLimit(Double time) const
     }
 
     Double ret;
+    bool returnLast = false;
 
     // before first
     if ( (isFirst) && htime < i1->first )
@@ -119,23 +120,27 @@ Double Timeline1d::getNoLimit(Double time) const
     if (isOver)
     {
         if (!isFirst) i1--;
-        ret = i1->second.val;
-        return ret;
+        returnLast = true;
     }
     else
     // on last
     if (isLast)
-    switch (i1->second.type)
+        returnLast = true;
+
+    if (returnLast)
     {
-        default:
-            ret = i1->second.val;
-            return ret;
-        case TimelinePoint::CONSTANT_USER:
-        case TimelinePoint::SYMMETRIC_USER:
+        switch (i1->second.type)
         {
-            const Timeline1d::Point *t1 = &i1->second;
-            ret = t1->val + t1->d1 * (time - t1->t);
-            return ret;
+            default:
+                ret = i1->second.val;
+                return ret;
+            case TimelinePoint::CONSTANT_USER:
+            case TimelinePoint::SYMMETRIC_USER:
+            {
+                const Timeline1d::Point *t1 = &i1->second;
+                ret = t1->val + t1->d1 * (time - t1->t);
+                return ret;
+            }
         }
     }
 
@@ -217,7 +222,7 @@ Double Timeline1d::getNoLimit(Double time) const
                 f = -2.0*tq*t + 3.0*tq;
             ret =
                   (1.0 - f) * (t1->val + t1->d1 * t0)
-                +        f  * (t2->val - t2->d1 * (t2->t-time));
+                +        f  * (t2->val - t2->d1 * (t2->t - time));
 
             return ret;
         }
@@ -225,7 +230,9 @@ Double Timeline1d::getNoLimit(Double time) const
 
         /** a variation of hermite with arbitrary derivatives
             http://paulbourke.net/miscellaneous/interpolation/ */
-        case TimelinePoint::SYMMETRIC2:
+        //case TimelinePoint::HERMITE_USER:
+        case TimelinePoint::HERMITE_USER:
+        case TimelinePoint::HERMITE:
         {
             auto i2 = i1; i2++;
             const Timeline1d::Point
@@ -242,40 +249,6 @@ Double Timeline1d::getNoLimit(Double time) const
                 (tr2)     * t1->d1  +
                 (tq3-tq2) * t2->d1  +
                 (1.0-tr1) * t2->val;
-
-            return ret;
-        }
-        break;
-
-
-        case TimelinePoint::SPLINE4_SYM:
-        {
-            auto i0=i1, i2 = i1; i2++;
-
-            Double d1 = 0, d2 = 0;
-
-            if (i0!=data_.begin())
-            {
-                i0--;
-                d1 = (i2->second.val-i0->second.val)/(i2->second.t-i0->second.t);
-            }
-            auto i3=i2; i3++;
-            if (i3!=data_.end())
-            {
-                d2 = (i3->second.val-i1->second.val)/(i3->second.t-i1->second.t);
-            }
-
-            const Timeline1d::Point
-                *t1 = &i1->second,
-                *t2 = &i2->second;
-            Double
-                tt = (time-t1->t),
-                t = tt/(t2->t - t1->t),
-                tq = t*t,
-                f = -2.0*tq*t + 3.0*tq;
-            ret =
-                  (1.0 - f) * (t1->val + d1 * tt)
-                +        f  * (t2->val - d2 * (t2->t-time));
 
             return ret;
         }
@@ -491,7 +464,8 @@ Timeline1d::Point* Timeline1d::add(Point &p)
 
 TimelinePoint::Type Timeline1d::currentType_(Double time)
 {
-    if (data_.empty()) return TimelinePoint::SPLINE4_SYM;
+    if (data_.empty())
+        return TimelinePoint::SYMMETRIC_USER;
 
     TpList::iterator i = first(time);
     if (i==data_.end()) i--;

@@ -37,6 +37,13 @@ class Timeline1d : public RefCounted
 
     // ------------ types -------------
 
+    /** the type of hash-value generated for the time of a point. <br>
+        <b>NOTE</b>: actually this is no random hash value. the points
+        in TpList (more specific in Timeline1D::data_) are always ordered
+        according to their time. TpHash is simply the integer version of
+        the time multiplied by a reasonable large constant. */
+    typedef int64_t TpHash;
+
     /** one que-point of a Timeline1D */
     struct Point
     {
@@ -51,21 +58,17 @@ class Timeline1d : public RefCounted
         /** type of this que-point, see MO::MATH::TimelinePoint::Type */
         TimelinePoint::Type type;
 
+        /** Hash value of this point */
+        TpHash hash() const { return Timeline1d::hash(t); }
+
         /** Has the type user adjustable derivatives */
         bool isUserDerivative() const { return TimelinePoint::isUserDerivative(type); }
         bool isAutoDerivative() const { return TimelinePoint::isAutoDerivative(type); }
         bool hasDerivative() const { return TimelinePoint::hasDerivative(type); }
-        bool isContinuous() const { return TimelinePoint::isContinuous(type); }
+        bool isDifferentiable() const { return TimelinePoint::isDifferentiable(type); }
 
         bool operator == (const Point& o) const { return t == o.t && val == o.val && d1 == o.d1 && type == o.type; }
     };
-
-    /** the type of hash-value generated for the time of a point. <br>
-        <b>NOTE</b>: actually this is no random hash value. the points
-        in TpList (more specific in Timeline1D::data_) are always ordered
-        according to their time. TpHash is simply the integer version of
-        the time multiplied by a reasonable large constant. */
-    typedef int64_t TpHash;
 
     static const TpHash InvalidHash = 0xffffffffffffffff;
 

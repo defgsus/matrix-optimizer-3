@@ -379,7 +379,7 @@ IconBar * ObjectMenu::createObjectToolBar(int objectTypeFlags, QWidget *parent)
         // XXX Exclude audio objects, since they don't
         // have specific icons yet and uselessly blow the width
         // of the icon bar
-        if (o->isAudioObject())
+        if (o->isAudioObject() || o->isTexture())
             continue;
 
         bar->addIcon(AppIcons::iconForObject(o, ObjectFactory::colorForObject(o)),

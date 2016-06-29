@@ -90,59 +90,6 @@ void MainWindow::createWidgets_()
     connect(controller_, SIGNAL(windowTitle(QString)),
             this, SLOT(setWindowTitle(QString)));
 
-    // main-main layout
-    auto lv0 = new QVBoxLayout(centralWidget());
-    lv0->setMargin(0);
-
-        lv0->addWidget(controller_->transportWidget());
-
-        // ------ main layout ------
-        auto l0 = new QHBoxLayout();
-        lv0->addLayout(l0);
-        l0->setMargin(0);
-        l0->setSpacing(1);
-
-            // --- left container ----
-            auto lv = new QVBoxLayout();
-            l0->addLayout(lv, 1);
-            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
-
-                // sequencer
-                lv->addWidget(controller_->sequencer());
-
-                // clipview
-                lv->addWidget(controller_->clipView());
-
-                // object graph
-                lv->addWidget(controller_->objectGraphView());
-                controller_->objectGraphView()->setMinimumWidth(320);
-                controller_->objectGraphView()->setSizePolicy(
-                            QSizePolicy::Expanding, QSizePolicy::Expanding);
-
-                // Sequence view
-                lv->addWidget(controller_->sequenceView());
-
-            lv = new QVBoxLayout();
-            l0->addLayout(lv);
-
-            // ------ right container -----
-            auto rightContainer = new QWidget(this);
-            l0->addWidget(rightContainer);
-            rightContainer->setObjectName("_right_container");
-            rightContainer->setSizePolicy(
-                        QSizePolicy::Preferred, QSizePolicy::Expanding);
-            rightContainer->setMinimumWidth(320);
-
-            auto ll = new QHBoxLayout(rightContainer);
-            ll->setMargin(0);
-            //lv->setSizeConstraint(QLayout::SetMinAndMaxSize);
-
-
-                // object (parameter) editor
-                ll->addWidget(controller_->objectView());
-                controller_->objectView()->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-
     setMinimumSize(800,500);
 
 }
@@ -150,46 +97,46 @@ void MainWindow::createWidgets_()
 void MainWindow::createDockWidgets_()
 {
     auto dock = createDockWidget(tr("Transport"), controller_->transportWidget());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Scene"), controller_->objectGraphView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Tree"), controller_->objectTreeView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
 
 #ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend"), controller_->frontView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
     removeDockWidget(dock);
 #endif
 
     dock = createDockWidget(tr("Sequence"), controller_->sequenceView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
 
     dock = createDockWidget(tr("Tracks"), controller_->sequencer());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
     removeDockWidget(dock);
 
     dock = createDockWidget(tr("Clips"), controller_->clipView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
     removeDockWidget(dock);
 
     dock = createDockWidget(tr("Object"), controller_->objectView());
-    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Browser"), controller_->assetBrowser());
-    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("OSC Listeners"), controller_->oscView());
-    addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Horizontal);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Horizontal);
 
     dock = createDockWidget(tr("Object outputs"), controller_->objectOutputView());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Vertical);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
 
 #ifndef MO_DISABLE_FRONT
     dock = createDockWidget(tr("Frontend settings"), controller_->frontItemEditor());
-    addDockWidget(Qt::LeftDockWidgetArea, dock, Qt::Horizontal);
+    addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Horizontal);
     removeDockWidget(dock);
 #endif
 
@@ -197,7 +144,7 @@ void MainWindow::createDockWidgets_()
     if (isServer())
     {
         dock = createDockWidget(tr("Server/Client"), controller_->serverView());
-        addDockWidget(Qt::RightDockWidgetArea, dock, Qt::Vertical);
+        addDockWidget(Qt::AllDockWidgetAreas, dock, Qt::Vertical);
         removeDockWidget(dock);
     }
 #endif

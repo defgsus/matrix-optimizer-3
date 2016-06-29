@@ -42,13 +42,12 @@ struct TimelinePoint
             symmetric derivatives at each point. <br>
             curve continuity at each point is granted. */
         SYMMETRIC_USER,
-        /** the value will be interpolated between user-adjustable
+        /** the value will be interpolated between
             symmetric derivatives at each point. <br>
             variation of hermite interpolation. */
-        SYMMETRIC2,
-        /** 4-point spline.
-            curve continuity at each point is granted. */
-        SPLINE4_SYM,
+        HERMITE,
+        /** Same with user-defined derivatives */
+        HERMITE_USER,
         /** the value will describe the way of a nice spline (4 points are used) */
         SPLINE4,
         /** the value will describe the way of a very nice spline (6 points are used) */
@@ -69,7 +68,7 @@ struct TimelinePoint
     static Type getTypeForPersistentName(const QString& persistent_name);
 
     /** Is this type continuous at the actual cue-point */
-    static bool isContinuous(Type);
+    static bool isDifferentiable(Type);
     /** Has the type user adjustable derivatives */
     static bool isUserDerivative(Type);
     /** Has the derivatives that need to be calculated first */

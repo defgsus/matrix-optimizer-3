@@ -225,6 +225,7 @@ protected:
 
     /** Returns the screen rect for a given point */
     QRect handleRect_(const MATH::Timeline1d::Point&, RectStyle_ rs);
+    QRect handleNumberRect_(const MATH::Timeline1d::Point&);
     QRect derivativeHandleRect_(const MATH::Timeline1d::Point&, int idx, RectStyle_ rs);
     void updateHandles_(const MATH::Timeline1d::Point&);
     void updateAroundPoint_(const MATH::Timeline1d::Point&);
@@ -276,9 +277,10 @@ protected:
     // ---- interaction ----
 
     MATH::Timeline1d::TpHash
-        hoverHash_,
-        hoverCurveHash_,
-        derivativeHoverHash_;
+        hoverHash_, //! hash value of time-point beeing hovered
+        moveHoverHash_, //! updated copy of hoveHash_ during move
+        hoverCurveHash_, //! hash value of time-point after which curve is hovered
+        derivativeHoverHash_; //! time-point who's derivative handles are hovered
 
     QSet<MATH::Timeline1d::TpHash>
         selectHashSet_;

@@ -357,7 +357,7 @@ class TimelineNd : public RefCounted
 inline bool TimelineNd::hasAutoDerivative(TimelinePoint::Type type)
 {
     return (type == TimelinePoint::SYMMETRIC ||
-            type == TimelinePoint::SYMMETRIC2);
+            type == TimelinePoint::HERMITE);
 }
 
 

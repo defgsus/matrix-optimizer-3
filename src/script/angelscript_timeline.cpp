@@ -287,9 +287,10 @@ void register_timeline_enums(asIScriptEngine * engine)
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_LINEAR",    MATH::TimelinePoint::LINEAR); assert( r >= 0 );
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_SMOOTH",    MATH::TimelinePoint::SMOOTH); assert( r >= 0 );
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC", MATH::TimelinePoint::SYMMETRIC); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::TimelinePoint::SYMMETRIC2); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4",   MATH::TimelinePoint::SPLINE4_SYM); assert( r >= 0 );
-    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4_2", MATH::TimelinePoint::SPLINE4); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SYMMETRIC_USER", MATH::TimelinePoint::SYMMETRIC_USER); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE",   MATH::TimelinePoint::HERMITE); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_HERMITE_USER",   MATH::TimelinePoint::HERMITE_USER); assert( r >= 0 );
+    r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE4", MATH::TimelinePoint::SPLINE4); assert( r >= 0 );
     r = engine->RegisterEnumValue(enumType.c_str(), "TL_SPLINE6",   MATH::TimelinePoint::SPLINE6); assert( r >= 0 );
 }
 
