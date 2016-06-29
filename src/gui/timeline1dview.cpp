@@ -274,7 +274,7 @@ QRect Timeline1DView::handleNumberRect_(
         const MATH::Timeline1d::Point& p)
 {
     auto r = handleRect_(p, RS_NORMAL);
-    r.moveTo(r.topLeft() + QPoint(12,-10));
+    r.moveTo(r.topLeft() + QPoint(handleRadius_*2+8,8));
     r.setSize(QSize(96,32));
     return r;
 }
@@ -309,11 +309,12 @@ QRect Timeline1DView::derivativeHandleRect_(
     // limit height of handle
     int Y = value2screen(p.val),
         curH = std::max(20, std::min(70, std::abs(value2screen(p.val+yo)-Y)));
-    Double lim = screen2value(std::max(5,Y-curH)) - p.val;
-
+    Double
+    lim = screen2value(std::max(1,Y-curH)) - p.val;
     if (yo > lim)
         xo = xo / yo * lim, yo = lim;
-    lim = screen2value(std::min(height()-6-r*2, Y+curH)) - p.val;
+
+    lim = screen2value(std::min(height()-5-r*2, Y+curH)) - p.val;
     if (yo < lim)
         xo = xo / yo * lim, yo = lim;
 
@@ -322,8 +323,22 @@ QRect Timeline1DView::derivativeHandleRect_(
                 value2screen(p.val + yo) - r
                 //std::max(5, std::min(height()-6-r*2, value2screen(y) - r ))
                 );
+    if ((rect.center() - QPoint(time2screen(p.t),value2screen(p.val)))
+                            .manhattanLength() < handleRadius_*2 + 6)
+        return QRect();
     return rect;
 
+}
+
+QRect Timeline1DView::derivativeHandleNumberRect_(
+        const MATH::Timeline1d::Point& p, int idx)
+{
+    auto r = derivativeHandleRect_(p, idx, RS_NORMAL);
+    if (!r.isValid())
+        return r;
+    r.moveTo(r.topLeft() + QPoint(handleRadius_*2+8,-4));
+    r.setSize(QSize(96,16));
+    return r;
 }
 
 void Timeline1DView::updateHandles_(const MATH::Timeline1d::Point& po)
@@ -334,6 +349,9 @@ void Timeline1DView::updateHandles_(const MATH::Timeline1d::Point& po)
         auto r1 = derivativeHandleRect_(po, 0, RS_UPDATE),
              r2 = derivativeHandleRect_(po, 1, RS_UPDATE);
         update(r1.united(r2));
+
+        if (po.isUserDerivative())
+            update(derivativeHandleNumberRect_(po, 1));
     }
     update(handleNumberRect_(po));
 }
@@ -480,8 +498,10 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             if (po.hasDerivative())
             {
                 p.setPen(QPen(QColor(255,255,255,100)));
-                p.drawLine(hr.center(), dr1.center());
-                p.drawLine(hr.center(), dr2.center());
+                if (dr1.isValid())
+                    p.drawLine(hr.center(), dr1.center());
+                if (dr2.isValid())
+                    p.drawLine(hr.center(), dr2.center());
                 p.setPen(Qt::NoPen);
             }
 
@@ -489,8 +509,10 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             if (po.isUserDerivative())
             {
                 p.setBrush(QBrush(QColor(255,255,255,100)));
-                p.drawRect(dr1);
-                p.drawRect(dr2);
+                if (dr1.isValid())
+                    p.drawRect(dr1);
+                if (dr2.isValid())
+                    p.drawRect(dr2);
             }
         }
 
@@ -503,6 +525,14 @@ void Timeline1DView::paintEvent(QPaintEvent * e)
             p.setBrush(Qt::NoBrush);
             //p.drawRect(r);
             p.drawText(r, 0, QString("t %1\nv %2").arg(po.t).arg(po.val));
+            p.setPen(Qt::NoPen);
+        }
+        else if (derHovered && po.isUserDerivative())
+        {
+            auto r = derivativeHandleNumberRect_(po, 1);
+            p.setPen(QPen(Qt::white));
+            p.setBrush(Qt::NoBrush);
+            p.drawText(r, 0, QString("d %1").arg(po.d1));
             p.setPen(Qt::NoPen);
         }
     }
@@ -863,9 +893,9 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
 
                     auto r1 = derivativeHandleRect_(po, 0, RS_NORMAL),
                          r2 = derivativeHandleRect_(po, 1, RS_NORMAL);
-                    if (r1.contains(e->pos()))
+                    if (r1.isValid() && r1.contains(e->pos()))
                         derivativeHoverIndex_ = 0;
-                    else if (r2.contains(e->pos()))
+                    else if (r2.isValid() && r2.contains(e->pos()))
                         derivativeHoverIndex_ = 1;
                     if (derivativeHoverIndex_ >= 0)
                     {
@@ -883,7 +913,7 @@ void Timeline1DView::mouseMoveEvent(QMouseEvent * e)
             derivativeHoverHash_ = MATH::Timeline1d::InvalidHash;
             if (oldDerivativeHoverHash != MATH::Timeline1d::InvalidHash)
             {
-                auto it1 = tl_->getData().lower_bound(derivativeHoverHash_);
+                auto it1 = tl_->getData().lower_bound(oldDerivativeHoverHash);
                 if (it1 != tl_->getData().end())
                     updateHandles_(it1->second);
             }

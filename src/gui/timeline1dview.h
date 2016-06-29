@@ -227,6 +227,8 @@ protected:
     QRect handleRect_(const MATH::Timeline1d::Point&, RectStyle_ rs);
     QRect handleNumberRect_(const MATH::Timeline1d::Point&);
     QRect derivativeHandleRect_(const MATH::Timeline1d::Point&, int idx, RectStyle_ rs);
+    QRect derivativeHandleNumberRect_(
+            const MATH::Timeline1d::Point&, int idx);
     void updateHandles_(const MATH::Timeline1d::Point&);
     void updateAroundPoint_(const MATH::Timeline1d::Point&);
     void updateDerivatives_(MATH::Timeline1d::TpList::iterator it, int leftRight = 1);
