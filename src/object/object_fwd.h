@@ -25,10 +25,11 @@ namespace MO {
         TT_OBJECT_WILDCARD
     };
 
-    /** General groups of object outputs and/or parameters */
+    /** Types of object outputs and/or parameters */
     enum SignalType
     {
         ST_FLOAT,
+        ST_FLOAT_MATRIX,
         ST_INT,
         ST_SELECT,
         ST_TEXT,
@@ -68,8 +69,13 @@ namespace MO {
     class Track;
     class TrackFloat;
 
+    class EvolutionEditInterface;
+    class GeometryEditInterface;
+    class MasterOutInterface;
     class ValueFloatInterface;
+    class ValueFloatMatrixInterface;
     class ValueGeometryInterface;
+    class ValueShaderSourceInterface;
     class ValueTextInterface;
     class ValueTextureInterface;
     class ValueTransformationInterface;
@@ -81,6 +87,7 @@ namespace MO {
     class ParameterInt;
     class ParameterFilename;
     class ParameterFloat;
+    class ParameterFloatMatrix;
     class ParameterFont;
     class ParameterGeometry;
     class ParameterSelect;
@@ -88,6 +95,8 @@ namespace MO {
     class ParameterText;
     class ParameterTexture;
     class ParameterTransformation;
+
+    class FloatMatrix;
 
     class TransformationBuffer;
     class Transformation;
@@ -100,7 +109,8 @@ namespace MO {
 
     class Modulator;
     class ModulatorFloat;
-    class ModulatorOutput;
+    class ModulatorFloatMatrix;
+    class ModulatorGeometry;
     class ModulatorTexture;
     class ModulatorTransformation;
 

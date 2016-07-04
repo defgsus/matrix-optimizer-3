@@ -145,7 +145,13 @@ HEADERS += \
     $$PWD/audio/counterao.h \
     $$PWD/texture/videoto.h \
     $$PWD/texture/floattotexture.h \
-    $$PWD/audio/fixeddelayao.h
+    $$PWD/audio/fixeddelayao.h \
+    $$PWD/param/floatmatrix.h \
+    $$PWD/param/modulatorfloatmatrix.h \
+    $$PWD/interface/valuefloatmatrixinterface.h \
+    $$PWD/param/parameterfloatmatrix.h \
+    $$PWD/texture/floatmatrixto.h \
+    $$PWD/audio/floatmatrixao.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -285,4 +291,8 @@ SOURCES += \
     $$PWD/audio/counterao.cpp \
     $$PWD/texture/videoto.cpp \
     $$PWD/texture/floattotexture.cpp \
-    $$PWD/audio/fixeddelayao.cpp
+    $$PWD/audio/fixeddelayao.cpp \
+    $$PWD/param/modulatorfloatmatrix.cpp \
+    $$PWD/param/parameterfloatmatrix.cpp \
+    $$PWD/texture/floatmatrixto.cpp \
+    $$PWD/audio/floatmatrixao.cpp

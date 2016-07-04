@@ -61,7 +61,7 @@ FloatToTextureTO::FloatToTextureTO()
     : TextureObjectBase ()
     , p_                (new Private(this))
 {
-    setName("FloatToTexture");
+    setName("Float");
     initMaximumTextureInputs(0);
     initDefaultUpdateMode(UM_ALWAYS);
     initInternalFbo(false);
@@ -217,7 +217,7 @@ void FloatToTextureTO::Private::updateTexture()
         }
     }
 
-    else
+    if (!tex)
         tex = new GL::Texture();
 
     if (!tex->isAllocated())

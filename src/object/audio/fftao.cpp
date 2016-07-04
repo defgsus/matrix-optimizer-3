@@ -10,14 +10,19 @@
 
 //#ifndef MO_DISABLE_EXP
 
+#include <QMutex>
+#include <QMutexLocker>
+
 #include "fftao.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/resamplebuffer.h"
 #include "audio/tool/fixedblockdelay.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterfloatmatrix.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/floatmatrix.h"
 #include "object/util/objecteditor.h"
 #include "math/fft.h"
 #include "io/datastream.h"
@@ -39,12 +44,19 @@ class FftAO::Private
         * paramType,
         * paramSize,
         * paramCompensate;
+    ParameterFloatMatrix
+        * paramMatrix;
 
     std::vector<MATH::Fft<F32>> ffts;
     std::vector<AUDIO::ResampleBuffer<F32>> inbufs, outbufs;
     std::vector<AUDIO::FixedBlockDelay<F32>> delays;
+    FloatMatrix matrix;
 
     size_t fftSize, delayInSamples;
+    QMutex matrixMutex;
+
+    std::vector<std::vector<F32>> ringBuffers;
+    size_t ringWrite;
 };
 
 FftAO::FftAO()
@@ -52,8 +64,9 @@ FftAO::FftAO()
       p_            (new Private())
 {
     setName("FFT");
-    setNumberAudioOutputs(1);
+    setNumberAudioInputsOutputs(1, 0);
     setNumberOutputs(ST_FLOAT, 1);
+    setNumberOutputs(ST_FLOAT_MATRIX, 1);
 }
 
 FftAO::~FftAO()
@@ -68,12 +81,20 @@ QString FftAO::getOutputName(SignalType st, uint channel) const
 {
     if (st == ST_FLOAT && channel == 0)
         return tr("delay");
+    if (st == ST_FLOAT_MATRIX && channel == 0)
+        return tr("values");
     return AudioObject::getOutputName(st, channel);
 }
 
 Double FftAO::valueFloat(uint , const RenderTime& ) const
 {
     return delayInSamples();
+}
+
+FloatMatrix FftAO::valueFloatMatrix(uint , const RenderTime& ) const
+{
+    QMutexLocker lock(&p_->matrixMutex);
+    return p_->matrix;
 }
 
 QString FftAO::infoString() const
@@ -107,11 +128,16 @@ void FftAO::createParameters()
 
         p_->paramType = params()->createSelectParameter("_fft_type", tr("mode"),
           tr("Selectes the type of fourier transform"),
-          { "fft", "ifft" },
-          { tr("fft"), tr("ifft") },
-          { tr("fast fourier transform"), tr("inverse fast fourier transform") },
-          { FT_FFT, FT_IFFT },
-          FT_FFT,
+          { "fft", "ifft", "ampphase" },
+          { tr("audio -> fourier"), tr("fourier -> audio"),
+            tr("audio -> amp/phase") },
+          { tr("fast fourier transform"),
+            tr("inverse fast fourier transform"),
+            tr("fast fourier transform followed by conversion to amp and phase") },
+          { FT_AUDIO_2_FFT,
+            FT_FFT_2_AUDIO,
+            FT_AUDIO_2_AMPPHASE },
+          FT_AUDIO_2_FFT,
           true, false);
 
         p_->paramSize = params()->createSelectParameter(
@@ -122,7 +148,6 @@ void FftAO::createParameters()
             { "", "", "", "", "", "", "", "", "", "", "", "", "" },
             { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
             1024, true, false);
-        p_->fftSize = nextPowerOfTwo((uint)p_->paramSize->baseValue());
 
         p_->paramCompensate = params()->createBooleanParameter(
                     "_fft_compensate", tr("compensate latency"),
@@ -130,6 +155,12 @@ void FftAO::createParameters()
                        "dsp buffer size"),
                     tr("yes"), tr("no"),
                     true, true, false);
+        p_->paramCompensate->setZombie(true);
+
+        p_->paramMatrix = params()->createFloatMatrixParameter(
+                    "_fft_input", tr("input"),
+                    tr("Input matrix"),
+                    FloatMatrix(), false, true);
 
     params()->endParameterGroup();
 }
@@ -142,6 +173,13 @@ void FftAO::onParameterChanged(Parameter * p)
         p_->fftSize = nextPowerOfTwo((uint)p_->paramSize->baseValue());
 }
 
+void FftAO::onParametersLoaded()
+{
+    AudioObject::onParametersLoaded();
+
+    p_->fftSize = nextPowerOfTwo((uint)p_->paramSize->baseValue());
+}
+
 void FftAO::setNumberThreads(uint count)
 {
     AudioObject::setNumberThreads(count);
@@ -150,18 +188,19 @@ void FftAO::setNumberThreads(uint count)
     p_->inbufs.resize(count);
     p_->outbufs.resize(count);
     p_->delays.resize(count);
+    p_->ringBuffers.resize(count);
 }
 
 void FftAO::setAudioBuffers(uint thread, uint bufferSize,
                             const QList<AUDIO::AudioBuffer*>&,
                             const QList<AUDIO::AudioBuffer*>&)
 {
-    // fftsize must at least be the current buffer length
-    uint fftsize = nextPowerOfTwo(std::max((uint)p_->paramSize->baseValue(),
-                                           bufferSize));
-    p_->ffts[thread].setSize(fftsize);
-    p_->inbufs[thread].setSize(fftsize);
+    p_->ffts[thread].setSize(p_->fftSize);
+    p_->inbufs[thread].setSize(p_->fftSize);
     p_->outbufs[thread].setSize(bufferSize);
+    p_->ringBuffers[thread].resize(p_->fftSize);
+    QMutexLocker lock(&p_->matrixMutex);
+    p_->matrix.setDimensions({p_->fftSize});
 }
 
 void FftAO::processAudio(const RenderTime& time)
@@ -170,14 +209,54 @@ void FftAO::processAudio(const RenderTime& time)
             inputs = audioInputs(time.thread()),
             outputs = audioOutputs(time.thread());
 
+    if (inputs.size() < 1 || inputs[0] == nullptr)
+        return;
+
+    const auto mode = p_->paramType->baseValue();
     const bool
-            forward = p_->paramType->baseValue() == FT_FFT,
+            forward = (mode == FT_AUDIO_2_FFT || mode == FT_AUDIO_2_AMPPHASE),
+            doConvertAmpPhase = mode == FT_AUDIO_2_AMPPHASE,
             doCompensate = p_->paramCompensate->baseValue() != 0;
 
     MATH::Fft<F32> * fft = &p_->ffts[time.thread()];
     if (fft->size() != p_->fftSize)
         fft->setSize(p_->fftSize);
 
+    // insert into ringbuffer
+    std::vector<F32>& ringBuf = p_->ringBuffers[time.thread()];
+    if (ringBuf.size() != fft->size())
+        ringBuf.resize(fft->size());
+    size_t num = std::min(inputs[0]->blockSize(), ringBuf.size());
+    for (size_t i=0; i<num; ++i)
+    {
+        if (p_->ringWrite >= ringBuf.size())
+            p_->ringWrite = 0;
+        ringBuf[p_->ringWrite++] = inputs[0]->read(i);
+    }
+
+    // do transform
+    memcpy(fft->buffer(), &ringBuf[0], fft->size() * sizeof(F32));
+    if (forward)
+    {
+        fft->fft();
+        if (doConvertAmpPhase)
+            fft->toAmplitudeAndPhase();
+    }
+    else
+        fft->ifft();
+
+    // copy to matrix output
+    {
+        QMutexLocker lock(&p_->matrixMutex);
+        if (p_->matrix.size() != fft->size())
+            p_->matrix.setDimensions({fft->size()});
+        for (size_t i=0; i<fft->size(); ++i)
+            *p_->matrix.data(i) = fft->buffer(i);
+    }
+
+
+    // Not quite right
+#if 0
     AUDIO::ResampleBuffer<F32>
             * inbuf = &p_->inbufs[time.thread()],
             * outbuf = &p_->outbufs[time.thread()];
@@ -207,15 +286,32 @@ void FftAO::processAudio(const RenderTime& time)
                       || delay->delay() != p_->delayInSamples))
         delay->setSize(time.bufferSize(), p_->delayInSamples);
 
+    auto inputMatrix = p_->paramMatrix->value(time);
+
     AUDIO::AudioBuffer::process(inputs, outputs,
-    [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    [=, &time, &inputMatrix](uint, const AUDIO::AudioBuffer * in,
+                                         AUDIO::AudioBuffer * out)
     {
-        inbuf->push(in->readPointer(), in->blockSize());
+        if (inputMatrix.dimensions() == 1 &&
+                inputMatrix.size(0) == p_->fftSize)
+        {
+            for (size_t i=0; i<p_->fftSize; ++i)
+                fft->buffer()[i] = inputMatrix.data()[i];
+            inbuf->push(fft->buffer(), p_->fftSize);
+        }
+        else
+        {
+            inbuf->push(in->readPointer(), in->blockSize());
+        }
 
         while (inbuf->pop(fft->buffer()))
         {
             if (forward)
+            {
                 fft->fft();
+                if (doConvertAmpPhase)
+                    fft->toAmplitudeAndPhase();
+            }
             else
                 fft->ifft();
 
@@ -234,7 +330,17 @@ void FftAO::processAudio(const RenderTime& time)
         else
             if (!outbuf->pop(out->writePointer()))
                 out->writeNullBlock();
+
+        // copy to matrix output
+        {
+            QMutexLocker lock(&p_->matrixMutex);
+            //for (size_t i=0; i<in->blockSize(); ++i)
+            //    p_->matrix.data()[i] = in->read(i);
+            for (size_t i=0; i<p_->fftSize; ++i)
+                p_->matrix.data()[i] = *(out->writePointer() + i);
+        }
     });
+#endif
 }
 
 /*  |512|512|

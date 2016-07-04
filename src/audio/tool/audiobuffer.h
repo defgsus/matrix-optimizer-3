@@ -28,8 +28,9 @@ class AudioBuffer
 
     // -------------- creation ------------------------
 
-    AudioBuffer() : AudioBuffer(1, 1) { }
+    AudioBuffer();
     AudioBuffer(size_t blockSize, size_t numBlocks = 1);
+    ~AudioBuffer();
 
     void setSize(size_t blockSize, size_t numBlocks = 1);
 

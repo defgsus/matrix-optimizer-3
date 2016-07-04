@@ -41,7 +41,7 @@ public:
     // --------- access ---------------
 
     void clear() { for (float & v : p_rect_) v = 0.f; }
-    void clip(float mi = 0.f, float ma = 1.f)
+    void clamp(float mi = 0.f, float ma = 1.f)
         { for (float & v : p_rect_) v = std::max(mi, std::min(ma, v )); }
 
     float  pixel(uint x, uint y) const { return p_rect_[y * p_w_ + x]; }

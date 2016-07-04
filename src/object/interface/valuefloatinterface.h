@@ -15,8 +15,7 @@
 
 namespace MO {
 
-/** A float value output.
-    *Currently* single channel... */
+/** A float value output. */
 class ValueFloatInterface
 {
 public:

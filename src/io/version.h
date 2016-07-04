@@ -25,14 +25,14 @@
     3.0.3.3  -> vioso
     3.0.3.3-9 LOTS OF CHANGES
     3.0.3.10 add MATH::TimelinePoint::SYMMETRIC_USER
-
+    3.0.3.11 add FloatMatrix
 */
 
 // all limited to 8 bit
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  3
-#define MO_VERSION_MICRO 10
+#define MO_VERSION_MICRO 11
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */

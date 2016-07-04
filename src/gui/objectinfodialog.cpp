@@ -34,6 +34,7 @@
 #include "object/util/alphablendsetting.h"
 #include "object/util/audioobjectconnections.h"
 #include "object/interface/valuefloatinterface.h"
+#include "object/interface/valuefloatmatrixinterface.h"
 #include "object/interface/valuegeometryinterface.h"
 #include "geom/geometry.h"
 
@@ -93,24 +94,50 @@ void ObjectInfoDialog::setObject(Object * o)
 
     s << "<p>" << tr("children objects") << ": " << o->numChildren(true) << "</p>\n";
 
+
     // ---- float value -----
+
+    auto outputMap = o->getNumberOutputs();
 
     if (auto fi = dynamic_cast<ValueFloatInterface*>(o))
     {
-        s << "<p>float value at " << curTime << " sec: "
-          << fi->valueFloat(0, RenderTime(curTime, MO_GUI_THREAD)) << "</p>\n";
+        s << "<p>float values at " << curTime << " sec: ";
+        size_t num = outputMap[ST_FLOAT];
+        for (size_t i = 0; i < num; ++i)
+            s << "<br/>" << o->getOutputName(ST_FLOAT, i) << ": "
+              << fi->valueFloat(i, RenderTime(curTime, MO_GUI_THREAD))
+              << "\n";
+        s << "</p>\n";
+    }
+
+    // ---- float matrix value -----
+
+    if (auto fmi = dynamic_cast<ValueFloatMatrixInterface*>(o))
+    {
+        s << "<p>float-matrix values at " << curTime << " sec: ";
+        size_t num = outputMap[ST_FLOAT_MATRIX];
+        for (size_t i = 0; i < num; ++i)
+            s << "<br/>" << o->getOutputName(ST_FLOAT_MATRIX, i) << ": "
+              << fmi->valueFloatMatrix(i,
+                RenderTime(curTime, MO_GUI_THREAD)).layoutString() << "\n";
+        s << "</p>\n";
     }
 
     // ---- geometry value -----
 
     if (auto gi = dynamic_cast<ValueGeometryInterface*>(o))
     {
-        auto geom = gi->valueGeometry(0, RenderTime(curTime, MO_GUI_THREAD));
-        s << "<p>geometry value at " << curTime << " sec: ";
-        if (!geom)
-            s << "null";
-        else
-            s << geom->infoString();
+        s << "<p>geometry values at " << curTime << " sec: ";
+        size_t num = outputMap[ST_GEOMETRY];
+        for (size_t i = 0; i < num; ++i)
+        {
+            s << "<br/>" << o->getOutputName(ST_GEOMETRY, i) << ": ";
+            auto geom = gi->valueGeometry(i, RenderTime(curTime, MO_GFX_THREAD));
+            if (!geom)
+                s << "null";
+            else
+                s << geom->infoString();
+        }
         s << "</p>\n";
     }
 

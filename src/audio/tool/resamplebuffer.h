@@ -37,23 +37,35 @@ class ResampleBuffer
 
     ResampleBuffer(size_t size = 1);
 
+    /** Specify size of the output buffers */
     void setSize(size_t size);
 
     // ---------------- getter ------------------------
 
+    /** Size of the output chunks */
     size_t size() const { return p_size_; }
 
-    /** Returns the number of samples left to push with writeBlock()
-        to receive blockSize() samples in readBlock(). */
-    //size_t left() const { return p_left_; }
+    /** Is a buffer available to read with pop() or buffer() */
+    bool hasBuffer() const;
 
     // -------------- sampling ------------------------
 
+    /** Clear everything */
     void clear();
 
+    /** Shove a piece of data into the buffer */
     void push(const T* data, size_t size);
 
+    /** Pop size() bytes into @p src and return true.
+        Returns false when no data was ready. */
     bool pop(T* src);
+
+    /** Same as pop(T*) but discards data when ready. */
+    bool pop();
+
+    /** Access to the current buffer that would be returned
+        by pop(), NULL if there is no data yet. */
+    const T* buffer() const;
 
 private:
 
@@ -118,7 +130,7 @@ inline void ResampleBuffer<T>::push(const T* src, size_t num)
 template <typename T>
 inline bool ResampleBuffer<T>::pop(T* dst)
 {
-    MO__D("pop()");
+    MO__D("pop(" << dst << ")");
 
     if (p_list_.empty())
         return false;
@@ -133,7 +145,41 @@ inline bool ResampleBuffer<T>::pop(T* dst)
     return true;
 }
 
+template <typename T>
+inline bool ResampleBuffer<T>::pop()
+{
+    MO__D("pop()");
+    if (p_list_.empty())
+        return false;
+    if (p_list_.size() == 1 && p_filled_ < p_size_)
+        return false;
+    p_list_.pop_back();
+    p_avail_ -= p_size_;
+    MO__D("pop() done, avail=" << p_avail_ << ", bufs=" << p_list_.size());
+    return true;
+}
 
+
+template <typename T>
+inline bool ResampleBuffer<T>::hasBuffer() const
+{
+    if (p_list_.empty())
+        return false;
+    if (p_list_.size() == 1 && p_filled_ < p_size_)
+        return false;
+    return true;
+}
+
+template <typename T>
+inline const T* ResampleBuffer<T>::buffer() const
+{
+    if (p_list_.empty())
+        return nullptr;
+    if (p_list_.size() == 1 && p_filled_ < p_size_)
+        return nullptr;
+    const std::vector<T>& vec = p_list_.back();
+    return &vec[0];
+}
 
 } // namespace AUDIO
 } // namespace MO

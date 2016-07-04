@@ -811,7 +811,7 @@ void RenderDialog::Private::createOutputWindow()
     outputWindow->setMinimumSize(200,200);
     settings()->restoreGeometry(outputWindow);
 
-    auto s = new QScrollArea(outputWindow);
+    //auto s = new QScrollArea(outputWindow);
     //outputWindow->setCentralWidget(s);
 
     outputLabel = new QLabel(outputWindow);

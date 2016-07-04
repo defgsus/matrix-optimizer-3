@@ -1965,6 +1965,8 @@ void MainWidgetController::stop()
 
 void MainWidgetController::closeAudio()
 {
+    stop();
+
     if (audioEngine_)
         audioEngine_->closeAudioDevice();
 }

@@ -145,7 +145,6 @@ QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
     int hue = -1;
     switch (i->signalType())
     {
-
         case ST_SELECT:
         case ST_TEXT:
         case ST_FILENAME:
@@ -154,9 +153,14 @@ QBrush ObjectGraphSettings::brushConnector(ObjectGraphConnectItem * i)
         case ST_FONT:
             break;
         case ST_FLOAT:
-        case ST_INT: hue = ObjectFactory::hueForObject(Object::T_SEQUENCE_FLOAT);
+        case ST_INT:
+            hue = ObjectFactory::hueForObject(Object::T_SEQUENCE_FLOAT);
             break;
-        case ST_TRANSFORMATION: hue = ObjectFactory::hueForObject(Object::T_TRANSFORMATION);
+        case ST_FLOAT_MATRIX:
+            hue = 20 + ObjectFactory::hueForObject(Object::T_SEQUENCE_FLOAT);
+        break;
+        case ST_TRANSFORMATION:
+            hue = ObjectFactory::hueForObject(Object::T_TRANSFORMATION);
             break;
         case ST_TEXTURE: hue = ObjectFactory::hueForObject(Object::T_TEXTURE);
             break;

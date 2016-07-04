@@ -678,14 +678,6 @@ public:
     /** Signals a change of connections through the ObjectEditor, if attached. */
     void emitConnectionsChanged();
 
-protected:
-
-    /** Sets the desired outputs for the object.
-        Call this in your constructor or in onParametersChanged()/onParametersLoaded().
-        Ownership of the ModulatorOutput classes is taken.
-        Emits ObjectEditor::objectChanged() when connected. */
-    void setModulatorOutputs(const QList<ModulatorOutput*>& mods);
-
     // --------------- parameter -------------------
 public:
 

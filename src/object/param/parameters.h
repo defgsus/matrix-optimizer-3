@@ -131,6 +131,10 @@ public:
                 Double defaultValue, Double smallStep,
                 bool editable = true, bool modulateable = true);
 
+    ParameterFloatMatrix * createFloatMatrixParameter(
+                const QString& id, const QString& name, const QString& statusTip,
+                const FloatMatrix& defaultValue,
+                bool editable, bool modulateable);
 
     ParameterInt * createIntParameter(
                 const QString& id, const QString& name, const QString& statusTip,

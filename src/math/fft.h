@@ -66,6 +66,9 @@ public:
         Contains halfSize() real values and halfSize() imaginary values. */
     const F * buffer() const { return &buffer_[0]; }
 
+    /** Read idx'th sample in buffer */
+    F buffer(size_t idx) const { return buffer_[idx]; }
+
     // ------------ setter ----------------
 
     /** Sets the size of the buffer (rounded to the next power of two).
@@ -100,7 +103,7 @@ public:
     void ifft() { MATH::ifft(&buffer_[0], size()); }
 
     /** Transforms the ft in buffer() into amplitude and phase */
-    void getAmplitudeAndPhase() { get_amplitude_phase(&buffer_[0], size()); }
+    void toAmplitudeAndPhase() { get_amplitude_phase(&buffer_[0], size()); }
 
 private:
 

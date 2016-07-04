@@ -1,0 +1,75 @@
+/** @file
+
+    @brief
+
+    <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 7/4/2016</p>
+*/
+
+#ifndef MOSRC_OBJECT_PARAM_PARAMETERFLOATMATRIX_H
+#define MOSRC_OBJECT_PARAM_PARAMETERFLOATMATRIX_H
+
+
+#include "parameter.h"
+#include "types/time.h"
+#include "object/param/floatmatrix.h"
+
+namespace MO {
+
+class ParameterFloatMatrix : public Parameter
+{
+public:
+
+    ParameterFloatMatrix(Object * object, const QString& idName, const QString& name);
+
+    virtual void serialize(IO::DataStream&) const;
+    virtual void deserialize(IO::DataStream&);
+
+    const QString& typeName() const { static QString s("float-matrix"); return s; }
+    SignalType signalType() const Q_DECL_OVERRIDE { return ST_FLOAT_MATRIX; }
+
+    virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
+
+    virtual QString getDocType() const Q_DECL_OVERRIDE;
+
+    QString baseValueString(bool ) const override {
+        return QString::fromStdString(baseValue().layoutString()); }
+    QString valueString(const RenderTime& t, bool ) const override
+        { return QString::fromStdString(value(t).layoutString()); }
+
+    // ---------------- getter -----------------
+
+    FloatMatrix defaultValue() const { return defaultValue_; }
+
+    FloatMatrix value(const RenderTime& time) const;
+
+    const FloatMatrix& baseValue() const { return baseValue_; }
+
+    // ---------------- setter -----------------
+
+    void setDefaultValue(const FloatMatrix& v) { defaultValue_ = v; }
+    void setValue(const FloatMatrix& v) { baseValue_ = v; }
+
+    // --------- modulation -----------
+
+    int getModulatorTypes() const Q_DECL_OVERRIDE;
+
+    /** Receives modulation value at time */
+    Double getModulationValue(const RenderTime& time) const;
+
+    virtual Modulator * getModulator(
+            const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
+
+private:
+
+    FloatMatrix
+        defaultValue_,
+        baseValue_;
+
+};
+
+} // namespace MO
+
+#endif // MOSRC_OBJECT_PARAM_PARAMETERFLOATMATRIX_H

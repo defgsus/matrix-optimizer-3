@@ -9,11 +9,30 @@
 */
 
 #include "audiobuffer.h"
-#include "io/error.h"
 #include "tool/asciirect.h"
+#include "io/error.h"
+
+#if 1
+#   include "io/log.h"
+#   define MO__D(arg__) MO_PRINT("AudioBuffer("<<this<<")::" << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
+
 
 namespace MO {
 namespace AUDIO {
+
+AudioBuffer::AudioBuffer()
+    : AudioBuffer(1, 1)
+{
+    MO__D("AudioBuffer()");
+}
+
+AudioBuffer::~AudioBuffer()
+{
+    MO__D("~AudioBuffer()");
+}
 
 AudioBuffer::AudioBuffer(size_t blockSize, size_t numBlocks)
     : p_blockSize_    (0),
@@ -21,6 +40,7 @@ AudioBuffer::AudioBuffer(size_t blockSize, size_t numBlocks)
       p_writeBlock_   (0),
       p_readBlock_    (0)
 {
+    MO__D("AudioBuffer(" << blockSize << ", " << numBlocks << ")");
     setSize(blockSize, numBlocks);
 }
 
@@ -33,7 +53,7 @@ QString AudioBuffer::toAscii(uint w, uint h) const
         r.addPixelF(float(i) / blockSize() * w,
                     h - h * (readPointer()[i] + 1.f) / 2.f, val);
     }
-    r.clip();
+    r.clamp();
     return r.toString();
 }
 

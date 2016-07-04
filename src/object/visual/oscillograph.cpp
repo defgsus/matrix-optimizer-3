@@ -555,7 +555,7 @@ void Oscillograph::Private::calcValueBuffer(const RenderTime& time)
 
             // perform it
             fft->fft();
-            fft->getAmplitudeAndPhase();
+            fft->toAmplitudeAndPhase();
 
             // copy
             uint offset = (sourceMode() == Private::S_SPECTRUM_PHASE)

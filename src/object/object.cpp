@@ -1578,6 +1578,7 @@ QString Object::getSignalName(SignalType t)
     switch (t)
     {
         case ST_FLOAT: return tr("float");
+        case ST_FLOAT_MATRIX: return tr("float-matrix");
         case ST_INT: return tr("int");
         case ST_SELECT: return tr("select");
         case ST_TEXT: return tr("text");

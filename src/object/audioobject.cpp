@@ -240,29 +240,21 @@ void AudioObject::clientFakeAudio(const RenderTime& time)
 
 Double AudioObject::getAudioOutputAsFloat(uint channel, const RenderTime & time) const
 {
-    auto outs = audioOutputs(time.thread());
+    auto& outs = audioOutputs(time.thread());
 
-    if ((int)channel >= outs.size() || outs[channel] == 0)
-        return 0;
+    if ((int)channel >= outs.size() || outs[channel] == nullptr)
+        return 0.;
 
     SamplePosDiff pos =
               p_ao_->lastOutputSamplePos[time.thread()]
               - SamplePosDiff(time.sample());
                  //- outs[channel]->blockSize() * (outs[channel]->numBlocks() - 1));
-
+    //MO_DEBUG("ACCESS " << outs[channel] << " AT " << pos);
     // repeat first sample in current read block
     if (pos < 0)
         return outs[channel]->read(0);
 
     return outs[channel]->readHistory(pos);
-    /*
-    // repeat last sample in current read block
-    if (pos > (SamplePosDiff)outs[channel]->blockSize())
-        return outs[channel]->read(
-                    outs[channel]->blockSize()-1);
-
-    return outs[channel]->read(pos);
-    */
 }
 
 void AudioObject::writeNullBlock(SamplePos , uint thread)

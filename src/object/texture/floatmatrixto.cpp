@@ -1,0 +1,292 @@
+/** @file
+
+    @brief
+
+    <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
+    <p>All rights reserved</p>
+
+    <p>created 7/4/2016</p>
+*/
+
+#include "floatmatrixto.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
+#include "object/param/parameterfloatmatrix.h"
+#include "object/param/parameterint.h"
+#include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
+#include "object/util/objecteditor.h"
+#include "gl/texture.h"
+#include "io/datastream.h"
+#include "io/log.h"
+
+namespace MO {
+
+MO_REGISTER_OBJECT(FloatMatrixTO)
+
+struct FloatMatrixTO::Private
+{
+    Private(FloatMatrixTO * to)
+        : to            (to)
+        , tex           (nullptr)
+    { }
+
+    ~Private()
+    {
+        delete tex;
+    }
+
+    void createParameters();
+    void updateTexture(size_t width, size_t height);
+    void initGl();
+    void releaseGl();
+    void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
+
+    FloatMatrixTO * to;
+
+    GL::Texture* tex;
+
+    ParameterFloat
+            *p_amplitude, *p_offset;
+    ParameterSelect
+            *p_clampWidth, *p_flipX, *p_flipY;
+    ParameterInt
+            *p_offsetX, *p_width;
+
+    ParameterFloatMatrix* p_matrix;
+    std::vector<gl::GLfloat> buffer;
+};
+
+
+FloatMatrixTO::FloatMatrixTO()
+    : TextureObjectBase ()
+    , p_                (new Private(this))
+{
+    setName("FloatMatrix");
+    initMaximumTextureInputs(0);
+    /** @todo implement change-check to ParameterFloatMatrix */
+    initDefaultUpdateMode(UM_ALWAYS);
+    initInternalFbo(false);
+}
+
+FloatMatrixTO::~FloatMatrixTO()
+{
+    delete p_;
+}
+
+void FloatMatrixTO::serialize(IO::DataStream & io) const
+{
+    TextureObjectBase::serialize(io);
+    io.writeHeader("texfloatm", 1);
+
+}
+
+void FloatMatrixTO::deserialize(IO::DataStream & io)
+{
+    TextureObjectBase::deserialize(io);
+    //const int ver =
+            io.readHeader("texfloatm", 1);
+}
+
+void FloatMatrixTO::createParameters()
+{
+    TextureObjectBase::createParameters();
+    p_->createParameters();
+}
+
+void FloatMatrixTO::initGl(uint thread)
+{
+    TextureObjectBase::initGl(thread);
+    p_->initGl();
+}
+
+void FloatMatrixTO::releaseGl(uint thread)
+{
+    p_->releaseGl();
+    TextureObjectBase::releaseGl(thread);
+}
+
+void FloatMatrixTO::renderGl(const GL::RenderSettings& rset, const RenderTime& time)
+{
+    p_->renderGl(rset, time);
+}
+
+
+void FloatMatrixTO::Private::createParameters()
+{
+    to->params()->beginParameterGroup("matrix_input", tr("input"));
+    to->initParameterGroupExpanded("matrix_input");
+
+        p_matrix = to->params()->createFloatMatrixParameter(
+                    "matrix0", tr("matrix"),
+                    tr("The float matrix to convert to texture"),
+                    FloatMatrix(), true, true);
+        p_matrix->setVisibleGraph(true);
+
+        p_amplitude = to->params()->createFloatParameter(
+                    "amp", tr("amplitude"),
+                    tr("Amplitude of input signal"), 1., 0.01);
+
+        p_offset = to->params()->createFloatParameter(
+                    "offset", tr("offset"),
+                    tr("Offset to input signal"), 0., 0.01);
+
+        p_offsetX = to->params()->createIntParameter(
+                    "offset_x", tr("skip X"),
+                    tr("Skips the number of columns in the input"),
+                    0, true, true);
+        p_offsetX->setMinValue(0);
+
+        p_clampWidth = to->params()->createBooleanParameter(
+                    "clamp_x", tr("fixed width"),
+                    tr("Selects a fixed width for the output texture"),
+                    tr("Off"), tr("On"),
+                    false, true, false);
+
+        p_width = to->params()->createIntParameter(
+                    "width", tr("width"), tr("The texture width"),
+                    1024, true, true);
+        p_width->setMinValue(1);
+
+
+        p_flipX = to->params()->createBooleanParameter(
+                    "flip_x", tr("flip X"),
+                    tr("Flip texture on X axis"), tr("Off"), tr("On"),
+                    false);
+        p_flipY = to->params()->createBooleanParameter(
+                    "flip_y", tr("flip Y"),
+                    tr("Flip texture on Y axis"), tr("Off"), tr("On"),
+                    false);
+        p_flipY->setZombie(true);
+
+    to->params()->endParameterGroup();
+
+}
+
+void FloatMatrixTO::onParameterChanged(Parameter * p)
+{
+    TextureObjectBase::onParameterChanged(p);
+
+}
+
+void FloatMatrixTO::onParametersLoaded()
+{
+    TextureObjectBase::onParametersLoaded();
+
+}
+
+void FloatMatrixTO::updateParameterVisibility()
+{
+    TextureObjectBase::updateParameterVisibility();
+
+    p_->p_width->setVisible(p_->p_clampWidth->baseValue());
+}
+
+
+void FloatMatrixTO::Private::initGl()
+{
+
+
+}
+
+void FloatMatrixTO::Private::updateTexture(size_t width, size_t height)
+{
+    if (width == 0 || height == 0)
+    {
+        if (tex)
+        {
+            if (tex->isAllocated())
+                tex->release();
+            delete tex;
+            tex = nullptr;
+        }
+        return;
+    }
+
+    if (tex)
+    {
+        if (tex->isHandle() &&
+            (!tex->isAllocated() || tex->width() != width || tex->height() != height))
+        {
+            tex->release();
+            delete tex;
+            tex = nullptr;
+        }
+    }
+
+    if (!tex)
+        tex = new GL::Texture();
+
+    if (!tex->isAllocated())
+        tex->create(width, height,
+                gl::GL_R32F, gl::GL_RED, gl::GL_FLOAT, nullptr);
+}
+
+void FloatMatrixTO::Private::releaseGl()
+{
+    if (tex && tex->isHandle())
+        tex->release();
+    delete tex;
+    tex = nullptr;
+}
+
+
+void FloatMatrixTO::Private::renderGl(
+        const GL::RenderSettings& , const RenderTime& time)
+{
+    auto matrix = p_matrix->value(time);
+
+    size_t  matrixWidth = matrix.dimensions() > 0 ? matrix.size(0) : 0,
+            width = matrixWidth,
+            height = matrix.dimensions() > 1 ? matrix.size(1) : 1,
+            offsetX = p_offsetX->value(time);
+
+    if (p_clampWidth->value(time))
+        width = p_width->value(time);
+
+    width -= std::min(width, offsetX);
+
+    updateTexture(width, height);
+    if (!tex)
+        return;
+
+    // -- update buffer
+
+    const bool
+            flipX = !p_flipX->value(time);
+            //flipY = p_flipY->value(time);
+    const Double
+            ampl = p_amplitude->value(time),
+            offset = p_offset->value(time);
+
+    buffer.resize(width);
+
+    //for (auto& f : buffer)
+    //    f = offset + ampl * float(rand()) / RAND_MAX;
+
+    for (size_t i=0; i<width; ++i)
+    {
+        size_t j = i + offsetX,
+               i1 = flipX ? width-1-i : i;
+        if (j < matrixWidth)
+            buffer[i1] = offset + ampl * *matrix.data(j);
+        else
+            buffer[i1] = 0.f;
+    }
+
+    // -- upload --
+
+    tex->bind();
+    tex->upload(&buffer[0]);
+    tex->setChanged();
+}
+
+const GL::Texture* FloatMatrixTO::valueTexture(uint chan, const RenderTime &) const
+{
+    if (chan != 0)
+        return nullptr;
+    return p_->tex;
+}
+
+} // namespace MO
+

@@ -1,38 +1,29 @@
-/** @file fftao.h
+/** @file
 
     @brief
 
-    <p>(c) 2014, stefan.berke@modular-audio-graphics.com</p>
+    <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 05.12.2014</p>
+    <p>created 7/4/2016</p>
 */
 
-//#ifndef MO_DISABLE_EXP
-
-#ifndef MOSRC_OBJECT_AUDIO_FFTAO_H
-#define MOSRC_OBJECT_AUDIO_FFTAO_H
+#ifndef MOSRC_OBJECT_AUDIO_FLOATMATRIXAO_H
+#define MOSRC_OBJECT_AUDIO_FLOATMATRIXAO_H
 
 #include "object/audioobject.h"
-#include "object/interface/valuefloatinterface.h"
 #include "object/interface/valuefloatmatrixinterface.h"
 
 namespace MO {
 
-class FftAO : public AudioObject
-            , public ValueFloatInterface
-            , public ValueFloatMatrixInterface
+/** Converts audio channels to FloatMatrix */
+class FloatMatrixAO
+        : public AudioObject
+        , public ValueFloatMatrixInterface
 {
 public:
 
-    enum FftType
-    {
-        FT_AUDIO_2_FFT,
-        FT_FFT_2_AUDIO,
-        FT_AUDIO_2_AMPPHASE,
-    };
-
-    MO_OBJECT_CONSTRUCTOR(FftAO)
+    MO_OBJECT_CONSTRUCTOR(FloatMatrixAO)
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -40,12 +31,7 @@ public:
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
 
     virtual QString getOutputName(SignalType, uint channel) const override;
-    virtual QString infoString() const override;
 
-    size_t fftSize() const;
-    size_t delayInSamples() const;
-
-    virtual Double valueFloat(uint channel, const RenderTime &time) const override;
     virtual FloatMatrix valueFloatMatrix(
             uint channel, const RenderTime &time) const override;
 
@@ -65,7 +51,4 @@ private:
 
 } // namespace MO
 
-
-#endif // MOSRC_OBJECT_AUDIO_FFTAO_H
-
-//#endif // #ifndef MO_DISABLE_EXP
+#endif // MOSRC_OBJECT_AUDIO_FLOATMATRIXAO_H

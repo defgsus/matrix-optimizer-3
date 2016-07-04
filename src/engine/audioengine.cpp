@@ -107,6 +107,7 @@ void AudioEngine::seek(SamplePos pos)
 
 void AudioEngine::setScene(Scene * s, const AUDIO::Configuration & conf, uint thread)
 {
+    MO_ASSERT(s, "null assignment");
     p_->isPathPrepared = false;
     p_->conf = conf;
     p_->scene = s;

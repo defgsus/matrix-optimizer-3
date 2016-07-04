@@ -11,6 +11,8 @@
 #ifndef MOSRC_OBJECT_INTERFACE_MASTEROUTINTERFACE_H
 #define MOSRC_OBJECT_INTERFACE_MASTEROUTINTERFACE_H
 
+namespace MO {
+
 class MasterOutInterface
 {
 public:
@@ -22,6 +24,8 @@ public:
     virtual void setMasterOutputEnabled(bool enable, bool sendGui = false) = 0;
 
 };
+
+} // namespace MO
 
 #endif // MOSRC_OBJECT_INTERFACE_MASTEROUTINTERFACE_H
 

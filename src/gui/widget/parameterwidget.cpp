@@ -39,6 +39,7 @@
 #include "object/param/parameterimagelist.h"
 #include "object/param/parameterfilename.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterfloatmatrix.h"
 #include "object/param/parameterfont.h"
 #include "object/param/parametergeometry.h"
 #include "object/param/parameterselect.h"
@@ -626,6 +627,12 @@ void ParameterWidget::createWidgets_()
     else
     // --- geometry parameter ---
     if (/*ParameterGeometry* pt = */dynamic_cast<ParameterGeometry*>(param_))
+    {
+
+    }
+    else
+    // --- float matrix parameter ---
+    if (/*ParameterFloatMatrix* pt = */dynamic_cast<ParameterFloatMatrix*>(param_))
     {
 
     }

@@ -5,23 +5,24 @@
     <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
     <p>All rights reserved</p>
 
-    <p>created 6/15/2016</p>
+    <p>created 7/4/2016</p>
 */
 
-#ifndef MOSRC_OBJECT_TEXTURE_FLOATTOTEXTURE_H
-#define MOSRC_OBJECT_TEXTURE_FLOATTOTEXTURE_H
+#ifndef MOSRC_OBJECT_TEXTURE_FLOATMATRIXTO_H
+#define MOSRC_OBJECT_TEXTURE_FLOATMATRIXTO_H
+
 
 #include "textureobjectbase.h"
 
 namespace MO {
 
-/** multiple float inputs to scanlines in texture */
-class FloatToTextureTO
+/** Float matrix to texture converter */
+class FloatMatrixTO
         : public TextureObjectBase
 {
 public:
 
-    MO_OBJECT_CONSTRUCTOR(FloatToTextureTO);
+    MO_OBJECT_CONSTRUCTOR(FloatMatrixTO);
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
@@ -45,4 +46,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_TEXTURE_FLOATTOTEXTURE_H
+#endif // MOSRC_OBJECT_TEXTURE_FLOATMATRIXTO_H

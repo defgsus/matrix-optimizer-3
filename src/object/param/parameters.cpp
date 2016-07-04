@@ -15,6 +15,7 @@
 #include "parameterint.h"
 #include "parameterimagelist.h"
 #include "parameterfloat.h"
+#include "parameterfloatmatrix.h"
 #include "parameterfilename.h"
 #include "parameterfont.h"
 #include "parametergeometry.h"
@@ -23,6 +24,7 @@
 #include "parametertext.h"
 #include "parametertexture.h"
 #include "parametertransformation.h"
+#include "object/param/floatmatrix.h"
 #include "object/object.h"
 #include "object/util/objectconnectiongraph.h"
 #include "gl/opengl.h"
@@ -370,6 +372,50 @@ ParameterFloat * Parameters::createFloatParameter(
     param->setMinValue(minValue);
     param->setMaxValue(maxValue);
     param->setSmallStep(smallStep);
+    param->setStatusTip(statusTip);
+    param->setEditable(editable);
+    param->setModulateable(modulateable);
+
+    p_finishParam_(param);
+
+    return param;
+}
+
+
+ParameterFloatMatrix * Parameters::createFloatMatrixParameter(
+        const QString& id, const QString& name, const QString& statusTip,
+        const FloatMatrix& defaultValue,
+        bool editable, bool modulateable)
+{
+    ParameterFloatMatrix * param = 0;
+
+    // see if already there
+
+    if (auto p = findParameter(id))
+    {
+        if (auto pf = dynamic_cast<ParameterFloatMatrix*>(p))
+            param = pf;
+        else
+        {
+            MO_LOGIC_ERROR("object '" << idName() << "' requested float "
+                      "parameter '" << id << "' "
+                      "which is already present as parameter of type " << p->typeName());
+        }
+    }
+
+    // create new
+    if (!param)
+    {
+        param = new ParameterFloatMatrix(object_, id, name);
+        parameters_.append(param);
+
+        // first time init
+        param->setValue(defaultValue);
+    }
+
+    // override potentially previous
+    param->setName(name);
+    param->setDefaultValue(defaultValue);
     param->setStatusTip(statusTip);
     param->setEditable(editable);
     param->setModulateable(modulateable);
