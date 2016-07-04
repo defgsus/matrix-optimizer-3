@@ -37,7 +37,7 @@ class FixedDelayAO::Private
         * paramSamples;
 
     FixedDelayAO * ao;
-    std::vector<AUDIO::FixedBlockDelay<F32>> delays;
+    std::vector<std::vector<AUDIO::FixedBlockDelay<F32>>> delays;
     F32 curDelaySam;
 };
 
@@ -110,20 +110,27 @@ void FixedDelayAO::setNumberThreads(uint count)
     p_->delays.resize(count);
 }
 
+void FixedDelayAO::setAudioBuffers(uint thread, uint,
+                             const QList<AUDIO::AudioBuffer*>& inputs,
+                             const QList<AUDIO::AudioBuffer*>& outputs)
+{
+    p_->delays[thread].resize(std::min(inputs.size(), outputs.size()));
+}
+
 void FixedDelayAO::processAudio(const RenderTime& time)
 {
     p_->curDelaySam = p_->paramTime->value(time) * sampleRate()
                       + p_->paramSamples->value(time);
 
-    AUDIO::FixedBlockDelay<F32> * delay = &p_->delays[time.thread()];
-    if (delay->size() != time.bufferSize()
-     || delay->delay() != p_->curDelaySam)
-        delay->setSize(time.bufferSize(), p_->curDelaySam);
-
     AUDIO::AudioBuffer::process(
                 audioInputs(time.thread()), audioOutputs(time.thread()),
-    [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+    [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
+        AUDIO::FixedBlockDelay<F32> * delay = &p_->delays[time.thread()][chan];
+        if (delay->size() != time.bufferSize()
+         || delay->delay() != p_->curDelaySam)
+            delay->setSize(time.bufferSize(), p_->curDelaySam);
+
         delay->write(in->readPointer());
         delay->read(out->writePointer());
     });
