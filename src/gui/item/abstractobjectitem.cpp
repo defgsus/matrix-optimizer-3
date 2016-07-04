@@ -728,14 +728,15 @@ void AbstractObjectItem::PrivateOI::createConnectors()
     auto map = object->getNumberOutputs();
     for (auto it = map.begin(); it != map.end(); ++it)
     {
+        // dont show outputs of output AO
+        if (it.key() == ST_AUDIO && dynamic_cast<AudioOutAO*>(object))
+            continue;
+
         for (uint i = 0; i < it.value(); ++i)
         {
-            // dont show outputs of output AO
-            if (it.key() == ST_AUDIO && dynamic_cast<AudioOutAO*>(object))
-                continue;
-
             auto coni = new ObjectGraphConnectItem(
                                 false, it.key(), i,
+                                object->getOutputName(it.key(), i),
                                 object->getOutputName(it.key(), i), item);
             outputItems.append(coni);
         }
@@ -752,10 +753,10 @@ void AbstractObjectItem::PrivateOI::createConnectors()
             if (ao->numAudioInputs() >= 0)
                 for (int i=0; i<ao->numAudioInputs(); ++i)
                     inputItems.append( new ObjectGraphConnectItem(
-                                           true, ST_AUDIO, i, ao->getAudioInputName(i), item) );
+                        true, ST_AUDIO, i, "", ao->getAudioInputName(i), item) );
             else
                 inputItems.append( new ObjectGraphConnectItem(
-                                       true, ST_AUDIO, 0, ao->getAudioInputName(0), item) );
+                        true, ST_AUDIO, 0, "", ao->getAudioInputName(0), item) );
         }
         /*
         if (!dynamic_cast<AudioOutAO*>(ao))
@@ -770,10 +771,12 @@ void AbstractObjectItem::PrivateOI::createConnectors()
 
     // set size accordingly to number of inputs
     minimumSize.setWidth(1 + (inputItems.isEmpty() ? 0 : 1)
-                           + (outputItems.isEmpty() || object->numChildren()==0 ? 0 : 1) );
+                           + (outputItems.isEmpty()
+                              || object->numChildren()==0 ? 0 : 1) );
     minimumSize.setHeight(1);
     if (numCon)
-        minimumSize.rheight() += 1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
+        minimumSize.rheight() +=
+                1 + (numCon-1) / ObjectGraphSettings::connectorsPerGrid();
 
     updateConnectorPositions();
 }
@@ -1089,17 +1092,6 @@ QPointF AbstractObjectItem::inputPos(uint c) const
 }
 
 
-QPointF AbstractObjectItem::outputPos(uint c) const
-{
-    for (auto i : p_oi_->outputItems)
-        if (//i->isAudioConnector() &&
-                i->channel() == c)
-            return i->pos();
-
-    QRectF r(rect());
-    return QPointF(r.right(), r.bottom() - 4);
-}
-
 QPointF AbstractObjectItem::inputPos(Parameter * p) const
 {
     for (auto i : p_oi_->inputItems)
@@ -1110,14 +1102,24 @@ QPointF AbstractObjectItem::inputPos(Parameter * p) const
     return QPointF(r.left(), r.top() + 4);
 }
 
+QPointF AbstractObjectItem::outputPos(uint c) const
+{
+    for (ObjectGraphConnectItem* i : p_oi_->outputItems)
+        if (i->signalType() == ST_AUDIO && i->channel() == c)
+            return i->pos();
+
+    QRectF r(rect());
+    return QPointF(r.right(), r.bottom() - 4);
+}
+
 QPointF AbstractObjectItem::outputPos(Modulator * m) const
 {
+    if (auto mf = dynamic_cast<ModulatorFloat*>(m))
+        if (mf->sourceType() == ModulatorFloat::ST_AUDIO_OBJECT)
+            return outputPos(mf->outputChannel());
+
     for (auto i : p_oi_->outputItems)
     {
-        if (auto mf = dynamic_cast<ModulatorFloat*>(m))
-            if (mf->sourceType() == ModulatorFloat::ST_AUDIO_OBJECT)
-                return outputPos(mf->outputChannel());
-
         if (i->signalType() == m->signalType() &&
                 i->channel() == m->outputChannel())
             return i->pos();

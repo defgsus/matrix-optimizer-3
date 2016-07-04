@@ -124,6 +124,9 @@ protected:
         to be adjusted by user, default is false. */
     void initAllowMultiPass(bool = true);
 
+    /** Call in constructor to disallow user-change of resolution */
+    void initEnableResolutionChange(bool enable);
+
     /** Returns the texture parameters (e.g. to change names and visibility) */
     const QList<ParameterTexture*>& textureParams() const;
 

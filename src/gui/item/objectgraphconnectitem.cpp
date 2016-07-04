@@ -28,15 +28,16 @@
 namespace MO {
 namespace GUI {
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(bool isInput, SignalType signal, uint channel,
-                                               const QString& toolTip,
-                                               AbstractObjectItem *object)
+ObjectGraphConnectItem::ObjectGraphConnectItem(
+        bool isInput, SignalType signal, uint channel, const QString& id,
+        const QString& toolTip, AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
       isInput_              (isInput),
       channel_              (channel),
       signalType_           (signal),
+      id_                   (id),
       param_                (0),
       text_                 (0),
       hovered_              (false),
@@ -61,6 +62,7 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem
       isInput_              (true),
       channel_              (0),
       signalType_           (p->signalType()),
+      id_                   (p->idName()),
       param_                (p),
       text_                 (0),
       hovered_              (false),

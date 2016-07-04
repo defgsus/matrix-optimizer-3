@@ -29,13 +29,14 @@ public:
     enum { Type = UserType + 2 };
 
     ObjectGraphConnectItem(bool isInput, SignalType, uint channel,
+                           const QString& id,
                            const QString& toolTip, AbstractObjectItem * parent);
 
     /** Creates an input for a Parameter */
     ObjectGraphConnectItem(Parameter * , AbstractObjectItem * parent);
 
     uint channel() const { return channel_; }
-
+    QString id() const { return id_; }
     Object * object() const { return object_; }
     AbstractObjectItem * objectItem() const { return objectItem_; }
 
@@ -80,6 +81,7 @@ private:
     bool isInput_;
     uint channel_;
     SignalType signalType_;
+    QString id_;
 
     Parameter * param_;
 

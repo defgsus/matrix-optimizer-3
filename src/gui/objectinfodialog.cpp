@@ -253,6 +253,10 @@ void ObjectInfoDialog::setObject(Object * o)
         s << "</p>";
     }
 
+    auto infoStr = o->infoString();
+    if (!infoStr.isEmpty())
+        s << "<p>" << infoStr << "</p>";
+
 
     s << "</html>";
 

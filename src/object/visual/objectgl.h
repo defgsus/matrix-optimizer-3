@@ -131,7 +131,8 @@ public:
     // ----------------- render state -------------------
 
     /* these must all be called before createParameters, e.g. in object constructor */
-    void initCreateRenderSettings(bool enable) { p_enableCreateRenderSettings_ = enable; }
+    void initCreateRenderSettings(bool enable)
+        { p_enableRenderSettings_ = enable; }
     void initDefaultDepthTestMode(DepthTestMode m) { p_defaultDepthTestMode_ = m; }
     void initDefaultDepthWriteMode(DepthWriteMode m) { p_defaultDepthWriteMode_ = m; }
     void initDefaultAlphaBlendMode(AlphaBlendSetting::Mode m) { p_defaultAlphaBlendMode_ = m; }
@@ -139,7 +140,7 @@ public:
     void initDefaultUpdateMode(UpdateMode m, bool visible = true)
         { p_defaultUpdateMode_ = m; p_updateModeVisible_ = visible; }
 
-    bool isRenderSettingsEnabled() const { return p_enableCreateRenderSettings_; }
+    bool isRenderSettingsEnabled() const { return p_enableRenderSettings_; }
 
     DepthTestMode defaultDepthTestMode() const { return p_defaultDepthTestMode_; }
     DepthWriteMode defaultDepthWriteMode() const { return p_defaultDepthWriteMode_; }
@@ -181,7 +182,8 @@ private:
     UpdateMode p_defaultUpdateMode_;
     CullingMode p_defaultCullingMode_, p_curCullingMode_;
 
-    bool p_enableCreateRenderSettings_,
+    bool p_enableRenderSettings_,
+         p_enableResolutionSettings_,
          p_updateModeVisible_,
          p_updateRequest_;
     ParameterSelect

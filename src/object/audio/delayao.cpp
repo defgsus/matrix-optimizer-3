@@ -8,7 +8,6 @@
     <p>created 15.12.2014</p>
 */
 
-#include <memory>
 
 #include "delayao.h"
 #include "audio/tool/audiobuffer.h"
@@ -28,7 +27,10 @@ class DelayAO::Private
 {
     public:
 
-    Private(DelayAO * ao) : ao(ao) { }
+    Private(DelayAO * ao)
+        : ao            (ao)
+        , curDelaySam   (0.f)
+    { }
 
     void updateDelays();
 
@@ -36,12 +38,15 @@ class DelayAO::Private
         * paramAmp,
         * paramTime,
         * paramMaxTime;
+    ParameterInt
+        * paramSamples;
         //* paramReset;
     //ParameterSelect
 //        * paramInterpol;
 
     DelayAO * ao;
-    std::vector<std::shared_ptr<AUDIO::AudioDelay>> delays;
+    std::vector<std::vector<AUDIO::AudioDelay>> delays;
+    F32 curDelaySam;
 };
 
 DelayAO::DelayAO()
@@ -55,6 +60,14 @@ DelayAO::DelayAO()
 DelayAO::~DelayAO()
 {
     delete p_;
+}
+
+QString DelayAO::infoString() const
+{
+    return tr("delay (samples) %1 / %2")
+            .arg(p_->curDelaySam)
+            .arg(p_->delays.empty()
+                 ? 0 : p_->delays[0].empty() ? 0 : p_->delays[0][0].size());
 }
 
 void DelayAO::serialize(IO::DataStream & io) const
@@ -78,19 +91,30 @@ void DelayAO::createParameters()
     params()->beginParameterGroup("_delay_", tr("delay"));
     initParameterGroupExpanded("_delay_");
 
-        p_->paramMaxTime = params()->createFloatParameter("_delay_max", tr("maximum time"),
-                                                   tr("The maximum time delay for the delay line in seconds "
-                                                      "(num. samples rounded to the next power of two)"),
-                                                   2,
-                                                   0.01, 60 * 60, /* one hour max */
-                                                   0.1, true, false);
+        p_->paramMaxTime = params()->createFloatParameter(
+                    "_delay_max", tr("maximum time"),
+                   tr("The maximum time delay for the delay line in seconds "
+                      "(num. samples rounded to the next power of two)"),
+                   2,
+                   0.01, 60 * 60, /* one hour max */
+                   0.1, true, false);
 
-        p_->paramTime = params()->createFloatParameter("_delay_time", tr("delay time in seconds"),
-                                                   tr("The current delay time in seconds"),
-                                                   1.0, 0.05);
-        p_->paramAmp = params()->createFloatParameter("_delay_amp", tr("amplitude"),
-                                                   tr("The output amplitude of the delayed signal"),
-                                                   1.0, 0.05);
+        p_->paramTime = params()->createFloatParameter(
+                    "_delay_time", tr("delay time in seconds"),
+                   tr("The current delay time in seconds"),
+                    1.0, 0.05);
+        p_->paramTime->setMinValue(0.);
+
+        p_->paramSamples = params()->createIntParameter(
+                    "_delay_samples", tr("delay time in samples"),
+                    tr("Additional delaytime in samples, added to the seconds"),
+                    0, true, true);
+        p_->paramSamples->setMinValue(0);
+
+        p_->paramAmp = params()->createFloatParameter(
+                    "_delay_amp", tr("amplitude"),
+                   tr("The output amplitude of the delayed signal"),
+                    1.0, 0.05);
 
     params()->endParameterGroup();
 }
@@ -121,43 +145,80 @@ void DelayAO::setNumberThreads(uint count)
 {
     AudioObject::setNumberThreads(count);
 
-    p_->delays.clear();
-    for (uint i=0; i<count; ++i)
-        p_->delays.push_back( std::shared_ptr<AUDIO::AudioDelay>(
-                                   new AUDIO::AudioDelay() ));
+    p_->delays.resize(count);
+    p_->updateDelays();
+}
+
+void DelayAO::setAudioBuffers(uint thread, uint ,
+                             const QList<AUDIO::AudioBuffer*>& inputs,
+                             const QList<AUDIO::AudioBuffer*>& outputs)
+{
+    size_t num = std::min(inputs.size(), outputs.size());
+    p_->delays[thread].resize(num);
     p_->updateDelays();
 }
 
 void DelayAO::Private::updateDelays()
 {
-    for (auto & dp : delays)
-    {
-        AUDIO::AudioDelay * d = dp.get();
-
-        d->resize(paramMaxTime->baseValue() * ao->sampleRate());
-    }
+    for (auto& dv : delays)
+        for (auto& d : dv)
+            d.resize(paramMaxTime->baseValue() * ao->sampleRate());
 }
 
 void DelayAO::processAudio(const RenderTime& time)
 {
-    // update Delay
-    AUDIO::AudioDelay * delay = p_->delays[time.thread()].get();
+    const bool isMod =
+            p_->paramTime->isModulated()
+         || p_->paramSamples->isModulated();
 
-    if (1) // parameter update per block
+    if (!isMod) // parameter update per block
     {
         const F32
                 amp = p_->paramAmp->value(time),
-                samplesBack = p_->paramTime->value(time) * sampleRate();
+                samplesBack = p_->paramTime->value(time) * sampleRate()
+                            + p_->paramSamples->value(time);
+        p_->curDelaySam = samplesBack;
 
-        AUDIO::AudioBuffer::process(audioInputs(time.thread()), audioOutputs(time.thread()),
-        [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        AUDIO::AudioBuffer::process(
+                    audioInputs(time.thread()), audioOutputs(time.thread()),
+        [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
+            AUDIO::AudioDelay * delay = &p_->delays[time.thread()][chan];
+
             // write block into delay
             delay->writeBlock(in->readPointer(), in->blockSize());
 
             // put delayed block into out
             for (uint i = 0; i < out->blockSize(); ++i)
                 out->write(i, amp * delay->read(in->blockSize() - i + samplesBack));
+        });
+    }
+    // parameter update per sample
+    else
+    {
+        AUDIO::AudioBuffer::process(
+                    audioInputs(time.thread()), audioOutputs(time.thread()),
+        [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
+        {
+            AUDIO::AudioDelay * delay = &p_->delays[time.thread()][chan];
+
+            // write block into delay
+            delay->writeBlock(in->readPointer(), in->blockSize());
+
+            // put delayed block into out
+            for (uint i = 0; i < out->blockSize(); ++i)
+            {
+                RenderTime btime(time);
+                btime += SamplePos(i);
+
+                const F32
+                        amp = p_->paramAmp->value(btime),
+                        samplesBack = p_->paramTime->value(btime) * sampleRate()
+                                    + p_->paramSamples->value(btime);
+                p_->curDelaySam = samplesBack;
+
+                out->write(i, amp * delay->read(in->blockSize() - i + samplesBack));
+            }
         });
     }
 }

@@ -281,8 +281,11 @@ public:
     const QString& idName() const;
     /** User defined name of the object */
     const QString& name() const;
-    /** Override to add some additional information. */
+    /** Override to add some additional information, Base returns name() */
     virtual QString infoName() const;
+    /** Override to return potential multiline info about
+        the object's state */
+    virtual QString infoString() const { return QString(); }
 
     /** Return the path up to this object */
     QString namePath() const;

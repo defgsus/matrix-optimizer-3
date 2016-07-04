@@ -144,7 +144,8 @@ HEADERS += \
     $$PWD/control/counterco.h \
     $$PWD/audio/counterao.h \
     $$PWD/texture/videoto.h \
-    $$PWD/texture/floattotexture.h
+    $$PWD/texture/floattotexture.h \
+    $$PWD/audio/fixeddelayao.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -283,4 +284,5 @@ SOURCES += \
     $$PWD/control/counterco.cpp \
     $$PWD/audio/counterao.cpp \
     $$PWD/texture/videoto.cpp \
-    $$PWD/texture/floattotexture.cpp
+    $$PWD/texture/floattotexture.cpp \
+    $$PWD/audio/fixeddelayao.cpp

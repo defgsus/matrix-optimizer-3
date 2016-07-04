@@ -8,7 +8,7 @@
     <p>created 05.12.2014</p>
 */
 
-#ifndef MO_DISABLE_EXP
+//#ifndef MO_DISABLE_EXP
 
 #ifndef MOSRC_OBJECT_AUDIO_FFTAO_H
 #define MOSRC_OBJECT_AUDIO_FFTAO_H
@@ -16,10 +16,12 @@
 #include <QObject>
 
 #include "object/audioobject.h"
+#include "object/interface/valuefloatinterface.h"
 
 namespace MO {
 
 class FftAO : public AudioObject
+            , public ValueFloatInterface
 {
 public:
 
@@ -29,13 +31,19 @@ public:
         FT_IFFT
     };
 
-
     MO_OBJECT_CONSTRUCTOR(FftAO)
-    ~FftAO();
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
+
+    virtual QString getOutputName(SignalType, uint channel) const override;
+    virtual QString infoString() const override;
+
+    size_t fftSize() const;
+    size_t delayInSamples() const;
+
+    virtual Double valueFloat(uint channel, const RenderTime &time) const override;
 
 protected:
 
@@ -44,8 +52,7 @@ protected:
                                  const QList<AUDIO::AudioBuffer*>& outputs)
                                                             Q_DECL_OVERRIDE;
 
-    virtual void processAudio(uint bufferSize, SamplePos pos, uint thread)
-                                                            Q_DECL_OVERRIDE;
+    virtual void processAudio(const RenderTime&) Q_DECL_OVERRIDE;
 private:
 
     class Private;
@@ -57,4 +64,4 @@ private:
 
 #endif // MOSRC_OBJECT_AUDIO_FFTAO_H
 
-#endif // #ifndef MO_DISABLE_EXP
+//#endif // #ifndef MO_DISABLE_EXP

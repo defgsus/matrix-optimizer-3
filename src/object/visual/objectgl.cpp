@@ -44,7 +44,8 @@ ObjectGl::ObjectGl()
       p_defaultAlphaBlendMode_  (AlphaBlendSetting::M_PARENT),
       p_defaultUpdateMode_      (UM_ALWAYS),
       p_defaultCullingMode_     (CM_PARENT),
-      p_enableCreateRenderSettings_(true),
+      p_enableRenderSettings_   (true),
+      p_enableResolutionSettings_(true),
       p_updateModeVisible_      (true),
       p_updateRequest_          (true),
       p_paramDepthTest_         (0),
@@ -96,7 +97,7 @@ void ObjectGl::createParameters()
     params()->endParameterGroup();
 
 
-    if (p_enableCreateRenderSettings_)
+    if (p_enableRenderSettings_)
     {
         params()->beginParameterGroup("renderset", tr("render settings"));
         params()->beginEvolveGroup(false);

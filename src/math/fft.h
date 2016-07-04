@@ -63,7 +63,7 @@ public:
     uint halfSize() const { return buffer_.size() >> 1; }
 
     /** Read access to the internal buffer.
-        Contains size() real values and size() imaginary values. */
+        Contains halfSize() real values and halfSize() imaginary values. */
     const F * buffer() const { return &buffer_[0]; }
 
     // ------------ setter ----------------
@@ -75,7 +75,7 @@ public:
     /** Zeroes the buffer */
     void clear() { for (auto & v : buffer_) v = F(0); }
 
-    /** Write access to the internal buffer */
+    /** Write access to the internal buffer of size() values */
     F * buffer() { return &buffer_[0]; }
 
     // ------------ fft -------------------
@@ -87,7 +87,8 @@ public:
 
     /** Perform real to fourier transform of given data.
         Input is size() real values (r0,r1,r2,r3..).
-        The output is in buffer(). */
+        The output is in buffer() containing
+        each halfSize() real and imaginary values. */
     void fft(const F * real_data)
     {
         memcpy(&buffer_[0], real_data, size() * sizeof(F));

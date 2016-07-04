@@ -11,7 +11,18 @@
 #ifndef MOSRC_AUDIO_TOOL_RESAMPLEBUFFER_H
 #define MOSRC_AUDIO_TOOL_ACCUMULATIONBUFFER_H
 
+#include <list>
+#include <vector>
+#include <cstring>
+
 #include "types/float.h"
+
+#if 0
+#   include "io/log.h"
+#   define MO__D(arg__) MO_PRINT("Resampler("<<this<<", "<<this->size()<<"): " << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
 
 namespace MO {
 namespace AUDIO {
@@ -24,44 +35,30 @@ class ResampleBuffer
 
     // -------------- creation ------------------------
 
-    ResampleBuffer(size_t blockSize = 1);
+    ResampleBuffer(size_t size = 1);
 
-    void setSize(size_t blockSize);
+    void setSize(size_t size);
 
     // ---------------- getter ------------------------
 
-    size_t blockSize() const { return p_samples_.size(); }
+    size_t size() const { return p_size_; }
 
     /** Returns the number of samples left to push with writeBlock()
         to receive blockSize() samples in readBlock(). */
-    size_t left() const { return p_left_; }
+    //size_t left() const { return p_left_; }
 
     // -------------- sampling ------------------------
 
-    /** Returns the sample at @p offset */
-    T read(size_t offset) const;
+    void clear();
 
-    /** Returns a pointer to blockSize() number of samples */
-    const T * readPointer() const { return &p_samples_[0]; }
+    void push(const T* data, size_t size);
 
-    /** Inserts at max @p size samples of @p block into the buffer.
-        The function stops, if blockSize() samples have been copied from @p block
-        and returns the number of copied samples.
-        The internal pointers are moved forward appropriately.
-        @p block must point to at least @p size samples. */
-    size_t writeBlock(const T *block, size_t size);
-
-    /** Same as writeBlock() but sets all to zero. */
-    size_t writeNullBlock(size_t size);
-
-    /** Copies the current bufferSize() samples into @p block.
-        left() will be equal to blockSize() after this call. */
-    void readBlock(T * block);
+    bool pop(T* src);
 
 private:
 
-    size_t p_write_, p_read_, p_left_;
-    std::vector<T> p_samples_;
+    size_t p_size_, p_avail_, p_filled_;
+    std::list<std::vector<T>> p_list_;
 };
 
 
@@ -69,9 +66,9 @@ private:
 
 template <typename T>
 ResampleBuffer<T>::ResampleBuffer(size_t s)
-    : p_write_  (0),
-      p_read_   (0),
-      p_left_   (s)
+    : p_size_   (0)
+    , p_avail_  (0)
+    , p_filled_ (0)
 {
     setSize(s);
 }
@@ -79,51 +76,68 @@ ResampleBuffer<T>::ResampleBuffer(size_t s)
 template <typename T>
 inline void ResampleBuffer<T>::setSize(size_t s)
 {
-    p_samples_.resize(std::max(size_t(1), s));
-    for (auto & t : p_samples_)
-        t = T(0);
-
-    p_write_ = p_read_ = 0;
-    p_left_ = s;
+    clear();
+    p_size_ = s;
 }
 
 template <typename T>
-inline T ResampleBuffer<T>::read(size_t offset) const
+inline void ResampleBuffer<T>::clear()
 {
-    return p_samples_[offset];
+    p_list_.clear();
+    p_avail_ = 0;
+    p_filled_ = 0;
 }
 
 template <typename T>
-inline size_t ResampleBuffer<T>::writeBlock(const T * block, size_t size)
+inline void ResampleBuffer<T>::push(const T* src, size_t num)
 {
-    // take only as much as we need
-    size_t num = std::min(size, p_left_);
+    MO__D("push(" << num << ")");
 
-    // copy data
-    for (size_t i = 0; i < num; ++i)
-        p_samples_[(p_write_ + i) % blockSize()] = block[i];
+    size_t written = 0;
+    while (written < num)
+    {
+        if (p_list_.empty() || p_filled_ == p_size_)
+        {
+            MO__D("create new block " << p_size_);
+            p_list_.push_front(std::vector<T>(p_size_));
+            p_filled_ = 0;
+        }
+        T* dst = &p_list_.front()[0];
 
-    // forward pointer
-    p_write_ = (p_write_ + num) % blockSize();
-    // remember how much we stored
-    p_left_ -= num;
-
-    return num;
+        size_t n = std::min(p_size_ - p_filled_, num - written);
+        MO__D("copy " << n);
+        memcpy(dst + p_filled_, src + written, n * sizeof(T));
+        written += n;
+        p_filled_ += n;
+        p_avail_ += n;
+    }
+    MO__D("push() end, written="<<written<<", avail="<<p_avail_
+      <<", filled="<<p_filled_<<", bufs="<<p_list_.size());
 }
 
 template <typename T>
-inline void ResampleBuffer<T>::readBlock(T * block)
+inline bool ResampleBuffer<T>::pop(T* dst)
 {
-    memcpy(block, &p_samples_[0], blockSize() * sizeof(T));
+    MO__D("pop()");
 
-    // ready for more
-    p_left_ = blockSize();
+    if (p_list_.empty())
+        return false;
+    if (p_list_.size() == 1 && p_filled_ < p_size_)
+        return false;
+
+    const std::vector<T>& vec = p_list_.back();
+    memcpy(dst, &vec[0], p_size_ * sizeof(T));
+    p_list_.pop_back();
+    p_avail_ -= p_size_;
+    MO__D("pop() done, avail=" << p_avail_ << ", bufs=" << p_list_.size());
+    return true;
 }
-
 
 
 
 } // namespace AUDIO
 } // namespace MO
+
+#undef MO__D
 
 #endif // MOSRC_AUDIO_TOOL_ACCUMULATIONBUFFER_H

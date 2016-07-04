@@ -64,7 +64,7 @@ FloatToTextureTO::FloatToTextureTO()
     setName("FloatToTexture");
     initMaximumTextureInputs(0);
     initDefaultUpdateMode(UM_ALWAYS);
-    initCreateRenderSettings(false);
+    initInternalFbo(false);
 }
 
 FloatToTextureTO::~FloatToTextureTO()
@@ -112,8 +112,8 @@ void FloatToTextureTO::renderGl(const GL::RenderSettings& rset, const RenderTime
 
 void FloatToTextureTO::Private::createParameters()
 {
-    to->params()->beginParameterGroup("input", tr("input"));
-    to->initParameterGroupExpanded("input");
+    to->params()->beginParameterGroup("float_input", tr("float input"));
+    to->initParameterGroupExpanded("float_input");
 
         p_numParams = to->params()->createIntParameter(
                     "num_params", tr("number inputs"),
@@ -150,7 +150,7 @@ void FloatToTextureTO::Private::createParameters()
 
     to->params()->endParameterGroup();
 
-    to->params()->beginParameterGroup("inputs", tr("inputs"));
+    to->params()->beginParameterGroup("float_inputs", tr("float inputs"));
 
         for (int i=0; i<64; ++i)
         {

@@ -8,11 +8,12 @@
     <p>created 05.12.2014</p>
 */
 
-#ifndef MO_DISABLE_EXP
+//#ifndef MO_DISABLE_EXP
 
 #include "fftao.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/resamplebuffer.h"
+#include "audio/tool/fixedblockdelay.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
@@ -30,13 +31,20 @@ class FftAO::Private
 {
     public:
 
+    Private()
+        : delayInSamples    (0)
+    { }
+
     ParameterSelect
         * paramType,
-        * paramSize;
+        * paramSize,
+        * paramCompensate;
 
     std::vector<MATH::Fft<F32>> ffts;
     std::vector<AUDIO::ResampleBuffer<F32>> inbufs, outbufs;
-    std::vector<size_t> writtenOut;
+    std::vector<AUDIO::FixedBlockDelay<F32>> delays;
+
+    size_t fftSize, delayInSamples;
 };
 
 FftAO::FftAO()
@@ -45,11 +53,35 @@ FftAO::FftAO()
 {
     setName("FFT");
     setNumberAudioOutputs(1);
+    setNumberOutputs(ST_FLOAT, 1);
 }
 
 FftAO::~FftAO()
 {
     delete p_;
+}
+
+size_t FftAO::fftSize() const { return p_->fftSize; }
+size_t FftAO::delayInSamples() const { return p_->delayInSamples; }
+
+QString FftAO::getOutputName(SignalType st, uint channel) const
+{
+    if (st == ST_FLOAT && channel == 0)
+        return tr("delay");
+    return AudioObject::getOutputName(st, channel);
+}
+
+Double FftAO::valueFloat(uint , const RenderTime& ) const
+{
+    return delayInSamples();
+}
+
+QString FftAO::infoString() const
+{
+    return QString("fft-size=%1, delay=%2")
+            .arg(fftSize())
+            .arg(delayInSamples())
+            ;
 }
 
 void FftAO::serialize(IO::DataStream & io) const
@@ -74,21 +106,30 @@ void FftAO::createParameters()
     initParameterGroupExpanded("fft");
 
         p_->paramType = params()->createSelectParameter("_fft_type", tr("mode"),
-                                                  tr("Selectes the type of fourier transform"),
-                                                  { "fft", "ifft" },
-                                                  { tr("fft"), tr("ifft") },
-                                                  { tr("fast fourier transform"), tr("inverse fast fourier transform") },
-                                                  { FT_FFT, FT_IFFT },
-                                                  FT_FFT,
-                                                  true, false);
+          tr("Selectes the type of fourier transform"),
+          { "fft", "ifft" },
+          { tr("fft"), tr("ifft") },
+          { tr("fast fourier transform"), tr("inverse fast fourier transform") },
+          { FT_FFT, FT_IFFT },
+          FT_FFT,
+          true, false);
 
-        p_->paramSize = params()->createSelectParameter("_fft_size", tr("size"),
-                    tr("The size of the fourier window in samples"),
-                    { "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16" },
-                    { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
-                    { "", "", "", "", "", "", "", "", "", "", "", "", "" },
-                    { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
-                    1024, true, false);
+        p_->paramSize = params()->createSelectParameter(
+                    "_fft_size", tr("size"),
+            tr("The size of the fourier window in samples"),
+            { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+            { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+            { "", "", "", "", "", "", "", "", "", "", "", "", "" },
+            { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
+            1024, true, false);
+        p_->fftSize = nextPowerOfTwo((uint)p_->paramSize->baseValue());
+
+        p_->paramCompensate = params()->createBooleanParameter(
+                    "_fft_compensate", tr("compensate latency"),
+                    tr("Should the output be delayed to match the fft size to the "
+                       "dsp buffer size"),
+                    tr("yes"), tr("no"),
+                    true, true, false);
 
     params()->endParameterGroup();
 }
@@ -98,9 +139,7 @@ void FftAO::onParameterChanged(Parameter * p)
     AudioObject::onParameterChanged(p);
 
     if (p == p_->paramSize)
-        // hack to get called setAudioBuffers again
-        if (editor())
-            editor()->emitAudioChannelsChanged(this);
+        p_->fftSize = nextPowerOfTwo((uint)p_->paramSize->baseValue());
 }
 
 void FftAO::setNumberThreads(uint count)
@@ -110,7 +149,7 @@ void FftAO::setNumberThreads(uint count)
     p_->ffts.resize(count);
     p_->inbufs.resize(count);
     p_->outbufs.resize(count);
-    p_->writtenOut.resize(count);
+    p_->delays.resize(count);
 }
 
 void FftAO::setAudioBuffers(uint thread, uint bufferSize,
@@ -121,95 +160,100 @@ void FftAO::setAudioBuffers(uint thread, uint bufferSize,
     uint fftsize = nextPowerOfTwo(std::max((uint)p_->paramSize->baseValue(),
                                            bufferSize));
     p_->ffts[thread].setSize(fftsize);
-    p_->inbufs[thread].setSize(p_->paramSize->baseValue());
+    p_->inbufs[thread].setSize(fftsize);
     p_->outbufs[thread].setSize(bufferSize);
-    p_->writtenOut[thread] = 0;
 }
 
-void FftAO::processAudio(uint , SamplePos , uint )
+void FftAO::processAudio(const RenderTime& time)
 {
-//    const QList<AUDIO::AudioBuffer*>&
-//            inputs = audioInputs(thread),
-//            outputs = audioOutputs(thread);
+    const QList<AUDIO::AudioBuffer*>&
+            inputs = audioInputs(time.thread()),
+            outputs = audioOutputs(time.thread());
 
-//    const Double time = sampleRateInv() * pos;
+    const bool
+            forward = p_->paramType->baseValue() == FT_FFT,
+            doCompensate = p_->paramCompensate->baseValue() != 0;
 
-//    const bool forward = p_->paramType->baseValue() == FT_FFT;
-
-//    MATH::Fft<F32> * fft = &p_->ffts[thread];
-
-#ifdef MO__fft_and_buffersize_equal_is_easy_
+    MATH::Fft<F32> * fft = &p_->ffts[time.thread()];
+    if (fft->size() != p_->fftSize)
+        fft->setSize(p_->fftSize);
 
     AUDIO::ResampleBuffer<F32>
-            * inbuf = &p_->inbufs[thread],
-            * outbuf = &p_->outbufs[thread];
+            * inbuf = &p_->inbufs[time.thread()],
+            * outbuf = &p_->outbufs[time.thread()];
+
+    if (inbuf->size() != p_->fftSize)
+        inbuf->setSize(p_->fftSize);
+    if (outbuf->size() != time.bufferSize())
+        outbuf->setSize(time.bufferSize());
+
+    // calculate matching delays
+    size_t buf1 = inbuf->size(), buf2 = outbuf->size();
+    if (buf2 > buf1)
+        std::swap(buf1, buf2);
+
+    if (buf2 == buf1)
+        p_->delayInSamples = 0;
+    else
+    {
+        p_->delayInSamples = ((buf1/buf2 + 1) * buf2) % buf1;
+        bool cong = buf1 % buf2 == 0;
+        if (!cong || p_->delayInSamples >= buf2/2)
+            p_->delayInSamples = buf1 - p_->delayInSamples;
+    }
+
+    AUDIO::FixedBlockDelay<F32>* delay = &p_->delays[time.thread()];
+    if (doCompensate && (delay->size() != time.bufferSize()
+                      || delay->delay() != p_->delayInSamples))
+        delay->setSize(time.bufferSize(), p_->delayInSamples);
 
     AUDIO::AudioBuffer::process(inputs, outputs,
     [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
     {
-        inbuf->writeBlock( in->readPointer(), in->blockSize() );
+        inbuf->push(in->readPointer(), in->blockSize());
 
-        inbuf->readBlock(fft->buffer());
-        if (forward)
-            fft->fft();
-        else
-            fft->ifft();
-        out->writeBlock(fft->buffer());
-    });
-
-#endif
-
-#if 0
-    AUDIO::AudioBuffer::process(inputs, outputs,
-    [=](uint, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
-    {
-        MO_DEBUG(idName() << " pos=" << pos);
-        size_t read = 0, written = 0;
-        bool dofft = true;
-        do
+        while (inbuf->pop(fft->buffer()))
         {
-            // copy partial or whole input buffer
-            read += inbuf->writeBlock(
-                        in->readPointer() + read, in->blockSize() - read);
+            if (forward)
+                fft->fft();
+            else
+                fft->ifft();
 
-            MO_DEBUG("fft read=" << read << ", \twrit=" << written << ", \tin-left=" << inbuf->left() << ", \tout-left=" << outbuf->left());
-
-            // perform fft
-            if (inbuf->left() == 0 && dofft)
-            {
-                MO_DEBUG("FFT");
-                inbuf->readBlock(fft->buffer());
-                if (forward)
-                    fft->fft();
-                else
-                    fft->ifft();
-
-                dofft = false;
-            }
-
-            // send one fft (part) to output
-
-            // chop to output size
-            written += outbuf->writeBlock(
-                            fft->buffer() + written, fft->size() - written);
-
-            // and eventually send away
-            if (outbuf->left() == 0)
-            {
-                MO_DEBUG("OUT");
-                outbuf->readBlock(out->writePointer());
-            }
-
+            outbuf->push(fft->buffer(), fft->size());
         }
-        // make sure we insert all of input buffer
-        while (read < in->blockSize()
-               // and write one output buffer
-               && written < out->blockSize());
-
+        if (doCompensate)
+        {
+            if (!outbuf->pop(delay->scratchBuffer()))
+                out->writeNullBlock();
+            else
+            {
+                delay->writeFromScratchBuffer();
+                delay->read(out->writePointer());
+            }
+        }
+        else
+            if (!outbuf->pop(out->writePointer()))
+                out->writeNullBlock();
     });
-#endif
 }
+
+/*  |512|512|
+    |1024   |
+
+               |128
+    |384|384|384|=1152
+    |1024      |
+
+                         |256
+    |384|384|384|384|384|384|=2304
+    |2048                |
+
+    | 384 | 384 | 384 |
+    |128|
+
+*/
 
 } // namespace MO
 
-#endif // #ifndef MO_DISABLE_EXP
+
+//#endif // #ifndef MO_DISABLE_EXP

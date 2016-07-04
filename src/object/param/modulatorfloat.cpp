@@ -94,31 +94,34 @@ bool ModulatorFloat::hasTimeOffset() const
 void ModulatorFloat::modulatorChanged_()
 {
     if (modulator() == 0)
+    {
         sourceType_ = ST_NONE;
-    else
+        return;
+    }
+
+    if (outputId().startsWith("_audio_"))
+    if (dynamic_cast<AudioObject*>(modulator()))
+    {
+        sourceType_ = ST_AUDIO_OBJECT;
+        return;
+    }
+
     if (auto iface = dynamic_cast<ValueFloatInterface*>(modulator()))
     {
         sourceType_ = ST_INTERFACE_FLOAT;
         interface_ = iface;
-    }
-    else
-    if (dynamic_cast<AudioObject*>(modulator()))
-    {
-        sourceType_ = ST_AUDIO_OBJECT;
+        return;
     }
 
-    else
-    {
-        sourceType_ = ST_NONE;
-        MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
-                       << "' to ModulatorFloat");
-    }
+    sourceType_ = ST_NONE;
+    MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
+                   << "' to ModulatorFloat");
 }
 
 Double ModulatorFloat::value(const RenderTime& rtime) const
 {
     RenderTime time(rtime);
-    time.setSecond( time.second() + timeOffset_ );
+    time += timeOffset_;
 
     if (!modulator() || !modulator()->active(time))
         return 0.0;

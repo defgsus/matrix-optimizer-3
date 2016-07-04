@@ -53,7 +53,8 @@ struct TextureObjectBase::PrivateTO
         , fboDepth      (1)
         , hasColorRange (false)
         , hasInternalFbo(true)
-        , doAllowMultiPass(true)
+        , doAllowMultiPass(false)
+        , doAllowResolutionChange(true)
         , p_resMode     (0)
         , p_width       (0)
         , p_height      (0)
@@ -98,7 +99,8 @@ struct TextureObjectBase::PrivateTO
     const GL::Texture * outputTex;
     uint maxIns, fboDepth;
     QStringList inpNames;
-    bool hasColorRange, hasInternalFbo, doAllowMultiPass;
+    bool hasColorRange, hasInternalFbo,
+        doAllowMultiPass, doAllowResolutionChange;
     QList<GL::Shader::CompileMessage> lastMessages;
 
     ParameterFloat  * p_out_r, * p_out_g, * p_out_b, * p_out_a,
@@ -255,6 +257,10 @@ void TextureObjectBase::initAllowMultiPass(bool a)
     p_to_->doAllowMultiPass = a;
 }
 
+void TextureObjectBase::initEnableResolutionChange(bool a)
+{
+    p_to_->doAllowResolutionChange = a;
+}
 
 const QList<ParameterTexture*>& TextureObjectBase::textureParams() const
 {
@@ -274,52 +280,75 @@ void TextureObjectBase::PrivateTO::createParameters()
         to->params()->beginParameterGroup("to_res", tr("resolution and format"));
         to->params()->beginEvolveGroup(false);
 
-            p_resMode  = to->params()->createSelectParameter("to_res_mode", tr("resolution"),
-                        tr("Selects how the resolution is defined"),
-                        { "custom", "input", "scaled", "fix_width", "fix_height" },
-                        { tr("custom"), tr("input"), tr("input scaled"),
-                          tr("input ratio width"), tr("input ratio height") },
-                        { tr("Resolution can be freely set"),
-                          tr("The resolution from the input texture is used"),
-                          tr("A scaled resolution with same ratio as the input texture is used"),
-                          tr("Fixed with and height choosen to match original aspect ratio"),
-                          tr("Fixed height and width choosen to match original aspect ratio") },
-                        { RM_CUSTOM, RM_INPUT, RM_INPUT_SCALED,
-                          RM_INPUT_FIX_WIDTH, RM_INPUT_FIX_HEIGHT },
-                        RM_INPUT,
-                        true, false);
+            p_resMode  = to->params()->createSelectParameter(
+                        "to_res_mode", tr("resolution"),
+            tr("Selects how the resolution is defined"),
+            { "custom", "input", "scaled", "fix_width", "fix_height" },
+            { tr("custom"), tr("input"), tr("input scaled"),
+              tr("input ratio width"), tr("input ratio height") },
+            { tr("Resolution can be freely set"),
+              tr("The resolution from the input texture is used"),
+              tr("A scaled resolution with same ratio as the input texture is used"),
+              tr("Fixed with and height choosen to match original aspect ratio"),
+              tr("Fixed height and width choosen to match original aspect ratio") },
+            { RM_CUSTOM, RM_INPUT, RM_INPUT_SCALED,
+              RM_INPUT_FIX_WIDTH, RM_INPUT_FIX_HEIGHT },
+            RM_INPUT,
+            true, false);
 
-            p_width = to->params()->createIntParameter("to_width", tr("width"), tr("Width of texture in pixels"),
-                                          1024, 16, 4096*4, 16, true, false);
-            p_height = to->params()->createIntParameter("to_height", tr("height"), tr("Height of texture in pixels"),
-                                          1024, 16, 4096*4, 16, true, false);
-            p_depth = to->params()->createIntParameter("to_depth", tr("depth"), tr("Depth of texture in pixels"),
-                                          1024, 16, 4096*4, 16, true, false);
+            p_width = to->params()->createIntParameter(
+                        "to_width", tr("width"), tr("Width of texture in pixels"),
+                        1024, 16, 4096*4, 16, true, false);
+            p_height = to->params()->createIntParameter(
+                        "to_height", tr("height"), tr("Height of texture in pixels"),
+                        1024, 16, 4096*4, 16, true, false);
+            p_depth = to->params()->createIntParameter(
+                        "to_depth", tr("depth"), tr("Depth of texture in pixels"),
+                        1024, 16, 4096*4, 16, true, false);
             p_res_scale = to->params()->createFloatParameter("to_res_scale",
                             tr("scale"), tr("A multiplier for the input texture"),
                                                              1.f, 0.125f, true, false);
             p_res_scale->setMinValue(0.f);
+            if (!doAllowResolutionChange)
+            {
+                p_resMode->setZombie(true);
+                p_width->setZombie(true);
+                p_height->setZombie(true);
+                p_depth->setZombie(true);
+                p_res_scale->setZombie(true);
+            }
 
-            p_texFormat = to->params()->createTextureFormatParameter("to_format", tr("texture format"),
-                                                        tr("The channel format of the output texture"));
-            p_texType = to->params()->createTextureTypeParameter("to_type", tr("texture type"),
-                                                        tr("The type-per-channel of the output texture"));
+            p_texFormat = to->params()->createTextureFormatParameter(
+                        "to_format", tr("texture format"),
+                        tr("The channel format of the output texture"));
+            p_texType = to->params()->createTextureTypeParameter(
+                        "to_type", tr("texture type"),
+                        tr("The type-per-channel of the output texture"));
 
-            p_split = to->params()->createIntParameter("to_split", tr("segments"),
-                                        tr("Split rendering of the output into separate regions for better gui response"),
-                                        1, 1, 4096, 1, true, false);
-            /** @todo fix split/segmentation in TextureObjectBase */
-            p_split->setZombie(true);
-
-            p_numPasses = to->params()->createIntParameter(
-                        "to_num_passes", tr("number of passes"),
-                tr("Iterates a number of times over the u_tex_feedback texture."),
-                    1, 1, 1024, 1, true, false);
-            p_numPasses->setVisible(doAllowMultiPass);
 
         to->params()->endEvolveGroup();
         to->params()->endParameterGroup();
     }
+
+    to->params()->beginParameterGroup("to_res", tr("resolution and format"));
+    to->params()->beginEvolveGroup(false);
+
+        p_split = to->params()->createIntParameter("to_split", tr("segments"),
+                    tr("Split rendering of the output into separate regions "
+                       "for better gui response"),
+                                    1, 1, 4096, 1, true, false);
+        /** @todo fix split/segmentation in TextureObjectBase */
+        p_split->setZombie(true);
+
+        p_numPasses = to->params()->createIntParameter(
+                    "to_num_passes", tr("number of passes"),
+            tr("Iterates a number of times over the u_tex_feedback texture."),
+                1, 1, 1024, 1, true, false);
+        p_numPasses->setVisible(doAllowMultiPass);
+
+    to->params()->endEvolveGroup();
+    to->params()->endParameterGroup();
+
 
     to->params()->beginParameterGroup("to_input", tr("input"));
     if (maxIns)
@@ -353,21 +382,21 @@ void TextureObjectBase::PrivateTO::createParameters()
     {
         to->params()->beginParameterGroup("to_crange", tr("color range"));
         p_r_min = to->params()->createFloatParameter("to_red_min", tr("red min"),
-                                                     tr("Minimum value of channel"), 0.0, 0.05);
+                                 tr("Minimum value of channel"), 0.0, 0.05);
         p_r_max = to->params()->createFloatParameter("to_red_max", tr("red max"),
-                                                     tr("Maximum value of channel"), 1.0, 0.05);
+                                 tr("Maximum value of channel"), 1.0, 0.05);
         p_g_min = to->params()->createFloatParameter("to_green_min", tr("green min"),
-                                                     tr("Minimum value of channel"), 0.0, 0.05);
+                                 tr("Minimum value of channel"), 0.0, 0.05);
         p_g_max = to->params()->createFloatParameter("to_green_max", tr("green max"),
-                                                     tr("Maximum value of channel"), 1.0, 0.05);
+                                 tr("Maximum value of channel"), 1.0, 0.05);
         p_b_min = to->params()->createFloatParameter("to_blue_min", tr("blue min"),
-                                                     tr("Minimum value of channel"), 0.0, 0.05);
+                                 tr("Minimum value of channel"), 0.0, 0.05);
         p_b_max = to->params()->createFloatParameter("to_blue_max", tr("blue max"),
-                                                     tr("Maximum value of channel"), 1.0, 0.05);
+                                 tr("Maximum value of channel"), 1.0, 0.05);
         p_a_min = to->params()->createFloatParameter("to_alpha_min", tr("alpha min"),
-                                                     tr("Minimum value of channel"), 0.0, 0.05);
+                                 tr("Minimum value of channel"), 0.0, 0.05);
         p_a_max = to->params()->createFloatParameter("to_alpha_max", tr("alpha max"),
-                                                     tr("Maximum value of channel"), 1.0, 0.05);
+                                 tr("Maximum value of channel"), 1.0, 0.05);
         to->params()->endParameterGroup();
     }
 
@@ -406,9 +435,9 @@ void TextureObjectBase::PrivateTO::createParameters()
                 true, false);
 
         p_aa = to->params()->createIntParameter("to_outaa", tr("anti-aliasing"),
-                      tr("Sets the super-sampling when drawing the rendered frame onto the output"),
-                      1,
-                      1, 16, 1, true, false);
+      tr("Sets the super-sampling when drawing the rendered frame onto the output"),
+      1,
+      1, 16, 1, true, false);
 
     to->params()->endEvolveGroup();
     to->params()->endParameterGroup();

@@ -24,8 +24,11 @@ public:
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter*) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
-
     virtual void setNumberThreads(uint count) Q_DECL_OVERRIDE;
+    virtual void setAudioBuffers(uint thread, uint bufferSize,
+                                 const QList<AUDIO::AudioBuffer*>& inputs,
+                                 const QList<AUDIO::AudioBuffer*>& outputs) override;
+    virtual QString infoString() const override;
 
 protected:
 
