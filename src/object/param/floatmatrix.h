@@ -53,6 +53,8 @@ public:
         return s.str();
     }
 
+    bool isEmpty() const { return p_dims_.empty(); }
+
     /** Number of dimensions */
     size_t dimensions() const { return p_dims_.size(); }
     /** Size of all data */
@@ -62,6 +64,11 @@ public:
         { MO_ASSERT(dimension < p_dims_.size(),
                     "dimension="<<dimension<<", p_dims_="<<p_dims_.size());
           return p_dims_[dimension]; }
+
+    bool hasDimensions(const std::vector<size_t>& dims)
+    {
+        return dims == p_dims_;
+    }
 
     // --- read access ---
 
@@ -128,6 +135,10 @@ public:
             p_data_.clear();
             return;
         }
+        // clamp size to 1
+        for (auto& s : p_dims_)
+            s = std::max(size_t(1), s);
+        // calculate space required
         size_t num = 1;
         p_offs_.push_back(0);
         for (auto d : p_dims_)
@@ -136,6 +147,13 @@ public:
             p_offs_.push_back(num);
         }
         p_data_.resize(num);
+    }
+
+    void clear()
+    {
+        p_dims_.clear();
+        p_data_.clear();
+        p_offs_.clear();
     }
 
     /** Write access to all data */

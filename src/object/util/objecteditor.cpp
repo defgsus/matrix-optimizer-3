@@ -51,8 +51,9 @@ namespace MO {
         return false; \
     }
 
-#if 0
-#   define MO_DEBUG_OBJ_EDITOR(arg__) MO_DEBUG(arg__)
+#if 1
+#   define MO_DO_DEBUG_OBJ_EDITOR
+#   define MO_DEBUG_OBJ_EDITOR(arg__) MO_PRINT(arg__)
 #else
 #   define MO_DEBUG_OBJ_EDITOR(unused__) { }
 #endif
@@ -246,7 +247,8 @@ bool ObjectEditor::addObject(Object *parent, Object *newChild, int insert_index)
 
 bool ObjectEditor::addObjects(Object *parent,
                               const QList<Object*> newObjects,
-                              int insert_index, bool releaseRef)
+                              int insert_index, bool releaseRef,
+                              QString * errorRet)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::addObjects("
                         << parent << ", [" << newObjects.size()
@@ -307,13 +309,16 @@ bool ObjectEditor::addObjects(Object *parent,
 
     if (!error.isEmpty())
     {
-        QMessageBox::critical(0, tr("Can't add object"),
+        if (errorRet)
+            *errorRet = error;
+        else
+            QMessageBox::critical(0, tr("Can't add object"),
                               (saveAdd.isEmpty()
                                 ? tr("None of the objects could be added to %1.%2")
                                 : tr("Some objects could not be added to %1.%2"))
                               .arg(parent->name())
                               .arg(error));
-        return !saveAdd.isEmpty();
+        return false;// !saveAdd.isEmpty();
     }
     return true;
 }
@@ -337,6 +342,11 @@ bool ObjectEditor::deleteObject(Object *object)
 bool ObjectEditor::deleteObjects(const QList<Object*>& list)
 {
     MO_DEBUG_OBJ_EDITOR("ObjectEditor::deleteObjects(" << list.size() << ")");
+#ifdef MO_DO_DEBUG_OBJ_EDITOR
+    for (auto o : list)
+        MO_DEBUG_OBJ_EDITOR("~ " << o->name() << "(" << o->idNamePath() << ")");
+#endif
+
     MO__CHECK_SCENE
 
     emit objectsAboutToDelete(list);
@@ -376,7 +386,8 @@ bool ObjectEditor::setObjectIndex(Object * object, int newIndex)
 
 bool ObjectEditor::moveObject(Object *object, Object *newParent, int newIndex)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::moveObject(" << object << ", " << newParent << ", " << newIndex << ")");
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::moveObject(" << object << ", "
+                        << newParent << ", " << newIndex << ")");
     MO__CHECK_SCENE
 
     QString error;
@@ -875,11 +886,33 @@ TrackFloat * ObjectEditor::wrapIntoTrack(SequenceFloat *seq)
 
     return track;
 }
-
-
-Object * ObjectEditor::createInClip(Parameter *p, const QString& className, Clip * parent)
+/*
+Group * ObjectEditor::wrapIntoGroup(const QList<Object*>& objs)
 {
-    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('" << p->name() << ", " << className << ", " << parent << "')");
+    Object * parent = seq->parentObject();
+
+    if (!parent)
+        return 0;
+
+    TrackFloat * track = ObjectFactory::createTrackFloat(seq->name());
+    addObject(parent, track);
+    track->releaseRef("finish add");
+
+    const QPoint pos = seq->getAttachedData(Object::DT_GRAPH_POS).toPoint();
+    seq->setAttachedData(QPoint(1,1), Object::DT_GRAPH_POS);
+    track->setAttachedData(pos, Object::DT_GRAPH_POS);
+
+    moveObject(seq, track);
+
+    return track;
+}
+*/
+
+Object * ObjectEditor::createInClip(Parameter *p,
+                                    const QString& className, Clip * parent)
+{
+    MO_DEBUG_OBJ_EDITOR("ObjectEditor::createInClip('"
+                        << p->name() << ", " << className << ", " << parent << "')");
 
     MO_ASSERT(scene_, "can't edit");
 

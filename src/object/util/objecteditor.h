@@ -139,15 +139,20 @@ public slots:
     // ------------ tree editing ---------------
 
     /** Adds the object @p newChild to the @p parent.
-        @p newChild is completely given away. If it can't be added to parent, it will be deleted
+        @p newChild is completely given away.
+        If it can't be added to parent, it will be deleted
         and a message is displayed to the user. */
     bool addObject(Object * parent, Object * newChild, int insert_index = -1);
 
     /** Adds the list of objects to @p parent.
-        The items in @p newObjects are completely given away. If they can't be added to parent,
-        they will be deleted and a message is displayed to the user. */
+        The items in @p newObjects are completely given away.
+        If they can't be added to parent,
+        they will be deleted and a message is displayed to the user.
+        If @p error is not NULL any error is written there and
+        not displayed. */
     bool addObjects(Object * parent, const QList<Object*> newObjects,
-                    int insert_index = -1, bool releaseRef = true);
+                    int insert_index = -1, bool releaseRef = true,
+                    QString* error = nullptr);
 
     bool deleteObject(Object * object);
 

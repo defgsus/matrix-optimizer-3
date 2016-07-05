@@ -56,8 +56,16 @@ public:
     bool dropMimeData(const QMimeData *data, Qt::DropAction action,
                       int row, int column, const QModelIndex &parent) override;
 
+    // XXX This causes some trouble when drag-moving
+    // in particular, removeRows() gets called somewhere in
+    // QAbstractItemView::startDrag() for the dropped object!
+#if 0
     // Needed for drag-move
     bool removeRows(int row, int count, const QModelIndex &parent) override;
+    bool insertRows(int row, int count, const QModelIndex &parent) override;
+    bool moveRows(const QModelIndex &sourceParent, int sourceRow, int count,
+                  const QModelIndex &destinationParent, int destinationChild) override;
+#endif
 
 signals:
 

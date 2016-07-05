@@ -55,6 +55,7 @@ namespace MO {
     }
 
     class Object;
+    class Group;
     class Scene;
     class Camera;
     class LightSource;

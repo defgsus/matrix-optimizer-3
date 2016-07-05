@@ -276,13 +276,6 @@ void ObjectTreeView::Private::showPopup()
     if (sel)
     {
         actions.addTitle(sel->name(), p);
-        /*
-        a = actions->addAction(sel->name());
-        auto f = a->font();
-        f.setBold(true);
-        a->setFont(f);
-        menu->addSeparator();
-        */
     }
 
     auto sub = new QMenu(tr("tree"), p);

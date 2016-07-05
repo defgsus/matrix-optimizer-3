@@ -1062,7 +1062,7 @@ void ObjectGraphScene::dropAction(QGraphicsSceneDragDropEvent *e, Object * paren
     // drop of object trees
     if (e->mimeData()->formats().contains(ObjectTreeMimeData::objectMimeType))
     {
-        dropMimeData(e->mimeData(), mapToGrid(e->scenePos()));
+        dropMimeData(e->mimeData(), mapToGrid(e->scenePos()), e->proposedAction());
 
         e->accept();
         return;
@@ -1542,7 +1542,8 @@ void ObjectGraphScene::Private::createClipboardMenu(
             connect(a, &QAction::triggered, [=]()
             {
                 scene->dropMimeData(
-                    application()->clipboard()->mimeData(), popupGridPos);
+                    application()->clipboard()->mimeData(), popupGridPos,
+                            Qt::CopyAction);
             });
         }
     }
@@ -1830,7 +1831,8 @@ QMimeData * ObjectGraphScene::mimeData(const QList<AbstractObjectItem *> & list)
     return data;
 }
 
-void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPos)
+void ObjectGraphScene::dropMimeData(
+        const QMimeData * data, const QPoint &gridPos, Qt::DropAction act)
 {
     MO_DEBUG_GUI("ObjectGraphScene::dropMimeData() "
                  << data->formats());
@@ -1855,25 +1857,45 @@ void ObjectGraphScene::dropMimeData(const QMimeData * data, const QPoint &gridPo
     // but to manage everything per QMimeData::data()
     auto objdata = static_cast<const ObjectTreeMimeData*>(data);
 
+    // find object to paste in
+    Object * pasteParent = p_->root;
+    if (auto pitem = objectItemAt(gridPos))
+        if (pitem->object())
+            pasteParent = pitem->object();
+
+    QPoint objPos = QPoint(0,0);
+    if (pasteParent != p_->root)
+        if (auto item = itemForObject(pasteParent))
+            objPos = item->globalGridPos();
+
+    // special case for move
+    if (act == Qt::MoveAction)
+    {
+        auto ids = objdata->getObjectTreeIds();
+        QList<Object*> objs;
+        for (auto id : ids)
+            if (auto o = p_->root->findChildObject(id, true))
+                objs << o;
+        if (objs.isEmpty())
+            return;
+        MO_ASSERT(p_->root && p_->root->editor(), "");
+        auto editor = p_->root->editor();
+        for (auto o : objs)
+        {
+            o->setAttachedData(gridPos - objPos, Object::DT_GRAPH_POS);
+            //if (o->parentObject() != pasteParent)
+                editor->moveObject(o, pasteParent);
+        }
+        return;
+    }
+
     // deserialize object
     QList<Object*> copies = objdata->getObjectTrees();
 
     // XXX how to copy/paste gui settings???
     // UPDATE: Almost all settings are now saved in Object::attachedData()
 
-    // find object to paste in
-    Object * root = p_->root;
-    if (auto pitem = objectItemAt(gridPos))
-        if (pitem->object())
-            root = pitem->object();
-
-    QPoint objPos = QPoint(0,0);
-    if (root != p_->root)
-        if (auto item = itemForObject(root))
-            objPos = item->globalGridPos();
-
-    addObjects(root, copies, gridPos - objPos);
-
+    addObjects(pasteParent, copies, gridPos - objPos);
 }
 
 

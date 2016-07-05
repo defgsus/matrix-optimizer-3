@@ -22,7 +22,8 @@ class ValueFloatMatrixInterface
 public:
     virtual ~ValueFloatMatrixInterface() { }
 
-    virtual FloatMatrix valueFloatMatrix(uint channel, const RenderTime& time) const = 0;
+    virtual FloatMatrix valueFloatMatrix(
+                uint channel, const RenderTime& time) const = 0;
 
 };
 

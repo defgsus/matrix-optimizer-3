@@ -127,7 +127,7 @@ public slots:
     /** Put clipboard data into scene.
         @p gridPos is global and will be retranslated to parent's
         local coords if necessary. */
-    void dropMimeData(const QMimeData*, const QPoint& gridPos);
+    void dropMimeData(const QMimeData*, const QPoint& gridPos, Qt::DropAction act);
 
     /** Drop from mouse. Implementation used by AbstractObjectItem
         and the GraphicsScene. If @p parent == 0, root will be used. */

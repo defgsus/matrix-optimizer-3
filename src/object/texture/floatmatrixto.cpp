@@ -49,9 +49,10 @@ struct FloatMatrixTO::Private
     ParameterFloat
             *p_amplitude, *p_offset;
     ParameterSelect
-            *p_clampWidth, *p_flipX, *p_flipY;
+            *p_clampWidth, *p_clampHeight, *p_flipX, *p_flipY;
     ParameterInt
-            *p_offsetX, *p_width;
+            *p_offsetX, *p_offsetY,
+            *p_width, *p_height;
 
     ParameterFloatMatrix* p_matrix;
     std::vector<gl::GLfloat> buffer;
@@ -137,9 +138,21 @@ void FloatMatrixTO::Private::createParameters()
                     0, true, true);
         p_offsetX->setMinValue(0);
 
+        p_offsetY = to->params()->createIntParameter(
+                    "offset_y", tr("skip Y"),
+                    tr("Skips the number of rows in the input"),
+                    0, true, true);
+        p_offsetY->setMinValue(0);
+
         p_clampWidth = to->params()->createBooleanParameter(
                     "clamp_x", tr("fixed width"),
                     tr("Selects a fixed width for the output texture"),
+                    tr("Off"), tr("On"),
+                    false, true, false);
+
+        p_clampHeight = to->params()->createBooleanParameter(
+                    "clamp_y", tr("fixed height"),
+                    tr("Selects a fixed height for the output texture"),
                     tr("Off"), tr("On"),
                     false, true, false);
 
@@ -147,6 +160,11 @@ void FloatMatrixTO::Private::createParameters()
                     "width", tr("width"), tr("The texture width"),
                     1024, true, true);
         p_width->setMinValue(1);
+
+        p_height = to->params()->createIntParameter(
+                    "height", tr("height"), tr("The texture height"),
+                    1024, true, true);
+        p_height->setMinValue(1);
 
 
         p_flipX = to->params()->createBooleanParameter(
@@ -157,7 +175,6 @@ void FloatMatrixTO::Private::createParameters()
                     "flip_y", tr("flip Y"),
                     tr("Flip texture on Y axis"), tr("Off"), tr("On"),
                     false);
-        p_flipY->setZombie(true);
 
     to->params()->endParameterGroup();
 
@@ -180,6 +197,7 @@ void FloatMatrixTO::updateParameterVisibility()
     TextureObjectBase::updateParameterVisibility();
 
     p_->p_width->setVisible(p_->p_clampWidth->baseValue());
+    p_->p_height->setVisible(p_->p_clampHeight->baseValue());
 }
 
 
@@ -236,15 +254,21 @@ void FloatMatrixTO::Private::renderGl(
 {
     auto matrix = p_matrix->value(time);
 
-    size_t  matrixWidth = matrix.dimensions() > 0 ? matrix.size(0) : 0,
-            width = matrixWidth,
-            height = matrix.dimensions() > 1 ? matrix.size(1) : 1,
-            offsetX = p_offsetX->value(time);
+    const size_t
+            matrixWidth = matrix.dimensions() > 0 ? matrix.size(0) : 0,
+            matrixHeight = matrix.dimensions() > 1 ? matrix.size(1) : 1;
+    size_t  width = matrixWidth,
+            height = matrixHeight,
+            offsetX = p_offsetX->value(time),
+            offsetY = p_offsetY->value(time);
 
     if (p_clampWidth->value(time))
         width = p_width->value(time);
+    if (p_clampHeight->value(time))
+        height = p_height->value(time);
 
     width -= std::min(width, offsetX);
+    height -= std::min(height, offsetY);
 
     updateTexture(width, height);
     if (!tex)
@@ -253,25 +277,34 @@ void FloatMatrixTO::Private::renderGl(
     // -- update buffer
 
     const bool
-            flipX = !p_flipX->value(time);
-            //flipY = p_flipY->value(time);
+            flipX = p_flipX->value(time),
+            flipY = p_flipY->value(time);
     const Double
             ampl = p_amplitude->value(time),
             offset = p_offset->value(time);
 
-    buffer.resize(width);
+    buffer.resize(width * height);
 
-    //for (auto& f : buffer)
-    //    f = offset + ampl * float(rand()) / RAND_MAX;
-
-    for (size_t i=0; i<width; ++i)
+    for (size_t j=0; j<height; ++j)
     {
-        size_t j = i + offsetX,
-               i1 = flipX ? width-1-i : i;
-        if (j < matrixWidth)
-            buffer[i1] = offset + ampl * *matrix.data(j);
+        size_t ry = j + offsetY,
+               wy = flipY ? height-1-j : j;
+        if (ry >= matrixHeight)
+        {
+            for (size_t i=0; i<width; ++i)
+                buffer[wy*width + i] = 0.f;
+        }
         else
-            buffer[i1] = 0.f;
+        for (size_t i=0; i<width; ++i)
+        {
+            size_t rx = i + offsetX,
+                   wx = flipX ? width-1-i : i;
+            if (rx < matrixWidth)
+                buffer[wy*width + wx] = offset + ampl *
+                                    *matrix.data(ry*matrixWidth + rx);
+            else
+                buffer[wy*width + wx] = 0.f;
+        }
     }
 
     // -- upload --

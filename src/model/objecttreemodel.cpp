@@ -27,8 +27,13 @@
 #include "model/objecttreemimedata.h"
 #include "io/error.h"
 
-#include "io/log.h"
-#include "io/streamoperators_qt.h"
+#if 0
+#   include "io/log.h"
+#   include "io/streamoperators_qt.h"
+#   define MO__D(arg__) MO_PRINT("ObjectTreeModel("<<this<<")::" << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
 
 namespace MO {
 
@@ -51,6 +56,8 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
     QAbstractItemModel  (parent),
     p_                  (new Private(this))
 {
+    MO__D("ObjectTreeModel(" << rootObject << ", " << parent << ")");
+
     p_->headerNames
 //            << "" // active
 //            << "" // draw
@@ -62,6 +69,8 @@ ObjectTreeModel::ObjectTreeModel(Object * rootObject, QObject *parent) :
 
 ObjectTreeModel::~ObjectTreeModel()
 {
+    MO__D("~ObjectTreeModel()");
+
     delete p_;
 }
 
@@ -69,6 +78,8 @@ Object* ObjectTreeModel::rootObject() const { return p_->rootObject; }
 
 void ObjectTreeModel::setRootObject(Object *rootObject)
 {
+    MO__D("setRootObject(" << rootObject << ")");
+
     beginResetModel();
 
     p_->rootObject = rootObject;
@@ -213,6 +224,8 @@ QVariant ObjectTreeModel::data(const QModelIndex &index, int role) const
 bool ObjectTreeModel::setData(
         const QModelIndex &index, const QVariant& val, int role)
 {
+    MO__D("setData(" << index << ", " << val.typeName() << ", " << role << ")");
+
     if (!p_->rootObject || !index.isValid() || index.column() < 0
             || index.column() >= p_->headerNames.size())
         return false;
@@ -234,6 +247,8 @@ bool ObjectTreeModel::setData(
             return true;
         }
     }
+
+    emit dataChanged(index, index, QVector<int>() << role);
 
     return false;
 }
@@ -284,6 +299,8 @@ QStringList ObjectTreeModel::mimeTypes() const
 
 QMimeData* ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 {
+    MO__D("mimeData(" << indexes.size() << ")");
+
     QSet<Object*> objs;
     for (auto& i : indexes)
         if (auto o = objectForIndex(i))
@@ -300,10 +317,13 @@ QMimeData* ObjectTreeModel::mimeData(const QModelIndexList &indexes) const
 }
 
 bool ObjectTreeModel::canDropMimeData(
-        const QMimeData *data, Qt::DropAction /*action*/,
+        const QMimeData *data, Qt::DropAction action,
         int row, int /*column*/, const QModelIndex &parent) const
 {
-    //MO_PRINT(data->formats());
+    //MO__D("canDropMimeData(" << data->formats() << ", act=" << action
+    //      << ", row=" << row << ", parent=" << parent << ")");
+    Q_UNUSED(action);
+
     if (!rootObject())
         return false;
 
@@ -323,7 +343,7 @@ bool ObjectTreeModel::canDropMimeData(
 
     // row out of range
     if (row >= 0 && parentObj->numChildren() >= 0
-        && row+1 >= parentObj->numChildren())
+        && row > parentObj->numChildren())
     {
         MO_WARNING("ObjectTreeModel::dropMimeData() row out of range: "
                    << row << "/" << parentObj->numChildren());
@@ -349,8 +369,14 @@ bool ObjectTreeModel::dropMimeData(
         const QMimeData *data, Qt::DropAction action,
         int row, int column, const QModelIndex &parent)
 {
+    MO__D("dropMimeData(" << data->formats() << ", act=" << action << ", row="
+          << row << ", parent=" << parent << ")");
+
     if (!canDropMimeData(data, action, row, column, parent))
+    {
+        MO__D("Quit drop becaue canDropMimeData() returned false");
         return false;
+    }
 
     auto parentObj = objectForIndex(parent);
     if (!parentObj)
@@ -363,8 +389,32 @@ bool ObjectTreeModel::dropMimeData(
     if (data->formats().contains(ObjectTreeMimeData::objectMimeType))
     {
         auto objdata = static_cast<const ObjectTreeMimeData*>(data);
+
+        // catch move events
+        if (action == Qt::MoveAction)
+        {
+            auto ids = objdata->getObjectTreeIds();
+            QList<Object*> objs;
+            for (auto id : ids)
+                if (auto o = rootObject()->findChildObject(id, true))
+                    objs << o;
+            if (objs.isEmpty())
+            {
+                MO__D("Quit drop, because found no objects belonging to "
+                      "the IDs to be moved");
+                return false;
+            }
+            auto editor = parentObj->editor();
+            MO_ASSERT(editor, "");
+            for (auto o : objs)
+                editor->moveObject(o, parentObj, row++);
+            return true;
+        }
+
         newObjects = objdata->getObjectTrees();
+        MO__D("Got " << newObjects.size() << " objects from objectMimeType");
     }
+
     // drop new-object
     else if (data->formats().contains(GUI::ObjectMenu::NewObjectMimeType))
     {
@@ -374,7 +424,10 @@ bool ObjectTreeModel::dropMimeData(
         int typ = ObjectFactory::typeForClass(classn);
         // check if dropable
         if (typ < 0 || !parentObj->canHaveChildren(Object::Type(typ)))
+        {
+            MO__D("Quit drop because NewObjectMimeType does not fit here");
             return false;
+        }
         if (auto obj = ObjectFactory::createObject(classn))
             newObjects << obj;
     }
@@ -402,9 +455,15 @@ bool ObjectTreeModel::dropMimeData(
         }
     }
 
-
+    bool added = false;
     if (!newObjects.isEmpty())
-        parentObj->editor()->addObjects(parentObj, newObjects, row);
+    {
+        added = parentObj->editor()->addObjects(parentObj, newObjects, row);
+        if (added)
+            MO__D("dropped " << newObjects.size() << " objects")
+        else
+            MO__D("dropping of " << newObjects.size() << " objects failed");
+    }
 
     // print errors
     if (!errors.isEmpty())
@@ -418,12 +477,24 @@ bool ObjectTreeModel::dropMimeData(
         QMessageBox::information(0, QObject::tr("File drop"), msg);
     }
 
-    return !newObjects.empty();
+    //return !newObjects.empty();
+    return added && errors.isEmpty();
 }
 
 
+#if 0
+bool ObjectTreeModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    MO__D("insertRows(row=" << row << ", cnt=" << count
+          << ", parent=" << parent << ")");
+    return false;
+}
+
 bool ObjectTreeModel::removeRows(int row, int count, const QModelIndex &parent)
 {
+    MO__D("removeRows(row=" << row << ", cnt=" << count
+          << ", parent=" << parent << ")");
+
     auto pobj = objectForIndex(parent);
     if (!pobj || !pobj->editor())
         return false;
@@ -440,5 +511,16 @@ bool ObjectTreeModel::removeRows(int row, int count, const QModelIndex &parent)
 
     return true;
 }
+
+bool ObjectTreeModel::moveRows(
+        const QModelIndex &sourceParent, int sourceRow, int count,
+        const QModelIndex &destinationParent, int destinationChild)
+{
+    MO_PRINT("moveRows(" << sourceParent << ", " << sourceRow << ", " << count
+             << ", " << destinationParent << ", " << destinationChild << ")");
+    return false;
+}
+#endif
+
 
 } // namespace MO

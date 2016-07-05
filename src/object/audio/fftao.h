@@ -32,6 +32,13 @@ public:
         FT_AUDIO_2_AMPPHASE,
     };
 
+    enum MatrixMode
+    {
+        MM_OFF,
+        MM_LINEAR,
+        MM_SPLIT
+    };
+
     MO_OBJECT_CONSTRUCTOR(FftAO)
 
     virtual void createParameters() Q_DECL_OVERRIDE;

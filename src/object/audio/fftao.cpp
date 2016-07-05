@@ -43,7 +43,8 @@ class FftAO::Private
     ParameterSelect
         * paramType,
         * paramSize,
-        * paramCompensate;
+        * paramCompensate,
+        * paramMatrixOut;
     ParameterFloatMatrix
         * paramMatrix;
 
@@ -65,7 +66,7 @@ FftAO::FftAO()
 {
     setName("FFT");
     setNumberAudioInputsOutputs(1, 0);
-    setNumberOutputs(ST_FLOAT, 1);
+    //setNumberOutputs(ST_FLOAT, 1);
     setNumberOutputs(ST_FLOAT_MATRIX, 1);
 }
 
@@ -82,7 +83,7 @@ QString FftAO::getOutputName(SignalType st, uint channel) const
     if (st == ST_FLOAT && channel == 0)
         return tr("delay");
     if (st == ST_FLOAT_MATRIX && channel == 0)
-        return tr("values");
+        return tr("matrix");
     return AudioObject::getOutputName(st, channel);
 }
 
@@ -139,6 +140,22 @@ void FftAO::createParameters()
             FT_AUDIO_2_AMPPHASE },
           FT_AUDIO_2_FFT,
           true, false);
+
+        p_->paramMatrixOut = params()->createSelectParameter(
+                    "_fft_matrix_out", tr("matrix output"),
+          tr("Selectes the type of output on the matrix connector"),
+          { "off", "linear", "split" },
+          { tr("off"),
+            tr("one line"),
+            tr("two lines") },
+          { tr("No output"),
+            tr("Whole data in one line"),
+            tr("Data split into two lines, e.g. amplitude and phase") },
+          { MM_OFF,
+            MM_LINEAR,
+            MM_SPLIT },
+          MM_LINEAR,
+          true, true);
 
         p_->paramSize = params()->createSelectParameter(
                     "_fft_size", tr("size"),
@@ -246,12 +263,40 @@ void FftAO::processAudio(const RenderTime& time)
         fft->ifft();
 
     // copy to matrix output
+    auto mao = (MatrixMode)p_->paramMatrixOut->value(time);
     {
         QMutexLocker lock(&p_->matrixMutex);
-        if (p_->matrix.size() != fft->size())
-            p_->matrix.setDimensions({fft->size()});
-        for (size_t i=0; i<fft->size(); ++i)
-            *p_->matrix.data(i) = fft->buffer(i);
+        switch (mao)
+        {
+            case MM_OFF:
+                if (!p_->matrix.isEmpty())
+                    p_->matrix.clear();
+            break;
+
+            case MM_LINEAR:
+            {
+                std::vector<size_t> dim = { fft->size() };
+                if (p_->matrix.hasDimensions(dim))
+                    p_->matrix.setDimensions(dim);
+                for (size_t i=0; i<fft->size(); ++i)
+                    *p_->matrix.data(i) = fft->buffer(i);
+            }
+            break;
+
+            case MM_SPLIT:
+            {
+                std::vector<size_t> dim = { fft->halfSize(), 2 };
+                if (!p_->matrix.hasDimensions(dim))
+                    p_->matrix.setDimensions(dim);
+                for (size_t i=0; i<fft->halfSize(); ++i)
+                {
+                    *p_->matrix.data(i, 0) = fft->buffer(i);
+                    *p_->matrix.data(i, 1) = fft->buffer(i+fft->halfSize());
+                }
+            }
+            break;
+        }
+
     }
 
 
