@@ -134,34 +134,44 @@ void Camera::createParameters()
         p_tex_type_ = params()->createTextureTypeParameter("fbo_type", tr("framebuffer type"),
                                                     tr("The type-per-channel of the framebuffer"));
 
-        p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
-                                      1024, 16, 4096*4, 16, true, false);
-        p_height_ = params()->createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
-                                      1024, 16, 4096*4, 16, true, false);
-        p_cubeRes_ = params()->createIntParameter("fbocuberes", tr("resolution of cube map"), tr("Width and height of the rendered frame per cube face"),
-                                      1024, 16, 4096*4, 16, true, false);
+        p_width_ = params()->createIntParameter(
+                    "fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
+                                      1024, 1, 4096*4, 16, true, false);
+        p_height_ = params()->createIntParameter(
+                    "fboheight", tr("height"), tr("Height of rendered frame in pixels"),
+                                      1024, 1, 4096*4, 16, true, false);
+        p_cubeRes_ = params()->createIntParameter(
+                    "fbocuberes", tr("resolution of cube map"),
+                    tr("Width and height of the rendered frame per cube face"),
+                    1024, 4, 4096*4, 16, true, false);
 
-        p_multiSample_ = params()->createIntParameter("fbo_msaa",
-                                  tr("anti-aliasing (multi-sampling)"),
-                                  tr("Number of multi-samples in framebuffer to avoid aliasing"),
-                                  0, 0, 64, 1,
-                                  true, false);
-        params()->endEvolveGroup();
+        p_multiSample_ = params()->createIntParameter(
+                    "fbo_msaa",
+                    tr("anti-aliasing (multi-sampling)"),
+                    tr("Number of multi-samples in framebuffer to avoid aliasing"),
+                    0, 0, 64, 1,
+                    true, false);
+
+    params()->endEvolveGroup();
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("camobjects", tr("rendered objects"));
 
-        p_wcInclude_ = params()->createTextParameter("cam_include", tr("include objects"),
-                                     tr("Wildcard expressions of which objects should be rendered"),
-                                     TT_OBJECT_WILDCARD,
-                                     "*", true, false);
+        p_wcInclude_ = params()->createTextParameter(
+                    "cam_include", tr("include objects"),
+                 tr("Wildcard expressions of which objects should be rendered"),
+                 TT_OBJECT_WILDCARD,
+                 "*", true, false);
 
-        p_wcIgnore_ = params()->createTextParameter("cam_ignore", tr("ignore objects"),
-                                     tr("Wildcard expressions of which objects should not be rendered"),
-                                     TT_OBJECT_WILDCARD,
-                                     "", true, false);
+        p_wcIgnore_ = params()->createTextParameter(
+                    "cam_ignore", tr("ignore objects"),
+                 tr("Wildcard expressions of which objects should not be rendered"),
+                 TT_OBJECT_WILDCARD,
+                 "", true, false);
 
     params()->endParameterGroup();
+
 
     params()->beginParameterGroup("camback", tr("background"));
 

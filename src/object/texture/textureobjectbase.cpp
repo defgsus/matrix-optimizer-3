@@ -298,13 +298,13 @@ void TextureObjectBase::PrivateTO::createParameters()
 
             p_width = to->params()->createIntParameter(
                         "to_width", tr("width"), tr("Width of texture in pixels"),
-                        1024, 16, 4096*4, 16, true, false);
+                        1024, 1, 4096*4, 16, true, false);
             p_height = to->params()->createIntParameter(
                         "to_height", tr("height"), tr("Height of texture in pixels"),
-                        1024, 16, 4096*4, 16, true, false);
+                        1024, 1, 4096*4, 16, true, false);
             p_depth = to->params()->createIntParameter(
                         "to_depth", tr("depth"), tr("Depth of texture in pixels"),
-                        1024, 16, 4096*4, 16, true, false);
+                        1024, 1, 4096*4, 16, true, false);
             p_res_scale = to->params()->createFloatParameter("to_res_scale",
                             tr("scale"), tr("A multiplier for the input texture"),
                                                              1.f, 0.125f, true, false);

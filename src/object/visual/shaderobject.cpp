@@ -74,9 +74,9 @@ void ShaderObject::createParameters()
     params()->beginEvolveGroup(false);
 
         p_width_ = params()->createIntParameter("fbowidth", tr("width"), tr("Width of rendered frame in pixels"),
-                                      1024, 16, 4096*4, 16, true, false);
+                                      1024, 1, 4096*4, 16, true, false);
         p_height_ = params()->createIntParameter("fboheight", tr("height"), tr("Height of rendered frame in pixels"),
-                                      1024, 16, 4096*4, 16, true, false);
+                                      1024, 1, 4096*4, 16, true, false);
 
         p_split_ = params()->createIntParameter("split", tr("segments"),
                                     tr("Split rendering of the output into separate regions for better gui response"),

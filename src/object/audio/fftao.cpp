@@ -252,6 +252,8 @@ void FftAO::processAudio(const RenderTime& time)
     }
 
     // do transform
+    /** @todo add a worker thread group to Scene or somewhere
+        and do fft transform async for matrix outputs */
     memcpy(fft->buffer(), &ringBuf[0], fft->size() * sizeof(F32));
     if (forward)
     {

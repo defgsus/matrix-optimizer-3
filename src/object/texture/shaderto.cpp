@@ -61,7 +61,8 @@ struct ShaderTO::Private
             * u_chan_res,
             * u_date,
             * u_mouse,
-            * u_samplerate;
+            * u_samplerate,
+            * u_frame;
 };
 
 
@@ -130,7 +131,9 @@ void ShaderTO::Private::createParameters()
     "   vec3  iResolution;              // resolution of output texture in pixels\n"
     "   float iGlobalTime;              // scene time in seconds\n"
     "   float iGlobalDelta;             // seconds between last and this frame\n"
-    "   float iChannelTime[4];          // playback of channel in seconds (not defined yet)\n"
+    "   uniform float iFrame;           // the current frame (independent of time)\n"
+    "   float iChannelTime[4];          // playback of channel in seconds "
+                                                                "(not defined yet)\n"
     "   vec3  iChannelResolution[4];    // resolution per channel in pixels\n"
     "   vec4  iMouse;                   // xy=mouse position in pixels, zw = click\n"
     "   vec4  iDate;                    // year, month, day, time in seconds\n"
@@ -244,6 +247,7 @@ void ShaderTO::Private::initGl()
     u_date = shader->getUniform("iDate");
     u_samplerate = shader->getUniform("iSampleRate");
     u_mouse = shader->getUniform("iMouse");
+    u_frame = shader->getUniform("iFrame");
     uniformSetting->tieToShader(shader);
 }
 
@@ -279,7 +283,9 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
         {
             data[k*3] = t->width();
             data[k*3+1] = t->height();
+            data[k*2+2] = 1.f;
             // XXX what is the 3rd value in shadertoy??
+            // UPDATE Should be aspect, is usually 1.
             ++k;
         }
         MO_CHECK_GL_THROW( gl::glUniform3fv(u_chan_res->location(), 4, &data[0]));
@@ -301,6 +307,10 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
                            MouseState::globalInstance().isDown(Qt::RightButton)
                     );
     }
+
+    /** @todo should be a local frame count with restart ability !?? */
+    if (u_frame)
+        u_frame->floats[0] = to->renderCount();
 
     if (u_date)
     {

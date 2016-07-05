@@ -225,7 +225,7 @@ void ObjectTreeView::Private::connectEditor()
 
     connect(editor, &ObjectEditor::objectAdded, [=](Object*o)
         { updateModel(); p->selectObject(o); });
-    connect(editor, &ObjectEditor::objectChanged, [=](){ p->update(); });
+    connect(editor, &ObjectEditor::objectChanged, [=](){ updateModel(); });
     connect(editor, &ObjectEditor::objectColorChanged, [=](){ p->update(); });
     connect(editor, &ObjectEditor::objectMoved, [=](){ updateModel(); });
     connect(editor, &ObjectEditor::objectNameChanged, [=](){ p->update(); });
@@ -261,6 +261,7 @@ void ObjectTreeView::Private::connectEditor()
 void ObjectTreeView::Private::updateModel()
 {
     model->setRootObject(model->rootObject());
+    p->setModel(model);
 }
 
 void ObjectTreeView::mousePressEvent(QMouseEvent* e)

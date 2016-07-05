@@ -13,6 +13,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QClipboard>
+#include <QFileInfo>
 
 #include "objectactions.h"
 #include "object/object.h"
@@ -28,6 +29,7 @@
 #include "gl/shadersource.h"
 #include "gui/util/objectmenu.h"
 #include "gui/util/appicons.h"
+#include "gui/util/recentfiles.h"
 #include "gui/geometrydialog.h"
 #include "gui/texteditdialog.h"
 #include "gui/geometrydialog.h"
@@ -84,7 +86,14 @@ void ObjectActions::createNewObjectActions(
         QString id = act->data().toString();
         Object * onew;
         if (id == "_template_")
-            onew = ObjectFactory::loadObjectTemplate();
+        {
+            QString fn;
+            onew = ObjectFactory::loadObjectTemplateDialog(&fn);
+            if (!fn.isEmpty())
+                recentObjectTemplates()->addFilename(fn);
+        }
+        else if (id.startsWith("_template_"))
+            onew = loadObjectTemplate(id.mid(10));
         else
             onew = ObjectFactory::createObject(id);
         if (onew)
@@ -147,10 +156,26 @@ QMenu * ObjectActions::createObjectsMenu(
     // from template
     if (with_template)
     {
-        QAction * a = new QAction(tr("from template ..."), pparent);
-        a->setData("_template_");
-        menu->addAction(a);
-        menu->addSeparator();
+        auto names = recentObjectTemplates()->filenames();
+        if (names.empty())
+        {
+            auto a = menu->addAction(tr("from template ..."));
+            a->setData("_template_");
+        }
+        else
+        {
+            auto sub = new QMenu(tr("from template"), menu);
+            auto a = sub->addAction(tr("..."));
+            a->setData("_template_");
+            for (auto& n : names)
+            {
+                auto fn = QFileInfo(n).baseName();
+                a = sub->addAction(fn);
+                a->setData("_template_" + n);
+            }
+            menu->addMenu(sub);
+            menu->addSeparator();
+        }
     }
 
     if (!list.empty())
@@ -303,7 +328,9 @@ void ObjectActions::createEditActions(
                        "file for later reuse"));
     QObject::connect(a, &QAction::triggered, [=]()
     {
-        ObjectFactory::storeObjectTemplate(obj);
+        auto fn = ObjectFactory::saveObjectTemplateDialog(obj);
+        if (!fn.isEmpty())
+            recentObjectTemplates()->addFilename(fn);
     });
 
     // save texture output
@@ -459,6 +486,36 @@ void ObjectActions::createClipboardActions(
     }
 }
 
+RecentFiles* ObjectActions::recentObjectTemplates()
+{
+    static RecentFiles* r = nullptr;
+    if (!r)
+    {
+        r = new RecentFiles(23, application());
+        r->setObjectName("_RecentObjectTemplates");
+        r->loadSettings();
+        r->setAutoSave(true);
+    }
+    return r;
+}
+
+Object* ObjectActions::loadObjectTemplate(const QString &fn, bool showErrorDiag)
+{
+    try
+    {
+        Object * o = ObjectFactory::loadObject(fn);
+        recentObjectTemplates()->addFilename(fn);
+        return o;
+    }
+    catch (const Exception& e)
+    {
+        if (showErrorDiag)
+            QMessageBox::critical(nullptr, tr("io error"),
+                              tr("Could not load the object template\n%1\n%2")
+                              .arg(fn).arg(e.what()));
+    }
+    return nullptr;
+}
 
 } // namespace GUI
 } // namespace MO

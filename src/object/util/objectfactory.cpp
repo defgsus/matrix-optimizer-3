@@ -658,15 +658,16 @@ Object * ObjectFactory::loadObject(IO::DataStream &io)
 }
 
 
-void ObjectFactory::storeObjectTemplate(Object * obj)
+QString ObjectFactory::saveObjectTemplateDialog(Object * obj)
 {
     QString fn = IO::Files::getSaveFileName(IO::FT_OBJECT_TEMPLATE, 0);
     if (fn.isEmpty())
-        return;
+        return fn;
 
     try
     {
         saveObject(fn, obj);
+        return fn;
     }
     catch (const Exception& e)
     {
@@ -674,17 +675,20 @@ void ObjectFactory::storeObjectTemplate(Object * obj)
                               tr("Could not save the object template\n%1\n%2")
                               .arg(fn).arg(e.what()));
     }
+    return QString();
 }
 
-Object * ObjectFactory::loadObjectTemplate()
+Object * ObjectFactory::loadObjectTemplateDialog(QString* retfn)
 {
     QString fn = IO::Files::getOpenFileName(IO::FT_OBJECT_TEMPLATE, 0);
     if (fn.isEmpty())
-        return 0;
+        return nullptr;
 
     try
     {
         Object * o = ObjectFactory::loadObject(fn);
+        if (retfn)
+            *retfn = fn;
         return o;
     }
     catch (const Exception& e)
@@ -693,7 +697,7 @@ Object * ObjectFactory::loadObjectTemplate()
                               tr("Could not load the object template\n%1\n%2")
                               .arg(fn).arg(e.what()));
     }
-    return 0;
+    return nullptr;
 }
 
 

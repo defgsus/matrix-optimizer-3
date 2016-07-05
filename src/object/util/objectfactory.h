@@ -151,12 +151,14 @@ public:
     static Object * loadObject(const QString& filename);
 
     /** Opens filedialog, saves the object,
-        no exceptions. */
-    static void storeObjectTemplate(Object * obj);
+        no exceptions.
+        Returns the filename if successful, empty otherwise */
+    static QString saveObjectTemplateDialog(Object * obj);
 
     /** Opens filedialog, returns an object or NULL,
-        no exceptions. */
-    static Object * loadObjectTemplate();
+        no exceptions.
+        @p fn will contain the filename on success. */
+    static Object * loadObjectTemplateDialog(QString* fn = nullptr);
 
 signals:
 
