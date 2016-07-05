@@ -125,6 +125,16 @@ Object* ObjectTreeView::selectedObject() const
     return p_->model->objectForIndex( idxs.first() );
 }
 
+QList<Object*> ObjectTreeView::selectedObjects() const
+{
+    QList<Object*> list;
+    auto idxs = selectedIndexes();
+    for (auto& idx : idxs)
+        if (auto o = p_->model->objectForIndex(idx))
+            list << o;
+    return list;
+}
+
 void ObjectTreeView::setRootObject(Object* o)
 {
     if (!o)
@@ -314,6 +324,8 @@ void ObjectTreeView::Private::showPopup()
         par = model->rootObject();
     if (par)
         ObjectActions::createNewObjectActions(actions, par, p);
+
+    ObjectActions::createClipboardActions(actions, p->selectedObjects(), p);
 
     auto menu = new QMenu(p);
     menu->addActions(actions);

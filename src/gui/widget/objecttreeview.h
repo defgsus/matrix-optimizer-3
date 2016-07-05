@@ -26,6 +26,7 @@ public:
 
     Object* rootObject() const;
     Object* selectedObject() const;
+    QList<Object*> selectedObjects() const;
 
 signals:
 

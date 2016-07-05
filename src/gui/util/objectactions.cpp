@@ -11,6 +11,8 @@
 #include <QMessageBox>
 #include <QMenu>
 #include <QAction>
+#include <QApplication>
+#include <QClipboard>
 
 #include "objectactions.h"
 #include "object/object.h"
@@ -21,6 +23,7 @@
 #include "object/interface/valuetextureinterface.h"
 #include "object/interface/valueshadersourceinterface.h"
 #include "object/interface/evolutioneditinterface.h"
+#include "model/objecttreemimedata.h"
 #include "gl/texture.h"
 #include "gl/shadersource.h"
 #include "gui/util/objectmenu.h"
@@ -392,6 +395,67 @@ void ObjectActions::saveTexture(const GL::Texture* tex)
     catch (const Exception& e)
     {
         QMessageBox::critical(0, tr("saving image failed"), e.what() );
+    }
+}
+
+
+void ObjectActions::createClipboardActions(
+        ActionList& actions,
+        const QList<Object*>& objects,
+        QObject* par)
+{
+    actions.addSeparator(par);
+
+    const bool plural = objects.size() > 1;
+    Object * obj = objects.isEmpty() ? nullptr : objects.first();
+
+    QAction * a;
+
+    auto editor = obj ? obj->editor() : nullptr;
+
+    if (obj && obj->parentObject() != nullptr && editor)
+    {
+        // copy
+        a = actions.addAction(plural ? tr("Copy objects") : tr("Copy"), par);
+        a->setStatusTip(tr("Copies the selected object(s) and "
+                           "all it's children to the clipboard"));
+        a->setShortcut(Qt::CTRL + Qt::Key_C);
+        QObject::connect(a, &QAction::triggered, [=]()
+        {
+            auto data = new ObjectTreeMimeData();
+            data->storeObjectTrees(objects);
+            application()->clipboard()->setMimeData(data);
+        });
+
+        // delete
+        a = actions.addAction(plural ? tr("Delete objects") : tr("Delete"), par);
+        a->setStatusTip(tr("Deletes the object(s) from the scene"));
+        //a->setShortcut(Qt::CTRL + Qt::Key_Delete);
+        QObject::connect(a, &QAction::triggered, [=]()
+        {
+            if (!plural)
+                editor->deleteObject(obj);
+            else
+                editor->deleteObjects(objects);
+        });
+
+    }
+
+    if (!plural && ObjectTreeMimeData::isObjectInClipboard() && editor)
+    {
+        const auto data = application()->clipboard()->mimeData();
+
+        QString pname = obj ? obj->name() : tr("Scene");
+
+        // paste
+        a = actions.addAction(tr("Paste into %1").arg(pname), par);
+        a->setShortcut(Qt::CTRL + Qt::Key_V);
+        QObject::connect(a, &QAction::triggered, [=]()
+        {
+            auto trees = static_cast<const ObjectTreeMimeData*>(data)->getObjectTrees();
+            if (!trees.isEmpty())
+                editor->addObjects(obj, trees);
+        });
     }
 }
 

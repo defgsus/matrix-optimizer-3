@@ -38,6 +38,10 @@ public:
             std::function<void(Object*)> onCreated = nullptr,
             std::function<void(Object*)> onAdded = nullptr);
 
+    static void createClipboardActions(
+            ActionList& actions,
+            const QList<Object*>& objects,
+            QObject* parent = nullptr);
 
     // --- low level bits ----
 

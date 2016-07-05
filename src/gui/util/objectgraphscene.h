@@ -95,7 +95,8 @@ public slots:
     /** Bring the item and all it's cables to front */
     void toFront(QGraphicsItem *);
 
-    /** Creates edit actions for current selection and sends it to MainWidgetController */
+    /** Creates edit actions for current selection and sends
+        it to MainWidgetController */
     void createEditMenu();
 
     /** Creates the edit menu, for scene or for selected items */
