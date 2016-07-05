@@ -67,17 +67,28 @@ void Modulator::deserialize(IO::DataStream & io)
 
 QString Modulator::nameAutomatic() const
 {
-    QString n = modulator() ? modulator()->name() : (modulatorId() + "(NULL)");
-    if (!outputId_.isEmpty())
-        n += ":" + outputId_;
-    n += QString("(%1) -> ").arg(channel_);
+    QString n;
+    if (auto obj = modulator())
+    {
+        n = obj->name() + ":" +
+            obj->getOutputName(signalType(), channel_);
+    }
+    else
+    {
+        n = modulatorId() + "[NULL]:(id=" + outputId_
+                + QString(",ch=%1)").arg(channel_);
+    }
+
+    n += " -> ";
+
+    // parent/parameter goal
     if (!parent())
-        n += name() + "(NULL)";
+        n += name() + "[NULL]";
     else
     {
         n += parent()->name();
         if (param_)
-            n += ":" + param_->name();
+            n += ":" + param_->displayName();
     }
     return n;
 }

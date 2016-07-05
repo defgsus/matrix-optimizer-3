@@ -42,7 +42,9 @@ public:
 
     Parameter * parameter() const { return param_; }
 
+    void setRadius(qreal);
     void setText(const QString&);
+    void setTextVisible(bool vis);
 
     bool isInput() const { return isInput_; }
     bool isOutput() const { return !isInput_; }
@@ -71,14 +73,15 @@ protected:
 
     void mousePressEvent(QGraphicsSceneMouseEvent*) Q_DECL_OVERRIDE;
 
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) Q_DECL_OVERRIDE;
+    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
+               QWidget *widget) Q_DECL_OVERRIDE;
 
 private:
 
     AbstractObjectItem * objectItem_;
     Object * object_;
 
-    bool isInput_;
+    bool isInput_, textVis_;
     uint channel_;
     SignalType signalType_;
     QString id_;

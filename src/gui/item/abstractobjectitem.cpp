@@ -908,13 +908,15 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
 
     top += r.top();
 
-    qreal heightfac = (r.height() - top) / std::max(1, inputItems.size());
     const bool vis = item->isExpanded();
+    qreal heightfac = (r.height() - top) / std::max(1, inputItems.size());
+    qreal rad = std::max(1., std::min(6., heightfac*.5) );
 
     for (int i=0; i<inputItems.size(); ++i)
     {
         inputItems[i]->setPos(r.left(), top + (i + 0.5) * heightfac);
-        inputItems[i]->setVisible(vis);
+        inputItems[i]->setTextVisible(vis);
+        inputItems[i]->setRadius(rad);
     }
 
     heightfac = (r.height() - top) / std::max(1, outputItems.size());
@@ -922,7 +924,8 @@ void AbstractObjectItem::PrivateOI::updateConnectorPositions()
     for (int i=0; i<outputItems.size(); ++i)
     {
         outputItems[i]->setPos(r.right(), top + (i + 0.3) * heightfac);
-        outputItems[i]->setVisible(vis);
+        outputItems[i]->setTextVisible(vis);
+        outputItems[i]->setRadius(rad);
     }
 
 }

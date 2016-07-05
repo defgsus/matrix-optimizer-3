@@ -35,6 +35,7 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(
       objectItem_           (object),
       object_               (object->object()),
       isInput_              (isInput),
+      textVis_              (true),
       channel_              (channel),
       signalType_           (signal),
       id_                   (id),
@@ -47,19 +48,19 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(
     setCursor(QCursor(Qt::ArrowCursor));
     setBrush(ObjectGraphSettings::brushConnector(this));
 
-
-    setRect(-6, -6, 12, 12);
+    setRadius(6);
 
     setToolTip(toolTip);
-
     setText(toolTip);
 }
 
-ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem *object)
+ObjectGraphConnectItem::ObjectGraphConnectItem(
+        Parameter * p, AbstractObjectItem *object)
     : QGraphicsEllipseItem  (object),
       objectItem_           (object),
       object_               (object->object()),
       isInput_              (true),
+      textVis_              (true),
       channel_              (0),
       signalType_           (p->signalType()),
       id_                   (p->idName()),
@@ -75,16 +76,23 @@ ObjectGraphConnectItem::ObjectGraphConnectItem(Parameter * p, AbstractObjectItem
     setBrush(ObjectGraphSettings::brushConnector(this));
     setPen(Qt::NoPen);
 
-    setRect(-6, -6, 12, 12);
+    setRadius(6);
 
-    setToolTip(param_->statusTip());
-    setText(param_->userName().isEmpty() ? param_->name() : param_->userName());
+    updateName();
+}
+
+void ObjectGraphConnectItem::setRadius(qreal r)
+{
+    setRect(-r, -r, r*2., r*2.);
 }
 
 void ObjectGraphConnectItem::updateName()
 {
     if (param_)
-        setText(param_->userName().isEmpty() ? param_->name() : param_->userName());
+    {
+        setToolTip(param_->displayName() + "\n" + param_->statusTip());
+        setText(param_->displayName());
+    }
 }
 
 void ObjectGraphConnectItem::setText(const QString & t)
@@ -104,9 +112,17 @@ void ObjectGraphConnectItem::setText(const QString & t)
         text_->setDefaultTextColor(brush().color().lighter());
         //text_->setDefaultTextColor(
         //            ObjectGraphSettings::colorText(objectItem_->object()));
+        text_->setVisible(textVis_);
 
         setFlag(ItemClipsToShape, false);
     }
+}
+
+void ObjectGraphConnectItem::setTextVisible(bool vis)
+{
+    textVis_ = vis;
+    if (text_)
+        text_->setVisible(vis);
 }
 
 bool ObjectGraphConnectItem::acceptsModulator(Object * o) const
@@ -172,13 +188,17 @@ void ObjectGraphConnectItem::dropEvent(QGraphicsSceneDragDropEvent * e)
     if (!desc.isSameApplicationInstance())
     {
         QMessageBox::information(0,
-                                 QMessageBox::tr("drop object"),
-                                 QMessageBox::tr("Can't drop an object from another application instance."));
+            QMessageBox::tr("drop object"),
+            QMessageBox::tr("Can't connect to object from another "
+                            "application instance.\nSorry."));
         return;
     }
 
     if (object_->editor())
+    {
         object_->editor()->addModulator(parameter(), desc.pointer()->idName(), "");
+        e->accept();
+    }
 }
 
 
@@ -190,7 +210,8 @@ void ObjectGraphConnectItem::mousePressEvent(QGraphicsSceneMouseEvent *)
     update();
 }
 
-void ObjectGraphConnectItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+void ObjectGraphConnectItem::paint(
+        QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     setBrush(ObjectGraphSettings::brushConnector(this));
     if (dragHovered_)

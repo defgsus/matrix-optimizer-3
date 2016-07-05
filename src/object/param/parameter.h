@@ -77,6 +77,8 @@ public:
     const QString& name() const { return name_; }
     /** Can be, and is by default, empty */
     const QString& userName() const { return userName_; }
+    /** Returns either userName() or name() */
+    const QString& displayName() const;
     const QString& statusTip() const { return statusTip_; }
     SpecificFlag specificFlag() const { return p_specFlag_; }
 

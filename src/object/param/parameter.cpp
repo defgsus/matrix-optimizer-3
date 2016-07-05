@@ -44,6 +44,11 @@ Parameter::~Parameter()
     //delete iProps_;
 }
 
+const QString& Parameter::displayName() const
+{
+    return userName().isEmpty() ? name() : userName();
+}
+
 void Parameter::serialize(IO::DataStream &io) const
 {
     io.writeHeader("par", 6);
