@@ -31,7 +31,7 @@ class SyntaxHighlighter : public QSyntaxHighlighter
 {
     Q_OBJECT
 public:
-    explicit SyntaxHighlighter(QObject * parent);
+    explicit SyntaxHighlighter(bool pythonComments, QObject * parent);
 
 signals:
 
@@ -83,6 +83,7 @@ private:
     QRegExp commentStartExpression_;
     QRegExp commentEndExpression_;
 
+    bool pythonComments_;
 };
 
 

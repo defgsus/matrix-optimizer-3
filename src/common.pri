@@ -282,7 +282,8 @@ HEADERS += \
     $$PWD/gl/win32/wm_codes.inl \
     $$PWD/gl/x11/include_x11.h \
     $$PWD/io/architecture.h \
-    $$PWD/audio/tool/fixedblockdelay.h
+    $$PWD/audio/tool/fixedblockdelay.h \
+    $$PWD/audio/tool/beatdetector.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -501,5 +502,6 @@ SOURCES += \
     src/gl/x11/glwindow_x11.cpp \
     src/gl/win32/glcontext_win32.cpp \
     src/gl/win32/glwindow_win32.cpp \
-    src/gl/win32/winerror.cpp
+    src/gl/win32/winerror.cpp \
+    $$PWD/audio/tool/beatdetector.cpp
 

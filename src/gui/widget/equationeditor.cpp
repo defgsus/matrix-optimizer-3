@@ -41,7 +41,7 @@ namespace GUI {
 
 EquationEditor::EquationEditor(QWidget *parent) :
     QPlainTextEdit  (parent),
-    highlighter_    (new SyntaxHighlighter(document())),
+    highlighter_    (new SyntaxHighlighter(false, document())),
     completer_      (0),
     parser_         (0),
     extParser_      (0),

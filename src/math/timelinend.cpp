@@ -409,12 +409,12 @@ TimelineNd::Point* TimelineNd::add(Double time, const ValueType& value, Timeline
     }
 
     // create point
-    Point p;
+    Point p(p_dim_);
 
     p.t = time;
     p.val = value;
     p.type = typ;
-    p.d1 = 0.0;
+    p.d1.fill(0.0);
 
     if (typ == TimelinePoint::DEFAULT)
         p.type = p_currentType_(time);

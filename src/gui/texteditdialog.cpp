@@ -215,7 +215,8 @@ void TextEditDialog::Private::createWidgets()
 
                 if (textType == TT_APP_STYLESHEET)
                 {
-                    auto s = new SyntaxHighlighter(dialog);//plainText->document());
+                    auto s = new SyntaxHighlighter(false, dialog);
+                                    //plainText->document());
                     s->initForStyleSheet();
                 }
             break;

@@ -625,7 +625,8 @@ bool Geometry::intersects_any(const Vec3 &ray_origin, const Vec3 &ray_direction,
     return false;
 }
 
-bool Geometry::intersects(const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *outpos) const
+bool Geometry::intersects(
+        const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *outpos) const
 {
     // XXX todo: Test against bounding-box first!
 

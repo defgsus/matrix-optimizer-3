@@ -223,6 +223,39 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         return fromInt(self->tl->size());
     }
 
+    MO_PY_DEF_DOC(tl_start,
+        "start() -> float\n"
+        "The time of the first cue in seconds"
+    )
+    static PyObject* tl_start(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        return fromDouble(self->tl->empty()
+                          ? 0.0 : self->tl->getData().begin()->second.t);
+    }
+
+    MO_PY_DEF_DOC(tl_end,
+        "end() -> float\n"
+        "The time of the last cue in seconds"
+    )
+    static PyObject* tl_end(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        return fromDouble(self->tl->empty()
+                          ? 0.0 : self->tl->getData().rbegin()->second.t);
+    }
+
+    MO_PY_DEF_DOC(tl_length,
+        "length() -> float\n"
+        "The time between the first and last cue in seconds"
+    )
+    static PyObject* tl_length(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        return fromDouble(self->tl->empty()
+                          ? 0.0 : self->tl->getData().rbegin()->second.t
+                                - self->tl->getData().begin()->second.t);
+    }
 
     MO_PY_DEF_DOC(tl_copy,
         "copy() -> Timeline\n"
@@ -324,6 +357,25 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         Py_RETURN_NONE;
     }
 
+    /*
+    MO_PY_DEF_DOC(tl_set_type,
+        "set_type(long) -> None\n"
+        "Sets the type of the timeline points that will be added afterwards.\n"
+        "CONSTANT, LINEAR, SMOOTH, SYMMETRIC, SYMMETRIC_USER, HERMITE,\n"
+        "SPLINE4, SPLINE6"
+    )
+    static PyObject* tl_set_type(TimelineStruct* self, PyObject* arg)
+    {
+        MO__ASSERT_TL(self);
+        long typ;
+        if (PyArg_ParseTuple(arg, "l", &typ))
+        {
+            //self->tl->setCurrentType(MATH::TimelinePoint::Type(typ));
+        }
+        Py_RETURN_NONE;
+    }
+    */
+
 
     MO_PY_DEF_DOC(tl_add,
         "add(float, vec) -> Timeline\n"
@@ -379,6 +431,9 @@ static PyMethodDef Timeline_methods[] =
     MO__METHOD(to_string,           METH_NOARGS)
     MO__METHOD(dimensions,          METH_NOARGS)
     MO__METHOD(size,                METH_NOARGS)
+    MO__METHOD(start,               METH_NOARGS)
+    MO__METHOD(end,                 METH_NOARGS)
+    MO__METHOD(length,              METH_NOARGS)
 
     MO__METHOD(copy,                METH_NOARGS)
     MO__METHOD(get_timeline,        METH_O)

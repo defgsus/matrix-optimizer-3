@@ -46,7 +46,11 @@ class TimelineNd : public RefCounted
     /** one que-point of a Timeline1D */
     struct Point
     {
-        Point() : t(0), val(0), d1(0), type(TimelinePoint::CONSTANT) { }
+        Point(size_t dim = 0)
+            : t(0.),
+              val(dim), d1(dim),
+              type(TimelinePoint::CONSTANT)
+        { }
 
 
         Double
@@ -211,6 +215,8 @@ class TimelineNd : public RefCounted
 
     /** Changes the dimensionality of the whole Timeline. */
     void setDimensions(size_t newDim);
+
+    //void setCurrentType(TimelinePoint::Type t) { curTy = t; }
 
 #if 0
     /** Adds the timeline data at the specified offset */

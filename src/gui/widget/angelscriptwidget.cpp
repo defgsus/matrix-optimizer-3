@@ -109,7 +109,7 @@ void AngelScriptWidget::Private::createObjects()
         MO_ERROR("Could not create script context");
 
     if (!syn)
-        syn = new SyntaxHighlighter(widget);
+        syn = new SyntaxHighlighter(false, widget);
     syn->initForAngelScript(module);
 
     widget->setSyntaxHighlighter(syn);

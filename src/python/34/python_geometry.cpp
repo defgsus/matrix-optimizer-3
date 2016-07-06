@@ -519,6 +519,28 @@ extern "C"
                              );
     }
 
+    MO_PY_DEF_DOC(geom_intersection,
+        "intersects(Vec ro, dir) -> float\n"
+        "Returns the distance from ro to the closest intersection with one\n"
+        "of the triangles of the geometry, or a negative value when not hit"
+    )
+    static PyObject* geom_intersection(PyObject* self, PyObject* arg)
+    {
+        PyObject* vo1, *vo2;
+        if (!PyArg_ParseTuple(arg, "OO", &vo1, &vo2))
+            return NULL;
+        double v1[3], v2[3];
+        if (   !get_vector(vo1, 3, v1)
+            || !get_vector(vo2, 3, v2))
+            return NULL;
+        MO__GETGEOM(p);
+        Vec3 ro(v1[0], v1[1], v1[2]),
+             rd(v2[0], v2[1], v2[2]), hit;
+        if (!p->geometry->intersects(ro, rd, &hit))
+            return PyFloat_FromDouble(-1.);
+        return PyFloat_FromDouble(glm::distance(ro, hit));
+    }
+
 
 
     // -------------- setter ----------------
@@ -1140,6 +1162,8 @@ extern "C"
         MO__METHOD(get_point,               METH_VARARGS)
         MO__METHOD(get_line,                METH_VARARGS)
         MO__METHOD(get_triangle,            METH_VARARGS)
+
+        MO__METHOD(intersection,            METH_VARARGS)
 
         MO__METHOD(set_shared,              METH_VARARGS)
         MO__METHOD(set_vertex,              METH_VARARGS)

@@ -19,13 +19,22 @@
 
 namespace MO {
 
-SyntaxHighlighter::SyntaxHighlighter(QObject * parent) :
-    QSyntaxHighlighter  (parent)
+SyntaxHighlighter::SyntaxHighlighter(bool pythonComments, QObject * parent)
+    : QSyntaxHighlighter    (parent)
+    , pythonComments_       (pythonComments)
 {
     // setup multiline comments
-    commentStartExpression_ = QRegExp("/\\*");
-    commentEndExpression_ = QRegExp("\\*/");
-    commentFormat_.setForeground(QBrush(QColor(140,140,140)));
+    if (!pythonComments)
+    {
+        commentStartExpression_ = QRegExp("/\\*");
+        commentEndExpression_ = QRegExp("\\*/");
+    }
+    else
+    {
+        commentStartExpression_ = QRegExp("\"\"\"");
+        commentEndExpression_ = QRegExp("\"\"\"");
+    }
+    commentFormat_.setForeground(QBrush(QColor(100,140,140)));
     markFormat_.setForeground(QBrush(Qt::white));
     markFormat_.setBackground(QBrush(Qt::darkGreen));
 }
@@ -56,7 +65,7 @@ void SyntaxHighlighter::setNames(const QStringList &variables,
     // variables
     variableFormat.setFontWeight(QFont::Bold);
     variableFormat.setForeground(QBrush(QColor(200,210,200)));
-    // variables
+    // types
     typesFormat.setFontWeight(QFont::Bold);
     typesFormat.setForeground(QBrush(QColor(200,210,210)));
     // reserved words
@@ -97,7 +106,10 @@ void SyntaxHighlighter::setNames(const QStringList &variables,
     // single line comments
     // [They are at the end here,
     //  so keywords in comments will not be highlighted.]
-    rule.pattern = QRegExp("//[^\n]*");
+    if (!pythonComments_)
+        rule.pattern = QRegExp("//[^\n]*");
+    else
+        rule.pattern = QRegExp("#[^\n]*");
     rule.format = commentFormat_;
     rules_.append(rule);
 
@@ -152,7 +164,7 @@ void SyntaxHighlighter::highlightBlock(const QString &text)
 
     while (startIndex >= 0)
     {
-        int endIndex = commentEndExpression_.indexIn(text, startIndex);
+        int endIndex = commentEndExpression_.indexIn(text, startIndex+1);
         int commentLength;
         if (endIndex == -1)
         {
