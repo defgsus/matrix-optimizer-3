@@ -151,7 +151,8 @@ HEADERS += \
     $$PWD/interface/valuefloatmatrixinterface.h \
     $$PWD/param/parameterfloatmatrix.h \
     $$PWD/texture/floatmatrixto.h \
-    $$PWD/audio/floatmatrixao.h
+    $$PWD/audio/floatmatrixao.h \
+    $$PWD/audio/beatdetectorao.h
 
 SOURCES += \
     src/object/object.cpp \
@@ -295,4 +296,5 @@ SOURCES += \
     $$PWD/param/modulatorfloatmatrix.cpp \
     $$PWD/param/parameterfloatmatrix.cpp \
     $$PWD/texture/floatmatrixto.cpp \
-    $$PWD/audio/floatmatrixao.cpp
+    $$PWD/audio/floatmatrixao.cpp \
+    $$PWD/audio/beatdetectorao.cpp

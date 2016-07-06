@@ -95,9 +95,10 @@ void EnvelopeFollowerAO::createParameters()
                                                    tr("The value of how much the input signal "
                                                       "must raise above the current average to cause a raise in the output"),
                                                    0.0, 0.025);
-        p_->paramAverage = params()->createFloatParameter("_envf_timeav", tr("time average"),
-                                                   tr("The time in seconds to gather the average amplitude used for thresholding"),
-                                                   1.0, 0.05);
+        p_->paramAverage = params()->createFloatParameter(
+                    "_envf_timeav", tr("time average"),
+       tr("The time in seconds to gather the average amplitude used for thresholding"),
+       1.0, 0.05);
 
         p_->paramNormal = params()->createFloatParameter(
                     "_envf_normal", tr("normalize"),
