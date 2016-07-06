@@ -511,7 +511,7 @@ Sequence* ObjectEditor::splitSequence(Sequence *s, Double globalTime)
 namespace
 {
     template <class P, typename V>
-    void setParameterVal(ObjectEditor * edit, P p, V v)
+    void setParameterVal(ObjectEditor * edit, P p, const V& v)
     {
         // only apply if different
         if (p->baseValue() == v)

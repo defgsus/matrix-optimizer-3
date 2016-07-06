@@ -198,7 +198,7 @@ public:
         if (auto seq = dynamic_cast<SequenceFloat*>(o))
             if (seq->timeline())
                 return timeline_to_angelscript(*seq->timeline());
-        return timeline_to_angelscript(MATH::Timeline1d());
+        return timeline_to_angelscript();
     }
 
     void setTimeline(Timeline1AS * tl)

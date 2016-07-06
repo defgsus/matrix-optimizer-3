@@ -25,8 +25,16 @@ class FftWavetableGenerator
 {
 public:
     FftWavetableGenerator(uint size = 4096)
-        : size_(size)
+        : size_     (size)
+        , freqs_    (new MATH::Timeline1d)
+        , phases_   (new MATH::Timeline1d)
     { }
+
+    FftWavetableGenerator()
+    {
+        phases_->releaseRef("FftWavetableGenerator destroy");
+        freqs_->releaseRef("FftWavetableGenerator destroy");
+    }
 
     // ----------- getter --------------
 
@@ -40,7 +48,7 @@ public:
     uint size() const { return size_; }
 
     /** Frequency curve */
-    const MATH::Timeline1d & frequencies() const { return freqs_; }
+    const MATH::Timeline1d & frequencies() const { return *freqs_; }
 
     // ---------- setter ---------------
 
@@ -48,16 +56,16 @@ public:
     void setSize(uint size) { size_ = nextPowerOfTwo(size); }
 
     /** Sets the frequency curve */
-    void setFrequencies(const MATH::Timeline1d & tl) { freqs_ = tl; }
+    void setFrequencies(const MATH::Timeline1d & tl) { *freqs_ = tl; }
 
     /** Sets the phase curve */
-    void setPhases(const MATH::Timeline1d & tl) { phases_ = tl; }
+    void setPhases(const MATH::Timeline1d & tl) { *phases_ = tl; }
 
 private:
 
     uint size_;
 
-    MATH::Timeline1d freqs_, phases_;
+    MATH::Timeline1d *freqs_, *phases_;
 };
 
 // -------------- template implementation -------------------
@@ -91,8 +99,8 @@ void FftWavetableGenerator<F>::getWavetable(Wavetable<F> * w) const
                 // which makes a fixed number of bands for all sizes
                 bandx = t * n,
                 // read timeline curves
-                amp = freqs_.get(bandx),
-                ph = MATH::moduloSigned(phases_.get(bandx), 1.0);
+                amp = freqs_->get(bandx),
+                ph = MATH::moduloSigned(phases_->get(bandx), 1.0);
 
                 //si = std::sin(ph * TWO_PI),
                 //co = std::cos(ph * TWO_PI);

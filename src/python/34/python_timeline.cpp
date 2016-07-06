@@ -278,6 +278,27 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         return buildList(self->tl->getDerivative(time, range));
     }
 
+    MO_PY_DEF_DOC(tl_get_timeline,
+        "get_timeline(i) -> Timeline | None\n"
+        "Returns the i'th dimension as one-dimensional timeline.\n"
+    )
+    static PyObject* tl_get_timeline(TimelineStruct* self, PyObject* arg)
+    {
+        MO__ASSERT_TL(self);
+        long idx = PyLong_AsLong(arg);
+        if (idx < 0 || (size_t)idx >= self->tl->numDimensions())
+        {
+            PyErr_Set(PyExc_IndexError, QString("Dimension out of range %1/%2")
+                      .arg(idx).arg(self->tl->numDimensions()));
+            return NULL;
+        }
+        auto tl1 = self->tl->getTimelineNd(idx, 1);
+        auto ret = reinterpret_cast<PyObject*>(buildTimeline(tl1));
+        tl1->releaseRef("create finish");
+        return ret;
+    }
+
+    // helper for MATH::TimelinePoint::Type getter
     static PyObject* tl_type_getter(TimelineStruct* , void* ptr)
     {
         return fromInt((int64_t)ptr);
@@ -323,7 +344,7 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         int ptype = MATH::TimelinePoint::DEFAULT;
         if (!py_get_time_and_vec_and_pointtype(arg, &time, &val, &ptype))
         {
-            MO_PRINT("PTYPE not retrieved");
+            MO_DEBUG("TODO Python Timeline: PTYPE not retrieved");
             PyErr_Clear();
             if (!py_get_time_and_vec(arg, &time, &val))
                 return NULL;
@@ -360,12 +381,13 @@ static PyMethodDef Timeline_methods[] =
     MO__METHOD(size,                METH_NOARGS)
 
     MO__METHOD(copy,                METH_NOARGS)
+    MO__METHOD(get_timeline,        METH_O)
     MO__METHOD(value,               METH_O)
     MO__METHOD(derivative,          METH_VARARGS)
 
     MO__METHOD(set_dimensions,      METH_O)
-    MO__METHOD(add,                 METH_VARARGS)
     MO__METHOD(update,              METH_O)
+    MO__METHOD(add,                 METH_VARARGS)
 
 
     { NULL, NULL, 0, NULL }
@@ -478,7 +500,9 @@ static PyTypeObject* Timeline_Type()
 
 TimelineStruct* new_tl()
 {
-    return PyObject_New(TimelineStruct, Timeline_Type());
+    auto t = PyObject_New(TimelineStruct, Timeline_Type());
+    t->tl = nullptr;
+    return t;
 }
 
 TimelineStruct* copy_tl(TimelineStruct* self, bool newInstance)

@@ -85,7 +85,8 @@ class Timeline1d : public RefCounted
 
     /** default constructor, no parameters */
     Timeline1d();
-    ~Timeline1d();
+protected: ~Timeline1d();
+public:
 
     // ------ copy assignment --------
 

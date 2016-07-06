@@ -125,11 +125,13 @@ public:
 
 /** Ref-counted wrapper of MATH::Timeline1D for AngelScript.
     This class supports Vec as value type.
-    So long as we don't have this timeline natively we cheat by using NUM timelines */
+    So long as we don't have this timeline natively we cheat by using NUM timelines
+    XXX Update There is now MATH::TimelineNd, need to refacture this class
+    */
 template <class Vec, unsigned int NUM>
 class TimelineXAS : public RefCounted
 {
-    MATH::Timeline1d tl[NUM];
+    MATH::Timeline1d* tl[NUM];
 public:
 
     typedef MATH::Timeline1d WrappedClass;
@@ -145,11 +147,15 @@ public:
     TimelineXAS() : RefCounted("TimelineXAS")
     {
         MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::Timeline1AS()");
+        for (auto i = 0; i< NUM; ++i)
+            tl[i] = new MATH::Timeline1d();
     }
 
     ~TimelineXAS()
     {
         MO_DEBUG_TAS("Timeline"<<NUM<<"AS("<<this<<")::~Timeline1AS()");
+        for (auto i = 0; i<NUM; ++i)
+            tl[i]->releaseRef("TimelineXAS destroy");
     }
 
     void addRefWrapper() { addRef("TimelineXAS from angelscript"); }
@@ -163,7 +169,7 @@ public:
     {
         std::stringstream s;
         s << "Timeline" << NUM << "(";
-        const auto & data = tl[0].getData();
+        const auto & data = tl[0]->getData();
         int type = -1;
         bool first = true;
         for (auto & p : data)
@@ -174,8 +180,8 @@ public:
             s << p.second.t << ":(" << p.second.val;
             for (uint i=1; i<NUM; ++i)
             {
-                auto it = tl[i].find(p.second.t);
-                if (it != tl[i].getData().end())
+                auto it = tl[i]->find(p.second.t);
+                if (it != tl[i]->getData().end())
                     s << "," << it->second.val;
             }
             s << ")";
@@ -188,53 +194,53 @@ public:
         s << ")";
         return s.str();
     }
-    uint count() const { uint c = tl[0].size(); for (uint i=1; i<NUM; ++i) c = std::max(c, tl[i].size()); return c; }
+    uint count() const { uint c = tl[0]->size(); for (uint i=1; i<NUM; ++i) c = std::max(c, tl[i]->size()); return c; }
     double start() const
     {
-        double st = tl[0].empty() ? 0.0 : tl[0].getData().begin()->second.t;
+        double st = tl[0]->empty() ? 0.0 : tl[0]->getData().begin()->second.t;
         for (uint i=1; i<NUM; ++i)
-            if (!tl[i].empty()) st = std::min(st, tl[i].getData().begin()->second.t);
+            if (!tl[i]->empty()) st = std::min(st, tl[i]->getData().begin()->second.t);
         return st;
     }
     double end() const
     {
-        double st = tl[0].empty() ? 0.0 : tl[0].getData().rbegin()->second.t;
+        double st = tl[0]->empty() ? 0.0 : tl[0]->getData().rbegin()->second.t;
         for (uint i=1; i<NUM; ++i)
-            if (!tl[i].empty()) st = std::max(st, tl[i].getData().rbegin()->second.t);
+            if (!tl[i]->empty()) st = std::max(st, tl[i]->getData().rbegin()->second.t);
         return st;
     }
     double length() const { return (end() - start()); }
 
-    Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i].get(time); return v; }
+    Vec value(double time) const { Vec v; for (uint i=0; i<NUM; ++i) v[i] = tl[i]->get(time); return v; }
     Vec derivative(double time, double range)
-    { range = std::max(range, tl[0].timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / Float(range); }
+    { range = std::max(range, tl[0]->timeQuantum()) * 0.5; return (value(time+range) - value(time-range)) / Float(range); }
 
     Timeline1AS * getTimeline1(uint idx)
     {
         idx = std::min(NUM-1, idx);
         auto tl1 = Timeline1AS::factory();
-        *tl1->tl = tl[idx];
+        *tl1->tl = *tl[idx];
         return tl1;
     }
 
     // --- setter ---
 
-    void clear() { for (uint i=0; i<NUM; ++i) tl[i].clear(); }
-    void update() { for (uint i=0; i<NUM; ++i) tl[i].setAutoDerivative(); }
-    void add(double time, const Vec& v) { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i]); }
+    void clear() { for (uint i=0; i<NUM; ++i) tl[i]->clear(); }
+    void update() { for (uint i=0; i<NUM; ++i) tl[i]->setAutoDerivative(); }
+    void add(double time, const Vec& v) { for (uint i=0; i<NUM; ++i) tl[i]->add(time, v[i]); }
     void addType(double time, const Vec& v, MATH::TimelinePoint::Type type)
-        { for (uint i=0; i<NUM; ++i) tl[i].add(time, v[i], type); }
+        { for (uint i=0; i<NUM; ++i) tl[i]->add(time, v[i], type); }
     void changeType(MATH::TimelinePoint::Type type)
     {
         for (uint i=0; i<NUM; ++i)
         {
-            auto & data = tl[i].getData();
+            auto & data = tl[i]->getData();
             for (auto & p : data)
                 p.second.type = type;
         }
     }
 
-    void set(TimelineXAS<Vec,NUM> * other) { for (uint i=0; i<NUM; ++i) tl[i] = other->tl[i]; }
+    void set(TimelineXAS<Vec,NUM> * other) { for (uint i=0; i<NUM; ++i) *tl[i] = *other->tl[i]; }
 
 /*
     void set_from_(Timeline1AS * other[])
@@ -257,10 +263,10 @@ public:
 
     // --- these are NUM dependent (not for every instantiation) ---
 
-    void set_1_1(Timeline1AS * a, Timeline1AS * b) { assert(NUM == 2); tl[0] = *a->tl; tl[1] = *b->tl; }
-    void set_1_1_1(Timeline1AS * a, Timeline1AS * b, Timeline1AS * c) { assert(NUM == 3); tl[0] = *a->tl; tl[1] = *b->tl; tl[2] = *c->tl; }
+    void set_1_1(Timeline1AS * a, Timeline1AS * b) { assert(NUM == 2); *tl[0] = *a->tl; *tl[1] = *b->tl; }
+    void set_1_1_1(Timeline1AS * a, Timeline1AS * b, Timeline1AS * c) { assert(NUM == 3); *tl[0] = *a->tl; *tl[1] = *b->tl; *tl[2] = *c->tl; }
     void set_1_1_1_1(Timeline1AS * a, Timeline1AS * b, Timeline1AS * c, Timeline1AS * d)
-        { assert(NUM == 4); tl[0] = *a->tl; tl[1] = *b->tl; tl[2] = *c->tl; tl[3] = *d->tl; }
+        { assert(NUM == 4); *tl[0] = *a->tl; *tl[1] = *b->tl; *tl[2] = *c->tl; *tl[3] = *d->tl; }
 
 
 };
@@ -406,6 +412,12 @@ Timeline1AS * timeline_to_angelscript(const MATH::Timeline1d & tl)
 {
     auto as = new Timeline1AS();
     *as->tl = tl;
+    return as;
+}
+
+Timeline1AS * timeline_to_angelscript()
+{
+    auto as = new Timeline1AS();
     return as;
 }
 

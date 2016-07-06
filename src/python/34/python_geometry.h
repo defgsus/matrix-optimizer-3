@@ -27,6 +27,10 @@ namespace PYTHON34 {
     void* createGeometryObject(MO::GEOM::Geometry*);
 
     bool isGeometry(void* pyObject);
+    /** Raises type error if no Geometry */
+    bool expectGeometry(void* pyObject);
+
+    MO::GEOM::Geometry* getGeometry(PyObject* o);
 
 } // namespace PYTHON34
 } // namespace MO

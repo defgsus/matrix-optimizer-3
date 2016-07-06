@@ -110,7 +110,9 @@ struct GlWindow::PrivateW
         oldX, oldY, oldWidth, oldHeight,
         /** @} */
         /** @{ Current mouse position */
-        mouseX, mouseY;
+        mouseX, mouseY, /** @} */
+        /** @{ Current mouse delta between last and this event */
+        mouseXDelta, mouseYDelta; /** @} */
     /** Current pressed mouse keys */
     MouseKeyCodes mouseKeys;
 

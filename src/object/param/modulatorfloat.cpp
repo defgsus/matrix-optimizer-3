@@ -99,13 +99,6 @@ void ModulatorFloat::modulatorChanged_()
         return;
     }
 
-    if (outputId().startsWith("_audio_"))
-    if (dynamic_cast<AudioObject*>(modulator()))
-    {
-        sourceType_ = ST_AUDIO_OBJECT;
-        return;
-    }
-
     if (auto iface = dynamic_cast<ValueFloatInterface*>(modulator()))
     {
         sourceType_ = ST_INTERFACE_FLOAT;
@@ -113,9 +106,16 @@ void ModulatorFloat::modulatorChanged_()
         return;
     }
 
+    //if (outputId().startsWith("_audio_"))
+    if (dynamic_cast<AudioObject*>(modulator()))
+    {
+        sourceType_ = ST_AUDIO_OBJECT;
+        return;
+    }
+
     sourceType_ = ST_NONE;
     MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
-                   << "' to ModulatorFloat");
+                   << "' to ModulatorFloat, outputId='" << outputId() << "'");
 }
 
 Double ModulatorFloat::value(const RenderTime& rtime) const

@@ -1265,6 +1265,30 @@ bool isGeometry(void *vobj)
     return PyObject_TypeCheck((PyObject*)vobj, &Python34Geom_type);
 }
 
+bool expectGeometry(PyObject* obj)
+{
+    if (!obj)
+    {
+        PyErr_SetString(PyExc_TypeError, "expected Geometry, got NULL");
+        return false;
+    }
+    if (!isGeometry(obj))
+    {
+        PyErr_Set(PyExc_TypeError, QString("expected Geometry, got %1")
+                                    .arg(typeName(obj)));
+        return false;
+    }
+    return true;
+}
+
+
+MO::GEOM::Geometry* getGeometry(PyObject* o)
+{
+    if (!expectGeometry(o))
+        return nullptr;
+    return reinterpret_cast<Python34Geom*>(o)->geometry;
+}
+
 
 } // namespace PYTHON34
 } // namespace MO

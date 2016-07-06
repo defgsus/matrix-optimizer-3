@@ -16,8 +16,11 @@
 #include "object/control/sequencefloat.h"
 #include "object/util/objecteditor.h"
 #include "object/util/objectfactory.h"
+#include "object/visual/model3d.h"
+#include "geom/geometry.h"
 #include "python_object.h"
 #include "python_timeline.h"
+#include "python_geometry.h"
 #include "math/timeline1d.h"
 #include "math/timelinend.h"
 #include "io/error.h"
@@ -515,6 +518,50 @@ extern "C" {
             Py_RETURN_NONE;
         }
 
+        MO_PY_DEF_DOC(get_geometry,
+            "get_geometry() -> Geometry | None\n"
+            "If returns the object's geometry if there is any.\n"
+            );
+        static PyObject* get_geometry(PyObject* self, PyObject* )
+        {
+            MO__GETOBJ(o);
+            if (auto model = dynamic_cast<Model3d*>(o->object))
+            if (auto geom = model->geometry())
+            {
+                auto copy = new GEOM::Geometry(*geom);
+                return reinterpret_cast<PyObject*>( createGeometryObject(copy) );
+            }
+            Py_RETURN_NONE;
+        }
+
+
+        MO_PY_DEF_DOC(set_geometry,
+            "set_geometry(Geometry) -> None\n"
+            "If applicable, sets the object's geometry.\n"
+            );
+        static PyObject* set_geometry(PyObject* self, PyObject* arg)
+        {
+            auto geom = getGeometry(arg);
+            if (!geom)
+                return NULL;
+            MO__GETOBJ(o);
+            auto model = dynamic_cast<Model3d*>(o->object);
+            if (!model)
+            {
+                PyErr_Set(PyExc_TypeError, QString(
+                          "object class %1 can not take a Geometry")
+                          .arg(o->object->className()));
+                return NULL;
+            }
+
+            model->setGeometry(*geom);
+
+            // gui signal
+            if (auto e = model->editor())
+                emit e->sceneChanged(model->sceneObject());
+
+            Py_RETURN_NONE;
+        }
 
         #undef MO__GETOBJ
         #undef MO__GETOBJ0
@@ -545,6 +592,8 @@ extern "C" {
         MO__METHOD(add,                 METH_VARARGS)
 
         MO__METHOD(set_timeline,        METH_O)
+        MO__METHOD(get_geometry,        METH_NOARGS)
+        MO__METHOD(set_geometry,        METH_O)
 
         { NULL, NULL, 0, NULL }
     };

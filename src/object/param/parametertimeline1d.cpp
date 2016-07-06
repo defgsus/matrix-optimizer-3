@@ -39,8 +39,10 @@ ParameterTimeline1D::ParameterTimeline1D(Object * object, const QString& id, con
 
 ParameterTimeline1D::~ParameterTimeline1D()
 {
-    delete default_;
-    delete tl_;
+    if (default_)
+        default_->releaseRef("ParameterTimeline1D destroy");
+    if (tl_)
+        tl_->releaseRef("ParameterTimeline1D destroy");
 }
 
 void ParameterTimeline1D::serialize(IO::DataStream &io) const
@@ -121,7 +123,8 @@ const MATH::Timeline1d & ParameterTimeline1D::getDefaultTimeline()
 
 void ParameterTimeline1D::setTimeline(MATH::Timeline1d *tl)
 {
-    delete tl_;
+    if (tl_)
+        tl_->releaseRef("ParameterTimeline1D setnew relprev");
     tl_ = tl;
 }
 
@@ -161,7 +164,8 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
 
-    MATH::Timeline1d backup(*timeline());
+    auto backup = new MATH::Timeline1d(*timeline());
+    ScopedRefCounted tldel(backup, "ParameterTimeline1D backup");
 
     // prepare dialog
     GUI::TimelineEditDialog diag(parent);
@@ -205,7 +209,7 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     // reset to default
     if (diag.exec() == QDialog::Rejected && changed)
-        object()->sceneObject()->editor()->setParameterValue(this, backup);
+        object()->sceneObject()->editor()->setParameterValue(this, *backup);
 
     return changed;
 }

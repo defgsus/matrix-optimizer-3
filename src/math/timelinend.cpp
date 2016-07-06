@@ -15,6 +15,7 @@
 #include "math/interpol.h"
 #include "io/datastream.h"
 #include "io/error.h"
+#include "io/log.h"
 
 namespace MO {
 namespace MATH {
@@ -30,11 +31,7 @@ TimelineNd::TimelineNd(size_t dim)
     , p_minVal_         (dim)
     , p_maxVal_         (dim)
 {
-
-}
-
-TimelineNd::~TimelineNd()
-{
+    MO_PRINT("TimelineNd("<<this<<")");
 }
 
 
@@ -48,7 +45,12 @@ TimelineNd::TimelineNd(const TimelineNd &other)
         p_minVal_       (other.p_minVal_),
         p_maxVal_       (other.p_maxVal_)
 {
+    //MO_PRINT("TimelineNd("<<this<<")");
+}
 
+TimelineNd::~TimelineNd()
+{
+    //MO_PRINT("~TimelineNd("<<this<<")");
 }
 
 const TimelineNd& TimelineNd::operator = (const TimelineNd& other)
@@ -695,7 +697,29 @@ Timeline1d* TimelineNd::getTimeline1d(size_t dimension)
     auto tl = new Timeline1d();
 
     for (auto i = p_data_.begin(); i != p_data_.end(); ++i)
-        tl->add(i->second.t, i->second.val[dimension], 0., i->second.type);
+        tl->add(i->second.t, i->second.val[dimension], i->second.type);
+
+    return tl;
+}
+
+TimelineNd* TimelineNd::getTimelineNd(size_t first, size_t num)
+{
+    auto tl = new TimelineNd(num);
+    if (!numDimensions())
+        return tl;
+
+    first = std::min(numDimensions()-1, first);
+    num = std::min(numDimensions()-first, num);
+
+    if (num)
+    for (auto i = p_data_.begin(); i != p_data_.end(); ++i)
+    {
+        ValueType v(num);
+        for (size_t k = 0; k < num; ++k)
+            v[k] = i->second.val[k+first];
+
+        tl->add(i->second.t, v, i->second.type);
+    }
 
     return tl;
 }

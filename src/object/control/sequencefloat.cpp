@@ -115,7 +115,8 @@ SequenceFloat::SequenceFloat()
 
 SequenceFloat::~SequenceFloat()
 {
-    delete timeline_;
+    if (timeline_)
+        timeline_->releaseRef("SequenceFloat destroy");
     delete wavetable_;
     if (soundFile_)
         AUDIO::SoundFileManager::releaseSoundFile(soundFile_);

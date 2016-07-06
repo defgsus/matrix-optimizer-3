@@ -74,7 +74,7 @@ void PythonObject::createParameters()
                     "python_script", tr("python script"),
                     tr("The source code of the python script to execute"),
                     TT_PYTHON34,
-                    "// " + tr("Press F1 for help") + "\n"
+                    "# " + tr("Press F1 for help") + "\n"
                     "import matrixoptimizer as mo\n",
                     true, false);
 
@@ -95,9 +95,19 @@ void PythonObject::onParameterChanged(Parameter *p)
 void PythonObject::Private::run()
 {
 #ifdef MO_ENABLE_PYTHON34
-    PYTHON34::PythonInterpreter interp;
-    interp.setObject(obj);
-    interp.execute(scriptText->baseValue());
+    try
+    {
+        obj->clearError();
+        PYTHON34::PythonInterpreter interp;
+        interp.setObject(obj);
+        interp.execute(scriptText->baseValue());
+    }
+    catch (const Exception& e)
+    {
+        MO_WARNING(e.what());
+        obj->setErrorMessage(e.what());
+        scriptText->addErrorMessage(0, e.what());
+    }
 #else
     obj->setErrorMessage(QObject::tr("Python support is not enabled in this binary"));
 #endif

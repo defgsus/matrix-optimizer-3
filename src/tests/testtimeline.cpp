@@ -35,7 +35,8 @@ bool TestTimeline::test(MATH::TimelinePoint::Type pointType)
 {
     const int num = values.size();
 
-    MATH::Timeline1d tl;
+    auto tl = new MATH::Timeline1d();
+    ScopedRefCounted tldel(tl, "TestTimeline");
 
     // write
 
@@ -50,7 +51,7 @@ bool TestTimeline::test(MATH::TimelinePoint::Type pointType)
 
     for (int i=0; i<num; ++i)
     {
-        tl.add(writepos[i], values[i], pointType);
+        tl->add(writepos[i], values[i], pointType);
     }
 
     int e1 = m.elapsed();
@@ -66,7 +67,7 @@ bool TestTimeline::test(MATH::TimelinePoint::Type pointType)
     double v=0;
     for (int i=0; i<num; ++i)
     {
-        v += tl.get(readpos[i]);
+        v += tl->get(readpos[i]);
     }
 
     int e2 = m.elapsed();

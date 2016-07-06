@@ -22,6 +22,7 @@
 #include "gl/opengl.h"
 #include "gl/texture.h"
 #include "gl/texturerenderer.h"
+#include "geom/freecamera.h"
 #include "scenerenderer.h"
 #include "tool/generalimage.h"
 #include "object/scene.h"
@@ -32,7 +33,6 @@
 #include "io/keyboardstate.h"
 #include "io/error.h"
 #include "io/log_gl.h"
-
 
 namespace MO {
 namespace GL {
@@ -48,6 +48,7 @@ public:
     { }
 
     Manager* manager;
+    FreeCamera camera;
 
 protected:
 
@@ -69,6 +70,33 @@ protected:
         else
             MouseState::globalInstance().setPos(
                         QPoint(x, y), QSize(width(), height()));
+
+        Float fac = 1.f;//e->modifiers() & Qt::SHIFT ?
+                    //10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
+        int dx = mouseXDelta(),
+            dy = mouseYDelta();
+
+        if (mouseKeys() & MKey_Left)
+        {
+            camera.moveX(-0.03*fac*dx);
+            camera.moveY( 0.03*fac*dy);
+        }
+        if (mouseKeys() & MKey_Right)
+        {
+            camera.rotateX(-dy * fac);
+            camera.rotateY(-dx * fac);
+        }
+
+        return true;
+    }
+
+    bool mouseWheelEvent(int delta) override
+    {
+        Float fac = 1.;//e->modifiers() & Qt::SHIFT ?
+                    //10.f : e->modifiers() & Qt::CTRL? 0.025f : 1.f;
+        Float d = std::max(-1, std::min(1, delta ));
+        camera.moveZ(-0.3 * d * fac);
+
         return true;
     }
 
@@ -143,7 +171,7 @@ struct Manager::Private
     Manager* p;
 
     Scene * scene, *newScene;
-    GlWindow * window;
+    RenderWindow * window;
     SceneRenderer * renderer;
     QList<TextureRenderer*> texRenderers;
     static const int maxTextureRenderers = 3;
@@ -178,6 +206,9 @@ Manager::Manager(QObject *parent)
             Qt::QueuedConnection);
     connect(this, SIGNAL(sendImage(const GL::Texture*,QString,QImage)),
             this, SIGNAL(imageFinished(const GL::Texture*,QString,QImage)),
+            Qt::QueuedConnection);
+    connect(this, SIGNAL(sendCameraChanged(MO::Mat4)),
+            this, SIGNAL(cameraMatrixChanged(MO::Mat4)),
             Qt::QueuedConnection);
 }
 
@@ -355,6 +386,9 @@ void Manager::Private::renderLoop()
                     newScene = nullptr;
                     setNewScene = false;
                 }
+
+                if (scene && scene->freeCameraIndex() >= 0)
+                    scene->setFreeCameraMatrix(window->camera.getMatrix());
 
                 renderer->setSize(QSize(window->width(), window->height()));
                 renderer->render(true);

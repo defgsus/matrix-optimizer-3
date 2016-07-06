@@ -24,7 +24,7 @@ namespace GUI {
 
 TimelineEditDialog::TimelineEditDialog(QWidget *parent)
     : QDialog       (parent),
-      tl_           (0),
+      tl_           (nullptr),
       autoUpdate_   (false),
       options_      (Timeline1DView::O_EnableAll)
 {
@@ -43,7 +43,8 @@ TimelineEditDialog::~TimelineEditDialog()
 {
     settings()->storeGeometry(this);
     settings()->setValue(objectName()+"/autoupdate", autoUpdate_);
-    delete tl_;
+    if (tl_)
+        tl_->releaseRef("TimelineEditDialog close");
 }
 
 void TimelineEditDialog::createWidgets_()

@@ -246,6 +246,10 @@ public: // ------------- ctor --------------------
     int mouseX() const;
     /** Returns current mouse y in pixels */
     int mouseY() const;
+    /** Returns current mouse x delta in pixels */
+    int mouseXDelta() const;
+    /** Returns current mouse y delta in pixels */
+    int mouseYDelta() const;
     /** Returns or combination of currently pressed mouse keys */
     MouseKeyCodes mouseKeys() const;
 
@@ -325,7 +329,7 @@ protected:
     virtual void mouseLeaveEvent() { }
     virtual bool mouseDownEvent(MouseKeyCode) { return false; }
     virtual bool mouseUpEvent(MouseKeyCode) { return false; }
-    virtual bool mouseWheelEvent(short delta) { (void)delta; return false; }
+    virtual bool mouseWheelEvent(int delta) { (void)delta; return false; }
     virtual bool mouseMoveEvent(int x, int y) { (void)x; (void)y; return false; }
 
 private:

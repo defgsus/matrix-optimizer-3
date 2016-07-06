@@ -12,7 +12,7 @@
 #include "tool/asciirect.h"
 #include "io/error.h"
 
-#if 1
+#if 0
 #   include "io/log.h"
 #   define MO__D(arg__) MO_PRINT("AudioBuffer("<<this<<")::" << arg__)
 #else

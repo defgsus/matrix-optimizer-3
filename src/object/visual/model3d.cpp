@@ -711,7 +711,7 @@ void Model3d::initGl(uint /*thread*/)
     if (!nextGeometry_) // or in background
     {
         resetCreator_();
-        creator_ = new GEOM::GeometryCreator(application());
+        creator_ = new GEOM::GeometryCreator();
         /** @todo find out if Qt's signal/slot mechanism doesn't work when
             not connected to main thread. In this case, when started via DiskRenderer,
             no signals are received from the GEOM::GeometryCreator.

@@ -117,9 +117,9 @@ MouseKeyCode mapXMouseButton(unsigned int key)
 {
     switch (key)
     {
-        case Button1: return MKey_Left;
-        case Button2: return MKey_Middle;
-        case Button3: return MKey_Right;
+        case XX::X_Button1: return MKey_Left;
+        case XX::X_Button2: return MKey_Middle;
+        case XX::X_Button3: return MKey_Right;
         default: return MKey_NoKey;
     }
 }
@@ -206,17 +206,25 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
 
         case XX::X_ButtonPress:
         {
-            // translate button
-            auto mk = mapXMouseButton(event->xbutton.button);
-            // update window state
+            // update mouse-over state
             if (!win->p_w_->isMouseOver)
             {
                 win->p_w_->isMouseOver = true;
                 win->mouseEnterEvent();
             }
-            win->p_w_->setMouseKey(mk, true);
-            // call user event
-            win->mouseDownEvent( mk );
+            if (event->xbutton.button == XX::X_Button4)
+                win->mouseWheelEvent(1);
+            else if (event->xbutton.button == XX::X_Button5)
+                win->mouseWheelEvent(-1);
+            else
+            {
+                // translate button
+                auto mk = mapXMouseButton(event->xbutton.button);
+
+                win->p_w_->setMouseKey(mk, true);
+                // call user event
+                win->mouseDownEvent( mk );
+            }
         }
 		break;
 
@@ -237,6 +245,8 @@ void XWindowEventDispatcher(void* xevent, GlWindow* win)
                 win->p_w_->isMouseOver = true;
                 win->mouseEnterEvent();
             }
+            win->p_w_->mouseXDelta = win->p_w_->mouseX - event->xmotion.x;
+            win->p_w_->mouseYDelta = win->p_w_->mouseY - event->xmotion.y;
             win->p_w_->mouseX = event->xmotion.x;
             win->p_w_->mouseY = event->xmotion.y;
             win->mouseMoveEvent(event->xmotion.x, event->xmotion.y);

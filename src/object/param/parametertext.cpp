@@ -149,7 +149,8 @@ GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterText::openEditWidget()");
     MO_ASSERT(object()->sceneObject(), "no scene for ParameterText::openEditWidget()");
-    MO_ASSERT(object()->sceneObject()->editor(), "no editor for ParameterText::openEditWidget()");
+    MO_ASSERT(object()->sceneObject()->editor(),
+              "no editor for ParameterText::openEditWidget()");
 
 //    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
 //        return 0;

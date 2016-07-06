@@ -1854,17 +1854,18 @@ void Timeline1DView::copySelection()
     IO::DataStream stream(&bytes, QIODevice::WriteOnly);
 
     // make a copy
-    MATH::Timeline1d tl(*tl_);
+    auto tl = new MATH::Timeline1d(*tl_);
+    ScopedRefCounted tldel(tl, "Timeline1DView copySelection");
 
     // and remove all unselected points
     std::set<MATH::Timeline1d::TpHash> times;
-    for (auto &i : tl.getData())
+    for (auto &i : tl->getData())
         if (!selectHashSet_.contains(i.first))
             times.insert(i.first);
     for (auto i : times)
-        tl.remove(i);
+        tl->remove(i);
 
-    tl.serialize(stream);
+    tl->serialize(stream);
 
     auto data = new QMimeData();
     data->setData("mo/timeline-sel", bytes);
@@ -1889,33 +1890,36 @@ void Timeline1DView::paste()
         IO::DataStream stream(&bytes, QIODevice::ReadOnly);
 
         // create a temp timeline with the data
-        MATH::Timeline1d tl;
+        auto tl = new MATH::Timeline1d();
+        ScopedRefCounted tldel(tl, "Timeline1DView paste");
+
         try
         {
-            tl.deserialize(stream);
+            tl->deserialize(stream);
         }
         catch (const Exception& e)
         {
-            QMessageBox::warning(this, "!", tr("Error pasting timeline data\n%1").arg(e.what()));
+            QMessageBox::warning(this, "!",
+                tr("Error pasting timeline data\n%1").arg(e.what()));
             return;
         }
 
         // paste selection
         if (ctype == C_SELECTION)
         {
-            if (tl.getData().empty())
+            if (tl->getData().empty())
                 return;
 
             const Double
-                    clipTime = tl.getData().begin()->second.t,
-                    clipVal = tl.getData().begin()->second.val,
+                    clipTime = tl->getData().begin()->second.t,
+                    clipVal = tl->getData().begin()->second.val,
                     insertTime = screen2time(popupClick_.x()) - clipTime,
                     insertVal = screen2value(popupClick_.y()) - clipVal;
 
             clearSelect_();
             {
                 Locker_ lock(this);
-                for (auto &i : tl.getData())
+                for (auto &i : tl->getData())
                 {
                     auto p =
                         tl_->add(limitX_(i.second.t + insertTime),
@@ -1932,7 +1936,7 @@ void Timeline1DView::paste()
         {
             {
                 Locker_ lock(this);
-                *tl_ = tl;
+                *tl_ = *tl;
             }
             emit timelineChanged();
         }

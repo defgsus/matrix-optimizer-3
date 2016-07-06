@@ -182,7 +182,7 @@ void RefCounted::setRefClassName(const QString& n)
 {
     Q_UNUSED(n);
 #ifdef MO_ENABLE_REF_STATS
-    QMutexLocker lock(&refMapMutex_);
+    QMutexLocker lock(refMapMutex_());
 
     auto i = refMap_().find(this);
     if (i == refMap_().end())

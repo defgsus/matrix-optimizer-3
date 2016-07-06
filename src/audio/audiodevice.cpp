@@ -332,7 +332,8 @@ void AudioDevice::init(int inDeviceIndex,
     // ---- check default parameters ---
 
     if (sampleRate == 0) {
-        sampleRate = opainf ? opainf->defaultSampleRate : ipainf->defaultSampleRate;
+        sampleRate = opainf ? opainf->defaultSampleRate :
+                              ipainf ? ipainf->defaultSampleRate : 44100;
     }
 
     if (bufferSize == 0)
@@ -362,7 +363,9 @@ void AudioDevice::init(int inDeviceIndex,
                   mo_pa_callback,
                   static_cast<void*>(this)
                   ),
-        "could not init audiodevice '" << ipainf->name << "'/'" << opainf->name << "'");
+        "could not init audiodevice '"
+                << (ipainf ? ipainf->name : "-") << "'/'"
+                << (opainf ? opainf->name : "-") << "'");
 
     // store parameters
 

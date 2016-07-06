@@ -40,6 +40,8 @@ Timeline1AS * timeline_to_angelscript(MATH::Timeline1d * );
     The timeline data will be copied to the internal angelscript timeline. */
 Timeline1AS * timeline_to_angelscript(const MATH::Timeline1d& );
 
+Timeline1AS * timeline_to_angelscript();
+
 /** Returns the associated timeline for the angelscript object */
 const MATH::Timeline1d& get_timeline(const Timeline1AS*);
 

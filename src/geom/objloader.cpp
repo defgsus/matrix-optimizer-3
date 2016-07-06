@@ -366,7 +366,8 @@ void ObjLoader::loadFromMemory(const QByteArray &bytes)
             {
                 if (filename_.isEmpty())
                 {
-                    MO_OBJ_LOG_LN("ignoring material lib statement when loading from memory.");
+                    MO_OBJ_LOG_LN("ignoring material lib statement when "
+                                  "loading from memory.");
                     continue;
                 }
                 x += 6;

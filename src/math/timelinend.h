@@ -87,7 +87,7 @@ class TimelineNd : public RefCounted
     // ------- ctor / dtor -----------
 
     TimelineNd(size_t numDimensions);
-    ~TimelineNd();
+    protected:    ~TimelineNd(); public:
 
     // ------ copy assignment --------
 
@@ -200,6 +200,9 @@ class TimelineNd : public RefCounted
 
     /** Returns a 1d copy of the given dimension */
     Timeline1d* getTimeline1d(size_t dimension = 0);
+
+    /** Returns a Xd copy of the given dimensions */
+    TimelineNd* getTimelineNd(size_t first, size_t num = 1);
 
     // ---------- modify -------------
 

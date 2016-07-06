@@ -57,6 +57,11 @@ namespace XX
     const long X_MappingNotify    = MappingNotify   ;
     const long X_ShiftMask        = ShiftMask       ;
     const long X_LockMask         = LockMask        ;
+    const long X_Button1          = Button1         ;
+    const long X_Button2          = Button2         ;
+    const long X_Button3          = Button3         ;
+    const long X_Button4          = Button4         ;
+    const long X_Button5          = Button5         ;
 
 } // namespace XX
 
@@ -102,6 +107,11 @@ namespace XX
 #undef ShiftMask
 #undef LockMask
 #undef LASTEvent
+#undef Button1
+#undef Button2
+#undef Button3
+#undef Button4
+#undef Button5
 
 #endif // MOSRC_GL_X11_INCLUDE_X11_H
 

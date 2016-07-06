@@ -44,6 +44,8 @@ const GlWindowTech& GlWindow::info() const { return p_w_->info; }
 GlWindowTech& GlWindow::info() { return p_w_->info; }
 int GlWindow::mouseX() const { return p_w_->mouseX; }
 int GlWindow::mouseY() const { return p_w_->mouseY; }
+int GlWindow::mouseXDelta() const { return p_w_->mouseXDelta; }
+int GlWindow::mouseYDelta() const { return p_w_->mouseYDelta; }
 MouseKeyCodes GlWindow::mouseKeys() const { return p_w_->mouseKeys; }
 
 double GlWindow::fps() const { return p_w_->framesPerSecond; }
