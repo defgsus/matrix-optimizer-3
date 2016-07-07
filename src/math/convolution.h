@@ -75,7 +75,9 @@ public:
 
 private:
 
-    std::vector<F> p_kernel_;
+    std::vector<F>
+        p_kernel_,
+        p_ikernel_, p_isrc_;
 };
 
 
@@ -151,72 +153,40 @@ void Convolution<F>::convolve(F * dst, const F * src, size_t num)
 template <typename F>
 void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 {
-    clear(dst, num + kernelSize());
-
-#if 0 // chunk by chunk - not working yet
-
-    // size of fft window
-    const size_t cnum = p_comp_kernel_.size();
-
-    // buffer for fft
-    std::vector<F> buf(cnum, F(0));
-
-    // process src in chunks of kernelSize()
-    size_t src_i = 0;
-    while (src_i < std::max(num, kernelSize()))
-    {
-        // copy src chunk
-        if (src_i + kernelSize() <= num)
-            for (size_t i=0; i<kernelSize(); ++i, ++src_i)
-                buf[i] = src[src_i];
-        else
-            for (size_t i=0; i<kernelSize(); ++i, ++src_i)
-                buf[i] = src_i < num ? src[src_i] : F(0);
-
-        real_fft(&buf[0], cnum);
-
-        // multiply with kernel
-        complex_multiply(&buf[0], &buf[0], &p_comp_kernel_[0], cnum);
-
-        ifft(&buf[0], cnum);
-
-        // copy to dst
-        for (size_t i=0; i<kernelSize(); ++i)
-            *dst++ = buf[i];
-    }
-
-#elif 1
-
     // size of fft
     const size_t cnum = nextPowerOfTwo( num + kernelSize() ) * 2;
     //MO_PRINT("num " << num << " kernel " << kernelSize() << ":"
     //         << (num + kernelSize()) << " / " << cnum);
 
     // buffer for fft
-    std::vector<F> isrc(cnum, F(0)),
-                   ikernel(cnum, F(0));
+    p_isrc_.resize(cnum),
+    p_ikernel_.resize(cnum);
 
     // copy src
-    for (size_t i=0; i<num; ++i)
-        isrc[i] = src[i];
+    size_t i;
+    for (i = 0; i<num; ++i)
+        p_isrc_[i] = src[i];
+    for (; i < cnum; ++i)
+        p_isrc_[i] = F(0);
 
     // copy kernel
-    for (size_t i=0; i<kernelSize(); ++i)
-        ikernel[i] = kernel(i);
+    for (i=0; i<kernelSize(); ++i)
+        p_ikernel_[i] = kernel(i);
+    for (; i < cnum; ++i)
+        p_ikernel_[i] = F(0);
 
-    real_fft(&isrc[0], cnum);
-    real_fft(&ikernel[0], cnum);
+    real_fft(&p_isrc_[0], cnum);
+    real_fft(&p_ikernel_[0], cnum);
 
     // multiply with kernel (complex multiplication)
-    complex_multiply(&isrc[0], &isrc[0], &ikernel[0], cnum);
+    complex_multiply(&p_isrc_[0], &p_isrc_[0], &p_ikernel_[0], cnum);
 
-    ifft(&isrc[0], cnum);
+    ifft(&p_isrc_[0], cnum);
 
     // copy to dst
     for (size_t i=0; i<num + kernelSize(); ++i)
-        *dst++ = isrc[i];
+        *dst++ = p_isrc_[i];
 
-#endif
 }
 
 

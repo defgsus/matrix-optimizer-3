@@ -44,6 +44,8 @@ class BeatDetectorAO::Private
     ParameterInt
         * paramNumBins;
     ParameterFloat
+        * paramFreqLow,
+        * paramFreqHigh,
         * paramAverage,
         * paramThresh;
 
@@ -154,6 +156,19 @@ void BeatDetectorAO::createParameters()
                     "num_bins", tr("bin count"),
                     tr("The number of frequency bands analyzed"),
                     p_->initNumBins, true, true);
+        p_->paramNumBins->setMinValue(1);
+
+        p_->paramFreqLow = params()->createFloatParameter(
+                    "freq_low", tr("low frequency"),
+                    tr("The lowest frequency to consider"),
+                    0., 10.);
+        p_->paramFreqLow->setMinValue(0.);
+
+        p_->paramFreqHigh = params()->createFloatParameter(
+                    "freq_high", tr("high frequency"),
+                    tr("The highest frequency to consider"),
+                    20000., 100.);
+        p_->paramFreqHigh->setMinValue(0.);
 
         p_->paramHist = params()->createSelectParameter(
                     "history_size", tr("history size"),
@@ -221,17 +236,19 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
     // changes to beatdetector that cause a reset
     if (beat.fftSize() != fftSize
      || beat.numBins() != numBins
-     || beat.numHistory() != numHist)
-        beat.setSize(fftSize, numBins, numHist);
+     || beat.numHistory() != numHist
+     || uint(beat.sampleRate()) != time.sampleRate())
+        beat.setSize(fftSize, numBins, numHist, time.sampleRate());
     // changes that can be set just so
     beat.setAverageTime(p_->paramAverage->value(time));
     beat.setThreshold(p_->paramThresh->value(time));
-    beat.setSampleRate(time.sampleRate());
     beat.setBeatsBinary(p_->paramBinary->value(time));
+    // This will resize bins on change
+    beat.setFrequencyRange(p_->paramFreqLow->value(time),
+                           p_->paramFreqHigh->value(time));
 
     // perform
     beat.push(inputs[0]->readPointer(), inputs[0]->blockSize());
-
 
 
     // copy to matrix output
@@ -253,8 +270,8 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
                 for (size_t i=0; i<beat.numBins(); ++i)
                 {
                     *p_->matrixBeat.data(i, 0) = beat.beat()[i];
-                    *p_->matrixBeat.data(i, 1) = beat.averageLevel()[i];
-                    *p_->matrixBeat.data(i, 2) = beat.currentLevel()[i];
+                    *p_->matrixBeat.data(i, 1) = beat.currentLevel()[i];
+                    *p_->matrixBeat.data(i, 2) = beat.averageLevel()[i];
                 }
             }
             break;
@@ -307,11 +324,15 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
 
             case 1:
             {
-                std::vector<size_t> dim = { beat.numBins() };
+                std::vector<size_t> dim = { beat.numBins(), 3 };
                 if (!p_->matrixSpeed.hasDimensions(dim))
                     p_->matrixSpeed.setDimensions(dim);
                 for (size_t i=0; i<beat.numBins(); ++i)
-                    *p_->matrixSpeed.data(i) = beat.speed(i);
+                {
+                    *p_->matrixSpeed.data(i, 0) = beat.beatsPerSecond(i);
+                    *p_->matrixSpeed.data(i, 1) = beat.lengthNormalized(i);
+                    *p_->matrixSpeed.data(i, 2) = beat.bestMatch(i);
+                }
             }
             break;
         }
