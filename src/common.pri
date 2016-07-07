@@ -443,7 +443,6 @@ SOURCES += \
     src/audio/tool/irmap.cpp \
     src/audio/audioplayer.cpp \
     src/audio/audioplayerdata.cpp \
-    src/math/convolution.cpp \
     src/audio/tool/convolvebuffer.cpp \
     src/geom/geometrymodifierenum.cpp \
     src/io/ladspaloader.cpp \

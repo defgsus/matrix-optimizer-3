@@ -38,7 +38,9 @@ class BeatDetectorAO::Private
     { }
 
     ParameterSelect
-        * paramFft;
+        * paramFft,
+        * paramHist,
+        * paramBinary;
     ParameterInt
         * paramNumBins;
     ParameterFloat
@@ -46,7 +48,9 @@ class BeatDetectorAO::Private
         * paramThresh;
 
     std::vector<AUDIO::BeatDetector> beats;
-    FloatMatrix matrixBeat, matrixHistory;
+    FloatMatrix
+            matrixBeat, matrixHistory,
+            matrixConv, matrixSpeed, matrixCandis;
 
     size_t initFftSize, initNumBins;
     QMutex matrixMutex;
@@ -59,7 +63,7 @@ BeatDetectorAO::BeatDetectorAO()
     setName("BeatDetect");
     setNumberAudioInputsOutputs(1, 0);
     //setNumberOutputs(ST_FLOAT, 1);
-    setNumberOutputs(ST_FLOAT_MATRIX, 2);
+    setNumberOutputs(ST_FLOAT_MATRIX, 5);
 }
 
 BeatDetectorAO::~BeatDetectorAO()
@@ -77,6 +81,13 @@ QString BeatDetectorAO::getOutputName(SignalType st, uint channel) const
             return tr("beat");
         if (channel == 1)
             return tr("history");
+        if (channel == 2)
+            return tr("conv");
+        if (channel == 3)
+            return tr("speed");
+        if (channel == 4)
+            return tr("candis");
+
     }
     return AudioObject::getOutputName(st, channel);
 }
@@ -86,17 +97,26 @@ Double BeatDetectorAO::valueFloat(uint , const RenderTime& ) const
     return 0.;
 }
 
-FloatMatrix BeatDetectorAO::valueFloatMatrix(uint , const RenderTime& ) const
+FloatMatrix BeatDetectorAO::valueFloatMatrix(uint chan, const RenderTime& ) const
 {
     QMutexLocker lock(&p_->matrixMutex);
-    return p_->matrixBeat;
+    switch (chan)
+    {
+        default:
+        case 0: return p_->matrixBeat;
+        case 1: return p_->matrixHistory;
+        case 2: return p_->matrixConv;
+        case 3: return p_->matrixSpeed;
+        case 4: return p_->matrixCandis;
+    }
 }
 
 QString BeatDetectorAO::infoString() const
 {
-    return QString("fft-size=%1, bins=%2")
+    return QString("fft-size=%1, bins=%2")//, history=%3")
             .arg(p_->paramFft ? p_->paramFft->baseValue() : p_->initFftSize)
             .arg(p_->paramNumBins ? p_->paramNumBins->baseValue() : p_->initNumBins)
+            //.arg(p_->)
             ;
 }
 
@@ -104,14 +124,14 @@ void BeatDetectorAO::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
 
-    io.writeHeader("aofft", 1);
+    io.writeHeader("aobeatdet", 2);
 }
 
 void BeatDetectorAO::deserialize(IO::DataStream & io)
 {
     Object::deserialize(io);
 
-    io.readHeader("aofft", 1);
+    io.readHeader("aobeatdet", 2);
 }
 
 void BeatDetectorAO::createParameters()
@@ -135,6 +155,15 @@ void BeatDetectorAO::createParameters()
                     tr("The number of frequency bands analyzed"),
                     p_->initNumBins, true, true);
 
+        p_->paramHist = params()->createSelectParameter(
+                    "history_size", tr("history size"),
+            tr("The number of chunks in beat history"),
+            { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+            { "16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "8192", "16384", "32768", "65536" },
+            { "", "", "", "", "", "", "", "", "", "", "", "", "" },
+            { 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536 },
+            256, true, false);
+
         p_->paramAverage = params()->createFloatParameter(
                     "average_time", tr("average time"),
                     tr("The time in seconds to gather the average amplitude "
@@ -147,6 +176,12 @@ void BeatDetectorAO::createParameters()
                     tr("Multiplier for comparing the current signal versus "
                        "the average signal"),
                     1.3, 0.05);
+
+        p_->paramBinary = params()->createBooleanParameter(
+                    "binary_beat", tr("binary"),
+                    tr(""),
+                    tr("Off"), tr("On"),
+                    false, true, true);
 
     params()->endParameterGroup();
 }
@@ -179,17 +214,20 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
 
     const size_t
             fftSize = nextPowerOfTwo((uint)p_->paramFft->value(time)),
-            numBins = p_->paramNumBins->value(time);
+            numBins = p_->paramNumBins->value(time),
+            numHist = p_->paramHist->value(time);
 
     AUDIO::BeatDetector& beat = p_->beats[time.thread()];
     // changes to beatdetector that cause a reset
     if (beat.fftSize() != fftSize
-     || beat.numBins() != numBins)
-        beat.setSize(fftSize, numBins);
+     || beat.numBins() != numBins
+     || beat.numHistory() != numHist)
+        beat.setSize(fftSize, numBins, numHist);
     // changes that can be set just so
     beat.setAverageTime(p_->paramAverage->value(time));
     beat.setThreshold(p_->paramThresh->value(time));
     beat.setSampleRate(time.sampleRate());
+    beat.setBeatsBinary(p_->paramBinary->value(time));
 
     // perform
     beat.push(inputs[0]->readPointer(), inputs[0]->blockSize());
@@ -199,6 +237,7 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
     // copy to matrix output
     {
         QMutexLocker lock(&p_->matrixMutex);
+
         switch (1)
         {
             case 0:
@@ -221,6 +260,80 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
             break;
         }
 
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixHistory.isEmpty())
+                    p_->matrixHistory.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins(), beat.numHistory() };
+                if (!p_->matrixHistory.hasDimensions(dim))
+                    p_->matrixHistory.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                    for (size_t j=0; j<beat.numHistory(); ++j)
+                        *p_->matrixHistory.data(i, j) = beat.beatHistory(i)[j];
+            }
+            break;
+        }
+
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixConv.isEmpty())
+                    p_->matrixConv.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins(), beat.numHistory() };
+                if (!p_->matrixConv.hasDimensions(dim))
+                    p_->matrixConv.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                    for (size_t j=0; j<beat.numHistory(); ++j)
+                        *p_->matrixConv.data(i, j) = beat.convolution(i)[j];
+            }
+            break;
+        }
+
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixSpeed.isEmpty())
+                    p_->matrixSpeed.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins() };
+                if (!p_->matrixSpeed.hasDimensions(dim))
+                    p_->matrixSpeed.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                    *p_->matrixSpeed.data(i) = beat.speed(i);
+            }
+            break;
+        }
+
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixCandis.isEmpty())
+                    p_->matrixCandis.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins(), beat.numHistory() };
+                if (!p_->matrixCandis.hasDimensions(dim))
+                    p_->matrixCandis.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                    for (size_t j=0; j<beat.numHistory(); ++j)
+                        *p_->matrixCandis.data(i, j) = beat.candidates(i)[j];
+            }
+            break;
+        }
     }
 }
 

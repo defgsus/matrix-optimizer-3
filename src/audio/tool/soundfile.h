@@ -77,7 +77,8 @@ public:
     /** Fills the audiobuffers,
         is aware of NULL buffers in @p channels. */
     void getResampled(const QList<AudioBuffer*> channels,
-                      SamplePos frame, uint sampleRate, F32 amplitude = 1.f);
+                      SamplePos frame, uint sampleRate,
+                      F32 amplitude = 1.f, F32 pitch = 1.f);
 
     // --------- setter ---------------
 

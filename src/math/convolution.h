@@ -44,9 +44,17 @@ public:
 
     void clear();
 
+    /** Copies the data to kernel */
     void setKernel(const F * data, size_t num, size_t stride = 1);
 
-    /** Zeroes all values in the kernal for which their absolute value is below @p minValue */
+    /** Resizes the kernel, used in conjunction with F* kernel() */
+    void setKernelSize(size_t num) { p_kernel_.resize(num); }
+
+    /** Direct write access */
+    F* kernel() { return &p_kernel_[0]; }
+
+    /** Zeroes all values in the kernal for which their
+        absolute value is below @p minValue */
     void setKernelZeroBelow(F minValue);
 
     /** Convolve @p num samples in @p src with the current kernel into @p dst.

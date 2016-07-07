@@ -54,6 +54,7 @@ class WavePlayerAO::Private
     ParameterFloat
         * paramAmp,
         * paramPlay,
+        * paramPitch,
         * paramGate,
         * paramPlayPos,
         * paramOffset,
@@ -152,6 +153,11 @@ void WavePlayerAO::createParameters()
         p_->paramPlay = params()->createFloatParameter("play", tr("playback enable"),
                                                     tr("A value > 0 enables playback"),
                                                     1.0);
+
+        p_->paramPitch = params()->createFloatParameter(
+                    "pitch", tr("pitch"),
+                    tr("Multiplier for playback speed"),
+                    1.0, 0.01);
 
         p_->paramGate = params()->createFloatParameter("gate", tr("restart gate"),
                                                     tr("A gate signal to start playing at a new position"),
@@ -264,7 +270,8 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     Double  // playback time
             dtime = time.second(),
             // bufferlength in seconds
-            blength = ao->sampleRateInv() * time.bufferSize();
+            blength = ao->sampleRateInv() * time.bufferSize(),
+            pitch = paramPitch->value(time);
 
     const QList<AUDIO::AudioBuffer*>&
             outputs = ao->audioOutputs(time.thread());
@@ -272,7 +279,7 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     // synced time
     if (mode == M_SYNCED)
     {
-        dtime += paramOffset->value(time);
+        dtime = dtime * pitch + paramOffset->value(time);
 
         // loop playback time
         if (doLoop)
@@ -312,23 +319,11 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     // sample from wave data
     if (dtime > blength && dtime < wlen + blength)
     {
-#if 1
         wave->getResampled(outputs,
                        dtime * wave->sampleRate(),
                        ao->sampleRate(),
-                       paramAmp->value(time));
-#else
-        for (int j=0; j<outputs.size(); ++j)
-        {
-            if (outputs[j] == nullptr)
-                continue;
-            for (int i=0; i<outputs[j]->blockSize(); ++i)
-            {
-                Double t = dtime + ao->sampleRateInv() * i;
-                outputs[j]->write(i, wave->value(t, j));
-            }
-        }
-#endif
+                       paramAmp->value(time),
+                       pitch);
     }
     // zero output when outside file length
     else
@@ -340,8 +335,8 @@ void WavePlayerAO::Private::processAudio(const RenderTime& time)
     // forward playback time
     if (mode == M_FREE)
     {
-        curTime += blength;
-        curTimeAll += blength;
+        curTime += blength * pitch;
+        curTimeAll += blength * pitch;
 
         // loop playback time
         if (doLoop)
