@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     //MO::TestTesselator t; return t.run();
     //MO::TestDirectedGraph t; return t.run();
     //TestGlWindow t; return t.run();
-        MO::TestFloatMatrix t; return t.run();
+    //MO::TestFloatMatrix t; return t.run();
 
 #if (0)
     using namespace MO;

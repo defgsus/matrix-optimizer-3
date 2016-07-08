@@ -65,6 +65,10 @@ public:
     /** Restores the geometry provided the QWidget::objectName() is set */
     bool restoreGeometry(QWidget *);
 
+    void storeViewPreset(const QString& name, QMainWindow*);
+    bool restoreViewPreset(const QString& name, QMainWindow*);
+    QStringList viewPresets();
+
     /** The path to data, generally ./data */
     QString dataPath() const;
 

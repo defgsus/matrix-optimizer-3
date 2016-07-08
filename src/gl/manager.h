@@ -81,9 +81,8 @@ public slots:
 
 private slots:
 
-    void onCameraMatrixChanged_(const MO::Mat4&);
-
 signals:
+    /** These are wrappers for thread-safe communication from the render thread */
     void sendResize_(const QSize&);
     void sendKeyPressed_(QKeyEvent*);
     void sendImage(const GL::Texture* tex, const QString& id, const QImage& img);

@@ -23,6 +23,7 @@
 #include <QTime>
 #include <QActionGroup>
 #include <QPushButton>
+#include <QInputDialog>
 
 #include "mainwidgetcontroller.h"
 #include "io/error.h"
@@ -937,17 +938,46 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 
 
     // ######### VIEW MENU #########
-    viewMenu_ = m = new QMenu("View", menuBar);
-    menuBar->addMenu(viewMenu_);
+    m = new QMenu("View", menuBar);
+    menuBar->addMenu(m);
 
-        a = aGlWindowVisible_ = new QAction(tr("Output window"), m);
-        a->setCheckable(true);
-        a->setChecked(glManager_->isWindowVisible());
-        m->addAction(a);
-        connect(a, &QAction::triggered, [=](bool check)
+        viewMenu_ = sub = m->addMenu(tr("Views"));
+
+            a = aGlWindowVisible_ = new QAction(tr("Output window"), m);
+            a->setCheckable(true);
+            a->setChecked(glManager_->isWindowVisible());
+            sub->addAction(a);
+            connect(a, &QAction::triggered, [=](bool check)
+            {
+                glManager_->setWindowVisible(check);
+            });
+
+        viewPresetMenu_ = sub = m->addMenu(tr("Presets"));
+        connect(viewPresetMenu_, &QMenu::triggered, [=](QAction* a)
         {
-            glManager_->setWindowVisible(check);
+            setViewPreset_(a->data().toString());
+            populateViewPresetMenu_();
         });
+
+            populateViewPresetMenu_();
+
+        m->addSeparator();
+
+        a = m->addAction(tr("Save current preset"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            saveViewPreset_();
+        });
+
+    #ifndef MO_RELEASE
+        m->addSeparator();
+        a = m->addAction(tr("Dump current view preset"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto data = window_->saveState(1);
+            MO_PRINT(data.toPercentEncoding().toStdString());
+        });
+    #endif
 
     // ######### HELP MENU #########
     m = new QMenu(tr("Help"), menuBar);
@@ -2534,10 +2564,45 @@ void MainWidgetController::updateResolutionActions_()
         {
             aResolutionCustom_->setChecked(true);
             aResolutionCustom_->setText(tr("Custom %1x%2 ...")
-                                        .arg(scene_->requestedFrameBufferSize().width())
-                                        .arg(scene_->requestedFrameBufferSize().height()));
+                .arg(scene_->requestedFrameBufferSize().width())
+                .arg(scene_->requestedFrameBufferSize().height()));
         }
     }
+}
+
+void MainWidgetController::populateViewPresetMenu_()
+{
+    viewPresetMenu_->clear();
+
+    auto list = settings()->viewPresets();
+
+    for (auto& name : list)
+    {
+        QAction* a = viewPresetMenu_->addAction(name);
+        a->setData(name);
+    }
+}
+
+void MainWidgetController::setViewPreset_(const QString& name)
+{
+    // save previous
+    settings()->storeViewPreset(tr("previous"), window_);
+
+    if (!settings()->restoreViewPreset(name, window_))
+        QMessageBox::critical(window_, tr("view preset"),
+                              tr("Could not load the view preset '%1'")
+                              .arg(name));
+}
+
+void MainWidgetController::saveViewPreset_()
+{
+    QString name = QInputDialog::getText(window_,
+                          tr("Save view preset"),
+                          tr("The name of the preset"));
+    if (name.isEmpty())
+        return;
+    settings()->storeViewPreset(name, window_);
+    populateViewPresetMenu_();
 }
 
 void MainWidgetController::onProjectionSettingsChanged_()

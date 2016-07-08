@@ -267,7 +267,8 @@ void Settings::storeGeometry(QWindow * win)
 
 bool Settings::restoreGeometry(QWindow * win)
 {
-    MO_ASSERT(!win->objectName().isEmpty(), "Settings::restoreGeometry(): no objectName set for QWindow");
+    MO_ASSERT(!win->objectName().isEmpty(),
+              "Settings::restoreGeometry(): no objectName set for QWindow");
 
     bool found = false;
 
@@ -335,7 +336,8 @@ void Settings::storeGeometry(QWidget * win)
     MO_DEBUG_GUI("Settings::saveGeometry(" << win << ", " << win->geometry()
              << ", " << win->frameGeometry() << ")");
 
-    MO_ASSERT(!win->objectName().isEmpty(), "Settings::saveGeometry(): no objectName set for QWidget");
+    MO_ASSERT(!win->objectName().isEmpty(),
+              "Settings::saveGeometry(): no objectName set for QWidget");
 
 #ifndef MO_GEOMETRY_SAVE_HACK
     setValue("Geometry/" + win->objectName(), win->saveGeometry());
@@ -410,6 +412,42 @@ bool Settings::restoreGeometry(QWidget * win)
     }
 
     return found;
+}
+
+namespace {
+    const QString presetKey = "WinStatePresets";
+    static const char* defaultPreset =
+            "%00%00%00%FF%00%00%00%01%FD%00%00%00%02%00%00%00%00%00%00%00%F8%00%00%02%1D%FC%02%00%00%00%01%FC%00%00%00%1B%00%00%01%0D%00%00%00%00%00%FF%FF%FF%FA%00%00%00%00%01%00%00%00%01%FB%00%00%00%1E%00_%00F%00r%00o%00n%00t%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%00%00%00%00%00%00%00%00%01%00%00%05%9E%00%00%01w%FC%01%00%00%00%04%FB%00%00%00%2A%00O%00b%00j%00e%00c%00t%00O%00u%00t%00p%00u%00t%00V%00i%00e%00w%00_%00D%00o%00c%00k%00%00%00%00%A6%00%00%01%18%00%00%00K%00%FF%FF%FF%FC%00%00%00%00%00%00%02%EB%00%00%02%BA%00%FF%FF%FF%FA%00%00%00%00%02%00%00%00%0A%FB%00%00%00%2A%00_%00O%00b%00j%00e%00c%00t%00G%00r%00a%00p%00h%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%BF%00%FF%FF%FF%FB%00%00%00%2A%00_%00t%00r%00a%00n%00s%00p%00o%00r%00t%00W%00i%00d%00g%00e%00t%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00Y%00%FF%FF%FF%FB%00%00%00%24%00_%00S%00e%00q%00u%00e%00n%00c%00e%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%3F%00%FF%FF%FF%FB%00%00%00%1A%00_%00O%00s%00c%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00k%00%FF%FF%FF%FB%00%00%00%26%00_%00S%00e%00q%00u%00e%00n%00c%00e%00r%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%01Y%00%FF%FF%FF%FB%00%00%00%2A%00_%00F%00r%00o%00n%00t%00I%00t%00e%00m%00E%00d%00i%00t%00o%00r%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%00%00%00%00%00%FB%00%00%00%20%00_%00S%00e%00r%00v%00e%00r%00V%00i%00e%00w%00_%00D%00o%00c%00k%00%00%00%00%00%FF%FF%FF%FF%00%00%01Y%00%FF%FF%FF%FB%00%00%00%1C%00_%00C%00l%00i%00p%00V%00i%00e%00w%00_%00D%00o%00c%00k%00%00%00%00%00%FF%FF%FF%FF%00%00%00%91%00%FF%FF%FF%FB%00%00%00%0A%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%00%00%00%00%00%FB%00%00%00%24%00_%00A%00s%00s%00e%00t%00B%00r%00o%00w%00s%00e%00r%00_%00D%00o%00c%00k%01%00%00%00%00%FF%FF%FF%FF%00%00%00%A3%00%FF%FF%FF%FB%00%00%00%26%00O%00b%00j%00e%00c%00t%00T%00r%00e%00e%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%02%F0%00%00%00%EE%00%00%00K%00%FF%FF%FF%FB%00%00%00%20%00_%00O%00b%00j%00e%00c%00t%00V%00i%00e%00w%00_%00D%00o%00c%00k%01%00%00%03%E3%00%00%01%BB%00%00%00j%00%FF%FF%FF%00%00%00%00%00%00%01w%00%00%00%04%00%00%00%04%00%00%00%08%00%00%00%08%FC%00%00%00%00";
+}
+
+QStringList Settings::viewPresets()
+{
+    beginGroup(presetKey);
+    auto list = childKeys();
+    endGroup();
+
+    list.prepend("factory default");
+    return list;
+}
+
+void Settings::storeViewPreset(const QString& name, QMainWindow* w)
+{
+    setValue(presetKey + "/" + name, w->saveState(1));
+}
+
+bool Settings::restoreViewPreset(const QString& name, QMainWindow* w)
+{
+    if (name == "factory default")
+    {
+        QByteArray data = QByteArray::fromPercentEncoding(
+                    defaultPreset);
+        return w->restoreState(data, 1);
+    }
+
+    const QString key = presetKey + "/" + name;
+    if (!contains(key))
+        return false;
+    return w->restoreState(value(key).toByteArray(), 1);
 }
 
 QString Settings::dataPath() const

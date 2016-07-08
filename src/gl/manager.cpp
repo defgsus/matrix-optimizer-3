@@ -207,9 +207,6 @@ Manager::Manager(QObject *parent)
     connect(this, SIGNAL(sendImage(const GL::Texture*,QString,QImage)),
             this, SIGNAL(imageFinished(const GL::Texture*,QString,QImage)),
             Qt::QueuedConnection);
-    connect(this, SIGNAL(sendCameraChanged(MO::Mat4)),
-            this, SIGNAL(cameraMatrixChanged(MO::Mat4)),
-            Qt::QueuedConnection);
 }
 
 Manager::~Manager()
@@ -306,11 +303,6 @@ void Manager::setTimeCallback(std::function<Double ()> timeFunc)
     p_->timeFunc = timeFunc;
     if (p_->renderer)
         p_->renderer->setTimeCallback(p_->timeFunc);
-}
-
-void Manager::onCameraMatrixChanged_(const Mat4 & mat)
-{
-    emit cameraMatrixChanged(mat);
 }
 
 bool Manager::isAnimating() const

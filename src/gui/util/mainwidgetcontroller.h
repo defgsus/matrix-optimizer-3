@@ -239,6 +239,10 @@ private:
     void setPredefinedResolution_(int index);
     void updateResolutionActions_();
 
+    void populateViewPresetMenu_();
+    void setViewPreset_(const QString& name);
+    void saveViewPreset_();
+
     Double getPrevLocatorTime_(Double time);
 
     QMainWindow * window_;
@@ -290,7 +294,7 @@ private:
 
     QMenu * menuEdit_, * menuResolutions_,
           * menuProjectorIndex_,
-          * viewMenu_;
+          * viewMenu_, * viewPresetMenu_;
 
     QAction * actionSaveScene_,
             * aDrawLightSources_,
