@@ -17,7 +17,9 @@
 namespace MO {
 
 /** An object calculating the derivative of it's input */
-class DerivativeObjectFloat : public Object, public ValueFloatInterface
+class DerivativeObjectFloat
+                : public Object
+                , public ValueFloatInterface
 {
 public:
     MO_OBJECT_CONSTRUCTOR(DerivativeObjectFloat);

@@ -9,7 +9,8 @@ HEADERS += \
     src/tests/test_angelscript.h \
     $$PWD/testcsg.h \
     $$PWD/testpython.h \
-    $$PWD/testglwindow.h
+    $$PWD/testglwindow.h \
+    $$PWD/testfloatmatrix.h
 
 SOURCES += \
     src/tests/testtesselator.cpp \
@@ -22,4 +23,5 @@ SOURCES += \
     src/tests/test_angelscript.cpp \
     $$PWD/testcsg.cpp \
     $$PWD/testpython.cpp \
-    $$PWD/testglwindow.cpp
+    $$PWD/testglwindow.cpp \
+    $$PWD/testfloatmatrix.cpp

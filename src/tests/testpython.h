@@ -27,6 +27,6 @@ private:
     Private * p_;
 };
 
-#endif // TESTPYTHON_H
+#endif // MOSRC_TESTS_TESTPYTHON_H
 
 #endif // #ifdef MO_ENABLE_PYTHON34

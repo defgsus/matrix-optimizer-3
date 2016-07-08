@@ -177,6 +177,8 @@ void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 
     real_fft(&p_isrc_[0], cnum);
     real_fft(&p_ikernel_[0], cnum);
+    //for (int i=cnum/2; i<cnum; ++i)
+    //    p_ikernel_[i] = -p_ikernel_[i];
 
     // multiply with kernel (complex multiplication)
     complex_multiply(&p_isrc_[0], &p_isrc_[0], &p_ikernel_[0], cnum);

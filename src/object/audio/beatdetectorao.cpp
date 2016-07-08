@@ -52,7 +52,8 @@ class BeatDetectorAO::Private
     std::vector<AUDIO::BeatDetector> beats;
     FloatMatrix
             matrixBeat, matrixHistory,
-            matrixConv, matrixSpeed, matrixCandis;
+            matrixConv, matrixSpeed, matrixSortedSpeed,
+            matrixCandis;
 
     size_t initFftSize, initNumBins;
     QMutex matrixMutex;
@@ -65,7 +66,7 @@ BeatDetectorAO::BeatDetectorAO()
     setName("BeatDetect");
     setNumberAudioInputsOutputs(1, 0);
     //setNumberOutputs(ST_FLOAT, 1);
-    setNumberOutputs(ST_FLOAT_MATRIX, 5);
+    setNumberOutputs(ST_FLOAT_MATRIX, 6);
 }
 
 BeatDetectorAO::~BeatDetectorAO()
@@ -88,6 +89,8 @@ QString BeatDetectorAO::getOutputName(SignalType st, uint channel) const
         if (channel == 3)
             return tr("speed");
         if (channel == 4)
+            return tr("sort speed");
+        if (channel == 5)
             return tr("candis");
 
     }
@@ -109,7 +112,8 @@ FloatMatrix BeatDetectorAO::valueFloatMatrix(uint chan, const RenderTime& ) cons
         case 1: return p_->matrixHistory;
         case 2: return p_->matrixConv;
         case 3: return p_->matrixSpeed;
-        case 4: return p_->matrixCandis;
+        case 4: return p_->matrixSortedSpeed;
+        case 5: return p_->matrixCandis;
     }
 }
 
@@ -324,14 +328,38 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
 
             case 1:
             {
-                std::vector<size_t> dim = { beat.numBins(), 3 };
+                std::vector<size_t> dim = { beat.numBins(), 4 };
                 if (!p_->matrixSpeed.hasDimensions(dim))
                     p_->matrixSpeed.setDimensions(dim);
                 for (size_t i=0; i<beat.numBins(); ++i)
                 {
                     *p_->matrixSpeed.data(i, 0) = beat.beatsPerSecond(i);
                     *p_->matrixSpeed.data(i, 1) = beat.lengthNormalized(i);
-                    *p_->matrixSpeed.data(i, 2) = beat.bestMatch(i);
+                    *p_->matrixSpeed.data(i, 2) = beat.lengthBuffers(i);
+                    *p_->matrixSpeed.data(i, 3) = beat.matchCount(i);
+                }
+            }
+            break;
+        }
+
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixSpeed.isEmpty())
+                    p_->matrixSpeed.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins(), 3 };
+                if (!p_->matrixSortedSpeed.hasDimensions(dim))
+                    p_->matrixSortedSpeed.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                {
+                    *p_->matrixSortedSpeed.data(i, 0) = beat.sortedBeatsPerSecond(i);
+                    *p_->matrixSortedSpeed.data(i, 1) = beat.sortedLengthNormalized(i);
+                    *p_->matrixSortedSpeed.data(i, 2) = beat.sortedLengthBuffers(i);
+                    //*p_->matrixSortedSpeed.data(i, 3) = beat.sortedMatchCount(i);
                 }
             }
             break;

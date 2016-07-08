@@ -61,7 +61,8 @@ int renderToDisk()
 //#include "tests/testdirectedgraph.h"
 //#include "tests/testcsg.h"
 //#include "tests/testpython.h"
-#include "tests/testglwindow.h"
+//#include "tests/testglwindow.h"
+#include "tests/testfloatmatrix.h"
 //#include "math/arithmeticarray.h"
 
 //#include "types/vector.h"
@@ -83,6 +84,7 @@ int main(int argc, char *argv[])
     //MO::TestTesselator t; return t.run();
     //MO::TestDirectedGraph t; return t.run();
     //TestGlWindow t; return t.run();
+        MO::TestFloatMatrix t; return t.run();
 
 #if (0)
     using namespace MO;
