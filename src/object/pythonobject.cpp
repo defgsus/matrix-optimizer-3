@@ -12,6 +12,7 @@
 #include "io/datastream.h"
 #include "param/parameters.h"
 #include "param/parametertext.h"
+#include "param/parametercallback.h"
 #include "python/34/python.h"
 #include "io/error.h"
 #include "io/log.h"
@@ -35,7 +36,8 @@ class PythonObject::Private
     void run();
 
     PythonObject * obj;
-    ParameterText * scriptText;
+    ParameterText * paramScriptText;
+    ParameterCallback * paramExecute;
 };
 
 
@@ -70,7 +72,12 @@ void PythonObject::createParameters()
     params()->beginParameterGroup("_python", tr("script"));
     initParameterGroupExpanded("_python");
 
-        p_->scriptText = params()->createTextParameter(
+        p_->paramExecute = params()->createCallbackParameter(
+                    "execute", tr("execute"),
+                    tr("Executes the script"),
+                    [=](){ runScript(); });
+
+        p_->paramScriptText = params()->createTextParameter(
                     "python_script", tr("python script"),
                     tr("The source code of the python script to execute"),
                     TT_PYTHON34,
@@ -85,7 +92,7 @@ void PythonObject::onParameterChanged(Parameter *p)
 {
     Object::onParameterChanged(p);
 
-    if (p == p_->scriptText)
+    if (p == p_->paramScriptText)
     {
         p_->run();
     }
@@ -100,13 +107,13 @@ void PythonObject::Private::run()
         obj->clearError();
         PYTHON34::PythonInterpreter interp;
         interp.setObject(obj);
-        interp.execute(scriptText->baseValue());
+        interp.execute(paramScriptText->baseValue());
     }
     catch (const Exception& e)
     {
         MO_WARNING(e.what());
         obj->setErrorMessage(e.what());
-        scriptText->addErrorMessage(0, e.what());
+        paramScriptText->addErrorMessage(0, e.what());
     }
 #else
     obj->setErrorMessage(QObject::tr("Python support is not enabled in this binary"));

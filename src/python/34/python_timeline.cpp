@@ -331,6 +331,37 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         return ret;
     }
 
+
+    MO_PY_DEF_DOC(tl_keys,
+        "keys() -> set\n"
+        "Returns a set containing the times of all timeline points\n"
+    )
+    static PyObject* tl_keys(TimelineStruct* self, PyObject* )
+    {
+        MO__ASSERT_TL(self);
+        auto set = PySet_New(NULL);
+        if (!set)
+        {
+            PyErr_Set(PyExc_MemoryError, "Could not create set object");
+            return NULL;
+        }
+        for (auto& i : self->tl->getData())
+        {
+            auto d = fromDouble(i.second.t);
+            if (!d)
+            {
+                Py_DecRef(set);
+                return NULL;
+            }
+            if (PySet_Add(set, d) < 0)
+            {
+                Py_DecRef(set);
+                return NULL;
+            }
+        }
+        return set;
+    }
+
     // helper for MATH::TimelinePoint::Type getter
     static PyObject* tl_type_getter(TimelineStruct* , void* ptr)
     {
@@ -383,7 +414,8 @@ static PyObject* tl_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         "Adds a value/vector at the given time.\n"
         "The vector size must fit the dimension of the timeline data.\n"
         "The third argument can be on of the Timeline point types,\n"
-        "e.g. Timeline.CONSTANT, Timeline.SPLINE6, etc..\n"
+        "CONSTANT, LINEAR, SMOOTH, SYMMETRIC, SYMMETRIC_USER, HERMITE,\n"
+        "SPLINE4, SPLINE6\n"
         "Returns self."
     )
     static PyObject* tl_add(TimelineStruct* self, PyObject* arg)
@@ -439,9 +471,10 @@ static PyMethodDef Timeline_methods[] =
     MO__METHOD(get_timeline,        METH_O)
     MO__METHOD(value,               METH_O)
     MO__METHOD(derivative,          METH_VARARGS)
+    MO__METHOD(keys,                METH_NOARGS)
 
     MO__METHOD(set_dimensions,      METH_O)
-    MO__METHOD(update,              METH_O)
+    MO__METHOD(update,              METH_NOARGS)
     MO__METHOD(add,                 METH_VARARGS)
 
 

@@ -37,13 +37,13 @@ public:
     struct NoInitTag { };
     static const NoInitTag NoInit;
 
-    ArithmeticArray(size_t dim, T fill = T(0))
+    explicit ArithmeticArray(size_t dim, T fill = T(0))
         : p_dim_    (dim)
     {
         p_data_.resize(p_dim_, fill);
     }
 
-    ArithmeticArray(size_t dim, const NoInitTag&)
+    explicit ArithmeticArray(size_t dim, const NoInitTag&)
         : p_dim_    (dim)
     {
         p_data_.resize(p_dim_);
@@ -74,8 +74,10 @@ public:
 
     // ---------- operators -----------
 
-    T  operator[] (size_t idx) const { MO_AA_ASSERT(idx < p_dim_); return p_data_[idx]; }
-    T& operator[] (size_t idx) { MO_AA_ASSERT(idx < p_dim_); return p_data_[idx]; }
+    T  operator[] (size_t idx) const
+            { MO_AA_ASSERT(idx < p_dim_); return p_data_[idx]; }
+    T& operator[] (size_t idx)
+            { MO_AA_ASSERT(idx < p_dim_); return p_data_[idx]; }
 
     ArithmeticArray& operator= (const ArithmeticArray& rhs)
     {
@@ -313,7 +315,6 @@ private:
 
 template <typename T>
 const typename ArithmeticArray<T>::NoInitTag ArithmeticArray<T>::NoInit;
-
 
 
 } // namespace MATH

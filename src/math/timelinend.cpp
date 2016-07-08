@@ -177,10 +177,11 @@ TimelineNd::ValueType TimelineNd::getNoLimit(Double time) const
             const TimelineNd::Point
                 *t1 = &i1->second,
                 *t2 = &i2->second;
-            ValueType f = (time-t1->t)/(t2->t - t1->t);
+
+            Double f = (time-t1->t)/(t2->t - t1->t);
             f = 3.0*f*f*(1.0-f) + f*f*f;
 
-            ret = t1->val*(1.0-f) + f*(t2->val);
+            ret = t1->val*(1.0-f) + (t2->val)*f;
             return ret;
         }
 
