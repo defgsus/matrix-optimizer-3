@@ -197,6 +197,7 @@ void ConvolveAO::onParametersLoaded()
 
     p_->needUpdate = true;
     p_->updateFilter();
+    p_->initConvolver();
 }
 
 void ConvolveAO::Private::updateFilter()
@@ -220,19 +221,33 @@ void ConvolveAO::updateParameterVisibility()
                 AUDIO::MultiFilter::supportsResonance(type));
 }
 
+void ConvolveAO::getNeededFiles(IO::FileList &files)
+{
+    AudioObject::getNeededFiles(files);
+
+    files << IO::FileListEntry(p_->pFile->baseValue(), IO::FT_IMPULSE_RESPONSE);
+}
+
 void ConvolveAO::Private::initConvolver()
 {
+    ao->clearError();
+
     // load IR file
     QString fn = pFile->baseValue();
     if (fn.isEmpty())
         return;
 
     auto sf = AUDIO::SoundFileManager::getSoundFile(fn);
-    if (!sf)
+    if (!sf->isOk())
+    {
+        sf->release();
+        ao->setErrorMessage(QString("%1 not loaded").arg(fn));
         return;
+    }
 
     auto sam = sf->getResampled(ao->sampleRate(),
-                std::min(sf->numberChannels(), uint(pChannel->baseValue())));
+                std::min(sf->numberChannels()-1, uint(pChannel->baseValue())));
+    sf->release();
 
     // set kernel
     convolver.setKernel(&sam[0], sam.size());
@@ -267,7 +282,8 @@ void ConvolveAO::processAudio(const RenderTime& time)
     if (doPp)
     {
         // delay can at least be equal to buffer-size
-        dtime = std::max(0., p_->pDelayTime->value(time) * sampleRate() - time.bufferSize());
+        dtime = std::max(0., p_->pDelayTime->value(time) * sampleRate()
+                                - time.bufferSize());
         damt = p_->pFeedback->value(time);
 
         // update delay

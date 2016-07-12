@@ -23,7 +23,10 @@ namespace MO {
 
 /** @brief Multi-dimensional float data container
 
-
+    @todo
+    Currently this is passed around by value between objects
+    to make it threadsafe. Not ideal, but a copy-on-write would
+    require lot's of lockings...
 
 */
 class FloatMatrix

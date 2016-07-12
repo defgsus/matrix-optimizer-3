@@ -42,18 +42,20 @@ class BeatDetectorAO::Private
         * paramHist,
         * paramBinary;
     ParameterInt
-        * paramNumBins;
+        * paramNumBins,
+        * paramNumConvs;
     ParameterFloat
         * paramFreqLow,
         * paramFreqHigh,
         * paramAverage,
-        * paramThresh;
+        * paramThresh,
+        * paramConvAdaptSpeed;
 
     std::vector<AUDIO::BeatDetector> beats;
     FloatMatrix
             matrixBeat, matrixHistory,
             matrixConv, matrixSpeed, matrixSortedSpeed,
-            matrixCandis;
+            matrixCandis, matrixResponse;
 
     size_t initFftSize, initNumBins;
     QMutex matrixMutex;
@@ -66,7 +68,7 @@ BeatDetectorAO::BeatDetectorAO()
     setName("BeatDetect");
     setNumberAudioInputsOutputs(1, 0);
     //setNumberOutputs(ST_FLOAT, 1);
-    setNumberOutputs(ST_FLOAT_MATRIX, 6);
+    setNumberOutputs(ST_FLOAT_MATRIX, 7);
 }
 
 BeatDetectorAO::~BeatDetectorAO()
@@ -92,7 +94,8 @@ QString BeatDetectorAO::getOutputName(SignalType st, uint channel) const
             return tr("sort speed");
         if (channel == 5)
             return tr("candis");
-
+        if (channel == 6)
+            return tr("response");
     }
     return AudioObject::getOutputName(st, channel);
 }
@@ -114,6 +117,7 @@ FloatMatrix BeatDetectorAO::valueFloatMatrix(uint chan, const RenderTime& ) cons
         case 3: return p_->matrixSpeed;
         case 4: return p_->matrixSortedSpeed;
         case 5: return p_->matrixCandis;
+        case 6: return p_->matrixResponse;
     }
 }
 
@@ -202,6 +206,17 @@ void BeatDetectorAO::createParameters()
                     tr("Off"), tr("On"),
                     false, true, true);
 
+        p_->paramNumConvs = params()->createIntParameter(
+                    "num_convolutions", tr("num of convolutions"),
+                    tr("The number of convolutions on the history"),
+                    2, true, true);
+        p_->paramNumConvs->setMinValue(1);
+
+        p_->paramConvAdaptSpeed = params()->createFloatParameter(
+                    "adapt_speed", tr("convolution adaptation"),
+                    tr("Speed between 0 and 1 to adapt to new convolution data"),
+                    .01,  0.0001, 1., 0.01);
+
     params()->endParameterGroup();
 }
 
@@ -250,6 +265,8 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
     // This will resize bins on change
     beat.setFrequencyRange(p_->paramFreqLow->value(time),
                            p_->paramFreqHigh->value(time));
+    beat.setNumConvolutions(p_->paramNumConvs->value(time));
+    beat.setConvolutionAdaptSpeed(p_->paramConvAdaptSpeed->value(time));
 
     // perform
     beat.push(inputs[0]->readPointer(), inputs[0]->blockSize());
@@ -315,6 +332,25 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
                 for (size_t i=0; i<beat.numBins(); ++i)
                     for (size_t j=0; j<beat.numHistory(); ++j)
                         *p_->matrixConv.data(i, j) = beat.convolution(i)[j];
+            }
+            break;
+        }
+
+        switch (1)
+        {
+            case 0:
+                if (!p_->matrixResponse.isEmpty())
+                    p_->matrixResponse.clear();
+            break;
+
+            case 1:
+            {
+                std::vector<size_t> dim = { beat.numBins(), beat.numFreqResponses() };
+                if (!p_->matrixResponse.hasDimensions(dim))
+                    p_->matrixResponse.setDimensions(dim);
+                for (size_t i=0; i<beat.numBins(); ++i)
+                    for (size_t j=0; j<beat.numFreqResponses(); ++j)
+                        *p_->matrixResponse.data(i, j) = beat.freqResponse(i)[j];
             }
             break;
         }

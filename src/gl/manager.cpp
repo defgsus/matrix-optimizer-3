@@ -103,6 +103,8 @@ protected:
     bool mouseDownEvent(MouseKeyCode k) override
     {
         MouseState::globalInstance().keyDown(mouseKeyToQt(k));
+        MouseState::globalInstance().setDragPos(
+                    QPoint(mouseX(), mouseY()), QSize(width(), height()));
         manager->render();
         return true;
     }

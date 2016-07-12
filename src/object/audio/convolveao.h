@@ -25,6 +25,7 @@ public:
     virtual void onParameterChanged(Parameter *) Q_DECL_OVERRIDE;
     virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
     virtual void setSampleRate(uint samplerate) Q_DECL_OVERRIDE;
+    virtual void getNeededFiles(IO::FileList &files) Q_DECL_OVERRIDE;
 protected:
 
     virtual void processAudio(const RenderTime& time) Q_DECL_OVERRIDE;
