@@ -80,6 +80,11 @@ void SoundFile::release()
     AUDIO::SoundFileManager::releaseSoundFile(this);
 }
 
+void SoundFile::addRef()
+{
+    AUDIO::SoundFileManager::addReference(this);
+}
+
 // --------------- getter ------------------------
 
 const QString& SoundFile::errorString() const

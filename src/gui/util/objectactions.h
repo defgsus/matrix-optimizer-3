@@ -18,6 +18,7 @@
 #include "object/object_fwd.h"
 #include "tool/actionlist.h"
 #include "gl/opengl_fwd.h"
+#include "audio/audio_fwd.h"
 
 namespace MO {
 namespace GUI {
@@ -62,6 +63,8 @@ public:
     static void saveTexture(const GL::Texture* tex);
 
     static Object* loadObjectTemplate(const QString& fn, bool showErrorDiag = true);
+
+    static void openSoundfileDisplay(AUDIO::SoundFile*);
 };
 
 

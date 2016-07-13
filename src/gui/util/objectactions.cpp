@@ -14,6 +14,7 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QFileInfo>
+#include <QVBoxLayout>
 
 #include "objectactions.h"
 #include "object/object.h"
@@ -34,6 +35,7 @@
 #include "gui/texteditdialog.h"
 #include "gui/geometrydialog.h"
 #include "gui/evolutiondialog.h"
+#include "gui/widget/soundfilewidget.h"
 #include "io/files.h"
 #include "io/currenttime.h"
 #include "io/application.h"
@@ -291,16 +293,26 @@ void ObjectActions::createEditActions(
         });
     }
 
-    // wrap float sequence in float track
     if (SequenceFloat * seq = dynamic_cast<SequenceFloat*>(obj))
     if (!obj->findParentObject(Object::T_TRACK_FLOAT))
     {
+        // wrap float sequence in float track
         a = actions.addAction(tr("Wrap into track"), parent);
         a->setStatusTip(tr("Creates a track and puts the sequence inside"));
         QObject::connect(a, &QAction::triggered, [=]()
         {
             editor->wrapIntoTrack(seq);
         });
+
+        if (seq->sequenceType() == SequenceFloat::ST_SOUNDFILE)
+        if (auto sf = seq->soundFile())
+        {
+            a = actions.addAction(tr("Display soundfile"), parent);
+            QObject::connect(a, &QAction::triggered, [=]()
+            {
+                openSoundfileDisplay(sf);
+            });
+        }
     }
 
     // EvolutionDialog
@@ -516,6 +528,23 @@ Object* ObjectActions::loadObjectTemplate(const QString &fn, bool showErrorDiag)
     }
     return nullptr;
 }
+
+void ObjectActions::openSoundfileDisplay(AUDIO::SoundFile* sf)
+{
+    auto diag = new QDialog(application()->mainWindow());
+    diag->setWindowTitle("Soundfile");
+    diag->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    auto lv = new QVBoxLayout(diag);
+
+        auto w = new SoundFileWidget(diag);
+        lv->addWidget(w);
+
+        w->setSoundFile(sf);
+
+    diag->show();
+}
+
 
 } // namespace GUI
 } // namespace MO

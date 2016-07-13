@@ -100,6 +100,8 @@ public:
     SequenceType sequenceType() const
         { return (SequenceType)p_mode_->baseValue(); }
 
+    AUDIO::SoundFile* soundFile() const { return soundFile_; }
+
     AUDIO::Waveform::Type oscillatorMode() const
     { return (AUDIO::Waveform::Type)p_oscMode_->baseValue(); }
 

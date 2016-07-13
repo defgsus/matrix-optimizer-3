@@ -163,5 +163,30 @@ void SoundFileManager::releaseSoundFile(SoundFile * sf)
     }
 }
 
+void SoundFileManager::addReference(SoundFile * sf)
+{
+    MO_DEBUG_SND("SoundFileManager::addReference(" << sf << ")");
+
+    QString key = sf->filename() + (sf->isStream() ? "_stream" : "_mem");
+
+    auto sfm = p_getInstance_();
+
+    QWriteLocker lock(&sfm->p_->lock);
+
+    auto i = sfm->p_->soundFiles_.find(key);
+
+    // check for existence
+    // (unlikely this would fail)
+    if (i == sfm->p_->soundFiles_.end())
+    {
+        MO_WARNING("SoundFileManager::addReference() called for unknown SoundFile\n"
+                   "'" << sf->filename() << "'");
+        return;
+    }
+
+    // count up
+    ++i.value().count;
+}
+
 } // namespace AUDIO
 } // namespace MO

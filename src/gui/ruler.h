@@ -43,7 +43,7 @@ public:
 
         O_EnableAllX = Ruler::O_DrawX | Ruler::O_DrawTextX | Ruler::O_DragX | Ruler::O_ZoomX,
         O_EnableAllY = Ruler::O_DrawY | Ruler::O_DrawTextY | Ruler::O_DragY | Ruler::O_ZoomY,
-        O_EnableAll = O_DrawAll | O_DrawAll
+        O_EnableAll = O_DrawAll | O_ChangeViewAll
     };
 
     // ------------- ctor ------------------

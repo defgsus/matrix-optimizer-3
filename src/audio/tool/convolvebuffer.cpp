@@ -91,9 +91,9 @@ void ConvolveBuffer::setKernel(const F32 *data, size_t num)
     p_->kernel.resize(num);
     //memcpy(&p_->kernel[0], data, num * sizeof(F32));
     // XXX test spike
+    for (size_t i=0; i<num; ++i) p_->kernel[i] = i == 10 ? 1.f : 0.f;
     //for (size_t i=0; i<num; ++i) p_->kernel[i] = i == num-1 ? 1.f : 0.f;
-    //for (size_t i=0; i<num; ++i) p_->kernel[i] = i == num-1 ? 1.f : 0.f;
-    for (size_t i=0; i<num; ++i) p_->kernel[i] = F32(rand()) / RAND_MAX * (1.f-F32(i)/num);
+    //for (size_t i=0; i<num; ++i) p_->kernel[i] = F32(rand()) / RAND_MAX * (1.f-F32(i)/num);
 
     p_->kernelChanged = true;
 }
@@ -243,7 +243,7 @@ void ConvolveBuffer::Private::process(const AudioBuffer *in, AudioBuffer *out)
         // wraps around at numWindows
         out_buf.nextBlock();
         // add remaining windowKernelSize samples to output
-        out_buf.writeAddBlock(&scratch[out_buf.blockSize()], windowKernelSize);
+        out_buf.writeAddBlock(&scratch[out_buf.blockSize()], windowKernelSize-1);
     }
 #endif
 

@@ -19,6 +19,7 @@ namespace AUDIO {
 class SoundFile;
 class Configuration;
 
+/** Singleton class to manager SoundFile instances */
 class SoundFileManager
 {
     SoundFileManager();
@@ -39,6 +40,9 @@ public:
     /** Tell the manager, you don't need the SoundFile anymore.
         Once all clients have released it, it will be deleted. */
     static void releaseSoundFile(SoundFile*);
+
+    /** Tell the manager that you want a reference on the SoundFile. */
+    static void addReference(SoundFile*);
 
 private:
 

@@ -136,7 +136,9 @@ HEADERS += \
     $$PWD/inserttimedialog.h \
     $$PWD/widget/textfindwidget.h \
     $$PWD/widget/objecttreeview.h \
-    $$PWD/util/objectactions.h
+    $$PWD/util/objectactions.h \
+    $$PWD/widget/soundfiledisplay.h \
+    $$PWD/widget/soundfilewidget.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -272,4 +274,6 @@ SOURCES += \
     $$PWD/inserttimedialog.cpp \
     $$PWD/widget/textfindwidget.cpp \
     $$PWD/widget/objecttreeview.cpp \
-    $$PWD/util/objectactions.cpp
+    $$PWD/util/objectactions.cpp \
+    $$PWD/widget/soundfiledisplay.cpp \
+    $$PWD/widget/soundfilewidget.cpp

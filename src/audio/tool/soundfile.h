@@ -14,8 +14,8 @@
 #include <QString>
 #include <QList>
 
-#include <types/float.h>
-#include <types/int.h>
+#include "types/float.h"
+#include "types/int.h"
 
 namespace MO {
 namespace AUDIO {
@@ -86,6 +86,9 @@ public:
 
     /** Calls AUDIO::SoundFileManager::releaseSoundFile(this) */
     void release();
+
+    /** Calls AUDIO::SoundFileManager::addReference(this) */
+    void addRef();
 
     // ------------- io ---------------
 
