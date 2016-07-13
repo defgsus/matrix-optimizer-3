@@ -19,6 +19,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // ==================================================================================
 
+/* A few additions made for inplace-processing of data buffers - sb/2016 */
+
 #ifndef MOSRC_MATH_FFT2_H
 #define MOSRC_MATH_FFT2_H
 
@@ -34,9 +36,11 @@ namespace MATH {
 * This implementation is by
     https://github.com/HiFi-LoFi/KlangFalter/blob/master/Source/FFTConvolver/AudioFFT.h
 */
+template <typename F>
 class OouraFFT
 {
 public:
+
   OouraFFT();
 
   /**
@@ -45,21 +49,75 @@ public:
    */
   void init(size_t size);
 
+  /** The initialized size of the FFT object */
+  size_t size() const { return size_; }
+
   /**
    * @brief Performs the forward FFT
    * @param data The real input data (has to be of the length as specified in init())
-   * @param re The real part of the complex output (has to be of length as returned by ComplexSize())
-   * @param im The imaginary part of the complex output (has to be of length as returned by ComplexSize())
+   * @param re The real part of the complex output
+   *        (has to be of length as returned by ComplexSize())
+   * @param im The imaginary part of the complex output
+   *        (has to be of length as returned by ComplexSize())
    */
   void fft(const float* data, float* re, float* im);
 
   /**
    * @brief Performs the inverse FFT
    * @param data The real output data (has to be of the length as specified in init())
-   * @param re The real part of the complex input (has to be of length as returned by ComplexSize())
-   * @param im The imaginary part of the complex input (has to be of length as returned by ComplexSize())
+   * @param re The real part of the complex input
+   *        (has to be of length as returned by ComplexSize())
+   * @param im The imaginary part of the complex input
+   *        (has to be of length as returned by ComplexSize())
    */
   void ifft(float* data, const float* re, const float* im);
+
+  /**
+   * @brief Performs the forward FFT on real numbers
+   * @param data a pointer to size() real numbers
+   * The calculation is done in-place, the result in @p data is
+   * an interleaved real/imag format.
+   */
+  void fft(F* data);
+
+  /**
+   * @brief Performs the inverse FFT
+   * @param data a pointer to size() real/image pairs
+   * The calculation is done in-place, the result in @p data is
+   * size() real numbers.
+   */
+  void ifft(F* data);
+
+  /**
+   * @brief Performs complex multiplication of a and b into dst
+   * @param dst The destination in interleaved real/imag format
+   * @param a The first multiplicant in interleaved real/imag format
+   * @param b The second multiplicant in interleaved real/imag format
+   * @note @p dst MUST NOT overlap with @p a or @p b
+   */
+  void complexMultiply(F* dst, const F* a, const F* b) const;
+
+  /**
+   * @brief Returns the real part from interleaved real/imag data
+   * @param num The index from 0 to size() / 2 + 1
+   */
+  F getReal(const F* data, size_t num) const;
+  /**
+   * @brief Returns the imaginary part from interleaved real/imag data
+   * @param num The index from 0 to size() / 2 + 1
+   */
+  F getImag(const F* data, size_t num) const;
+
+  /**
+   * @brief Sets the real part in interleaved real/imag data
+   * @param num The index from 0 to size() / 2 + 1
+   */
+  void setReal(F* data, size_t num, F r) const;
+  /**
+   * @brief Sets the imaginary part in interleaved real/imag data
+   * @param num The index from 0 to size() / 2 + 1
+   */
+  void setImag(F* data, size_t num, F i) const;
 
   /**
    * @brief Calculates the necessary size of the real/imaginary complex arrays
@@ -72,22 +130,23 @@ public:
   }
 
 private:
-  size_t _size;
-  std::vector<int> _ip;
-  std::vector<double> _w;
-  std::vector<double> _buffer;
+
+  size_t size_;
+  std::vector<int> ip_;
+  std::vector<F> w_;
+  std::vector<F> buffer_;
 
   // The original FFT routines by Takuya Ooura (see http://momonga.t.u-tokyo.ac.jp/~ooura/fft.html)
-  void rdft(int n, int isgn, double *a, int *ip, double *w);
-  void makewt(int nw, int *ip, double *w);
-  void makect(int nc, int *ip, double *c);
-  void bitrv2(int n, int *ip, double *a);
-  void cftfsub(int n, double *a, double *w);
-  void cftbsub(int n, double *a, double *w);
-  void rftfsub(int n, double *a, int nc, double *c);
-  void rftbsub(int n, double *a, int nc, double *c);
-  void cft1st(int n, double *a, double *w);
-  void cftmdl(int n, int l, double *a, double *w);
+  void rdft(int n, int isgn, F *a, int *ip, F *w);
+  void makewt(int nw, int *ip, F *w);
+  void makect(int nc, int *ip, F *c);
+  void bitrv2(int n, int *ip, F *a);
+  void cftfsub(int n, F *a, F *w);
+  void cftbsub(int n, F *a, F *w);
+  void rftfsub(int n, F *a, int nc, F *c);
+  void rftbsub(int n, F *a, int nc, F *c);
+  void cft1st(int n, F *a, F *w);
+  void cftmdl(int n, int l, F *a, F *w);
 
   // Prevent uncontrolled usage
   OouraFFT(const OouraFFT&);

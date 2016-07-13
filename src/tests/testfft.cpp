@@ -155,9 +155,55 @@ int testConv2()
     return 0;
 }
 
+int testFft2()
+{
+    MO_PRINT("\ntestFft2");
+
+    std::vector<float>
+            inp,
+            rinp, cinp,
+            rinp2, cinp2;
+
+    inp.resize(16);
+    for (size_t i=0; i<inp.size(); ++i)
+        inp[i] = float(i+1);
+
+    std::cout << "input:    "; print(inp);
+
+    rinp.resize(MO::MATH::OouraFFT::ComplexSize(inp.size()));
+    cinp.resize(rinp.size());
+
+    MO::MATH::OouraFFT fft;
+    fft.init(inp.size());
+
+    MO_PRINT("split:");
+
+    fft.fft(inp.data(), rinp.data(), cinp.data());
+
+    std::cout << "r input:  "; print(rinp);
+    std::cout << "i input:  "; print(cinp);
+
+    MO_PRINT("unsplit:");
+
+    fft.fft(inp.data());
+
+    for (size_t i=0; i<rinp.size(); ++i)
+    {
+        rinp2.push_back(fft.getReal(inp.data(), i));
+        cinp2.push_back(fft.getImag(inp.data(), i));
+    }
+
+    std::cout << "ft:       "; print(inp);
+    std::cout << "r ft:     "; print(rinp2);
+    std::cout << "i ft:     "; print(cinp2);
+
+    return 0;
+}
 
 int testConv3()
 {
+    MO_PRINT("\ntestConv3");
+
     std::vector<float>
             inp, kernel, conv,
             rinp, cinp, rkernel, ckernel, rconv, cconv;
@@ -222,11 +268,59 @@ int testConv3()
 }
 
 
+int testConv4()
+{
+    MO_PRINT("\ntestConv4");
+
+    std::vector<float>
+            inp, kernel, conv;
+
+    inp.resize(16);
+    for (size_t i=0; i<inp.size(); ++i)
+        inp[i] = i < 8 ? float(i+1) : 0.f;
+
+    kernel.resize(inp.size());
+    for (size_t i=0; i<kernel.size(); ++i)
+        kernel[i] = std::max(0, 4-int(i));
+
+    conv.resize(inp.size());
+
+    std::cout << "input:   "; print(inp);
+    std::cout << "kernel:  "; print(kernel);
+
+    MO::MATH::Convolution<float> c;
+    c.setKernel(kernel.data(), 8);
+
+    c.convolve(conv.data(), inp.data(), 8);
+    std::cout << "conv:    "; print(conv);
+
+    MO_PRINT("FFT");
+
+    MO::MATH::OouraFFT fft;
+    fft.init(inp.size());
+
+    fft.fft(inp.data());
+    fft.fft(kernel.data());
+
+    std::cout << "input:   "; print(inp);
+    std::cout << "kernel:  "; print(kernel);
+
+    MO_PRINT("convolve");
+
+    fft.complexMultiply(conv.data(), inp.data(), kernel.data());
+    fft.ifft(conv.data());
+
+    std::cout << "conv:    "; print(conv);
+
+    return 0;
+}
 
 int TestFft::run()
 {
-
-    return testConv3();
+    //testFft2();
+    //testConv3();
+    testConv4();
+    return 0;
 }
 
 

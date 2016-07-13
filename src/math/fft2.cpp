@@ -41,7 +41,8 @@ namespace internal
 
 
   template<typename TypeDest, typename TypeSrc, typename TypeFactor>
-  void ScaleBuffer(TypeDest* dest, const TypeSrc* src, const TypeFactor factor, size_t len)
+  void ScaleBuffer(TypeDest* dest, const TypeSrc* src, const TypeFactor factor,
+                   size_t len)
   {
     for (size_t i=0; i<len; ++i)
     {
@@ -51,11 +52,13 @@ namespace internal
 
 } // End of namespace internal
 
+
+
 OouraFFT::OouraFFT() :
-  _size(0),
-  _ip(),
-  _w(),
-  _buffer()
+  size_(0),
+  ip_(),
+  w_(),
+  buffer_()
 {
 }
 
@@ -64,16 +67,16 @@ void OouraFFT::init(size_t size)
 {
   size = nextPowerOfTwo(size);
 
-  if (_size != size)
+  if (size_ != size)
   {
-    _ip.resize(2 + static_cast<int>(std::sqrt(static_cast<double>(size))));
-    _w.resize(size / 2);
-    _buffer.resize(size);
-    _size = size;
+    ip_.resize(2 + static_cast<int>(std::sqrt(static_cast<F>(size))));
+    w_.resize(size / 2);
+    buffer_.resize(size);
+    size_ = size;
 
-    const int size4 = static_cast<int>(_size) / 4;
-    makewt(size4, _ip.data(), _w.data());
-    makect(size4, _ip.data(), _w.data() + size4);
+    const int size4 = static_cast<int>(size_) / 4;
+    makewt(size4, ip_.data(), w_.data());
+    makect(size4, ip_.data(), w_.data() + size4);
   }
 }
 
@@ -81,14 +84,14 @@ void OouraFFT::init(size_t size)
 void OouraFFT::fft(const float* data, float* re, float* im)
 {
   // Convert into the format as required by the Ooura FFT
-  internal::ConvertBuffer(&_buffer[0], data, _size);
+  internal::ConvertBuffer(&buffer_[0], data, size_);
 
-  rdft(static_cast<int>(_size), +1, _buffer.data(), _ip.data(), _w.data());
+  rdft(static_cast<int>(size_), +1, buffer_.data(), ip_.data(), w_.data());
 
   // Convert back to split-complex
   {
-    double* b = &_buffer[0];
-    double* bEnd = b + _size;
+    F* b = &buffer_[0];
+    F* bEnd = b + size_;
     float *r = re;
     float *i = im;
     while (b != bEnd)
@@ -97,7 +100,7 @@ void OouraFFT::fft(const float* data, float* re, float* im)
       *(i++) = static_cast<float>(-(*(b++)));
     }
   }
-  const size_t size2 = _size / 2;
+  const size_t size2 = size_ / 2;
   re[size2] = -im[0];
   im[0] = 0.0;
   im[size2] = 0.0;
@@ -108,26 +111,87 @@ void OouraFFT::ifft(float* data, const float* re, const float* im)
 {
   // Convert into the format as required by the Ooura FFT
   {
-    double* b = &_buffer[0];
-    double* bEnd = b + _size;
+    F* b = &buffer_[0];
+    F* bEnd = b + size_;
     const float *r = re;
     const float *i = im;
     while (b != bEnd)
     {
-      *(b++) = static_cast<double>(*(r++));
-      *(b++) = -static_cast<double>(*(i++));
+      *(b++) = static_cast<F>(*(r++));
+      *(b++) = -static_cast<F>(*(i++));
     }
-    _buffer[1] = re[_size / 2];
+    buffer_[1] = re[size_ / 2];
   }
 
-  rdft(static_cast<int>(_size), -1, _buffer.data(), _ip.data(), _w.data());
+  rdft(static_cast<int>(size_), -1, buffer_.data(), ip_.data(), w_.data());
 
   // Convert back to split-complex
-  internal::ScaleBuffer(data, &_buffer[0], 2.0 / static_cast<double>(_size), _size);
+  internal::ScaleBuffer(data, &buffer_[0], F(2) / static_cast<F>(size_), size_);
+}
+
+void OouraFFT::fft(float* data)
+{
+  rdft(static_cast<int>(size_), +1, data, ip_.data(), w_.data());
+}
+
+void OouraFFT::ifft(float* data)
+{
+  rdft(static_cast<int>(size_), -1, data, ip_.data(), w_.data());
+  const F factor = F(2) / static_cast<F>(size_);
+  for (size_t i=0; i<size_; ++i)
+      *data++ *= factor;
+}
+
+OouraFFT::F OouraFFT::getReal(const F* data, size_t num) const
+{
+    if (num < size_/2)
+        return data[num * 2];
+    else
+        return data[1];
+}
+
+OouraFFT::F OouraFFT::getImag(const F* data, size_t num) const
+{
+    if (num > 0 && num < size_/2)
+        return -data[num * 2 + 1];
+    else
+        return 0.;
+}
+
+void OouraFFT::setReal(F* data, size_t num, F r) const
+{
+    if (num < size_/2)
+        data[num * 2] = r;
+    else
+        data[1] = r;
+}
+
+void OouraFFT::setImag(F* data, size_t num, F i) const
+{
+    if (num < size_/2)
+        data[num * 2 + 1] = -i;
+}
+
+void OouraFFT::complexMultiply(F * dst, const F* A, const F* B) const
+{
+    size_t num2 = size_ / 2 + 1;
+    for (size_t i=0; i<num2; ++i)
+    {
+        F a_r = getReal(A, i),
+          a_i = getImag(A, i),
+          b_r = getReal(B, i),
+          b_i = getImag(B, i),
+
+          re = a_r * b_r - a_i * b_i,
+          im = a_r * b_i + a_i * b_r;
+
+        setReal(dst, i, re);
+        setImag(dst, i, im);
+    }
 }
 
 
-void OouraFFT::rdft(int n, int isgn, double *a, int *ip, double *w)
+void OouraFFT::rdft(int n, int isgn, F *a, int *ip, F *w)
 {
   int nw = ip[0];
   int nc = ip[1];
@@ -144,7 +208,7 @@ void OouraFFT::rdft(int n, int isgn, double *a, int *ip, double *w)
     {
       cftfsub(n, a, w);
     }
-    double xi = a[0] - a[1];
+    F xi = a[0] - a[1];
     a[0] += a[1];
     a[1] = xi;
   }
@@ -168,10 +232,10 @@ void OouraFFT::rdft(int n, int isgn, double *a, int *ip, double *w)
 
 /* -------- initializing routines -------- */
 
-void OouraFFT::makewt(int nw, int *ip, double *w)
+void OouraFFT::makewt(int nw, int *ip, F *w)
 {
   int j, nwh;
-  double delta, x, y;
+  F delta, x, y;
 
   ip[0] = nw;
   ip[1] = 1;
@@ -197,20 +261,20 @@ void OouraFFT::makewt(int nw, int *ip, double *w)
 }
 
 
-void OouraFFT::makect(int nc, int *ip, double *c)
+void OouraFFT::makect(int nc, int *ip, F *c)
 {
   int j, nch;
-  double delta;
+  F delta;
 
   ip[1] = nc;
   if (nc > 1) {
     nch = nc >> 1;
-    delta = atan(1.0) / nch;
-    c[0] = cos(delta * nch);
+    delta = std::atan(1.0) / nch;
+    c[0] = std::cos(delta * nch);
     c[nch] = 0.5 * c[0];
     for (j = 1; j < nch; j++) {
-      c[j] = 0.5 * cos(delta * j);
-      c[nc - j] = 0.5 * sin(delta * j);
+      c[j] = 0.5 * std::cos(delta * j);
+      c[nc - j] = 0.5 * std::sin(delta * j);
     }
   }
 }
@@ -219,10 +283,10 @@ void OouraFFT::makect(int nc, int *ip, double *c)
 /* -------- child routines -------- */
 
 
-void OouraFFT::bitrv2(int n, int *ip, double *a)
+void OouraFFT::bitrv2(int n, int *ip, F *a)
 {
   int j, j1, k, k1, l, m, m2;
-  double xr, xi, yr, yi;
+  F xr, xi, yr, yi;
 
   ip[0] = 0;
   l = n;
@@ -319,10 +383,10 @@ void OouraFFT::bitrv2(int n, int *ip, double *a)
 }
 
 
-void OouraFFT::cftfsub(int n, double *a, double *w)
+void OouraFFT::cftfsub(int n, F *a, F *w)
 {
   int j, j1, j2, j3, l;
-  double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+  F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
   l = 2;
   if (n > 8) {
@@ -369,10 +433,10 @@ void OouraFFT::cftfsub(int n, double *a, double *w)
 }
 
 
-void OouraFFT::cftbsub(int n, double *a, double *w)
+void OouraFFT::cftbsub(int n, F *a, F *w)
 {
   int j, j1, j2, j3, l;
-  double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+  F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
   l = 2;
   if (n > 8) {
@@ -419,11 +483,11 @@ void OouraFFT::cftbsub(int n, double *a, double *w)
 }
 
 
-void OouraFFT::cft1st(int n, double *a, double *w)
+void OouraFFT::cft1st(int n, F *a, F *w)
 {
   int j, k1, k2;
-  double wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
-  double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+  F wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
+  F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
   x0r = a[0] + a[2];
   x0i = a[1] + a[3];
@@ -524,11 +588,11 @@ void OouraFFT::cft1st(int n, double *a, double *w)
 }
 
 
-void OouraFFT::cftmdl(int n, int l, double *a, double *w)
+void OouraFFT::cftmdl(int n, int l, F *a, F *w)
 {
   int j, j1, j2, j3, k, k1, k2, m, m2;
-  double wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
-  double x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
+  F wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
+  F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
 
   m = l << 2;
   for (j = 0; j < l; j += 2) {
@@ -651,10 +715,10 @@ void OouraFFT::cftmdl(int n, int l, double *a, double *w)
 }
 
 
-void OouraFFT::rftfsub(int n, double *a, int nc, double *c)
+void OouraFFT::rftfsub(int n, F *a, int nc, F *c)
 {
   int j, k, kk, ks, m;
-  double wkr, wki, xr, xi, yr, yi;
+  F wkr, wki, xr, xi, yr, yi;
 
   m = n >> 1;
   ks = 2 * nc / m;
@@ -676,10 +740,10 @@ void OouraFFT::rftfsub(int n, double *a, int nc, double *c)
 }
 
 
-void OouraFFT::rftbsub(int n, double *a, int nc, double *c)
+void OouraFFT::rftbsub(int n, F *a, int nc, F *c)
 {
   int j, k, kk, ks, m;
-  double wkr, wki, xr, xi, yr, yi;
+  F wkr, wki, xr, xi, yr, yi;
 
   a[1] = -a[1];
   m = n >> 1;
