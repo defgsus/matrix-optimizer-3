@@ -62,7 +62,8 @@ int renderToDisk()
 //#include "tests/testcsg.h"
 //#include "tests/testpython.h"
 //#include "tests/testglwindow.h"
-#include "tests/testfloatmatrix.h"
+//#include "tests/testfloatmatrix.h"
+#include "tests/testfft.h"
 //#include "math/arithmeticarray.h"
 
 //#include "types/vector.h"
@@ -70,6 +71,7 @@ int renderToDisk()
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
 //#include "io/log.h"
+
 
 int main(int argc, char *argv[])
 {
@@ -85,6 +87,7 @@ int main(int argc, char *argv[])
     //MO::TestDirectedGraph t; return t.run();
     //TestGlWindow t; return t.run();
     //MO::TestFloatMatrix t; return t.run();
+    MO::TestFft t; return t.run();
 
 #if (0)
     using namespace MO;

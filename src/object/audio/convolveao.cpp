@@ -330,9 +330,17 @@ void ConvolveAO::processAudio(const RenderTime& time)
     {
         if (!doPp)
         {
+#if 1
             // convolve
-            p_->convolver.process(in, &p_->outbuf);
+            p_->convolver.process(in, out);//p_->outbuf);
+#else
+            p_->convolver.push(in);//, &p_->outbuf);
+            p_->convolver.pop(out);
+#endif
+            for (size_t i=0; i<out->blockSize(); ++i)
+                out->writePointer()[i] *= amp;
         }
+#if 0
         else
         {
             // get input
@@ -353,12 +361,12 @@ void ConvolveAO::processAudio(const RenderTime& time)
             p_->delay.writeBlock(p_->outbuf.readPointer(), time.bufferSize());
 
         }
-
         // mix into output channel
         for (size_t i=0; i<time.bufferSize(); ++i)
             out->write(i, in->readPointer()[i] + wet * (
                         amp * p_->outbuf.writePointer()[i] - in->readPointer()[i])
                        );
+#endif
     });
 
 }

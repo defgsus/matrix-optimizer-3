@@ -42,10 +42,18 @@ void get_amplitude_phase(Float * data, uint num);
 void get_amplitude_phase(Double * data, uint num);
 
 /** Multiplies complex numbers in @p A and @p B.
-    Input for both @p A and @p B is num/2 real and num/2 imag values (r0,r1,r2,...,i2,i1,i0)
+    Input for both @p A and @p B is num/2 real and num/2 imag values
+    (r0,r1,r2,...,i2,i1,i0)
     Multiplication is stored in @p dst, which can be equal to @p A and/or @p B */
 template <typename F>
 void complex_multiply(F * dst, const F * A, const F * B, uint num);
+
+/** Divides complex numbers @p A by @p B.
+    Input for both @p A and @p B is num/2 real and num/2 imag values
+    (r0,r1,r2,...,i2,i1,i0)
+    Quotients are stored in @p dst, which can be equal to @p A and/or @p B */
+template <typename F>
+void complex_divide(F * dst, const F * A, const F * B, uint num);
 
 
 /** Wrapper for standalone functions with associated buffer */
@@ -121,13 +129,35 @@ void complex_multiply(F * dst, const F* A, const F* B, uint num)
     for (size_t i=0; i<num2; ++i)
     {
         size_t j = num - 1 - i;
-        F a = A[i],
-          b = A[j],
-          c = B[i],
-          d = B[j],
+        F a_r = A[i],
+          a_i = A[j],
+          b_r = B[i],
+          b_i = B[j],
 
-          re = a*c - b*d,
-          im = a*d + b*c;
+          re = a_r * b_r - a_i * b_i,
+          im = a_r * b_i + a_i * b_r;
+
+        dst[i] = re;
+        dst[j] = im;
+    }
+}
+
+template <typename F>
+void complex_divide(F * dst, const F* A, const F* B, uint num)
+{
+    size_t num2 = num / 2;
+    for (size_t i=0; i<num2; ++i)
+    {
+        size_t j = num - 1 - i;
+        F b_r = B[i],
+          b_i = B[j],
+          a_r = A[i],
+          a_i = A[j],
+
+          n = b_r * b_r + b_i * b_i,
+
+          re = (a_r * b_r + a_i * b_i) / n,
+          im = (a_i * b_r + a_r * b_i) / n;
 
         dst[i] = re;
         dst[j] = im;

@@ -33,10 +33,13 @@ public:
         Blocksize must match! */
     void process(const AudioBuffer * in, AudioBuffer * out);
 
+    //void push(const AudioBuffer* in);
+    //bool pop(AudioBuffer* out);
+
     /** Call this to prepare the complex kernel, once the blockSize
         of the AudioBuffer in process() is known.
         When not called, this will be executed in process() automatically. */
-    void prepareComplexKernel(size_t blockSize);
+    void setBlockSize(size_t blockSize);
 
 private:
     struct Private;

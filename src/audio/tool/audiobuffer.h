@@ -83,7 +83,14 @@ class AudioBuffer
     /** Adds one block of data to the buffer.
         @p block must point to at least blockSize() floats. */
     void writeAddBlock(const F32 * block)
-        { auto p = writePointer(); for (size_t i=0; i < p_blockSize_; ++i) p[i] += block[i]; }
+        { auto p = writePointer();
+          for (size_t i=0; i < p_blockSize_; ++i) p[i] += block[i]; }
+
+    /** Adds at most one block of data to the buffer.
+        @p block must point to at least blockSize() floats. */
+    void writeAddBlock(const F32 * block, size_t num)
+        { auto p = writePointer(); num = std::min(num, p_blockSize_);
+          for (size_t i=0; i < num; ++i) p[i] += block[i]; }
 
     /** Copies the current read-block into @p block */
     void readBlock(F32 * block) const { memcpy(block, readPointer(), p_blockSize_ * sizeof(F32)); }

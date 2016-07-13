@@ -154,7 +154,7 @@ template <typename F>
 void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 {
     // size of fft
-    const size_t cnum = nextPowerOfTwo( num + kernelSize() ) * 2;
+    const size_t cnum = nextPowerOfTwo( num + kernelSize() );
     //MO_PRINT("num " << num << " kernel " << kernelSize() << ":"
     //         << (num + kernelSize()) << " / " << cnum);
 

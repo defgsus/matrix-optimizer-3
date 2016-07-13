@@ -10,7 +10,8 @@ HEADERS += \
     $$PWD/testcsg.h \
     $$PWD/testpython.h \
     $$PWD/testglwindow.h \
-    $$PWD/testfloatmatrix.h
+    $$PWD/testfloatmatrix.h \
+    $$PWD/testfft.h
 
 SOURCES += \
     src/tests/testtesselator.cpp \
@@ -24,4 +25,5 @@ SOURCES += \
     $$PWD/testcsg.cpp \
     $$PWD/testpython.cpp \
     $$PWD/testglwindow.cpp \
-    $$PWD/testfloatmatrix.cpp
+    $$PWD/testfloatmatrix.cpp \
+    $$PWD/testfft.cpp
