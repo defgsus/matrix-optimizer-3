@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     //MO::TestDirectedGraph t; return t.run();
     //TestGlWindow t; return t.run();
     //MO::TestFloatMatrix t; return t.run();
-    MO::TestFft t; return t.run();
+    //MO::TestFft t; return t.run();
 
 #if (0)
     using namespace MO;

@@ -17,6 +17,7 @@
 #include "math/convolution.h"
 #include "types/int.h"
 #include "io/error.h"
+#include "io/log.h"
 
 #define OLD_METHOD
 

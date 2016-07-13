@@ -14,9 +14,8 @@
 #include <vector>
 #include <algorithm>
 
-#include "fft.h"
+#include "fft2.h"
 #include "types/int.h" // for nextPowerOfTwo()
-#include "io/log.h" // XXX debug
 
 namespace MO {
 namespace MATH {
@@ -77,7 +76,9 @@ private:
 
     std::vector<F>
         p_kernel_,
-        p_ikernel_, p_isrc_;
+        p_ikernel_, p_isrc_, p_iconv_;
+    OouraFFT<F>
+        p_fft_;
 };
 
 
@@ -155,40 +156,39 @@ void Convolution<F>::convolveComplex(F * dst, const F * src, size_t num)
 {
     // size of fft
     const size_t cnum = nextPowerOfTwo( num + kernelSize() );
-    //MO_PRINT("num " << num << " kernel " << kernelSize() << ":"
-    //         << (num + kernelSize()) << " / " << cnum);
 
-    // buffer for fft
+    // buffer for fft and multiply
     p_isrc_.resize(cnum),
     p_ikernel_.resize(cnum);
+    p_iconv_.resize(cnum);
 
-    // copy src
+    if (p_fft_.size() != cnum)
+        p_fft_.init(cnum);
+
+    // copy src and zero-pad
     size_t i;
     for (i = 0; i<num; ++i)
         p_isrc_[i] = src[i];
     for (; i < cnum; ++i)
         p_isrc_[i] = F(0);
 
-    // copy kernel
+    // copy kernel and zero-pad
     for (i=0; i<kernelSize(); ++i)
         p_ikernel_[i] = kernel(i);
     for (; i < cnum; ++i)
         p_ikernel_[i] = F(0);
 
-    real_fft(&p_isrc_[0], cnum);
-    real_fft(&p_ikernel_[0], cnum);
-    //for (int i=cnum/2; i<cnum; ++i)
-    //    p_ikernel_[i] = -p_ikernel_[i];
+    p_fft_.fft(p_isrc_.data());
+    p_fft_.fft(p_ikernel_.data());
 
     // multiply with kernel (complex multiplication)
-    complex_multiply(&p_isrc_[0], &p_isrc_[0], &p_ikernel_[0], cnum);
+    p_fft_.complexMultiply(p_iconv_.data(), p_isrc_.data(), p_ikernel_.data());
 
-    ifft(&p_isrc_[0], cnum);
+    p_fft_.ifft(p_iconv_.data());
 
     // copy to dst
     for (size_t i=0; i<num + kernelSize(); ++i)
-        *dst++ = p_isrc_[i];
-
+        *dst++ = p_iconv_[i];
 }
 
 

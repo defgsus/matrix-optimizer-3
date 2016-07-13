@@ -19,7 +19,8 @@
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // ==================================================================================
 
-/* A few additions made for inplace-processing of data buffers - sb/2016 */
+/* Templated and a few additions made for
+   inplace-processing of data buffers - sb/2016 */
 
 #ifndef MOSRC_MATH_FFT2_H
 #define MOSRC_MATH_FFT2_H
@@ -133,10 +134,10 @@ private:
 
   size_t size_;
   std::vector<int> ip_;
-  std::vector<F> w_;
-  std::vector<F> buffer_;
+  std::vector<F> w_, buffer_;
 
-  // The original FFT routines by Takuya Ooura (see http://momonga.t.u-tokyo.ac.jp/~ooura/fft.html)
+  // The original FFT routines by Takuya Ooura
+  // (see http://momonga.t.u-tokyo.ac.jp/~ooura/fft.html)
   void rdft(int n, int isgn, F *a, int *ip, F *w);
   void makewt(int nw, int *ip, F *w);
   void makect(int nc, int *ip, F *c);
@@ -149,8 +150,8 @@ private:
   void cftmdl(int n, int l, F *a, F *w);
 
   // Prevent uncontrolled usage
-  OouraFFT(const OouraFFT&);
-  OouraFFT& operator=(const OouraFFT&);
+  OouraFFT(const OouraFFT&) = delete;
+  OouraFFT& operator=(const OouraFFT&) = delete;
 };
 
 

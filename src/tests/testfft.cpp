@@ -19,56 +19,6 @@
 namespace MO {
 
 
-void ComplexMultiplyAccumulate(float* re,
-                               float* im,
-                               const float* reA,
-                               const float* imA,
-                               const float* reB,
-                               const float* imB,
-                               size_t len)
-{
-#if defined(FFTCONVOLVER_USE_SSE)
-  const size_t end4 = 4 * (len / 4);
-  for (size_t i=0; i<end4; i+=4)
-  {
-    const __m128 ra = _mm_load_ps(&reA[i]);
-    const __m128 rb = _mm_load_ps(&reB[i]);
-    const __m128 ia = _mm_load_ps(&imA[i]);
-    const __m128 ib = _mm_load_ps(&imB[i]);
-    __m128 real = _mm_load_ps(&re[i]);
-    __m128 imag = _mm_load_ps(&im[i]);
-    real = _mm_add_ps(real, _mm_mul_ps(ra, rb));
-    real = _mm_sub_ps(real, _mm_mul_ps(ia, ib));
-    _mm_store_ps(&re[i], real);
-    imag = _mm_add_ps(imag, _mm_mul_ps(ra, ib));
-    imag = _mm_add_ps(imag, _mm_mul_ps(ia, rb));
-    _mm_store_ps(&im[i], imag);
-  }
-  for (size_t i=end4; i<len; ++i)
-  {
-    re[i] += reA[i] * reB[i] - imA[i] * imB[i];
-    im[i] += reA[i] * imB[i] + imA[i] * reB[i];
-  }
-#else
-  const size_t end4 = 4 * (len / 4);
-  for (size_t i=0; i<end4; i+=4)
-  {
-    re[i+0] += reA[i+0] * reB[i+0] - imA[i+0] * imB[i+0];
-    re[i+1] += reA[i+1] * reB[i+1] - imA[i+1] * imB[i+1];
-    re[i+2] += reA[i+2] * reB[i+2] - imA[i+2] * imB[i+2];
-    re[i+3] += reA[i+3] * reB[i+3] - imA[i+3] * imB[i+3];
-    im[i+0] += reA[i+0] * imB[i+0] + imA[i+0] * reB[i+0];
-    im[i+1] += reA[i+1] * imB[i+1] + imA[i+1] * reB[i+1];
-    im[i+2] += reA[i+2] * imB[i+2] + imA[i+2] * reB[i+2];
-    im[i+3] += reA[i+3] * imB[i+3] + imA[i+3] * reB[i+3];
-  }
-  for (size_t i=end4; i<len; ++i)
-  {
-    re[i] += reA[i] * reB[i] - imA[i] * imB[i];
-    im[i] += reA[i] * imB[i] + imA[i] * reB[i];
-  }
-#endif
-}
 
 
 template <typename T>
@@ -124,14 +74,17 @@ int testConv()
     return 0;
 }
 
+template <typename F>
 int testConv2()
 {
-    std::vector<float>
+    MO_PRINT("\ntestConv2 " << typeid(F).name());
+
+    std::vector<F>
             inp, kernel, conv;
 
     inp.resize(7);
     for (size_t i=0; i<inp.size(); ++i)
-        inp[i] = float(i+1);
+        inp[i] = F(i+1);
 
     kernel.resize(2);
     for (size_t i=0; i<kernel.size(); ++i)
@@ -143,7 +96,7 @@ int testConv2()
     std::cout << "kernel:  "; print(kernel);
     std::cout << "conv:    "; print(conv);
 
-    MO::MATH::Convolution<float> c;
+    MO::MATH::Convolution<F> c;
     c.setKernel(&kernel[0], kernel.size());
 
     c.convolve(&conv[0], &inp[0], inp.size());
@@ -155,25 +108,26 @@ int testConv2()
     return 0;
 }
 
+template <typename F>
 int testFft2()
 {
-    MO_PRINT("\ntestFft2");
+    MO_PRINT("\ntestFft2 " << typeid(F).name());
 
-    std::vector<float>
+    std::vector<F>
             inp,
             rinp, cinp,
             rinp2, cinp2;
 
     inp.resize(16);
     for (size_t i=0; i<inp.size(); ++i)
-        inp[i] = float(i+1);
+        inp[i] = F(i+1);
 
     std::cout << "input:    "; print(inp);
 
-    rinp.resize(MO::MATH::OouraFFT::ComplexSize(inp.size()));
+    rinp.resize(MO::MATH::OouraFFT<F>::ComplexSize(inp.size()));
     cinp.resize(rinp.size());
 
-    MO::MATH::OouraFFT fft;
+    MO::MATH::OouraFFT<F> fft;
     fft.init(inp.size());
 
     MO_PRINT("split:");
@@ -200,17 +154,18 @@ int testFft2()
     return 0;
 }
 
+template <typename F>
 int testConv3()
 {
     MO_PRINT("\ntestConv3");
 
-    std::vector<float>
+    std::vector<F>
             inp, kernel, conv,
             rinp, cinp, rkernel, ckernel, rconv, cconv;
 
     inp.resize(16);
     for (size_t i=0; i<inp.size(); ++i)
-        inp[i] = i < 8 ? float(i+1) : 0.f;
+        inp[i] = i < 8 ? F(i+1) : 0.f;
 
     kernel.resize(inp.size());
     for (size_t i=0; i<kernel.size(); ++i)
@@ -230,13 +185,13 @@ int testConv3()
     std::cout << "kernel:  "; print(kernel);
     std::cout << "conv:    "; print(conv);
 
-    MO::MATH::Convolution<float> c;
+    MO::MATH::Convolution<F> c;
     c.setKernel(kernel.data(), 8);
 
     c.convolve(conv.data(), inp.data(), 8);
     std::cout << "conv:    "; print(conv);
 
-    MO::MATH::OouraFFT fft;
+    MO::MATH::OouraFFT<F> fft;
     fft.init(inp.size());
 
     fft.fft(inp.data(), rinp.data(), cinp.data());
@@ -268,16 +223,17 @@ int testConv3()
 }
 
 
+template <typename F>
 int testConv4()
 {
-    MO_PRINT("\ntestConv4");
+    MO_PRINT("\ntestConv4 " << typeid(F).name());
 
-    std::vector<float>
+    std::vector<F>
             inp, kernel, conv;
 
     inp.resize(16);
     for (size_t i=0; i<inp.size(); ++i)
-        inp[i] = i < 8 ? float(i+1) : 0.f;
+        inp[i] = i < 8 ? F(i+1) : F(0);
 
     kernel.resize(inp.size());
     for (size_t i=0; i<kernel.size(); ++i)
@@ -288,7 +244,7 @@ int testConv4()
     std::cout << "input:   "; print(inp);
     std::cout << "kernel:  "; print(kernel);
 
-    MO::MATH::Convolution<float> c;
+    MO::MATH::Convolution<F> c;
     c.setKernel(kernel.data(), 8);
 
     c.convolve(conv.data(), inp.data(), 8);
@@ -296,7 +252,7 @@ int testConv4()
 
     MO_PRINT("FFT");
 
-    MO::MATH::OouraFFT fft;
+    MO::MATH::OouraFFT<F> fft;
     fft.init(inp.size());
 
     fft.fft(inp.data());
@@ -319,7 +275,9 @@ int TestFft::run()
 {
     //testFft2();
     //testConv3();
-    testConv4();
+    //testConv2<float>();
+    //testConv4<float>();
+    //testConv4<double>();
     return 0;
 }
 

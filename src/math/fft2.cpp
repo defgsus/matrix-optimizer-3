@@ -20,6 +20,7 @@
 // ==================================================================================
 
 #include <cmath>
+#include <cassert>
 
 #include "fft2.h"
 #include "types/int.h" // for nextPowerOfTwo()
@@ -54,7 +55,8 @@ namespace internal
 
 
 
-OouraFFT::OouraFFT() :
+template <typename F>
+OouraFFT<F>::OouraFFT() :
   size_(0),
   ip_(),
   w_(),
@@ -62,8 +64,8 @@ OouraFFT::OouraFFT() :
 {
 }
 
-
-void OouraFFT::init(size_t size)
+template <typename F>
+void OouraFFT<F>::init(size_t size)
 {
   size = nextPowerOfTwo(size);
 
@@ -81,7 +83,8 @@ void OouraFFT::init(size_t size)
 }
 
 
-void OouraFFT::fft(const float* data, float* re, float* im)
+template <typename F>
+void OouraFFT<F>::fft(const float* data, float* re, float* im)
 {
   // Convert into the format as required by the Ooura FFT
   internal::ConvertBuffer(&buffer_[0], data, size_);
@@ -107,7 +110,8 @@ void OouraFFT::fft(const float* data, float* re, float* im)
 }
 
 
-void OouraFFT::ifft(float* data, const float* re, const float* im)
+template <typename F>
+void OouraFFT<F>::ifft(float* data, const float* re, const float* im)
 {
   // Convert into the format as required by the Ooura FFT
   {
@@ -129,12 +133,14 @@ void OouraFFT::ifft(float* data, const float* re, const float* im)
   internal::ScaleBuffer(data, &buffer_[0], F(2) / static_cast<F>(size_), size_);
 }
 
-void OouraFFT::fft(float* data)
+template <typename F>
+void OouraFFT<F>::fft(F* data)
 {
   rdft(static_cast<int>(size_), +1, data, ip_.data(), w_.data());
 }
 
-void OouraFFT::ifft(float* data)
+template <typename F>
+void OouraFFT<F>::ifft(F* data)
 {
   rdft(static_cast<int>(size_), -1, data, ip_.data(), w_.data());
   const F factor = F(2) / static_cast<F>(size_);
@@ -142,7 +148,8 @@ void OouraFFT::ifft(float* data)
       *data++ *= factor;
 }
 
-OouraFFT::F OouraFFT::getReal(const F* data, size_t num) const
+template <typename F>
+F OouraFFT<F>::getReal(const F* data, size_t num) const
 {
     if (num < size_/2)
         return data[num * 2];
@@ -150,7 +157,8 @@ OouraFFT::F OouraFFT::getReal(const F* data, size_t num) const
         return data[1];
 }
 
-OouraFFT::F OouraFFT::getImag(const F* data, size_t num) const
+template <typename F>
+F OouraFFT<F>::getImag(const F* data, size_t num) const
 {
     if (num > 0 && num < size_/2)
         return -data[num * 2 + 1];
@@ -158,7 +166,8 @@ OouraFFT::F OouraFFT::getImag(const F* data, size_t num) const
         return 0.;
 }
 
-void OouraFFT::setReal(F* data, size_t num, F r) const
+template <typename F>
+void OouraFFT<F>::setReal(F* data, size_t num, F r) const
 {
     if (num < size_/2)
         data[num * 2] = r;
@@ -166,14 +175,18 @@ void OouraFFT::setReal(F* data, size_t num, F r) const
         data[1] = r;
 }
 
-void OouraFFT::setImag(F* data, size_t num, F i) const
+template <typename F>
+void OouraFFT<F>::setImag(F* data, size_t num, F i) const
 {
     if (num < size_/2)
         data[num * 2 + 1] = -i;
 }
 
-void OouraFFT::complexMultiply(F * dst, const F* A, const F* B) const
+template <typename F>
+void OouraFFT<F>::complexMultiply(F * dst, const F* A, const F* B) const
 {
+    assert(dst != a && dst != b);
+
     size_t num2 = size_ / 2 + 1;
     for (size_t i=0; i<num2; ++i)
     {
@@ -190,8 +203,8 @@ void OouraFFT::complexMultiply(F * dst, const F* A, const F* B) const
     }
 }
 
-
-void OouraFFT::rdft(int n, int isgn, F *a, int *ip, F *w)
+template <typename F>
+void OouraFFT<F>::rdft(int n, int isgn, F *a, int *ip, F *w)
 {
   int nw = ip[0];
   int nc = ip[1];
@@ -232,7 +245,8 @@ void OouraFFT::rdft(int n, int isgn, F *a, int *ip, F *w)
 
 /* -------- initializing routines -------- */
 
-void OouraFFT::makewt(int nw, int *ip, F *w)
+template <typename F>
+void OouraFFT<F>::makewt(int nw, int *ip, F *w)
 {
   int j, nwh;
   F delta, x, y;
@@ -261,7 +275,8 @@ void OouraFFT::makewt(int nw, int *ip, F *w)
 }
 
 
-void OouraFFT::makect(int nc, int *ip, F *c)
+template <typename F>
+void OouraFFT<F>::makect(int nc, int *ip, F *c)
 {
   int j, nch;
   F delta;
@@ -283,7 +298,8 @@ void OouraFFT::makect(int nc, int *ip, F *c)
 /* -------- child routines -------- */
 
 
-void OouraFFT::bitrv2(int n, int *ip, F *a)
+template <typename F>
+void OouraFFT<F>::bitrv2(int n, int *ip, F *a)
 {
   int j, j1, k, k1, l, m, m2;
   F xr, xi, yr, yi;
@@ -383,7 +399,8 @@ void OouraFFT::bitrv2(int n, int *ip, F *a)
 }
 
 
-void OouraFFT::cftfsub(int n, F *a, F *w)
+template <typename F>
+void OouraFFT<F>::cftfsub(int n, F *a, F *w)
 {
   int j, j1, j2, j3, l;
   F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
@@ -433,7 +450,8 @@ void OouraFFT::cftfsub(int n, F *a, F *w)
 }
 
 
-void OouraFFT::cftbsub(int n, F *a, F *w)
+template <typename F>
+void OouraFFT<F>::cftbsub(int n, F *a, F *w)
 {
   int j, j1, j2, j3, l;
   F x0r, x0i, x1r, x1i, x2r, x2i, x3r, x3i;
@@ -483,7 +501,8 @@ void OouraFFT::cftbsub(int n, F *a, F *w)
 }
 
 
-void OouraFFT::cft1st(int n, F *a, F *w)
+template <typename F>
+void OouraFFT<F>::cft1st(int n, F *a, F *w)
 {
   int j, k1, k2;
   F wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
@@ -588,7 +607,8 @@ void OouraFFT::cft1st(int n, F *a, F *w)
 }
 
 
-void OouraFFT::cftmdl(int n, int l, F *a, F *w)
+template <typename F>
+void OouraFFT<F>::cftmdl(int n, int l, F *a, F *w)
 {
   int j, j1, j2, j3, k, k1, k2, m, m2;
   F wk1r, wk1i, wk2r, wk2i, wk3r, wk3i;
@@ -715,7 +735,8 @@ void OouraFFT::cftmdl(int n, int l, F *a, F *w)
 }
 
 
-void OouraFFT::rftfsub(int n, F *a, int nc, F *c)
+template <typename F>
+void OouraFFT<F>::rftfsub(int n, F *a, int nc, F *c)
 {
   int j, k, kk, ks, m;
   F wkr, wki, xr, xi, yr, yi;
@@ -740,7 +761,8 @@ void OouraFFT::rftfsub(int n, F *a, int nc, F *c)
 }
 
 
-void OouraFFT::rftbsub(int n, F *a, int nc, F *c)
+template <typename F>
+void OouraFFT<F>::rftbsub(int n, F *a, int nc, F *c)
 {
   int j, k, kk, ks, m;
   F wkr, wki, xr, xi, yr, yi;
@@ -766,6 +788,11 @@ void OouraFFT::rftbsub(int n, F *a, int nc, F *c)
   a[m + 1] = -a[m + 1];
 }
 
+// -- instantiations --
+
+template class OouraFFT<float>;
+template class OouraFFT<double>;
+template class OouraFFT<long double>;
 
 } // namespace MATH
 } // namespace MO
