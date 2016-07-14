@@ -8,6 +8,8 @@
     <p>created 03.05.2015</p>
 */
 
+#define MO_USE_KLANGFALTER_FOR_NOW
+
 #include <memory>
 
 #include "convolveao.h"
@@ -16,7 +18,11 @@
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
 #include "object/param/parameterfilename.h"
-#include "audio/tool/convolvebuffer.h"
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+#   include "audio/3rd/KlangFalter/FFTConvolver.h"
+#else
+#   include "audio/tool/convolvebuffer.h"
+#endif
 #include "audio/tool/multifilter.h"
 #include "audio/tool/soundfilemanager.h"
 #include "audio/tool/soundfile.h"
@@ -25,6 +31,7 @@
 #include "math/constants.h"
 #include "math/convolution.h"
 #include "io/datastream.h"
+
 
 namespace MO {
 
@@ -38,7 +45,7 @@ struct ConvolveAO::Private
     }
 
     void updateFilter();
-    void initConvolver();
+    void initConvolver(size_t blockSize);
 
     ConvolveAO * ao;
 
@@ -59,7 +66,11 @@ struct ConvolveAO::Private
             * pPostProc,
             * pfType;
 
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+    ::fftconvolver::FFTConvolver convolver;
+#else
     AUDIO::ConvolveBuffer convolver;
+#endif
     AUDIO::AudioBuffer inbuf, outbuf, outbuf2;
     AUDIO::Delay<F32, int> delay;
     AUDIO::MultiFilter filter, filterHp;
@@ -197,7 +208,7 @@ void ConvolveAO::onParametersLoaded()
 
     p_->needUpdate = true;
     p_->updateFilter();
-    p_->initConvolver();
+    //p_->initConvolver();
 }
 
 void ConvolveAO::Private::updateFilter()
@@ -228,7 +239,7 @@ void ConvolveAO::getNeededFiles(IO::FileList &files)
     files << IO::FileListEntry(p_->pFile->baseValue(), IO::FT_IMPULSE_RESPONSE);
 }
 
-void ConvolveAO::Private::initConvolver()
+void ConvolveAO::Private::initConvolver(size_t blockSize)
 {
     ao->clearError();
 
@@ -250,7 +261,11 @@ void ConvolveAO::Private::initConvolver()
     sf->release();
 
     // set kernel
-    convolver.setKernel(&sam[0], sam.size());
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+    convolver.init(blockSize, sam.data(), sam.size());
+#else
+    convolver.setKernel(sam.data(), sam.size());
+#endif
     delay.setNull();
     delayCleared = true;
 }
@@ -261,8 +276,12 @@ void ConvolveAO::processAudio(const RenderTime& time)
     if (p_->needUpdate)
     {
         p_->needUpdate = false; // XXX not reentrant
-        p_->initConvolver();
+        p_->initConvolver(time.bufferSize());
     }
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+    if (p_->convolver.blockSize() != time.bufferSize())
+        p_->initConvolver(time.bufferSize());
+#endif
 
     // init output buffer
     if (p_->outbuf.blockSize() != time.bufferSize())
@@ -330,17 +349,14 @@ void ConvolveAO::processAudio(const RenderTime& time)
     {
         if (!doPp)
         {
-#if 1
             // convolve
-            p_->convolver.process(in, out);//p_->outbuf);
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+            p_->convolver.process(in->readPointer(), p_->outbuf.writePointer(),
+                                  p_->outbuf.blockSize());
 #else
-            p_->convolver.push(in);//, &p_->outbuf);
-            p_->convolver.pop(out);
+            p_->convolver.process(in, &p_->outbuf);
 #endif
-            for (size_t i=0; i<out->blockSize(); ++i)
-                out->writePointer()[i] *= amp;
         }
-#if 0
         else
         {
             // get input
@@ -351,11 +367,18 @@ void ConvolveAO::processAudio(const RenderTime& time)
                     damt * p_->delay.read(dtime - i);
 
             // convolve
+#ifdef MO_USE_KLANGFALTER_FOR_NOW
+            p_->convolver.process(p_->inbuf.readPointer(), p_->outbuf.writePointer(),
+                                  p_->outbuf.blockSize());
+#else
             p_->convolver.process(&p_->inbuf, &p_->outbuf);
+#endif
 
             // filter
-            p_->filter.process(p_->outbuf.readPointer(), p_->inbuf.writePointer(), time.bufferSize());
-            p_->filterHp.process(p_->inbuf.readPointer(), p_->outbuf.writePointer(), time.bufferSize());
+            p_->filter.process(p_->outbuf.readPointer(),
+                               p_->inbuf.writePointer(), time.bufferSize());
+            p_->filterHp.process(p_->inbuf.readPointer(),
+                                 p_->outbuf.writePointer(), time.bufferSize());
 
             // write convoluted signal to delay line
             p_->delay.writeBlock(p_->outbuf.readPointer(), time.bufferSize());
@@ -366,7 +389,6 @@ void ConvolveAO::processAudio(const RenderTime& time)
             out->write(i, in->readPointer()[i] + wet * (
                         amp * p_->outbuf.writePointer()[i] - in->readPointer()[i])
                        );
-#endif
     });
 
 }

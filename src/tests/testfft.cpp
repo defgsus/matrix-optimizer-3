@@ -25,6 +25,7 @@
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/convolvebuffer.h"
 #include "audio/audioplayer.h"
+#include "audio/3rd/KlangFalter/FFTConvolver.h"
 #include "io/application.h"
 #include "io/time.h"
 #include "io/log.h"
@@ -294,8 +295,47 @@ int TestFft::run()
     return 0;
 }
 
+
+
+
 namespace {
 
+void displayData(const std::vector<std::vector<float>*>& data)
+{
+    std::vector<AUDIO::SoundFile*> sfs;
+    for (auto d : data)
+    {
+        auto sf = AUDIO::SoundFileManager::createSoundFile(1, 1);
+        assert(sf->isWriteable());
+        assert(sf->isOk());
+        sf->appendDeviceData(d->data(), d->size());
+        MO_PRINT(sf->infoString());
+        sfs.push_back( sf );
+    }
+
+    auto diag = new QDialog(application()->mainWindow());
+    diag->setWindowTitle("Convolution test");
+    diag->setAttribute(Qt::WA_DeleteOnClose, true);
+
+    auto lv = new QVBoxLayout(diag);
+
+        auto w = new GUI::SoundFileWidget(diag);
+        lv->addWidget(w);
+
+        QObject::connect(w, &GUI::SoundFileWidget::doubleClicked,
+                         [](AUDIO::SoundFile* sf, Double)
+        {
+            AUDIO::AudioPlayer::play(sf);
+        });
+
+        for (size_t i=0; i<sfs.size(); ++i)
+        {
+            w->setSoundFile(sfs[i], i);
+            sfs[i]->release();
+        }
+
+    diag->show();
+}
 // convolve as a whole
 template <typename F>
 void convolve1(std::vector<F>& conv,
@@ -446,16 +486,40 @@ void convolve4(std::vector<F>& conv,
     }
 }
 
+
+// convolve via AUDIO::ConvolveBuffer
+template <typename F>
+void convolve5(std::vector<F>& conv,
+               const std::vector<F>& input2,
+               const std::vector<F>& kernel)
+{
+    const size_t blockSize = 384;
+
+    auto input = input2;
+    input.resize(input.size() + blockSize, F(0));
+    conv.clear(); conv.resize(input.size() + kernel.size() + blockSize, F(0));
+
+    ::fftconvolver::FFTConvolver c;
+    c.init(blockSize, kernel.data(), kernel.size());
+
+    size_t pos = 0;
+    while (pos < conv.size() - blockSize)
+    {
+        c.process(input.data() + pos, conv.data() + pos, blockSize);
+
+        pos += blockSize;
+    }
+}
+
+
 } // namespace
 
 void TestFft::runConvolutionDialog()
 {
-    const int sr = 1;
-
     std::vector<float>
             input(45055),
             kernel(16003),
-            conv1, conv2, conv3, conv4;
+            conv1, conv2, conv3, conv4, conv5;
 
     for (size_t i=0; i<input.size(); ++i)
     {
@@ -482,74 +546,32 @@ void TestFft::runConvolutionDialog()
         kernel[i] /= sum;
 #endif
 
-    TimeMessure tm;
-    tm.start(); convolve1(conv1, input, kernel); auto e1 = tm.time();
-    tm.start(); convolve2(conv2, input, kernel); auto e2 = tm.time();
-    tm.start(); convolve3(conv3, input, kernel); auto e3 = tm.time();
-#if 1
-    tm.start(); convolve4(conv4, input, kernel); auto e4 = tm.time();
-#else
-    assert(conv2.size() == conv3.size());
-    conv4.resize(conv2.size());
-    for (size_t i=0;i<conv2.size();++i)
-        conv4[i] = conv2[i] - conv3[i];
-    double e4 = 0.;
-#endif
+#define MO__RUN(arg__, name__) \
+    { TimeMessure tm; arg__; auto e = tm.time(); \
+      MO_PRINT(name__ << ": " << e << "secs"); }
 
-    MO_PRINT("Timing whole=" << e1 << ", overlap-add=" << e2
-             << ", both-split=" << e3 << ", ConvolveBuffer=" << e4);
+    MO__RUN( convolve1(conv1, input, kernel), "naive         " );
+    MO__RUN( convolve2(conv2, input, kernel), "overlap-add   " );
+    MO__RUN( convolve3(conv3, input, kernel), "both-split    " );
+    MO__RUN( convolve4(conv4, input, kernel), "ConvolveBuffer" );
+    MO__RUN( convolve5(conv5, input, kernel), "KlangFalter   " );
+
+#undef MO__RUN
 
     // --- display ---
 
-    auto sf_input =  AUDIO::SoundFileManager::createSoundFile(1, sr),
-         sf_kernel = AUDIO::SoundFileManager::createSoundFile(1, sr),
-         sf_conv1 =  AUDIO::SoundFileManager::createSoundFile(1, sr),
-         sf_conv2 =  AUDIO::SoundFileManager::createSoundFile(1, sr),
-         sf_conv3 =  AUDIO::SoundFileManager::createSoundFile(1, sr),
-         sf_conv4 =  AUDIO::SoundFileManager::createSoundFile(1, sr);
-
-    assert(sf_input->isWriteable());
-    assert(sf_input->isOk());
-
-    sf_input->appendDeviceData(input.data(), input.size());
-    sf_kernel->appendDeviceData(kernel.data(), kernel.size());
-    sf_conv1->appendDeviceData(conv1.data(), conv1.size());
-    sf_conv2->appendDeviceData(conv2.data(), conv2.size());
-    sf_conv3->appendDeviceData(conv3.data(), conv3.size());
-    sf_conv4->appendDeviceData(conv4.data(), conv4.size());
-
-    MO_PRINT(     "input  : " << sf_input->infoString()
-             << "\nkernel : " << sf_kernel->infoString()
-             << "\nconv1  : " << sf_conv1->infoString()
-             << "\nconv2  : " << sf_conv2->infoString()
-             << "\nconv3  : " << sf_conv3->infoString()
-             << "\nconv4  : " << sf_conv4->infoString()
-             );
-
-    auto diag = new QDialog(application()->mainWindow());
-    diag->setWindowTitle("Convolution test");
-    diag->setAttribute(Qt::WA_DeleteOnClose, true);
-
-    auto lv = new QVBoxLayout(diag);
-
-        auto w = new GUI::SoundFileWidget(diag);
-        lv->addWidget(w);
-
-        QObject::connect(w, &GUI::SoundFileWidget::doubleClicked,
-                         [](AUDIO::SoundFile* sf, Double)
-        {
-            AUDIO::AudioPlayer::play(sf);
-        });
-
-        w->setSoundFile(sf_kernel, 0); sf_kernel->release();
-        w->setSoundFile(sf_input, 1);  sf_input->release();
-        w->setSoundFile(sf_conv1, 2);  sf_conv1->release();
-        w->setSoundFile(sf_conv2, 3);  sf_conv2->release();
-        w->setSoundFile(sf_conv3, 4);  sf_conv3->release();
-        w->setSoundFile(sf_conv4, 5);  sf_conv4->release();
-
-    diag->show();
+    std::vector<std::vector<float>*> data;
+    data.push_back(&kernel);
+    data.push_back(&input);
+    data.push_back(&conv1);
+    data.push_back(&conv2);
+    data.push_back(&conv3);
+    data.push_back(&conv4);
+    data.push_back(&conv5);
+    displayData(data);
 }
+
+
 
 
 

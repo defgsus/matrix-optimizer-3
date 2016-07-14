@@ -284,7 +284,9 @@ HEADERS += \
     $$PWD/io/architecture.h \
     $$PWD/audio/tool/fixedblockdelay.h \
     $$PWD/audio/tool/beatdetector.h \
-    $$PWD/math/fft2.h
+    $$PWD/math/fft2.h \
+    $$PWD/audio/3rd/KlangFalter/FFTConvolver.h \
+    $$PWD/audio/3rd/KlangFalter/Utilities.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
@@ -504,5 +506,7 @@ SOURCES += \
     src/gl/win32/glwindow_win32.cpp \
     src/gl/win32/winerror.cpp \
     $$PWD/audio/tool/beatdetector.cpp \
-    $$PWD/math/fft2.cpp
+    $$PWD/math/fft2.cpp \
+    $$PWD/audio/3rd/KlangFalter/FFTConvolver.cpp \
+    $$PWD/audio/3rd/KlangFalter/Utilities.cpp
 
