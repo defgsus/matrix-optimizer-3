@@ -19,7 +19,7 @@
 #include "io/error.h"
 #include "io/log.h"
 
-#define OLD_METHOD
+#define MO_SPLIT_METHOD
 
 namespace MO {
 namespace AUDIO {
@@ -28,9 +28,9 @@ struct ConvolveBuffer::Private
 {
     Private(ConvolveBuffer*p)
         : p         (p)
-    #ifdef OLD_METHOD
-        , curBlockSize  (0)
+    #ifdef MO_SPLIT_METHOD
     #endif
+        , curBlockSize  (0)
         , kernelChanged (true)
         , amplitude            (1.f)
     { }
@@ -44,7 +44,7 @@ struct ConvolveBuffer::Private
 
     ConvolveBuffer* p;
 
-#ifdef OLD_METHOD
+#ifdef MO_SPLIT_METHOD
     void process(const AudioBuffer *in, AudioBuffer *out);
     std::vector<F32>
             kernel,
@@ -55,19 +55,18 @@ struct ConvolveBuffer::Private
     MATH::OouraFFT<F32> fft;
     AUDIO::AudioBuffer out_buf;
     size_t windowSize, numWindows, curBlockSize;
-    F32 kernelSum;
 #else
-    void push(const AudioBuffer* in);
+    void process(const AudioBuffer *in, AudioBuffer *out);
 
     std::vector<F32>
-            kernel, kernel_fft,
-    scratch, output;
-size_t chunkSize, numChunks, halfSize, curOutChunk;
-
-    AUDIO::ResampleBuffer<F32> inRebuf, outRebuf;
+            kernel, kernel_fft, input, scratch;
+    size_t curBlockSize, numChunks;
+    MATH::OouraFFT<F32> fft;
+    AUDIO::AudioBuffer out_buf;
 #endif
 
     bool kernelChanged;
+    F32 kernelSum;
     F32 amplitude;
 
 };
@@ -102,12 +101,12 @@ void ConvolveBuffer::setBlockSize(size_t blockSize)
     p_->prepareComplexKernel(blockSize);
 }
 
-#ifdef OLD_METHOD
-
 void ConvolveBuffer::process(const AudioBuffer *in, AudioBuffer *out)
 {
     p_->process(in, out);
 }
+
+#ifdef MO_SPLIT_METHOD
 
 void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
 {
@@ -143,7 +142,7 @@ void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
         for (size_t i = 0; i<windowSize; ++i)
             s += std::abs(kernel_fft[j][i]);
 
-        MO_PRINT("window " << j << ": " << k << ", sum=" << s);
+        //MO_PRINT("window " << j << ": " << k << ", sum=" << s);
 
         // to fourier
         fft.fft(kernel_fft[j].data());
@@ -220,27 +219,11 @@ void ConvolveBuffer::Private::process(const AudioBuffer *in, AudioBuffer *out)
 
 #else
 
-void ConvolveBuffer::push(const AudioBuffer* in)
-{
-    p_->push(in);
-}
-
-bool ConvolveBuffer::pop(AudioBuffer* out)
-{
-    if (p_->outRebuf.size() != out->blockSize())
-        p_->outRebuf.setSize(out->blockSize());
-
-    return p_->outRebuf.pop(out->writePointer());
-}
 
 void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
 {
-    chunkSize = 1024;
-
     // half length of kernel in freq domain
-    kernel_fft.resize( nextPowerOfTwo(chunkSize + kernel.size()) * 2 );
-
-    numChunks = (kernel_fft.size()+chunkSize-1) / chunkSize;
+    kernel_fft.resize( nextPowerOfTwo(blockSize + kernel.size()) );
 
     // copy and f-transform kernel
     size_t i;
@@ -250,70 +233,78 @@ void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
         kernel_fft[i] = 0.f;
 
     // to fourier
-    MATH::real_fft(&kernel_fft[0], kernel_fft.size());
-
-    /*for (size_t i=0; i<kernel_fft.size(); ++i)
-        std::cout << kernel_fft[i] << ", ";
-    std::cout << std::endl;
-    */
+    fft.init(kernel_fft.size());
+    fft.fft(kernel_fft.data());
 
     // buffer space
+    numChunks = (kernel_fft.size()+blockSize-1) / blockSize;
+    input.resize(kernel_fft.size());
     scratch.resize(kernel_fft.size());
-    inRebuf.setSize(chunkSize);
-    output.resize(numChunks * chunkSize);
-    curOutChunk = 0;
+    out_buf.setSize(blockSize, numChunks);
+
+    // get global amp
+    kernelSum = 0.0001f;
+    for (size_t i=0; i<kernel.size(); ++i)
+        kernelSum += std::abs(kernel[i]);
+
+    amplitude = 1.f / kernelSum;
 
     // acknowledge
+    curBlockSize = blockSize;
     kernelChanged = false;
 }
 
-void ConvolveBuffer::Private::push(const AudioBuffer *in)
+
+void ConvolveBuffer::Private::process(const AudioBuffer *in, AudioBuffer *out)
 {
+    MO_ASSERT(in->blockSize() == out->blockSize(), "blocksize mismatch "
+              << in->blockSize() << "/" << out->blockSize());
+
     // update complex kernel if necessary
-    if (kernelChanged)
+    if (kernelChanged
+        || in->blockSize() != curBlockSize)
         prepareComplexKernel(in->blockSize());
 
     // get input block
-    inRebuf.push(in->readPointer(), in->blockSize());
+    in->readBlock(&input[0]);
+    // pad
+    for (size_t i=in->blockSize(); i<kernel_fft.size(); ++i)
+        input[i] = 0.f;
 
-    while (inRebuf.pop(&scratch[0]))
+    // transform input
+    fft.fft(input.data());
+
+    // multiply input with kernel window
+    fft.complexMultiply(scratch.data(), input.data(), kernel_fft.data());
+
+    // transform back
+    fft.ifft(scratch.data());
+
+    // for each kernel window
+    for (size_t k = 0; k < numChunks; ++k)
     {
-        // zero-pad input
-        for (size_t i=chunkSize; i<kernel_fft.size(); ++i)
-            scratch[i] = 0.f;
+        // wraps around at numChunks
+        out_buf.nextBlock();
 
-        // f-transform
-        MATH::real_fft(&scratch[0], kernel_fft.size());
-
-        MATH::complex_multiply(
-                    &scratch[0],
-                    &scratch[0], &kernel_fft[0],
-                    kernel_fft.size());
-
-        // t-transform
-        MATH::ifft(&scratch[0], kernel_fft.size());
-
-        // copy/mix to output
-        const F32* src = &scratch[0];
-        F32* out = &output[curOutChunk * halfSize];
-        for (size_t j=0; j<numChunks; ++j)
-        {
-            if (j+1 < numChunks)
-                for (size_t i=0; i<chunkSize; ++i)
-                    *out++ += *src++ * amplitude;
-            else
-                for (size_t i=0; i<chunkSize; ++i)
-                    *out++ = *src++ * amplitude;
-
-            outRebuf.push(&output[curOutChunk*chunkSize], chunkSize);
-            curOutChunk++;
-            if (curOutChunk >= numChunks)
-                curOutChunk = 0;
-        }
-
-        //outRebuf.push(&output[(1-curOutChunk) * halfSize], halfSize);
+        // add curBlockSize samples to output
+        out_buf.writeAddBlock(&scratch[k * curBlockSize]);
     }
+
+
+    // copy to output
+    out->writeBlock(out_buf.readPointer());
+
+    // amplitude
+    for (size_t i=0; i<out->blockSize(); ++i)
+        out->writePointer()[i] *= 1.;//amplitude;
+
+    // clear farmost future
+    out_buf.previousBlock();
+    out_buf.writeNullBlock();
+    out_buf.nextBlock();
+    out_buf.nextBlock();
 }
+
 
 #endif
 
