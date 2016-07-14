@@ -418,19 +418,25 @@ void convolve3(std::vector<F>& conv,
 // convolve via AUDIO::ConvolveBuffer
 template <typename F>
 void convolve4(std::vector<F>& conv,
-               const std::vector<F>& input,
+               const std::vector<F>& input2,
                const std::vector<F>& kernel)
 {
-    AUDIO::AudioBuffer in(512), out(512);
+    AUDIO::AudioBuffer in(384), out(384);
     AUDIO::ConvolveBuffer c;
 
+    auto input = input2;
+    input.resize(input.size() + in.blockSize(), F(0));
+
     c.setKernel(kernel.data(), kernel.size());
-    conv.clear(); conv.resize(input.size() + kernel.size(), F(0));
+    conv.clear(); conv.resize(input.size() + kernel.size() + in.blockSize(), F(0));
 
     size_t pos = 0;
-    while (pos < input.size()-in.blockSize())
+    while (pos < conv.size() - in.blockSize())
     {
-        in.writeBlock(&input[pos]);
+        if (pos < input.size() - in.blockSize())
+            in.writeBlock(&input[pos]);
+        else
+            in.writeNullBlock();
 
         c.process(&in, &out);
 
@@ -480,7 +486,7 @@ void TestFft::runConvolutionDialog()
     tm.start(); convolve1(conv1, input, kernel); auto e1 = tm.time();
     tm.start(); convolve2(conv2, input, kernel); auto e2 = tm.time();
     tm.start(); convolve3(conv3, input, kernel); auto e3 = tm.time();
-#if 0
+#if 1
     tm.start(); convolve4(conv4, input, kernel); auto e4 = tm.time();
 #else
     assert(conv2.size() == conv3.size());

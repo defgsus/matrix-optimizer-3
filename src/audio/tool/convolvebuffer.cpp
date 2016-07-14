@@ -13,7 +13,7 @@
 #include "convolvebuffer.h"
 #include "audiobuffer.h"
 #include "resamplebuffer.h"
-#include "math/fft.h"
+#include "math/fft2.h"
 #include "math/convolution.h"
 #include "types/int.h"
 #include "io/error.h"
@@ -29,7 +29,6 @@ struct ConvolveBuffer::Private
     Private(ConvolveBuffer*p)
         : p         (p)
     #ifdef OLD_METHOD
-        , pos            (0)
         , curBlockSize  (0)
     #endif
         , kernelChanged (true)
@@ -53,9 +52,9 @@ struct ConvolveBuffer::Private
             input;
     std::vector<std::vector<F32>>
             kernel_fft;
+    MATH::OouraFFT<F32> fft;
     AUDIO::AudioBuffer out_buf;
-    AUDIO::ResampleBuffer<F32> outRebuf;
-    size_t windowSize, numWindows, windowKernelSize, pos, curBlockSize;
+    size_t windowSize, numWindows, curBlockSize;
     F32 kernelSum;
 #else
     void push(const AudioBuffer* in);
@@ -86,12 +85,12 @@ ConvolveBuffer::~ConvolveBuffer()
 
 void ConvolveBuffer::setKernel(const F32 *data, size_t num)
 {
-    num = 384*2;//44100/4;
+//    num = 384*2;//44100/4;
 
     p_->kernel.resize(num);
-    //memcpy(&p_->kernel[0], data, num * sizeof(F32));
+    memcpy(&p_->kernel[0], data, num * sizeof(F32));
     // XXX test spike
-    for (size_t i=0; i<num; ++i) p_->kernel[i] = i == 10 ? 1.f : 0.f;
+    //for (size_t i=0; i<num; ++i) p_->kernel[i] = i == 10 ? 1.f : 0.f;
     //for (size_t i=0; i<num; ++i) p_->kernel[i] = i == num-1 ? 1.f : 0.f;
     //for (size_t i=0; i<num; ++i) p_->kernel[i] = F32(rand()) / RAND_MAX * (1.f-F32(i)/num);
 
@@ -112,37 +111,19 @@ void ConvolveBuffer::process(const AudioBuffer *in, AudioBuffer *out)
 
 void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
 {
-    /*
-        bs = fixed
-        wks = kernel / numWindows
-        windowSize = [bs+wks]² (next-power-of-two)
-        conv ( [bs+wks]² )
-        out <- bs+wks
-
-        bs = 256
-        ks = 1000
-        nw = ks / bs = 3.9 = 4
-        wks = ks / nw = 250
-
-        ws = [bs+wks]² = 512
-
-        out <- bs+wks = 506
-    */
-
     if (blockSize >= kernel.size())
         numWindows = 1;
     else
         numWindows = (kernel.size() + blockSize-1) / blockSize;
-    windowKernelSize = kernel.size() / (numWindows);
-    windowSize = nextPowerOfTwo(blockSize + windowKernelSize);
+    windowSize = nextPowerOfTwo(blockSize * 2);
+    curBlockSize = blockSize;
+    fft.init(windowSize);
 
     MO_PRINT("ConvolveBuffer: kernel=" << kernel.size()
-             << "; win-kernel=" << windowKernelSize
-             << "; dspblock=" << blockSize
+             << "; dspblock=" << curBlockSize
              << "; window=" << numWindows << "x" << windowSize
              << " = " << (numWindows * windowSize)
-             << "; per-win=" << (blockSize + windowKernelSize)
-             << ", padding=" << (windowSize - (blockSize + windowKernelSize))
+             << ", padding=" << (windowSize - (curBlockSize*2))
              );
 
     // copy, split and f-transform kernel
@@ -153,7 +134,7 @@ void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
         kernel_fft[j].resize(windowSize);
         // split and pad
         size_t i;
-        for (i=0; i<windowKernelSize; ++i)
+        for (i=0; i<blockSize; ++i)
             kernel_fft[j][i] = k < kernel.size() ? kernel[k++] : 0.f;
         for (; i<windowSize; ++i)
             kernel_fft[j][i] = 0.f;
@@ -165,13 +146,11 @@ void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
         MO_PRINT("window " << j << ": " << k << ", sum=" << s);
 
         // to fourier
-        MATH::real_fft(&kernel_fft[j][0], windowSize);
+        fft.fft(kernel_fft[j].data());
     }
 
-    out_buf.setSize(blockSize, numWindows);
-    outRebuf.setSize(blockSize);
-
     // buffer space
+    out_buf.setSize(blockSize, numWindows);
     scratch.resize(windowSize);
     input.resize(windowSize);
 
@@ -180,9 +159,7 @@ void ConvolveBuffer::Private::prepareComplexKernel(size_t blockSize)
     for (size_t i=0; i<kernel.size(); ++i)
         kernelSum += std::abs(kernel[i]);
 
-    amplitude = windowSize / kernelSum;
-    //MO_PRINT("length = " << p_->kernel.size()
-    //         << "; sum = " << sum << "; amp = " << p_->amplitude);
+    amplitude = 1.f / kernelSum;
 
     // acknowledge
     curBlockSize = blockSize;
@@ -206,53 +183,29 @@ void ConvolveBuffer::Private::process(const AudioBuffer *in, AudioBuffer *out)
     for (size_t i=in->blockSize(); i<windowSize; ++i)
         input[i] = 0.f;
 
-#if 0
     // transform input
-    MATH::real_fft(&input[0], windowSize);
+    fft.fft(input.data());
 
     // for each kernel window
     for (size_t k = 0; k < numWindows; ++k)
     {
         // multiply input with kernel window
-        MATH::complex_multiply(&scratch[0],
-                               &input[0], &kernel_fft[k][0], windowSize);
+        fft.complexMultiply(scratch.data(), input.data(), kernel_fft[k].data());
 
         // transform back
-        MATH::ifft(&scratch[0], windowSize);
+        fft.ifft(scratch.data());
 
-        //for (size_t i=curBlockSize-100; i<curBlockSize; ++i)
-        //    scratch[i] = 0.f;//(F32(i) / curBlockSize, 1.f);
-                    //std::max(0.f, 1.f - F32(i) / windowSize);
-
-        // add blockSize samples to output
-        out_buf.writeAddBlock(&scratch[0]);
+        // add curBlockSize samples to output
+        out_buf.writeAddBlock(scratch.data());
         // wraps around at numWindows
         out_buf.nextBlock();
-        // add remaining windowKernelSize samples to output
-        out_buf.writeAddBlock(&scratch[out_buf.blockSize()], windowKernelSize);
+        // add remaining samples to output
+        out_buf.writeAddBlock(&scratch[curBlockSize], curBlockSize);
     }
-#else
-    for (size_t k=0; k<numWindows; ++k)
-    {
-        MATH::Convolution<F32> c;
-        c.setKernel(&kernel[k*windowKernelSize], windowKernelSize);
-        c.convolve(&scratch[0], &input[0], curBlockSize);
 
-        // add blockSize samples to output
-        out_buf.writeAddBlock(&scratch[0]);
-        // wraps around at numWindows
-        out_buf.nextBlock();
-        // add remaining windowKernelSize samples to output
-        out_buf.writeAddBlock(&scratch[out_buf.blockSize()], windowKernelSize-1);
-    }
-#endif
-
-    //outRebuf.push(out_buf.readPointer(), out_buf.blockSize());
 
     // copy to output
-    //if (!outRebuf.pop(out->writePointer()))
-    //    MO_PRINT("CANT POP");
-    out->writeBlock(out_buf.readPointer());
+    out->writeBlock(out_buf.writePointer());
 
     // amplitude
     for (size_t i=0; i<out->blockSize(); ++i)
