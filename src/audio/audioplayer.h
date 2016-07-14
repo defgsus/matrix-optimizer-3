@@ -29,7 +29,7 @@ class AudioPlayerData;
 
     Currently this conflicts with the actual LiveAudioEngine.
 
-    AND... Currently this is not finished nor used
+    AND... Currently this is not finished nor really used
 */
 class AudioPlayer
 {
@@ -47,8 +47,9 @@ public:
 
     static bool stop();
 
+    /** Will open the device if necessary */
     static bool play(AudioPlayerData *);
-    //static bool play(SoundFile * );
+    static bool play(SoundFile * );
 
 private:
 

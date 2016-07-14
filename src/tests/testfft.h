@@ -19,6 +19,8 @@ public:
     TestFft() { }
 
     int run();
+
+    static void runConvolutionDialog();
 };
 
 } // namespace MO

@@ -9,7 +9,7 @@
 */
 
 #include "audioplayerdata.h"
-
+#include "tool/soundfile.h"
 
 namespace MO {
 namespace AUDIO {
@@ -109,6 +109,58 @@ size_t AudioPlayerSample::getInterlaced(F32 *buffer, size_t numChan, size_t bloc
     return blockSize;
 }
 
+
+
+
+
+// #################### AudioPlayerSoundFile ########################
+
+AudioPlayerSoundFile::AudioPlayerSoundFile(SoundFile* sf)
+    : p_sf_     (sf)
+    , p_pos_    (0)
+{
+    p_sf_->addRef();
+}
+
+AudioPlayerSoundFile::~AudioPlayerSoundFile()
+{
+    p_sf_->release();
+}
+
+size_t AudioPlayerSoundFile::numChannels() const { return p_sf_->numberChannels(); }
+size_t AudioPlayerSoundFile::sampleRate() const { return p_sf_->sampleRate(); }
+size_t AudioPlayerSoundFile::lengthSamples() const { return p_sf_->lengthSamples(); }
+
+size_t AudioPlayerSoundFile::get(F32 *buffer, size_t numChan, size_t blockSize)
+{
+    for (size_t i=0; i<blockSize; ++i)
+    {
+        if (p_pos_ >= p_sf_->lengthSamples())
+            return i;
+
+        for (size_t j=0; j<numChan; ++j)
+            buffer[i + j * blockSize] = p_sf_->value(p_pos_, j);
+
+        ++p_pos_;
+    }
+    return blockSize;
+}
+
+size_t AudioPlayerSoundFile::getInterlaced(
+        F32 *buffer, size_t numChan, size_t blockSize)
+{
+    for (size_t i=0; i<blockSize; ++i)
+    {
+        if (p_pos_ >= p_sf_->lengthSamples())
+            return i;
+
+        for (size_t j = 0; j<numChan; ++j)
+            *buffer++ = p_sf_->value(p_pos_, j);
+
+        ++p_pos_;
+    }
+    return blockSize;
+}
 
 } // namespace AUDIO
 } // namespace MO

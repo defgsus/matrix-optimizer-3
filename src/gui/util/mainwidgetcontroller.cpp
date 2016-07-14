@@ -126,6 +126,10 @@
 #include "object/interface/valuefloatinterface.h"
 #include "tool/commonresolutions.h"
 
+#ifndef MO_RELEASE
+#   include "tests/testfft.h"
+#endif
+
 namespace MO {
 namespace GUI {
 
@@ -936,6 +940,11 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
 #endif
 #endif
 
+    m->addAction( a = new QAction(tr("Convolution test"), m) );
+    connect(a, &QAction::triggered, [=]()
+    {
+        TestFft::runConvolutionDialog();
+    });
 
     // ######### VIEW MENU #########
     m = new QMenu("View", menuBar);

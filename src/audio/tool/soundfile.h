@@ -39,6 +39,9 @@ public:
     /** Returns an error description, empty string if no error */
     const QString& errorString() const;
 
+    /** Short description of content */
+    QString infoString() const;
+
     /** Returns true if file was loaded / data can be read */
     bool isOk() const;
 
@@ -65,7 +68,7 @@ public:
     uint lengthSamples() const;
 
     /** Returns value at @p time (in seconds) */
-    Double value(Double time, uint channel = 0) const;
+    Double value(Double time, uint channel = 0, bool interpol = true) const;
     Double value(size_t frame, uint channel) const;
 
     /** Returns one channel as consecutive data */
@@ -103,6 +106,7 @@ private:
     void p_openStream_(const QString&);
     void p_create_(uint channels, uint sr, int bitSize);
     void p_setError_(const QString&);
+    void p_setFilename_(const QString&);
 
     class Private;
     Private * p_;

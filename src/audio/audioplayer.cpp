@@ -332,6 +332,18 @@ bool AudioPlayer::play(AudioPlayerData * d)
     return true;
 }
 
+bool AudioPlayer::play(SoundFile * sf)
+{
+    if (!p_()->device.isPlaying())
+        if (!open())
+            return false;
+
+    auto d = new AudioPlayerSoundFile(sf);
+
+    p_()->addData(d);
+    return true;
+}
+
 bool AudioPlayer::stop() { return p_()->removeAllData(); }
 
 

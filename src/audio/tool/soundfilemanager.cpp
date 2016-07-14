@@ -119,6 +119,9 @@ SoundFile * SoundFileManager::createSoundFile(uint channels, uint samplerate)
     SoundFile * sf = new SoundFile();
     sf->p_create_(channels, samplerate, 32);
 
+    const QString fn = "audio_" + QString::number(ulong(sf), 16);
+    sf->p_setFilename_(fn);
+
     auto sfm = p_getInstance_();
 
     // install
@@ -126,7 +129,7 @@ SoundFile * SoundFileManager::createSoundFile(uint channels, uint samplerate)
     Private::File file;
     file.sf = sf;
     file.count = 1;
-    sfm->p_->soundFiles_.insert("audio_" + QString::number(ulong(sf), 16) + "_mem", file);
+    sfm->p_->soundFiles_.insert(fn + "_mem", file);
 
     return sf;
 }

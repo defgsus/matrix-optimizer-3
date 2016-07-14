@@ -9,6 +9,7 @@
 */
 
 #include <QLayout>
+#include <QList>
 
 #include "soundfilewidget.h"
 #include "gui/widget/soundfiledisplay.h"
@@ -25,19 +26,32 @@ struct SoundFileWidget::Private
 
     }
 
+    struct Display
+    {
+        Ruler * vruler;
+        SoundFileDisplay* display;
+        ~Display()
+        {
+            vruler->deleteLater();
+            display->deleteLater();
+        }
+    };
+
     void createWidgets();
+    Display* createDisplay();
 
     SoundFileWidget* p;
 
-    Ruler * vruler;
-    SoundFileDisplay* display;
+    QGridLayout* layout;
+    QList<Display*> displays;
 };
 
 SoundFileWidget::SoundFileWidget(QWidget *parent)
     : QWidget   (parent)
     , p_        (new Private(this))
 {
-    p_->createWidgets();
+    p_->layout = new QGridLayout(this);
+    p_->layout->setMargin(0);
 }
 
 SoundFileWidget::~SoundFileWidget()
@@ -45,32 +59,82 @@ SoundFileWidget::~SoundFileWidget()
     delete p_;
 }
 
-void SoundFileWidget::Private::createWidgets()
+SoundFileWidget::Private::Display* SoundFileWidget::Private::createDisplay()
 {
-    auto lh = new QHBoxLayout(p);
-    lh->setMargin(0);
+    auto d = new Display;
 
-        vruler = new Ruler(p);
-        vruler->setOptions(Ruler::O_EnableAllY);
-        vruler->setMaximumWidth(40);
-        lh->addWidget(vruler);
+    d->vruler = new Ruler(p);
+    d->vruler->setOptions(Ruler::O_EnableAllY);
+    d->vruler->setMaximumWidth(40);
 
-        display = new SoundFileDisplay(p);
-        display->setRulerOptions(Ruler::O_EnableAllX | Ruler::O_DrawY);
-        lh->addWidget(display);
+    d->display = new SoundFileDisplay(p);
+    d->display->setRulerOptions(Ruler::O_EnableAllX | Ruler::O_DrawY);
 
-        vruler->setViewSpace(display->viewSpace());
+    d->vruler->setViewSpace(d->display->viewSpace());
 
-    connect(vruler, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
-            display, SLOT(setViewSpace(UTIL::ViewSpace)));
-    connect(display, SIGNAL(viewSpaceChanged(UTIL::ViewSpace)),
-            vruler, SLOT(setViewSpace(UTIL::ViewSpace)));
+    connect(d->vruler, &Ruler::viewSpaceChanged,
+            [=](const UTIL::ViewSpace& v)
+    {
+        auto vs = d->display->viewSpace();
+        vs.setY(v.y());
+        vs.setScaleY(v.scaleY());
+        d->display->setViewSpace(vs);
+    });
+
+    connect(d->display, &SoundFileDisplay::viewSpaceChanged,
+            [=](const UTIL::ViewSpace& v)
+    {
+        for (auto dis : displays)
+        if (d != dis)
+        {
+            auto vs = dis->display->viewSpace();
+            vs.setX(v.x());
+            vs.setScaleX(v.scaleX());
+            dis->display->setViewSpace(vs);
+        }
+    });
+
+    connect(d->display, &SoundFileDisplay::doubleClicked,
+            [=](Double time)
+    {
+        emit p->doubleClicked(d->display->soundFile(), time);
+    });
+
+    return d;
 }
 
-void SoundFileWidget::setSoundFile(AUDIO::SoundFile* sf)
+AUDIO::SoundFile* SoundFileWidget::soundFile(int idx) const
 {
-    p_->display->setSoundFile(sf);
-    p_->display->fitToSoundFile();
+    if (idx < 0 || idx >= p_->displays.size())
+        return nullptr;
+    return p_->displays[idx]->display->soundFile();
+}
+
+void SoundFileWidget::clear()
+{
+    for (auto d : p_->displays)
+        delete d;
+
+    p_->displays.clear();
+}
+
+void SoundFileWidget::setSoundFile(AUDIO::SoundFile* sf, int idx)
+{
+    if (idx < 0)
+        return;
+    if (idx >= p_->displays.size())
+    {
+        auto d = p_->createDisplay();
+        p_->layout->addWidget(d->vruler, p_->displays.size(), 0);
+        p_->layout->addWidget(d->display, p_->displays.size(), 1);
+        p_->displays.append(d);
+        d->display->setSoundFile(sf);
+        d->display->fitToSoundFile();
+    }
+    else
+    {
+        p_->displays[idx]->display->setSoundFile(sf);
+    }
 }
 
 } // namespace GUI

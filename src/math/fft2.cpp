@@ -185,7 +185,7 @@ void OouraFFT<F>::setImag(F* data, size_t num, F i) const
 template <typename F>
 void OouraFFT<F>::complexMultiply(F * dst, const F* A, const F* B) const
 {
-    assert(dst != a && dst != b);
+    assert(dst != A && dst != B);
 
     size_t num2 = size_ / 2 + 1;
     for (size_t i=0; i<num2; ++i)

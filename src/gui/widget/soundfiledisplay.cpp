@@ -32,12 +32,13 @@ struct SoundFileDisplay::Private
         , soundFile     (nullptr)
         , rulerOptions  (Ruler::O_EnableAll)
         , doDragSpace   (false)
+        , doInterpol    (false)
     {
         gridDraw->setOptions(
                     PAINTER::Grid::O_DrawAll);
         valueDraw->setCurveFunction([=](Double t)
         {
-            return soundFile ? soundFile->value(t, 0) : 0.;
+            return soundFile && t >= 0. ? soundFile->value(t, 0, doInterpol) : 0.;
         });
     }
 
@@ -63,7 +64,7 @@ struct SoundFileDisplay::Private
     AUDIO::SoundFile* soundFile;
 
     int rulerOptions;
-    bool doDragSpace;
+    bool doDragSpace, doInterpol;
     QPoint dragStart, lastPos;
     UTIL::ViewSpace dragStartSpace;
 };
@@ -86,6 +87,8 @@ const UTIL::ViewSpace& SoundFileDisplay::viewSpace() const
 }
 
 int SoundFileDisplay::rulerOptions() const { return p_->rulerOptions; }
+
+AUDIO::SoundFile* SoundFileDisplay::soundFile() const { return p_->soundFile; }
 
 void SoundFileDisplay::setViewSpace(const UTIL::ViewSpace& v)
 {

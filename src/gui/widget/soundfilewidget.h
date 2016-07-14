@@ -14,6 +14,7 @@
 #include <QWidget>
 
 #include "audio/audio_fwd.h"
+#include "types/float.h"
 
 namespace MO {
 namespace GUI {
@@ -25,11 +26,16 @@ public:
     explicit SoundFileWidget(QWidget *parent = 0);
     ~SoundFileWidget();
 
+    AUDIO::SoundFile* soundFile(int idx = 0) const;
+
 signals:
+
+    void doubleClicked(AUDIO::SoundFile*, Double time);
 
 public slots:
 
-    void setSoundFile(AUDIO::SoundFile*);
+    void setSoundFile(AUDIO::SoundFile*, int idx = 0);
+    void clear();
 
 private:
     struct Private;

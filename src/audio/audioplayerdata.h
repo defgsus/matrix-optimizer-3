@@ -20,6 +20,8 @@ namespace AUDIO {
 /** Abstract data class to be played with AudioPlayer */
 class AudioPlayerData : public RefCounted
 {
+protected:
+    ~AudioPlayerData() { }
 public:
     AudioPlayerData() : RefCounted("AudioPlayerData") { }
 
@@ -47,21 +49,25 @@ public:
 
 class AudioPlayerSample : public AudioPlayerData
 {
+protected:
+    ~AudioPlayerSample() { }
 public:
     explicit AudioPlayerSample(size_t length, size_t numChannels, size_t sampleRate);
 
     /** Creates a new instance by copying the given data */
-    static AudioPlayerSample * fromData(const F32 * data, size_t length, size_t sampleRate);
+    static AudioPlayerSample * fromData(const F32 * data,
+                                        size_t length, size_t sampleRate);
 
-    virtual size_t numChannels() const { return p_chan_; }
-    virtual size_t sampleRate() const { return p_rate_; }
-    virtual size_t lengthSamples() const { return p_len_; }
-    virtual size_t pos() const { return p_pos_; }
+    virtual size_t numChannels() const override { return p_chan_; }
+    virtual size_t sampleRate() const override { return p_rate_; }
+    virtual size_t lengthSamples() const override { return p_len_; }
+    virtual size_t pos() const override { return p_pos_; }
 
-    virtual void seek(size_t pos) { p_pos_ = pos; }
+    virtual void seek(size_t pos) override { p_pos_ = pos; }
 
-    virtual size_t get(F32 * buffer, size_t numChan, size_t blockSize);
-    virtual size_t getInterlaced(F32 * buffer, size_t numChan, size_t blockSize);
+    virtual size_t get(F32 * buffer, size_t numChan, size_t blockSize) override;
+    virtual size_t getInterlaced(
+                       F32 * buffer, size_t numChan, size_t blockSize) override;
 
     F32 * samples() { return &p_data_[0]; }
     const F32 * samples() const { return &p_data_[0]; }
@@ -72,6 +78,34 @@ private:
     std::vector<F32> p_data_;
 };
 
+
+class SoundFile;
+
+class AudioPlayerSoundFile : public AudioPlayerData
+{
+protected:
+    ~AudioPlayerSoundFile();
+public:
+    explicit AudioPlayerSoundFile(SoundFile*);
+
+    SoundFile* soundFile() const { return p_sf_; }
+
+    virtual size_t numChannels() const override;
+    virtual size_t sampleRate() const override;
+    virtual size_t lengthSamples() const override;
+    virtual size_t pos() const override { return p_pos_; }
+
+    virtual void seek(size_t pos) override { p_pos_ = pos; }
+
+    virtual size_t get(F32 * buffer, size_t numChan, size_t blockSize) override;
+    virtual size_t getInterlaced(
+                       F32 * buffer, size_t numChan, size_t blockSize) override;
+
+private:
+
+    SoundFile* p_sf_;
+    size_t p_pos_;
+};
 
 
 
