@@ -18,6 +18,7 @@
 #include "types/int.h"
 #include "math/convolution.h"
 #include "math/fft2.h"
+#include "math/fftwindow.h"
 #include "gui/widget/soundfilewidget.h"
 #include "audio/tool/soundfile.h"
 #include "audio/tool/soundfilemanager.h"
@@ -572,6 +573,83 @@ void TestFft::runConvolutionDialog()
 }
 
 
+
+
+
+
+
+
+// ------------------- FftFilter test ----------------------
+
+
+
+
+template <typename F>
+void fffilter1(std::vector<F>& output,
+               const std::vector<F>& signal,
+               const std::vector<F>& table)
+{
+    const size_t size = (table.size()-1)*2;
+
+    MATH::OouraFFT<F> fft;
+    fft.init(size);
+    std::vector<F> scratch(size), window(size);
+
+    MATH::FftWindow::makeWindow(
+                window, MATH::FftWindow::T_TRIANGULAR);
+
+    output.clear(); output.resize(signal.size(), F(0));
+
+    size_t pos = 0;
+    while (pos < signal.size())
+    {
+        for (size_t i=0; i<size; ++i)
+            scratch[i] = pos+i >= signal.size() ? F(0)
+                : window[i] * signal[pos+i];
+
+        fft.fft(scratch.data());
+        fft.multiply(scratch.data(), table.data());
+        fft.ifft(scratch.data());
+
+        for (size_t i=0; i<size; ++i)
+            if (pos+i < output.size())
+                output[pos+i] += scratch[i];
+
+        pos += fft.size() / 2;
+    }
+
+}
+
+void TestFft::runFftFilterDialog()
+{
+    const size_t fftSize = 1024;
+
+    std::vector<F32>
+            signal(10000, F32(0)),
+            table(fftSize/2+1, F32(0)),
+            output;
+
+
+    for (size_t i=0; i<signal.size(); ++i)
+    {
+        F32 t = F32(i) / 44100.f;
+        signal[i] = .7*std::sin(t * 6.28f * 100.f)
+                  + .2*std::sin(t * 6.28f * 1000.f)
+                  + .05*(F32(rand()) / RAND_MAX * 2.f - 1.f);
+    }
+
+    for (size_t i=0; i<table.size(); ++i)
+        table[i] = i < 5 ? F32(1) : F32(0);
+
+
+    fffilter1(output, signal, table);
+
+    std::vector<std::vector<F32>*> data;
+    data.push_back(&table);
+    data.push_back(&signal);
+    data.push_back(&output);
+    displayData(data);
+}
 
 
 

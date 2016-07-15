@@ -930,7 +930,7 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             });
             diag->show();
         });
-#ifndef MO_HAMBURG
+
         a = new QAction(tr("export AngelScript namespace"), m);
         m->addAction(a);
         connect(a, &QAction::triggered, [=]()
@@ -938,13 +938,19 @@ void MainWidgetController::createMainMenu(QMenuBar * menuBar)
             exportAngelScriptFunctions("./angelscript_export.xml");
         });
 #endif
-#endif
 
     m->addAction( a = new QAction(tr("Convolution test"), m) );
     connect(a, &QAction::triggered, [=]()
     {
         TestFft::runConvolutionDialog();
     });
+
+    m->addAction( a = new QAction(tr("FFT filter test"), m) );
+    connect(a, &QAction::triggered, [=]()
+    {
+        TestFft::runFftFilterDialog();
+    });
+
 
     // ######### VIEW MENU #########
     m = new QMenu("View", menuBar);

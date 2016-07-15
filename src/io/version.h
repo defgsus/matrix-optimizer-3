@@ -26,13 +26,14 @@
     3.0.3.3-9 LOTS OF CHANGES
     3.0.3.10 add MATH::TimelinePoint::SYMMETRIC_USER
     3.0.3.11 add FloatMatrix
+    3.0.3.12 add ConvolveAO, FftFilterAO, BeatDetectorAO
 */
 
 // all limited to 8 bit
 #define MO_VERSION_MAJOR 3
 #define MO_VERSION_MINOR 0
 #define MO_VERSION_TINY  3
-#define MO_VERSION_MICRO 11
+#define MO_VERSION_MICRO 12
 
 /** Constructs a number from the smaller parts (major = most-significant).
     Should fit into 32 bit for a while... */

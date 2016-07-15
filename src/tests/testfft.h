@@ -21,6 +21,8 @@ public:
     int run();
 
     static void runConvolutionDialog();
+
+    static void runFftFilterDialog();
 };
 
 } // namespace MO

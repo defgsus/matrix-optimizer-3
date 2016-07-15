@@ -18,6 +18,7 @@
 #include "audio/tool/resamplebuffer.h"
 #include "math/timeline1d.h"
 #include "math/fft2.h"
+#include "math/fftwindow.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -49,16 +50,22 @@ struct FftFilterAO::Private
     ParameterTimeline1D
             * pFilterCurve;
 
+    struct PerChannel
+    {
+        AUDIO::ResampleBuffer<F32> inRebuf, outRebuf;
+        AUDIO::AudioBuffer inBuf;
+        std::vector<std::vector<F32>> scratch;
+        size_t curBlock;
+    };
+
     struct PerThread
     {
         std::vector<F32> factors, window;
         MATH::OouraFFT<F32> fft;
-        std::vector<AUDIO::ResampleBuffer<F32>> inRebuf, outRebuf;
-        std::vector<AUDIO::AudioBuffer> inBuf;
-        std::vector<std::vector<F32>> scratch1, scratch2;
+        std::vector<PerChannel> perChan;
     };
     std::vector<PerThread> perThread;
-    bool curveChanged;
+    bool needsUpdate;
 };
 
 FftFilterAO::FftFilterAO()
@@ -143,15 +150,16 @@ void FftFilterAO::onParameterChanged(Parameter * p)
 {
     AudioObject::onParameterChanged(p);
 
-    if (p == p_->pFilterCurve)
-        p_->curveChanged = true;
+    if (p == p_->pFilterCurve
+        || p == p_->pWindowSize)
+        p_->needsUpdate = true;
 }
 
 void FftFilterAO::onParametersLoaded()
 {
     AudioObject::onParametersLoaded();
 
-    p_->curveChanged = true;
+    p_->needsUpdate = true;
 }
 
 void FftFilterAO::updateParameterVisibility()
@@ -180,18 +188,16 @@ void FftFilterAO::Private::updateBuffers(
 {
     const size_t num = pWindowSize->baseValue();
 
-    p.inRebuf.resize(numChan);
-    p.outRebuf.resize(numChan);
-    p.inBuf.resize(numChan);
-    p.scratch1.resize(numChan);
-    p.scratch2.resize(numChan);
-    for (size_t i=0; i<numChan; ++i)
+    p.perChan.resize(numChan);
+    for (Private::PerChannel& c : p.perChan)
     {
-        p.inRebuf[i].setSize(num/2);
-        p.outRebuf[i].setSize(blockSize);
-        p.inBuf[i].setSize(num/2, 3);
-        p.scratch1[i].resize(num, 0.f);
-        p.scratch2[i].resize(num, 0.f);
+        c.curBlock = 0;
+        c.outRebuf.setSize(blockSize);
+        c.inRebuf.setSize(num/2);
+        c.inBuf.setSize(num/2, 2);
+        c.scratch.resize(3);
+        for (auto& s : c.scratch)
+            s.resize(num, 0.f);
     }
 }
 
@@ -207,20 +213,8 @@ void FftFilterAO::Private::updateFft(PerThread* pt)
                     F32(i)/F32(pt->factors.size()-1));
     }
 
-    pt->window.resize(num);
-    for (size_t i=0; i<num/2; ++i)
-    {
-        F32 t = F32(i) / F32(num/2-1);
-        if (t < .25)
-            pt->window[i] = 0.f;
-        else if (t >= .75)
-            pt->window[i] = 1.f;
-        else
-            pt->window[i] = (t-.25) / .5;
-
-    }
-    for (size_t i=0; i<num/2; ++i)
-        pt->window[num-1-i] = pt->window[i];
+    MATH::FftWindow::makeWindow(
+        pt->window, num, MATH::FftWindow::T_COSINE);
 }
 
 
@@ -236,45 +230,17 @@ void FftFilterAO::processAudio(const RenderTime& time)
     Private::PerThread* pt = &p_->perThread[time.thread()];
 
     if (pt->fft.size() != (size_t)p_->pWindowSize->baseValue()
-        || p_->curveChanged)
+        || p_->needsUpdate)
     {
+        p_->updateBuffers(*pt, time.bufferSize(),
+                          std::min(inputs.size(), outputs.size()));
         p_->updateFft(pt);
-        p_->curveChanged = false;
+        p_->needsUpdate = false;
     }
 
     MO_ASSERT(pt->factors.size() == pt->fft.ComplexSize(), "");
 
-    // per-window mode
-    if (0)
-    {
-        MO_ASSERT(pt->inRebuf.size()
-                  == (size_t)std::min(inputs.size(), outputs.size()), "");
-        MO_ASSERT(pt->outRebuf.size()
-                  == (size_t)std::min(inputs.size(), outputs.size()), "");
-
-        AUDIO::AudioBuffer::process(inputs, outputs,
-        [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
-        {
-            pt->inRebuf[chan].push(in);
-            auto scratch = pt->scratch1[chan].data();
-            while (pt->inRebuf[chan].pop(scratch))
-            {
-                pt->fft.fft(scratch);
-
-                pt->fft.multiply(scratch, pt->factors.data());
-
-                pt->fft.ifft(scratch);
-                for (size_t i=0; i<pt->fft.size(); ++i)
-                    scratch[i] = pt->window[i];
-
-                pt->outRebuf[chan].push(scratch, pt->fft.size());
-            }
-
-            pt->outRebuf[chan].pop(out);
-        });
-    }
     // overlap
-    else
     {
         MO_ASSERT(pt->window.size() == pt->fft.size(), "");
         MO_ASSERT(pt->inRebuf.size()
@@ -282,54 +248,54 @@ void FftFilterAO::processAudio(const RenderTime& time)
         MO_ASSERT(pt->outRebuf.size()
                   == (size_t)std::min(inputs.size(), outputs.size()), "");
 
+/*
+            1   2   3
+          |-------|
+      :.......|-------|
+          :.......|-------|
+
+*/
         AUDIO::AudioBuffer::process(inputs, outputs,
         [=](uint chan, const AUDIO::AudioBuffer * in, AUDIO::AudioBuffer * out)
         {
-            pt->inRebuf[chan].push(in);
-            while (pt->inRebuf[chan].pop(pt->inBuf[chan].writePointer()))
+            Private::PerChannel* pc = &pt->perChan[chan];
+            pc->inRebuf.push(in);
+            // read a half-window
+            while (pc->inRebuf.pop(pc->inBuf.writePointer()))
             {
-                const size_t halfSize = pt->fft.size() / 2;
+                const size_t
+                        size = pt->fft.size(),
+                        halfSize = size / 2;
 
-                auto scratch1 = pt->scratch1[chan].data();
-                // second overlapping window
-                auto scratch2 = pt->scratch2[chan].data();
+                // current window
+                auto scratch1 = pc->scratch[pc->curBlock].data(),
+                // previous window
+                     scratch2 = pc->scratch[1-pc->curBlock].data();
 
-                std::cout << pt->inBuf[chan].curReadBlock() << std::endl;
+                pc->inBuf.nextBlock();
+                pc->inBuf.readBlock(scratch1 + halfSize);
+                pc->inBuf.nextBlock();
+                pc->inBuf.readBlock(scratch1);
+                pc->inBuf.nextBlock();
 
-                pt->inBuf[chan].readBlock(scratch1);
-                pt->inBuf[chan].nextBlock();
-                pt->inBuf[chan].readBlock(scratch1 + halfSize);
-                pt->inBuf[chan].readBlock(scratch2);
-                pt->inBuf[chan].nextBlock();
-                pt->inBuf[chan].readBlock(scratch2 + halfSize);
-
-                pt->inBuf[chan].nextBlock();
-                pt->inBuf[chan].nextBlock();
-
+                // apply window
+                for (size_t i=0; i<size; ++i)
+                    scratch1[i] *= pt->window[i];
 #if 1
-                // filter one window
+                // filter the window
                 pt->fft.fft(scratch1);
                 pt->fft.multiply(scratch1, pt->factors.data());
                 pt->fft.ifft(scratch1);
+#endif
+                // combine
+                for (size_t i=0; i<halfSize; ++i)
+                    scratch1[i] += scratch2[i + halfSize];
 
-                // filter one window
-                pt->fft.fft(scratch2);
-                pt->fft.multiply(scratch2, pt->factors.data());
-                pt->fft.ifft(scratch2);
-#endif
-                // combine & windowing
-                size_t winOfs1 = (pt->inBuf[chan].curWriteBlock() % 2) * halfSize,
-                       winOfs2 = halfSize - winOfs1;
-#if 1
-                for (size_t i=0; i<pt->fft.size()/2; ++i)
-                    scratch1[i] =
-                            pt->window[i+winOfs1] * scratch1[i + halfSize]
-                          + pt->window[i+winOfs2] * scratch2[i];
-#endif
-                pt->outRebuf[chan].push(scratch1, pt->fft.size()/2);
+                pc->outRebuf.push(scratch1, halfSize);
+                pc->curBlock = (pc->curBlock + 1) & 1;
             }
 
-            if (!pt->outRebuf[chan].pop(out))
+            if (!pc->outRebuf.pop(out))
                 out->writeNullBlock();
         });
     }

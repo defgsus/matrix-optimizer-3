@@ -286,7 +286,8 @@ HEADERS += \
     $$PWD/audio/tool/beatdetector.h \
     $$PWD/math/fft2.h \
     $$PWD/audio/3rd/KlangFalter/FFTConvolver.h \
-    $$PWD/audio/3rd/KlangFalter/Utilities.h
+    $$PWD/audio/3rd/KlangFalter/Utilities.h \
+    $$PWD/math/fftwindow.h
 
 SOURCES += \
     src/math/timeline1d.cpp \
