@@ -130,6 +130,14 @@ public:
     return (size / 2) + 1;
   }
 
+  size_t ComplexSize() const { return ComplexSize(size_); }
+
+  /** @brief Multiply the complex data with the factor table.
+      @param complexData The fourier transform in interleaved real/imag format
+      @param factors A table of factors of length ComplexSize()
+      */
+  void multiply(F* complexData, const F* factors) const;
+
 private:
 
   size_t size_;
@@ -148,10 +156,6 @@ private:
   void rftbsub(int n, F *a, int nc, F *c);
   void cft1st(int n, F *a, F *w);
   void cftmdl(int n, int l, F *a, F *w);
-
-  // Prevent uncontrolled usage
-  OouraFFT(const OouraFFT&) = delete;
-  OouraFFT& operator=(const OouraFFT&) = delete;
 };
 
 

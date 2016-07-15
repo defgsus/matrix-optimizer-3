@@ -39,6 +39,8 @@ class AudioBuffer
     size_t blockSize() const { return p_blockSize_; }
     size_t blockSizeBytes() const { return p_blockSize_ * sizeof(F32); }
     size_t numBlocks() const { return p_numBlocks_; }
+    size_t curReadBlock() const { return p_readBlock_; }
+    size_t curWriteBlock() const { return p_writeBlock_; }
 
     /** Returns an ascii dump of the current buffer contents */
     QString toAscii(uint w = 70, uint h = 15) const;
@@ -144,7 +146,8 @@ class AudioBuffer
 
     static void process(const QList<AudioBuffer *> &dst,
                         const QList<AudioBuffer *> &src,
-                        std::function<void(uint channel, const AudioBuffer*,AudioBuffer*)> func,
+                        std::function<void(uint channel,
+                                           const AudioBuffer*,AudioBuffer*)> func,
                         bool callNextBlock = false);
 private:
 

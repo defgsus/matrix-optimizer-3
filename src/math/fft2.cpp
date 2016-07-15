@@ -203,6 +203,19 @@ void OouraFFT<F>::complexMultiply(F * dst, const F* A, const F* B) const
     }
 }
 
+/** @todo make it more efficient */
+template <typename F>
+void OouraFFT<F>::multiply(F *data, const F *factors) const
+{
+    const size_t num = ComplexSize();
+    for (size_t i=0; i<num; ++i)
+    {
+        setReal(data, i, getReal(data, i) * factors[i]);
+        setImag(data, i, getImag(data, i) * factors[i]);
+    }
+}
+
+
 template <typename F>
 void OouraFFT<F>::rdft(int n, int isgn, F *a, int *ip, F *w)
 {

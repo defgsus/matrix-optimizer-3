@@ -15,7 +15,8 @@
 #include <vector>
 #include <cstring>
 
-#include "types/float.h"
+#include "audiobuffer.h"
+#include "io/error.h"
 
 #if 0
 #   include "io/log.h"
@@ -55,10 +56,12 @@ class ResampleBuffer
 
     /** Shove a piece of data into the buffer */
     void push(const T* data, size_t size);
+    void push(const AudioBuffer*);
 
     /** Pop size() bytes into @p src and return true.
         Returns false when no data was ready. */
     bool pop(T* src);
+    bool pop(AudioBuffer*);
 
     /** Same as pop(T*) but discards data when ready. */
     bool pop();
@@ -159,6 +162,18 @@ inline bool ResampleBuffer<T>::pop()
     return true;
 }
 
+template <typename T>
+inline void ResampleBuffer<T>::push(const AudioBuffer* b)
+{
+    push(b->readPointer(), b->blockSize());
+}
+
+template <typename T>
+inline bool ResampleBuffer<T>::pop(AudioBuffer* b)
+{
+    MO_ASSERT(b->blockSize() >= size(), "");
+    return pop(b->writePointer());
+}
 
 template <typename T>
 inline bool ResampleBuffer<T>::hasBuffer() const
