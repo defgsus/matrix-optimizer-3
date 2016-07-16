@@ -27,25 +27,48 @@ public:
     */
     enum Type
     {
-        T_COSINE,
-        T_TRIANGULAR
+        T_HANNING,
+        T_FLATTOP,
+        T_TRIANGULAR,
+        T_GAUSS
     };
 
     /** Generates a window of @p num samples into data */
     template <typename F>
     static void makeWindow(F* data, size_t num, Type type)
     {
-        const size_t num2 = num;
+        const size_t num2 = num / 2;
+        const F PI = F(3.14159265);
+                //PI2 = PI * F(2);
         switch (type)
         {
-            case T_COSINE:
+            case T_HANNING:
                 for (size_t i=0; i<num2; ++i)
-                    data[i] = F(.5)-F(.5)*std::cos(F(i)/num2 * 3.14159265f);
+                    data[i] = F(.5)-F(.5)*std::cos(F(i)/(num2-1) * PI);
+            break;
+
+            case T_FLATTOP:
+                for (size_t i=0; i<num2; ++i)
+                {
+                    F t = F(i)/(num2-1) * PI;
+                    data[i] = F(1)
+                     - F(1.93293488969227) * std::cos(t)
+                     + F(1.28349769674027) * std::cos(t * F(2))
+                     - F(0.38130801681619) * std::cos(t * F(3))
+                     + F(0.02929730258511) * std::cos(t * F(4));
+                    data[i] /= 4.62708;
+                }
             break;
 
             case T_TRIANGULAR:
                 for (size_t i=0; i<num2; ++i)
                     data[i] = F(i) / (num2-1);
+            break;
+
+            case T_GAUSS:
+                for (size_t i=0; i<num2; ++i)
+                    data[i] = std::exp(-std::pow(
+                            (F(i)-F(num2))/F(num2)*F(2.7183), F(2)));
             break;
         }
 

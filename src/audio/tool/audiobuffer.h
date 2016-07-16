@@ -121,6 +121,10 @@ class AudioBuffer
         p_readBlock_ = p_readBlock_ > 0 ? p_readBlock_ - 1 : p_numBlocks_ - 1;
     }
 
+    /** Multiplies the current write-block with @p amp */
+    void multiply(F32 amp)
+    { F32* p = writePointer(); for (size_t i=0; i<blockSize(); ++i, ++p) *p *= amp; }
+
     // ------ static convenience functions ----------
 
     /* Copies @p size samples from @p src to @p dst */

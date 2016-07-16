@@ -201,7 +201,8 @@ bool ParameterTimeline1D::openEditDialog(QWidget *parent)
 
     bool changed = false;
 
-    diag.connect(&diag, &GUI::TimelineEditDialog::timelineChanged, [this, &diag, &changed]()
+    diag.connect(&diag, &GUI::TimelineEditDialog::timelineChanged,
+                 [this, &diag, &changed]()
     {
         object()->sceneObject()->editor()->setParameterValue(this, diag.timeline());
         changed = true;

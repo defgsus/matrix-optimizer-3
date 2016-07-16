@@ -301,15 +301,15 @@ int TestFft::run()
 
 namespace {
 
-void displayData(const std::vector<std::vector<float>*>& data)
+void displayData(const std::vector<std::vector<float>>& data)
 {
     std::vector<AUDIO::SoundFile*> sfs;
-    for (auto d : data)
+    for (auto& d : data)
     {
         auto sf = AUDIO::SoundFileManager::createSoundFile(1, 1);
         assert(sf->isWriteable());
         assert(sf->isOk());
-        sf->appendDeviceData(d->data(), d->size());
+        sf->appendDeviceData(d.data(), d.size());
         MO_PRINT(sf->infoString());
         sfs.push_back( sf );
     }
@@ -561,14 +561,14 @@ void TestFft::runConvolutionDialog()
 
     // --- display ---
 
-    std::vector<std::vector<float>*> data;
-    data.push_back(&kernel);
-    data.push_back(&input);
-    data.push_back(&conv1);
-    data.push_back(&conv2);
-    data.push_back(&conv3);
-    data.push_back(&conv4);
-    data.push_back(&conv5);
+    std::vector<std::vector<float>> data;
+    data.push_back(kernel);
+    data.push_back(input);
+    data.push_back(conv1);
+    data.push_back(conv2);
+    data.push_back(conv3);
+    data.push_back(conv4);
+    data.push_back(conv5);
     displayData(data);
 }
 
@@ -644,10 +644,16 @@ void TestFft::runFftFilterDialog()
 
     fffilter1(output, signal, table);
 
-    std::vector<std::vector<F32>*> data;
-    data.push_back(&table);
-    data.push_back(&signal);
-    data.push_back(&output);
+    std::vector<std::vector<F32>> data;
+    for (int i=0; i<4; ++i)
+    {
+        std::vector<float> vec;
+        MATH::FftWindow::makeWindow(vec, 128, MATH::FftWindow::Type(i));
+        data.push_back(vec);
+    }
+    data.push_back(table);
+    data.push_back(signal);
+    data.push_back(output);
     displayData(data);
 }
 

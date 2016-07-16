@@ -252,13 +252,15 @@ void SequenceFloat::createParameters()
         4096, true, false);
         p_oscWtSize_->setDefaultEvolvable(false);
 
-        p_wtFreqs_ = params()->createTimeline1DParameter("wtfreqs", tr("frequency spectrum"),
+        p_wtFreqs_ = params()->createTimeline1DParameter(
+                    "wtfreqs", tr("frequency spectrum"),
                     tr("Editable curve for the amplitude of each frequency band"),
-                    0,
+                    nullptr,
                     0.0, 100.0);
-        p_wtPhases_ = params()->createTimeline1DParameter("wtphases", tr("phase spectrum"),
+        p_wtPhases_ = params()->createTimeline1DParameter(
+                    "wtphases", tr("phase spectrum"),
                     tr("Editable curve for the phase of each frequency band"),
-                    0,
+                    nullptr,
                     0.0, 100.0, -1, 1);
 
         p_useFreq_ = params()->createBooleanParameter("use_freq", tr("use frequency"),

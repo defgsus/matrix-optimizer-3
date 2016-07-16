@@ -893,7 +893,7 @@ ParameterTimeline1D * Parameters::createTimeline1DParameter(
 
 ParameterTimeline1D * Parameters::createTimeline1DParameter(
         const QString& id, const QString& name, const QString& statusTip,
-        const MATH::Timeline1d * defaultValue,
+        const MATH::Timeline1d* defaultValue,
         Double minTime, Double maxTime, Double minValue, Double maxValue,
         bool editable)
 {

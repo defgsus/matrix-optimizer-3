@@ -210,9 +210,8 @@ public:
                 const MATH::Timeline1d * defaultValue,
                 Double minTime, Double maxTime, bool editable = true);
 
-    ParameterTimeline1D * createTimeline1DParameter(
-                const QString& id, const QString& name, const QString& statusTip,
-                const MATH::Timeline1d * defaultValue,
+    ParameterTimeline1D * createTimeline1DParameter(const QString& id, const QString& name, const QString& statusTip,
+                const MATH::Timeline1d* defaultValue,
                 Double minTime, Double maxTime, Double minValue, Double maxValue,
                 bool editable = true);
 
