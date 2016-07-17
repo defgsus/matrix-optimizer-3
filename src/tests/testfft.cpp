@@ -595,8 +595,8 @@ void fffilter1(std::vector<F>& output,
     fft.init(size);
     std::vector<F> scratch(size), window(size);
 
-    MATH::FftWindow::makeWindow(
-                window, MATH::FftWindow::T_TRIANGULAR);
+    MATH::FftWindow w;
+    w.makeWindow(window, MATH::FftWindow::T_TRIANGULAR);
 
     output.clear(); output.resize(signal.size(), F(0));
 
@@ -617,7 +617,43 @@ void fffilter1(std::vector<F>& output,
 
         pos += fft.size() / 2;
     }
+}
 
+template <typename F>
+void fffilter2(std::vector<F>& output,
+               const std::vector<F>& signal,
+               const std::vector<F>& table)
+{
+    const size_t size = (table.size()-1)*2;
+
+    MATH::OouraFFT<F> fft;
+    fft.init(size);
+    std::vector<F> scratch(size), window(size), mixWindow(size);
+
+    MATH::FftWindow w;
+    w.makeWindow(window, MATH::FftWindow::T_TRIANGULAR);
+    w.alpha = .2;
+    w.makeWindow(mixWindow, MATH::FftWindow::T_TRIANGULAR);
+
+    output.clear(); output.resize(signal.size(), F(0));
+
+    size_t pos = 0;
+    while (pos < signal.size())
+    {
+        for (size_t i=0; i<size; ++i)
+            scratch[i] = pos+i >= signal.size() ? F(0)
+                : window[i] * signal[pos+i];
+
+        fft.fft(scratch.data());
+        fft.multiply(scratch.data(), table.data());
+        fft.ifft(scratch.data());
+
+        for (size_t i=0; i<size; ++i)
+            if (pos+i < output.size())
+                output[pos+i] += scratch[i] * mixWindow[i];
+
+        pos += fft.size() / 2;
+    }
 }
 
 void TestFft::runFftFilterDialog()
@@ -625,9 +661,9 @@ void TestFft::runFftFilterDialog()
     const size_t fftSize = 1024;
 
     std::vector<F32>
-            signal(10000, F32(0)),
             table(fftSize/2+1, F32(0)),
-            output;
+            signal(10000, F32(0)),
+            output1, output2;
 
 
     for (size_t i=0; i<signal.size(); ++i)
@@ -639,21 +675,31 @@ void TestFft::runFftFilterDialog()
     }
 
     for (size_t i=0; i<table.size(); ++i)
-        table[i] = i < 5 ? F32(1) : F32(0);
+        table[i] = //i < 5 ? F32(1) : F32(0);
+                    i % 2 == 0;
 
 
-    fffilter1(output, signal, table);
+    fffilter1(output1, signal, table);
+    fffilter2(output2, signal, table);
 
     std::vector<std::vector<F32>> data;
-    for (int i=0; i<4; ++i)
+    std::vector<float> vec(200*6*3, F32(0));
+    for (int i=0; i<6; ++i)
     {
-        std::vector<float> vec;
-        MATH::FftWindow::makeWindow(vec, 128, MATH::FftWindow::Type(i));
-        data.push_back(vec);
+        MATH::FftWindow w(0.);
+        std::vector<F32> win;
+        w.makeWindow(&vec[(i*3)*200], 128, MATH::FftWindow::Type(i));
+        w.makeWindow(win, 128, MATH::FftWindow::Type(i));
+        w.alpha = .5;
+        w.makeWindow(&vec[(i*3+1)*200], 128, MATH::FftWindow::Type(i));
+        for (int j=0; j<128; ++j)
+            vec[(i*3+2)*200+j] = win[i] + win[(i+64)%128];
     }
+    data.push_back(vec);
     data.push_back(table);
     data.push_back(signal);
-    data.push_back(output);
+    data.push_back(output1);
+    data.push_back(output2);
     displayData(data);
 }
 

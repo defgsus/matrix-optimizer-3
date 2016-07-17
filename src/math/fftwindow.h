@@ -18,7 +18,7 @@
 namespace MO {
 namespace MATH {
 
-/** Namespace for generating a windowing function */
+/** Class for generating a windowing function */
 class FftWindow
 {
 public:
@@ -30,14 +30,27 @@ public:
         T_HANNING,
         T_FLATTOP,
         T_TRIANGULAR,
-        T_GAUSS
+        T_GAUSS,
+        T_BLACKMAN,
+        T_BLACKMAN_HARRIS
     };
+
+    /** Defines the size of a flat top area.
+        0.0 leaves the windowing functions unchanged.
+        1.0 makes a rectangular window without transition. */
+    double alpha;
+
+    FftWindow(double alpha = 0.)
+        : alpha     (alpha)
+    { }
 
     /** Generates a window of @p num samples into data */
     template <typename F>
-    static void makeWindow(F* data, size_t num, Type type)
+    void makeWindow(F* data, size_t num, Type type) const
     {
-        const size_t num2 = num / 2;
+        const size_t numA = std::max(0, std::min(int(num)/2-1,
+                                     int(num/2*alpha) ));
+        const size_t num2 = num / 2 - numA;
         const F PI = F(3.14159265);
                 //PI2 = PI * F(2);
         switch (type)
@@ -70,21 +83,46 @@ public:
                     data[i] = std::exp(-std::pow(
                             (F(i)-F(num2))/F(num2)*F(2.7183), F(2)));
             break;
+
+            case T_BLACKMAN:
+                for (size_t i=0; i<num2; ++i)
+                {
+                    F t = F(i)/(num2-1) * PI;
+                    data[i] = F(0.42)
+                            - F(0.50) * std::cos(t)
+                            + F(0.08) * std::cos(t * F(2));
+                }
+            break;
+
+            case T_BLACKMAN_HARRIS:
+                for (size_t i=0; i<num2; ++i)
+                {
+                    F t = F(i)/(num2-1) * PI;
+                    data[i] = F(0.35875)
+                            - F(0.48829) * std::cos(t )
+                            + F(0.14128) * std::cos(t * F(2))
+                            - F(0.01168) * std::cos(t * F(3));
+                }
+            break;
         }
 
-        for (size_t i=0; i<num2; ++i)
+        // set flat-top area
+        for (size_t i=num2; i<num/2; ++i)
+            data[i] = F(1);
+        // mirror
+        for (size_t i=0; i<num/2; ++i)
             data[num-1-i] = data[i];
     }
 
     template <typename F>
-    static void makeWindow(std::vector<F>& data, size_t num, Type type)
+    void makeWindow(std::vector<F>& data, size_t num, Type type) const
     {
         data.resize(num);
         makeWindow(data.data(), num, type);
     }
 
     template <typename F>
-    static void makeWindow(std::vector<F>& data, Type type)
+    void makeWindow(std::vector<F>& data, Type type) const
     {
         makeWindow(data.data(), data.size(), type);
     }

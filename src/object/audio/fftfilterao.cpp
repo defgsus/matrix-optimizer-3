@@ -13,12 +13,14 @@
 #include "object/param/parameterfloat.h"
 #include "object/param/parameterint.h"
 #include "object/param/parameterselect.h"
+#include "object/param/parametertext.h"
 #include "object/param/parametertimeline1d.h"
 #include "audio/tool/audiobuffer.h"
 #include "audio/tool/resamplebuffer.h"
 #include "math/timeline1d.h"
 #include "math/fft2.h"
 #include "math/fftwindow.h"
+#include "math/funcparser/parser.h"
 #include "io/datastream.h"
 #include "io/error.h"
 
@@ -34,9 +36,12 @@ struct FftFilterAO::Private
 
     }
 
+    struct PerWindow;
     struct PerThread;
+    void createWindowParams(PerWindow*, const QString& suffix);
     void updateBuffers(PerThread& p, size_t blockSize, size_t numChan);
     void updateFft(PerThread* pt);
+    void updateFactors(std::vector<F32>& factors, size_t num, PerWindow* pw);
 
     FftFilterAO * ao;
 
@@ -48,10 +53,35 @@ struct FftFilterAO::Private
     ParameterSelect
             * pWindowSize,
             * pWindowType,
-            * pDoMix;
-    ParameterTimeline1D
-            * pFilterCurve,
-            * pFilterCurve2;
+            * pDoMix,
+            * pDoMixWin;
+
+    struct Equation
+    {
+        PPP_NAMESPACE::Parser parser;
+        PPP_NAMESPACE::Float bin, x, xr, N;
+        Equation()
+        {
+            parser.variables().add(
+                "i", &bin, tr("The current bin number").toStdString());
+            parser.variables().add(
+                "x", &x, tr("The position along the curve [0,1]").toStdString());
+            parser.variables().add(
+                "xr", &xr, tr("The position along the curve in radians").toStdString());
+            parser.variables().add(
+                "N", &N, tr("The number of bins").toStdString());
+        }
+    };
+
+    struct PerWindow
+    {
+        ParameterSelect
+                * pMode;
+        ParameterTimeline1D
+                * pFilterCurve;
+        ParameterText
+                * pEqu;
+    };
 
     struct PerChannel
     {
@@ -63,11 +93,13 @@ struct FftFilterAO::Private
 
     struct PerThread
     {
-        std::vector<F32> factors, factors2, factorsMix, window;
+        std::vector<F32> factors, factors2, factorsMix,
+                window, mixWindow;
         MATH::OouraFFT<F32> fft;
         F32 prevMix;
         std::vector<PerChannel> perChan;
     };
+    std::vector<PerWindow> perWindow;
     std::vector<PerThread> perThread;
     bool needsUpdate;
 };
@@ -111,22 +143,9 @@ void FftFilterAO::createParameters()
                     tr("This enables a second response curve and a mixing value"),
                     tr("Off"), tr("On"), false, true, false);
 
-        auto tl = new MATH::Timeline1d;
-        tl->add(0., 1., MATH::TimelinePoint::LINEAR);
-        tl->add(1., 0., MATH::TimelinePoint::LINEAR);
-        p_->pFilterCurve = params()->createTimeline1DParameter(
-                    "response", tr("response curve"),
-                    tr("The response of the filter"),
-                    tl, 0., 1., -10., 10., true);
-
-        tl->clear();
-        tl->add(0., 0., MATH::TimelinePoint::LINEAR);
-        tl->add(1., 1., MATH::TimelinePoint::LINEAR);
-        p_->pFilterCurve2 = params()->createTimeline1DParameter(
-                    "response2", tr("response curve 2"),
-                    tr("The 2nd response of the filter"),
-                    tl, 0., 1., -10., 10., true);
-        tl->releaseRef("finish create parameter");
+        p_->perWindow.resize(2);
+        p_->createWindowParams(&p_->perWindow[0], "");
+        p_->createWindowParams(&p_->perWindow[1], "2");
 
         p_->pMix = params()->createFloatParameter(
                     "mix", tr("mix"),
@@ -166,16 +185,66 @@ void FftFilterAO::createParameters()
         p_->pWindowType = params()->createSelectParameter(
                     "fft_window", tr("window type"),
                     tr("The windowing function"),
-        { "hanning", "flattop", "tri", "gauss" },
-        { tr("hanning"), tr("flat-top"), tr("triangular"), tr("gauss") },
-        { "", "", "", "" },
-        { MATH::FftWindow::T_HANNING,
+        { "tri", "hanning", "blackman", "gauss", "flattop" },
+        { tr("Triangular"), tr("Hanning"), tr("Blackman"),
+          tr("Gauss"), tr("flat-top") },
+        { "", "", "", "", "" },
+        { MATH::FftWindow::T_TRIANGULAR,
+          MATH::FftWindow::T_HANNING,
+          MATH::FftWindow::T_BLACKMAN,
+          MATH::FftWindow::T_GAUSS,
           MATH::FftWindow::T_FLATTOP,
-          MATH::FftWindow::T_TRIANGULAR,
-          MATH::FftWindow::T_GAUSS },
-                    MATH::FftWindow::T_HANNING, true, false);
+
+                    },
+          MATH::FftWindow::T_HANNING, true, false);
+
+        p_->pDoMixWin = params()->createBooleanParameter(
+                    "do_mix_win", tr("apply mixing window"),
+            tr("Applies a windowing function before mixing the filtered windows"),
+                    tr("Off"), tr("On"), true, true, true);
 
     params()->endParameterGroup();
+
+}
+
+void FftFilterAO::Private::createWindowParams(PerWindow* pw, const QString& suffix)
+{
+    pw->pMode = ao->params()->createSelectParameter(
+                "response_mode" + suffix, tr("type") + " " + suffix,
+                tr("Select the mode of defining the filter response"),
+        { "tl", "equ" },
+        { tr("timeline"), tr("equation") },
+        { tr("Define the response by editing a timeline"),
+          tr("Define the response with an equation") },
+        { 0, 1 },
+        0, true, false);
+
+    auto tl = new MATH::Timeline1d;
+    if (suffix.isEmpty())
+    {
+        tl->add(0., 1., MATH::TimelinePoint::LINEAR);
+        tl->add(1., 0., MATH::TimelinePoint::LINEAR);
+    }
+    else
+    {
+        tl->add(0., 0., MATH::TimelinePoint::LINEAR);
+        tl->add(1., 1., MATH::TimelinePoint::LINEAR);
+    }
+    pw->pFilterCurve = ao->params()->createTimeline1DParameter(
+                "response" + suffix, tr("response curve") + " " + suffix,
+                tr("The response of the filter"),
+                tl, 0., 1., -10., 10., true);
+    tl->releaseRef("finish create parameter");
+
+    pw->pEqu = ao->params()->createTextParameter(
+                "response_func" + suffix, tr("equation") + " " + suffix,
+                tr("An equation calculating the filter response"),
+                TT_EQUATION,
+                "i % 2 == 0", true, false);
+    Equation tmpequ;
+    pw->pEqu->setVariableNames(tmpequ.parser.variables().variableNames());
+    pw->pEqu->setVariableDescriptions(
+                tmpequ.parser.variables().variableDescriptions());
 
 }
 
@@ -183,10 +252,15 @@ void FftFilterAO::onParameterChanged(Parameter * p)
 {
     AudioObject::onParameterChanged(p);
 
-    if (p == p_->pFilterCurve
-        || p == p_->pFilterCurve2
-        || p == p_->pWindowSize
-        || p == p_->pWindowType)
+    if (   p == p_->pDoMix
+           || p == p_->perWindow[0].pMode
+           || p == p_->perWindow[0].pFilterCurve
+           || p == p_->perWindow[0].pEqu
+           || p == p_->perWindow[1].pMode
+           || p == p_->perWindow[1].pFilterCurve
+           || p == p_->perWindow[1].pEqu
+           || p == p_->pWindowSize
+           || p == p_->pWindowType)
         p_->needsUpdate = true;
 }
 
@@ -201,9 +275,17 @@ void FftFilterAO::updateParameterVisibility()
 {
     AudioObject::updateParameterVisibility();
 
-    p_->pMix->setVisible(p_->pDoMix->baseValue());
-    p_->pFilterCurve2->setVisible(p_->pDoMix->baseValue());
-
+    const bool doMix = p_->pDoMix->baseValue();
+    p_->pMix->setVisible(doMix);
+    bool e = true;
+    for (int i=0; i<2; ++i)
+    {
+        const int mode = p_->perWindow[i].pMode->baseValue();
+        p_->perWindow[i].pMode->setVisible(e);
+        p_->perWindow[i].pFilterCurve->setVisible(e && mode == 0);
+        p_->perWindow[i].pEqu->setVisible(e && mode == 1);
+        e = doMix;
+    }
 }
 
 void FftFilterAO::setNumberThreads(uint num)
@@ -244,22 +326,53 @@ void FftFilterAO::Private::updateFft(PerThread* pt)
     const size_t num = pWindowSize->baseValue();
     pt->fft.init(num);
 
-    pt->prevMix = -1.f;
-    pt->factors.resize(pt->fft.ComplexSize());
-    pt->factors2.resize(pt->fft.ComplexSize());
-    for (size_t i=0; i<pt->factors.size(); ++i)
-    {
-        pt->factors[i] = pFilterCurve->baseValue().get(
-                    F32(i)/F32(pt->factors.size()-1));
-        pt->factors2[i] = pFilterCurve2->baseValue().get(
-                    F32(i)/F32(pt->factors.size()-1));
-    }
-
-    MATH::FftWindow::makeWindow(
+    MATH::FftWindow w;
+    w.makeWindow(
         pt->window, num, MATH::FftWindow::Type(pWindowType->baseValue()));
+    w.alpha = .8;
+    w.makeWindow(pt->mixWindow, num, MATH::FftWindow::T_HANNING);
+
+    ao->clearError();
+    pt->prevMix = -1.f;
+    updateFactors(pt->factors, pt->fft.ComplexSize(), &perWindow[0]);
+    if (pDoMix->baseValue())
+        updateFactors(pt->factors2, pt->fft.ComplexSize(), &perWindow[1]);
 }
 
+void FftFilterAO::Private::updateFactors(
+        std::vector<F32>& factors, size_t num, PerWindow *pw)
+{
+    factors.clear(); factors.resize(num, F32(0));
+    switch (pw->pMode->baseValue())
+    {
+        case 0:
+            for (size_t i=0; i<num; ++i)
+                factors[i] = pw->pFilterCurve->baseValue().get(F32(i)/F32(num-1));
+        break;
 
+        case 1:
+        {
+            Equation equ;
+            if (!equ.parser.parse(pw->pEqu->baseValue().toStdString()))
+            {
+                pw->pEqu->addErrorMessage(0, tr("Parsing failed"));
+                ao->setErrorMessage(tr("Parsing failed"));
+                return;
+            }
+
+            for (size_t i=0; i<num; ++i)
+            {
+                equ.bin = i;
+                equ.x = PPP_NAMESPACE::Float(i) / (num-1);
+                equ.xr = equ.x * 3.14159265 * 2.;
+                equ.N = num;
+                factors[i] = equ.parser.eval();
+                //std::cout << factors[i] << " ";
+            }
+            //std::cout << std::endl;
+        }
+    }
+}
 
 void FftFilterAO::processAudio(const RenderTime& time)
 {
@@ -301,6 +414,7 @@ void FftFilterAO::processAudio(const RenderTime& time)
     }
 
     const F32 amp = p_->pAmp->value(time);
+    const bool doMixWin = p_->pDoMixWin->value(time);
 
 /* overlap:
       |-------|
@@ -330,7 +444,7 @@ void FftFilterAO::processAudio(const RenderTime& time)
             pc->inBuf.readBlock(scratch1);
             pc->inBuf.nextBlock();
 
-            // apply window
+            // apply pre-fft window
             for (size_t i=0; i<size; ++i)
                 scratch1[i] *= pt->window[i];
 #if 1
@@ -338,6 +452,12 @@ void FftFilterAO::processAudio(const RenderTime& time)
             pt->fft.fft(scratch1);
             pt->fft.multiply(scratch1, factors);
             pt->fft.ifft(scratch1);
+#endif
+#if 1
+            // apply mixing window
+            if (doMixWin)
+            for (size_t i=0; i<size; ++i)
+                scratch1[i] *= pt->mixWindow[i];
 #endif
             // combine
             for (size_t i=0; i<halfSize; ++i)
