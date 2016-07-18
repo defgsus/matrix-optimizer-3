@@ -129,12 +129,14 @@ void FloatMatrixAO::setNumberThreads(uint count)
     p_->rebufs.resize(count);
 }
 
+/*
 void FloatMatrixAO::setAudioBuffers(uint thread, uint bufferSize,
                             const QList<AUDIO::AudioBuffer*>&,
                             const QList<AUDIO::AudioBuffer*>&)
 {
 
 }
+*/
 
 void FloatMatrixAO::processAudio(const RenderTime& time)
 {

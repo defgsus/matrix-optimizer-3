@@ -206,7 +206,7 @@ void SceneRenderer::render(bool renderToScreen)
                     std::max(0., std::min(1., time - lastTime_)),
                     time * scene_->sampleRate(),
                     scene_->sampleRate(),
-                    256 /** @todo have correct buffer size here */,
+                    256 /**< @todo have correct buffer size here */,
                     MO_GFX_THREAD);
 
     }

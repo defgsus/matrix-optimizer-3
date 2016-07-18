@@ -37,10 +37,10 @@ public:
 
 protected:
 
-    virtual void setAudioBuffers(uint thread, uint bufferSize,
+    /*virtual void setAudioBuffers(uint thread, uint bufferSize,
                                  const QList<AUDIO::AudioBuffer*>& inputs,
                                  const QList<AUDIO::AudioBuffer*>& outputs)
-                                                            Q_DECL_OVERRIDE;
+                                                            Q_DECL_OVERRIDE; */
 
     virtual void processAudio(const RenderTime&) Q_DECL_OVERRIDE;
 private:

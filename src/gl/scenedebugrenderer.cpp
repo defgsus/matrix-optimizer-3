@@ -27,6 +27,13 @@
 #include "audio/spatial/spatialmicrophone.h"
 #include "audio/spatial/spatialsoundsource.h"
 
+#if 0
+#   include "io/log.h"
+#   define MO__D(arg__) MO_PRINT("SceneDebugRenderer("<<this<<")::" << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
+
 namespace MO {
 namespace GL {
 
@@ -47,7 +54,7 @@ struct SceneDebugRenderer::Private
     void initGl();
     void releaseGl();
     void addCoordinates(GEOM::Geometry*) const;
-    void render(const RenderSettings & rs, uint thread, int options);
+    void render(const RenderSettings & rs, const RenderTime& time, int options);
 
     /** struct to fake the microphones of an object */
     struct Micro
@@ -93,11 +100,13 @@ struct SceneDebugRenderer::Private
 SceneDebugRenderer::SceneDebugRenderer(Scene * s)
     : p_        (new Private(this))
 {
+    MO__D("SceneDebugRenderer(" << s << ")");
     p_->scene = s;
 }
 
 SceneDebugRenderer::~SceneDebugRenderer()
 {
+    MO__D("~SceneDebugRenderer()");
     // only for debugging mainly
     // these objects should be deleted by releaseGl()
     delete p_->drawAudioSource;
@@ -112,28 +121,37 @@ bool SceneDebugRenderer::isGlInitialized() const { return p_->glReady; }
 
 void SceneDebugRenderer::updateTree()
 {
+    MO__D("updateTree()");
+
     p_->updateTree();
 }
 
 void SceneDebugRenderer::initGl()
 {
+    MO__D("initGl()");
+
     p_->initGl();
 }
 
 void SceneDebugRenderer::releaseGl()
 {
+    MO__D("releaseGl()");
+
     p_->releaseGl();
 }
 
-void SceneDebugRenderer::render(const RenderSettings & rs, uint thread, int options)
+void SceneDebugRenderer::render(
+        const RenderSettings & rs, const RenderTime& rt, int options)
 {
-    p_->render(rs, thread, options);
+    p_->render(rs, rt, options);
 }
 
 void SceneDebugRenderer::Private::updateTree()
 {
     cameras = scene->findChildObjects<Camera>(QString(), true);
     lightSources = scene->findChildObjects<LightSource>(QString(), true);
+    microphones.clear();
+    sounds.clear();
 
     // get all objects with microphones
     QList<Object*> objs = scene->findChildObjects<Object>([](const Object*o)
@@ -155,8 +173,8 @@ void SceneDebugRenderer::Private::updateTree()
 
     for (Object * o : objs)
     {
-        auto mic = new Sound(o);
-        sounds.push_back( std::shared_ptr<Sound>(mic) );
+        auto snd = new Sound(o);
+        sounds.push_back( std::shared_ptr<Sound>(snd) );
     }
 
 
@@ -313,7 +331,8 @@ void SceneDebugRenderer::Private::releaseGl()
     }
 }
 
-void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread, int options)
+void SceneDebugRenderer::Private::render(
+        const RenderSettings & rs, const RenderTime& time, int options)
 {
     MO_ASSERT(glReady, "drawables not defined for SceneDebugRenderer::render()");
 
@@ -347,15 +366,15 @@ void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread,
         if (!m->object->activeAtAll())
             continue;
         m->trans->setTransformation(m->object->transformation(), 0);
-        SamplePos pos = 0;
         // calc one sample of transformations
         // ZZZ
         m->object->calculateMicrophoneTransformation(
-                    m->trans, m->mics, RenderTime(pos, thread));
+                    m->trans, m->mics, time);
         for (const AUDIO::SpatialMicrophone * mic : m->mics)
         {
             const Mat4& trans = mic->transformationBuffer()->transformation(0);
-            /** @todo avoid unnecessary state changes in multiple calls to Drawable::renderShader */
+            /** @todo avoid unnecessary state changes in multiple
+                      calls to Drawable::renderShader */
             drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
         }
     }
@@ -367,16 +386,16 @@ void SceneDebugRenderer::Private::render(const RenderSettings & rs, uint thread,
         if (!s->object->activeAtAll())
             continue;
         s->trans->setTransformation(s->object->transformation(), 0);
-        SamplePos pos = 0;
         // calc one sample of transformations
         // ZZZ
         s->object->calculateSoundSourceTransformation(
-                    s->trans, s->snds, RenderTime(pos, thread));
+                    s->trans, s->snds, time);
         // draw
         for (const AUDIO::SpatialSoundSource * snd : s->snds)
         {
             const Mat4& trans = snd->transformationBuffer()->transformation(0);
-            drawAudioSource->renderShader(proj, cubeView * trans, view * trans, trans);
+            drawAudioSource->renderShader(
+                        proj, cubeView * trans, view * trans, trans);
         }
 
     }

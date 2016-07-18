@@ -87,7 +87,7 @@ void ObjectActions::createNewObjectActions(
     {
         QString id = act->data().toString();
         Object * onew;
-        std::cout << "HERE[" << id << "]" << std::endl;
+        //std::cout << "HERE[" << id << "]" << std::endl;
         if (id == "_template_")
         {
             QString fn;

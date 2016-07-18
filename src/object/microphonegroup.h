@@ -35,7 +35,7 @@ public:
     virtual QString infoString() const Q_DECL_OVERRIDE;
 
 
-    static void getVectors(std::vector<Vec3>& v, const FloatMatrix& m);
+    static void getMicVectors(std::vector<Vec3>& v, const FloatMatrix& m);
 
 private:
 

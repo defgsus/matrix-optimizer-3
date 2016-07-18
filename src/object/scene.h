@@ -326,7 +326,8 @@ public:
 
     /** Returns the lighting settings for the scene.
         This may only be valid during rendering in objects! */
-    const GL::LightSettings& lightSettings(uint thread) const { return p_lightSettings_[thread]; }
+    const GL::LightSettings& lightSettings(uint thread) const
+        { return p_lightSettings_[thread]; }
 
     /** Returns the framebuffer of the final master frame, or NULL */
     GL::FrameBufferObject * fboMaster(uint thread) const;
@@ -355,6 +356,8 @@ private:
     void updateSampleRate_();
 
     void updateModulators_();
+
+    void updateDebugRenderer_();
 
     /** Tell everyone the number of light sources */
     void updateNumberLights_();

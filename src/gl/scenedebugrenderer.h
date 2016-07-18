@@ -15,6 +15,7 @@
 
 #include "object/object_fwd.h"
 #include "gl/opengl_fwd.h"
+#include "types/time.h"
 
 namespace MO {
 namespace GL {
@@ -33,7 +34,7 @@ public:
     void releaseGl();
 
     /** @p options is an OR combination of Scene::DebugRenderOption */
-    void render(const RenderSettings&, uint thread, int options = 0xffffffff);
+    void render(const RenderSettings&, const RenderTime&, int options = 0xffffffff);
 
 private:
 

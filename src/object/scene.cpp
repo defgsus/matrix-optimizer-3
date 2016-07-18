@@ -224,6 +224,12 @@ void Scene::deserializeAfterChilds(IO::DataStream & io)
 
 void Scene::setObjectEditor(ObjectEditor * editor)
 {
+    //if (p_editor_ != editor)
+    if (editor)
+    QObject::connect(editor, &ObjectEditor::audioConnectionsChanged, [=]()
+    {
+        updateDebugRenderer_();
+    });
     p_editor_ = editor;
     p_editor_->setScene(this);
 }
@@ -692,9 +698,18 @@ void Scene::updateTree_()
         // XXX This should be iteratively for all glContext_s
         setGlContext(MO_GFX_THREAD, p_glContext_);
 
+        updateDebugRenderer_();
+
         // update image
         render_();
     }
+}
+
+void Scene::updateDebugRenderer_()
+{
+    if (MO_GFX_THREAD <= p_debugRenderer_.size()
+        && p_debugRenderer_[MO_GFX_THREAD])
+        p_debugRenderer_[MO_GFX_THREAD]->updateTree();
 }
 
 void Scene::updateChildrenChanged_()
@@ -1224,7 +1239,7 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                             // render debug objects
                             if (p_debugRenderOptions_)
                                 p_debugRenderer_[time.thread()]
-                                        ->render(renderSet, time.thread(), p_debugRenderOptions_);
+                                ->render(renderSet, time, p_debugRenderOptions_);
                         }
 
                         camera->finishGlFrame(time);
@@ -1285,8 +1300,6 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     // okay, we've painted them
     for (ObjectGl * o : p_glObjects_)
         o->clearUpdateRequest();
-
-//    MO_DEBUG("render finalFbo, time == " << time << ", cameras_.size() == " << cameras_.size());    
 
     // --- mix camera frames and framedrawers ---
 

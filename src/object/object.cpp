@@ -1398,8 +1398,7 @@ void Object::setSampleRate(uint samplerate)
 void Object::setNumberSoundSources(uint num)
 {
     pobj_->numberSoundSources = num;
-    auto e = editor();
-    if (e)
+    if (auto e = editor())
         emit e->audioConnectionsChanged();
 }
 
@@ -1411,11 +1410,13 @@ void Object::setNumberMicrophones(uint num)
         emit e->audioConnectionsChanged();
 }
 
-void Object::calculateSoundSourceTransformation(const TransformationBuffer * objectTransform,
+void Object::calculateSoundSourceTransformation(
+        const TransformationBuffer * objectTransform,
         const QList<AUDIO::SpatialSoundSource*>& list,
         const RenderTime&)
 {
-    MO_ASSERT(list.size() == (int)numberSoundSources(), "number of sound sources does not match "
+    MO_ASSERT(list.size() == (int)numberSoundSources(),
+              "number of sound sources does not match "
               << list.size() << "/" << numberSoundSources());
 
     for (auto s : list)

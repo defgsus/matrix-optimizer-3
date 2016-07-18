@@ -209,6 +209,10 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
         minDist = paramDistMin_->value(time),
         maxDist = paramDistMax_->value(time);
 
+    const auto m = paramMatrix_->value(time);
+    std::vector<Vec3> mic_vec(mics.size());
+    getMicVectors(mic_vec, m);
+
     for (int i=0; i<mics.size(); ++i)
     {
         // update parameters
@@ -218,8 +222,8 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
         mics[i]->setDistanceSound(useDist, minDist, maxDist);
 
         // direction -> matrix
-        Vec3 micdir = mic_pos[i];
-        Vec3 up = glm::normalize(glm::mix(
+        Vec3 micdir = mic_vec[i];
+        Vec3 up = MATH::normalize_safe(glm::mix(
                                     Vec3(0, micdir.z, -micdir.y),
                                     Vec3(0,-1,0),
                                     std::abs(micdir.x)));
@@ -232,14 +236,14 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
                         Mat4(1.), micdir * Float(paramMicDist_->value(time)))
                             * micmat;
 
-            for (uint j=0; j<time.bufferSize(); ++j)
+            for (uint j=0; j<mics[i]->transformationBuffer()->bufferSize(); ++j)
                 mics[i]->transformationBuffer()->setTransformation(
                         objectTransformation->transformation(j) * micmat2
                         , j);
         }
         else
         // for each sample
-        for (uint j=0; j<time.bufferSize(); ++j)
+        for (uint j=0; j<mics[i]->transformationBuffer()->bufferSize(); ++j)
         {
             RenderTime btime(time);
             btime += Double(j) * sampleRateInv();
@@ -255,12 +259,12 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
     }
 }
 
-void MicrophoneGroup::getVectors(std::vector<Vec3>& vec, const FloatMatrix& m)
+void MicrophoneGroup::getMicVectors(std::vector<Vec3>& vec, const FloatMatrix& m)
 {
     if (m.numDimensions() < 2 || m.size(0) < 3)
     {
         for (auto& v : vec)
-            v = Vec3(0);
+            v = Vec3(0,0,-1);
         return;
     }
     size_t i, num = std::min(vec.size(), m.size(1));
@@ -270,14 +274,14 @@ void MicrophoneGroup::getVectors(std::vector<Vec3>& vec, const FloatMatrix& m)
             vec[i][j] = *m.data(j, i);
     }
     for (; i<vec.size(); ++i)
-        vec[i] = Vec3(0);
+        vec[i] = Vec3(0,0,-1);
 }
 
 QString MicrophoneGroup::infoString() const
 {
     const auto m = paramMatrix_->baseValue();
     std::vector<Vec3> vec(paramNumMics_->baseValue());
-    getVectors(vec, m);
+    getMicVectors(vec, m);
     const Float dist = paramMicDist_->baseValue();
 
     std::stringstream s;
