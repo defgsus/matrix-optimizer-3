@@ -30,6 +30,8 @@ public:
 
 signals:
 
+    void matrixChanged();
+
 public slots:
 
     void setFloatMatrix(const FloatMatrix&);

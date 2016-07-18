@@ -182,7 +182,6 @@ void MicrophoneGroup::updateParameterVisibility()
     paramDistMax_->setVisible(useDist);
 }
 
-/*
 Mat3 compute_orthogonals(const Vec3& v)
 {
     Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
@@ -192,7 +191,29 @@ Mat3 compute_orthogonals(const Vec3& v)
 
     return Mat3(v, v1, v2);
 }
-*/
+
+Mat4 compute_orthogonals4(const Vec3& vi)
+{
+    Vec3 v = -vi;
+    //Vec3 v = Vec3(vi.x,vi.z,vi.y);
+    Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
+            ? Vec3(v.y, -v.x, 0.f)
+            : Vec3(0.f, -v.z, v.y);
+    Vec3 v2 = MATH::normalize_safe( glm::cross(v, v1) );
+
+    return Mat4(Vec4(v2,0), Vec4(v1,0), Vec4(v,0), Vec4(0,0,0,1));
+}
+
+Vec3 compute_up(const Vec3& v)
+{
+    /*MATH::normalize_safe(glm::mix(
+                        Vec3(0, micdir.z, -micdir.y),
+                        Vec3(0,-1,0),
+                        std::abs(micdir.x)))*/
+    return (std::abs(v.x) > std::abs(v.y))
+            ? Vec3(-v.z, 0., v.x)
+            : Vec3(0., v.z, -v.y);
+}
 
 void MicrophoneGroup::calculateMicrophoneTransformation(
                     const TransformationBuffer *objectTransformation,
@@ -223,12 +244,16 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
 
         // direction -> matrix
         Vec3 micdir = mic_vec[i];
-        Vec3 up = MATH::normalize_safe(glm::mix(
+#if 0
+        Vec3 up = compute_up(micdir);
+                /*MATH::normalize_safe(glm::mix(
                                     Vec3(0, micdir.z, -micdir.y),
                                     Vec3(0,-1,0),
-                                    std::abs(micdir.x)));
+                                    std::abs(micdir.x)));*/
         Mat4 micmat = glm::lookAt(Vec3(0.), micdir, up);
-
+#else
+        Mat4 micmat = compute_orthogonals4(micdir);
+#endif
 
         if (!paramMicDist_->isModulated())
         {
@@ -272,6 +297,9 @@ void MicrophoneGroup::getMicVectors(std::vector<Vec3>& vec, const FloatMatrix& m
     {
         for (size_t j=0; j<3; ++j)
             vec[i][j] = *m.data(j, i);
+        if (glm::all(glm::lessThanEqual(glm::abs(vec[i]), Vec3(0.0001f))))
+            vec[i] = Vec3(0,0,-1);
+        vec[i] = MATH::normalize_safe(vec[i]);
     }
     for (; i<vec.size(); ++i)
         vec[i] = Vec3(0,0,-1);

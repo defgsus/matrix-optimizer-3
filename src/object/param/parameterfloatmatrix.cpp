@@ -107,12 +107,14 @@ GUI::FloatMatrixDialog* ParameterFloatMatrix::openEditDialog(QWidget *parent)
 //    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
 //        return 0;
 
-    const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
+    const QString parName = QString("%1.%2")
+            .arg(object()->name()).arg(displayName());
 
     if (!diag_)
     {
         // prepare default dialog
         diag_ = new GUI::FloatMatrixDialog(parent);
+        diag_->setWindowTitle(parName + " " + diag_->windowTitle());
         diag_->setAttribute(Qt::WA_DeleteOnClose, true);
         diag_->setModal(false);
 

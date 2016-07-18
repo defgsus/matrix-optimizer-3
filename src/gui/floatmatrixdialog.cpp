@@ -53,12 +53,20 @@ FloatMatrixDialog::FloatMatrixDialog(QWidget *parent)
 
             lh->addStretch(1);
 
+            but = new QPushButton(tr("Revert"), this);
+            connect(but, &QPushButton::clicked, [=]()
+            {
+                p_widget_->setFloatMatrix(p_backup_);
+                emit matrixChanged();
+            });
+            lh->addWidget(but);
+
             but = new QPushButton(tr("Cancel"), this);
             connect(but, &QPushButton::clicked, [=]()
             {
                 p_widget_->setFloatMatrix(p_backup_);
                 emit matrixChanged();
-                abort();
+                reject();
             });
             lh->addWidget(but);
 

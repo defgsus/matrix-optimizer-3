@@ -109,7 +109,8 @@ GUI::TextEditDialog* ParameterText::openEditDialog(QWidget *parent)
 //    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
 //        return 0;
 
-    const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
+    const QString parName = QString("%1.%2")
+            .arg(object()->name()).arg(displayName());
 
     if (!diag_)
     {
