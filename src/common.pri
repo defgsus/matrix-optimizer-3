@@ -104,7 +104,6 @@ HEADERS += \
     src/io/povrayexporter.h \
     src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
-    src/audio/audiomicrophone.h \
     src/io/equationpresets.h \
     src/io/equationpreset.h \
     src/audio/mididevices.h \

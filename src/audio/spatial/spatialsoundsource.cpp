@@ -10,14 +10,18 @@
 
 #include "spatialsoundsource.h"
 #include "audio/tool/audiobuffer.h"
+#include "audio/tool/delay.h"
 
 namespace MO {
 namespace AUDIO {
 
 SpatialSoundSource::SpatialSoundSource(AudioBuffer * b, AudioDelay * d)
-    : p_signal_             (b),
-      p_delay_              (d),
-      p_transform_          (b->blockSize())
+    : p_signal_             (b)
+    , p_signalDist_         (nullptr)
+    , p_delay_              (d)
+    , p_delayDist_          (nullptr)
+    , p_transform_          (b->blockSize())
+    , p_isDistSound_        (false)
 {
 }
 
@@ -26,6 +30,22 @@ uint SpatialSoundSource::bufferSize() const
     return p_signal_->blockSize();
 }
 
+void SpatialSoundSource::setDistanceSound(bool enable)
+{
+    if (p_isDistSound_ == enable)
+        return;
+    p_isDistSound_ = enable;
+    if (!p_isDistSound_)
+    {
+        delete p_signalDist_; p_signalDist_ = nullptr;
+        delete p_delayDist_; p_delayDist_ = nullptr;
+    }
+    else
+    {
+        p_signalDist_ = new AudioBuffer(p_signal_->blockSize(), p_signal_->numBlocks());
+        p_delayDist_ = new AudioDelay(p_delay_->size());
+    }
+}
 
 } // namespace AUDIO
 } // namespace MO

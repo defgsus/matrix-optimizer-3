@@ -9,19 +9,20 @@
 */
 
 #include "parameterfloatmatrix.h"
+#include "modulatorfloatmatrix.h"
+#include "object/scene.h"
+#include "object/util/objecteditor.h"
+#include "gui/floatmatrixdialog.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "object/control/trackfloat.h"
-#include "object/scene.h"
-#include "modulatorfloatmatrix.h"
-
 
 namespace MO {
 
 ParameterFloatMatrix::ParameterFloatMatrix(
         Object * object, const QString& id, const QString& name)
-    :   Parameter(object, id, name)
+    : Parameter (object, id, name)
+    , diag_     (nullptr)
 {
 }
 
@@ -92,6 +93,50 @@ Modulator * ParameterFloatMatrix::getModulator(
     return m;
 }
 
+
+
+
+GUI::FloatMatrixDialog* ParameterFloatMatrix::openEditDialog(QWidget *parent)
+{
+    MO_ASSERT(object(), "no object for ParameterFloatMatrix::openFileDialog()");
+    MO_ASSERT(object()->sceneObject(),
+              "no scene for ParameterFloatMatrix::openFileDialog()");
+    MO_ASSERT(object()->sceneObject()->editor(),
+              "no editor for ParameterFloatMatrix::openFileDialog()");
+
+//    if (!object() || !object()->sceneObject() || !object()->sceneObject()->editor())
+//        return 0;
+
+    const QString parName = QString("%1.%2").arg(object()->name()).arg(name());
+
+    if (!diag_)
+    {
+        // prepare default dialog
+        diag_ = new GUI::FloatMatrixDialog(parent);
+        diag_->setAttribute(Qt::WA_DeleteOnClose, true);
+        diag_->setModal(false);
+
+        diag_->setFloatMatrix(baseValue());
+
+        diag_->connect(diag_, &GUI::FloatMatrixDialog::matrixChanged, [this]()
+        {
+            object()->editor()->setParameterValue(this, diag_->floatMatrix());
+        });
+
+        diag_->connect(diag_, &GUI::FloatMatrixDialog::destroyed, [this]()
+        {
+            diag_ = nullptr;
+        });
+
+    }
+    else
+        diag_->setFloatMatrix(baseValue());
+
+    diag_->show();
+    diag_->raise();
+
+    return diag_;
+}
 
 
 

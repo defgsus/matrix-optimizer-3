@@ -255,8 +255,8 @@ void FloatMatrixTO::Private::renderGl(
     auto matrix = p_matrix->value(time);
 
     const size_t
-            matrixWidth = matrix.dimensions() > 0 ? matrix.size(0) : 0,
-            matrixHeight = matrix.dimensions() > 1 ? matrix.size(1) : 1;
+            matrixWidth = matrix.numDimensions() > 0 ? matrix.size(0) : 0,
+            matrixHeight = matrix.numDimensions() > 1 ? matrix.size(1) : 1;
     size_t  width = matrixWidth,
             height = matrixHeight,
             offsetX = p_offsetX->value(time),

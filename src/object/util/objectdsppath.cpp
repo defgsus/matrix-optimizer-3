@@ -389,11 +389,13 @@ void ObjectDspPath::calcAudio(SamplePos pos)
 
     // ---------- process virtual sound sources --------
 
-    // ZZZ add delta!
-    RenderTime time(pos, config().sampleRate(), config().bufferSize(), p_->thread);
-    time.setSecond(Double(pos) / config().sampleRate());
-
 #ifndef MO_DISABLE_SPATIAL
+
+    RenderTime time(Double(pos) * config().sampleRateInv(),
+                    Double(config().bufferSize()) * config().sampleRateInv(),
+                    pos, config().sampleRate(),
+                    config().bufferSize(), p_->thread);
+
     for (Private::ObjectBuffer * b : p_->soundsourceObjects)
     {
         // get transformation-per-soundsource
@@ -405,11 +407,21 @@ void ObjectDspPath::calcAudio(SamplePos pos)
         b->object->calculateSoundSourceBuffer(
                     b->soundSources,
                     time);
+
         // forward buffers and fill delay-lines
         for (AUDIO::SpatialSoundSource * s : b->soundSources)
         {
             s->signal()->nextBlock();
-            s->delay()->writeBlock(s->signal()->readPointer(), config().bufferSize());
+            s->delay()->writeBlock(
+                    s->signal()->readPointer(), config().bufferSize());
+
+            if (s->isDistanceSound())
+            {
+                MO_ASSERT(s->signalDist() && s->delayDist(), "");
+                s->signalDist()->nextBlock();
+                s->delayDist()->writeBlock(
+                        s->signalDist()->readPointer(), config().bufferSize());
+            }
         }
     }
 

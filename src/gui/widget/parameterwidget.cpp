@@ -632,13 +632,34 @@ void ParameterWidget::createWidgets_()
     }
     else
     // --- float matrix parameter ---
-    if (/*ParameterFloatMatrix* pt = */dynamic_cast<ParameterFloatMatrix*>(param_))
+    if (ParameterFloatMatrix* pfm = dynamic_cast<ParameterFloatMatrix*>(param_))
     {
+        defaultValueName = QString::fromStdString(
+                    pfm->defaultValue().layoutString() );
+
+        // edit button
+        QToolButton * butedit = new QToolButton(this);
+        l->addWidget(butedit);
+        butedit->setText("...");
+        butedit->setStatusTip(tr("Click to edit the float matrix"));
+
+        // load button click
+        connect(butedit, &QToolButton::clicked, [=]()
+        {
+            pfm->openEditDialog(this);
+        });
+
+        // reset to default
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            editor_->setParameterValue(pfm, pfm->defaultValue());
+        });
 
     }
     else
     // --- transformation parameter ---
-    if (/*ParameterTransformation* pt = */dynamic_cast<ParameterTransformation*>(param_))
+    if (/*ParameterTransformation* pt = */
+            dynamic_cast<ParameterTransformation*>(param_))
     {
 
     }

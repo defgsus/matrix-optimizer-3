@@ -13,10 +13,13 @@
 #include <math.h>
 
 #include "microphone.h"
+#include "object/param/parameters.h"
+#include "object/param/parameterfloat.h"
+#include "object/param/parameterselect.h"
+#include "audio/spatial/spatialmicrophone.h"
 #include "io/datastream.h"
 #include "io/error.h"
 #include "io/log.h"
-#include "audio/audiomicrophone.h"
 
 namespace MO {
 
@@ -44,78 +47,84 @@ void Microphone::deserialize(IO::DataStream & io)
     io.readHeader("mic", 1);
 }
 
-#if (0)
-void Microphone::sampleAudioSource(const AUDIO::AudioSource *src, F32 *buffer, uint thread) const
+void Microphone::createParameters()
 {
-    const uint size = bufferSize(thread);
+    Object::createParameters();
 
-    MO_ASSERT(size == src->bufferSize(thread), "unmatched buffer size");
+    params()->beginParameterGroup("mic", tr("microphone"));
+    initParameterGroupExpanded("mic",true);
 
-    for (uint i=0; i<size; ++i)
+        paramAmp_ = params()->createFloatParameter(
+                    "amp", tr("amplitude"),
+                    tr("Amplitude of the microphone signal"),
+                    1., 0.1);
+
+        paramDistFade_ = params()->createFloatParameter(
+                    "dist_fade", tr("distance fall-off"),
+                    tr("Amplitude decimation by distance factor"),
+                    1., 0.1);
+        paramDistFade_->setMinValue(0.);
+
+        paramDirExp_ = params()->createFloatParameter(
+                    "dir_exp", tr("directional exponent"),
+                    tr("The exponent of the directional term defining the "
+                       "opening angle of the microphone, the higher - the narrower"),
+                    3., 0.1);
+        paramDirExp_->setMinValue(0.);
+
+
+        paramUseDist_ = params()->createBooleanParameter(
+                    "use_dist", tr("distance sound"),
+                    tr("Enable mixing with distance-sound if sound sources provide it"),
+                    tr("Off"), tr("On"),
+                    true, true, false);
+
+        paramDistMin_ = params()->createFloatParameter(
+                    "min_dist", tr("minimum distance"),
+                tr("The minimum distance where mixing-in the distance-sound starts"),
+                    3., .1, true, true);
+        paramDistMin_->setMinValue(0.);
+
+        paramDistMax_ = params()->createFloatParameter(
+                    "max_dist", tr("maximum distance"),
+                tr("The distance where the distance-sound is fully mixed-in"),
+                    20., .1, true, true);
+        paramDistMax_->setMinValue(0.);
+
+    params()->endParameterGroup();
+}
+
+void Microphone::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+
+    const bool useDist = paramUseDist_->baseValue();
+    paramDistMin_->setVisible(useDist);
+    paramDistMax_->setVisible(useDist);
+}
+
+void Microphone::processMicrophoneBuffers(
+        const QList<AUDIO::SpatialMicrophone*>& mics,
+        const RenderTime& time)
+{
+    const F32
+            amp = paramAmp_->value(time),
+            distFade = paramDistFade_->value(time),
+            dirExp = std::max(0.00001, paramDirExp_->value(time));
+    const bool useDist = paramUseDist_->baseValue();
+    F32 minDist=0., maxDist=0.;
+    if (useDist)
+        minDist = paramDistMin_->value(time),
+        maxDist = paramDistMax_->value(time);
+
+    for (auto m : mics)
     {
-        const Mat4&
-                mmic = transformation(thread, i),
-                msnd = src->transformation(thread, i);
-
-        // direction towards sound
-        F32 dx = msnd[3][0] - mmic[3][0],
-            dy = msnd[3][1] - mmic[3][1],
-            dz = msnd[3][2] - mmic[3][2];
-
-        // distance to sound
-        const F32 dist = std::sqrt(dx*dx + dy*dy + dz*dz);
-
-        if (dist == 0.f)
-            *buffer++ += src->getSample(thread, i);
-        else
-        {
-
-            // amplitude from distance
-            const F32 ampDist = 1.f / (1.f + dist);
-
-            // delaytime from distance
-            const F32 delaySam = dist / 330.f * sampleRate();
-
-            // delayed sample
-#if (1)
-            const F32 sam = src->getDelaySample(thread, i, delaySam);
-#else
-            const F32 sam = src->getSample(thread, i);
-#endif
-            // normalize direction
-            dx /= dist;
-            dy /= dist;
-            dz /= dist;
-
-            // get direction of microphone
-            // (suppose microphone originally points at <0,0,-1>)
-#if (0)
-            F32
-                mx =  mmic[0][2],
-                my =  mmic[1][2],
-                mz = -mmic[2][2];
-#else
-            Vec4 mdir_ = mmic * Vec4(0,0,-1, 0);
-            F32 mx = mdir_[0], my = mdir_[1], mz = mdir_[2];
-#endif
-            // normalize
-            const F32 mdirmag = std::sqrt(mx*mx + my*my + mz*mz);
-            mx /= mdirmag;
-            my /= mdirmag;
-            mz /= mdirmag;
-
-            // direction factor
-            const F32 mdot = 0.5f + 0.5f * (dx * mx + dy * my + dz * mz);
-
-            // amplitude from direction
-            const F32 ampDir = std::pow(mdot, 3.f);
-
-            *buffer++ += sam * ampDist * ampDir;
-        }
+        m->setAmplitude(amp);
+        m->setDistanceFadeout(distFade);
+        m->setDirectionExponent(dirExp);
+        m->setDistanceSound(useDist, minDist, maxDist);
     }
 }
-#endif
-
 
 } // namespace MO
 

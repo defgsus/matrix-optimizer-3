@@ -200,6 +200,7 @@ public slots:
     void setParameterValue(MO::ParameterTimeline1D *, const MATH::Timeline1d& value);
     void setParameterValue(MO::ParameterImageList *, const QStringList& value);
     void setParameterValue(MO::ParameterFont*, const QFont& value);
+    void setParameterValue(MO::ParameterFloatMatrix*, const FloatMatrix& value);
 
     void setParameterUserName(MO::Parameter*, const QString& name);
 

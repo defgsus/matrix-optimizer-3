@@ -27,6 +27,7 @@
 #include "object/util/audioobjectconnections.h"
 #include "object/param/parameters.h"
 #include "object/param/parameterfloat.h"
+#include "object/param/parameterfloatmatrix.h"
 #include "object/param/parameterfont.h"
 #include "object/param/parameterimagelist.h"
 #include "object/param/parameterint.h"
@@ -573,6 +574,11 @@ void ObjectEditor::setParameterValue(ParameterImageList *p, const QStringList& v
 }
 
 void ObjectEditor::setParameterValue(ParameterFont *p, const QFont& v)
+{
+    setParameterVal(this, p, v);
+}
+
+void ObjectEditor::setParameterValue(ParameterFloatMatrix *p, const FloatMatrix& v)
 {
     setParameterVal(this, p, v);
 }

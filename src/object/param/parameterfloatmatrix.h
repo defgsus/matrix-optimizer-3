@@ -17,6 +17,7 @@
 #include "object/param/floatmatrix.h"
 
 namespace MO {
+namespace GUI { class FloatMatrixDialog; }
 
 class ParameterFloatMatrix : public Parameter
 {
@@ -62,12 +63,20 @@ public:
     virtual Modulator * getModulator(
             const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
+    // ---- GUI ----
+
+    /** Opens a GUI::FloatMatrixDialog to edit the contents of this parameter.
+        @note Don't let parent be the ParameterWidget as it would destroy the
+        Dialog when selecting another object. */
+    GUI::FloatMatrixDialog* openEditDialog(QWidget* parent = nullptr);
+
 private:
 
     FloatMatrix
         defaultValue_,
         baseValue_;
 
+    GUI::FloatMatrixDialog* diag_;
 };
 
 } // namespace MO

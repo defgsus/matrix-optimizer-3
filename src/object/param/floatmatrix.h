@@ -59,7 +59,7 @@ public:
     bool isEmpty() const { return p_dims_.empty(); }
 
     /** Number of dimensions */
-    size_t dimensions() const { return p_dims_.size(); }
+    size_t numDimensions() const { return p_dims_.size(); }
     /** Size of all data */
     size_t size() const { return p_data_.size(); }
     /** Size of one dimension */
@@ -115,9 +115,9 @@ public:
     bool operator == (const FloatMatrix& o) const { return !(*this != o); }
     bool operator != (const FloatMatrix& o) const
     {
-        if (o.dimensions() != dimensions())
+        if (o.numDimensions() != numDimensions())
             return true;
-        for (size_t i=0; i<dimensions(); ++i)
+        for (size_t i=0; i<numDimensions(); ++i)
             if (o.size(i) != size(i))
                 return true;
         for (size_t i=0; i<size(); ++i)
@@ -193,8 +193,8 @@ public:
     friend IO::DataStream& operator << (IO::DataStream& io, const FloatMatrix& m)
     {
         io.writeHeader("fm", 1);
-        io << quint64(m.dimensions());
-        for (size_t i=0; i<m.dimensions(); ++i)
+        io << quint64(m.numDimensions());
+        for (size_t i=0; i<m.numDimensions(); ++i)
             io << quint64(m.size(i));
         for (size_t i=0; i<m.size(); ++i)
             io << m.data()[i];

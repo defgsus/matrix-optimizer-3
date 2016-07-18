@@ -138,7 +138,9 @@ HEADERS += \
     $$PWD/widget/objecttreeview.h \
     $$PWD/util/objectactions.h \
     $$PWD/widget/soundfiledisplay.h \
-    $$PWD/widget/soundfilewidget.h
+    $$PWD/widget/soundfilewidget.h \
+    $$PWD/widget/floatmatrixwidget.h \
+    $$PWD/floatmatrixdialog.h
 
 SOURCES += \
     src/gui/objectview.cpp \
@@ -276,4 +278,6 @@ SOURCES += \
     $$PWD/widget/objecttreeview.cpp \
     $$PWD/util/objectactions.cpp \
     $$PWD/widget/soundfiledisplay.cpp \
-    $$PWD/widget/soundfilewidget.cpp
+    $$PWD/widget/soundfilewidget.cpp \
+    $$PWD/widget/floatmatrixwidget.cpp \
+    $$PWD/floatmatrixdialog.cpp

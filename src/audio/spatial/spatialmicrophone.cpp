@@ -23,7 +23,12 @@ SpatialMicrophone::SpatialMicrophone(AudioBuffer * b, uint sampleRate, uint chan
       p_sampleRate_         (sampleRate),
       p_channel_            (channel),
       p_sampleRateInv_      (1.f / std::max(uint(1), sampleRate))
+    , p_amp_                (1.f)
     , p_dirExp_             (3.f)
+    , p_distFade_           (1.f)
+    , p_minDist_            (5.f)
+    , p_maxDist_            (50.f)
+    , p_enableDist_         (false)
 {
 }
 
@@ -35,7 +40,7 @@ uint SpatialMicrophone::bufferSize() const
 
 void SpatialMicrophone::spatialize(const QList<SpatialSoundSource*>& sources)
 {
-    // clear buffer
+    // clear accumulation buffer
     p_signal_->writeNullBlock();
 
     // sample each sound source
@@ -48,7 +53,8 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
     MO_ASSERT(snd->bufferSize() == bufferSize(), "unmatched buffer size"
               << snd->bufferSize() << "/" << bufferSize());
 
-    const Float EPSILON = 1e-20;
+    const F32 EPSILON = 1e-20,
+            dist_fac = 1.f / std::max(0.00001f, p_maxDist_ - p_minDist_);
 
     // add-write here
     F32 * buffer = p_signal_->writePointer();
@@ -79,17 +85,27 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
         else
         {
             // amplitude from distance
-            const F32 ampDist = 1.f / (1.f + dist);
+            const F32 ampDist = 1.f / (1.f + p_distFade_ * dist);
 
             // delaytime from distance
             const F32 delaySam = dist / 330.f * p_sampleRate_;
 
             // read delayed sample from snd
 #if (1)
-            const F32 sam = snd->delay()->read(delayReadPos + delaySam);
+            F32 sam = snd->delay()->read(delayReadPos + delaySam);
 #else
-            const F32 sam = snd->signal()->read(i);
+            F32 sam = snd->signal()->read(i);
 #endif
+            // mix with distance-sound
+            if (p_enableDist_ && snd->isDistanceSound())
+            {
+                F32 dmix = std::max(0.f, std::min(1.f,
+                                (dist - p_minDist_) * dist_fac ));
+
+                sam += dmix * (snd->delayDist()->read(delayReadPos + delaySam) - sam);
+            }
+
+
             // normalize direction
             dx /= dist;
             dy /= dist;
@@ -113,7 +129,7 @@ void SpatialMicrophone::spatialize_(SpatialSoundSource * snd)
             const F32 ampDir = std::pow(micDot, p_dirExp_);
 
             // add to microphone sample buffer
-            *buffer++ += sam * ampDist * ampDir;
+            *buffer++ += sam * ampDist * ampDir * p_amp_;
         }
     }
 }

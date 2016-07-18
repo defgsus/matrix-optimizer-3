@@ -138,7 +138,7 @@ void FloatMatrixAO::setAudioBuffers(uint thread, uint bufferSize,
 
 void FloatMatrixAO::processAudio(const RenderTime& time)
 {
-    size_t width = p_->matrix.dimensions() ? p_->matrix.size(0) : 0;
+    size_t width = p_->matrix.numDimensions() ? p_->matrix.size(0) : 0;
     if (width == 0)
         return;
 

@@ -8,8 +8,6 @@
     <p>created 9/1/2014</p>
 */
 
-#ifndef MO_DISABLE_EXP
-
 #include "microphonegroup.h"
 
 
@@ -19,6 +17,8 @@
 #include "param/parameters.h"
 #include "param/parameterint.h"
 #include "param/parameterfloat.h"
+#include "param/parameterselect.h"
+#include "param/parameterfloatmatrix.h"
 #include "audio/spatial/spatialmicrophone.h"
 #include "math/vector.h"
 
@@ -68,6 +68,11 @@ MicrophoneGroup::MicrophoneGroup()
     setNumberMicrophones(1);
 }
 
+MicrophoneGroup::~MicrophoneGroup()
+{
+
+}
+
 void MicrophoneGroup::serialize(IO::DataStream & io) const
 {
     Object::serialize(io);
@@ -84,20 +89,70 @@ void MicrophoneGroup::createParameters()
 {
     Object::createParameters();
 
-    params()->beginParameterGroup("mics", "microphones");
+    params()->beginParameterGroup("mics", "layout");
+    initParameterGroupExpanded("mics");
 
-        pNumMics_ = params()->createIntParameter("nummic", tr("number microphones"),
-                                       tr("The number of microphones in this group"),
-                                       1, 1, 256, 1, true, false);
+        paramNumMics_ = params()->createIntParameter(
+                    "nummic", tr("number microphones"),
+                   tr("The number of microphones in this group"),
+                   1, 1, 256, 1, true, false);
 
-        pDistance_ = params()->createFloatParameter("micdist", tr("distance to center"),
-                            tr("The distance of the microphones to the center of the group"),
-                                          0.0, 0.02);
+        paramMicDist_ = params()->createFloatParameter(
+                    "micdist", tr("distance to center"),
+                    tr("The distance of the microphones to the center of the group"),
+                    0.0, 0.02);
 
-        pDirExp_ = params()->createFloatParameter("micdirexp", tr("directional exponent"),
-                            tr("The exponent setting the opening angle - larger means smaller area"),
-                                          3.0, 0.1);
-        pDirExp_->setMinValue(0.001);
+        FloatMatrix m({ 3, 2 });
+        *m.data(0, 0) = -1.;
+        *m.data(1, 0) = 0.;
+        *m.data(2, 0) = 0.;
+        *m.data(0, 1) = 1.;
+        *m.data(1, 1) = 0.;
+        *m.data(2, 1) = 0.;
+        paramMatrix_ = params()->createFloatMatrixParameter(
+                    "pos_matrix", tr("positions"),
+                    tr("A 2d float matrix with the 3d positions of the microphones"),
+                    m, true, true);
+
+    params()->beginParameterGroup("params", "parameters");
+    initParameterGroupExpanded("params");
+
+        paramAmp_ = params()->createFloatParameter(
+                    "amp", tr("amplitude"),
+                    tr("Amplitude of the microphone signal"),
+                    1., 0.1);
+
+        paramDistFade_ = params()->createFloatParameter(
+                    "dist_fade", tr("distance fall-off"),
+                    tr("Amplitude decimation by distance factor"),
+                    1., 0.1);
+        paramDistFade_->setMinValue(0.);
+
+        paramDirExp_ = params()->createFloatParameter(
+                    "dir_exp", tr("directional exponent"),
+                    tr("The exponent of the directional term defining the "
+                       "opening angle of the microphone, the higher - the narrower"),
+                    3., 0.1);
+        paramDirExp_->setMinValue(0.);
+
+
+        paramUseDist_ = params()->createBooleanParameter(
+                    "use_dist", tr("distance sound"),
+                    tr("Enable mixing with distance-sound if sound sources provide it"),
+                    tr("Off"), tr("On"),
+                    true, true, false);
+
+        paramDistMin_ = params()->createFloatParameter(
+                    "min_dist", tr("minimum distance"),
+                tr("The minimum distance where mixing-in the distance-sound starts"),
+                    3., .1, true, true);
+        paramDistMin_->setMinValue(0.);
+
+        paramDistMax_ = params()->createFloatParameter(
+                    "max_dist", tr("maximum distance"),
+                tr("The distance where the distance-sound is fully mixed-in"),
+                    20., .1, true, true);
+        paramDistMax_->setMinValue(0.);
 
     params()->endParameterGroup();
 }
@@ -106,81 +161,28 @@ void MicrophoneGroup::onParameterChanged(Parameter *p)
 {
     Object::onParameterChanged(p);
 
-    if (p == pNumMics_)
-        setNumberMicrophones(pNumMics_->baseValue());
-        //requestCreateMicrophones();
+    if (p == paramNumMics_)
+        setNumberMicrophones(paramNumMics_->baseValue());
+
 }
 
 void MicrophoneGroup::onParametersLoaded()
 {
     Object::onParametersLoaded();
 
-    setNumberMicrophones(pNumMics_->baseValue());
+    setNumberMicrophones(paramNumMics_->baseValue());
+}
+
+void MicrophoneGroup::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+
+    const bool useDist = paramUseDist_->baseValue();
+    paramDistMin_->setVisible(useDist);
+    paramDistMax_->setVisible(useDist);
 }
 
 /*
-void MicrophoneGroup::createMicrophones()
-{
-    Object::createMicrophones();
-
-    micros_ = createOrDeleteMicrophones("groupmicro", pNumMics_->baseValue());
-}
-
-void MicrophoneGroup::updateAudioTransformations(Double time, uint thread)
-{
-    const Mat4 & trans = transformation(thread, 0);
-
-    const Float
-            micdist = pDistance_->value(time);
-
-    int index = 0;
-    for (AUDIO::AudioMicrophone* m : micros_)
-    {
-        m->setTransformation(
-                    trans * getMicroTransformation_(index, micdist), thread, 0);
-        ++index;
-    }
-}
-
-void MicrophoneGroup::updateAudioTransformations(Double stime, uint blocksize, uint thread)
-{
-#if (0)
-    int index = 0;
-    for (AUDIO::AudioMicrophone* m : micros_)
-    {
-        m->setTransformation(
-                transformation(thread, 0)
-     //            * getMicroTransformation_(index, stime, thread)
-                 , thread, 0);
-        m->setTransformation(
-                transformation(thread, blocksize-1)
-     //               * getMicroTransformation_(index, stime + sampleRateInv() * (blocksize-1), thread)
-                 , thread, blocksize-1);
-        ++index;
-    }
-#else
-
-    for (uint i=0; i<blocksize; ++i)
-    {
-        const Double time = stime + sampleRateInv() * i;
-
-        const Float
-                micdist = pDistance_->value(time);
-
-        int index = 0;
-        for (AUDIO::AudioMicrophone* m : micros_)
-        {
-            m->setTransformation(
-                    transformation(thread, i)
-                        * getMicroTransformation_(index, micdist)
-                        , thread, i);
-            ++index;
-        }
-    }
-#endif
-}
-*/
-
 Mat3 compute_orthogonals(const Vec3& v)
 {
     Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
@@ -190,30 +192,60 @@ Mat3 compute_orthogonals(const Vec3& v)
 
     return Mat3(v, v1, v2);
 }
+*/
 
 void MicrophoneGroup::calculateMicrophoneTransformation(
                     const TransformationBuffer *objectTransformation,
                     const QList<AUDIO::SpatialMicrophone *> & mics,
-                    uint bufferSize, SamplePos pos, uint thread)
+                    const RenderTime& time)
 {
+    const F32
+            amp = paramAmp_->value(time),
+            distFade = paramDistFade_->value(time),
+            dirExp = std::max(0.00001, paramDirExp_->value(time));
+    const bool useDist = paramUseDist_->baseValue();
+    F32 minDist=0., maxDist=0.;
+    if (useDist)
+        minDist = paramDistMin_->value(time),
+        maxDist = paramDistMax_->value(time);
+
     for (int i=0; i<mics.size(); ++i)
     {
-        mics[i]->setDirectionExponent(pDirExp_->value(Double(pos) / sampleRate(), thread));
+        // update parameters
+        mics[i]->setAmplitude(amp);
+        mics[i]->setDistanceFadeout(distFade);
+        mics[i]->setDirectionExponent(dirExp);
+        mics[i]->setDistanceSound(useDist, minDist, maxDist);
 
         // direction -> matrix
         Vec3 micdir = mic_pos[i];
         Vec3 up = glm::normalize(glm::mix(
                                     Vec3(0, micdir.z, -micdir.y),
                                     Vec3(0,-1,0),
-                                 std::abs(micdir.x)));
+                                    std::abs(micdir.x)));
         Mat4 micmat = glm::lookAt(Vec3(0.), micdir, up);
 
-        // for each sample
-        for (uint j=0; j<bufferSize; ++j)
-        {
-            Double time = Double(pos + j) / sampleRate();
 
-            Mat4 micmat2 = glm::translate(Mat4(1.), micdir * Float(pDistance_->value(time)))
+        if (!paramMicDist_->isModulated())
+        {
+            Mat4 micmat2 = glm::translate(
+                        Mat4(1.), micdir * Float(paramMicDist_->value(time)))
+                            * micmat;
+
+            for (uint j=0; j<time.bufferSize(); ++j)
+                mics[i]->transformationBuffer()->setTransformation(
+                        objectTransformation->transformation(j) * micmat2
+                        , j);
+        }
+        else
+        // for each sample
+        for (uint j=0; j<time.bufferSize(); ++j)
+        {
+            RenderTime btime(time);
+            btime += Double(j) * sampleRateInv();
+
+            Mat4 micmat2 = glm::translate(
+                        Mat4(1.), micdir * Float(paramMicDist_->value(time)))
                             * micmat;
 
             mics[i]->transformationBuffer()->setTransformation(
@@ -223,7 +255,41 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
     }
 }
 
+void MicrophoneGroup::getVectors(std::vector<Vec3>& vec, const FloatMatrix& m)
+{
+    if (m.numDimensions() < 2 || m.size(0) < 3)
+    {
+        for (auto& v : vec)
+            v = Vec3(0);
+        return;
+    }
+    size_t i, num = std::min(vec.size(), m.size(1));
+    for (i=0; i<num; ++i)
+    {
+        for (size_t j=0; j<3; ++j)
+            vec[i][j] = *m.data(j, i);
+    }
+    for (; i<vec.size(); ++i)
+        vec[i] = Vec3(0);
+}
+
+QString MicrophoneGroup::infoString() const
+{
+    const auto m = paramMatrix_->baseValue();
+    std::vector<Vec3> vec(paramNumMics_->baseValue());
+    getVectors(vec, m);
+    const Float dist = paramMicDist_->baseValue();
+
+    std::stringstream s;
+    s << "mic pos: ";
+    for (size_t i=0; i<vec.size(); ++i)
+    {
+        if (i != 0)
+            s << ", ";
+        s << (vec[i] * dist);
+    }
+    return QString::fromStdString(s.str()).toHtmlEscaped();
+}
+
 
 } // namespace MO
-
-#endif // MO_DISABLE_EXP

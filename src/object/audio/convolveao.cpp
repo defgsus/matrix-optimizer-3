@@ -83,8 +83,8 @@ ConvolveAO::ConvolveAO()
       p_            (new Private(this))
 {
     setName("Convolver");
-    setNumberAudioInputs(1);
-    setNumberAudioOutputs(1);
+    setNumberAudioInputsOutputs(1,1);
+    //setNumberChannelsAdjustable(true);
 }
 
 ConvolveAO::~ConvolveAO()

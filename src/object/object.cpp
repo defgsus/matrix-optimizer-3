@@ -1422,11 +1422,13 @@ void Object::calculateSoundSourceTransformation(const TransformationBuffer * obj
         TransformationBuffer::copy(objectTransform, s->transformationBuffer());
 }
 
-void Object::calculateMicrophoneTransformation(const TransformationBuffer * objectTransform,
+void Object::calculateMicrophoneTransformation(
+        const TransformationBuffer * objectTransform,
         const QList<AUDIO::SpatialMicrophone*>& list,
         const RenderTime&)
 {
-    MO_ASSERT(list.size() == (int)numberMicrophones(), "number of microphones does not match "
+    MO_ASSERT(list.size() == (int)numberMicrophones(),
+              "number of microphones does not match "
               << list.size() << "/" << numberMicrophones());
 
     for (auto m : list)

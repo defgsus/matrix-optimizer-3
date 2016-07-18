@@ -25,7 +25,8 @@ public:
     virtual Type type() const Q_DECL_OVERRIDE { return T_SOUND_OBJECT; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
-
+    virtual void onParameterChanged(Parameter*) Q_DECL_OVERRIDE;
+    virtual void onParametersLoaded() Q_DECL_OVERRIDE;
     virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*>,
                                             const RenderTime& time)
                                             Q_DECL_OVERRIDE;
@@ -34,6 +35,10 @@ protected:
     virtual void processAudio(const RenderTime& ) Q_DECL_OVERRIDE { }
 private:
 
+    ParameterFloat
+        * paramAmp_;
+    ParameterSelect
+        * paramHasDist_;
 };
 
 } // namespace MO

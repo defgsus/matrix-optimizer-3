@@ -8,8 +8,6 @@
     <p>created 9/1/2014</p>
 */
 
-#ifndef MO_DISABLE_EXP
-
 #ifndef MOSRC_OBJECT_MICROPHONEGROUP_H
 #define MOSRC_OBJECT_MICROPHONEGROUP_H
 
@@ -27,28 +25,36 @@ public:
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter *p) Q_DECL_OVERRIDE;
     virtual void onParametersLoaded() Q_DECL_OVERRIDE;
+    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual void calculateMicrophoneTransformation(
                     const TransformationBuffer * objectTransformation,
                     const QList<AUDIO::SpatialMicrophone*>&,
-                    uint bufferSize, SamplePos pos, uint thread) Q_DECL_OVERRIDE;
+                    const RenderTime& time) Q_DECL_OVERRIDE;
 
-signals:
+    virtual QString infoString() const Q_DECL_OVERRIDE;
 
-public slots:
+
+    static void getVectors(std::vector<Vec3>& v, const FloatMatrix& m);
 
 private:
 
-    ParameterInt
-        * pNumMics_;
     ParameterFloat
-        * pDistance_, * pDirExp_;
-
-    //QList<AUDIO::AudioMicrophone*> micros_;
+        * paramMicDist_,
+        * paramAmp_,
+        * paramDistFade_,
+        * paramDirExp_,
+        * paramDistMin_,
+        * paramDistMax_;
+    ParameterSelect
+        * paramUseDist_;
+    ParameterInt
+        * paramNumMics_;
+    ParameterFloatMatrix
+        * paramMatrix_;
 };
 
 } // namespace MO
 
 #endif // MOSRC_OBJECT_MICROPHONEGROUP_H
 
-#endif // MO_DISABLE_EXP
