@@ -19,7 +19,7 @@ struct GlContext::Private
     Private(GlContext * p)
         : pcontext          (p)
         , isValid           (false)
-        , window            (0)
+        , window            (nullptr)
         , syncMode          (SYNC_FIXED)
         , vMajor            (1)
         , vMinor            (1)

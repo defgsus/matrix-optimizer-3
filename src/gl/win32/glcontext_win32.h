@@ -18,6 +18,14 @@ struct WglExt;
 /** structure holding states for the system interaction on windows */
 struct GlContextTech
 {
+    GlContextTech()
+        : hrc       (0)
+        , hdc       (0)
+        , hwnd      (0)
+        , pfdnr     (0)
+        , wglExt    (nullptr)
+    { }
+
 	/** rendering context */
 	HGLRC		hrc;
 	/** device context */

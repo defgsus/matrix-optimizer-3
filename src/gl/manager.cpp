@@ -34,6 +34,14 @@
 #include "io/error.h"
 #include "io/log_gl.h"
 
+#if 1
+#   include "io/log.h"
+#   define MO__D(arg__) MO_PRINT("Manager("<<this<<")::" << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
+
+
 namespace MO {
 namespace GL {
 
@@ -339,11 +347,18 @@ void Manager::Private::stopThread(bool wait)
 
 void Manager::Private::renderLoop()
 {
+    setCurrentThreadName("GL");
+
+    MO__D("renderLoop()");
+
     doStop = false;
 
+    MO__D("creating window");
     window = new RenderWindow(p, 320, 320);
 
+    MO__D("creating scene renderer");
     renderer = new SceneRenderer();
+    MO__D("creating scene renderer context");
     renderer->createContext(window);
     renderer->setTimeCallback(timeFunc);
     if (!setNewScene && scene)
@@ -354,7 +369,7 @@ void Manager::Private::renderLoop()
 
     TimeMessure fpsCount;
 
-    MO_DEBUG_GL("Starting render-loop");
+    MO__D("Starting render-loop");
 
     while (!doStop && window->update())
     {
@@ -370,8 +385,10 @@ void Manager::Private::renderLoop()
             {
                 if (setNewScene)
                 {
+                    MO__D("setting new scene");
                     if (scene)
                     {
+                        MO__D("replacing old scene");
                         scene->destroyGlRequest();
                         scene->releaseRef("Manager:release-prev");
                     }
@@ -401,6 +418,8 @@ void Manager::Private::renderLoop()
             std::lock_guard<std::mutex> lock(imageRequestMutex);
             while (!imageRequests.isEmpty())
             {
+                MO__D("image render request '" << imageRequests.front().id << "'");
+
                 auto img = renderImage(imageRequests.front());
                 emit p->sendImage(imageRequests.front().tex,
                                   imageRequests.front().id,

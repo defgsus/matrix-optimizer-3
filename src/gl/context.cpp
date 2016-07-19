@@ -38,9 +38,9 @@ Context::Context(GlWindow* win)
 {
     MO_DEBUG_GL("Context::Context(GlWindow " << win << ")");
 
-    glContext_ = new GlContext(win);
-
+    glContext_ = new GlContext();
     glContext_->setSyncMode(GlContext::SYNC_NONE);
+    glContext_->create(win, 3, 2);
 }
 
 Context::~Context()

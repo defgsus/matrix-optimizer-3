@@ -16,6 +16,11 @@
 #pragma warning(disable : 4267)
 #endif
 
+#if 0
+#   undef MO_DEBUG_GL
+#   define MO_DEBUG_GL(arg__) MO_PRINT(arg__)
+#endif
+
 namespace MO {
 namespace GL {
 

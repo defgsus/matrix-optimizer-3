@@ -47,29 +47,37 @@ int64_t processEvent_(
 namespace Private {
 
     /* hwnd_impl_map_ maps between a HWND (os-window handle) and
-        the Window class that created the window */
+        the GlWindow class that created the window */
 
     static std::mutex hwnd_impl_map_mutex_;
 
-    static std::map<const HWND, GlWindow*> hwnd_impl_map_;
+    std::map<const HWND, GlWindow*>& hwnd_impl_map_()
+    {
+        static std::map<const HWND, GlWindow*>* map = nullptr;
+        static std::mutex mutex;
+        std::lock_guard<std::mutex> lock(mutex);
+        if (!map)
+            map = new std::map<const HWND, GlWindow*>();
+        return *map;
+    }
 
     void install_hwnd_(const HWND hwnd, GlWindow* win)
     {
         std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
-        hwnd_impl_map_[hwnd] = win;
+        hwnd_impl_map_()[hwnd] = win;
     }
 
     void uninstall_hwnd_(const HWND hwnd)
     {
         std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
-        hwnd_impl_map_.erase(hwnd);
+        hwnd_impl_map_().erase(hwnd);
     }
 
     GlWindow* get_impl_(const HWND hwnd)
     {
         std::lock_guard<std::mutex> lock(hwnd_impl_map_mutex_);
-        auto i = hwnd_impl_map_.find(hwnd);
-        return (i==hwnd_impl_map_.end())? 0 : i->second;
+        auto i = hwnd_impl_map_().find(hwnd);
+        return (i==hwnd_impl_map_().end())? 0 : i->second;
     }
 
     std::vector<WCHAR> getWChar(const char * t)
