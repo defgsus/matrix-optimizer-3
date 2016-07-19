@@ -19,12 +19,12 @@
 #include "angelscript_math.h"
 #include "angelscript.h"
 #include "3rd/angelscript/scriptarray/scriptarray.h"
-#include "object/object.h"
-#include "geom/geometry.h"
-#include "geom/geometryfactory.h"
-#include "geom/marchingcubes.h"
+#include "object/Object.h"
+#include "geom/Geometry.h"
+#include "geom/GeometryFactory.h"
+#include "geom/MarchingCubes.h"
 #include "math/vector.h"
-#include "types/refcounted.h"
+#include "types/Refcounted.h"
 #include "io/log.h"
 
 

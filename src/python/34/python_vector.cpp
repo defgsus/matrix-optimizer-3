@@ -19,7 +19,7 @@
 #include "python_vector.h"
 #include "math/vector.h"
 #include "math/functions.h"
-#include "math/arithmeticarray.h"
+#include "math/ArithmeticArray.h"
 #include "math/vec_math.h"
 #include "io/log.h"
 

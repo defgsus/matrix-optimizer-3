@@ -11,8 +11,8 @@
 #ifndef MOSRC_OBJECT_UTIL_OBJECTTREE_H
 #define MOSRC_OBJECT_UTIL_OBJECTTREE_H
 
-#include "graph/tree.h"
-#include "object/object.h"
+#include "graph/Tree.h"
+#include "object/Object.h"
 
 //#include "graph/directedgraph.h"
 //#include "model/treemodel.h"

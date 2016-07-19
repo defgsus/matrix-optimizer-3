@@ -30,7 +30,7 @@
 #include "3rd/angelscript/scriptstdstring/scriptstdstring.h"
 #include "io/log.h"
 #include "io/error.h"
-#include "io/xmlstream.h"
+#include "io/XmlStream.h"
 
 namespace MO {
 

@@ -12,7 +12,7 @@
 #define MOSRC_MATH_ADVANCED_H
 
 #include "math/functions.h"
-#include "math/noiseperlin.h"
+#include "math/NoisePerlin.h"
 #include "math/interpol.h"
 #include "math/constants.h"
 #include "types/conversion.h"

@@ -1,11 +1,11 @@
 HEADERS += \
-    src/engine/clientengine.h \
-    src/network/client.h \
-    src/io/clientfiles.h \
-    src/engine/clientenginecommandline.h
+    $$PWD/engine/ClientEngine.h \
+    $$PWD/io/ClientFiles.h \
+    $$PWD/network/Client.h \
+    $$PWD/engine/ClientEngineCommandLine.h
 
 SOURCES += \
-    src/engine/clientengine.cpp \
-    src/network/client.cpp \
-    src/io/clientfiles.cpp \
-    src/engine/clientenginecommandline.cpp
+    $$PWD/engine/ClientEngine.cpp \
+    $$PWD/io/ClientFiles.cpp \
+    $$PWD/network/Client.cpp \
+    $$PWD/engine/ClientEngineCommandLine.cpp

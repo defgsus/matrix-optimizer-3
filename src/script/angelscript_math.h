@@ -16,7 +16,7 @@
 #include <random>
 
 #include "types/vector.h"
-#include "types/refcounted.h"
+#include "types/Refcounted.h"
 
 class asIScriptEngine;
 

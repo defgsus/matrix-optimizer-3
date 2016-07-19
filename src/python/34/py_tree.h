@@ -17,7 +17,7 @@
 
 #include <QString>
 
-#include "graph/tree.h"
+#include "graph/Tree.h"
 
 namespace MO {
 namespace PYTHON34 {

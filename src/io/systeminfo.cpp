@@ -15,8 +15,8 @@
 #include <QScreen>
 
 #include "systeminfo.h"
-#include "io/datastream.h"
-#include "io/application.h"
+#include "io/DataStream.h"
+#include "io/Application.h"
 
 
 namespace MO {

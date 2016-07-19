@@ -12,9 +12,9 @@
 #include <QHostAddress>
 
 #include "netlog.h"
-#include "io/application.h"
-#include "io/applicationtime.h"
-#include "io/currentthread.h"
+#include "io/Application.h"
+#include "io/ApplicationTime.h"
+#include "io/CurrentThread.h"
 #include "io/error.h"
 #include "io/log_io.h"
 

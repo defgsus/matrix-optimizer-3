@@ -15,8 +15,8 @@
 #include "io/lockedoutput.h"
 #include "io/console.h"
 #include "io/streamoperators_qt.h"
-#include "io/applicationtime.h"
-#include "io/currentthread.h"
+#include "io/ApplicationTime.h"
+#include "io/CurrentThread.h"
 
 
 #ifndef NDEBUG

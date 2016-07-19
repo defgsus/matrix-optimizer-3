@@ -12,17 +12,17 @@
 
 #include "py_utils.h"
 
-#include "object/object.h"
-#include "object/control/sequencefloat.h"
-#include "object/util/objecteditor.h"
-#include "object/util/objectfactory.h"
-#include "object/visual/model3d.h"
-#include "geom/geometry.h"
+#include "object/Object.h"
+#include "object/control/SequenceFloat.h"
+#include "object/util/ObjectEditor.h"
+#include "object/util/ObjectFactory.h"
+#include "object/visual/Model3d.h"
+#include "geom/Geometry.h"
 #include "python_object.h"
 #include "python_timeline.h"
 #include "python_geometry.h"
-#include "math/timeline1d.h"
-#include "math/timelinend.h"
+#include "math/Timeline1d.h"
+#include "math/TimelineNd.h"
 #include "io/error.h"
 
 namespace MO {

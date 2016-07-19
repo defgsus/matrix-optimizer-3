@@ -9,7 +9,7 @@
 */
 
 #include "isclient.h"
-#include "application.h"
+#include "Application.h"
 #include "io/error.h"
 
 namespace MO {

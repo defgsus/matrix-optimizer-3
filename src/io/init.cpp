@@ -15,7 +15,7 @@
 #include "python/34/python.h"
 #include "io/error.h"
 #include "io/memory.h"
-#include "types/refcounted_info.h"
+#include "types/Refcounted_info.h"
 
 #ifdef Q_OS_LINUX
 #   include <X11/Xlib.h>

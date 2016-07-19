@@ -18,7 +18,7 @@
 #ifndef _FFTCONVOLVER_FFTCONVOLVER_H
 #define _FFTCONVOLVER_FFTCONVOLVER_H
 
-#include "math/fft2.h"
+#include "math/OouraFft.h"
 #include "Utilities.h"
 
 #include <vector>

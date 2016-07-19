@@ -19,9 +19,9 @@
 
 #include "angelscript_timeline.h"
 #include "angelscript.h"
-#include "math/timeline1d.h"
+#include "math/Timeline1d.h"
 #include "types/vector.h"
-#include "types/refcounted.h"
+#include "types/Refcounted.h"
 #include "io/log.h"
 #include "io/error.h"
 

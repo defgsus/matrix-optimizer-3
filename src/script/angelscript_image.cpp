@@ -20,7 +20,7 @@
 
 #include "angelscript_image.h"
 #include "angelscript.h"
-#include "types/refcounted.h"
+#include "types/Refcounted.h"
 #include "types/vector.h"
 #include "io/error.h"
 #include "io/log.h"

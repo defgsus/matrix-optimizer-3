@@ -13,7 +13,7 @@
 #include "py_utils.h"
 #include "python_timeline.h"
 #include "python_vector.h"
-#include "math/timelinend.h"
+#include "math/TimelineNd.h"
 #include "io/log.h"
 
 namespace MO {

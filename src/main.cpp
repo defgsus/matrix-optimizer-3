@@ -14,17 +14,17 @@
 #include <QTextStream>
 
 #include "io/init.h"
-#include "io/application.h"
-#include "io/settings.h"
+#include "io/Application.h"
+#include "io/Settings.h"
 #include "io/isclient.h"
-#include "io/currentthread.h"
+#include "io/CurrentThread.h"
 #include "io/log.h"
 #include "io/version.h"
-#include "gui/mainwindow.h"
-#include "gui/splashscreen.h"
-#include "engine/clientengine.h"
+#include "gui/MainWindow.h"
+#include "gui/SplashScreen.h"
+#include "engine/ClientEngine.h"
 #include "maincommandline.h"
-#include "io/diskrendersettings.h"
+#include "io/DiskRenderSettings.h"
 //#include "python/34/python.h"
 
 void showHelp()
@@ -63,7 +63,7 @@ int renderToDisk()
 //#include "tests/testpython.h"
 //#include "tests/testglwindow.h"
 //#include "tests/testfloatmatrix.h"
-#include "tests/testfft.h"
+#include "tests/TestFft.h"
 //#include "math/arithmeticarray.h"
 
 //#include "types/vector.h"

@@ -17,8 +17,8 @@
 #include "python_geometry.h"
 #include "py_tree.h"
 #include "python.h"
-#include "geom/geometry.h"
-#include "object/scene.h"
+#include "geom/Geometry.h"
+#include "object/Scene.h"
 #include "io/log.h"
 
 namespace MO {

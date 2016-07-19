@@ -16,14 +16,14 @@
 #include <sstream>
 
 #include "io/streamoperators_qt.h"
-#include "io/applicationtime.h"
-#include "io/currentthread.h"
+#include "io/ApplicationTime.h"
+#include "io/CurrentThread.h"
 #include "io/isclient.h"
 // to pass MO_WARNING messages to the server
 #include "network/netlog.h"
 // also include QTextStream << stuff operators
 // for NetworkLogger::operator <<
-#include "io/qtextstreamoperators.h"
+#include "io/QTextStreamOperators.h"
 
 #ifndef NDEBUG
 /** Enables MO_ASSERT() */

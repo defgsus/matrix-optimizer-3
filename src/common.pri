@@ -8,165 +8,44 @@ HEADERS += \
     src/types/vector.h \
     src/math/vector.h \
     src/math/constants.h \
-    src/math/timeline1d.h \
     src/math/interpol.h \
     src/types/float.h \
     src/io/console.h \
-    src/audio/audiosource.h \
     src/math/functions.h \
     src/io/log.h \
     src/io/error.h \
     src/io/streamoperators_qt.h \
-    src/io/xmlstream.h \
-    src/io/datastream.h \
-    src/model/qobjecttreemodel.h \
     src/doc.h \
     src/tool/stringmanip.h \
-    src/io/application.h \
-    src/model/objecttreemimedata.h \
-    src/gl/window.h \
-    src/gl/context.h \
-    src/gl/manager.h \
     src/io/init.h \
-    src/io/applicationtime.h \
     src/math/random.h \
-    src/math/noiseperlin.h \
     src/math/funcparser/functions.h \
     src/math/funcparser/parser.h \
     src/math/funcparser/parser_defines.h \
     src/math/funcparser/parser_program.h \
-    src/tool/syntaxhighlighter.h \
-    src/tool/actionlist.h \
     src/tool/enumnames.h \
     src/io/memory.h \
-    src/io/settings.h \
-    src/audio/configuration.h \
     src/types/int.h \
-    src/audio/audiodevices.h \
-    src/audio/audiodevice.h \
-    src/gl/drawable.h \
-    src/gl/shader.h \
-    src/gl/shadersource.h \
-    src/gl/cameraspace.h \
     src/gl/opengl.h \
-    src/gl/vertexarrayobject.h \
     src/gl/opengl_fwd.h \
     src/math/hash.h \
-    src/geom/objloader.h \
-    src/geom/geometry.h \
-    src/geom/geometryfactory.h \
-    src/gl/texture.h \
-    src/gl/framebufferobject.h \
-    src/gl/screenquad.h \
-    src/math/cubemapmatrix.h \
-    src/geom/geometrycreator.h \
-    src/geom/freecamera.h \
-    src/io/files.h \
-    src/io/currentthread.h \
-    src/gl/lightsettings.h \
     src/audio/audio_fwd.h \
-    src/audio/tool/envelopefollower.h \
-    src/audio/tool/multifilter.h \
-    src/audio/tool/waveform.h \
-    src/audio/tool/wavetable.h \
-    src/audio/tool/wavetablegenerator.h \
-    src/tool/locklessqueue.h \
     src/io/lockedoutput.h \
-    src/audio/tool/chebychevfilter.h \
-    src/gl/rendersettings.h \
     src/io/filetypes.h \
-    src/geom/geometrymodifier.h \
-    src/geom/geometrymodifierscale.h \
-    src/geom/geometrymodifiertesselate.h \
-    src/geom/geometrymodifierchain.h \
-    src/geom/geometrymodifiercreate.h \
-    src/geom/geometrymodifiertranslate.h \
-    src/geom/geometrymodifierrotate.h \
-    src/geom/geometrymodifiernormalize.h \
-    src/geom/geometrymodifiernormals.h \
-    src/geom/geometrymodifierconvertlines.h \
-    src/geom/geometrymodifiervertexgroup.h \
-    src/geom/geometrymodifierremove.h \
-    src/geom/geometrymodifiervertexequation.h \
-    src/geom/geometrymodifierprimitiveequation.h \
-    src/geom/geometrymodifierextrude.h \
-    src/geom/geometryfactorysettings.h \
-    src/geom/geometrymodifiertexcoords.h \
-    src/geom/objexporter.h \
-    src/audio/tool/soundfile.h \
-    src/audio/tool/soundfilemanager.h \
     src/math/intersection.h \
-    src/projection/domesettings.h \
-    src/projection/projectorsettings.h \
-    src/projection/projectormapper.h \
-    src/projection/projectionsystemsettings.h \
-    src/projection/camerasettings.h \
-    src/io/povrayexporter.h \
-    src/gl/scenedebugrenderer.h \
     src/gl/compatibility.h \
-    src/io/equationpresets.h \
-    src/io/equationpreset.h \
-    src/audio/mididevices.h \
-    src/audio/mididevice.h \
-    src/audio/midievent.h \
     src/network/netlog.h \
-    src/network/networkmanager.h \
-    src/network/tcpserver.h \
-    src/network/netevent.h \
     src/io/systeminfo.h \
     src/network/network_fwd.h \
     src/gl/opengl_undef.h \
     src/io/streamoperators_glbinding.h \
-    src/io/filemanager.h \
     src/tool/deleter.h \
-    src/network/eventcom.h \
-    src/geom/tesselator.h \
-    src/audio/tool/notefreq.h \
-    src/audio/tool/floatgate.h \
-    src/audio/tool/synth.h \
-    src/audio/tool/envelopegenerator.h \
-    src/audio/tool/filter24.h \
     src/math/denormals.h \
-    src/audio/tool/butterworthfilter.h \
-    src/audio/tool/fixedfilter.h \
-    src/geom/geometrymodifierduplicate.h \
-    src/math/polygon.h \
-    src/audio/tool/bandlimitwavetablegenerator.h \
-    src/math/fft.h \
-    src/audio/tool/fftwavetablegenerator.h \
-    src/projection/testprojectionrenderer.h \
-    src/io/commandlineparser.h \
     src/io/version.h \
-    src/tool/selection.h \
-    src/graph/directedgraph.h \
-    src/graph/tree.h \
-    src/projection/projectorblender.h \
-    src/video/videostreamreader.h \
-    src/tool/commonresolutions.h \
-    src/gl/scenerenderer.h \
-    src/io/currenttime.h \
-    src/network/clientstate.h \
-    src/io/qtextstreamoperators.h \
-    src/io/helpsystem.h \
-    src/io/helpexporterhtml.h \
-    src/io/helpexporterlatex.h \
     src/io/isclient.h \
-    src/engine/serverengine.h \
     src/types/time.h \
-    src/audio/tool/audiobuffer.h \
-    src/engine/liveaudioengine.h \
-    src/engine/audioengine.h \
-    src/math/transformationbuffer.h \
-    src/model/objectmimedata.h \
     src/audio/3rd/MVerb.h \
-    src/audio/tool/resamplebuffer.h \
-    src/audio/spatial/spatialsoundsource.h \
-    src/audio/spatial/spatialmicrophone.h \
     src/types/conversion.h \
-    src/audio/tool/delay.h \
-    src/gl/bufferobject.h \
-    src/audio/tool/dumbfile.h \
-    src/geom/geometrymodifierangelscript.h \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.h \
     src/script/3rd/angelscript/scriptarray/scriptarray.h \
     src/script/3rd/angelscript/scriptstdstring/scriptstdstring.h \
@@ -176,77 +55,20 @@ HEADERS += \
     src/script/angelscript_math.h \
     src/script/angelscript_object.h \
     src/script/angelscript_geometry.h \
-    src/geom/builtinlinefont.h \
     src/script/angelscript_timeline.h \
-    src/geom/pointcloud.h \
-    src/geom/marchingcubes.h \
-    src/network/udpconnection.h \
     src/script/angelscript_network.h \
-    src/network/udpaudioconnection.h \
-    src/types/refcounted.h \
     src/script/angelscript_image.h \
     src/io/time.h \
-    src/tool/asciirect.h \
-    src/types/properties.h \
-    src/io/docbookexporter.h \
     src/maincommandline.h \
-    src/gl/offscreencontext.h \
-    src/io/diskrendersettings.h \
-    src/engine/diskrenderer.h \
-    src/tool/threadpool.h \
-    src/audio/spatial/wavetracershader.h \
-    src/audio/tool/irmap.h \
-    src/audio/audioplayer.h \
-    src/audio/audioplayerdata.h \
-    src/math/convolution.h \
-    src/audio/tool/convolvebuffer.h \
-    src/geom/geometrymodifierenum.h \
-    src/io/ladspaloader.h \
-    src/audio/tool/ladspaplugin.h \
     src/audio/3rd/ladspa.h \
-    src/gl/texturerenderer.h \
-    $$PWD/io/sswproject.h \
-    $$PWD/model/jsontreemodel.h \
-    $$PWD/geom/shploader.h \
-    $$PWD/audio/tool/soundfileistream.h \
-    $$PWD/io/imagereader.h \
-    $$PWD/tool/dfdownsampler.h \
-    $$PWD/geom/geometrymodifiertext.h \
-    $$PWD/geom/textmesh.h \
-    $$PWD/tool/linearizerfloat.h \
-    $$PWD/network/oscinput.h \
-    $$PWD/network/oscinputs.h \
-    $$PWD/tool/valuesmoother.h \
-    $$PWD/math/interpolationtype.h \
-    $$PWD/io/keyboardstate.h \
-    $$PWD/io/mousestate.h \
-    $$PWD/math/csgbase.h \
-    $$PWD/math/csgprimitives.h \
-    $$PWD/math/csgcombine.h \
-    $$PWD/model/csgtreemodel.h \
-    $$PWD/gl/csgshader.h \
-    $$PWD/math/csgdeform.h \
-    $$PWD/math/csgfractals.h \
-    $$PWD/gl/neurogl.h \
-    $$PWD/tool/evolutionbase.h \
-    $$PWD/tool/evolutionpool.h \
-    $$PWD/model/evolutionmimedata.h \
-    $$PWD/math/kalisetevolution.h \
-    $$PWD/tool/brainf.h \
-    $$PWD/tool/brainfevolution.h \
-    $$PWD/tool/generalimage.h \
     $$PWD/python/34/python.h \
     $$PWD/python/34/python_geometry.h \
     $$PWD/python/34/python_funcs.h \
-    $$PWD/geom/geometrymodifierpython34.h \
     $$PWD/python/34/python_output.h \
     $$PWD/python/34/python_object.h \
     $$PWD/python/34/python_vector.h \
     $$PWD/python/34/py_utils.h \
     $$PWD/python/34/python_timeline.h \
-    $$PWD/math/arithmeticarray.h \
-    $$PWD/math/timelinend.h \
-    $$PWD/model/python34model.h \
     $$PWD/python/34/py_tree.h \
     $$PWD/math/vec_math.h \
     $$PWD/io/log_texture.h \
@@ -261,161 +83,230 @@ HEADERS += \
     $$PWD/io/log_geom.h \
     $$PWD/io/log_snd.h \
     $$PWD/gl/gl_state.h \
-    $$PWD/math/timeline_point.h \
-    $$PWD/types/refcounted_info.h \
     $$PWD/video/ffm/ffmpeg.h \
     $$PWD/video/ffm/videostream.h \
-    $$PWD/video/decoderframe.h \
-    $$PWD/model/objecttreemodel.h \
-    $$PWD/gl/glcontext.h \
-    $$PWD/gl/glcontext_private.h \
-    $$PWD/gl/glwindow.h \
-    $$PWD/gl/glwindow_private.h \
-    $$PWD/gl/x11/glcontext_x11.h \
-    $$PWD/gl/x11/glwindow_x11.h \
-    $$PWD/gl/win32/glcontext_win32.h \
-    $$PWD/gl/win32/glwindow_win32.h \
     $$PWD/gl/win32/winerror.h \
     $$PWD/gl/win32/wm_codes.def \
     $$PWD/gl/win32/wglext.h \
     $$PWD/gl/win32/wm_codes.inl \
     $$PWD/gl/x11/include_x11.h \
     $$PWD/io/architecture.h \
-    $$PWD/audio/tool/fixedblockdelay.h \
-    $$PWD/audio/tool/beatdetector.h \
-    $$PWD/math/fft2.h \
     $$PWD/audio/3rd/KlangFalter/FFTConvolver.h \
     $$PWD/audio/3rd/KlangFalter/Utilities.h \
-    $$PWD/math/fftwindow.h \
-    $$PWD/io/jsoninterface.h
+    $$PWD/audio/spatial/SpatialMicrophone.h \
+    $$PWD/audio/spatial/SpatialSoundSource.h \
+    $$PWD/audio/spatial/WaveTracerShader.h \
+    $$PWD/audio/tool/AudioBuffer.h \
+    $$PWD/audio/tool/BandlimitWavetableGenerator.h \
+    $$PWD/audio/tool/BeatDetector.h \
+    $$PWD/audio/tool/ButterworthFilter.h \
+    $$PWD/audio/tool/ChebychevFilter.h \
+    $$PWD/audio/tool/ConvolveBuffer.h \
+    $$PWD/audio/tool/Delay.h \
+    $$PWD/audio/tool/DumbFile.h \
+    $$PWD/audio/tool/EnvelopeFollower.h \
+    $$PWD/audio/tool/EnvelopeGenerator.h \
+    $$PWD/audio/tool/FftWavetableGenerator.h \
+    $$PWD/audio/tool/Filter24.h \
+    $$PWD/audio/tool/FixedBlockDelay.h \
+    $$PWD/audio/tool/FixedFilter.h \
+    $$PWD/audio/tool/FloatGate.h \
+    $$PWD/audio/tool/IrMap.h \
+    $$PWD/audio/tool/LadspaPlugin.h \
+    $$PWD/audio/tool/MultiFilter.h \
+    $$PWD/audio/tool/NoteFreq.h \
+    $$PWD/audio/tool/ResampleBuffer.h \
+    $$PWD/audio/tool/SoundFile.h \
+    $$PWD/audio/tool/SoundFileIStream.h \
+    $$PWD/audio/tool/SoundFileManager.h \
+    $$PWD/audio/tool/Synth.h \
+    $$PWD/audio/tool/Waveform.h \
+    $$PWD/audio/tool/Wavetable.h \
+    $$PWD/audio/tool/WavetableGenerator.h \
+    $$PWD/audio/AudioDevice.h \
+    $$PWD/audio/AudioDevices.h \
+    $$PWD/audio/AudioPlayer.h \
+    $$PWD/audio/AudioPlayerData.h \
+    $$PWD/audio/AudioSource.h \
+    $$PWD/audio/Configuration.h \
+    $$PWD/audio/MidiDevice.h \
+    $$PWD/audio/MidiDevices.h \
+    $$PWD/audio/MidiEvent.h \
+    $$PWD/engine/AudioEngine.h \
+    $$PWD/engine/DiskRenderer.h \
+    $$PWD/engine/LiveAudioEngine.h \
+    $$PWD/engine/ServerEngine.h \
+    $$PWD/geom/BuiltinLineFont.h \
+    $$PWD/geom/FreeCamera.h \
+    $$PWD/geom/Geometry.h \
+    $$PWD/geom/GeometryCreator.h \
+    $$PWD/geom/GeometryFactory.h \
+    $$PWD/geom/GeometryFactorySettings.h \
+    $$PWD/geom/GeometryModifier.h \
+    $$PWD/geom/GeometryModifierAngelscript.h \
+    $$PWD/geom/GeometryModifierChain.h \
+    $$PWD/geom/GeometryModifierConvertlines.h \
+    $$PWD/geom/GeometryModifierCreate.h \
+    $$PWD/geom/GeometryModifierDuplicate.h \
+    $$PWD/geom/GeometryModifierEnum.h \
+    $$PWD/geom/GeometryModifierExtrude.h \
+    $$PWD/geom/GeometryModifierNormalize.h \
+    $$PWD/geom/GeometryModifierNormals.h \
+    $$PWD/geom/GeometryModifierPrimitiveEquation.h \
+    $$PWD/geom/GeometryModifierPython34.h \
+    $$PWD/geom/GeometryModifierRemove.h \
+    $$PWD/geom/GeometryModifierRotate.h \
+    $$PWD/geom/GeometryModifierScale.h \
+    $$PWD/geom/GeometryModifierTesselate.h \
+    $$PWD/geom/GeometryModifierTexCoords.h \
+    $$PWD/geom/GeometryModifierText.h \
+    $$PWD/geom/GeometryModifierTranslate.h \
+    $$PWD/geom/GeometryModifierVertexEquation.h \
+    $$PWD/geom/GeometryModifierVertexGroup.h \
+    $$PWD/geom/MarchingCubes.h \
+    $$PWD/geom/ObjExporter.h \
+    $$PWD/geom/ObjLoader.h \
+    $$PWD/geom/PointCloud.h \
+    $$PWD/geom/ShpLoader.h \
+    $$PWD/geom/Tesselator.h \
+    $$PWD/geom/TextMesh.h \
+    $$PWD/gl/win32/GlContext_win32.h \
+    $$PWD/gl/win32/GlWindow_win32.h \
+    $$PWD/gl/x11/GlContext_x11.h \
+    $$PWD/gl/x11/GlWindow_x11.h \
+    $$PWD/gl/BufferObject.h \
+    $$PWD/gl/CameraSpace.h \
+    $$PWD/gl/Context.h \
+    $$PWD/gl/CsgShader.h \
+    $$PWD/gl/Drawable.h \
+    $$PWD/gl/GlContext.h \
+    $$PWD/gl/GlContext_private.h \
+    $$PWD/gl/GlWindow.h \
+    $$PWD/gl/GlWindow_private.h \
+    $$PWD/gl/LightSettings.h \
+    $$PWD/gl/Manager.h \
+    $$PWD/gl/NeuroGl.h \
+    $$PWD/gl/OffscreenContext.h \
+    $$PWD/gl/RenderSettings.h \
+    $$PWD/gl/SceneDebugRenderer.h \
+    $$PWD/gl/SceneRenderer.h \
+    $$PWD/gl/ScreenQuad.h \
+    $$PWD/gl/Shader.h \
+    $$PWD/gl/ShaderSource.h \
+    $$PWD/gl/Texture.h \
+    $$PWD/gl/TextureRenderer.h \
+    $$PWD/gl/VertexArrayObject.h \
+    $$PWD/gl/Window.h \
+    $$PWD/graph/DirectedGraph.h \
+    $$PWD/graph/Tree.h \
+    $$PWD/io/Application.h \
+    $$PWD/io/ApplicationTime.h \
+    $$PWD/io/CurrentThread.h \
+    $$PWD/io/CurrentTime.h \
+    $$PWD/io/DataStream.h \
+    $$PWD/io/DiskRenderSettings.h \
+    $$PWD/io/DocbookExporter.h \
+    $$PWD/io/EquationPreset.h \
+    $$PWD/io/EquationPresets.h \
+    $$PWD/io/FileManager.h \
+    $$PWD/io/Files.h \
+    $$PWD/io/HelpExporterHtml.h \
+    $$PWD/io/HelpExporterLatex.h \
+    $$PWD/io/HelpSystem.h \
+    $$PWD/io/ImageReader.h \
+    $$PWD/io/JsonInterface.h \
+    $$PWD/io/KeyboardState.h \
+    $$PWD/io/LadspaLoader.h \
+    $$PWD/io/MouseState.h \
+    $$PWD/io/PovrayExporter.h \
+    $$PWD/io/QTextStreamOperators.h \
+    $$PWD/io/Settings.h \
+    $$PWD/io/SswProject.h \
+    $$PWD/io/XmlStream.h \
+    $$PWD/math/ArithmeticArray.h \
+    $$PWD/math/Convolution.h \
+    $$PWD/math/CsgBase.h \
+    $$PWD/math/CsgCombine.h \
+    $$PWD/math/CsgDeform.h \
+    $$PWD/math/CsgFractals.h \
+    $$PWD/math/CsgPrimitives.h \
+    $$PWD/math/CubemapMatrix.h \
+    $$PWD/math/Fft.h \
+    $$PWD/math/OouraFft.h \
+    $$PWD/math/FftWindow.h \
+    $$PWD/math/InterpolationType.h \
+    $$PWD/math/KalisetEvolution.h \
+    $$PWD/math/NoisePerlin.h \
+    $$PWD/math/Polygon.h \
+    $$PWD/math/Timeline1d.h \
+    $$PWD/math/TimelinePoint.h \
+    $$PWD/math/TimelineNd.h \
+    $$PWD/math/TransformationBuffer.h \
+    $$PWD/model/CsgTreeModel.h \
+    $$PWD/model/EvolutionMimeData.h \
+    $$PWD/model/JsonTreeModel.h \
+    $$PWD/model/ObjectMimeData.h \
+    $$PWD/model/ObjectTreeMimeData.h \
+    $$PWD/model/ObjectTreeModel.h \
+    $$PWD/model/Python34Model.h \
+    $$PWD/model/QObjectTreeModel.h \
+    $$PWD/network/ClientState.h \
+    $$PWD/network/EventCom.h \
+    $$PWD/network/NetEvent.h \
+    $$PWD/network/NetworkManager.h \
+    $$PWD/network/OscInput.h \
+    $$PWD/network/OscInputs.h \
+    $$PWD/network/TcpServer.h \
+    $$PWD/network/UdpAudioConnection.h \
+    $$PWD/network/UdpConnection.h \
+    $$PWD/projection/CameraSettings.h \
+    $$PWD/projection/DomeSettings.h \
+    $$PWD/projection/ProjectionSystemSettings.h \
+    $$PWD/projection/ProjectorBlender.h \
+    $$PWD/projection/ProjectorMapper.h \
+    $$PWD/projection/ProjectorSettings.h \
+    $$PWD/projection/TestProjectionRenderer.h \
+    $$PWD/tool/ActionList.h \
+    $$PWD/tool/AsciiRect.h \
+    $$PWD/tool/Brainf.h \
+    $$PWD/tool/BrainfEvolution.h \
+    $$PWD/tool/CommonResolutions.h \
+    $$PWD/tool/DfDownsampler.h \
+    $$PWD/tool/EvolutionBase.h \
+    $$PWD/tool/EvolutionPool.h \
+    $$PWD/tool/GeneralImage.h \
+    $$PWD/tool/LinearizerFloat.h \
+    $$PWD/tool/LocklessQueue.h \
+    $$PWD/tool/Selection.h \
+    $$PWD/tool/SyntaxHighlighter.h \
+    $$PWD/tool/ThreadPool.h \
+    $$PWD/tool/ValueSmoother.h \
+    $$PWD/types/Properties.h \
+    $$PWD/types/Refcounted.h \
+    $$PWD/types/Refcounted_info.h \
+    $$PWD/video/DecoderFrame.h \
+    $$PWD/video/VideoStreamReader.h \
+    $$PWD/gl/FrameBufferObject.h \
+    $$PWD/io/CommandLineParser.h
 
 SOURCES += \
-    src/math/timeline1d.cpp \
     src/io/console.cpp \
-    src/audio/audiosource.cpp \
-    src/io/xmlstream.cpp \
-    src/io/datastream.cpp \
-    src/model/qobjecttreemodel.cpp \
     src/tool/stringmanip.cpp \
-    src/io/application.cpp \
-    src/model/objecttreemimedata.cpp \
-    src/gl/window.cpp \
-    src/gl/context.cpp \
     src/io/init.cpp \
     src/types/float.cpp \
-    src/io/applicationtime.cpp \
-    src/math/noiseperlin.cpp \
     src/math/funcparser/parser.cpp \
-    src/tool/syntaxhighlighter.cpp \
-    src/gl/manager.cpp \
-    src/tool/actionlist.cpp \
-    src/tool/enumnames.cpp \
     src/io/memory.cpp \
-    src/io/settings.cpp \
-    src/audio/audiodevices.cpp \
-    src/audio/audiodevice.cpp \
-    src/gl/drawable.cpp \
-    src/gl/shader.cpp \
-    src/gl/shadersource.cpp \
     src/gl/opengl.cpp \
-    src/gl/vertexarrayobject.cpp \
-    src/geom/objloader.cpp \
-    src/geom/geometry.cpp \
-    src/geom/geometryfactory.cpp \
-    src/gl/texture.cpp \
-    src/gl/framebufferobject.cpp \
-    src/gl/screenquad.cpp \
-    src/math/cubemapmatrix.cpp \
-    src/geom/geometrycreator.cpp \
-    src/geom/freecamera.cpp \
-    src/io/files.cpp \
-    src/io/currentthread.cpp \
-    src/gl/lightsettings.cpp \
-    src/audio/tool/envelopefollower.cpp \
-    src/audio/tool/multifilter.cpp \
-    src/audio/tool/waveform.cpp \
-    src/audio/tool/wavetablegenerator.cpp \
     src/io/lockedoutput.cpp \
-    src/audio/tool/chebychevfilter.cpp \
-    src/gl/rendersettings.cpp \
     src/io/filetypes.cpp \
-    src/geom/geometrymodifier.cpp \
-    src/geom/geometrymodifierscale.cpp \
-    src/geom/geometrymodifiertesselate.cpp \
-    src/geom/geometrymodifierchain.cpp \
-    src/geom/geometrymodifiercreate.cpp \
-    src/geom/geometrymodifiertranslate.cpp \
-    src/geom/geometrymodifierrotate.cpp \
-    src/geom/geometrymodifiernormalize.cpp \
-    src/geom/geometrymodifiernormals.cpp \
-    src/geom/geometrymodifierconvertlines.cpp \
-    src/geom/geometrymodifiervertexgroup.cpp \
-    src/geom/geometrymodifierremove.cpp \
-    src/geom/geometrymodifiervertexequation.cpp \
-    src/geom/geometrymodifierprimitiveequation.cpp \
-    src/geom/geometrymodifierextrude.cpp \
-    src/geom/geometryfactorysettings.cpp \
-    src/geom/geometrymodifiertexcoords.cpp \
-    src/geom/objexporter.cpp \
-    src/audio/tool/soundfile.cpp \
-    src/audio/tool/soundfilemanager.cpp \
     src/math/intersection.cpp \
-    src/projection/domesettings.cpp \
-    src/projection/projectorsettings.cpp \
-    src/projection/projectormapper.cpp \
-    src/projection/projectionsystemsettings.cpp \
-    src/projection/camerasettings.cpp \
-    src/io/povrayexporter.cpp \
-    src/gl/scenedebugrenderer.cpp \
     src/gl/compatibility.cpp \
-    src/audio/audiomicrophone.cpp \
-    src/io/equationpresets.cpp \
-    src/io/equationpreset.cpp \
-    src/audio/mididevices.cpp \
-    src/audio/mididevice.cpp \
-    src/audio/midievent.cpp \
     src/network/netlog.cpp \
-    src/network/networkmanager.cpp \
-    src/network/tcpserver.cpp \
-    src/network/netevent.cpp \
     src/io/systeminfo.cpp \
-    src/io/filemanager.cpp \
-    src/network/eventcom.cpp \
-    src/audio/tool/synth.cpp \
-    src/audio/tool/filter24.cpp \
     src/math/denormals.cpp \
-    src/audio/tool/butterworthfilter.cpp \
-    src/audio/tool/fixedfilter.cpp \
-    src/geom/geometrymodifierduplicate.cpp \
-    src/math/polygon.cpp \
-    src/projection/projectormapper_gl.cpp \
-    src/audio/tool/bandlimitwavetablegenerator.cpp \
-    src/math/fft.cpp \
-    src/projection/testprojectionrenderer.cpp \
-    src/io/commandlineparser.cpp \
     src/io/version.cpp \
-    src/projection/projectorblender.cpp \
-    src/video/videostreamreader.cpp \
-    src/tool/commonresolutions.cpp \
-    src/gl/scenerenderer.cpp \
-    src/io/currenttime.cpp \
-    src/network/clientstate.cpp \
-    src/io/qtextstreamoperators.cpp \
-    src/io/helpsystem.cpp \
-    src/io/helpexporterhtml.cpp \
-    src/io/helpexporterlatex.cpp \
     src/io/isclient.cpp \
     src/main.cpp \
-    src/engine/serverengine.cpp \
-    src/audio/tool/audiobuffer.cpp \
-    src/engine/liveaudioengine.cpp \
-    src/engine/audioengine.cpp \
-    src/audio/spatial/spatialsoundsource.cpp \
-    src/audio/spatial/spatialmicrophone.cpp \
-    src/model/objectmimedata.cpp \
-    src/audio/tool/dumbfile.cpp \
-    src/gl/bufferobject.cpp \
-    src/geom/geometrymodifierangelscript.cpp \
     src/script/3rd/angelscript/scriptmath/scriptmathcomplex.cpp \
     src/script/3rd/angelscript/scriptarray/scriptarray.cpp \
     src/script/3rd/angelscript/scriptstdstring/scriptstdstring.cpp \
@@ -426,89 +317,198 @@ SOURCES += \
     src/script/angelscript_math.cpp \
     src/script/angelscript_object.cpp \
     src/script/angelscript_geometry.cpp \
-    src/geom/builtinlinefont.cpp \
     src/script/angelscript_timeline.cpp \
-    src/geom/pointcloud.cpp \
-    src/geom/marchingcubes.cpp \
-    src/network/udpconnection.cpp \
     src/script/angelscript_network.cpp \
-    src/network/udpaudioconnection.cpp \
     src/script/angelscript_image.cpp \
     src/io/time.cpp \
-    src/tool/asciirect.cpp \
-    src/types/properties.cpp \
-    src/io/docbookexporter.cpp \
-    src/maincommandline.cpp \
-    src/gl/offscreencontext.cpp \
-    src/io/diskrendersettings.cpp \
-    src/engine/diskrenderer.cpp \
-    src/tool/threadpool.cpp \
-    src/audio/spatial/wavetracershader.cpp \
-    src/audio/tool/irmap.cpp \
-    src/audio/audioplayer.cpp \
-    src/audio/audioplayerdata.cpp \
-    src/audio/tool/convolvebuffer.cpp \
-    src/geom/geometrymodifierenum.cpp \
-    src/io/ladspaloader.cpp \
-    src/audio/tool/ladspaplugin.cpp \
-    src/gl/texturerenderer.cpp \
-    $$PWD/io/sswproject.cpp \
-    $$PWD/model/jsontreemodel.cpp \
-    $$PWD/geom/shploader.cpp \
-    $$PWD/audio/tool/soundfileistream.cpp \
-    $$PWD/io/imagereader.cpp \
-    $$PWD/tool/dfdownsampler.cpp \
-    $$PWD/geom/tesselator_glu.cpp \
-    $$PWD/geom/tesselator.cpp \
-    $$PWD/geom/geometrymodifiertext.cpp \
-    $$PWD/geom/textmesh.cpp \
-    $$PWD/tool/linearizerfloat.cpp \
-    $$PWD/network/oscinput.cpp \
-    $$PWD/network/oscinputs.cpp \
-    $$PWD/io/mousestate.cpp \
-    $$PWD/io/keyboardstate.cpp \
-    $$PWD/math/csgbase.cpp \
-    $$PWD/math/csgprimitives.cpp \
-    $$PWD/math/csgcombine.cpp \
-    $$PWD/model/csgtreemodel.cpp \
-    $$PWD/gl/csgshader.cpp \
-    $$PWD/math/csgdeform.cpp \
-    $$PWD/math/csgfractals.cpp \
-    $$PWD/gl/neurogl.cpp \
-    $$PWD/tool/evolutionbase.cpp \
-    $$PWD/tool/evolutionpool.cpp \
-    $$PWD/model/evolutionmimedata.cpp \
-    $$PWD/math/kalisetevolution.cpp \
-    $$PWD/tool/brainfevolution.cpp \
-    $$PWD/tool/generalimage.cpp \
     $$PWD/python/34/python.cpp \
     $$PWD/python/34/python_geometry.cpp \
     $$PWD/python/34/python_funcs.cpp \
-    $$PWD/geom/geometrymodifierpython34.cpp \
     $$PWD/python/34/python_output.cpp \
     $$PWD/python/34/python_object.cpp \
     $$PWD/python/34/python_vector.cpp \
     $$PWD/python/34/py_utils.cpp \
     $$PWD/python/34/python_timeline.cpp \
-    $$PWD/math/timelinend.cpp \
-    $$PWD/model/python34model.cpp \
     $$PWD/python/34/py_tree.cpp \
-    $$PWD/types/refcounted.cpp \
     $$PWD/gl/gl_state.cpp \
-    $$PWD/math/timeline_point.cpp \
     $$PWD/video/ffm/ffmpeg.cpp \
-    $$PWD/video/ffm/videostream.cpp \
-    $$PWD/model/objecttreemodel.cpp \
-    src/gl/glcontext_common.cpp \
-    src/gl/glwindow_common.cpp \
-    src/gl/x11/glcontext_x11.cpp \
-    src/gl/x11/glwindow_x11.cpp \
-    src/gl/win32/glcontext_win32.cpp \
-    src/gl/win32/glwindow_win32.cpp \
     src/gl/win32/winerror.cpp \
-    $$PWD/audio/tool/beatdetector.cpp \
-    $$PWD/math/fft2.cpp \
     $$PWD/audio/3rd/KlangFalter/FFTConvolver.cpp \
     $$PWD/audio/3rd/KlangFalter/Utilities.cpp \
-    $$PWD/io/jsoninterface.cpp
+    $$PWD/tool/ActionList.cpp \
+    $$PWD/audio/spatial/SpatialMicrophone.cpp \
+    $$PWD/audio/spatial/SpatialSoundSource.cpp \
+    $$PWD/audio/spatial/WaveTracerShader.cpp \
+    $$PWD/audio/tool/AudioBuffer.cpp \
+    $$PWD/audio/tool/BandlimitWavetableGenerator.cpp \
+    $$PWD/audio/tool/BeatDetector.cpp \
+    $$PWD/audio/tool/ButterworthFilter.cpp \
+    $$PWD/audio/tool/ChebychevFilter.cpp \
+    $$PWD/audio/tool/ConvolveBuffer.cpp \
+    $$PWD/audio/tool/DumbFile.cpp \
+    $$PWD/audio/tool/EnvelopeFollower.cpp \
+    $$PWD/audio/tool/Filter24.cpp \
+    $$PWD/audio/tool/FixedFilter.cpp \
+    $$PWD/audio/tool/IrMap.cpp \
+    $$PWD/audio/tool/LadspaPlugin.cpp \
+    $$PWD/audio/tool/MultiFilter.cpp \
+    $$PWD/audio/tool/SoundFile.cpp \
+    $$PWD/audio/tool/SoundFileIStream.cpp \
+    $$PWD/audio/tool/SoundFileManager.cpp \
+    $$PWD/audio/tool/Synth.cpp \
+    $$PWD/audio/tool/Waveform.cpp \
+    $$PWD/audio/tool/WavetableGenerator.cpp \
+    $$PWD/audio/AudioDevice.cpp \
+    $$PWD/audio/AudioDevices.cpp \
+    $$PWD/audio/AudioMicrophone.cpp \
+    $$PWD/audio/AudioPlayer.cpp \
+    $$PWD/audio/AudioPlayerData.cpp \
+    $$PWD/audio/AudioSource.cpp \
+    $$PWD/audio/MidiDevice.cpp \
+    $$PWD/audio/MidiDevices.cpp \
+    $$PWD/audio/MidiEvent.cpp \
+    $$PWD/engine/AudioEngine.cpp \
+    $$PWD/engine/DiskRenderer.cpp \
+    $$PWD/engine/LiveAudioEngine.cpp \
+    $$PWD/engine/ServerEngine.cpp \
+    $$PWD/geom/BuiltinLineFont.cpp \
+    $$PWD/geom/FreeCamera.cpp \
+    $$PWD/geom/Geometry.cpp \
+    $$PWD/geom/GeometryCreator.cpp \
+    $$PWD/geom/GeometryFactory.cpp \
+    $$PWD/geom/GeometryFactorySettings.cpp \
+    $$PWD/geom/GeometryModifier.cpp \
+    $$PWD/geom/GeometryModifierAngelscript.cpp \
+    $$PWD/geom/GeometryModifierChain.cpp \
+    $$PWD/geom/GeometryModifierConvertLines.cpp \
+    $$PWD/geom/GeometryModifierCreate.cpp \
+    $$PWD/geom/GeometryModifierDuplicate.cpp \
+    $$PWD/geom/GeometryModifierEnum.cpp \
+    $$PWD/geom/GeometryModifierExtrude.cpp \
+    $$PWD/geom/GeometryModifierNormalize.cpp \
+    $$PWD/geom/GeometryModifierNormals.cpp \
+    $$PWD/geom/GeometryModifierPrimitiveEquation.cpp \
+    $$PWD/geom/GeometryModifierPython34.cpp \
+    $$PWD/geom/GeometryModifierRemove.cpp \
+    $$PWD/geom/GeometryModifierRotate.cpp \
+    $$PWD/geom/GeometryModifierScale.cpp \
+    $$PWD/geom/GeometryModifierTesselate.cpp \
+    $$PWD/geom/GeometryModifierTexCoords.cpp \
+    $$PWD/geom/GeometryModifierText.cpp \
+    $$PWD/geom/GeometryModifierTranslate.cpp \
+    $$PWD/geom/GeometryModifierVertexEquation.cpp \
+    $$PWD/geom/GeometryModifierVertexGroup.cpp \
+    $$PWD/geom/MarchingCubes.cpp \
+    $$PWD/geom/ObjExporter.cpp \
+    $$PWD/geom/ObjLoader.cpp \
+    $$PWD/geom/PointCloud.cpp \
+    $$PWD/geom/ShpLoader.cpp \
+    $$PWD/geom/Tesselator.cpp \
+    $$PWD/geom/Tesselator_glu.cpp \
+    $$PWD/geom/TextMesh.cpp \
+    $$PWD/gl/win32/GlContext_win32.cpp \
+    $$PWD/gl/win32/GlWindow_win32.cpp \
+    $$PWD/gl/x11/GlContext_x11.cpp \
+    $$PWD/gl/x11/GlWindow_x11.cpp \
+    $$PWD/gl/BufferObject.cpp \
+    $$PWD/gl/Context.cpp \
+    $$PWD/gl/CsgShader.cpp \
+    $$PWD/gl/Drawable.cpp \
+    $$PWD/gl/FrameBufferObject.cpp \
+    $$PWD/gl/GlContext_common.cpp \
+    $$PWD/gl/GlWindow_common.cpp \
+    $$PWD/gl/LightSettings.cpp \
+    $$PWD/gl/Manager.cpp \
+    $$PWD/gl/NeuroGl.cpp \
+    $$PWD/gl/OffscreenContext.cpp \
+    $$PWD/gl/RenderSettings.cpp \
+    $$PWD/gl/SceneDebugRenderer.cpp \
+    $$PWD/gl/SceneRenderer.cpp \
+    $$PWD/gl/ScreenQuad.cpp \
+    $$PWD/gl/Shader.cpp \
+    $$PWD/gl/ShaderSource.cpp \
+    $$PWD/gl/Texture.cpp \
+    $$PWD/gl/TextureRenderer.cpp \
+    $$PWD/gl/VertexArrayObject.cpp \
+    $$PWD/gl/Window.cpp \
+    $$PWD/io/Application.cpp \
+    $$PWD/io/ApplicationTime.cpp \
+    $$PWD/io/CommandLineParser.cpp \
+    $$PWD/io/CurrentThread.cpp \
+    $$PWD/io/CurrentTime.cpp \
+    $$PWD/io/DataStream.cpp \
+    $$PWD/io/DiskRenderSettings.cpp \
+    $$PWD/io/DocbookExporter.cpp \
+    $$PWD/io/EquationPreset.cpp \
+    $$PWD/io/EquationPresets.cpp \
+    $$PWD/io/FileManager.cpp \
+    $$PWD/io/Files.cpp \
+    $$PWD/io/HelpExporterHtml.cpp \
+    $$PWD/io/HelpExporterLatex.cpp \
+    $$PWD/io/HelpSystem.cpp \
+    $$PWD/io/ImageReader.cpp \
+    $$PWD/io/JsonInterface.cpp \
+    $$PWD/io/KeyboardState.cpp \
+    $$PWD/io/LadspaLoader.cpp \
+    $$PWD/io/MouseState.cpp \
+    $$PWD/io/PovrayExporter.cpp \
+    $$PWD/io/QTextStreamOperators.cpp \
+    $$PWD/io/Settings.cpp \
+    $$PWD/io/SswProject.cpp \
+    $$PWD/io/XmlStream.cpp \
+    $$PWD/math/CsgBase.cpp \
+    $$PWD/math/CsgCombine.cpp \
+    $$PWD/math/CsgDeform.cpp \
+    $$PWD/math/CsgFractals.cpp \
+    $$PWD/math/CsgPrimitives.cpp \
+    $$PWD/math/CubemapMatrix.cpp \
+    $$PWD/math/Fft.cpp \
+    $$PWD/math/OouraFft.cpp \
+    $$PWD/math/KalisetEvolution.cpp \
+    $$PWD/math/NoisePerlin.cpp \
+    $$PWD/math/Polygon.cpp \
+    $$PWD/math/Timeline1d.cpp \
+    $$PWD/math/TimelinePoint.cpp \
+    $$PWD/math/TimelineNd.cpp \
+    $$PWD/model/CsgTreeModel.cpp \
+    $$PWD/model/EvolutionMimeData.cpp \
+    $$PWD/model/jsonTreeModel.cpp \
+    $$PWD/model/ObjectMimeData.cpp \
+    $$PWD/model/ObjectTreeMimeData.cpp \
+    $$PWD/model/ObjectTreeModel.cpp \
+    $$PWD/model/Python34Model.cpp \
+    $$PWD/model/QObjectTreeModel.cpp \
+    $$PWD/network/ClientState.cpp \
+    $$PWD/network/EventCom.cpp \
+    $$PWD/network/NetEvent.cpp \
+    $$PWD/network/NetworkManager.cpp \
+    $$PWD/network/OscInput.cpp \
+    $$PWD/network/OscInputs.cpp \
+    $$PWD/network/TcpServer.cpp \
+    $$PWD/network/UdpAudioConnection.cpp \
+    $$PWD/network/UdpConnection.cpp \
+    $$PWD/projection/CameraSettings.cpp \
+    $$PWD/projection/DomeSettings.cpp \
+    $$PWD/projection/ProjectionSystemSettings.cpp \
+    $$PWD/projection/ProjectorBlender.cpp \
+    $$PWD/projection/ProjectorMapper.cpp \
+    $$PWD/projection/ProjectorMapper_gl.cpp \
+    $$PWD/projection/ProjectorSettings.cpp \
+    $$PWD/projection/TestProjectionRenderer.cpp \
+    $$PWD/tool/AsciiRect.cpp \
+    $$PWD/tool/BrainfEvolution.cpp \
+    $$PWD/tool/CommonResolutions.cpp \
+    $$PWD/tool/DfDownsampler.cpp \
+    $$PWD/tool/EnumNames.cpp \
+    $$PWD/tool/EvolutionBase.cpp \
+    $$PWD/tool/EvolutionPool.cpp \
+    $$PWD/tool/GeneralImage.cpp \
+    $$PWD/tool/LinearizerFloat.cpp \
+    $$PWD/tool/SyntaxHighlighter.cpp \
+    $$PWD/tool/ThreadPool.cpp \
+    $$PWD/types/Properties.cpp \
+    $$PWD/types/Refcounted.cpp \
+    $$PWD/video/VideoStreamReader.cpp \
+    $$PWD/video/ffm/VideoStream.cpp \
+    $$PWD/mainCommandLine.cpp
 
