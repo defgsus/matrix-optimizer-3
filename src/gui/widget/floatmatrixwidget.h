@@ -36,6 +36,9 @@ public slots:
 
     void setFloatMatrix(const FloatMatrix&);
 
+    void loadDialog();
+    void saveDialog();
+
 private:
     struct Private;
     Private* p_;

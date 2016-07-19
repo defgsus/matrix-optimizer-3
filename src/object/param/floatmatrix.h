@@ -18,6 +18,7 @@
 #include "types/float.h"
 #include "io/error.h"
 #include "io/datastream.h"
+#include "io/jsoninterface.h"
 
 namespace MO {
 
@@ -30,12 +31,18 @@ namespace MO {
 
 */
 class FloatMatrix
+        : public JsonInterface
 {
 public:
     typedef std::vector<Double> Vector;
 
     FloatMatrix() { }
     FloatMatrix(const std::vector<size_t>& dimensions) { setDimensions(dimensions); }
+
+    // ---- io ----
+
+    QJsonObject toJson() const override;
+    void fromJson(const QJsonObject&) override;
 
     // ---- getter ----
 

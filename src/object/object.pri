@@ -299,4 +299,5 @@ SOURCES += \
     $$PWD/texture/floatmatrixto.cpp \
     $$PWD/audio/floatmatrixao.cpp \
     $$PWD/audio/beatdetectorao.cpp \
-    $$PWD/audio/fftfilterao.cpp
+    $$PWD/audio/fftfilterao.cpp \
+    $$PWD/param/floatmatrix.cpp

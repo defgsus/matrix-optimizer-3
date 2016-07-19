@@ -42,7 +42,8 @@ namespace IO {
       "python34",
       "ssw",
       "csg",
-      "evo"
+      "evo",
+      "fmatrix"
     };
 
     const QStringList fileTypeNames =
@@ -72,7 +73,8 @@ namespace IO {
       QObject::tr("Python 3.4"),
       QObject::tr("SSW Project"),
       QObject::tr("CSG Tree"),
-      QObject::tr("Evolution")
+      QObject::tr("Evolution"),
+      QObject::tr("Float Matrix")
     };
 
     const QList<QStringList> fileTypeExtensions =
@@ -103,6 +105,7 @@ namespace IO {
         { "py" },
         { "uifm" },
         { "xml-csg" },
+        { "json" },
         { "json" }
     };
 
@@ -154,6 +157,8 @@ namespace IO {
           QObject::tr("all files (*)") },
         { QObject::tr("SSW-JSON-Project (*.uifm)") },
         { QObject::tr("xml files ( *.xml *.xml-csg )") },
+        { QObject::tr("json files ( *.json )"),
+          QObject::tr("all files (*)") },
         { QObject::tr("json files ( *.json )"),
           QObject::tr("all files (*)") },
 

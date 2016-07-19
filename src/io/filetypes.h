@@ -47,7 +47,8 @@ namespace IO {
         FT_TEXT_PYTHON34,
         FT_SSW_PROJECT,
         FT_CSG_XML,
-        FT_EVOLUTION
+        FT_EVOLUTION,
+        FT_FLOAT_MATRIX
     };
 
     extern const QStringList fileTypeIds;

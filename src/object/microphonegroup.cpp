@@ -27,38 +27,6 @@ namespace MO {
 
 MO_REGISTER_OBJECT(MicrophoneGroup)
 
-// pot=14
-static const Vec3 mic_pos[] = {
-    Vec3(-0.707106,	-0.707106,	 0.0), // 1
-    Vec3(-1.0, 		 0.0,  		 0.0), // 2
-    Vec3(-0.707106,	 0.707106,	 0.0),
-    Vec3( 0.0,		 1.0,		 0.0), // 4
-    Vec3( 0.707106,	 0.707106,	 0.0),
-    Vec3( 1.0,		 0.0,		 0.0), // 6
-    Vec3( 0.707106,	-0.707106,	 0.0),
-    Vec3( 0.0,		-1.0,		 0.0), // 8
-
-    Vec3(-0.331413,	-0.800103,   -0.5), // 9
-    Vec3(-0.800103,	-0.331413,	 -0.5),
-    Vec3(-0.800103,	 0.331413,   -0.5),
-    Vec3(-0.331413,	 0.800103,	 -0.5), // 12
-    Vec3( 0.331413,	 0.800103,	 -0.5),
-    Vec3( 0.800103,	 0.331413,	 -0.5),
-    Vec3( 0.800103,	-0.331413,	 -0.5), // 15
-    Vec3( 0.331413,	-0.800103,	 -0.5),
-
-    Vec3(-0.3535533,	-0.3535533,	 -0.866025), // 17
-    Vec3(-0.3535533,	 0.3535533,	 -0.866025),
-    Vec3( 0.3535533,	 0.3535533,	 -0.866025),
-    Vec3( 0.3535533,	-0.3535533,	 -0.866025),
-
-    Vec3( 0.0,		 0.0,		 -1.0)  // 21 zenith
-                    //if (type == Audio::MICRO_22)
-    //Vec3( 0.0,		 0.0,		  1.0) ,0,1.0) ); // 22 dome origin / downwards
-//                    break;
-};
-
-
 
 
 MicrophoneGroup::MicrophoneGroup()
@@ -182,19 +150,11 @@ void MicrophoneGroup::updateParameterVisibility()
     paramDistMax_->setVisible(useDist);
 }
 
-Mat3 compute_orthogonals(const Vec3& v)
+/** Creates a matrix for aligninment with the
+    negative Z-axis of @p vz */
+Mat4 compute_orthogonals4(const Vec3& vz)
 {
-    Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
-            ? Vec3(-v.z, 0., v.x)
-            : Vec3(0., v.z, -v.y);
-    Vec3 v2 = glm::cross(v, v1);
-
-    return Mat3(v, v1, v2);
-}
-
-Mat4 compute_orthogonals4(const Vec3& vi)
-{
-    Vec3 v = -vi;
+    Vec3 v = -vz;
     //Vec3 v = Vec3(vi.x,vi.z,vi.y);
     Vec3 v1 = (std::abs(v.x) > std::abs(v.y))
             ? Vec3(v.y, -v.x, 0.f)
@@ -204,16 +164,6 @@ Mat4 compute_orthogonals4(const Vec3& vi)
     return Mat4(Vec4(v2,0), Vec4(v1,0), Vec4(v,0), Vec4(0,0,0,1));
 }
 
-Vec3 compute_up(const Vec3& v)
-{
-    /*MATH::normalize_safe(glm::mix(
-                        Vec3(0, micdir.z, -micdir.y),
-                        Vec3(0,-1,0),
-                        std::abs(micdir.x)))*/
-    return (std::abs(v.x) > std::abs(v.y))
-            ? Vec3(-v.z, 0., v.x)
-            : Vec3(0., v.z, -v.y);
-}
 
 void MicrophoneGroup::calculateMicrophoneTransformation(
                     const TransformationBuffer *objectTransformation,
@@ -244,23 +194,21 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
 
         // direction -> matrix
         Vec3 micdir = mic_vec[i];
-#if 0
-        Vec3 up = compute_up(micdir);
-                /*MATH::normalize_safe(glm::mix(
-                                    Vec3(0, micdir.z, -micdir.y),
-                                    Vec3(0,-1,0),
-                                    std::abs(micdir.x)));*/
-        Mat4 micmat = glm::lookAt(Vec3(0.), micdir, up);
-#else
         Mat4 micmat = compute_orthogonals4(micdir);
-#endif
 
         if (!paramMicDist_->isModulated())
         {
+#if 0
             Mat4 micmat2 = glm::translate(
                         Mat4(1.), micdir * Float(paramMicDist_->value(time)))
                             * micmat;
-
+#else
+            const Float dis = Float(paramMicDist_->value(time));
+            Mat4 micmat2 = micmat;
+            micmat2[3].x = micdir.x * dis;
+            micmat2[3].y = micdir.y * dis;
+            micmat2[3].z = micdir.z * dis;
+#endif
             for (uint j=0; j<mics[i]->transformationBuffer()->bufferSize(); ++j)
                 mics[i]->transformationBuffer()->setTransformation(
                         objectTransformation->transformation(j) * micmat2
@@ -273,9 +221,11 @@ void MicrophoneGroup::calculateMicrophoneTransformation(
             RenderTime btime(time);
             btime += Double(j) * sampleRateInv();
 
-            Mat4 micmat2 = glm::translate(
-                        Mat4(1.), micdir * Float(paramMicDist_->value(time)))
-                            * micmat;
+            const Float dis = Float(paramMicDist_->value(btime));
+            Mat4 micmat2 = micmat;
+            micmat2[3].x = micdir.x * dis;
+            micmat2[3].y = micdir.y * dis;
+            micmat2[3].z = micdir.z * dis;
 
             mics[i]->transformationBuffer()->setTransformation(
                         objectTransformation->transformation(j) * micmat2

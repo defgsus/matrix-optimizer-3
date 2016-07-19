@@ -9,10 +9,14 @@
 */
 
 #include <QTableWidget>
+#include <QToolButton>
 #include <QLayout>
+#include <QMessageBox>
 
 #include "floatmatrixwidget.h"
 #include "gui/widget/spinbox.h"
+#include "io/files.h"
+#include "io/error.h"
 
 namespace MO {
 namespace GUI {
@@ -55,7 +59,7 @@ FloatMatrixWidget::FloatMatrixWidget(QWidget *parent)
 
             p_->sbW = new SpinBox(this);
             p_->sbW->setLabel(tr("width"));
-            p_->sbW->setMinimum(1);
+            p_->sbW->setRange(1, 1<<30);
             lh->addWidget(p_->sbW);
             connect(p_->sbW, &SpinBox::valueChanged, [=]()
             {
@@ -65,13 +69,29 @@ FloatMatrixWidget::FloatMatrixWidget(QWidget *parent)
 
             p_->sbH = new SpinBox(this);
             p_->sbH->setLabel(tr("height"));
-            p_->sbH->setMinimum(1);
+            p_->sbH->setRange(1, 1<<30);
             lh->addWidget(p_->sbH);
             connect(p_->sbH, &SpinBox::valueChanged, [=]()
             {
                 if (!p_->ignoreChange)
                     p_->resize();
             });
+
+            lh->addStretch(1);
+
+            auto but = new QToolButton(this);
+            but->setText(tr("Load"));
+            but->setStatusTip(tr("Load a matrix from json data"));
+            but->setShortcut(Qt::CTRL + Qt::Key_L);
+            lh->addWidget(but);
+            connect(but, SIGNAL(clicked(bool)), this, SLOT(loadDialog()));
+
+            but = new QToolButton(this);
+            but->setText(tr("Save"));
+            but->setStatusTip(tr("Saves the matrix to json data"));
+            but->setShortcut(Qt::CTRL + Qt::Key_S);
+            lh->addWidget(but);
+            connect(but, SIGNAL(clicked(bool)), this, SLOT(saveDialog()));
 
         p_->table = new QTableWidget(this);
         lv->addWidget(p_->table);
@@ -202,6 +222,45 @@ bool FloatMatrixWidget::Private::updateMatrixFromCell(int r, int c)
     }
     return true;
 }
+
+void FloatMatrixWidget::loadDialog()
+{
+    auto fn = IO::Files::getOpenFileName(IO::FT_FLOAT_MATRIX);
+    if (fn.isEmpty())
+        return;
+    try
+    {
+        FloatMatrix m;
+        m.loadJsonFile(fn);
+        setFloatMatrix(m);
+        emit matrixChanged();
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("load float matrix"),
+                              tr("Loading the float matrix failed,\n%1")
+                              .arg(e.what()));
+    }
+}
+
+void FloatMatrixWidget::saveDialog()
+{
+    auto fn = IO::Files::getSaveFileName(IO::FT_FLOAT_MATRIX);
+    if (fn.isEmpty())
+        return;
+    try
+    {
+        p_->matrix.saveJsonFile(fn);
+    }
+    catch (const Exception& e)
+    {
+        QMessageBox::critical(this, tr("save float matrix"),
+                              tr("Saving the float matrix failed,\n%1")
+                              .arg(e.what()));
+    }
+}
+
+
 
 } // namespace GUI
 } // namespace MO
