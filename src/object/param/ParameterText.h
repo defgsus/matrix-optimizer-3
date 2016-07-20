@@ -34,7 +34,8 @@ public:
 
     virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
 
-    Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE { return 0; }
+    Modulator * getModulator(const QString&, const QString&) Q_DECL_OVERRIDE
+        { return 0; }
 
     QString baseValueString(bool inShort) const override
         { auto s = baseValue(); if (inShort && s.size()>25) { s.resize(23); s += ".."; }
@@ -48,6 +49,8 @@ public:
     const QString& defaultValue() const { return defaultValue_; }
     const QString& baseValue() const { return value_; }
     TextType textType() const { return textType_; }
+
+    bool isBaseValueEqual(const QString& v) const { return value_ == v; }
 
     /** Should be editable in single line or in text editor */
     bool isOneliner() const;

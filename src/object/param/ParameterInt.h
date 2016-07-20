@@ -54,6 +54,8 @@ public:
         { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time) )); }
     Int baseValue() const { return value_; }
 
+    bool isBaseValueEqual(Int v) const { return value_ == v; }
+
     // ---------------- setter -----------------
 
     void setDefaultValue(Int v) { defaultValue_ = v; }

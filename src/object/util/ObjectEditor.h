@@ -16,6 +16,7 @@
 #include "object/Object_fwd.h"
 #include "types/int.h"
 #include "types/float.h"
+#include "math/Fraction.h"
 
 namespace MO {
 #ifndef MO_DISABLE_FRONT
@@ -194,6 +195,8 @@ public slots:
 
     void setParameterValue(MO::ParameterInt *, Int value);
     void setParameterValue(MO::ParameterFloat *, Double value);
+    void setParameterValue(MO::ParameterFloat *, int64_t nom, int64_t den);
+    void setParameterValue(MO::ParameterFloat *, const MATH::Fraction&);
     void setParameterValue(MO::ParameterSelect *, int value);
     void setParameterValue(MO::ParameterFilename *, const QString& value);
     void setParameterValue(MO::ParameterText *, const QString& value);

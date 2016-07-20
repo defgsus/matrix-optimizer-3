@@ -38,7 +38,8 @@ public:
     QString baseValueString(bool ) const override { return "XXX"; }
     QString valueString(const RenderTime& , bool ) const override { return "XXX"; }
 
-    Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
+    Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE
+        { return 0; }
 
     // ---------------- getter -----------------
 
@@ -48,6 +49,8 @@ public:
 
     QString valueText() const { return value_.join("; "); }
     QString defaultValueText() const { return defaultValue_.join("; "); }
+
+    bool isBaseValueEqual(const QStringList& v) const { return value_ == v; }
 
     // ---------------- setter -----------------
 

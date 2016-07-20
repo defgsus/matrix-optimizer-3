@@ -47,7 +47,6 @@ HEADERS += \
     $$PWD/widget/CsgTreeView.h \
     $$PWD/widget/DomePreviewWidget.h \
     $$PWD/widget/DoubleSpinBox.h \
-    $$PWD/widget/DoubleSpinBoxClean.h \
     $$PWD/widget/EditableLabel.h \
     $$PWD/widget/EnvelopeWidget.h \
     $$PWD/widget/EquationDisplayWidget.h \
@@ -140,7 +139,8 @@ HEADERS += \
     $$PWD/TrackHeader.h \
     $$PWD/TrackView.h \
     $$PWD/TrackViewOverpaint.h \
-    $$PWD/WaveTracerDialog.h
+    $$PWD/WaveTracerDialog.h \
+    $$PWD/widget/DoubleSpinBoxFract.h
 
 SOURCES += \
     $$PWD/item/AbstractFrontDisplayItem.cpp \
@@ -187,7 +187,6 @@ SOURCES += \
     $$PWD/widget/CsgTreeView.cpp \
     $$PWD/widget/DomePreviewWidget.cpp \
     $$PWD/widget/DoubleSpinBox.cpp \
-    $$PWD/widget/DoubleSpinBoxClean.cpp \
     $$PWD/widget/EditableLabel.cpp \
     $$PWD/widget/EnvelopeWidget.cpp \
     $$PWD/widget/EquationDisplayWidget.cpp \
@@ -280,4 +279,5 @@ SOURCES += \
     $$PWD/TrackHeader.cpp \
     $$PWD/TrackView.cpp \
     $$PWD/TrackViewOverpaint.cpp \
-    $$PWD/WaveTracerDialog.cpp
+    $$PWD/WaveTracerDialog.cpp \
+    $$PWD/widget/DoubleSpinBoxFract.cpp

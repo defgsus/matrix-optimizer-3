@@ -46,6 +46,8 @@ public:
 
     Mat4 value(const RenderTime& time) const;
 
+    bool isBaseValueEqual(const Mat4& v) const { return value_ == v; }
+
     /* Writes @p number values starting at @p time into the pointer */
     //void getValues(Double time, uint thread, Double timeIncrement, uint number, Double * ptr) const;
 

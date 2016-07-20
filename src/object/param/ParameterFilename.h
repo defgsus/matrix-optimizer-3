@@ -33,7 +33,8 @@ public:
 
     virtual void copyFrom(Parameter* other) Q_DECL_OVERRIDE;
 
-    Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE { return 0; }
+    Modulator * getModulator(const QString &, const QString &) Q_DECL_OVERRIDE
+        { return 0; }
 
     virtual QString getDocType() const Q_DECL_OVERRIDE;
 
@@ -50,6 +51,8 @@ public:
     QString defaultValue() const { return defaultValue_; }
 
     IO::FileType fileType() const { return fileType_; }
+
+    bool isBaseValueEqual(const QString& v) const { return value_ == v; }
 
     // ---------------- setter -----------------
 

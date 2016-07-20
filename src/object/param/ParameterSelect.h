@@ -49,6 +49,8 @@ public:
     int value(const RenderTime& time) const { Q_UNUSED(time); return value_; }
     int baseValue() const { return value_; }
 
+    bool isBaseValueEqual(int v) const { return value_ == v; }
+
     const QList<int>& valueList() const { return valueList_; }
     const QStringList& valueNames() const { return valueNames_; }
     const QStringList& valueIds() const { return valueIds_; }

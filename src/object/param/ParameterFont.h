@@ -40,6 +40,7 @@ public:
 
     const QFont& baseValue() const { return p_font_; }
     const QFont& defaultValue() const { return p_def_; }
+    bool isBaseValueEqual(const QFont& v) const { return p_font_ == v; }
 
     // ---------------- setter -----------------
 

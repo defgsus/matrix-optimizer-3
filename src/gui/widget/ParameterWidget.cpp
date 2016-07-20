@@ -243,9 +243,9 @@ void ParameterWidget::createWidgets_()
         editor_->setParameterUserName(param_, label->text());
     });
 
+    l->addStretch(1);
 
     QToolButton * but, * breset;
-
 
     // reset-to-default button
     but = breset = new QToolButton(this);
@@ -258,17 +258,22 @@ void ParameterWidget::createWidgets_()
     // --- float parameter ---
     if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param_))
     {
-        defaultValueName = QString::number(pf->defaultValue());
+        defaultValueName = pf->isDefaultFractional()
+                ? pf->defaultValueFraction().toString()
+                : QString::number(pf->defaultValue());
 
         DoubleSpinBox * spin = spinFloat_ = new DoubleSpinBox(this);
         l->addWidget(spin);
 
         spin->setMinimum(pf->minValue());
         spin->setMaximum(pf->maxValue());
-        spin->setDecimals(4);
+        spin->setDecimals(6);
         spin->setSingleStep(pf->smallStep());
-        spin->setValue(pf->baseValue());
-        spin->spinBox()->setMaximumWidth(120);
+        if (pf->isFractional())
+            spin->setValue(pf->baseValueFraction());
+        else
+            spin->setValue(pf->baseValue());
+        spin->lineEdit()->setMaximumWidth(120);
         spin->setEnabled(pf->isEditable());
         spin->setStatusTip(pf->statusTip().isEmpty()
                            ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
@@ -276,13 +281,21 @@ void ParameterWidget::createWidgets_()
 
         setFocusProxy(spin);
 
-        connect(spin, static_cast<void(DoubleSpinBox::*)(double)>(&DoubleSpinBox::valueChanged),
-            [this, pf](Double value)
-            {
+        connect(spin, &DoubleSpinBox::valueChanged, [this, pf, spin](Double value)
+        {
+            if (spin->isFractional())
+                editor_->setParameterValue(pf, spin->fraction());
+            else
                 editor_->setParameterValue(pf, value);
-            });
+        });
 
-        connect(breset, &QToolButton::pressed, [=](){ spin->setValue(pf->defaultValue(), true); });
+        connect(breset, &QToolButton::pressed, [=]()
+        {
+            if (pf->isDefaultFractional())
+                spin->setValue(pf->defaultValueFraction(), true);
+            else
+                spin->setValue(pf->defaultValue(), true);
+        });
     }
     else
 
@@ -1143,7 +1156,12 @@ void ParameterWidget::updateWidgetValue()
     if (spinFloat_)
     {
         if (ParameterFloat * pf = dynamic_cast<ParameterFloat*>(param_))
-            spinFloat_->setValue(pf->baseValue());
+        {
+            if (pf->isFractional())
+                spinFloat_->setValue(pf->baseValueFraction());
+            else
+                spinFloat_->setValue(pf->baseValue());
+        }
     }
     else
     if (comboSelect_)

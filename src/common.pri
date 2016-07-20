@@ -287,7 +287,8 @@ HEADERS += \
     $$PWD/video/DecoderFrame.h \
     $$PWD/video/VideoStreamReader.h \
     $$PWD/gl/FrameBufferObject.h \
-    $$PWD/io/CommandLineParser.h
+    $$PWD/io/CommandLineParser.h \
+    $$PWD/math/Fraction.h
 
 SOURCES += \
     src/io/console.cpp \
@@ -510,5 +511,6 @@ SOURCES += \
     $$PWD/types/Refcounted.cpp \
     $$PWD/video/VideoStreamReader.cpp \
     $$PWD/video/ffm/VideoStream.cpp \
-    $$PWD/mainCommandLine.cpp
+    $$PWD/mainCommandLine.cpp \
+    $$PWD/math/Fraction.cpp
 

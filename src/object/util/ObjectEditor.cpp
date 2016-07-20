@@ -515,7 +515,7 @@ namespace
     void setParameterVal(ObjectEditor * edit, P p, const V& v)
     {
         // only apply if different
-        if (p->baseValue() == v)
+        if (p->isBaseValueEqual(v))
             return;
 
         {
@@ -546,6 +546,16 @@ void ObjectEditor::setParameterValue(ParameterInt *p, Int v)
 void ObjectEditor::setParameterValue(ParameterFloat *p, Double v)
 {
     setParameterVal(this, p, v);
+}
+
+void ObjectEditor::setParameterValue(ParameterFloat *p, int64_t nom, int64_t den)
+{
+    setParameterVal(this, p, MATH::Fraction(nom, den));
+}
+
+void ObjectEditor::setParameterValue(ParameterFloat *p, const MATH::Fraction& f)
+{
+    setParameterVal(this, p, f);
 }
 
 void ObjectEditor::setParameterValue(ParameterSelect *p, int v)

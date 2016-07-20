@@ -12,12 +12,12 @@
 #include <QLabel>
 
 #include "DoubleSpinBox.h"
-#include "DoubleSpinBoxClean.h"
+#include "DoubleSpinBoxFract.h"
 
 namespace MO {
 namespace GUI {
 
-
+/*
 DoubleSpinBox::DoubleSpinBox(QWidget *parent)
     : QWidget       (parent)
     , label_        (0)
@@ -30,7 +30,7 @@ DoubleSpinBox::DoubleSpinBox(QWidget *parent)
     //l->setSizeConstraint(QLayout::SetMinAndMaxSize);
     layout_->setSizeConstraint(QLayout::SetMaximumSize);
 
-    spin_ = new DoubleSpinBoxClean(this);
+    spin_ = new DoubleSpinBoxFract(this);
     layout_->addWidget(spin_);
     setFocusProxy(spin_);
 
@@ -65,6 +65,7 @@ void DoubleSpinBox::setLabel(const QString & txt)
     else
         label_->setText(txt);
 }
+*/
 
 } // namespace GUI
 } // namespace MO

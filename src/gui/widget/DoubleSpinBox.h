@@ -11,7 +11,7 @@
 #ifndef MOSRC_GUI_DOUBLESPINBOX_H
 #define MOSRC_GUI_DOUBLESPINBOX_H
 
-#include "DoubleSpinBoxClean.h"
+#include "DoubleSpinBoxFract.h"
 
 class QLabel;
 class QHBoxLayout;
@@ -19,6 +19,14 @@ class QHBoxLayout;
 namespace MO {
 namespace GUI {
 
+class DoubleSpinBox : public DoubleSpinBoxFract
+{
+    Q_OBJECT
+public:
+    DoubleSpinBox(QWidget* parent = 0) : DoubleSpinBoxFract(parent) { }
+};
+
+/*
 class DoubleSpinBox : public QWidget
 {
     Q_OBJECT
@@ -61,11 +69,12 @@ private slots:
     void internValueChanged_(double);
 
 private:
-    DoubleSpinBoxClean * spin_;
+    DoubleSpinBoxFract * spin_;
     QLabel * label_;
     QHBoxLayout * layout_;
     bool ignoreSignal_;
 };
+*/
 
 } // namespace GUI
 } // namespace MO

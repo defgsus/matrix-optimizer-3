@@ -48,6 +48,8 @@ public:
 
     const FloatMatrix& baseValue() const { return baseValue_; }
 
+    bool isBaseValueEqual(const FloatMatrix& v) const { return baseValue_ == v; }
+
     // ---------------- setter -----------------
 
     void setDefaultValue(const FloatMatrix& v) { defaultValue_ = v; }

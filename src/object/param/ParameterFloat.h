@@ -13,6 +13,7 @@
 
 #include "Parameter.h"
 #include "types/time.h"
+#include "math/Fraction.h"
 
 namespace MO {
 
@@ -37,41 +38,53 @@ public:
 
     //QString infoName() const { return QString("%1 (%2)").arg(name()).arg(value_); }
 
-    QString baseValueString(bool ) const override { return QString::number(baseValue()); }
-    QString valueString(const RenderTime& t, bool ) const override { return QString::number(value(t)); }
+    QString baseValueString(bool inShort) const override;
+    QString valueString(const RenderTime& t, bool inShort) const override;
 
     // ---------------- getter -----------------
 
     Double defaultValue() const { return defaultValue_; }
+    const MATH::Fraction& defaultValueFraction() const { return defFrac_; }
     Double minValue() const { return minValue_; }
     Double maxValue() const { return maxValue_; }
     Double smallStep() const { return smallStep_; }
 
     bool isMinLimit() const;
     bool isMaxLimit() const;
+    bool isFractional() const { return isFractional_; }
+    bool isDefaultFractional() const { return isDefaultFractional_; }
+
+    bool isBaseValueEqual(Double v) const { return value_ == v; }
+    bool isBaseValueEqual(const MATH::Fraction& v) const { return frac_ == v; }
 
     Double value(const RenderTime& time) const
-        { return std::max(minValue_,std::min(maxValue_, value_ + getModulationValue(time) )); }
+        { return std::max(minValue_,std::min(maxValue_,
+                                             value_ + getModulationValue(time) )); }
+
     Double baseValue() const { return value_; }
+    const MATH::Fraction& baseValueFraction() const { return frac_; }
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(const RenderTime& time, Double timeIncrement, uint number, Double * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement,
+                   uint number, Double * ptr) const;
 
     /** Writes @p number values starting at @p time into the pointer */
-    void getValues(const RenderTime& time, Double timeIncrement, uint number, F32 * ptr) const;
-
-    /** Writes @p number values starting at @p pos into the pointer */
-    //void getValues(const RenderTime& time, Double sampleRateInv, uint number, F32 * ptr) const;
+    void getValues(const RenderTime& time, Double timeIncrement,
+                   uint number, F32 * ptr) const;
 
     // ---------------- setter -----------------
 
-    void setDefaultValue(Double v) { defaultValue_ = v; }
+    void setDefaultValue(Double v) { defaultValue_ = v; isDefaultFractional_ = false; }
+    void setDefaultValue(const MATH::Fraction& v)
+        { defFrac_ = v; defaultValue_ = defFrac_.value(); isDefaultFractional_ = true; }
     void setSmallStep(Double v) { smallStep_ = v; }
     void setMinValue(Double v) { minValue_ = v; }
     void setMaxValue(Double v) { maxValue_ = v; }
     void setRange(Double vmin, Double vmax) { minValue_ = vmin; maxValue_ = vmax; }
 
-    void setValue(Double v) { value_ = v; }
+    void setValue(Double v) { value_ = v; isFractional_ = false; }
+    void setValue(const MATH::Fraction& f)
+        { frac_ = f; value_ = frac_.value(); isFractional_ = true; }
 
     void setNoMinValue() { minValue_ = infinity; }
     void setNoMaxValue() { maxValue_ = infinity; }
@@ -84,7 +97,8 @@ public:
     /** Receives modulation value at time */
     Double getModulationValue(const RenderTime& time) const;
 
-    virtual Modulator * getModulator(const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
+    virtual Modulator * getModulator(
+            const QString &modulatorId, const QString& outputId) Q_DECL_OVERRIDE;
 
 private:
 
@@ -93,7 +107,8 @@ private:
            maxValue_,
            smallStep_,
            value_;
-
+    MATH::Fraction frac_, defFrac_;
+    bool isFractional_, isDefaultFractional_;
 };
 
 } // namespace MO

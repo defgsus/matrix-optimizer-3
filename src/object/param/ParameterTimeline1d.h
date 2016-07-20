@@ -57,6 +57,9 @@ public:
 
     const MATH::Timeline1d & baseValue() { return tl_ ? (const MATH::Timeline1d &)*tl_ : getDefaultTimeline(); }
 
+    bool isBaseValueEqual(const MATH::Timeline1d& ) const
+        { if (!tl_) return false; return false; /** @todo *tl_ == v; */ }
+
     // ---------------- setter -----------------
 
     /** Read/Write access to timeline.
