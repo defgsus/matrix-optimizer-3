@@ -1,13 +1,3 @@
-/** @file
-
-    @brief
-
-    <p>(c) 2016, stefan.berke@modular-audio-graphics.com</p>
-    <p>All rights reserved</p>
-
-    <p>created 2/19/2016</p>
-*/
-
 /** @file brainf.h
 
     @brief A templated brainfuck interpreter

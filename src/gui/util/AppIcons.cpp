@@ -33,6 +33,7 @@
 #include "object/audio/FilterAO.h"
 #include "object/texture/BlurTO.h"
 #include "object/AScriptObject.h"
+#include "object/PythonObject.h"
 #include "object/visual/Oscillograph.h"
 #include "object/visual/ImageGallery.h"
 #include "object/TextObject.h"
@@ -86,7 +87,8 @@ struct AppIcons::Private
         I_TEXT,
         I_MICROPHONE_GROUP,
         I_GALLERY,
-        I_OSCIN
+        I_OSCIN,
+        I_PYTHON
     };
 
     struct IconDesc { IconId id; QString name; };
@@ -165,6 +167,7 @@ void AppIcons::Private::init()
     nameMap_.insert(I_MICROPHONE_GROUP, ":/icon/obj_microphone_group.png");
     nameMap_.insert(I_GALLERY, ":/icon/obj_gallery.png");
     nameMap_.insert(I_OSCIN, ":/icon/obj_oscin.png");
+    nameMap_.insert(I_PYTHON, ":/icon/obj_python.png");
 }
 
 
@@ -208,6 +211,9 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
     if (dynamic_cast<const AScriptObject*>(o))
         return I_ANGELSCRIPT;
 
+    if (dynamic_cast<const PythonObject*>(o))
+        return I_PYTHON;
+
     if (dynamic_cast<const Oscillograph*>(o))
         return I_OSCILLOGRAPH;
 
@@ -218,10 +224,8 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
         return I_DERIVATIVE;
 
 #ifndef MO_DISABLE_SPATIAL
-#ifndef MO_DISABLE_EXP
     if (dynamic_cast<const MicrophoneGroup*>(o))
         return I_MICROPHONE_GROUP;
-#endif
     if (dynamic_cast<const Synthesizer*>(o))
             return I_MUSIC_NOTE;
 #endif

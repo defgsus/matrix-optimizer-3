@@ -21,6 +21,7 @@
 #include "gl/ShaderSource.h"
 #include "gl/RenderSettings.h"
 #include "gl/CameraSpace.h"
+#include "gl/Shader.h"
 #include "geom/Geometry.h"
 #include "geom/ObjLoader.h"
 #include "audio/tool/AudioBuffer.h"
@@ -53,6 +54,7 @@ struct SceneDebugRenderer::Private
     void updateTree();
     void initGl();
     void releaseGl();
+    GL::Drawable* createConeDrawable(const QString& name);
     void addCoordinates(GEOM::Geometry*) const;
     void render(const RenderSettings & rs, const RenderTime& time, int options);
 
@@ -264,6 +266,7 @@ void SceneDebugRenderer::Private::initGl()
 
     // --- setup Microphone drawable ----
 
+#if 0
     drawMicrophone = new GL::Drawable("scene_debug_microphone");
     objload.loadFile(":/model/audiosource.obj");
     objload.getGeometry(drawMicrophone->geometry());
@@ -272,6 +275,9 @@ void SceneDebugRenderer::Private::initGl()
     addCoordinates(drawMicrophone->geometry());
     drawMicrophone->setShaderSource(src);
     drawMicrophone->createOpenGl();
+#else
+    drawMicrophone = createConeDrawable("scene_debug_microphone");
+#endif
 
     glReady = true;
 }
@@ -279,19 +285,81 @@ void SceneDebugRenderer::Private::initGl()
 void SceneDebugRenderer::Private::addCoordinates(GEOM::Geometry * geom) const
 {
     const Float len = 1.0;
-    geom->setColor(1,0,0,1);
+    geom->setColor(1,0.5,0.5,1);
     geom->addLine(
                 geom->addVertexAlways(0,0,0),
                 geom->addVertexAlways(len,0,0));
-    geom->setColor(0,1,0,1);
+    geom->setColor(0.5,1,0.5,1);
     geom->addLine(
                 geom->addVertexAlways(0,0,0),
                 geom->addVertexAlways(0,len,0));
-    geom->setColor(0,0,1,1);
+    geom->setColor(0.5,0.5,1,1);
     geom->addLine(
                 geom->addVertexAlways(0,0,0),
                 geom->addVertexAlways(0,0,len));
 
+}
+
+/** This builds a cone Geometry with a special attribute used to
+    visually approximate the exponential pow(dot()) direction function
+    controlled by a shader uniform */
+GL::Drawable* SceneDebugRenderer::Private::createConeDrawable(const QString& name)
+{
+    GL::ShaderSource src;
+    src.loadDefaultSource();
+    src.addDefine("#define MO_ENABLE_VERTEX_OVERRIDE");
+    src.replace("//%mo_override_vert2%",
+                 "//#include <transform>\n"
+                 "mat4 mo_user_transform()\n"
+                 "{\n"
+                 "    mat4 m = mat4(1.);\n"
+                 "    vec3 cone = a_cone;\n"
+                 "    float cexp = u_cone_exp;\n"
+                 "    cone.z *= -clamp(cexp-1., -1., 1.);\n"
+                 "    cone.xy /= (1. + .1*cexp);\n"
+                 "    m[3] += m * vec4(cone, 0.);\n"
+                 "    //m = translate(m, cone);\n"
+                 "    return m;\n"
+                 "}\n"
+                 "vec3 mo_modify_position(in vec3 p) { return p; }\n"
+                 "void mo_modify_vertex_output() { }\n"
+                );
+    src.replace("//%user_uniforms%", "uniform float u_cone_exp;\n");
+
+    auto g = new GEOM::Geometry();
+    g->setSharedVertices(false);
+
+    g->addAttribute("a_cone", 3);
+
+    auto i0 = g->addVertex(0.f, 0.f, 0.f);
+    for (int i=0; i<36; ++i)
+    {
+        float t = float(i) / 18.f * 3.14159265f;
+        Vec3 cone(std::sin(t), std::cos(t), 1.);
+
+        auto i1 = g->addVertex(0.f, 0.f, 0.f);
+        g->setAttribute("a_cone", i1, cone.x, cone.y, cone.z);
+        g->addLine(i0, i1);
+    }
+    for (int i=0; i<36; ++i)
+        g->addLine(i+1, (((i+1) % 36) + 1));
+
+    addCoordinates(g);
+
+    auto draw = new GL::Drawable(name);
+    draw->setGeometry(g);
+
+    draw->setShaderSource(src);
+    try
+    {
+        draw->createOpenGl();
+    }
+    catch (...)
+    {
+        delete draw;
+        throw;
+    }
+    return draw;
 }
 
 void SceneDebugRenderer::Private::releaseGl()
@@ -360,22 +428,27 @@ void SceneDebugRenderer::Private::render(
     }
 
     if (options & Scene::DD_MICROPHONES)
-    for (auto & pm : microphones)
     {
-        const Micro * m = pm.get();
-        if (!m->object->activeAtAll())
-            continue;
-        m->trans->setTransformation(m->object->transformation(), 0);
-        // calc one sample of transformations
-        // ZZZ
-        m->object->calculateMicrophoneTransformation(
-                    m->trans, m->mics, time);
-        for (const AUDIO::SpatialMicrophone * mic : m->mics)
+        auto u_cone_exp = drawMicrophone->shader()->getUniform("u_cone_exp");
+        for (auto & pm : microphones)
         {
-            const Mat4& trans = mic->transformationBuffer()->transformation(0);
-            /** @todo avoid unnecessary state changes in multiple
-                      calls to Drawable::renderShader */
-            drawMicrophone->renderShader(proj, cubeView * trans, view * trans, trans);
+            const Micro * m = pm.get();
+            if (!m->object->activeAtAll())
+                continue;
+            m->trans->setTransformation(m->object->transformation(), 0);
+            // calc one sample of transformations
+            m->object->calculateMicrophoneTransformation(
+                        m->trans, m->mics, time);
+            for (const AUDIO::SpatialMicrophone * mic : m->mics)
+            {
+                if (u_cone_exp)
+                    u_cone_exp->floats[0] = mic->directionExponent();
+                const Mat4& trans = mic->transformationBuffer()->transformation(0);
+                /** @todo avoid unnecessary state changes in multiple
+                          calls to Drawable::renderShader */
+                drawMicrophone->renderShader(proj, cubeView * trans,
+                                             view * trans, trans);
+            }
         }
     }
 
@@ -387,7 +460,6 @@ void SceneDebugRenderer::Private::render(
             continue;
         s->trans->setTransformation(s->object->transformation(), 0);
         // calc one sample of transformations
-        // ZZZ
         s->object->calculateSoundSourceTransformation(
                     s->trans, s->snds, time);
         // draw
@@ -401,6 +473,46 @@ void SceneDebugRenderer::Private::render(
     }
 
 }
+
+
+/*
+import matrixoptimizer as mo
+import math
+
+g = mo.geometry()
+g.set_shared(False)
+
+i0 = g.add_vertex(0, 0, 0)
+for i in range(36):
+    t = i / 36. * 3.14159265 * 2.
+    cone = mo.Vec(math.sin(t), math.cos(t), 1)
+
+    i1 = g.add_vertex(0,0,0)
+    g.set_attribute("a_cone", i1, cone)
+    g.add_line(i0, i1)
+
+for i in range(36):
+    g.add_line(i+1, ((i+1) % 36 + 1))
+
+
+#include <transform>
+
+mat4 mo_user_transform()
+{
+    mat4 m = mat4(1.);
+    vec3 cone = a_cone;
+    float cexp = 13.;
+    cone.z *= clamp(cexp-1., -1., 1.);
+    cone.xy /= (1. + .1*cexp);
+    m = translate(m, cone);
+    return m;
+}
+
+
+*/
+
+
+
 
 
 

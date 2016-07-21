@@ -27,13 +27,13 @@ public:
     QLineEdit* lineEdit() const;
 
     bool isFractional() const;
-    void setFractional(bool enable);
     const MATH::Fraction& fraction() const;
 
     void setLabel(const QString&);
 
     void setValue(double, bool sendSignal = false);
     void setValue(const MATH::Fraction&, bool sendSignal = false);
+    void step(int direction, bool sendSignal = false);
 
     void setMinimum(double min);
     void setMaximum(double max);
@@ -53,10 +53,12 @@ public:
 
 signals:
 
-    /** Only emitted by user change */
+    /** Only emitted by user change or when sendSignal was true in setValue() */
     void valueChanged(double);
 
 protected:
+
+    void wheelEvent(QWheelEvent* e) override;
 
 private:
     struct Private;

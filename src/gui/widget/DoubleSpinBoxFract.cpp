@@ -10,15 +10,20 @@
 
 #include <QLayout>
 #include <QLineEdit>
+#include <QToolButton>
 #include <QLabel>
-#include <QResizeEvent>
+#include <QWheelEvent>
 
 #include "DoubleSpinBoxFract.h"
 #include "math/functions.h"
 
-#include "io/log.h"
-#define MO__D(arg__) MO_PRINT(::MO::applicationTimeString() \
-    << ": DoubleSpinBox(" << this << "): " << arg__)
+#if 0
+#   include "io/log.h"
+#   define MO__D(arg__) MO_PRINT(::MO::applicationTimeString() \
+        << ": DoubleSpinBox(" << this << "): " << arg__)
+#else
+#   define MO__D(unused__) { }
+#endif
 
 namespace MO {
 namespace GUI {
@@ -42,6 +47,9 @@ struct DoubleSpinBoxFract::Private
 
     void createWidgets();
     bool hasFocus() const { return p->hasFocus(); }
+    void updateToolTips();
+    void setFractional(bool enable);
+    void setValid(bool valid);
     void textToValue(const QString& text, bool send);
     void valueToText();
     void setValue(double, bool send);
@@ -56,6 +64,7 @@ struct DoubleSpinBoxFract::Private
 
     QLineEdit* lineEdit;
     QLabel* label;
+    QToolButton *butUp, *butDown;
     QHBoxLayout* layout;
     double minimum,
            maximum,
@@ -69,14 +78,19 @@ DoubleSpinBoxFract::DoubleSpinBoxFract(QWidget *parent)
 {
     p_->createWidgets();
     p_->valueToText();
+    setStatusTip(tr("Edit with keyboard, scroll with mouse-wheel or "
+                    "use the up/down buttons"));
+    p_->updateToolTips();
 }
 
 void DoubleSpinBoxFract::Private::createWidgets()
 {
     layout = new QHBoxLayout(p);
-    layout->setMargin(0);
+    layout->setContentsMargins(0,0,0,0);
+    layout->setSpacing(0);
 
         lineEdit = new QLineEdit(p);
+        lineEdit->setMaximumWidth(140);
         layout->addWidget(lineEdit);
         p->setFocusProxy(lineEdit);
 
@@ -87,16 +101,42 @@ void DoubleSpinBoxFract::Private::createWidgets()
             MO__D("textChanged(" << lineEdit->text() << ")");
             textToValue(lineEdit->text(), true);
         });
+
+        int h = lineEdit->height() * .7,
+            w = h * .8;
+        auto but = butUp = new QToolButton(p);
+        but->setFixedSize(w, h);
+        but->setIcon(QIcon(":/icon/small_up.png"));
+        layout->addWidget(but);
+        connect(but, &QToolButton::clicked, [=](){ p->step(1, true); });
+
+        but = butDown = new QToolButton(p);
+        but->setFixedSize(w, h);
+        but->setIcon(QIcon(":/icon/small_down.png"));
+        layout->addWidget(but);
+        connect(but, &QToolButton::clicked, [=](){ p->step(-1, true); });
+
 }
 
 bool DoubleSpinBoxFract::isFractional() const { return p_->isFractional; }
 
-void DoubleSpinBoxFract::setFractional(bool enable)
+void DoubleSpinBoxFract::Private::setFractional(bool enable)
 {
     MO__D("setFractional(" << enable << ")");
-    if (enable == p_->isFractional)
-        return;
-    p_->isFractional = enable;
+    isFractional = enable;
+    updateToolTips();
+}
+
+void DoubleSpinBoxFract::Private::setValid(bool valid)
+{
+    MO__D("setValid(" << valid << ")");
+    isInputValid = valid;
+
+    auto f = lineEdit->font();
+    f.setUnderline(!isInputValid);
+    lineEdit->setFont(f);
+    if (!isInputValid)
+        lineEdit->setToolTip(tr("invalid input"));
 }
 
 QLineEdit* DoubleSpinBoxFract::lineEdit() const { return p_->lineEdit; }
@@ -105,7 +145,8 @@ void DoubleSpinBoxFract::setMaximum(double max) { p_->maximum = max; }
 void DoubleSpinBoxFract::setRange(double minimum, double maximum)
     { p_->minimum = minimum, p_->maximum = maximum; }
 void DoubleSpinBoxFract::setDecimals(int prec) { p_->decimals = prec; }
-void DoubleSpinBoxFract::setSingleStep(double val) { p_->singleStep = val; }
+void DoubleSpinBoxFract::setSingleStep(double val)
+    { p_->singleStep = val; p_->updateToolTips(); }
 void DoubleSpinBoxFract::setPrefix(const QString& prefix) { p_->prefix = prefix; }
 void DoubleSpinBoxFract::setSuffix(const QString& suffix) { p_->suffix = suffix; }
 
@@ -120,6 +161,25 @@ const MATH::Fraction& DoubleSpinBoxFract::fraction() const { return p_->fraction
 double  DoubleSpinBoxFract::value() const
 {
     return isFractional() ? p_->fraction.value() : p_->value;
+}
+
+void DoubleSpinBoxFract::Private::updateToolTips()
+{
+    MO__D("updateToolTips() valid=" << isInputValid << ", frac=" << isFractional);
+
+    if (isInputValid)
+        lineEdit->setToolTip(QString::number(value));
+
+    if (isFractional)
+    {
+        butUp->setToolTip(tr("increase denominator"));
+        butDown->setToolTip(tr("decrease denominator"));
+    }
+    else
+    {
+        butUp->setToolTip(tr("increase by %1").arg(singleStep));
+        butDown->setToolTip(tr("decrease by %1").arg(singleStep));
+    }
 }
 
 void DoubleSpinBoxFract::setLabel(const QString& s)
@@ -153,8 +213,8 @@ void DoubleSpinBoxFract::Private::setValue(double v, bool send)
 {
     double old = value;
     value = std::max(minimum, std::min(maximum, v ));
-    isFractional = false;
     MO__D("value = " << value);
+    setFractional(false);
     if (send && old != value)
         emit p->valueChanged(value);
 }
@@ -162,22 +222,29 @@ void DoubleSpinBoxFract::Private::setValue(double v, bool send)
 void DoubleSpinBoxFract::Private::setValue(int64_t n, int64_t d, bool send)
 {
     fraction.nom = n;
-    fraction.denom = d;
-    isFractional = true;
+    fraction.denom = std::abs(d);
     double v = d ? double(n) / d : 0., old = value;
     value = std::max(minimum, std::min(maximum, v ));
     MO__D("value = " << value << " <- " << n << "/" << d);
+    setFractional(true);
     if (send && old != value)
         emit p->valueChanged(value);
 }
 
-void DoubleSpinBoxFract::Private::textToValue(const QString &text, bool send)
+void DoubleSpinBoxFract::Private::textToValue(const QString &text2, bool send)
 {
-    MO__D("textToValue(" << text << ")");
+    MO__D("textToValue(" << text2 << ")");
+
+    QString text = text2;
+    if (!prefix.isEmpty() && text.startsWith(prefix))
+        text.remove(prefix + " ");
+    if (!suffix.isEmpty() && text.endsWith(suffix))
+        text.remove(" " + suffix);
 
     if (!text.contains("/"))
     {
         double v = text.toDouble(&isInputValid);
+        setValid(isInputValid);
         if (isInputValid)
             setValue(v, send);
         return;
@@ -186,21 +253,31 @@ void DoubleSpinBoxFract::Private::textToValue(const QString &text, bool send)
     auto s = text.split('/', QString::SkipEmptyParts);
     if (s.size() < 1)
     {
-        isInputValid = false;
+        setValid(false);
         return;
     }
 
     int n = s[0].toInt(&isInputValid);
     if (!isInputValid)
+    {
+        setValid(false);
         return;
+    }
 
-    if (s.size() < 2)
+    if (s.size() != 2)
+    {
+        setValid(false);
         return;
+    }
 
     int d = s[1].toInt(&isInputValid);
     if (!isInputValid)
+    {
+        setValid(false);
         return;
+    }
 
+    setValid(true);
     setValue(n, d, send);
 }
 
@@ -213,83 +290,40 @@ void DoubleSpinBoxFract::Private::valueToText()
     else
         txt = fraction.toString();
 
+    if (!prefix.isEmpty())
+        txt = prefix + " " + txt;
+    if (!suffix.isEmpty())
+        txt += " " + suffix;
+
+    setValid(true);
+    updateToolTips();
+
     MO__D("valueToText() -> '" << txt << "'");
     ignoreChange = true;
+    int cp = lineEdit->cursorPosition();
     lineEdit->setText(txt);
+    lineEdit->setCursorPosition(cp);
     ignoreChange = false;
-/*
-    double i = std::floor(val), f = val - i;
-    if (std::abs(f) < 1e-10)
-        return QString::number(val);
-    double n = val / f,
-           d = 1. / f;
-    int cn = 0;
-    while (cn++ < 5)
-    {
-        f = MATH::fract(d);
-        if (f < 1e-10)
-            break;
-        n *= f, d *= f;
-    }
-    return QString("%1/%2")
-            .arg(val / f)
-            .arg(1. / f);
-*/
 }
 
-/*
-void DoubleSpinBoxFract::keyPressEvent(QKeyEvent* event)
+void DoubleSpinBoxFract::wheelEvent(QWheelEvent* e)
 {
-    MO__D("keyPress()");
-    QDoubleSpinBox::keyPressEvent(event);
-
-    QString txt = text();
-    MO__D("text now '" << txt << "'");
-    bool hasDot = txt.contains("."),
-         hasSlash = txt.contains("/");
-    if (hasDot && !hasSlash)
-        setFractional(false);
-    if (hasSlash && !hasDot)
-        setFractional(true);
+    step(e->angleDelta().y(), true);
 }
 
-QString DoubleSpinBoxFract::textFromValue(double val) const
+void DoubleSpinBoxFract::step(int direction, bool send)
 {
-    MO__D("textFromValue(" << val << ")");
+    if (!direction)
+        return;
+    direction = direction > 0 ? 1 : -1;
 
-    if (!isFractional() && !text().contains("/"))
-        return QString::number(val);
-
-    double i = std::floor(val), f = val - i;
-    if (std::abs(f) < 1e-10)
-        return QString::number(val);
-    double n = val / f,
-           d = 1. / f;
-    int cn = 0;
-    while (cn++ < 5)
-    {
-        f = MATH::fract(d);
-        if (f < 1e-10)
-            break;
-        n *= f, d *= f;
-    }
-    return QString("%1/%2")
-            .arg(val / f)
-            .arg(1. / f);
+    if (!isFractional())
+        setValue(value() + singleStep() * direction, send);
+    else
+        setValue(MATH::Fraction(p_->fraction.nom, p_->fraction.denom + direction),
+                 send);
 }
 
-
-QValidator::State DoubleSpinBoxFract::validate(QString &input, int &pos) const
-{
-    MO__D("validate(" << input << ", " << pos << ")");
-
-    auto s = QAbstractSpinBox::validate(input, pos);
-    if (s == QValidator::Acceptable)
-        return s;
-
-    return QValidator::Acceptable;
-}
-*/
 
 } // namespace GUI
 } // namespace MO

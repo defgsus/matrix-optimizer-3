@@ -343,10 +343,11 @@ void ParameterWidget::createWidgets_()
             spin->setMaximum(pi->maxValue());
             spin->setSingleStep(pi->smallStep());
             spin->setValue(pi->baseValue());
-            spin->spinBox()->setMaximumWidth(120);
+            spin->lineEdit()->setMaximumWidth(120);
             spin->setEnabled(pi->isEditable());
             spin->setStatusTip(pi->statusTip().isEmpty()
-                               ? tr("Edit with keyboard, scroll with mouse-wheel or use the up/down buttons")
+                               ? tr("Edit with keyboard, scroll with mouse-wheel "
+                                    "or use the up/down buttons")
                                : pi->statusTip());
 
             setFocusProxy(spin);

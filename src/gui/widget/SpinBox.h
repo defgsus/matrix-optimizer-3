@@ -21,50 +21,46 @@ class QHBoxLayout;
 namespace MO {
 namespace GUI {
 
-/** Wrapper around QSpinBox.
-    Most of all, to have better control over the valueChanged() signal */
+/** A mock of QSpinBox, to have the same visual style as DoubleSpinBoxFract */
 class SpinBox : public QWidget
 {
     Q_OBJECT
 public:
     explicit SpinBox(QWidget *parent = 0);
 
-    QSpinBox * spinBox() const { return spin_; }
+    QLineEdit* lineEdit() const;
 
-    void setMinimum(int min) { spin_->setMinimum(min); }
-    void setMaximum(int max) { spin_->setMaximum(max); }
-    void setRange(int minimum, int maximum) { spin_->setRange(minimum, maximum); }
-    void setSingleStep(int val) { spin_->setSingleStep(val); }
-    void setPrefix(const QString& prefix) { spin_->setPrefix(prefix); }
-    void setSuffix(const QString& suffix) { spin_->setSuffix(suffix); }
+    void setLabel(const QString&);
 
-    int value() const { return spin_->value(); }
-    int minimum() const { return spin_->minimum(); }
-    int maximum() const { return spin_->maximum(); }
-    int singleStep() const { return spin_->singleStep(); }
-    QString prefix() const { return spin_->prefix(); }
-    QString suffix() const { return spin_->suffix(); }
+    void setValue(int, bool sendSignal = false);
+    void step(int direction, bool sendSignal = false);
 
-    QString cleanText() const { return spin_->cleanText(); }
+    void setMinimum(int min);
+    void setMaximum(int max);
+    void setRange(int minimum, int maximum);
+    void setSingleStep(int val);
+    void setPrefix(const QString& prefix);
+    void setSuffix(const QString& suffix);
+
+    int value() const;
+    int minimum() const;
+    int maximum() const;
+    int singleStep() const;
+    QString prefix() const;
+    QString suffix() const;
 
 signals:
 
+    /** Only emitted by user change or when sendSignal was true in setValue() */
     void valueChanged(int);
 
-public slots:
+protected:
 
-    void setValue(int val, bool send_signal = false);
-    /** Attaches a label to the spinbox */
-    void setLabel(const QString&);
-
-private slots:
-    void internValueChanged_(int);
+    void wheelEvent(QWheelEvent* e) override;
 
 private:
-    QSpinBox * spin_;
-    QLabel * label_;
-    QHBoxLayout * layout_;
-    bool ignoreSignal_;
+    struct Private;
+    Private* p_;
 };
 
 } // namespace GUI

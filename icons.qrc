@@ -82,5 +82,8 @@
         <file alias="branch_end.png">assets/icon/branch_end.png</file>
         <file alias="branch_more.png">assets/icon/branch_more.png</file>
         <file alias="branch_vline.png">assets/icon/branch_vline.png</file>
+        <file alias="small_down.png">assets/icon/small_down.png</file>
+        <file alias="small_up.png">assets/icon/small_up.png</file>
+        <file alias="obj_python.png">assets/icon/obj_python.png</file>
     </qresource>
 </RCC>

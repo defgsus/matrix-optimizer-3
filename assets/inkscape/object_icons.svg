@@ -171,9 +171,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2.8"
-     inkscape:cx="436.94766"
-     inkscape:cy="128.20821"
+     inkscape:zoom="1.979899"
+     inkscape:cx="745.63891"
+     inkscape:cy="656.77964"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -3772,5 +3772,72 @@
        d="m 510.3405,865.89854 0,1.93859 -0.12141,36.31548 30.69043,-0.0869 0.17856,-4.20347 -27.14286,0 0,-32.02506 0,-1.93859 z"
        id="path4696"
        inkscape:connector-curvature="0" />
+    <rect
+       inkscape:export-ydpi="30.860001"
+       inkscape:export-xdpi="30.860001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/small_up.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-669.09436"
+       x="978.26782"
+       height="68.188736"
+       width="68.188736"
+       id="rect3860-3"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <path
+       inkscape:export-ydpi="30.860001"
+       inkscape:export-xdpi="30.860001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/small_up.png"
+       sodipodi:nodetypes="cccc"
+       inkscape:connector-curvature="0"
+       id="path3862-6"
+       d="m 665.19151,1038.0791 -59.95626,0.086 30.18975,-46.57881 z"
+       style="fill:#d8d8d8;fill-opacity:1;stroke:#000000;stroke-width:2.70000004999999987;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <rect
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0"
+       id="rect4713"
+       width="68.188736"
+       height="68.188736"
+       x="977.91071"
+       y="-739.09436"
+       transform="matrix(0,1,-1,0,0,0)"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/small_down.png"
+       inkscape:export-xdpi="30.860001"
+       inkscape:export-ydpi="30.860001" />
+    <path
+       style="fill:#d8d8d8;fill-opacity:1;stroke:#000000;stroke-width:2.70000005;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       d="m 735.19151,991.31515 -59.95626,-0.086 30.18975,46.57885 z"
+       id="path4715"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="cccc"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/small_down.png"
+       inkscape:export-xdpi="30.860001"
+       inkscape:export-ydpi="30.860001" />
+    <rect
+       inkscape:export-ydpi="164.57001"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_python.png"
+       transform="matrix(0,1,-1,0,0,0)"
+       y="-734.09436"
+       x="373.19641"
+       height="68.188736"
+       width="68.188736"
+       id="rect4717"
+       style="opacity:0.35068964;fill:none;stroke:#000000;stroke-width:1.81126356;stroke-miterlimit:4;stroke-opacity:0;stroke-dasharray:none;stroke-dashoffset:0" />
+    <image
+       y="456.78842"
+       x="909.59924"
+       id="image4729"
+       xlink:href="file:///home/defgsus/pic/python-logo.png"
+       height="82"
+       width="290" />
+    <path
+       style="fill:#000000"
+       d="m 692.07191,434.05173 c -5.30592,-2.39852 -6.56854,-5.35737 -5.76518,-13.51019 0.3826,-3.8828 0.52555,-7.20754 0.31767,-7.38831 -0.20788,-0.18076 0.92524,-1.53644 2.51805,-3.01261 2.71635,-2.51742 3.48106,-2.68394 12.32567,-2.68394 8.64511,0 9.60431,-0.19609 11.52897,-2.35688 1.15463,-1.29628 2.19597,-3.20878 2.31408,-4.25 0.11812,-1.04121 0.36009,-3.35562 0.53772,-5.14312 0.25813,-2.59769 0.77019,-3.25 2.55123,-3.25 1.84352,-0.0173 2.9733,0.68215 4.4,1.46681 0.51866,0.28526 1.77831,0.85297 2.83286,2.58703 4.12662,6.78569 3.4438,17.70672 -1.41059,22.56111 -2.20295,2.20295 -3.31202,3.75697 -13.68051,2.58375 -8.69203,-0.98352 -9.88099,0.26573 -3.99015,0.54492 l 7.3053,0.34623 -0.3053,4.10511 c -0.42535,5.7193 -3.81101,8.1109 -12.06607,8.52338 -3.91106,0.19542 -7.4238,-0.22374 -9.41375,-1.12329 z m 17.71617,-4.14524 c 1.06278,-1.28057 0.99712,-1.83962 -0.37755,-3.21428 -1.55213,-1.55213 -1.77607,-1.55213 -3.3282,0 -1.37467,1.37466 -1.44033,1.93371 -0.37755,3.21428 0.70759,0.8526 1.62634,1.55019 2.04165,1.55019 0.41531,0 1.33406,-0.69759 2.04165,-1.55019 z m -33.97143,-11.22574 c -3.14679,-3.1468 -4.60226,-9.78363 -3.49278,-15.92679 1.57954,-8.74579 4.84897,-10.46372 18.2602,-9.59484 6.57386,0.4259 9.16236,0.26927 9.16236,-0.55442 0,-0.75671 -2.43087,-1.14802 -7.13167,-1.14802 l -7.13167,0 0.5562,-4.14675 c 0.93018,-6.93502 3.24786,-8.35325 13.65096,-8.35325 8.03144,0 9.13924,0.23408 11.473,2.42431 2.41278,2.2644 2.58318,3.02797 2.58318,11.57569 0,8.27285 -0.22218,9.3601 -2.31445,11.32569 -2.0274,1.90464 -3.44678,2.17431 -11.44424,2.17431 -8.09515,0 -9.43397,0.26165 -11.81397,2.30884 -2.08336,1.79203 -2.79584,3.47083 -3.18299,7.5 -0.47745,4.96888 -0.62511,5.19116 -3.4485,5.19116 -1.8912,0 -3.94584,-0.99615 -5.72563,-2.77593 z m 18.92978,-33.22407 c 0,-1.31306 -0.66667,-2 -1.94098,-2 -2.19765,0 -3.48233,1.50606 -2.55902,3 1.15259,1.86493 4.5,1.12106 4.5,-1 z"
+       id="path4732"
+       inkscape:connector-curvature="0"
+       sodipodi:nodetypes="sscssscscssssscsssssssssssssscssssssssssssss"
+       inkscape:export-filename="/home/defgsus/prog/qt_project/mo/matrixoptimizer/assets/icon/obj_python.png"
+       inkscape:export-xdpi="164.57001"
+       inkscape:export-ydpi="164.57001" />
   </g>
 </svg>
