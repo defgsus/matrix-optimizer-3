@@ -49,6 +49,8 @@ public:
         directional light parameters */
     const Float * directionParam() const { return &directionParam_[0]; }
 
+    bool isDirectional(uint i) const { return directionParam_[i*3+2] > 0.f; }
+
     // --------------- setter ---------------
 
     /** Reserves space for the @p num light sources */

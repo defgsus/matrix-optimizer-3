@@ -252,7 +252,8 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
 
     // executes foo on copy of self and returns copy
     // foo is like inplace_func() above
-    PyObject* copy_of_inplace(VectorStruct* self, PyObject*(*foo)(VectorStruct*, PyObject*))
+    PyObject* copy_of_inplace(VectorStruct* self,
+                              PyObject*(*foo)(VectorStruct*, PyObject*))
     {
         auto copy = copy_vec(self);
         foo(copy, NULL);
@@ -506,6 +507,81 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         });
     }
 
+    MO_PY_DEF_DOC(vec_rotate_doc,
+        "rotate(degree) -> " MO__VEC_STR "\n"
+        "Rotates a 2d vector."
+    )
+    static PyObject* vec_rotate(VectorStruct* self, PyObject* arg)
+    {
+        if (!checkSize(self, 2))
+            return NULL;
+
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double deg;
+            if (!PyArg_ParseTuple(arg, "d", &deg))
+                return false;
+            MATH::INPLACE::vec_rotate_2(self->v, deg);
+            return true;
+        });
+    }
+
+    MO_PY_DEF_DOC(vec_rotate_x_doc,
+        "rotate_x(degree) -> " MO__VEC_STR "\n"
+        "Rotates a 3d vector about the X axis."
+    )
+    static PyObject* vec_rotate_x(VectorStruct* self, PyObject* arg)
+    {
+        if (!checkSize(self, 3))
+            return NULL;
+
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double deg;
+            if (!PyArg_ParseTuple(arg, "d", &deg))
+                return false;
+            MATH::INPLACE::vec_rotate_x_3(self->v, deg);
+            return true;
+        });
+    }
+
+    MO_PY_DEF_DOC(vec_rotate_y_doc,
+        "rotate_y(degree) -> " MO__VEC_STR "\n"
+        "Rotates a 3d vector about the Y axis."
+    )
+    static PyObject* vec_rotate_y(VectorStruct* self, PyObject* arg)
+    {
+        if (!checkSize(self, 3))
+            return NULL;
+
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double deg;
+            if (!PyArg_ParseTuple(arg, "d", &deg))
+                return false;
+            MATH::INPLACE::vec_rotate_y_3(self->v, deg);
+            return true;
+        });
+    }
+
+    MO_PY_DEF_DOC(vec_rotate_z_doc,
+        "rotate_z(degree) -> " MO__VEC_STR "\n"
+        "Rotates a 3d vector about the Z axis."
+    )
+    static PyObject* vec_rotate_z(VectorStruct* self, PyObject* arg)
+    {
+        if (!checkSize(self, 3))
+            return NULL;
+
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double deg;
+            if (!PyArg_ParseTuple(arg, "d", &deg))
+                return false;
+            MATH::INPLACE::vec_rotate_z_3(self->v, deg);
+            return true;
+        });
+    }
 
     MO_PY_DEF_DOC(vec_normalize_doc,
         "normalize() -> " MO__VEC_STR "\n"
@@ -728,7 +804,8 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     )
     static PyObject* vec_dot(VectorStruct* self, PyObject* other)
     {
-        return vec_reduce_func2(self, other, [](int len, double v1[], double v2[]) -> double
+        return vec_reduce_func2(self, other,
+                                [](int len, double v1[], double v2[]) -> double
         {
             double d = 0.;
             for (int i=0; i<len; ++i)
@@ -743,7 +820,8 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     )
     static PyObject* vec_distance(VectorStruct* self, PyObject* other)
     {
-        return vec_reduce_func2(self, other, [](int len, double v1[], double v2[]) -> double
+        return vec_reduce_func2(self, other,
+                                [](int len, double v1[], double v2[]) -> double
         {
             double d = 0.;
             for (int i=0; i<len; ++i)
@@ -758,7 +836,8 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     )
     static PyObject* vec_distance_squared(VectorStruct* self, PyObject* other)
     {
-        return vec_reduce_func2(self, other, [](int len, double v1[], double v2[]) -> double
+        return vec_reduce_func2(self, other,
+                                [](int len, double v1[], double v2[]) -> double
         {
             double d = 0.;
             for (int i=0; i<len; ++i)
@@ -890,6 +969,10 @@ static PyMethodDef Vector_methods[] =
     //MO__METHOD(orthogonal,          METH_NOARGS)
 
     MO__METHOD(cross,               METH_VARARGS)
+    MO__METHOD(rotate,              METH_O)
+    MO__METHOD(rotate_x,            METH_O)
+    MO__METHOD(rotate_y,            METH_O)
+    MO__METHOD(rotate_z,            METH_O)
     MO__METHOD(pow,                 METH_VARARGS)
     MO__METHOD(mod,                 METH_VARARGS)
 

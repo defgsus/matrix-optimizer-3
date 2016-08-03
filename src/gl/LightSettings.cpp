@@ -63,7 +63,8 @@ void LightSettings::setDirection(uint index, Float nx, Float ny, Float nz)
     *p++ = nx; *p++ = ny; *p++ = nz;
 }
 
-void LightSettings::setDirectionParam(uint index, Float mix, Float angle_min, Float angle_max)
+void LightSettings::setDirectionParam(
+        uint index, Float mix, Float angle_min, Float angle_max)
 {
     Float * p = &directionParam_[index*3];
     *p++ = std::atan((180.f - angle_max) / 340.f * PI);

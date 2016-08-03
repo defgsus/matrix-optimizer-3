@@ -24,6 +24,7 @@
 #include "gl/Shader.h"
 #include "geom/Geometry.h"
 #include "geom/ObjLoader.h"
+#include "geom/GeometryFactory.h"
 #include "audio/tool/AudioBuffer.h"
 #include "audio/spatial/SpatialMicrophone.h"
 #include "audio/spatial/SpatialSoundSource.h"
@@ -43,12 +44,13 @@ struct SceneDebugRenderer::Private
 {
     Private(SceneDebugRenderer * r)
         : p                 (r)
-        , scene             (0)
+        , scene             (nullptr)
         , glReady           (false)
-        , drawCamera        (0)
-        , drawAudioSource   (0)
-        , drawMicrophone    (0)
-        , drawLightSource   (0)
+        , drawCamera        (nullptr)
+        , drawAudioSource   (nullptr)
+        , drawMicrophone    (nullptr)
+        , drawLightSourceCone   (nullptr)
+        , drawLightSourceSphere(nullptr)
     { }
 
     void updateTree();
@@ -95,7 +97,8 @@ struct SceneDebugRenderer::Private
         * drawCamera,
         * drawAudioSource,
         * drawMicrophone,
-        * drawLightSource;
+        * drawLightSourceCone,
+        * drawLightSourceSphere;
 };
 
 
@@ -114,7 +117,7 @@ SceneDebugRenderer::~SceneDebugRenderer()
     delete p_->drawAudioSource;
     delete p_->drawCamera;
     delete p_->drawMicrophone;
-    delete p_->drawLightSource;
+    delete p_->drawLightSourceCone;
 
     delete p_;
 }
@@ -255,29 +258,18 @@ void SceneDebugRenderer::Private::initGl()
 
     // --- setup LightSource drawable ----
 
-    drawLightSource = new GL::Drawable("scene_debug_lightsource");
-    objload.loadFile(":/model/audiosource.obj");
-    objload.getGeometry(drawLightSource->geometry());
-    drawLightSource->geometry()->convertToLines();
-    drawLightSource->geometry()->scale(0.15, 0.15, 0.15);
-    addCoordinates(drawLightSource->geometry());
-    drawLightSource->setShaderSource(src);
-    drawLightSource->createOpenGl();
+    drawLightSourceSphere = new GL::Drawable("scene_debug_lightsource_sphere");
+    GEOM::GeometryFactory::createUVSphereLines(
+                drawLightSourceSphere->geometry(), .5, 10, 10);
+    addCoordinates(drawLightSourceSphere->geometry());
+    drawLightSourceSphere->setShaderSource(src);
+    drawLightSourceSphere->createOpenGl();
+
+    drawLightSourceCone = createConeDrawable("scene_debug_lightsource");
 
     // --- setup Microphone drawable ----
 
-#if 0
-    drawMicrophone = new GL::Drawable("scene_debug_microphone");
-    objload.loadFile(":/model/audiosource.obj");
-    objload.getGeometry(drawMicrophone->geometry());
-    drawMicrophone->geometry()->convertToLines();
-    drawMicrophone->geometry()->scale(0.15, 0.15, 0.15);
-    addCoordinates(drawMicrophone->geometry());
-    drawMicrophone->setShaderSource(src);
-    drawMicrophone->createOpenGl();
-#else
     drawMicrophone = createConeDrawable("scene_debug_microphone");
-#endif
 
     glReady = true;
 }
@@ -390,12 +382,20 @@ void SceneDebugRenderer::Private::releaseGl()
         drawAudioSource = 0;
     }
 
-    if (drawLightSource)
+    if (drawLightSourceCone)
     {
-        if (drawLightSource->isReady())
-            drawLightSource->releaseOpenGl();
-        delete drawLightSource;
-        drawLightSource = 0;
+        if (drawLightSourceCone->isReady())
+            drawLightSourceCone->releaseOpenGl();
+        delete drawLightSourceCone;
+        drawLightSourceCone = 0;
+    }
+
+    if (drawLightSourceSphere)
+    {
+        if (drawLightSourceSphere->isReady())
+            drawLightSourceSphere->releaseOpenGl();
+        delete drawLightSourceSphere;
+        drawLightSourceSphere = 0;
     }
 }
 
@@ -419,12 +419,30 @@ void SceneDebugRenderer::Private::render(
     }
 
     if (options & Scene::DD_LIGHT_SOURCES)
-    for (LightSource * o : lightSources)
     {
-        if (!o->activeAtAll())
-            continue;
-        const Mat4& trans = o->transformation();
-        drawLightSource->renderShader(proj, cubeView * trans, view * trans, trans);
+        GL::LightSettings set;
+        set.resize(1);
+        auto u_cone_exp = drawLightSourceCone->shader()->getUniform("u_cone_exp");
+        auto u_color = drawLightSourceCone->shader()->getUniform("u_color");
+        for (LightSource * o : lightSources)
+        {
+            if (!o->activeAtAll())
+                continue;
+            const Mat4& trans = o->transformation();
+            o->getLightSettings(&set, 0, time);
+            if (u_color)
+                u_color->setFloats(set.colors()[0], set.colors()[1], set.colors()[2]);
+            if (!set.isDirectional(0))
+                drawLightSourceSphere->renderShader(
+                            proj, cubeView * trans, view * trans, trans);
+            else
+            {
+                if (u_cone_exp)
+                    u_cone_exp->floats[0] = set.directionParam()[0];
+                drawLightSourceCone->renderShader(
+                            proj, cubeView * trans, view * trans, trans);
+            }
+        }
     }
 
     if (options & Scene::DD_MICROPHONES)

@@ -82,6 +82,54 @@ namespace INPLACE {
         dst[X] = x;
     }
 
+    /** dst = rotate(dst, degree) */
+    template <typename F>
+    void vec_rotate_2(F* dst, F degree)
+    {
+        const F rad = degree / F(180.) * F(3.14159265),
+                s = std::sin(rad), c = std::cos(rad),
+                x = dst[X] * c - dst[Y] * s;
+           dst[Y] = dst[X] * s + dst[Y] * c;
+           dst[X] = x;
+    }
+
+    /** dst = rotate_x(dst, degree) */
+    template <typename F>
+    void vec_rotate_x_3(F* dst, F degree)
+    {
+        const F rad = degree / F(180.) * F(3.14159265),
+                sa = std::sin(rad), ca = std::cos(rad),
+                y = dst[Y] * ca - dst[Z] * sa,
+                z = dst[Y] * sa + dst[Z] * ca;
+        dst[Y] = y;
+        dst[Z] = z;
+    }
+
+
+    /** dst = rotate_y(dst, degree) */
+    template <typename F>
+    void vec_rotate_y_3(F* dst, F degree)
+    {
+        const F rad = degree / F(180.) * F(3.14159265),
+                sa = std::sin(rad), ca = std::cos(rad),
+                x =  dst[X] * ca + dst[Z] * sa,
+                z = -dst[X] * sa + dst[Z] * ca;
+        dst[X] = x;
+        dst[Z] = z;
+    }
+
+    /** dst = rotate_z(dst, degree) */
+    template <typename F>
+    void vec_rotate_z_3(F* dst, F degree)
+    {
+        const F rad = degree / F(180.) * F(3.14159265),
+                sa = std::sin(rad), ca = std::cos(rad),
+                x = dst[X] * ca - dst[Y] * sa,
+                y = dst[X] * sa + dst[Y] * ca;
+        dst[X] = x;
+        dst[Y] = y;
+    }
+
     /** return perpendicular vector to a plane that
         crosses 0,0,0 and that v1 and v2 lay on. */
     template <typename F>
