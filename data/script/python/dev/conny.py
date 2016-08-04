@@ -40,12 +40,13 @@ class Conny:
 		
 
 class Tree:
-	def __init__(self, seed = 23, pos = mo.Vec(0,0,0)):
+	def __init__(self, seed = 23, pos = mo.Vec(0,0,0), id = 0):
 		self.rnd = random.Random(seed)
 		#help(self.rnd)
 		self.conny = Conny()
 		self.points = dict()
 		self.points[0] = pos
+		self.conny.geom.set_cur_attribute("a_id", id)
 		self.conny.add_ring(0, .2, self.points[0], mo.Vec(0,0,0))
 		self.next_level = 0
 		self.grow_prob = .9
@@ -82,11 +83,11 @@ g.set_shared(True)
 #conny = Conny(); conny.test(); g.add_geometry(conny.geom)
 
 def make_trees(g):
-	rnd = random.Random()
+	rnd = random.Random(777)
 	rad = 30
 	for i in range(150):
 		p = mo.Vec(rnd.uniform(-rad,rad), 0, rnd.uniform(-rad,rad))
-		tree = Tree(seed = rnd.randint(1000,10000000), pos=p); 
+		tree = Tree(seed = rnd.randint(1000,10000000), pos=p, id = i); 
 		tree.split_prob = rnd.uniform(0.1, .9)
 		tree.rad_decay = rnd.uniform(0.5, .98)
 		tree.grow(0, rnd.uniform(0.05, .2)); 

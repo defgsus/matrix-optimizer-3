@@ -123,7 +123,7 @@ GUI::TextEditDialog* ParameterText::openEditDialog(QWidget *parent)
         if (textType_ == TT_EQUATION)
         {
             diag_->addVariableNames(varNames_, varDescs_);
-            diag_->setWindowTitle(QObject::tr("equation for %1").arg(parName));
+            //diag_->setWindowTitle(QObject::tr("equation for %1").arg(parName));
         }
 
         diag_->connect(diag_, &GUI::TextEditDialog::textChanged, [this]()
@@ -142,10 +142,12 @@ GUI::TextEditDialog* ParameterText::openEditDialog(QWidget *parent)
 
     diag_->show();
     diag_->raise();
+    diag_->setWindowTitle(parName);
 
     return diag_;
 }
 
+#if 0
 GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
 {
     MO_ASSERT(object(), "no object for ParameterText::openEditWidget()");
@@ -169,7 +171,7 @@ GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
         if (textType_ == TT_EQUATION)
         {
             editor_->addVariableNames(varNames_, varDescs_);
-            editor_->setWindowTitle(QObject::tr("equation for %1").arg(parName));
+            //editor_->setWindowTitle(QObject::tr("equation for %1").arg(parName));
         }
 
         editor_->connect(editor_, &GUI::TextEditWidget::textChanged, [this]()
@@ -184,8 +186,11 @@ GUI::TextEditWidget * ParameterText::createEditWidget(QWidget *parent)
 
     }
 
+    editor_->setWindowTitle(parName);
+
     return editor_;
 }
+#endif
 
 void ParameterText::addErrorMessage(int line, const QString &text)
 {

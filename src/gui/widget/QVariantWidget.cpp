@@ -282,6 +282,7 @@ void QVariantWidget::Private::createWidgets()
                             auto diag = new TextEditDialog(
                                         TextType(subtype & Properties::subTypeMask), widget);
                             diag->setAttribute(Qt::WA_DeleteOnClose);
+                            diag->setWindowTitle(name);
                             diag->setText(v.toString());
                             if (props)
                                 props->callWidgetCallback(id, diag);

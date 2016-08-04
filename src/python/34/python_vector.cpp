@@ -31,7 +31,9 @@ extern "C" {
 
 static const char* VectorDocString()
 {
-    static const char* str = "The geometric vector type";
+    static const char* str =
+            "The geometric vector type\n"
+            "It can be 2d, 3d or 4d.";
     return str;
 }
 
@@ -176,6 +178,14 @@ bool get_vector_var(PyObject* args_, int *len, double vout[4])
             if (i >= 4)
                 break;
             ++iarg;
+            if (isVector(arg))
+            {
+                auto vec = reinterpret_cast<VectorStruct*>(arg);
+                *len = vec->len;
+                for (int i=0; i<vec->len; ++i)
+                    vout[i] = vec->v[i];
+                return true;
+            }
             if (!toDouble(arg, &v))
             {
                 PyErr_Set(PyExc_TypeError, QString("argument %1 (%2) is not "
@@ -1763,7 +1773,7 @@ static PyTypeObject* Vector_Type()
         0,                         /*tp_getattr*/
         0,                         /*tp_setattr*/
         0,                         /*tp_reserved*/
-        0,//vec_repr,     /*tp_repr*/
+        vec_repr,     /*tp_repr*/
         &Vector_NumMethods,         /*tp_as_number*/
         &Vector_SeqMethods,        /*tp_as_sequence*/
         0,                         /*tp_as_mapping*/

@@ -41,7 +41,7 @@ float sdCylinder( vec3 p, vec3 c )
     return length(p.xz - c.xy) - c.z;
 }
 
-/** Distance to a cone with normalize radius and length in @p c */
+/** Distance to a cone with normalized radius and length in @p c */
 float sdCone( vec3 p, vec2 c )
 {
     // c must be normalized

@@ -85,6 +85,7 @@ public:
         Dialog when selecting another object. */
     GUI::TextEditDialog * openEditDialog(QWidget * parent = 0);
 
+#if 0
     /** Creates a widget for editing the text.
         Depending on the textType(), the dialog will be structured.
         If a (valid) text change was done, the ObjectEditor will be
@@ -94,6 +95,7 @@ public:
         @note Don't let parent be the ParameterWidget as it would destroy the
         Dialog when selecting another object. */
     GUI::TextEditWidget * createEditWidget(QWidget * parent = 0);
+#endif
 
     /** Adds an object that is referenced by a source text, if any.
         @p idName is the Object::idName() of a ValueTextInterface. */

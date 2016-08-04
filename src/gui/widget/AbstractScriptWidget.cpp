@@ -339,6 +339,7 @@ void AbstractScriptWidget::PrivateSW::onTextChanged(bool alwaysSend)
 void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 {
     const bool ctrl = (e->modifiers() & Qt::CTRL);
+    const bool shift = (e->modifiers() & Qt::SHIFT);
 
     if (e->key() == Qt::Key_F1)
     {
@@ -368,7 +369,10 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
 
     if (ctrl && e->key() == Qt::Key_S)
     {
-        saveScript();
+        if (shift)
+            saveScriptAs();
+        else
+            saveScript();
         e->accept();
         return;
     }
@@ -376,13 +380,6 @@ void AbstractScriptWidget::keyPressEvent(QKeyEvent * e)
     if (ctrl && e->key() == Qt::Key_F)
     {
         openFinder(wordUnderCursor());
-        e->accept();
-        return;
-    }
-
-    if (ctrl && (e->modifiers() & Qt::SHIFT) && e->key() == Qt::Key_S)
-    {
-        saveScriptAs();
         e->accept();
         return;
     }

@@ -535,7 +535,7 @@ static PyTypeObject* Timeline_Type()
         0,                         /*tp_getattr*/
         0,                         /*tp_setattr*/
         0,                         /*tp_reserved*/
-        0,//vec_repr,     /*tp_repr*/
+        0,//tl_repr,     /*tp_repr*/
         0,//&Timeline_NumMethods,         /*tp_as_number*/
         0,//&Timeline_SeqMethods,        /*tp_as_sequence*/
         0,                         /*tp_as_mapping*/
