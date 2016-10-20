@@ -903,7 +903,8 @@ void TextureObjectBase::PrivateTO::renderShaderQuad(
         // -- find input resolution --
         for (int i=0; i<p_textures.length(); ++i)
         {
-            const GL::Texture * tex = p_textures[i]->textureParam()->value(time);
+            const GL::Texture*
+                    tex = p_textures[i]->textureParam()->value(time);
             if (tex)
             {
                 width = tex->width();
@@ -1100,7 +1101,8 @@ void TextureObjectBase::renderShaderQuad(
         // output textures
         MO_CHECK_GL( gl::glViewport(0, 0, fbo->width(), fbo->height()) );
         MO_CHECK_GL( gl::glClearColor(0,0,0,0) );
-        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT | gl::GL_DEPTH_BUFFER_BIT) );
+        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT
+                               | gl::GL_DEPTH_BUFFER_BIT) );
     }
 
     // --- set shader uniforms ---
@@ -1129,8 +1131,11 @@ void TextureObjectBase::renderShaderQuad(
     // --- render ---
 
     MO_EXTEND_EXCEPTION(
-        quad.quad->draw(fbo->width(), fbo->height(), p_to_->p_split->baseValue())
-                , "in TextureObjectBase::renderGl()")
+        quad.quad->draw(fbo->width(), fbo->height(),
+                        p_to_->p_split->baseValue())
+                , "in TextureObjectBase::renderShaderQuad("
+                  "index=" << index << ")"
+                );
 
     gl::glFlush();
     gl::glFinish();

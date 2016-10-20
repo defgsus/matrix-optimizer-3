@@ -37,7 +37,7 @@ struct FloatMatrixTO::Private
     }
 
     void createParameters();
-    void updateTexture(size_t width, size_t height);
+    void updateTexture(size_t width, size_t height, size_t depth);
     void initGl();
     void releaseGl();
     void renderGl(const GL::RenderSettings&rset, const RenderTime& time);
@@ -49,10 +49,11 @@ struct FloatMatrixTO::Private
     ParameterFloat
             *p_amplitude, *p_offset;
     ParameterSelect
-            *p_clampWidth, *p_clampHeight, *p_flipX, *p_flipY;
+            *p_clampWidth, *p_clampHeight, *p_clampDepth,
+            *p_flipX, *p_flipY, *p_flipZ;
     ParameterInt
-            *p_offsetX, *p_offsetY,
-            *p_width, *p_height;
+            *p_offsetX, *p_offsetY, *p_offsetZ,
+            *p_width, *p_height, *p_depth;
 
     ParameterFloatMatrix* p_matrix;
     std::vector<gl::GLfloat> buffer;
@@ -144,6 +145,12 @@ void FloatMatrixTO::Private::createParameters()
                     0, true, true);
         p_offsetY->setMinValue(0);
 
+        p_offsetZ = to->params()->createIntParameter(
+                    "offset_z", tr("skip Z"),
+                    tr("Skips the number of depth-planes in the input"),
+                    0, true, true);
+        p_offsetZ->setMinValue(0);
+
         p_clampWidth = to->params()->createBooleanParameter(
                     "clamp_x", tr("fixed width"),
                     tr("Selects a fixed width for the output texture"),
@@ -156,16 +163,26 @@ void FloatMatrixTO::Private::createParameters()
                     tr("Off"), tr("On"),
                     false, true, false);
 
+        p_clampDepth = to->params()->createBooleanParameter(
+                    "clamp_z", tr("fixed depth"),
+                    tr("Selects a fixed depth for the output texture"),
+                    tr("Off"), tr("On"),
+                    false, true, false);
+
         p_width = to->params()->createIntParameter(
                     "width", tr("width"), tr("The texture width"),
-                    1024, true, true);
+                    4096, true, true);
         p_width->setMinValue(1);
 
         p_height = to->params()->createIntParameter(
                     "height", tr("height"), tr("The texture height"),
-                    1024, true, true);
+                    4096, true, true);
         p_height->setMinValue(1);
 
+        p_depth = to->params()->createIntParameter(
+                    "depth", tr("depth"), tr("The texture depth"),
+                    4096, true, true);
+        p_depth->setMinValue(1);
 
         p_flipX = to->params()->createBooleanParameter(
                     "flip_x", tr("flip X"),
@@ -174,6 +191,10 @@ void FloatMatrixTO::Private::createParameters()
         p_flipY = to->params()->createBooleanParameter(
                     "flip_y", tr("flip Y"),
                     tr("Flip texture on Y axis"), tr("Off"), tr("On"),
+                    false);
+        p_flipZ = to->params()->createBooleanParameter(
+                    "flip_z", tr("flip Z"),
+                    tr("Flip texture on Z axis"), tr("Off"), tr("On"),
                     false);
 
     to->params()->endParameterGroup();
@@ -198,6 +219,7 @@ void FloatMatrixTO::updateParameterVisibility()
 
     p_->p_width->setVisible(p_->p_clampWidth->baseValue());
     p_->p_height->setVisible(p_->p_clampHeight->baseValue());
+    p_->p_depth->setVisible(p_->p_clampDepth->baseValue());
 }
 
 
@@ -207,9 +229,10 @@ void FloatMatrixTO::Private::initGl()
 
 }
 
-void FloatMatrixTO::Private::updateTexture(size_t width, size_t height)
+void FloatMatrixTO::Private::updateTexture(
+            size_t width, size_t height, size_t depth)
 {
-    if (width == 0 || height == 0)
+    if (width == 0 || height == 0 || depth == 0)
     {
         if (tex)
         {
@@ -223,8 +246,12 @@ void FloatMatrixTO::Private::updateTexture(size_t width, size_t height)
 
     if (tex)
     {
-        if (tex->isHandle() &&
-            (!tex->isAllocated() || tex->width() != width || tex->height() != height))
+        if (tex->isHandle()
+                && (!tex->isAllocated()
+                    || tex->width() != width
+                    || tex->height() != height
+                    || (tex->depth() != depth && depth > 1))
+           )
         {
             tex->release();
             delete tex;
@@ -236,8 +263,14 @@ void FloatMatrixTO::Private::updateTexture(size_t width, size_t height)
         tex = new GL::Texture();
 
     if (!tex->isAllocated())
-        tex->create(width, height,
+    {
+        if (depth > 1)
+            tex->create(width, height, depth,
                 gl::GL_R32F, gl::GL_RED, gl::GL_FLOAT, nullptr);
+        else
+            tex->create(width, height,
+                gl::GL_R32F, gl::GL_RED, gl::GL_FLOAT, nullptr);
+    }
 }
 
 void FloatMatrixTO::Private::releaseGl()
@@ -255,22 +288,28 @@ void FloatMatrixTO::Private::renderGl(
     auto matrix = p_matrix->value(time);
 
     const size_t
-            matrixWidth = matrix.numDimensions() > 0 ? matrix.size(0) : 0,
-            matrixHeight = matrix.numDimensions() > 1 ? matrix.size(1) : 1;
+            matrixWidth =  matrix.numDimensions() > 0 ? matrix.size(0) : 0,
+            matrixHeight = matrix.numDimensions() > 1 ? matrix.size(1) : 1,
+            matrixDepth =  matrix.numDimensions() > 2 ? matrix.size(2) : 2;
     size_t  width = matrixWidth,
             height = matrixHeight,
+            depth = matrixDepth,
             offsetX = p_offsetX->value(time),
-            offsetY = p_offsetY->value(time);
+            offsetY = p_offsetY->value(time),
+            offsetZ = p_offsetZ->value(time);
 
     if (p_clampWidth->value(time))
         width = p_width->value(time);
     if (p_clampHeight->value(time))
         height = p_height->value(time);
+    if (p_clampDepth->value(time))
+        depth = p_depth->value(time);
 
     width -= std::min(width, offsetX);
     height -= std::min(height, offsetY);
+    depth -= std::min(depth, offsetZ);
 
-    updateTexture(width, height);
+    updateTexture(width, height, depth);
     if (!tex)
         return;
 
@@ -278,32 +317,41 @@ void FloatMatrixTO::Private::renderGl(
 
     const bool
             flipX = p_flipX->value(time),
-            flipY = p_flipY->value(time);
+            flipY = p_flipY->value(time),
+            flipZ = p_flipZ->value(time);
     const Double
             ampl = p_amplitude->value(time),
             offset = p_offset->value(time);
 
-    buffer.resize(width * height);
+    buffer.resize(width * height * depth);
 
-    for (size_t j=0; j<height; ++j)
+    for (size_t k=0; k<depth; ++k)
     {
-        size_t ry = j + offsetY,
-               wy = flipY ? height-1-j : j;
-        if (ry >= matrixHeight)
+        size_t rz = k + offsetZ,
+               wz = flipZ ? depth-1-k : k,
+               bidxz = wz * height * width,
+               midxz = rz * matrixHeight * matrixWidth;
+
+        for (size_t j=0; j<height; ++j)
         {
-            for (size_t i=0; i<width; ++i)
-                buffer[wy*width + i] = 0.f;
-        }
-        else
-        for (size_t i=0; i<width; ++i)
-        {
-            size_t rx = i + offsetX,
-                   wx = flipX ? width-1-i : i;
-            if (rx < matrixWidth)
-                buffer[wy*width + wx] = offset + ampl *
-                                    *matrix.data(ry*matrixWidth + rx);
+            size_t ry = j + offsetY,
+                   wy = flipY ? height-1-j : j;
+            if (ry >= matrixHeight)
+            {
+                for (size_t i=0; i<width; ++i)
+                    buffer[wy*width + i] = 0.f;
+            }
             else
-                buffer[wy*width + wx] = 0.f;
+            for (size_t i=0; i<width; ++i)
+            {
+                size_t rx = i + offsetX,
+                       wx = flipX ? width-1-i : i;
+                if (rx < matrixWidth)
+                    buffer[bidxz + wy*width + wx] = offset + ampl *
+                                     * matrix.data(midxz + ry*matrixWidth + rx);
+                else
+                    buffer[bidxz + wy*width + wx] = 0.f;
+            }
         }
     }
 
@@ -314,7 +362,8 @@ void FloatMatrixTO::Private::renderGl(
     tex->setChanged();
 }
 
-const GL::Texture* FloatMatrixTO::valueTexture(uint chan, const RenderTime &) const
+const GL::Texture* FloatMatrixTO::valueTexture(
+                                    uint chan, const RenderTime &) const
 {
     if (chan != 0)
         return nullptr;

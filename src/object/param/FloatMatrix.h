@@ -82,26 +82,33 @@ public:
 
     // --- read access ---
 
+    /** Convert to float data array */
+    std::vector<Float> toFloat() const;
+
     /** Read access to all data */
     const Double* data() const
         { MO_ASSERT(!p_data_.empty(), "");
           return &p_data_[0]; }
+
     const Double* data(size_t i0) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
           return &p_data_[i0]; }
+
     const Double* data(size_t i0, size_t i1) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
           return &p_data_[i1*p_dims_[0] + i0]; }
+
     const Double* data(size_t i0, size_t i1, size_t i2) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
           return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+
     const Double* data(size_t i0, size_t i1, size_t i2, size_t i3) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());

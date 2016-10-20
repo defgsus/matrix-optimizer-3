@@ -97,12 +97,12 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
                  gl::GLenum format, gl::GLenum input_format,
                  gl::GLenum type, void *ptr_to_data)
     : ptr_			(ptr_to_data),
-      ptr_px_         (0),
-      ptr_nx_         (0),
-      ptr_py_         (0),
-      ptr_ny_         (0),
-      ptr_pz_         (0),
-      ptr_nz_         (0),
+      ptr_px_       (0),
+      ptr_nx_       (0),
+      ptr_py_       (0),
+      ptr_ny_       (0),
+      ptr_pz_       (0),
+      ptr_nz_       (0),
       uploaded_		(false),
       width_		(width),
       height_		(height),
@@ -115,7 +115,7 @@ Texture::Texture(gl::GLsizei width, gl::GLsizei height, gl::GLsizei depth,
       format_		(format),
       input_format_	(input_format),
       type_			(type),
-      hash_           (++init_hash_)
+      hash_         (++init_hash_)
 {
     MO_DEBUG_TEX("Texture::Texture(" << width << "x" << height << "x" << depth
                 << ", " << format << ", " << input_format
@@ -571,7 +571,7 @@ void Texture::upload_(const void * ptr, GLint mipmap_level, GLenum cube_target)
         MO_GL_ERROR("Texture::upload() on uninitialized Texture");
 
 #if 1
-    if (isAllocated() && !isMultiSample() && !isCube())
+    if (isAllocated() && !isMultiSample() && !isCube() && !is3d())
     {
         uploadFast_(ptr, mipmap_level, cube_target);
         return;

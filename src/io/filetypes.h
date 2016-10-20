@@ -48,7 +48,8 @@ namespace IO {
         FT_SSW_PROJECT,
         FT_CSG_XML,
         FT_EVOLUTION,
-        FT_FLOAT_MATRIX
+        FT_FLOAT_MATRIX,
+        FT_NIFTI
     };
 
     extern const QStringList fileTypeIds;

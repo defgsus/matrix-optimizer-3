@@ -53,8 +53,6 @@ mac { DEFINES += MO_OS_MAC \
                 MO_DISABLE_DUMB \
                 # linux audio plugins
                 MO_DISABLE_LADSPA \
-                # neuro-imaging io library
-                MO_DISABLE_NIFTI \
                 # shapefiles
                 MO_DISABLE_SHP
 }
@@ -71,7 +69,9 @@ windows { DEFINES += MO_OS_WIN \
 unix: { DEFINES += MO_OS_UNIX \
 # for optirun bug (XXX old and obsolete by now)
         MO_DISABLE_OBJECT_TREE_DRAG \
-        MO_ENABLE_PYTHON34
+        MO_ENABLE_PYTHON34 \
+        # neuro-imaging io library
+        MO_ENABLE_NIFTI
         #MO_ENABLE_NUMPY
 }
 
@@ -99,6 +99,7 @@ LIBS += -lglbinding \
         -lpython3.4m \
         # numpy
         #-L/home/defgsus/.local/lib/ -lnpymath-1.8 \
+        -lniftiio \
         -lshp -latomic \
         -lavutil -lavcodec -lavformat -lswscale \
         -lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \

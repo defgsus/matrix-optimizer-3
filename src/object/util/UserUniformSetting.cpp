@@ -46,7 +46,7 @@ bool UserUniformSetting::Uniform::isTransformation() const
 bool UserUniformSetting::Uniform::isTextureInput() const
 {
     int ut = p_type->baseValue();
-    return ut == UT_TEX || ut == UT_TEX_C;
+    return ut == UT_TEX || ut == UT_TEX_C || ut == UT_TEX_3D;
 }
 
 UserUniformSetting::UserUniformSetting(Object * object, uint maxUnis)
@@ -89,45 +89,48 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
             tr("The type of the uniform variable"),
             { "none", "float", "vec2", "vec3", "vec4",
               "transform",
-              "texture", "texturecube", "texture1D", "texture1D2", "texture1D3", "texture1D4" },
+              "texture", "texturecube", "texture3D", "texture1D", "texture1D2", "texture1D3", "texture1D4" },
             { tr("none"), "float", "vec2", "vec3", "vec4",
               tr("mat4"),
-              tr("texture"), tr("texture cube"),
+              tr("texture"), tr("texture cube"), tr("texture 3D"),
               tr("float texture1D"), tr("vec2 texture1D"), tr("vec3 texture1D"),
               tr("vec4 texture1D") },
             { tr("none"), "float", "vec2", "vec3", "vec4",
               tr("mat4 transformation"),
-              tr("texture"), tr("texture cube"),
+              tr("texture"), tr("texture cube"), tr("texture 3D"),
               tr("float texture1D"), tr("vec2 texture1D"), tr("vec3 texture1D"),
               tr("vec4 texture1D") },
             { UT_NONE, UT_F1, UT_F2, UT_F3, UT_F4,
               UT_TRANS,
-              UT_TEX, UT_TEX_C, UT_T1, UT_T2, UT_T3, UT_T4 },
+              UT_TEX, UT_TEX_C, UT_TEX_3D, UT_T1, UT_T2, UT_T3, UT_T4 },
             UT_NONE,
             true, false);
         u.p_type->setDefaultEvolvable(false);
 
-        u.p_name = params->createTextParameter(("uniformname%1_" + id_suffix).arg(i),
-                                               tr("uniform%1 name").arg(i + 1),
-                                               tr("The name of the uniform variable as it should go into the header of the shader"),
-                                               TT_PLAIN_TEXT,
-                                               QString("uu_%1").arg(i),
-                                               true, false);
+        u.p_name = params->createTextParameter(
+                    ("uniformname%1_" + id_suffix).arg(i),
+               tr("uniform%1 name").arg(i + 1),
+               tr("The name of the uniform variable as it should "
+                  "go into the header of the shader"),
+               TT_PLAIN_TEXT,
+               QString("uu_%1").arg(i),
+               true, false);
         u.p_name->setDefaultEvolvable(false);
 
-        u.p_length = params->createIntParameter(("uniformtexlen%1_" + id_suffix).arg(i),
-                                                tr("uniform%1 length").arg(i + 1),
-                                                tr("The length of the array / texture width"),
-                                                1024, 16, 16384,
-                                                16, true, false);
+        u.p_length = params->createIntParameter(
+                    ("uniformtexlen%1_" + id_suffix).arg(i),
+                    tr("uniform%1 length").arg(i + 1),
+                    tr("The length of the array / texture width"),
+                    1024, 16, 16384,
+                    16, true, false);
         u.p_length->setDefaultEvolvable(false);
 
         u.p_timerange = params->createFloatParameter(
-                                                ("uniformtextime%1_" + id_suffix).arg(i),
-                                                tr("uniform%1 time range").arg(i + 1),
-                                                tr("The time range in seconds to fill the texture"),
-                                                1., -10000., 10000.,
-                                                .1, true, true);
+                ("uniformtextime%1_" + id_suffix).arg(i),
+                tr("uniform%1 time range").arg(i + 1),
+                tr("The time range in seconds to fill the texture"),
+                1., -10000., 10000.,
+                .1, true, true);
 
         u.p_texSet = new TextureSetting(object_);
         u.p_texSet->createParameters(("uniformtex%1_" + id_suffix).arg(i),
@@ -139,11 +142,11 @@ void UserUniformSetting::createParameters(const QString &id_suffix)
         for (int j=0; j<4; ++j)
         {
             ParameterFloat * pf = params->createFloatParameter(
-                                                    ("uniformdecl%1_%2_" + id_suffix).arg(i).arg(j),
-                                                    tr("uniform%2 %1").arg(compName[j]).arg(i+1),
-                                                    tr("The %1 value of the %2th uniform").arg(compName[j]).arg(i+1),
-                                                    0.0, 0.1,
-                                                    true, true);
+                ("uniformdecl%1_%2_" + id_suffix).arg(i).arg(j),
+                tr("uniform%2 %1").arg(compName[j]).arg(i+1),
+                tr("The %1 value of the %2th uniform").arg(compName[j]).arg(i+1),
+                0.0, 0.1,
+                true, true);
             u.p_float.push_back(pf);
         }
 
@@ -239,6 +242,7 @@ QString UserUniformSetting::getDeclarations() const
             case UT_T4: typestr = "sampler1D"; break;
             case UT_TEX: typestr = "sampler2D"; break;
             case UT_TEX_C: typestr = "samplerCube"; break;
+            case UT_TEX_3D: typestr = "sampler3D"; break;
             case UT_NONE: break;
         }
 
@@ -266,6 +270,7 @@ void UserUniformSetting::tieToShader(GL::Shader * shader)
                      || u.uniform->type() == gl::GL_FLOAT_VEC3
                      || u.uniform->type() == gl::GL_FLOAT_VEC4
                      || u.uniform->type() == gl::GL_SAMPLER_2D
+                     || u.uniform->type() == gl::GL_SAMPLER_3D
                      || u.uniform->type() == gl::GL_SAMPLER_CUBE
                      || u.uniform->type() == gl::GL_FLOAT_MAT4
                         ))

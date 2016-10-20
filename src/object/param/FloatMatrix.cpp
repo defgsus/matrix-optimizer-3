@@ -46,5 +46,12 @@ void FloatMatrix::fromJson(const QJsonObject& main)
     p_data_ = data;
 }
 
+std::vector<Float> FloatMatrix::toFloat() const
+{
+    std::vector<Float> d;
+    for (const auto& f : p_data_)
+        d.push_back(f);
+    return d;
+}
 
 } // namespace MO

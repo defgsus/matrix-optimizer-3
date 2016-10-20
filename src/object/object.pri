@@ -153,7 +153,8 @@ HEADERS += \
     $$PWD/Scene.h \
     $$PWD/SoundSource.h \
     $$PWD/Synthesizer.h \
-    $$PWD/TextObject.h
+    $$PWD/TextObject.h \
+    $$PWD/data/NiftiDO.h
 
 SOURCES += \
     $$PWD/audio/AudioInAO.cpp \
@@ -300,4 +301,5 @@ SOURCES += \
     $$PWD/Scene.cpp \
     $$PWD/SoundSource.cpp \
     $$PWD/Synthesizer.cpp \
-    $$PWD/TextObject.cpp
+    $$PWD/TextObject.cpp \
+    $$PWD/data/NiftiDO.cpp

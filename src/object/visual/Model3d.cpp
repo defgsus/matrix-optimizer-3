@@ -12,7 +12,6 @@
 #include "object/Scene.h"
 #include "io/DataStream.h"
 #include "gl/Drawable.h"
-#include "geom/GeometryFactorySettings.h"
 #include "gl/ShaderSource.h"
 #include "gl/RenderSettings.h"
 #include "gl/CameraSpace.h"
@@ -22,6 +21,7 @@
 #include "geom/Geometry.h"
 #include "geom/GeometryCreator.h"
 #include "geom/GeometryModifierChain.h"
+#include "geom/GeometryFactorySettings.h"
 #include "object/param/Parameters.h"
 #include "object/param/ParameterFloat.h"
 #include "object/param/ParameterSelect.h"
@@ -133,11 +133,13 @@ void Model3d::createParameters()
 
     params()->beginParameterGroup("renderset", tr("render settings"));
 
-        fixPosition_ = params()->createBooleanParameter("fixposition", tr("\"skybox\" (fixed position)"),
-                                     tr("When fixed, the model will always be around the camera"),
-                                     tr("The model behaves normally"),
-                                     tr("The model will always be centered around the camera position, like a skybox"),
-                                     false, true, false);
+        fixPosition_ = params()->createBooleanParameter("fixposition",
+            tr("\"skybox\" (fixed position)"),
+            tr("When fixed, the model will always be around the camera"),
+            tr("The model behaves normally"),
+            tr("The model will always be centered around the camera position, "
+               " like a skybox"),
+         false, true, false);
 
         paramPolySmooth_ = params()->createBooleanParameter(
                     "polysmooth", tr("antialiased polygons"),
@@ -155,34 +157,44 @@ void Model3d::createParameters()
                     true,
                     true, false);
 
-        paramLineWidth_ = params()->createFloatParameter("linewidth", tr("line width"),
-                                            tr("*deprecated* The width of the line - currently in pixels - your driver supports maximally %1 and %2 (anti-aliased)")
-                                                            // XXX Not initialized before first gl context
-                                                            .arg(GL::Properties::staticInstance().lineWidth[0])
-                                                            .arg(GL::Properties::staticInstance().lineWidth[1]),
+        paramLineWidth_ = params()->createFloatParameter(
+                    "linewidth", tr("line width"),
+                    tr("*deprecated* The width of the line - currently in "
+                       "pixels - your driver supports maximally %1 and %2 "
+                       "(anti-aliased)")
+                    // XXX Not initialized before first gl context
+                    .arg(GL::Properties::staticInstance().lineWidth[0])
+                    .arg(GL::Properties::staticInstance().lineWidth[1]),
                                             2, 1, 10000,
                                             0.1, true, true);
 
-        paramPointSize_ = params()->createFloatParameter("pointsize", tr("pointsize"),
-                                            tr("The size of the points in pixels"),
-                                            10.0,
-                                            1, true, true);
+        paramPointSize_ = params()->createFloatParameter(
+                    "pointsize", tr("pointsize"),
+                    tr("The size of the points in pixels"),
+                    10.0,
+                    1, true, true);
 
-        paramPointSizeMax_ = params()->createFloatParameter("pointsizemax", tr("pointsize max"),
-                                            tr("The size of the closest points in pixels"),
-                                            200.0,
-                                            1, true, true);
+        paramPointSizeMax_ = params()->createFloatParameter(
+                    "pointsizemax", tr("pointsize max"),
+                    tr("The size of the closest points in pixels"),
+                    200.0,
+                    1, true, true);
 
-        paramPointSizeDistFac_ = params()->createFloatParameter("pointsize_distfac", tr("pointsize distance factor"),
-                                            tr("Approximately the distance after which the pointsize decreases by half"),
+        paramPointSizeDistFac_ = params()->createFloatParameter(
+                    "pointsize_distfac", tr("pointsize distance factor"),
+                    tr("Approximately the distance after which the "
+                       "pointsize decreases by half"),
                                             10,
                                             0.1, true, true);
         paramPointSizeDistFac_->setMinValue(0.0001);
 
-        pointSizeAuto_ = params()->createBooleanParameter("pointsize_auto", tr("pointsize distance control"),
-                                         tr("Selects if the distance to camera should control the point size"),
-                                         tr("The point size is uniform"),
-                                         tr("The point size is between size and max size depending on distance to camera"),
+        pointSizeAuto_ = params()->createBooleanParameter(
+                    "pointsize_auto", tr("pointsize distance control"),
+                    tr("Selects if the distance to camera should control "
+                       "the point size"),
+                     tr("The point size is uniform"),
+                     tr("The point size is between size and max size "
+                        "depending on distance to camera"),
                                          false, true, false);
 
         paramNumInstance_ = params()->createIntParameter("num_instances", tr("gl instances"),

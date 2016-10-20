@@ -43,7 +43,8 @@ namespace IO {
       "ssw",
       "csg",
       "evo",
-      "fmatrix"
+      "fmatrix",
+      "nifti"
     };
 
     const QStringList fileTypeNames =
@@ -74,7 +75,8 @@ namespace IO {
       QObject::tr("SSW Project"),
       QObject::tr("CSG Tree"),
       QObject::tr("Evolution"),
-      QObject::tr("Float Matrix")
+      QObject::tr("Float Matrix"),
+      QObject::tr("Nifti")
     };
 
     const QList<QStringList> fileTypeExtensions =
@@ -106,7 +108,8 @@ namespace IO {
         { "uifm" },
         { "xml-csg" },
         { "json" },
-        { "json" }
+        { "json" },
+        { "nii", "nii.gz", "img", "hdr" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -160,6 +163,8 @@ namespace IO {
         { QObject::tr("json files ( *.json )"),
           QObject::tr("all files (*)") },
         { QObject::tr("json files ( *.json )"),
+          QObject::tr("all files (*)") },
+        { QObject::tr("Nifti files ( *.nii *.nii.gz *.img *.hdr )"),
           QObject::tr("all files (*)") },
 
     };

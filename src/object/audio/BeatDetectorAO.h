@@ -35,9 +35,10 @@ public:
     virtual QString getOutputName(SignalType, uint channel) const override;
     virtual QString infoString() const override;
 
-    virtual Double valueFloat(uint channel, const RenderTime &time) const override;
+    virtual Double valueFloat(
+                uint channel, const RenderTime &time) const override;
     virtual FloatMatrix valueFloatMatrix(
-            uint channel, const RenderTime &time) const override;
+                uint channel, const RenderTime &time) const override;
 
 protected:
 

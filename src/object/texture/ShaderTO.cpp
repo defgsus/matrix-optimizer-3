@@ -256,7 +256,8 @@ void ShaderTO::Private::releaseGl()
 
 }
 
-void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& time)
+void ShaderTO::Private::renderGl(
+        const GL::RenderSettings& , const RenderTime& time)
 {
     // update uniforms
 
@@ -283,12 +284,15 @@ void ShaderTO::Private::renderGl(const GL::RenderSettings& , const RenderTime& t
         {
             data[k*3] = t->width();
             data[k*3+1] = t->height();
-            data[k*2+2] = 1.f;
+            data[k*2+2] = t->height() > 0
+                                ? gl::GLfloat(t->width()) / t->height()
+                                : gl::GLfloat(1);
             // XXX what is the 3rd value in shadertoy??
             // UPDATE Should be aspect, is usually 1.
             ++k;
         }
-        MO_CHECK_GL_THROW( gl::glUniform3fv(u_chan_res->location(), 4, &data[0]));
+        MO_CHECK_GL_THROW( gl::glUniform3fv(u_chan_res->location(),
+                                            4, &data[0]));
     }
 
     if (u_mouse)
