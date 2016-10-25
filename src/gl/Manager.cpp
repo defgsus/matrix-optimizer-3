@@ -24,6 +24,7 @@
 #include "gl/TextureRenderer.h"
 #include "geom/FreeCamera.h"
 #include "SceneRenderer.h"
+#include "object/interface/ValueTextureInterface.h"
 #include "tool/GeneralImage.h"
 #include "object/Scene.h"
 #include "object/util/SceneSignals.h"
@@ -31,6 +32,7 @@
 #include "io/time.h"
 #include "io/MouseState.h"
 #include "io/KeyboardState.h"
+#include "io/CurrentTime.h"
 #include "io/error.h"
 #include "io/log_gl.h"
 
@@ -168,15 +170,17 @@ struct Manager::Private
 
     struct ImageRequest
     {
+        ValueTextureInterface* iface;
         const GL::Texture* tex;
         QSize res;
         QString id;
+        int ifaceChan;
     };
 
     void startThread();
     void stopThread(bool wait = true);
     void renderLoop();
-    QImage renderImage(const ImageRequest&);
+    QImage renderImage(ImageRequest&);
 
     Manager* p;
 
@@ -418,7 +422,8 @@ void Manager::Private::renderLoop()
             std::lock_guard<std::mutex> lock(imageRequestMutex);
             while (!imageRequests.isEmpty())
             {
-                MO__D("image render request '" << imageRequests.front().id << "'");
+                MO__D("image render request '"
+                      << imageRequests.front().id << "'");
 
                 auto img = renderImage(imageRequests.front());
                 emit p->sendImage(imageRequests.front().tex,
@@ -483,12 +488,26 @@ void Manager::Private::renderLoop()
     delete renderer; renderer = nullptr;
 }
 
-QImage Manager::Private::renderImage(const ImageRequest& req)
+QImage Manager::Private::renderImage(ImageRequest& req)
 {
     QString errText = tr("error");
 
     try
     {
+        if (!req.tex)
+        {
+            if (!req.iface)
+            {
+                return GeneralImage::getErrorImage(
+                            tr("nothing\nassigned"), req.res);
+            }
+            req.tex = req.iface->valueTexture(
+                        req.ifaceChan,
+                        RenderTime(CurrentTime::time(), MO_GFX_THREAD)
+                        );
+
+        }
+
         // return texture data as-is
         if ((int)req.tex->width() == req.res.width()
          && (int)req.tex->height() == req.res.height())
@@ -557,12 +576,25 @@ void Manager::renderImage(const Texture *tex, const QSize &s, const QString& id)
 {
     Private::ImageRequest r;
     r.tex = tex;
+    r.iface = nullptr;
     r.res = s;
     r.id = id;
     std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
     p_->imageRequests << r;
 }
 
+void Manager::renderImage(ValueTextureInterface* iface, int channel,
+                          const QSize &s, const QString& id)
+{
+    Private::ImageRequest r;
+    r.iface = iface;
+    r.ifaceChan = channel;
+    r.tex = nullptr;
+    r.res = s;
+    r.id = id;
+    std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
+    p_->imageRequests << r;
+}
 
 } // namespace GL
 } // namespace MO

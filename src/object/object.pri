@@ -155,7 +155,8 @@ HEADERS += \
     $$PWD/Synthesizer.h \
     $$PWD/TextObject.h \
     $$PWD/data/NiftiDO.h \
-    $$PWD/data/DistanceFieldDO.h
+    $$PWD/data/DistanceFieldDO.h \
+    $$PWD/data/TextureDO.h
 
 SOURCES += \
     $$PWD/audio/AudioInAO.cpp \
@@ -304,4 +305,5 @@ SOURCES += \
     $$PWD/Synthesizer.cpp \
     $$PWD/TextObject.cpp \
     $$PWD/data/NiftiDO.cpp \
-    $$PWD/data/DistanceFieldDO.cpp
+    $$PWD/data/DistanceFieldDO.cpp \
+    $$PWD/data/TextureDO.cpp

@@ -233,7 +233,8 @@ void SceneRenderer::render(bool renderToScreen)
         MO_CHECK_GL( gl::glViewport(0,0, context_->size().width(),
                                          context_->size().height()) );
         MO_CHECK_GL( gl::glClearColor(1,0,0,1) );
-        MO_CHECK_GL( gl::glClear(gl::GL_COLOR_BUFFER_BIT) );
+        MO_CHECK_GL( gl::glClear(
+                         gl::GL_COLOR_BUFFER_BIT|gl::GL_DEPTH_BUFFER_BIT) );
         throw e << "\n  in SceneRenderer::render(" << rtime << ")";
     }
 

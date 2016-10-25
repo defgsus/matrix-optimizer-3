@@ -1168,12 +1168,12 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
         renderSet.setCameraSpace(&camSpace);
         renderSet.setFinalFramebuffer(p_fboFinal_[time.thread()]);
 
-        try
-        {
-            uint cindex = 0;
+        uint cindex = 0;
 
-            // for each object that renders
-            for (ObjectGl * o : p_frameDrawers_)
+        // for each object that renders
+        for (ObjectGl * o : p_frameDrawers_)
+        {
+            try
             {
                 if (o->active(time))
                 {
@@ -1289,11 +1289,12 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
                 if (o->isCamera())
                     ++cindex;
             }
-        }
-        catch (Exception & e)
-        {
-            e << "\n  in Scene::renderScene(" << time.thread() << "): frame-drawers";
-            throw;
+            catch (Exception & e)
+            {
+                e << "\nin Scene::renderScene():: frame-drawer "
+                  << o->infoName() << " " << time;
+                throw;
+            }
         }
     }
 
@@ -1313,16 +1314,27 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     for (ObjectGl * drawer : p_frameDrawers_)
     if (drawer->active(time))
     {
-        if (drawer->isCamera())
-            static_cast<Camera*>(drawer)->drawFramebuffer(time);
-        else if (drawer->isShader())
-            static_cast<ShaderObject*>(drawer)->drawFramebuffer(time,
-                                                                p_fboFinal_[time.thread()]->width(),
-                                                                p_fboFinal_[time.thread()]->height());
-        else if (drawer->isTexture())
-            static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(time,
-                                                                p_fboFinal_[time.thread()]->width(),
-                                                                p_fboFinal_[time.thread()]->height());
+        try
+        {
+            if (drawer->isCamera())
+                static_cast<Camera*>(drawer)->drawFramebuffer(time);
+            else if (drawer->isShader())
+                static_cast<ShaderObject*>(drawer)->drawFramebuffer(
+                        time,
+                        p_fboFinal_[time.thread()]->width(),
+                        p_fboFinal_[time.thread()]->height());
+            else if (drawer->isTexture())
+                static_cast<TextureObjectBase*>(drawer)->drawFramebuffer(
+                        time,
+                        p_fboFinal_[time.thread()]->width(),
+                        p_fboFinal_[time.thread()]->height());
+        }
+        catch (Exception& e)
+        {
+            e << "\nin Scene::renderScene():drawFrameBuffer "
+              << drawer->infoName() << " " << time;
+            throw;
+        }
     }
     p_fboFinal_[time.thread()]->unbind();
 
@@ -1355,8 +1367,8 @@ void Scene::renderScene(const RenderTime& time, bool paintToScreen)//, GL::Frame
     if (isClient())
         p_screenQuad_[time.thread()]->draw(width, height);
     else
-        p_screenQuad_[time.thread()]->drawCentered(width, height,
-                                                 p_fboFinal_[time.thread()]->aspect());
+        p_screenQuad_[time.thread()]->drawCentered(
+                    width, height, p_fboFinal_[time.thread()]->aspect());
 
     //if (outputFbo)
     //    outputFbo->unbind();

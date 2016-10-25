@@ -131,7 +131,8 @@ void TextureRenderer::render(const Texture * tex, bool bindTexture)
     using namespace gl;
 
     // update fbo
-    if (!fbo_ || !fbo_->isCreated() || fbo_->width() != w_ || fbo_->height() != h_)
+    if (!fbo_ || !fbo_->isCreated()
+      || fbo_->width() != w_ || fbo_->height() != h_)
     {
         createGl();
     }
@@ -159,6 +160,7 @@ void TextureRenderer::render(const Texture * tex, bool bindTexture)
     // set edge-clamp
     tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE));
     tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE));
+    tex->setTexParameter(GL_TEXTURE_WRAP_R, GLint(GL_CLAMP_TO_EDGE));
 
     // render quad
     if (tex->isCube())

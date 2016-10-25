@@ -60,7 +60,7 @@ struct DistanceFieldDO::Private
     std::vector<std::vector<Idx>> indices;
 
     ParameterFloatMatrix* p_input;
-    ParameterFloat* p_thresh;
+    ParameterFloat* p_thresh, *p_uthresh;
     ParameterSelect* p_inside;
 };
 
@@ -97,21 +97,28 @@ void DistanceFieldDO::createParameters()
             "input", tr("input"),
             tr("The input matrix"),
             FloatMatrix(), true, true);
+        p_->p_input->setVisibleGraph(true);
 
         p_->p_inside = params()->createSelectParameter(
             "inside", tr("inside"),
-            tr("What values determine the inside of the implicit object"),
-        { "above", "below" },
-        { tr("above threshold"), tr("below threshold") },
+            tr("Values that determine the inside of the implicit object"),
+        { "above", "below", "between" },
+        { tr("above threshold"), tr("below threshold"), tr("between") },
         { tr("Values >= threshold are inside"),
-          tr("Values <= threshold are inside") },
-        { IN_ABOVE, IN_BELOW },
+          tr("Values <= threshold are inside"),
+          tr("Values >= threshold and <= upper threshold are inside") },
+        { IN_ABOVE, IN_BELOW, IN_BETWEEN },
         IN_ABOVE, true, false);
 
         p_->p_thresh = params()->createFloatParameter(
             "threshold", tr("surface threshold"),
-            tr("The value in the input below which is inside"),
+            tr("Input values above/below are inside"),
             0.0, 0.1, true, false);
+
+        p_->p_uthresh = params()->createFloatParameter(
+            "threshold2", tr("upper surface threshold"),
+            tr("The upper limit for input values which are inside"),
+            1.0, 0.1, true, false);
 
     params()->endParameterGroup();
 }
@@ -123,9 +130,19 @@ void DistanceFieldDO::onParameterChanged(Parameter* p)
     if (p == p_->p_input
      || p == p_->p_inside
      || p == p_->p_thresh
-            )
+     || p == p_->p_uthresh
+           )
         p_->doRecalc = true;
 }
+
+void DistanceFieldDO::updateParameterVisibility()
+{
+    Object::updateParameterVisibility();
+    bool between = p_->p_inside->baseValue() == IN_BETWEEN;
+
+    p_->p_uthresh->setVisible(between);
+}
+
 
 FloatMatrix DistanceFieldDO::valueFloatMatrix(uint, const RenderTime& time) const
 {
@@ -241,6 +258,13 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
             for (auto& f : matrix)
                 f = f <= thresh ? 1. : 0.;
         break;
+        case IN_BETWEEN:
+        {
+            const Double uthresh = p_uthresh->value(time);
+            for (auto& f : matrix)
+                f = f >= thresh && f <= uthresh ? 1. : 0.;
+        }
+        break;
     }
 
     MO_DEBUG_FM("calcing distance ..");
@@ -330,7 +354,7 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
                             if (x >= 0 && y >= 0 && x < W && y < H) \
                             if ((*matrix.data(y, x) > 0) != inside) \
                             { \
-                                d = inside ? -i.d : i.d; \
+                                d = inside ? (-i.d+1.) : i.d; \
                                 goto index_found2; \
                             } \
                         }
@@ -389,7 +413,7 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
                                     x < W && y < H && z < D) \
                                 if ((*matrix.data(z, y, x) > 0) != inside) \
                                 { \
-                                    d = inside ? -i.d : i.d; \
+                                    d = inside ? (-i.d+1.) : i.d; \
                                     goto end_loop; \
                                 } \
                             }

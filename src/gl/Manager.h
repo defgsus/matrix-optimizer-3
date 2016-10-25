@@ -18,6 +18,7 @@
 
 #include "types/vector.h"
 #include "opengl_fwd.h"
+#include "object/Object_fwd.h"
 
 namespace MO {
 class Scene;
@@ -79,6 +80,11 @@ public slots:
         Emits imageFinished() when ready. */
     void renderImage(const GL::Texture* tex, const QSize& s, const QString& id);
 
+    /** Will render the texture of the interface to a QImage of dimension @p s.
+        @p tex MUST be a texture of the Manager's thread/context.
+        Emits imageFinished() when ready. */
+    void renderImage(ValueTextureInterface* iface, int channel,
+                     const QSize& res, const QString& id);
 private slots:
 
 signals:

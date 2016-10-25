@@ -220,7 +220,10 @@ void TextTO::onParameterChanged(Parameter * p)
             || p == pCornerRad_
             || p == pBackAlpha_
             )
+    {
         doRenderText_ = true;
+        requestRender();
+    }
 }
 
 void TextTO::onParametersLoaded()
@@ -261,26 +264,26 @@ void TextTO::initGl(uint thread)
 
 void TextTO::releaseGl(uint thread)
 {
-    if (tex_ && tex_->isAllocated())
+    if (tex_)
         tex_->release();
     tex_ = 0;
 
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
+const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& time) const
 {
     if (chan != 0)
         return 0;
 
-    if (doRenderText_)
+    if (doRenderText_ && time.thread() == MO_GFX_THREAD)
     {
+        MO_PRINT(currentThreadName() << " rendering");
         doRenderText_ = false;
 
         if (tex_)
         {
-            if (tex_->isHandle())
-                tex_->release();
+            tex_->release();
             delete tex_;
         }
 
@@ -293,7 +296,8 @@ const GL::Texture * TextTO::valueTexture(uint chan, const RenderTime& ) const
                     hborder = .5 * border,
                     padX = pPadX_->baseValue() * (img.width() - border),
                     padY = pPadY_->baseValue() * (img.height() - border);
-        const QRectF irect = QRectF(img.rect().adjusted(border, border, -border, -border));
+        const QRectF irect =
+                QRectF(img.rect().adjusted(border, border, -border, -border));
         QRectF frect = irect;
         if (flags & Qt::AlignLeft)
             frect.moveLeft(frect.left() + padX);

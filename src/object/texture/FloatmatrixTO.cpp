@@ -29,6 +29,7 @@ struct FloatMatrixTO::Private
     Private(FloatMatrixTO * to)
         : to            (to)
         , tex           (nullptr)
+        , doReUpload    (true)
     { }
 
     ~Private()
@@ -45,6 +46,7 @@ struct FloatMatrixTO::Private
     FloatMatrixTO * to;
 
     GL::Texture* tex;
+    bool doReUpload;
 
     ParameterFloat
             *p_amplitude, *p_offset;
@@ -205,6 +207,8 @@ void FloatMatrixTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
+    p_->doReUpload = true;
+    requestRender();
 }
 
 void FloatMatrixTO::onParametersLoaded()
@@ -285,8 +289,9 @@ void FloatMatrixTO::Private::releaseGl()
 void FloatMatrixTO::Private::renderGl(
         const GL::RenderSettings& , const RenderTime& time)
 {
-    if (tex && !p_matrix->hasChanged(time))
+    if (tex && !p_matrix->hasChanged(time) && !doReUpload)
         return;
+    doReUpload = false;
 
     auto matrix = p_matrix->value(time);
 

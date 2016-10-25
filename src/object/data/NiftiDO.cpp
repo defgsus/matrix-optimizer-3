@@ -99,6 +99,7 @@ void NiftiDO::onParameterChanged(Parameter* p)
         p_->doReload = true;
 }
 
+
 FloatMatrix NiftiDO::valueFloatMatrix(uint, const RenderTime& ) const
 {
     if (p_->doReload)

@@ -250,10 +250,10 @@ void ObjectView::updateImage()
     if (auto ti = dynamic_cast<ValueTextureInterface*>(object_))
     {
         if (manager_ && manager_->isWindowVisible())
-        if (auto tex = ti->valueTexture(
-                    channel, RenderTime(CurrentTime::time(), MO_GFX_THREAD)))
+        //if (auto tex = ti->valueTexture(
+        //            channel, RenderTime(CurrentTime::time(), MO_GFX_THREAD)))
         {
-            manager_->renderImage(tex, imgs, "objectview");
+            manager_->renderImage(ti, channel, imgs, "objectview");
             return;
         }
 

@@ -18,34 +18,26 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H
-#define MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H
+#ifndef MOSRC_OBJECT_DATA_TEXTUREDO_H
+#define MOSRC_OBJECT_DATA_TEXTUREDO_H
 
 #include "object/Object.h"
 #include "object/interface/ValueFloatMatrixInterface.h"
 
 namespace MO {
 
-/** Calculates the distance to a implicit surface in a FloatMatrix */
-class DistanceFieldDO
+/** Converts texture data to FloatMatrix */
+class TextureDO
                 : public Object
                 , public ValueFloatMatrixInterface
 {
 public:
-    MO_OBJECT_CONSTRUCTOR(DistanceFieldDO);
-
-    enum Inside
-    {
-        IN_ABOVE,
-        IN_BELOW,
-        IN_BETWEEN
-    };
+    MO_OBJECT_CONSTRUCTOR(TextureDO);
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_CONTROL; }
 
     virtual void createParameters() Q_DECL_OVERRIDE;
     virtual void onParameterChanged(Parameter* p) Q_DECL_OVERRIDE;
-    virtual void updateParameterVisibility() Q_DECL_OVERRIDE;
 
     virtual FloatMatrix valueFloatMatrix(
             uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
@@ -60,4 +52,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H
+#endif // MOSRC_OBJECT_DATA_TEXTUREDO_H

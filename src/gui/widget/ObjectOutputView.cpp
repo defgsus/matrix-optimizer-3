@@ -134,6 +134,10 @@ void ObjectOutputView::setLabel_(QPair<QLabel*,const GL::Texture*>& label,
         return;
     }
 
+#if 1
+    label.first->clear();
+    manager_->renderImage(ti, channel, imgSize_, "objectoutputview");
+#else
     if (auto tex = ti->valueTexture(channel, RenderTime(time, MO_GFX_THREAD)))
     {
         label.second = tex;
@@ -141,6 +145,7 @@ void ObjectOutputView::setLabel_(QPair<QLabel*,const GL::Texture*>& label,
     }
     else
         label.first->clear();
+#endif
 }
 
 
