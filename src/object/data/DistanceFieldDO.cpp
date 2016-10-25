@@ -26,6 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #include "object/param/ParameterFloat.h"
 #include "object/param/ParameterSelect.h"
 #include "math/interpol.h"
+#include "tool/ProgressInfo.h"
 #include "io/DataStream.h"
 #include "io/log_FloatMatrix.h"
 
@@ -176,7 +177,7 @@ void DistanceFieldDO::Private::recalcIndex()
             const int H = dist.size(1);
             const int D = dist.size(0);
 
-            for (int z=0; z<D; ++z) { MO_DEBUG_FM(z << "/" << D);
+            for (int z=0; z<D; ++z) //{ MO_DEBUG_FM(z << "/" << D);
             for (int y=0; y<H; ++y)
             for (int x=0; x<W; ++x)
             if (!(x==0 && y==0 && z==0))
@@ -185,7 +186,7 @@ void DistanceFieldDO::Private::recalcIndex()
                 idx.d = std::sqrt(Double(x*x+y*y+z*z));
                 idx.x = x; idx.y = y; idx.z = z;
                 all.push_back(idx);
-            } }
+            } //}
         }
         break;
     }
@@ -224,6 +225,9 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
         dist.setDimensionsFrom(matrix);
         recalcIndex();
     }
+
+    ProgressInfo progress(tr("calc distance field"), p);
+    progress.send();
 
     // thresholding input
     const Double thresh = p_thresh->value(time);
@@ -294,6 +298,8 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
             const int H = matrix.size(0);
             const Double maxD = std::sqrt(Double(W*W+H*H));
 
+            progress.setNumItems(W*H);
+
             auto ii = indices.cbegin();
 
             std::vector<std::vector<std::vector<Idx>>::const_iterator> iiY;
@@ -302,6 +308,9 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
 
             for (int y1=0; y1<H; ++y1)
             {
+                progress.setProgress(y1*W);
+                progress.send();
+
                 ii = iiY[y1];
                 for (int x1=0; x1<W; ++x1)
                 {
@@ -346,6 +355,8 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
             const int D = matrix.size(0);
             const Double maxD = std::sqrt(Double(W*W+H*H+D*D));
 
+            progress.setNumItems(W*H*D);
+
             auto ii = indices.cbegin();
             std::vector<std::vector<std::vector<Idx>>::const_iterator> iiY;
             for (int i=0; i<W*H; ++i)
@@ -353,7 +364,9 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
 
             for (int z1=0; z1<D; ++z1)
             {
-                MO_DEBUG_FM(z1 << "/" << D);
+                progress.setProgress(z1*H*W);
+                progress.send();
+
                 for (int y1=0; y1<H; ++y1)
                 {
                     ii = iiY[z1*H+y1];
@@ -412,6 +425,8 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
 
     }
 
+    progress.setFinished();
+    progress.send();
 }
 
 

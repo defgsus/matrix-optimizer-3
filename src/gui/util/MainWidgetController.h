@@ -13,9 +13,12 @@
 
 #include <QObject>
 #include <QSize>
+#include <QProgressBar>
+#include <QMap>
 
 #include "object/Object_fwd.h"
 #include "types/float.h"
+#include "tool/ProgressInfo.h"
 
 class QStatusBar;
 class QLabel;
@@ -196,6 +199,7 @@ private slots:
     void updateSceneProjectionSettings_();
 
     void onOutputSizeChanged_(const QSize&);
+    void onProgress(const MO::ProgressInfo&);
 
     void dumpIdNames_();
     void dumpNeededFiles_();
@@ -238,6 +242,7 @@ private:
     void copySceneSettings_(Object * o);
     void setPredefinedResolution_(int index);
     void updateResolutionActions_();
+    void updateProgress_();
 
     void populateViewPresetMenu_();
     void setViewPreset_(const QString& name);
@@ -307,6 +312,9 @@ private:
             * aGlWindowVisible_;
 
     bool sceneNotSaved_;
+
+    QMap<QString, ProgressInfo> progressMap_;
+    QMap<QString, QProgressBar*> progressBars_;
 
     // ----- config -------
 

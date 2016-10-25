@@ -132,6 +132,7 @@ namespace MO {
     class ObjectConnectionGraph;
     class ObjectDspPath;
     class ObjectTreeMimeData;
+    class ProgressInfo;
 
     class EvolutionBase;
     class ParameterEvolution;

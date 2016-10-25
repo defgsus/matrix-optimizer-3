@@ -103,7 +103,8 @@ signals:
     /** A parameter has been changed with setParameterValue() */
     void parameterChanged(MO::Parameter*);
 
-    /** A parameters visibility has changed (with isVisible() or isVisibleInGraph()) */
+    /** A parameters visibility has changed
+        (with isVisible() or isVisibleInGraph()) */
     void parameterVisibilityChanged(MO::Parameter*);
 
     /** All parameter widgets should be recreated */
@@ -124,8 +125,12 @@ signals:
     /** A bunch of modulators has been deleted */
     void modulatorsDeleted(const QList<MO::Modulator*>& mods);
 
-    /** Emitted in response to connectAudioObjects() or disconnectAudioObjects() */
+    /** Emitted in response to
+        connectAudioObjects() or disconnectAudioObjects() */
     void audioConnectionsChanged();
+
+    /** Some progress has been made by some task */
+    void progressInfo(const MO::ProgressInfo&);
 
 public slots:
 

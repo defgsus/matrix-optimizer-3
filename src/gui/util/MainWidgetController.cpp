@@ -24,6 +24,7 @@
 #include <QActionGroup>
 #include <QPushButton>
 #include <QInputDialog>
+#include <QProgressBar>
 
 #include "MainWidgetController.h"
 #include "io/error.h"
@@ -125,6 +126,7 @@
 #include "object/util/SceneSignals.h"
 #include "object/interface/ValueFloatInterface.h"
 #include "tool/CommonResolutions.h"
+#include "tool/ProgressInfo.h"
 
 #ifndef MO_RELEASE
 #   include "tests/TestFft.h"
@@ -242,6 +244,8 @@ void MainWidgetController::createObjects_()
         if (audioEngine_)
             audioEngine_->setScene(s, MO_AUDIO_THREAD);
     });
+    connect(objectEditor_, SIGNAL(progressInfo(MO::ProgressInfo)),
+            this, SLOT(onProgress(MO::ProgressInfo)), Qt::QueuedConnection);
 
     // status bar
     statusBar_ = new QStatusBar(window_);
@@ -2672,6 +2676,53 @@ void MainWidgetController::onOutputSizeChanged_(const QSize & size)
     if (scene_ && scene_->doMatchOutputResolution())
         scene_->setResolution(outputSize_);
 }
+
+void MainWidgetController::onProgress(const ProgressInfo& inf)
+{
+    if (inf.isFinished())
+    {
+        progressMap_.remove(inf.taskName());
+    }
+    else
+        progressMap_[inf.taskName()] = inf;
+
+    MO_PRINT("progress: " << inf.toString());
+
+    updateProgress_();
+}
+
+void MainWidgetController::updateProgress_()
+{
+    // remove unneeded instances
+    QMap<QString, QProgressBar*> tmp;
+    for (auto i = progressBars_.begin(); i != progressBars_.end(); ++i)
+    if (!progressMap_.contains(i.key()))
+    {
+        i.value()->deleteLater();
+    }
+    else
+        tmp.insert(i.key(), i.value());
+
+    progressBars_.swap(tmp);
+
+    for (const ProgressInfo& inf : progressMap_)
+    {
+        QProgressBar * bar = nullptr;
+        if (progressBars_.contains(inf.taskName()))
+            bar = progressBars_.value(inf.taskName());
+        else
+        {
+            bar = new QProgressBar(statusBar_);
+            bar->setTextVisible(true);
+            statusBar_->addPermanentWidget(bar);
+            progressBars_.insert(inf.taskName(), bar);
+        }
+
+        bar->setValue(inf.percent());
+    }
+
+}
+
 
 void MainWidgetController::exportHelpHtml_()
 {

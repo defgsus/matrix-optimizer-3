@@ -29,6 +29,7 @@
 #include "util/ParameterEvolution.h"
 #include "math/TransformationBuffer.h"
 #include "tool/stringmanip.h"
+#include "tool/ProgressInfo.h"
 #include "io/DataStream.h"
 #include "io/error.h"
 #include "io/log_io.h"
@@ -1675,7 +1676,8 @@ void Object::setEvolution(const QString& key, const EvolutionBase* evobase)
         auto evo = dynamic_cast<const ParameterEvolution*>(evobase);
         if (!evo)
             return;
-        MO_ASSERT(evo->object() == this, "Wrong ParameterEvolution given to Object::setEvolution()");
+        MO_ASSERT(evo->object() == this,
+                  "Wrong ParameterEvolution given to Object::setEvolution()");
         if (evo->object() != this)
             return;
 
@@ -1687,6 +1689,15 @@ void Object::setEvolution(const QString& key, const EvolutionBase* evobase)
         evo->applyParametersToObject(true);
     }
 }
+
+void Object::emitProgress(const ProgressInfo& i)
+{
+    if (editor())
+        editor()->progressInfo(i);
+    else
+        MO_PRINT("Progress: " << i.toString());
+}
+
 
 QString Object::getGlslInclude(const QString &url, bool do_search, Object** object) const
 {

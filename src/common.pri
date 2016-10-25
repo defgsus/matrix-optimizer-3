@@ -289,7 +289,8 @@ HEADERS += \
     $$PWD/gl/FrameBufferObject.h \
     $$PWD/io/CommandLineParser.h \
     $$PWD/math/Fraction.h \
-    $$PWD/io/log_FloatMatrix.h
+    $$PWD/io/log_FloatMatrix.h \
+    $$PWD/tool/ProgressInfo.h
 
 SOURCES += \
     src/io/console.cpp \
@@ -513,5 +514,6 @@ SOURCES += \
     $$PWD/video/VideoStreamReader.cpp \
     $$PWD/video/ffm/VideoStream.cpp \
     $$PWD/mainCommandLine.cpp \
-    $$PWD/math/Fraction.cpp
+    $$PWD/math/Fraction.cpp \
+    $$PWD/tool/ProgressInfo.cpp
 

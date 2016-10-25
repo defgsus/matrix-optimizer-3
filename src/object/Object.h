@@ -749,32 +749,31 @@ public:
     /** Override to update the transformations of the soundsources.
         The base implementation simply copies the object transformation. */
     virtual void calculateSoundSourceTransformation(
-                                        const TransformationBuffer * objectTransformation,
-                                        const QList<AUDIO::SpatialSoundSource*>&,
-                                        const RenderTime& time);
+                        const TransformationBuffer * objectTransformation,
+                        const QList<AUDIO::SpatialSoundSource*>&,
+                        const RenderTime& time);
 
     /** Override to fill the audio buffers of the sound sources.
         The base implementation does nothing. */
-    virtual void calculateSoundSourceBuffer(const QList<AUDIO::SpatialSoundSource*> sources,
-                                            const RenderTime& time)
-    { Q_UNUSED(sources); Q_UNUSED(time); }
+    virtual void calculateSoundSourceBuffer(
+                        const QList<AUDIO::SpatialSoundSource*> sources,
+                        const RenderTime& time)
+        { Q_UNUSED(sources); Q_UNUSED(time); }
 
     /** Override to update the transformations of each microphone.
         The base implementation simply copies the object transformation. */
     virtual void calculateMicrophoneTransformation(
-                                        const TransformationBuffer * objectTransformation,
-                                        const QList<AUDIO::SpatialMicrophone*>&,
-                                        const RenderTime& time);
+                        const TransformationBuffer * objectTransformation,
+                        const QList<AUDIO::SpatialMicrophone*>&,
+                        const RenderTime& time);
 
     /** Override to sample or change the current dsp-block of each virtual microphone. */
     virtual void processMicrophoneBuffers(
-            const QList<AUDIO::SpatialMicrophone*>& microphones, const RenderTime& time)
+            const QList<AUDIO::SpatialMicrophone*>& microphones,
+            const RenderTime& time)
         { Q_UNUSED(microphones); Q_UNUSED(time); }
 public:
     // --------------- 3d --------------------------
-
-    // XXX transformations-per-object are just temporarily
-    //     before a generic render class wraps this
 
     /** Initialize transformation matrix */
     void clearTransformation();
@@ -791,9 +790,11 @@ public:
     /** Returns the position of this object */
     Vec3 position() const;
 
-    /** Base implementation applies all transformation objects inside this object to the given matrix.
+    /** Base implementation applies all transformation objects inside
+        this object to the given matrix.
         XXX Made virtual to override Camera's matrix... */
-    virtual void calculateTransformation(Mat4& matrix, const RenderTime& time) const;
+    virtual void calculateTransformation(
+            Mat4& matrix, const RenderTime& time) const;
 
     /** List of all direct transformation childs */
     const QList<Transformation*>& transformationObjects() const;
@@ -810,6 +811,11 @@ public:
         changes the errorString() */
     void setErrorMessage(const QString& errorString) const;
 
+    // ---------------- progress ---------------------
+
+    /** Sends progress info via ObjectEditor */
+    void emitProgress(const ProgressInfo&);
+
     // ------------------ files ----------------------
 
     /** Should return the list of files, this object needs, by appending to the list.
@@ -821,6 +827,8 @@ public:
 
     // -------------- EvolutionEditInterface ---------
 
+    /** Object's default implementation supports ParameterEvolution.
+        Override to implement more specific things. */
     virtual const EvolutionBase* getEvolution(const QString& key) const override;
     virtual void setEvolution(const QString& key, const EvolutionBase*) override;
 
