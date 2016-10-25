@@ -18,6 +18,7 @@
 
 #include "ObjectActions.h"
 #include "object/Object.h"
+#include "object/Scene.h"
 #include "object/control/SequenceFloat.h"
 #include "object/util/ObjectEditor.h"
 #include "object/util/ObjectFactory.h"
@@ -29,6 +30,7 @@
 #include "model/ObjectTreeMimeData.h"
 #include "gl/Texture.h"
 #include "gl/ShaderSource.h"
+#include "gl/Manager.h"
 #include "gui/util/ObjectMenu.h"
 #include "gui/util/AppIcons.h"
 #include "gui/util/RecentFiles.h"
@@ -390,17 +392,18 @@ void ObjectActions::createSaveTextureMenu(
     if (!iface)
         return;
 
-    // XXX hacky in many regards
-    RenderTime rt(CurrentTime::time(), 1./60., MO_GUI_THREAD);
-
     struct Tex
     {
         const GL::Texture* tex;
         int index;
     };
+    std::vector<Tex> tex;
+
+#if 0
+    // XXX hacky in many regards
+    RenderTime rt(CurrentTime::time(), 1./60., MO_GUI_THREAD);
 
     // collect texture outputs
-    std::vector<Tex> tex;
     for (size_t i=0; ; ++i)
     {
         auto t = iface->valueTexture(i, rt);
@@ -418,6 +421,15 @@ void ObjectActions::createSaveTextureMenu(
         x.index = i;
         tex.push_back(x);
     }
+#else
+    for (size_t i=0; i<obj->getNumberOutputs(ST_TEXTURE); ++i)
+    {
+        Tex x;
+        x.tex = nullptr;
+        x.index = i;
+        tex.push_back(x);
+    }
+#endif
 
     if (tex.empty())
         return;
@@ -431,7 +443,9 @@ void ObjectActions::createSaveTextureMenu(
                               .arg(obj->getOutputName(ST_TEXTURE, tex[0].index)),
                             parent);
         a->setStatusTip(tr("Saves the texture output to a file"));
-        QObject::connect(a, &QAction::triggered, [=]() { saveTexture(tex[0].tex); });
+        QObject::connect(a, &QAction::triggered, [=]()
+        //{ saveTexture(tex[0].tex); });
+        { deferredSaveTexture(iface, tex[0].index); });
     }
     else
     {
@@ -443,7 +457,8 @@ void ObjectActions::createSaveTextureMenu(
             a = sub->addAction(obj->getOutputName(ST_TEXTURE, tex[i].index));
             a->setStatusTip(tr("Saves the texture output to a file"));
             QObject::connect(a, &QAction::triggered,
-                             [=]() { saveTexture(tex[i].tex); });
+                [=]() //{ saveTexture(tex[i].tex); });
+                        { deferredSaveTexture(iface, tex[0].index); });
         }
     }
 }
@@ -465,6 +480,29 @@ void ObjectActions::saveTexture(const GL::Texture* tex)
     }
 }
 
+bool ObjectActions::deferredSaveTexture(
+        ValueTextureInterface *iface, int channel)
+{
+    auto o = dynamic_cast<Object*>(iface);
+    if (!o)
+        return false;
+    auto s = o->sceneObject();
+    if (!s)
+        return false;
+    auto mgr = s->manager();
+    if (!mgr)
+        return false;
+
+    auto fn = IO::Files::getSaveFileName(IO::FT_TEXTURE);
+    if (fn.isEmpty())
+        return false;
+
+    mgr->renderImage(iface, channel, QSize(), [=](const QImage& img)
+    {
+        if (!img.save(fn))
+            MO_IO_ERROR(WRITE, "Could not save image " << fn);
+    });
+}
 
 void ObjectActions::createClipboardActions(
         ActionList& actions,

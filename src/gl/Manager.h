@@ -30,6 +30,9 @@ class Manager : public QObject
 {
     Q_OBJECT
 public:
+    typedef std::function<void(const QImage&)> ImageCallback;
+
+
     explicit Manager(QObject *parent = 0);
     ~Manager();
 
@@ -85,6 +88,11 @@ public slots:
         Emits imageFinished() when ready. */
     void renderImage(ValueTextureInterface* iface, int channel,
                      const QSize& res, const QString& id);
+
+    void renderImage(ValueTextureInterface* iface, int channel,
+                     const QSize& res,
+                     ImageCallback foo);
+
 private slots:
 
 signals:

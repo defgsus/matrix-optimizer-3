@@ -61,6 +61,7 @@ public:
     // ---- helper ----
 
     static void saveTexture(const GL::Texture* tex);
+    static bool deferredSaveTexture(ValueTextureInterface*iface, int channel);
 
     static Object* loadObjectTemplate(const QString& fn, bool showErrorDiag = true);
 

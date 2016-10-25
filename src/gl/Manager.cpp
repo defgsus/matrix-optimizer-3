@@ -175,6 +175,7 @@ struct Manager::Private
         QSize res;
         QString id;
         int ifaceChan;
+        std::function<void(const QImage&)> callback;
     };
 
     void startThread();
@@ -397,7 +398,8 @@ void Manager::Private::renderLoop()
                         scene->releaseRef("Manager:release-prev");
                     }
                     renderer->setScene(scene = newScene);
-                    scene->setManager(p);
+                    if (scene)
+                        scene->setManager(p);
                     newScene = nullptr;
                     setNewScene = false;
                 }
@@ -426,9 +428,12 @@ void Manager::Private::renderLoop()
                       << imageRequests.front().id << "'");
 
                 auto img = renderImage(imageRequests.front());
-                emit p->sendImage(imageRequests.front().tex,
-                                  imageRequests.front().id,
-                                  img);
+                if (!imageRequests.front().id.isEmpty())
+                    emit p->sendImage(imageRequests.front().tex,
+                                      imageRequests.front().id,
+                                      img);
+                else if (imageRequests.front().callback)
+                    imageRequests.front().callback(img);
                 imageRequests.pop_front();
             }
         }
@@ -505,8 +510,13 @@ QImage Manager::Private::renderImage(ImageRequest& req)
                         req.ifaceChan,
                         RenderTime(CurrentTime::time(), MO_GFX_THREAD)
                         );
-
         }
+
+        if (!req.tex)
+            return GeneralImage::getErrorImage(tr("NULL"), req.res);
+
+        if (req.res.isEmpty())
+            req.res = QSize(req.tex->width(), req.tex->height());
 
         // return texture data as-is
         if ((int)req.tex->width() == req.res.width()
@@ -515,7 +525,8 @@ QImage Manager::Private::renderImage(ImageRequest& req)
             req.tex->bind();
             return req.tex->toQImage();
         }
-        // find resampler with match resolution
+
+        // find resampler with matching resolution
         GL::TextureRenderer* renderer = nullptr;
         for (auto t : texRenderers)
         if ((int)t->width() == req.res.width()
@@ -592,6 +603,20 @@ void Manager::renderImage(ValueTextureInterface* iface, int channel,
     r.tex = nullptr;
     r.res = s;
     r.id = id;
+    std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
+    p_->imageRequests << r;
+}
+
+void Manager::renderImage(ValueTextureInterface* iface, int channel,
+                          const QSize &s,
+                          ImageCallback foo)
+{
+    Private::ImageRequest r;
+    r.iface = iface;
+    r.ifaceChan = channel;
+    r.tex = nullptr;
+    r.res = s;
+    r.callback = foo;
     std::lock_guard<std::mutex> lock(p_->imageRequestMutex);
     p_->imageRequests << r;
 }

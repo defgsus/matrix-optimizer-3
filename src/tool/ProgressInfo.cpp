@@ -45,14 +45,13 @@ QString ProgressInfo::toString() const
 
 void ProgressInfo::send(double interval)
 {
-    if (interval > 0. && p_sendTime > 0.)
+    if (interval > 0. && !isFinished())
     {
         Double t = applicationTime();
-        if (t < interval + p_sendTime)
+        if (p_sendTime > 0. && t < interval + p_sendTime)
             return;
         p_sendTime = t;
     }
-
 
     if (object())
         object()->emitProgress(*this);
