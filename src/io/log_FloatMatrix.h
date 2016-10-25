@@ -18,38 +18,17 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MOSRC_OBJECT_DATA_NIFTIDO_H
-#define MOSRC_OBJECT_DATA_NIFTIDO_H
+#ifndef MOSRC_IO_LOG_FLOATMATRIX_H
+#define MOSRC_IO_LOG_FLOATMATRIX_H
 
-#include "object/Object.h"
-#include "object/interface/ValueFloatMatrixInterface.h"
+#include "log.h"
 
-namespace MO {
+#if (1) //&& defined(MO_ENABLE_DEBUG)
+#   define MO_DO_DEBUG_FM
+#   define MO_DEBUG_FM(stream_arg__) MO_PRINT(stream_arg__)
+#else
+#   define MO_DEBUG_FM(unused__) { }
+#endif
 
-/** Loads Nifti data to FloatMatrix */
-class NiftiDO
-                : public Object
-                , public ValueFloatMatrixInterface
-{
-public:
-    MO_OBJECT_CONSTRUCTOR(NiftiDO);
+#endif // MOSRC_IO_LOG_FLOATMATRIX_H
 
-    virtual Type type() const Q_DECL_OVERRIDE { return T_CONTROL; }
-
-    virtual void createParameters() Q_DECL_OVERRIDE;
-    virtual void onParameterChanged(Parameter* p) Q_DECL_OVERRIDE;
-
-    virtual FloatMatrix valueFloatMatrix(
-            uint channel, const RenderTime& time) const Q_DECL_OVERRIDE;
-    virtual bool hasFloatMatrixChanged(
-            uint channel, const RenderTime &time) const Q_DECL_OVERRIDE;
-
-private:
-
-    struct Private;
-    Private* p_;
-};
-
-} // namespace MO
-
-#endif // MOSRC_OBJECT_DATA_NIFTIDO_H

@@ -29,7 +29,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 #include "object/param/ParameterSelect.h"
 #include "math/interpol.h"
 #include "io/DataStream.h"
-#include "io/log.h"
+#include "io/log_FloatMatrix.h"
 
 namespace MO {
 
@@ -93,6 +93,8 @@ void NiftiDO::createParameters()
 
 void NiftiDO::onParameterChanged(Parameter* p)
 {
+    Object::onParameterChanged(p);
+
     if (p == p_->p_filename)
         p_->doReload = true;
 }
@@ -108,6 +110,13 @@ FloatMatrix NiftiDO::valueFloatMatrix(uint, const RenderTime& ) const
     }
     return p_->matrix;
 }
+
+bool NiftiDO::hasFloatMatrixChanged(
+        uint , const RenderTime&) const
+{
+    return p_->doReload;
+}
+
 
 bool NiftiDO::Private::loadNifti(const QString& filename)
 {
@@ -128,11 +137,13 @@ bool NiftiDO::Private::loadNifti(const QString& filename)
     matrix.setDimensions({ (size_t)img->nz, (size_t)img->ny, (size_t)img->nx });
 
     MO_ASSERT(img->nvox == matrix.size(), "");
+    bool handled = true;
     switch (img->datatype)
     {
         default:
             p->setErrorMessage(tr("Datatype %1 not supported")
                 .arg(nifti_datatype_to_string(img->datatype)) );
+            handled = false;
         break;
         case NIFTI_TYPE_INT8:
             for (size_t i=0; i<img->nvox; ++i)
@@ -176,7 +187,10 @@ bool NiftiDO::Private::loadNifti(const QString& filename)
 
     nifti_image_free(img);
 
-    return true;
+    MO_DEBUG_FM("NiftiDO(" << p->idName() << "): loaded Nifti to matrix "
+                << matrix.layoutString() << ", " << handled);
+
+    return handled;
 #else
 
     return false;

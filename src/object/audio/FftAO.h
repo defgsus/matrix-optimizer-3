@@ -52,8 +52,11 @@ public:
     size_t fftSize() const;
     size_t delayInSamples() const;
 
-    virtual Double valueFloat(uint channel, const RenderTime &time) const override;
+    virtual Double valueFloat(
+            uint channel, const RenderTime &time) const override;
     virtual FloatMatrix valueFloatMatrix(
+            uint channel, const RenderTime &time) const override;
+    virtual bool hasFloatMatrixChanged(
             uint channel, const RenderTime &time) const override;
 
 protected:

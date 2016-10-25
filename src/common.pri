@@ -288,7 +288,8 @@ HEADERS += \
     $$PWD/video/VideoStreamReader.h \
     $$PWD/gl/FrameBufferObject.h \
     $$PWD/io/CommandLineParser.h \
-    $$PWD/math/Fraction.h
+    $$PWD/math/Fraction.h \
+    $$PWD/io/log_FloatMatrix.h
 
 SOURCES += \
     src/io/console.cpp \

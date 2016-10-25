@@ -38,6 +38,7 @@ class FftAO::Private
 
     Private()
         : delayInSamples    (0)
+        , hasMatrixChanged  (true)
     { }
 
     ParameterSelect
@@ -55,6 +56,7 @@ class FftAO::Private
 
     size_t fftSize, delayInSamples;
     QMutex matrixMutex;
+    bool hasMatrixChanged;
 
     std::vector<std::vector<F32>> ringBuffers;
     size_t ringWrite;
@@ -95,8 +97,17 @@ Double FftAO::valueFloat(uint , const RenderTime& ) const
 FloatMatrix FftAO::valueFloatMatrix(uint , const RenderTime& ) const
 {
     QMutexLocker lock(&p_->matrixMutex);
+    p_->hasMatrixChanged = false;
     return p_->matrix;
 }
+
+bool FftAO::hasFloatMatrixChanged(
+        uint , const RenderTime&) const
+{
+    QMutexLocker lock(&p_->matrixMutex);
+    return p_->hasMatrixChanged;
+}
+
 
 QString FftAO::infoString() const
 {
@@ -232,8 +243,8 @@ void FftAO::processAudio(const RenderTime& time)
     const auto mode = p_->paramType->baseValue();
     const bool
             forward = (mode == FT_AUDIO_2_FFT || mode == FT_AUDIO_2_AMPPHASE),
-            doConvertAmpPhase = mode == FT_AUDIO_2_AMPPHASE,
-            doCompensate = p_->paramCompensate->baseValue() != 0;
+            doConvertAmpPhase = mode == FT_AUDIO_2_AMPPHASE;
+            //doCompensate = p_->paramCompensate->baseValue() != 0;
 
     MATH::Fft<F32> * fft = &p_->ffts[time.thread()];
     if (fft->size() != p_->fftSize)
@@ -299,8 +310,8 @@ void FftAO::processAudio(const RenderTime& time)
             break;
         }
 
+        p_->hasMatrixChanged = true;
     }
-
 
     // Not quite right
 #if 0

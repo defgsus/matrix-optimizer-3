@@ -13,7 +13,6 @@
 
 #include <vector>
 #include <string>
-#include <sstream>
 
 #include "types/float.h"
 #include "io/error.h"
@@ -37,7 +36,8 @@ public:
     typedef std::vector<Double> Vector;
 
     FloatMatrix() { }
-    FloatMatrix(const std::vector<size_t>& dimensions) { setDimensions(dimensions); }
+    explicit FloatMatrix(const std::vector<size_t>& dimensions)
+        { setDimensions(dimensions); }
 
     // ---- io ----
 
@@ -46,24 +46,12 @@ public:
 
     // ---- getter ----
 
-    std::string layoutString() const
-    {
-        if (p_dims_.empty())
-            return "empty";
-        std::stringstream s; s << "(";
-        for (size_t i=0; i<p_dims_.size(); ++i)
-        {
-            if (i > 0)
-                s << "x";
-            s << p_dims_[i];
-        }
-        s << ")";
-        if (p_dims_.size() > 1)
-            s << "=" << p_data_.size();
-        return s.str();
-    }
+    std::string layoutString() const;
+    std::string rangeString() const;
 
     bool isEmpty() const { return p_dims_.empty(); }
+
+    const std::vector<size_t>& dimensions() const { return p_dims_; }
 
     /** Number of dimensions */
     size_t numDimensions() const { return p_dims_.size(); }
@@ -143,27 +131,11 @@ public:
     // --- setter ---
 
     /** Reserve space for each dimension */
-    void setDimensions(const std::vector<size_t>& dimensions)
+    void setDimensions(const std::vector<size_t>& dimensions);
+
+    void setDimensionsFrom(const FloatMatrix& other)
     {
-        p_dims_ = dimensions;
-        p_offs_.clear();
-        if (p_dims_.empty())
-        {
-            p_data_.clear();
-            return;
-        }
-        // clamp size to 1
-        for (auto& s : p_dims_)
-            s = std::max(size_t(1), s);
-        // calculate space required
-        size_t num = 1;
-        p_offs_.push_back(0);
-        for (auto d : p_dims_)
-        {
-            num *= d;
-            p_offs_.push_back(num);
-        }
-        p_data_.resize(num);
+        setDimensions(other.dimensions());
     }
 
     void clear()
@@ -181,18 +153,21 @@ public:
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
           return &p_data_[i0]; }
+
     Double* data(size_t i0, size_t i1)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
           return &p_data_[i1*p_dims_[0] + i0]; }
+
     Double* data(size_t i0, size_t i1, size_t i2)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
           return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+
     Double* data(size_t i0, size_t i1, size_t i2, size_t i3)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());

@@ -44,6 +44,8 @@ public:
     /** Returns the matrix at given time */
     FloatMatrix value(const RenderTime& time) const;
 
+    bool hasChanged(const RenderTime& time) const;
+
     // ------------- setter ----------------
 
     virtual void copySettingsFrom(const Modulator * other) Q_DECL_OVERRIDE;

@@ -117,9 +117,13 @@ void ObjectInfoDialog::setObject(Object * o)
         s << "<p>float-matrix values at " << curTime << " sec: ";
         size_t num = outputMap[ST_FLOAT_MATRIX];
         for (size_t i = 0; i < num; ++i)
+        {
+            auto matrix = fmi->valueFloatMatrix(i,
+                                RenderTime(curTime, MO_GUI_THREAD));
             s << "<br/>" << o->getOutputName(ST_FLOAT_MATRIX, i) << ": "
-              << fmi->valueFloatMatrix(i,
-                RenderTime(curTime, MO_GUI_THREAD)).layoutString() << "\n";
+              << matrix.layoutString() << " ("
+              << matrix.rangeString() << ")\n";
+        }
         s << "</p>\n";
     }
 

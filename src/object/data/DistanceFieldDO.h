@@ -18,21 +18,27 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MOSRC_OBJECT_DATA_NIFTIDO_H
-#define MOSRC_OBJECT_DATA_NIFTIDO_H
+#ifndef MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H
+#define MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H
 
 #include "object/Object.h"
 #include "object/interface/ValueFloatMatrixInterface.h"
 
 namespace MO {
 
-/** Loads Nifti data to FloatMatrix */
-class NiftiDO
+/** Calculates the distance to a implicit surface in a FloatMatrix */
+class DistanceFieldDO
                 : public Object
                 , public ValueFloatMatrixInterface
 {
 public:
-    MO_OBJECT_CONSTRUCTOR(NiftiDO);
+    MO_OBJECT_CONSTRUCTOR(DistanceFieldDO);
+
+    enum Inside
+    {
+        IN_ABOVE,
+        IN_BELOW
+    };
 
     virtual Type type() const Q_DECL_OVERRIDE { return T_CONTROL; }
 
@@ -52,4 +58,4 @@ private:
 
 } // namespace MO
 
-#endif // MOSRC_OBJECT_DATA_NIFTIDO_H
+#endif // MOSRC_OBJECT_DATA_DISTANCEFIELDDO_H

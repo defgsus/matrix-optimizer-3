@@ -72,7 +72,8 @@ void ModulatorTexture::modulatorChanged_()
 
     else
     {
-        MO_ASSERT(false, "illegal assignment of modulator '" << modulator()->idName()
+        MO_LOGIC_ERROR("illegal assignment of modulator '"
+                       << modulator()->idName()
                        << "' to ModulatorTexture");
     }
 }

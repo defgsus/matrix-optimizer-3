@@ -50,10 +50,12 @@ public:
 
     bool isBaseValueEqual(const FloatMatrix& v) const { return baseValue_ == v; }
 
+    bool hasChanged(const RenderTime&) const;
+
     // ---------------- setter -----------------
 
     void setDefaultValue(const FloatMatrix& v) { defaultValue_ = v; }
-    void setValue(const FloatMatrix& v) { baseValue_ = v; }
+    void setValue(const FloatMatrix& v);
 
     // --------- modulation -----------
 
@@ -77,6 +79,7 @@ private:
     FloatMatrix
         defaultValue_,
         baseValue_;
+    mutable std::vector<bool> hasChanged_;
 
     GUI::FloatMatrixDialog* diag_;
 };

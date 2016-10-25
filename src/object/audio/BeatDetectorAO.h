@@ -39,6 +39,8 @@ public:
                 uint channel, const RenderTime &time) const override;
     virtual FloatMatrix valueFloatMatrix(
                 uint channel, const RenderTime &time) const override;
+    virtual bool hasFloatMatrixChanged(
+            uint channel, const RenderTime &time) const override;
 
 protected:
 

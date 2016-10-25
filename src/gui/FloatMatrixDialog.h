@@ -16,6 +16,8 @@
 
 
 namespace MO {
+class ValueFloatMatrixInterface;
+class RenderTime;
 namespace GUI {
 
 class FloatMatrixWidget;
@@ -29,6 +31,12 @@ public:
 
     const FloatMatrix& floatMatrix() const;
 
+    static FloatMatrixDialog* openForInterface(
+            ValueFloatMatrixInterface* iface,
+            const RenderTime& time,
+            uint channel = 0,
+            QWidget* parent = nullptr);
+
 signals:
 
     void matrixChanged() const;
@@ -36,11 +44,18 @@ signals:
 public slots:
 
     void setFloatMatrix(const FloatMatrix&);
+    void setReadOnly(bool);
 
 private:
 
     FloatMatrixWidget* p_widget_;
     FloatMatrix p_backup_;
+    bool p_readOnly_;
+    QPushButton
+            *p_butRevert_,
+            *p_butCancel_,
+            *p_butOk_,
+            *p_butUpdate_;
 };
 
 

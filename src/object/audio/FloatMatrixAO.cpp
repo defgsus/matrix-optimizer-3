@@ -33,7 +33,8 @@ class FloatMatrixAO::Private
     public:
 
     Private()
-        : matrixMutex       (QMutex::Recursive)
+        : hasMatrixChanged  (true)
+        , matrixMutex       (QMutex::Recursive)
     { }
 
     ParameterInt
@@ -41,7 +42,7 @@ class FloatMatrixAO::Private
 
     std::vector<AUDIO::ResampleBuffer<F32>> rebufs;
     FloatMatrix matrix;
-
+    bool hasMatrixChanged;
     QMutex matrixMutex;
 };
 
@@ -69,9 +70,16 @@ QString FloatMatrixAO::getOutputName(SignalType st, uint channel) const
 FloatMatrix FloatMatrixAO::valueFloatMatrix(uint , const RenderTime& ) const
 {
     QMutexLocker lock(&p_->matrixMutex);
+    p_->hasMatrixChanged = false;
     return p_->matrix;
 }
 
+bool FloatMatrixAO::hasFloatMatrixChanged(
+        uint , const RenderTime& ) const
+{
+    QMutexLocker lock(&p_->matrixMutex);
+    return p_->hasMatrixChanged;
+}
 
 void FloatMatrixAO::serialize(IO::DataStream & io) const
 {
@@ -111,6 +119,7 @@ void FloatMatrixAO::onParameterChanged(Parameter * p)
     {
         QMutexLocker lock(&p_->matrixMutex);
         p_->matrix.setDimensions({size_t(p_->paramSize->baseValue())});
+        p_->hasMatrixChanged = true;
     }
 }
 
@@ -119,6 +128,7 @@ void FloatMatrixAO::onParametersLoaded()
     {
         QMutexLocker lock(&p_->matrixMutex);
         p_->matrix.setDimensions({size_t(p_->paramSize->baseValue())});
+        p_->hasMatrixChanged = true;
     }
 }
 
@@ -167,6 +177,7 @@ void FloatMatrixAO::processAudio(const RenderTime& time)
             const F32* src = rebuf.buffer();
             for (size_t i=0; i<width; ++i, ++src)
                 *p_->matrix.data(i) = *src;
+            p_->hasMatrixChanged = true;
 
             rebuf.pop();
         }

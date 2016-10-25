@@ -25,6 +25,7 @@
 #include "object/interface/ValueTextureInterface.h"
 #include "object/interface/ValueShaderSourceInterface.h"
 #include "object/interface/EvolutionEditInterface.h"
+#include "object/interface/ValueFloatMatrixInterface.h"
 #include "model/ObjectTreeMimeData.h"
 #include "gl/Texture.h"
 #include "gl/ShaderSource.h"
@@ -34,6 +35,7 @@
 #include "gui/GeometryDialog.h"
 #include "gui/TextEditDialog.h"
 #include "gui/GeometryDialog.h"
+#include "gui/FloatMatrixDialog.h"
 #include "gui/EvolutionDialog.h"
 #include "gui/widget/SoundFileWidget.h"
 #include "io/Files.h"
@@ -257,8 +259,10 @@ void ObjectActions::createEditActions(
     if (GeometryEditInterface * geom = dynamic_cast<GeometryEditInterface*>(obj))
     {
         // edit geometry
-        a = actions.addAction(QIcon(":/icon/obj_geometry.png"), tr("Edit geometry"), parent);
-        a->setStatusTip(tr("Opens a dialog for editing the attached geometry data"));
+        a = actions.addAction(QIcon(":/icon/obj_geometry.png"),
+                              tr("Edit geometry"), parent);
+        a->setStatusTip(
+                tr("Opens a dialog for editing the attached geometry data"));
         QObject::connect(a, &QAction::triggered, [=]()
         {
             GeometryDialog::openForInterface(geom);
@@ -273,8 +277,9 @@ void ObjectActions::createEditActions(
         auto sub = new QMenu(tr("Show shader source"));
         a = actions.addMenu(sub, parent);
         a->setIcon(QIcon(":/icon/obj_glsl.png"));
-        a->setStatusTip(tr("Shows the full shader source code including user-code, "
-                           "automatic defines and overrides, and include files"));
+        a->setStatusTip(
+                    tr("Shows the full shader source code including user-code, "
+                       "automatic defines and overrides and included files"));
 
         a = sub->addAction(tr("vertex shader"));
         a->setData(0);
@@ -288,10 +293,32 @@ void ObjectActions::createEditActions(
                     ? ssrc->valueShaderSource(0).vertexSource()
                     : ssrc->valueShaderSource(0).fragmentSource();
 
-            auto diag = new TextEditDialog(src, TT_GLSL, application()->mainWindow());
+            auto diag = new TextEditDialog(src, TT_GLSL,
+                                           application()->mainWindow());
             diag->setAttribute(Qt::WA_DeleteOnClose, true);
             diag->show();
         });
+    }
+
+    // display FloatMatrix
+    if (auto iface = dynamic_cast<ValueFloatMatrixInterface*>(obj))
+    {
+        auto sub = new QMenu(tr("Show float matrix"));
+        actions.addMenu(sub, parent);
+
+        // XXX Hacky
+        RenderTime rt(CurrentTime::time(), 1./60., MO_GUI_THREAD);
+
+        for (size_t i=0; i<obj->getNumberOutputs(ST_FLOAT_MATRIX); ++i)
+        {
+            a = sub->addAction(tr("%1")
+                .arg(obj->getOutputName(ST_FLOAT_MATRIX, i)));
+            a->connect(a, &QAction::triggered, [=]()
+            {
+                FloatMatrixDialog::openForInterface(
+                            iface, rt, i);
+            });
+        }
     }
 
     if (SequenceFloat * seq = dynamic_cast<SequenceFloat*>(obj))

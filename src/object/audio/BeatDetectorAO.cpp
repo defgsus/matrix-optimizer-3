@@ -35,6 +35,7 @@ class BeatDetectorAO::Private
     Private()
         : initFftSize           (1024)
         , initNumBins           (16)
+        , hasMatrixChanged      (true)
     { }
 
     ParameterSelect
@@ -59,6 +60,7 @@ class BeatDetectorAO::Private
 
     size_t initFftSize, initNumBins;
     QMutex matrixMutex;
+    bool hasMatrixChanged;
 };
 
 BeatDetectorAO::BeatDetectorAO()
@@ -108,6 +110,7 @@ Double BeatDetectorAO::valueFloat(uint , const RenderTime& ) const
 FloatMatrix BeatDetectorAO::valueFloatMatrix(uint chan, const RenderTime& ) const
 {
     QMutexLocker lock(&p_->matrixMutex);
+    p_->hasMatrixChanged = false;
     switch (chan)
     {
         default:
@@ -120,6 +123,14 @@ FloatMatrix BeatDetectorAO::valueFloatMatrix(uint chan, const RenderTime& ) cons
         case 6: return p_->matrixResponse;
     }
 }
+
+bool BeatDetectorAO::hasFloatMatrixChanged(
+        uint , const RenderTime&) const
+{
+    QMutexLocker lock(&p_->matrixMutex);
+    return p_->hasMatrixChanged;
+}
+
 
 QString BeatDetectorAO::infoString() const
 {
@@ -275,6 +286,7 @@ void BeatDetectorAO::processAudio(const RenderTime& time)
     // copy to matrix output
     {
         QMutexLocker lock(&p_->matrixMutex);
+        p_->hasMatrixChanged = true;
 
         switch (1)
         {

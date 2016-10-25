@@ -88,6 +88,13 @@ FloatMatrix ModulatorFloatMatrix::value(const RenderTime& rtime) const
     return interface_->valueFloatMatrix(outputChannel(), rtime);
 }
 
+bool ModulatorFloatMatrix::hasChanged(const RenderTime& rtime) const
+{
+    if (!modulator() || !modulator()->active(rtime))
+        return false;
+
+    return interface_->hasFloatMatrixChanged(outputChannel(), rtime);
+}
 
 } // namespace MO
 

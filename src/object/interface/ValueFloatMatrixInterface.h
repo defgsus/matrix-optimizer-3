@@ -25,6 +25,8 @@ public:
     virtual FloatMatrix valueFloatMatrix(
                 uint channel, const RenderTime& time) const = 0;
 
+    virtual bool hasFloatMatrixChanged(
+            uint channel, const RenderTime& time) const = 0;
 };
 
 } // namespace MO

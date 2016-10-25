@@ -18,7 +18,7 @@
 #include "object/util/ObjectEditor.h"
 #include "gl/Texture.h"
 #include "io/DataStream.h"
-#include "io/log.h"
+#include "io/log_FloatMatrix.h"
 
 namespace MO {
 
@@ -285,12 +285,19 @@ void FloatMatrixTO::Private::releaseGl()
 void FloatMatrixTO::Private::renderGl(
         const GL::RenderSettings& , const RenderTime& time)
 {
+    if (tex && !p_matrix->hasChanged(time))
+        return;
+
     auto matrix = p_matrix->value(time);
+
+    MO_DEBUG_FM("FloatMatrixTO(" << to->idName()
+                << "): update texture from matrix "
+                << matrix.layoutString());
 
     const size_t
             matrixWidth =  matrix.numDimensions() > 0 ? matrix.size(0) : 0,
             matrixHeight = matrix.numDimensions() > 1 ? matrix.size(1) : 1,
-            matrixDepth =  matrix.numDimensions() > 2 ? matrix.size(2) : 2;
+            matrixDepth =  matrix.numDimensions() > 2 ? matrix.size(2) : 1;
     size_t  width = matrixWidth,
             height = matrixHeight,
             depth = matrixDepth,

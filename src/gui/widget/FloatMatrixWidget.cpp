@@ -28,6 +28,7 @@ struct FloatMatrixWidget::Private
         , w             (0)
         , h             (0)
         , ignoreChange  (false)
+        , isReadOnly    (false)
     { }
 
     void resize();
@@ -40,9 +41,10 @@ struct FloatMatrixWidget::Private
 
     FloatMatrix matrix;
     size_t w, h;
-    bool ignoreChange;
+    bool ignoreChange, isReadOnly;
     QTableWidget* table;
     SpinBox *sbW, *sbH;
+    QToolButton *butSave;
 };
 
 FloatMatrixWidget::FloatMatrixWidget(QWidget *parent)
@@ -79,7 +81,7 @@ FloatMatrixWidget::FloatMatrixWidget(QWidget *parent)
 
             lh->addStretch(1);
 
-            auto but = new QToolButton(this);
+            auto but = p_->butSave = new QToolButton(this);
             but->setText(tr("Load"));
             but->setStatusTip(tr("Load a matrix from json data"));
             but->setShortcut(Qt::CTRL + Qt::Key_L);
@@ -113,6 +115,15 @@ const FloatMatrix& FloatMatrixWidget::floatMatrix() const
 {
     return p_->matrix;
 }
+
+void FloatMatrixWidget::setReadOnly(bool e)
+{
+    p_->isReadOnly = e;
+    p_->butSave->setVisible(!p_->isReadOnly);
+    p_->sbH->setEnabled(!p_->isReadOnly);
+    p_->sbW->setEnabled(!p_->isReadOnly);
+}
+
 
 void FloatMatrixWidget::setFloatMatrix(const FloatMatrix& m)
 {

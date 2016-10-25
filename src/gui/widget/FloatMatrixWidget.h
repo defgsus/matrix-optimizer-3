@@ -34,6 +34,8 @@ signals:
 
 public slots:
 
+    void setReadOnly(bool e);
+
     void setFloatMatrix(const FloatMatrix&);
 
     void loadDialog();

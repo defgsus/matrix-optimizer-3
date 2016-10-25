@@ -70,14 +70,34 @@ int ParameterFloatMatrix::getModulatorTypes() const
     return 0xffffffff;
 }
 
+bool ParameterFloatMatrix::hasChanged(const RenderTime& t) const
+{
+    for (auto m : modulators())
+        return static_cast<ModulatorFloatMatrix*>(m)->hasChanged(t);
+
+    if (t.thread() >= hasChanged_.size())
+        return true;
+    return hasChanged_[t.thread()];
+}
+
 FloatMatrix ParameterFloatMatrix::value(const RenderTime& time) const
 {
     for (auto m : modulators())
         return static_cast<ModulatorFloatMatrix*>(m)->value(time);
 
+    if (time.thread() >= hasChanged_.size())
+        hasChanged_.resize(time.thread()+1);
+
+    hasChanged_[time.thread()] = false;
     return baseValue_;
 }
 
+void ParameterFloatMatrix::setValue(const FloatMatrix& v)
+{
+    baseValue_ = v;
+    for (auto i = hasChanged_.begin(); i!=hasChanged_.end(); ++i)
+        *i = true;
+}
 
 
 Modulator * ParameterFloatMatrix::getModulator(
@@ -92,8 +112,6 @@ Modulator * ParameterFloatMatrix::getModulator(
 
     return m;
 }
-
-
 
 
 GUI::FloatMatrixDialog* ParameterFloatMatrix::openEditDialog(QWidget *parent)
