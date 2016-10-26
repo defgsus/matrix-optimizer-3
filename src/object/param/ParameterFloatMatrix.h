@@ -14,7 +14,7 @@
 
 #include "Parameter.h"
 #include "types/time.h"
-#include "object/param/FloatMatrix.h"
+#include "math/FloatMatrix.h"
 
 namespace MO {
 namespace GUI { class FloatMatrixDialog; }

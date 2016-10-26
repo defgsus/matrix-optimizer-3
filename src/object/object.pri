@@ -54,7 +54,6 @@ HEADERS += \
     $$PWD/interface/ValueTextInterface.h \
     $$PWD/interface/ValueTextureInterface.h \
     $$PWD/interface/ValueTransformationInterface.h \
-    $$PWD/param/FloatMatrix.h \
     $$PWD/param/Modulator.h \
     $$PWD/param/ModulatorEvent.h \
     $$PWD/param/ModulatorFloat.h \
@@ -207,7 +206,6 @@ SOURCES += \
     $$PWD/interface/EvolutionEditInterface.cpp \
     $$PWD/interface/GeometryEditInterface.cpp \
     $$PWD/interface/ValueFloatInterface.cpp \
-    $$PWD/param/FloatMatrix.cpp \
     $$PWD/param/Modulator.cpp \
     $$PWD/param/ModulatorEvent.cpp \
     $$PWD/param/ModulatorFloat.cpp \

@@ -12,7 +12,7 @@
 #define MOSRC_OBJECT_INTERFACE_VALUEFLOATMATRIXINTERFACE_H
 
 #include "types/time.h"
-#include "object/param/FloatMatrix.h"
+#include "math/FloatMatrix.h"
 
 namespace MO {
 

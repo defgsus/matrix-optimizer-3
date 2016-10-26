@@ -41,27 +41,17 @@ struct DistanceFieldDO::Private
         , doRecalc  (true)
     { }
 
-    struct Idx
-    {
-        int x,y,z;
-        Double d;
-        bool operator<(const Idx& o) const { return d < o.d; }
-    };
 
-    void recalcIndex();
     void recalc(const RenderTime& time);
 
     DistanceFieldDO* p;
     FloatMatrix dist;
 
     bool doRecalc;
-    /** Lists of Idx (for one quadrant) sorted by distance to origin,
-        separated for each distance >=1 step. */
-    std::vector<std::vector<Idx>> indices;
 
     ParameterFloatMatrix* p_input;
     ParameterFloat* p_thresh, *p_uthresh;
-    ParameterSelect* p_inside;
+    ParameterSelect* p_inside, *p_mode;
 };
 
 DistanceFieldDO::DistanceFieldDO()
@@ -99,6 +89,16 @@ void DistanceFieldDO::createParameters()
             FloatMatrix(), true, true);
         p_->p_input->setVisibleGraph(true);
 
+        p_->p_mode = params()->createSelectParameter(
+            "sdf_mode", tr("mode"),
+            tr("The method used for distance field estimation"),
+        { "exact", "fast" },
+        { tr("exact"), tr("fast") },
+        { tr("Exact (slow) evaluation of distance field"),
+          tr("Fast approximation using 'Dead Reckoning' method") },
+        { FloatMatrix::DF_EXACT, FloatMatrix::DF_FAST },
+            FloatMatrix::DF_FAST, true, false);
+
         p_->p_inside = params()->createSelectParameter(
             "inside", tr("inside"),
             tr("Values that determine the inside of the implicit object"),
@@ -128,6 +128,7 @@ void DistanceFieldDO::onParameterChanged(Parameter* p)
     Object::onParameterChanged(p);
 
     if (p == p_->p_input
+     || p == p_->p_mode
      || p == p_->p_inside
      || p == p_->p_thresh
      || p == p_->p_uthresh
@@ -161,72 +162,6 @@ bool DistanceFieldDO::hasFloatMatrixChanged(
 }
 
 
-void DistanceFieldDO::Private::recalcIndex()
-{
-    MO_DEBUG_FM(p->idName() + "::recalcIndex()");
-
-    indices.clear();
-
-    // generate distance-to-point list
-    std::vector<Idx> all;
-    switch (dist.numDimensions())
-    {
-        case 2:
-        {
-            const int W = dist.size(1);
-            const int H = dist.size(0);
-
-            for (int y=0; y<H; ++y)
-            for (int x=0; x<W; ++x)
-            if (!(x==0 && y==0))
-            {
-                Idx idx;
-                idx.d = std::sqrt(Double(x*x+y*y));
-                idx.x = x; idx.y = y; idx.z = 0;
-                all.push_back(idx);
-            }
-        }
-        break;
-
-        case 3:
-        {
-            const int W = dist.size(2);
-            const int H = dist.size(1);
-            const int D = dist.size(0);
-
-            for (int z=0; z<D; ++z) //{ MO_DEBUG_FM(z << "/" << D);
-            for (int y=0; y<H; ++y)
-            for (int x=0; x<W; ++x)
-            if (!(x==0 && y==0 && z==0))
-            {
-                Idx idx;
-                idx.d = std::sqrt(Double(x*x+y*y+z*z));
-                idx.x = x; idx.y = y; idx.z = z;
-                all.push_back(idx);
-            } //}
-        }
-        break;
-    }
-
-    MO_DEBUG_FM("sorting");
-    std::sort(all.begin(), all.end());
-
-    if (all.empty())
-        return;
-
-    std::vector<Idx> idxs;
-    Double curD = 0.;
-    for (const Idx& i : all)
-    {
-        if (i.d >= curD)
-        {
-            indices.push_back(idxs);
-            idxs.clear();
-            curD = i.d + 1.;
-        }
-        idxs.push_back(i);
-    }
-}
 
 void DistanceFieldDO::Private::recalc(const RenderTime& time)
 {
@@ -236,15 +171,21 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
     MO_DEBUG_FM(p->idName() << ")::recalc(" << time << ")"
                 << matrix.layoutString());
 
+    ProgressInfo progress(tr("calc distance field"), p);
+    progress.send();
+
+    dist.calcDistanceField(
+                matrix,
+                FloatMatrix::DFMode(p_mode->value(time)),
+                &progress);
+
+#if 0
     // recalc distance indices
     if (!dist.hasDimensions(matrix.dimensions()))
     {
         dist.setDimensionsFrom(matrix);
         recalcIndex();
     }
-
-    ProgressInfo progress(tr("calc distance field"), p);
-    progress.send();
 
     // thresholding input
     const Double thresh = p_thresh->value(time);
@@ -448,9 +389,9 @@ void DistanceFieldDO::Private::recalc(const RenderTime& time)
         break;
 
     }
-
     progress.setFinished();
     progress.send();
+#endif
 }
 
 

@@ -97,7 +97,13 @@ namespace MO {
     class ParameterTexture;
     class ParameterTransformation;
 
-    class FloatMatrix;
+    template <typename F>
+    class FloatMatrixT;
+    #ifndef MO_DEFAULT_FLOAT_MATRIX_DEFINED
+    #   define MO_DEFAULT_FLOAT_MATRIX_DEFINED
+        /** default type */
+        typedef FloatMatrixT<double> FloatMatrix;
+    #endif
 
     class TransformationBuffer;
     class Transformation;

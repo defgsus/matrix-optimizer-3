@@ -15,6 +15,8 @@
 
 #include "FloatMatrixWidget.h"
 #include "gui/widget/SpinBox.h"
+#include "math/FloatMatrix.h"
+#include "types/float.h"
 #include "io/Files.h"
 #include "io/error.h"
 

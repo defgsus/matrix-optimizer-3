@@ -24,9 +24,9 @@
 #include "ParameterText.h"
 #include "ParameterTexture.h"
 #include "ParameterTransformation.h"
-#include "object/param/FloatMatrix.h"
 #include "object/Object.h"
 #include "object/util/ObjectConnectionGraph.h"
+#include "math/FloatMatrix.h"
 #include "gl/opengl.h"
 #include "io/DataStream.h"
 #include "io/error.h"
@@ -382,8 +382,7 @@ ParameterFloat * Parameters::createFloatParameter(
 }
 
 
-ParameterFloatMatrix * Parameters::createFloatMatrixParameter(
-        const QString& id, const QString& name, const QString& statusTip,
+ParameterFloatMatrix * Parameters::createFloatMatrixParameter(const QString& id, const QString& name, const QString& statusTip,
         const FloatMatrix& defaultValue,
         bool editable, bool modulateable)
 {

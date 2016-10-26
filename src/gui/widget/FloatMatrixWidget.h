@@ -12,7 +12,7 @@
 #define MOSRC_GUI_WIDGET_FLOATMATRIXWIDGET_H
 
 #include <QWidget>
-#include "object/param/FloatMatrix.h"
+#include "object/Object_fwd.h"
 
 
 namespace MO {

@@ -19,7 +19,7 @@
 #include "object/param/ParameterFloatMatrix.h"
 #include "object/param/ParameterInt.h"
 #include "object/param/ParameterSelect.h"
-#include "object/param/FloatMatrix.h"
+#include "math/FloatMatrix.h"
 #include "object/util/ObjectEditor.h"
 #include "io/DataStream.h"
 #include "io/log.h"

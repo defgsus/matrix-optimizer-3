@@ -14,12 +14,14 @@
 #include <vector>
 #include <string>
 
-#include "types/float.h"
+//#include "types/float.h"
 #include "io/error.h"
 #include "io/DataStream.h"
 #include "io/JsonInterface.h"
 
 namespace MO {
+
+class ProgressInfo;
 
 /** @brief Multi-dimensional float data container
 
@@ -29,14 +31,15 @@ namespace MO {
     require lot's of lockings...
 
 */
-class FloatMatrix
+template <typename F>
+class FloatMatrixT
         : public JsonInterface
 {
 public:
-    typedef std::vector<Double> Vector;
+    typedef std::vector<F> Vector;
 
-    FloatMatrix() { }
-    explicit FloatMatrix(const std::vector<size_t>& dimensions)
+    FloatMatrixT() { }
+    explicit FloatMatrixT(const std::vector<size_t>& dimensions)
         { setDimensions(dimensions); }
 
     // ---- io ----
@@ -71,33 +74,34 @@ public:
     // --- read access ---
 
     /** Convert to float data array */
-    std::vector<Float> toFloat() const;
+    template <typename T>
+    FloatMatrixT<T> toType() const;
 
     /** Read access to all data */
-    const Double* data() const
+    const F* data() const
         { MO_ASSERT(!p_data_.empty(), "");
           return &p_data_[0]; }
 
-    const Double* data(size_t i0) const
+    const F* data(size_t i0) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
           return &p_data_[i0]; }
 
-    const Double* data(size_t i0, size_t i1) const
+    const F* data(size_t i0, size_t i1) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
           return &p_data_[i1*p_dims_[0] + i0]; }
 
-    const Double* data(size_t i0, size_t i1, size_t i2) const
+    const F* data(size_t i0, size_t i1, size_t i2) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
           return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
 
-    const Double* data(size_t i0, size_t i1, size_t i2, size_t i3) const
+    const F* data(size_t i0, size_t i1, size_t i2, size_t i3) const
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
@@ -105,17 +109,44 @@ public:
                    <<i3<<", layout="<<layoutString());
           return &p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
 
+    /** Read single values */
+    const F& operator()(size_t i0) const
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
+          return p_data_[i0]; }
+
+    const F& operator()(size_t i0, size_t i1) const
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
+          return p_data_[i1*p_dims_[0] + i0]; }
+
+    const F& operator()(size_t i0, size_t i1, size_t i2) const
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
+          return p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+
+    const F& operator()(size_t i0, size_t i1, size_t i2, size_t i3) const
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
+                   <<i3<<", layout="<<layoutString());
+          return p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
     // --- std container ---
 
-    Vector::const_iterator begin() const { return p_data_.begin(); }
-    Vector::const_iterator end() const { return p_data_.end(); }
-    Vector::iterator begin() { return p_data_.begin(); }
-    Vector::iterator end() { return p_data_.end(); }
+    typename Vector::const_iterator begin() const { return p_data_.begin(); }
+    typename Vector::const_iterator end() const { return p_data_.end(); }
+    typename Vector::iterator begin() { return p_data_.begin(); }
+    typename Vector::iterator end() { return p_data_.end(); }
 
     // --- compare ---
 
-    bool operator == (const FloatMatrix& o) const { return !(*this != o); }
-    bool operator != (const FloatMatrix& o) const
+    bool operator == (const FloatMatrixT<F>& o) const { return !(*this != o); }
+    bool operator != (const FloatMatrixT<F>& o) const
     {
         if (o.numDimensions() != numDimensions())
             return true;
@@ -133,7 +164,8 @@ public:
     /** Reserve space for each dimension */
     void setDimensions(const std::vector<size_t>& dimensions);
 
-    void setDimensionsFrom(const FloatMatrix& other)
+    template <typename T>
+    void setDimensionsFrom(const FloatMatrixT<T>& other)
     {
         setDimensions(other.dimensions());
     }
@@ -146,29 +178,29 @@ public:
     }
 
     /** Write access to all data */
-    Double* data()
+    F* data()
         { MO_ASSERT(!p_data_.empty(), "");
           return &p_data_[0]; }
-    Double* data(size_t i0)
+    F* data(size_t i0)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
           return &p_data_[i0]; }
 
-    Double* data(size_t i0, size_t i1)
+    F* data(size_t i0, size_t i1)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
           return &p_data_[i1*p_dims_[0] + i0]; }
 
-    Double* data(size_t i0, size_t i1, size_t i2)
+    F* data(size_t i0, size_t i1, size_t i2)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
                    "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
           return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
 
-    Double* data(size_t i0, size_t i1, size_t i2, size_t i3)
+    F* data(size_t i0, size_t i1, size_t i2, size_t i3)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
           MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
@@ -176,10 +208,48 @@ public:
                    <<i3<<", layout="<<layoutString());
           return &p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
 
+    /** Write access to single values */
+    F& operator()(size_t i0)
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
+          return p_data_[i0]; }
+
+    F& operator()(size_t i0, size_t i1)
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
+          return p_data_[i1*p_dims_[0] + i0]; }
+
+    F& operator()(size_t i0, size_t i1, size_t i2)
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
+          return p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+
+    F& operator()(size_t i0, size_t i1, size_t i2, size_t i3)
+        { MO_ASSERT(!p_data_.empty(), "");
+          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
+          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
+                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
+                   <<i3<<", layout="<<layoutString());
+          return p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+
+    // ----- signed distance field -----
+
+    enum DFMode { DF_EXACT, DF_FAST };
+
+    void calcDistanceField(
+            const FloatMatrixT<F>& binarySource, DFMode mode,
+            ProgressInfo* pinfo = nullptr);
+
+
 
     // -------- io ----------
 
-    friend IO::DataStream& operator << (IO::DataStream& io, const FloatMatrix& m)
+    friend IO::DataStream& operator << (
+            IO::DataStream& io, const FloatMatrixT<F>& m)
     {
         io.writeHeader("fm", 1);
         io << quint64(m.numDimensions());
@@ -190,7 +260,8 @@ public:
         return io;
     }
 
-    friend IO::DataStream& operator >> (IO::DataStream& io, FloatMatrix& m)
+    friend IO::DataStream& operator >> (
+            IO::DataStream& io, FloatMatrixT<F>& m)
     {
         io.readHeader("fm", 1);
         quint64 dim;
@@ -214,6 +285,12 @@ private:
     std::vector<size_t> p_dims_, p_offs_;
 };
 
+
+#ifndef MO_DEFAULT_FLOAT_MATRIX_DEFINED
+#   define MO_DEFAULT_FLOAT_MATRIX_DEFINED
+    /** default type */
+    typedef FloatMatrixT<double> FloatMatrix;
+#endif
 
 } // namespace MO
 

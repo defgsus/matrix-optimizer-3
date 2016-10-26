@@ -14,7 +14,7 @@
 
 #include "Modulator.h"
 #include "types/time.h"
-#include "FloatMatrix.h"
+#include "math/FloatMatrix.h"
 
 namespace MO {
 

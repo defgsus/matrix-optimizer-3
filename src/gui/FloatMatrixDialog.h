@@ -12,8 +12,7 @@
 #define MOSRC_GUI_FLOATMATRIXDIALOG_H
 
 #include <QDialog>
-#include "object/param/FloatMatrix.h"
-
+#include "math/FloatMatrix.h"
 
 namespace MO {
 class ValueFloatMatrixInterface;
