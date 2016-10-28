@@ -79,7 +79,8 @@ public:
     static const QStringList wrapModeNames;
     static const QList<WrapMode> wrapModeValues;
 
-    ParameterTexture(Object * object, const QString& idName, const QString& name);
+    ParameterTexture(Object * object,
+                     const QString& idName, const QString& name);
     ~ParameterTexture();
 
     virtual void serialize(IO::DataStream&) const;
@@ -97,7 +98,8 @@ public:
 
     const GL::Texture* value(const RenderTime& time) const;
 
-    /** Returns true when the texture is different since the last call to value() */
+    /** Returns true when the texture is different since
+        the last call to value() */
     bool hasChanged(const RenderTime& time) const Q_DECL_OVERRIDE;
 
     bool isInputTypeSelectable() const;
@@ -105,15 +107,17 @@ public:
     InputType defaultInputType() const;
     WrapMode wrapModeX() const;
     WrapMode wrapModeY() const;
+    WrapMode wrapModeZ() const;
     MagMode magMode() const;
     MinMode minMode() const;
     uint mipmaps() const;
     QString filename() const;
 
-    /** Returns true when at least one of the minifiying modes is set to
-        mip-mapping. */
+    /** Returns true when the minifying mode belongs to the
+        set of mip-mapping modes. */
     bool isMipmap() const;
 
+    /** The attached filename parameter */
     ParameterFilename* filenameParameter() const;
 
     // ---------------- setter -----------------
@@ -124,10 +128,12 @@ public:
     void setWrapMode(WrapMode m);
     void setWrapModeX(WrapMode m);
     void setWrapModeY(WrapMode m);
+    void setWrapModeZ(WrapMode m);
     void setMagMode(MagMode m);
     void setMinMode(MinMode m);
     void setMipmaps(uint level);
 
+    /** Attaches a filename parameter to use for loading textures */
     void setFilenameParameter(ParameterFilename*);
 
     // -------- opengl ----------------

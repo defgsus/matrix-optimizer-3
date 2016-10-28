@@ -42,6 +42,7 @@ struct ParameterTexture::Private
         , defaultInputType(IT_INPUT)
         , wrapModeX     (WM_CLAMP)
         , wrapModeY     (WM_CLAMP)
+        , wrapModeZ     (WM_CLAMP)
         , magMode       (MAG_LINEAR)
         , minMode       (MIN_LINEAR)
         , mipmaps       (0)
@@ -69,7 +70,7 @@ struct ParameterTexture::Private
 
     bool isInputSelectable;
     InputType inputType, defaultInputType;
-    WrapMode wrapModeX, wrapModeY;
+    WrapMode wrapModeX, wrapModeY, wrapModeZ;
     MagMode magMode;
     MinMode minMode;
     uint mipmaps;
@@ -135,6 +136,7 @@ ParameterTexture::InputType ParameterTexture::inputType() const { return p_->inp
 ParameterTexture::InputType ParameterTexture::defaultInputType() const { return p_->defaultInputType; }
 ParameterTexture::WrapMode  ParameterTexture::wrapModeX() const { return p_->wrapModeX; }
 ParameterTexture::WrapMode  ParameterTexture::wrapModeY() const { return p_->wrapModeY; }
+ParameterTexture::WrapMode  ParameterTexture::wrapModeZ() const { return p_->wrapModeZ; }
 ParameterTexture::MagMode   ParameterTexture::magMode() const { return p_->magMode; }
 ParameterTexture::MinMode   ParameterTexture::minMode() const { return p_->minMode; }
                        uint ParameterTexture::mipmaps() const { return p_->mipmaps; }
@@ -150,28 +152,36 @@ bool ParameterTexture::isMipmap() const
 
 }
 
-void ParameterTexture::setInputTypeSelectable(bool e) { p_->isInputSelectable = e; }
+void ParameterTexture::setInputTypeSelectable(bool e)
+    { p_->isInputSelectable = e; }
 void ParameterTexture::setInputType(InputType t)
     { p_->inputType = t; p_->needChange = true; }
-void ParameterTexture::setDefaultInputType(InputType t) { p_->defaultInputType = t; }
-void ParameterTexture::setWrapMode(WrapMode m) { setWrapModeX(m); setWrapModeY(m); }
+void ParameterTexture::setDefaultInputType(InputType t)
+    { p_->defaultInputType = t; }
+void ParameterTexture::setWrapMode(WrapMode m)
+    { setWrapModeX(m); setWrapModeY(m); setWrapModeZ(m); }
 void ParameterTexture::setWrapModeX(WrapMode m) { p_->wrapModeX = m; }
 void ParameterTexture::setWrapModeY(WrapMode m) { p_->wrapModeY = m; }
+void ParameterTexture::setWrapModeZ(WrapMode m) { p_->wrapModeZ = m; }
 void ParameterTexture::setMagMode(MagMode m) { p_->magMode = m; }
 void ParameterTexture::setMinMode(MinMode m) { p_->minMode = m; }
 void ParameterTexture::setMipmaps(uint level)
-    { p_->needChange = p_->mipmaps != level && p_->inputType == IT_FILE; p_->mipmaps = level; }
-void ParameterTexture::setFilenameParameter(ParameterFilename* p) { p_->paramFilename = p; p_->needChange = true; }
+    { p_->needChange = p_->mipmaps != level && p_->inputType == IT_FILE;
+      p_->mipmaps = level; }
+void ParameterTexture::setFilenameParameter(ParameterFilename* p)
+    { p_->paramFilename = p; p_->needChange = true; }
 
 void ParameterTexture::serialize(IO::DataStream &io) const
 {
     Parameter::serialize(io);
 
-    io.writeHeader("partex", 6);
+    io.writeHeader("partex", 7);
 
     // v2
     io << magModeIds[p_->magMode] << minModeIds[p_->minMode]
        << wrapModeIds[p_->wrapModeX] << wrapModeIds[p_->wrapModeY];
+    // v7
+    io << wrapModeIds[p_->wrapModeZ];
     // v6
     if (p_->inputType == IT_INTERNAL)
         io << (qint8)0;
@@ -191,7 +201,7 @@ void ParameterTexture::deserialize(IO::DataStream &io)
 {
     Parameter::deserialize(io);
 
-    const int ver = io.readHeader("partex", 6);
+    const int ver = io.readHeader("partex", 7);
 
     if (ver >= 2)
     {
@@ -206,6 +216,11 @@ void ParameterTexture::deserialize(IO::DataStream &io)
         p_->magMode = MAG_LINEAR;
         p_->minMode = MIN_LINEAR;
     }
+    if (ver >= 7)
+        io.readEnum(p_->wrapModeZ, WM_CLAMP, wrapModeIds, wrapModeValues);
+    else
+        p_->wrapModeZ = WM_CLAMP;
+
     if (ver >= 3)
     {
         qint8 hasType = 1;
@@ -243,6 +258,7 @@ void ParameterTexture::copyFrom(Parameter* other)
     p_->defaultInputType = p->p_->defaultInputType;
     p_->wrapModeX = p->p_->wrapModeX;
     p_->wrapModeY = p->p_->wrapModeY;
+    p_->wrapModeZ = p->p_->wrapModeZ;
     p_->magMode = p->p_->magMode;
     p_->minMode = p->p_->minMode;
     p_->mipmaps = p->p_->mipmaps;
@@ -289,21 +305,40 @@ void ParameterTexture::applyTextureParam(const GL::Texture* tex) const
     switch (p_->wrapModeX)
     {
         case WM_CLAMP:
-            tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_CLAMP_TO_EDGE)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_S,
+                                 GLint(GL_CLAMP_TO_EDGE)); break;
         case WM_REPEAT:
-            tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_REPEAT)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_S,
+                                 GLint(GL_REPEAT)); break;
         case WM_MIRROR:
-            tex->setTexParameter(GL_TEXTURE_WRAP_S, GLint(GL_MIRRORED_REPEAT)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_S,
+                                 GLint(GL_MIRRORED_REPEAT)); break;
     }
 
     switch (p_->wrapModeY)
     {
         case WM_CLAMP:
-            tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_CLAMP_TO_EDGE)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_T,
+                                 GLint(GL_CLAMP_TO_EDGE)); break;
         case WM_REPEAT:
-            tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_REPEAT)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_T,
+                                 GLint(GL_REPEAT)); break;
         case WM_MIRROR:
-            tex->setTexParameter(GL_TEXTURE_WRAP_T, GLint(GL_MIRRORED_REPEAT)); break;
+            tex->setTexParameter(GL_TEXTURE_WRAP_T,
+                                 GLint(GL_MIRRORED_REPEAT)); break;
+    }
+
+    switch (p_->wrapModeZ)
+    {
+        case WM_CLAMP:
+            tex->setTexParameter(GL_TEXTURE_WRAP_R,
+                                 GLint(GL_CLAMP_TO_EDGE)); break;
+        case WM_REPEAT:
+            tex->setTexParameter(GL_TEXTURE_WRAP_R,
+                                 GLint(GL_REPEAT)); break;
+        case WM_MIRROR:
+            tex->setTexParameter(GL_TEXTURE_WRAP_R,
+                                 GLint(GL_MIRRORED_REPEAT)); break;
     }
 
 }
@@ -376,7 +411,8 @@ bool ParameterTexture::hasChanged(const RenderTime& time) const
 }
 
 
-Modulator * ParameterTexture::getModulator(const QString& id, const QString& outputId)
+Modulator * ParameterTexture::getModulator(
+        const QString& id, const QString& outputId)
 {
     Modulator * m = findModulator(id, outputId);
     if (m)
@@ -420,7 +456,8 @@ const GL::Texture* ParameterTexture::Private::getNoneTexture(bool white)
 
 const GL::Texture* ParameterTexture::Private::getFileTexture()
 {
-    MO_ASSERT(paramFilename, "ParameterFilename not assigned to ParameterTexture");
+    MO_ASSERT(paramFilename,
+              "ParameterFilename not assigned to ParameterTexture");
 
     if (!needChange)
         return createdTex;
@@ -476,7 +513,7 @@ const GL::Texture* ParameterTexture::Private::getErrorTexture()
     if (!errorTex)
     {
         QImage img = GeneralImage::getErrorImage(
-                    QObject::tr("no\ntexture"),
+                    QObject::tr("NULL"),
                     QSize(128,128), QImage::Format_RGBA8888_Premultiplied);
         errorTex = GL::Texture::createFromImage(img, gl::GL_RGBA);
     }

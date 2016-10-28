@@ -835,6 +835,22 @@ void ParameterWidget::addTexParamButtons_(ParameterTexture* param, QHBoxLayout* 
         } );
     });
 
+    but = new QToolButton(this);
+    but->setText(param->wrapModeNames[param->wrapModeZ()]);
+    l->addWidget(but);
+    connect(but, &QToolButton::clicked, [=]()
+    {
+        texParamPopup_<ParameterTexture::WrapMode>(this, param, tr("edge z"),
+                       ParameterTexture::wrapModeNames,
+                       ParameterTexture::wrapModeValues,
+                       param->wrapModeZ(),
+                       [=](ParameterTexture::WrapMode m)
+        {
+            param->setWrapModeZ(m);
+            but->setText(param->wrapModeNames[param->wrapModeZ()]);
+        } );
+    });
+
     if (param->inputType() != ParameterTexture::IT_INTERNAL)
     {
         QStringList names = { tr("no mipmap") };

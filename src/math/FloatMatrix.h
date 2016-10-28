@@ -208,7 +208,7 @@ public:
                    <<i3<<", layout="<<layoutString());
           return &p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
 
-    /** Write access to single values */
+    /** Write access to single value */
     F& operator()(size_t i0)
         { MO_ASSERT(!p_data_.empty(), "");
           MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
@@ -240,7 +240,7 @@ public:
 
     enum DFMode { DF_EXACT, DF_FAST };
 
-    void calcDistanceField(
+    bool calcDistanceField(
             const FloatMatrixT<F>& binarySource, DFMode mode,
             ProgressInfo* pinfo = nullptr);
 

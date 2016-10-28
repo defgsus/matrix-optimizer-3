@@ -133,9 +133,15 @@ bool NiftiDO::Private::loadNifti(const QString& filename)
     p->clearError();
     MO_PRINT(img->nx << "x" << img->ny << "x" << img->nz
              << " bytes=" << img->nbyper
-             << ", dt=" << nifti_datatype_string(img->datatype));
+             << ", dt=" << nifti_datatype_string(img->datatype)
+             << ", lsb=" << img->byteorder);
 
     matrix.setDimensions({ (size_t)img->nz, (size_t)img->ny, (size_t)img->nx });
+
+#if Q_BYTE_ORDER == Q_LITTLE_ENDIAN
+    //if (img->byteorder != 0) // lsb
+    //    nifti_swap_2bytes(img->nvox, img->data);
+#endif
 
     MO_ASSERT(img->nvox == matrix.size(), "");
     bool handled = true;

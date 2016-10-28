@@ -16,6 +16,7 @@
 
 #include "FloatMatrix.h"
 #include "tool/ProgressInfo.h"
+#include "io/log.h"
 
 namespace MO {
 
@@ -416,6 +417,7 @@ void calcSdfDr2(FloatMatrixT<F>& dst, const FloatMatrixT<F>& src,
 
         // detect border
         F v = src(y, x);
+        //if (v > 0.)
         if ( (x>0 && src(y,x-1) != v)
           || (y>0 && src(y-1,x) != v)
           || (x+1<W && src(y,x+1) != v)
@@ -429,120 +431,272 @@ void calcSdfDr2(FloatMatrixT<F>& dst, const FloatMatrixT<F>& src,
 
     const F d1 = F(1), d2 = std::sqrt(F(2));
 
+    int numIter = 10;
+
     if (progress)
+        progress->setNumItems(numIter);
+
+    int prevNumChanged2=-1, prevNumChanged1=-1, numChanged;
+    for (int iter=0; iter<numIter; ++iter)
     {
-        progress->setNumItems(2);
-        progress->send();
+        if (progress)
+        {
+            progress->setProgress(iter);
+            progress->send();
+        }
+
+        numChanged = 0;
+
+    #define MO__TEST(x__, y__, di__) \
+        if (dst((y__), (x__)) + di__ < d) \
+        { \
+            coords[ofs] = coords[(y__)*W + (x__)]; \
+            dst(y, x) = coords[ofs].dist(x, y); \
+            ++numChanged; \
+        }
+
+        // forward pass
+        for (int y=0; y<H; ++y)
+        for (int x=0; x<W; ++x)
+        {
+            size_t ofs = y*W+x;
+            const F d = dst(y, x);
+
+            if (y > 0)
+            {
+                if (x > 0)
+                {
+                    MO__TEST(x-1, y-1, d2);
+                }
+                MO__TEST(x, y-1, d1);
+                if (x < W-1)
+                {
+                    MO__TEST(x+1, y-1, d2);
+                }
+            }
+            if (x > 0)
+            {
+                MO__TEST(x-1, y, d1);
+            }
+        }
+
+        // backward pass
+        for (int y=H-1; y>=0; --y)
+        for (int x=W-1; x>=0; --x)
+        {
+            size_t ofs = y*W+x;
+            const F d = dst(y, x);
+
+            if (x < W-1)
+            {
+                MO__TEST(x+1, y, d1);
+            }
+            if (y < H-1)
+            {
+                if (x > 0)
+                {
+                    MO__TEST(x-1, y+1, d2);
+                }
+                MO__TEST(x, y+1, d1);
+                if (x < W-1)
+                {
+                    MO__TEST(x+1, y+1, d2);
+                }
+            }
+        }
+    #undef MO__TEST
+
+        // quit if no significant change
+        if (numChanged == prevNumChanged2)
+            break;
+        prevNumChanged2 = prevNumChanged1;
+        prevNumChanged1 = numChanged;
+
+        if (iter > numIter*3/4)
+        {
+            numIter += 10;
+            if (progress)
+                progress->setNumItems(numIter);
+        }
     }
 
-    // forward pass
+    // set sign
     for (int y=0; y<H; ++y)
     for (int x=0; x<W; ++x)
     {
-        size_t ofs = y*W+x;
-        const F d = dst(y, x);
-
-        if (y > 0)
-        {
-            if (x > 0)
-            {
-                if (dst(y-1, x-1) + d2 < d)
-                {
-                    coords[ofs] = coords[(y-1)*W+(x-1)];
-                    dst(y, x) = coords[ofs].dist(x, y);
-                }
-            }
-            if (x+1 < W)
-            {
-                if (dst(y-1, x+1) + d2 < d)
-                {
-                    coords[ofs] = coords[(y-1)*W+(x+1)];
-                    dst(y, x) = coords[ofs].dist(x, y);
-                }
-            }
-            if (dst(y-1, x) + d1 < d)
-            {
-                coords[ofs] = coords[(y-1)*W+(x)];
-                dst(y, x) = coords[ofs].dist(x, y);
-            }
-        }
-        if (x > 0)
-        {
-            if (dst(y, x-1) + d1 < d)
-            {
-                coords[ofs] = coords[(y)*W+(x-1)];
-                dst(y, x) = coords[ofs].dist(x, y);
-            }
-        }
-    }
-
-    if (progress)
-    {
-        progress->setProgress(1);
-        progress->send();
-    }
-
-    // backward pass
-    for (int y=H-1; y>=0; --y)
-    for (int x=W-1; x>=0; --x)
-    {
-        size_t ofs = y*W+x;
-        const F d = dst(y, x);
-
-        if (y < H-1)
-        {
-            if (x > 0)
-            {
-                if (dst(y+1, x-1) + d2 < d)
-                {
-                    coords[ofs] = coords[(y+1)*W+(x-1)];
-                    dst(y, x) = coords[ofs].dist(x, y);
-                }
-            }
-            if (dst(y+1, x) + d1 < d)
-            {
-                coords[ofs] = coords[(y+1)*W+(x)];
-                dst(y, x) = coords[ofs].dist(x, y);
-            }
-            if (x < W-1)
-            {
-                if (dst(y+1, x+1) + d2 < d)
-                {
-                    coords[ofs] = coords[(y+1)*W+(x+1)];
-                    dst(y, x) = coords[ofs].dist(x, y);
-                }
-
-            }
-        }
-        if (x < W-1)
-        {
-            if (dst(y, x+1) + d1 < d)
-            {
-                coords[ofs] = coords[(y)*W+(x+1)];
-                dst(y, x) = coords[ofs].dist(x, y);
-            }
-        }
-    }
-
-    if (progress)
-    {
-        progress->setProgress(2);
-        progress->send();
+        if (src(y,x) > 0.)
+            dst(y,x) *= F(-1);
     }
 }
 
+
+/** Approximated three-dimensional signed distance field
+    using "Dead Reckoning" */
+template <typename F>
+void calcSdfDr3(FloatMatrixT<F>& dst, const FloatMatrixT<F>& src,
+                ProgressInfo* progress)
+{
+    dst.setDimensions(src.dimensions());
+
+    const int W = src.size(2);
+    const int H = src.size(1);
+    const int D = src.size(0);
+    const F maxD = std::sqrt(F(W*W+H*H+D*D));
+
+    struct Coord
+    {
+        Coord() : x(0), y(0), z(0) { }
+        Coord(int x, int y, int z) : x(x), y(y), z(z) { }
+        F dist(int x1, int y1, int z1)
+            { x1-=x; y1-=y; z1-=z; return std::sqrt(F(x1*x1+y1*y1+z1*z1)); }
+        int x, y, z;
+    };
+    std::vector<Coord> coords(src.size());
+    std::vector<size_t> prevOfs(dst.size());
+
+    // init
+    for (int z=0; z<D; ++z)
+    for (int y=0; y<H; ++y)
+    for (int x=0; x<W; ++x)
+    {
+        dst(z, y, x) = maxD;
+
+        // detect border
+        const F diff = 0.01;
+        F v = src(z, y, x);
+        //if (v > 0.)
+        if ( (x>0   && std::abs(src(z,  y,  x-1) - v) > diff)
+          || (y>0   && std::abs(src(z,  y-1,x  ) - v) > diff)
+          || (z>0   && std::abs(src(z-1,y,  x  ) - v) > diff)
+          || (x+1<W && std::abs(src(z,  y,  x+1) - v) > diff)
+          || (y+1<H && std::abs(src(z,  y+1,x  ) - v) > diff)
+          || (z+1<D && std::abs(src(z+1,y,  x  ) - v) > diff)
+             )
+        {
+            dst(z, y, x) = F(0);
+            coords[(z*H+y)*W+x] = Coord(x,y,z);
+        }
+    }
+
+    //const F d1 = F(1), d2 = std::sqrt(F(2)), d3 = std::sqrt(F(3));
+
+    int numIter = 10;
+
+    if (progress)
+        progress->setNumItems(numIter);
+
+    int prevNumChanged2=-1, prevNumChanged1=-1, numChanged;
+    for (int iter=0; iter<numIter; ++iter)
+    {
+        if (progress)
+        {
+            progress->setProgress(iter);
+            progress->send();
+        }
+
+        numChanged = 0;
+
+    #define MO__TEST(x__, y__, z__) \
+        if ((x+(x__))>0 && (x+(x__))<W && (y+(y__))>0 && (y+(y__))<H \
+            && (z+(z__))>0 && (z+(z__))<D) \
+        if (dst(z+(z__), y+(y__), x+(x__)) \
+            + std::sqrt(F((x__)*(x__)+(y__)*(y__)+(z__)*(z__))) < d) \
+        { \
+            ++numChanged; \
+            size_t ofs2 = ((z+(z__))*H + (y+(y__)))*W + (x+(x__)); \
+            coords[ofs] = coords[ofs2]; \
+            dst(z, y, x) = coords[ofs].dist(x, y, z); \
+        }
+
+        // forward pass
+        for (int z=0; z<D; ++z)
+        for (int y=0; y<H; ++y)
+        for (int x=0; x<W; ++x)
+        {
+            size_t ofs = (z*H+y)*W+x;
+            const F d = dst(z, y, x);
+
+            MO__TEST(-1, -1, -1);
+            MO__TEST( 0, -1, -1);
+            MO__TEST(+1, -1, -1);
+            MO__TEST(-1,  0, -1);
+            MO__TEST(+1,  0, -1);
+            MO__TEST(-1, +1, -1);
+            MO__TEST( 0, +1, -1);
+            MO__TEST(+1, +1, -1);
+
+            MO__TEST(-1, -1,  0);
+            MO__TEST( 0, -1,  0);
+            MO__TEST(+1, -1,  0);
+            MO__TEST(-1,  0,  0);
+
+            MO__TEST(-1, -1, +1);
+        }
+
+        // backward pass
+        for (int z=D-1; z>=0; --z)
+        for (int y=H-1; y>=0; --y)
+        for (int x=W-1; x>=0; --x)
+        {
+            size_t ofs = (z*H+y)*W+x;
+            const F d = dst(z, y, x);
+
+            MO__TEST(+1, +1, -1);
+
+            MO__TEST(+1,  0,  0);
+            MO__TEST(-1, +1,  0);
+            MO__TEST( 0, +1,  0);
+            MO__TEST(+1, +1,  0);
+
+            MO__TEST(-1, -1, +1);
+            MO__TEST( 0, -1, +1);
+            MO__TEST(+1, -1, +1);
+            MO__TEST(-1,  0, +1);
+            MO__TEST(+1,  0, +1);
+            MO__TEST(-1, +1, +1);
+            MO__TEST( 0, +1, +1);
+            MO__TEST(+1, +1, +1);
+        }
+#undef MO__TEST
+
+        // quit if no significant change
+        if (numChanged == prevNumChanged2)
+            break;
+        prevNumChanged2 = prevNumChanged1;
+        prevNumChanged1 = numChanged;
+
+        if (iter > numIter*3/4)
+        {
+            numIter += 10;
+            if (progress)
+                progress->setNumItems(numIter);
+        }
+
+    }
+
+    // set sign
+    for (int z=0; z<D; ++z)
+    for (int y=0; y<H; ++y)
+    for (int x=0; x<W; ++x)
+    {
+        if (src(z,y,x) > 0.)
+            dst(z,y,x) *= F(-1);
+    }
+}
 
 
 
 } // namespace {
 
 template <typename F>
-void FloatMatrixT<F>::calcDistanceField(
+bool FloatMatrixT<F>::calcDistanceField(
         const FloatMatrixT<F>& src, DFMode mode, ProgressInfo* pinfo)
 {
+    bool handled = false;
     switch (mode)
     {
         case DF_EXACT:
+            handled = true;
             switch (src.numDimensions())
             {
                 case 1: calcSdfExact1(*this, src, pinfo); break;
@@ -550,18 +704,21 @@ void FloatMatrixT<F>::calcDistanceField(
                 case 3: calcSdfExact3(*this, src, pinfo); break;
                 default: MO_WARNING("Exact distance field for matrix "
                                     << src.layoutString() << " not supported");
+                    handled = false;
                 break;
             }
         break;
 
         case DF_FAST:
+            handled = true;
             switch (src.numDimensions())
             {
-                //case 1: calcSdfExact1(*this, src, pinfo); break;
+                //case 1: calcSdfDr1(*this, src, pinfo); break;
                 case 2: calcSdfDr2(*this, src, pinfo); break;
-                //case 3: calcSdfExact3(*this, src, pinfo); break;
-                default: MO_WARNING("Exact distance field for matrix "
+                case 3: calcSdfDr3(*this, src, pinfo); break;
+                default: MO_WARNING("Fast distance field for matrix "
                                     << src.layoutString() << " not supported");
+                    handled = false;
                 break;
             }
         break;
@@ -572,6 +729,8 @@ void FloatMatrixT<F>::calcDistanceField(
         pinfo->setFinished();
         pinfo->send();
     }
+
+    return handled;
 }
 
 

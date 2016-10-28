@@ -173,17 +173,17 @@ void FloatMatrixTO::Private::createParameters()
 
         p_width = to->params()->createIntParameter(
                     "width", tr("width"), tr("The texture width"),
-                    4096, true, true);
+                    1024, true, true);
         p_width->setMinValue(1);
 
         p_height = to->params()->createIntParameter(
                     "height", tr("height"), tr("The texture height"),
-                    4096, true, true);
+                    1024, true, true);
         p_height->setMinValue(1);
 
         p_depth = to->params()->createIntParameter(
                     "depth", tr("depth"), tr("The texture depth"),
-                    4096, true, true);
+                    16, true, true);
         p_depth->setMinValue(1);
 
         p_flipX = to->params()->createBooleanParameter(
@@ -370,7 +370,7 @@ void FloatMatrixTO::Private::renderGl(
     // -- upload --
 
     tex->bind();
-    tex->upload(&buffer[0]);
+    tex->upload(buffer.data());
     tex->setChanged();
 }
 
