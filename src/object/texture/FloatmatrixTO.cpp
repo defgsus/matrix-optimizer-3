@@ -207,8 +207,26 @@ void FloatMatrixTO::onParameterChanged(Parameter * p)
 {
     TextureObjectBase::onParameterChanged(p);
 
-    p_->doReUpload = true;
-    requestRender();
+    if (p == p_->p_matrix
+     || p == p_->p_amplitude
+     || p == p_->p_offset
+     || p == p_->p_offsetX
+     || p == p_->p_offsetY
+     || p == p_->p_offsetZ
+     || p == p_->p_clampWidth
+     || p == p_->p_clampHeight
+     || p == p_->p_clampDepth
+     || p == p_->p_width
+     || p == p_->p_height
+     || p == p_->p_depth
+     || p == p_->p_flipX
+     || p == p_->p_flipY
+     || p == p_->p_flipZ
+            )
+    {
+        p_->doReUpload = true;
+        requestRender();
+    }
 }
 
 void FloatMatrixTO::onParametersLoaded()
@@ -300,12 +318,12 @@ void FloatMatrixTO::Private::renderGl(
                 << matrix.layoutString());
 
     const size_t
-            matrixWidth =  matrix.numDimensions() > 0 ? matrix.size(0) : 0,
-            matrixHeight = matrix.numDimensions() > 1 ? matrix.size(1) : 1,
-            matrixDepth =  matrix.numDimensions() > 2 ? matrix.size(2) : 1;
-    size_t  width = matrixWidth,
-            height = matrixHeight,
-            depth = matrixDepth,
+            matrixW = matrix.width(),
+            matrixH = matrix.height(),
+            matrixD = matrix.depth();
+    size_t  width = matrixW,
+            height = matrixH,
+            depth = matrixD,
             offsetX = p_offsetX->value(time),
             offsetY = p_offsetY->value(time),
             offsetZ = p_offsetZ->value(time);
@@ -342,13 +360,13 @@ void FloatMatrixTO::Private::renderGl(
         size_t rz = k + offsetZ,
                wz = flipZ ? depth-1-k : k,
                bidxz = wz * height * width,
-               midxz = rz * matrixHeight * matrixWidth;
+               midxz = rz * matrixH * matrixW;
 
         for (size_t j=0; j<height; ++j)
         {
             size_t ry = j + offsetY,
                    wy = flipY ? height-1-j : j;
-            if (ry >= matrixHeight)
+            if (ry >= matrixH)
             {
                 for (size_t i=0; i<width; ++i)
                     buffer[wy*width + i] = 0.f;
@@ -358,9 +376,9 @@ void FloatMatrixTO::Private::renderGl(
             {
                 size_t rx = i + offsetX,
                        wx = flipX ? width-1-i : i;
-                if (rx < matrixWidth)
-                    buffer[bidxz + wy*width + wx] = offset + ampl *
-                                     * matrix.data(midxz + ry*matrixWidth + rx);
+                if (rx < matrixW)
+                    buffer[bidxz + wy*width + wx] =
+                            offset + ampl * matrix(midxz + ry*matrixW + rx);
                 else
                     buffer[bidxz + wy*width + wx] = 0.f;
             }

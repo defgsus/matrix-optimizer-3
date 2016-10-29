@@ -110,7 +110,21 @@ FloatMatrixWidget::FloatMatrixWidget(QWidget *parent)
 
             lh->addStretch(1);
 
-            auto but = p_->butSave = new QToolButton(this);
+            auto but = new QToolButton(this);
+            but->setText(tr("Transpose XY"));
+            but->setStatusTip(tr("Flip X and Y axes"));
+            lh->addWidget(but);
+            connect(but, SIGNAL(clicked(bool)), this, SLOT(transposeXY()));
+
+            but = new QToolButton(this);
+            but->setText(tr("Rotate XY"));
+            but->setStatusTip(tr("Rotate X/Y axes around Z axis"));
+            lh->addWidget(but);
+            connect(but, SIGNAL(clicked(bool)), this, SLOT(rotateXY()));
+
+            lh->addStretch(1);
+
+            but = p_->butSave = new QToolButton(this);
             but->setText(tr("Load"));
             but->setStatusTip(tr("Load a matrix from json data"));
             but->setShortcut(Qt::CTRL + Qt::Key_L);
@@ -231,14 +245,10 @@ void FloatMatrixWidget::Private::updateTableFromMatrix()
     }
     else
     {
-        switch (matrix.numDimensions())
-        {
-            case 1: w = matrix.size(0); h = d = 1; break;
-            case 2: w = matrix.size(1); h = matrix.size(0); d = 1; break;
-            case 3: w = matrix.size(2); h = matrix.size(1);
-                    d = matrix.size(0); break;
-            default: w = h = d = 1; break;
-        }
+        w = matrix.width();
+        h = matrix.height();
+        d = matrix.depth();
+
         size_t z = std::max(0,std::min(int(d)-1, sbZ->value() ));
         table->setColumnCount(w);
         table->setRowCount(h);
@@ -366,7 +376,17 @@ void FloatMatrixWidget::saveDialog()
     }
 }
 
+void FloatMatrixWidget::rotateXY()
+{
+    setFloatMatrix(p_->matrix.rotatedRight());
+    emit matrixChanged();
+}
 
+void FloatMatrixWidget::transposeXY()
+{
+    setFloatMatrix(p_->matrix.transposedXY());
+    emit matrixChanged();
+}
 
 } // namespace GUI
 } // namespace MO

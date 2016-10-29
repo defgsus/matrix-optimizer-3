@@ -291,7 +291,8 @@ HEADERS += \
     $$PWD/math/Fraction.h \
     $$PWD/io/log_FloatMatrix.h \
     $$PWD/tool/ProgressInfo.h \
-    $$PWD/math/FloatMatrix.h
+    $$PWD/math/FloatMatrix.h \
+    $$PWD/io/error_index.h
 
 SOURCES += \
     src/io/console.cpp \

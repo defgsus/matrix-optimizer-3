@@ -15,7 +15,7 @@
 #include <string>
 
 //#include "types/float.h"
-#include "io/error.h"
+#include "io/error_index.h"
 #include "io/DataStream.h"
 #include "io/JsonInterface.h"
 
@@ -56,6 +56,10 @@ public:
 
     const std::vector<size_t>& dimensions() const { return p_dims_; }
 
+    size_t width() const;
+    size_t height() const;
+    size_t depth() const;
+
     /** Number of dimensions */
     size_t numDimensions() const { return p_dims_.size(); }
     /** Size of all data */
@@ -71,71 +75,83 @@ public:
         return dims == p_dims_;
     }
 
+    FloatMatrixT<F> transposedXY() const;
+    FloatMatrixT<F> rotatedRight() const;
+
     // --- read access ---
 
-    /** Convert to float data array */
+    /** Convert to matrix of different type */
     template <typename T>
     FloatMatrixT<T> toType() const;
+
+
+    size_t offset(size_t x) const
+    {
+        MO_ASSERT(!p_data_.empty(), "");
+        MO_ASSERT_LT(x, p_data_.size(), layoutString());
+        return x;
+    }
+
+    size_t offset(size_t y, size_t x) const
+    {
+        MO_ASSERT(!p_data_.empty(), "");
+        MO_ASSERT_EQUAL(p_dims_.size(), size_t(2), layoutString());
+        MO_ASSERT_LT(x, p_dims_[1], layoutString());
+        MO_ASSERT_LT(y, p_dims_[0], layoutString());
+        return y * p_dims_[1] + x;
+    }
+
+    size_t offset(size_t z, size_t y, size_t x) const
+    {
+        MO_ASSERT(!p_data_.empty(), "");
+        MO_ASSERT_EQUAL(p_dims_.size(), size_t(3), layoutString());
+        MO_ASSERT_LT(x, p_dims_[2], layoutString());
+        MO_ASSERT_LT(y, p_dims_[1], layoutString());
+        MO_ASSERT_LT(z, p_dims_[0], layoutString());
+        return (z * p_dims_[1] + y) * p_dims_[2] + x;
+    }
+
+    size_t offset(size_t w, size_t z, size_t y, size_t x) const
+    {
+        MO_ASSERT(!p_data_.empty(), "");
+        MO_ASSERT_EQUAL(p_dims_.size(), size_t(4), layoutString());
+        MO_ASSERT_LT(x, p_dims_[3], layoutString());
+        MO_ASSERT_LT(y, p_dims_[2], layoutString());
+        MO_ASSERT_LT(z, p_dims_[1], layoutString());
+        MO_ASSERT_LT(w, p_dims_[0], layoutString());
+        return ((w * p_dims_[1] + z) * p_dims_[2] + y) * p_dims_[3] + x;
+    }
 
     /** Read access to all data */
     const F* data() const
         { MO_ASSERT(!p_data_.empty(), "");
           return &p_data_[0]; }
 
-    const F* data(size_t i0) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
-          return &p_data_[i0]; }
+    const F* data(size_t x) const
+        { return &p_data_[offset(x)]; }
 
-    const F* data(size_t i0, size_t i1) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
-          return &p_data_[i1*p_dims_[0] + i0]; }
+    const F* data(size_t y, size_t x) const
+        { return &p_data_[offset(y, x)]; }
 
-    const F* data(size_t i0, size_t i1, size_t i2) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
-          return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    const F* data(size_t z, size_t y, size_t x) const
+        { return &p_data_[offset(z, y, x)]; }
 
-    const F* data(size_t i0, size_t i1, size_t i2, size_t i3) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
-                   <<i3<<", layout="<<layoutString());
-          return &p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    const F* data(size_t w, size_t z, size_t y, size_t x) const
+        { return &p_data_[offset(w, z, y, x)]; }
 
     /** Read single values */
-    const F& operator()(size_t i0) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
-          return p_data_[i0]; }
+    const F& operator()(size_t x) const
+        { return p_data_[offset(x)]; }
 
-    const F& operator()(size_t i0, size_t i1) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
-          return p_data_[i1*p_dims_[0] + i0]; }
+    const F& operator()(size_t y, size_t x) const
+        { return p_data_[offset(y, x)]; }
 
-    const F& operator()(size_t i0, size_t i1, size_t i2) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
-          return p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    const F& operator()(size_t z, size_t y, size_t x) const
+        { return p_data_[offset(z, y, x)]; }
 
-    const F& operator()(size_t i0, size_t i1, size_t i2, size_t i3) const
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
-                   <<i3<<", layout="<<layoutString());
-          return p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    const F& operator()(size_t w, size_t z, size_t y, size_t x) const
+        { return p_data_[offset(w, z, y, x)]; }
+
     // --- std container ---
 
     typename Vector::const_iterator begin() const { return p_data_.begin(); }
@@ -170,6 +186,9 @@ public:
         setDimensions(other.dimensions());
     }
 
+    /** Deletes all dimensions who's size is one. */
+    void minimizeDimensions();
+
     void clear()
     {
         p_dims_.clear();
@@ -181,60 +200,31 @@ public:
     F* data()
         { MO_ASSERT(!p_data_.empty(), "");
           return &p_data_[0]; }
-    F* data(size_t i0)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
-          return &p_data_[i0]; }
 
-    F* data(size_t i0, size_t i1)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
-          return &p_data_[i1*p_dims_[0] + i0]; }
+    F* data(size_t x)
+        { return &p_data_[offset(x)]; }
 
-    F* data(size_t i0, size_t i1, size_t i2)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
-          return &p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    F* data(size_t y, size_t x)
+        { return &p_data_[offset(y, x)]; }
 
-    F* data(size_t i0, size_t i1, size_t i2, size_t i3)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
-                   <<i3<<", layout="<<layoutString());
-          return &p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    F* data(size_t z, size_t y, size_t x)
+        { return &p_data_[offset(z, y, x)]; }
 
-    /** Write access to single value */
-    F& operator()(size_t i0)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(i0 < p_data_.size(), "i0="<<i0<< ", layout=" << layoutString());
-          return p_data_[i0]; }
+    F* data(size_t w, size_t z, size_t y, size_t x)
+        { return &p_data_[offset(w, z, y, x)]; }
 
-    F& operator()(size_t i0, size_t i1)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(i1*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", layout="<<layoutString());
-          return p_data_[i1*p_dims_[0] + i0]; }
+    /** Write access to single values */
+    F& operator()(size_t x)
+        { return p_data_[offset(x)]; }
 
-    F& operator()(size_t i0, size_t i1, size_t i2)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT((i2*p_dims_[1] + i1)*p_dims_[0] + i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", layout="<<layoutString());
-          return p_data_[(i2*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    F& operator()(size_t y, size_t x)
+        { return p_data_[offset(y, x)]; }
 
-    F& operator()(size_t i0, size_t i1, size_t i2, size_t i3)
-        { MO_ASSERT(!p_data_.empty(), "");
-          MO_ASSERT(p_dims_.size() >= 2, "layout="<<layoutString());
-          MO_ASSERT(((i3*p_dims_[2]+i2)*p_dims_[1]+i1)*p_dims_[0]+i0 < p_data_.size(),
-                   "i0="<<i0<<", i1="<<i1<<", i2="<<i2<<", i3="
-                   <<i3<<", layout="<<layoutString());
-          return p_data_[((i3*p_dims_[2] + i2)*p_dims_[1] + i1)*p_dims_[0] + i0]; }
+    F& operator()(size_t z, size_t y, size_t x)
+        { return p_data_[offset(z, y, x)]; }
+
+    F& operator()(size_t w, size_t z, size_t y, size_t x)
+        { return p_data_[offset(w, z, y, x)]; }
 
     // ----- signed distance field -----
 

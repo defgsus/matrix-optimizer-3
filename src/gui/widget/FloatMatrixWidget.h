@@ -40,6 +40,8 @@ public slots:
 
     void loadDialog();
     void saveDialog();
+    void rotateXY();
+    void transposeXY();
 
 private:
     struct Private;

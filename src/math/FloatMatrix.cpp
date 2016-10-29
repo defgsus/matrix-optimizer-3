@@ -84,6 +84,26 @@ std::string FloatMatrixT<F>::rangeString() const
     return s.str();
 }
 
+template <typename F>
+size_t FloatMatrixT<F>::width() const
+{
+    return isEmpty() ? 0
+                     : size(numDimensions()-1);
+}
+
+template <typename F>
+size_t FloatMatrixT<F>::height() const
+{
+    return numDimensions() < 2 ? 1
+                               : size(numDimensions()-2);
+}
+
+template <typename F>
+size_t FloatMatrixT<F>::depth() const
+{
+    return numDimensions() < 3 ? 1
+                               : size(numDimensions()-3);
+}
 
 template <typename F>
 template <typename T>
@@ -120,7 +140,94 @@ void FloatMatrixT<F>::setDimensions(const std::vector<size_t>& dimensions)
     p_data_.resize(num);
 }
 
+template <typename F>
+void FloatMatrixT<F>::minimizeDimensions()
+{
+    if (numDimensions() < 2)
+        return;
 
+    while (p_dims_.size() > 1 && p_dims_.front() <= 1)
+        p_dims_.erase(p_dims_.begin());
+
+    setDimensions(p_dims_);
+}
+
+
+template <typename F>
+FloatMatrixT<F> FloatMatrixT<F>::transposedXY() const
+{
+    if (numDimensions() == 0)
+        return *this;
+    if (numDimensions() == 1)
+    {
+        FloatMatrixT<F> m({ size(0), 1 });
+        for (size_t i=0; i<size(0); ++i)
+            m(i, 0) = (*this)(i);
+        return m;
+    }
+    if (numDimensions() == 2)
+    {
+        FloatMatrixT<F> m({ size(1), size(0) });
+        for (size_t y=0; y<size(0); ++y)
+        for (size_t x=0; x<size(1); ++x)
+            m(x, y) = (*this)(y, x);
+        m.minimizeDimensions();
+        return m;
+    }
+    if (numDimensions() == 3)
+    {
+        FloatMatrixT<F> m({ size(0), size(2), size(1) });
+        for (size_t z=0; z<size(0); ++z)
+        for (size_t y=0; y<size(1); ++y)
+        for (size_t x=0; x<size(2); ++x)
+            m(z, x, y) = (*this)(z, y, x);
+        m.minimizeDimensions();
+        return m;
+    }
+    MO_ASSERT(false, "transposedXY not implemented for matrix "
+              << layoutString());
+    return *this;
+}
+
+template <typename F>
+FloatMatrixT<F> FloatMatrixT<F>::rotatedRight() const
+{
+    if (numDimensions() == 0)
+        return *this;
+    if (numDimensions() == 1)
+    {
+        FloatMatrixT<F> m({ size(0), 1 });
+        for (size_t i=0; i<size(0); ++i)
+            m(i, 0) = (*this)(i);
+        return m;
+    }
+    if (numDimensions() == 2)
+    {
+        FloatMatrixT<F> m({ size(1), size(0) });
+        for (size_t y=0; y<size(0); ++y)
+        for (size_t x=0; x<size(1); ++x)
+            m(x, y) = (*this)(size(0)-1-y, x);
+        m.minimizeDimensions();
+        return m;
+    }
+    if (numDimensions() == 3)
+    {
+        FloatMatrixT<F> m({ size(0), size(2), size(1) });
+        for (size_t z=0; z<size(0); ++z)
+        for (size_t y=0; y<size(1); ++y)
+        for (size_t x=0; x<size(2); ++x)
+            m(z, x, y) = (*this)(z, size(1)-1-y, x);
+        m.minimizeDimensions();
+        return m;
+    }
+    MO_ASSERT(false, "rotateRight not implemented for matrix "
+              << layoutString());
+    return *this;
+}
+
+
+
+// ###################### distance field ##############################
 
 namespace {
 

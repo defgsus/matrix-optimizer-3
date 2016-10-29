@@ -215,17 +215,20 @@ public:
 
 // ----------------------- assert ---------------------------
 
-#ifdef MO_ENABLE_ASSERT
-    #define MO_ASSERT(cond__, text__) \
+#if 1//MO_ENABLE_ASSERT
+#define MO_ASSERT_IMPL_(cond__, text__) \
     if (!(cond__)) \
     { \
         throw ::MO::LogicException(::MO::Exception::ASSERT) \
-            << "assertion '" << #cond__ << "' in " << __FILE__ << ":" << __LINE__ \
-            << "\n" << text__; \
+          << "assertion '" << #cond__ << "' in " << __FILE__ << ":" << __LINE__ \
+          << "\n" << text__; \
     }
 #else
-    #define MO_ASSERT(unused__, unused___) { }
+#define MO_ASSERT_IMPL_(unused__, unused2__)
 #endif
+
+
+#define MO_ASSERT(cond__, text__) MO_ASSERT_IMPL_(cond__, text__)
 
 } // namespace MO
 

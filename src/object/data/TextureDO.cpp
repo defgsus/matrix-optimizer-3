@@ -132,7 +132,7 @@ bool TextureDO::Private::download(const RenderTime& time)
     }
     else
     {
-        dims = { tex->width(), tex->height() };
+        dims = { tex->height(), tex->width() };
     }
 
     matrix.setDimensions(dims);

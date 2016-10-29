@@ -502,6 +502,7 @@ bool ObjectActions::deferredSaveTexture(
         if (!img.save(fn))
             MO_IO_ERROR(WRITE, "Could not save image " << fn);
     });
+    return true;
 }
 
 void ObjectActions::createClipboardActions(

@@ -45,11 +45,17 @@ public slots:
     void setFloatMatrix(const FloatMatrix&);
     void setReadOnly(bool);
 
+protected slots:
+
+    void closeEvent(QCloseEvent*);
+
 private:
+
+    void p_setChanged(bool e);
 
     FloatMatrixWidget* p_widget_;
     FloatMatrix p_backup_;
-    bool p_readOnly_;
+    bool p_readOnly_, p_isChanged_;
     QPushButton
             *p_butRevert_,
             *p_butCancel_,

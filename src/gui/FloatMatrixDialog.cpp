@@ -10,6 +10,8 @@
 
 #include <QLayout>
 #include <QPushButton>
+#include <QCloseEvent>
+#include <QMessageBox>
 
 #include "FloatMatrixDialog.h"
 #include "widget/FloatMatrixWidget.h"
@@ -24,6 +26,7 @@ namespace GUI {
 FloatMatrixDialog::FloatMatrixDialog(QWidget *parent)
     : QDialog       (parent)
     , p_readOnly_   (false)
+    , p_isChanged_  (true)
 {
     setObjectName("FloatMatrixDialog");
     setWindowTitle(tr("Float Matrix"));
@@ -34,6 +37,11 @@ FloatMatrixDialog::FloatMatrixDialog(QWidget *parent)
 
         p_widget_ = new FloatMatrixWidget(this);
         lv->addWidget(p_widget_);
+        connect(p_widget_, &FloatMatrixWidget::matrixChanged, [=]()
+        {
+            p_setChanged(true);
+            //emit matrixChanged();
+        });
 
         auto lh = new QHBoxLayout();
         lv->addLayout(lh);
@@ -43,6 +51,7 @@ FloatMatrixDialog::FloatMatrixDialog(QWidget *parent)
             connect(but, &QPushButton::clicked, [=]()
             {
                 p_widget_->setFloatMatrix(p_backup_);
+                p_setChanged(false);
                 emit matrixChanged();
             });
             lh->addWidget(but);
@@ -71,15 +80,33 @@ FloatMatrixDialog::FloatMatrixDialog(QWidget *parent)
             but->setShortcut(Qt::CTRL + Qt::Key_Return);
             connect(but, &QPushButton::clicked, [=]()
             {
+                p_setChanged(false);
                 emit matrixChanged();
             });
             lh->addWidget(but);
 
+    p_setChanged(false);
 }
 
 FloatMatrixDialog::~FloatMatrixDialog()
 {
     settings()->storeGeometry(this);
+}
+
+void FloatMatrixDialog::closeEvent(QCloseEvent* e)
+{
+    if (p_isChanged_)
+    {
+        int r = QMessageBox::question(this, tr("Discard Changes?"),
+            tr("The Matrix data has changed. Discard?"),
+            tr("Discard"), tr("Cancel"));
+        if (r == 1)
+        {
+            e->ignore();
+            return;
+        }
+    }
+    QDialog::closeEvent(e);
 }
 
 const FloatMatrix& FloatMatrixDialog::floatMatrix() const
@@ -91,6 +118,7 @@ void FloatMatrixDialog::setFloatMatrix(const FloatMatrix& m)
 {
     p_widget_->setFloatMatrix(m);
     p_backup_ = m;
+    p_setChanged(false);
 }
 
 void FloatMatrixDialog::setReadOnly(bool e)
@@ -101,6 +129,16 @@ void FloatMatrixDialog::setReadOnly(bool e)
     p_butCancel_->setVisible(!p_readOnly_);
     p_butUpdate_->setVisible(!p_readOnly_);
     p_butOk_->setText(p_readOnly_ ? tr("Close") : tr("Ok"));
+}
+
+void FloatMatrixDialog::p_setChanged(bool e)
+{
+    if (e == p_isChanged_)
+        return;
+    p_isChanged_ = e;
+
+    p_butRevert_->setEnabled(p_isChanged_);
+    p_butUpdate_->setEnabled(p_isChanged_);
 }
 
 FloatMatrixDialog* FloatMatrixDialog::openForInterface(
