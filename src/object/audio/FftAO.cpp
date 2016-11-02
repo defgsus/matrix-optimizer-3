@@ -10,6 +10,8 @@
 
 //#ifndef MO_DISABLE_EXP
 
+//#define MO_USE_OOURA
+
 #include <QMutex>
 #include <QMutexLocker>
 
@@ -24,6 +26,9 @@
 #include "object/param/ParameterSelect.h"
 #include "object/util/ObjectEditor.h"
 #include "math/FloatMatrix.h"
+#ifdef MO_USE_OOURA
+#include "math/OouraFft.h"
+#endif
 #include "math/Fft.h"
 #include "io/DataStream.h"
 #include "io/log.h"
@@ -46,10 +51,14 @@ class FftAO::Private
         * paramSize,
         * paramCompensate,
         * paramMatrixOut;
-    ParameterFloatMatrix
-        * paramMatrix;
 
+#ifdef MO_USE_OOURA
+    std::vector<MATH::OouraFFT<F32>> ffts;
+    std::vector<std::vector<F32>> fftBufs;
+#else
     std::vector<MATH::Fft<F32>> ffts;
+#endif
+
     std::vector<AUDIO::ResampleBuffer<F32>> inbufs, outbufs;
     std::vector<AUDIO::FixedBlockDelay<F32>> delays;
     FloatMatrix matrix;
@@ -185,11 +194,6 @@ void FftAO::createParameters()
                     true, true, false);
         p_->paramCompensate->setZombie(true);
 
-        p_->paramMatrix = params()->createFloatMatrixParameter(
-                    "_fft_input", tr("input"),
-                    tr("Input matrix"),
-                    FloatMatrix(), false, true);
-
     params()->endParameterGroup();
 }
 
@@ -213,6 +217,9 @@ void FftAO::setNumberThreads(uint count)
     AudioObject::setNumberThreads(count);
 
     p_->ffts.resize(count);
+#ifdef MO_USE_OOURA
+    p_->fftBufs.resize(count);
+#endif
     p_->inbufs.resize(count);
     p_->outbufs.resize(count);
     p_->delays.resize(count);
@@ -224,6 +231,9 @@ void FftAO::setAudioBuffers(uint thread, uint bufferSize,
                             const QList<AUDIO::AudioBuffer*>&)
 {
     p_->ffts[thread].setSize(p_->fftSize);
+#ifdef MO_USE_OOURA
+    p_->fftBufs[thread].resize(p_->fftSize);
+#endif
     p_->inbufs[thread].setSize(p_->fftSize);
     p_->outbufs[thread].setSize(bufferSize);
     p_->ringBuffers[thread].resize(p_->fftSize);
@@ -246,7 +256,12 @@ void FftAO::processAudio(const RenderTime& time)
             doConvertAmpPhase = mode == FT_AUDIO_2_AMPPHASE;
             //doCompensate = p_->paramCompensate->baseValue() != 0;
 
+    // prepare fft
+#ifdef MO_USE_OOURA
+    MATH::OouraFFT<F32> * fft = &p_->ffts[time.thread()];
+#else
     MATH::Fft<F32> * fft = &p_->ffts[time.thread()];
+#endif
     if (fft->size() != p_->fftSize)
         fft->setSize(p_->fftSize);
 
@@ -265,7 +280,21 @@ void FftAO::processAudio(const RenderTime& time)
     // do transform
     /** @todo add a worker thread group to Scene or somewhere
         and do fft transform async for matrix outputs */
+#ifdef MO_USE_OOURA
+    std::vector<F32>& buffer = p_->fftBufs[time.thread()];
+    F32* outBuf = buffer.data();
+    memcpy(buffer.data(), &ringBuf[0], fft->size() * sizeof(F32));
+    if (forward)
+    {
+        fft->fft(buffer.data());
+        if (doConvertAmpPhase)
+            MATH::get_amplitude_phase(buffer.data(), fft->size());
+    }
+    else
+        fft->ifft(buffer.data());
+#else
     memcpy(fft->buffer(), &ringBuf[0], fft->size() * sizeof(F32));
+    F32* outBuf = fft->buffer();
     if (forward)
     {
         fft->fft();
@@ -274,6 +303,7 @@ void FftAO::processAudio(const RenderTime& time)
     }
     else
         fft->ifft();
+#endif
 
     // copy to matrix output
     auto mao = (MatrixMode)p_->paramMatrixOut->value(time);
@@ -288,23 +318,24 @@ void FftAO::processAudio(const RenderTime& time)
 
             case MM_LINEAR:
             {
-                std::vector<size_t> dim = { fft->size() };
-                if (p_->matrix.hasDimensions(dim))
+                std::vector<size_t> dim = { p_->fftSize };
+                if (!p_->matrix.hasDimensions(dim))
                     p_->matrix.setDimensions(dim);
                 for (size_t i=0; i<fft->size(); ++i)
-                    *p_->matrix.data(i) = fft->buffer(i);
+                    *p_->matrix.data(i) = outBuf[i];
             }
             break;
 
             case MM_SPLIT:
             {
-                std::vector<size_t> dim = { fft->halfSize(), 2 };
+                size_t half = p_->fftSize/2;
+                std::vector<size_t> dim = { 2, half };
                 if (!p_->matrix.hasDimensions(dim))
                     p_->matrix.setDimensions(dim);
-                for (size_t i=0; i<fft->halfSize(); ++i)
+                for (size_t i=0; i<half; ++i)
                 {
-                    *p_->matrix.data(i, 0) = fft->buffer(i);
-                    *p_->matrix.data(i, 1) = fft->buffer(i+fft->halfSize());
+                    *p_->matrix.data(0, i) = outBuf[i];
+                    *p_->matrix.data(1, i) = outBuf[i+half];
                 }
             }
             break;

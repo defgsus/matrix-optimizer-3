@@ -18,17 +18,43 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 ****************************************************************************/
 
-#ifndef MOSRC_IO_LOG_FLOATMATRIX_H
-#define MOSRC_IO_LOG_FLOATMATRIX_H
+#ifndef MOSRC_IO_NEUROFOXLOADER_H
+#define MOSRC_IO_NEUROFOXLOADER_H
 
-#include "log.h"
+#include <QString>
+#include "types/float.h"
 
-#if (0) //&& defined(MO_ENABLE_DEBUG)
-#   define MO_DO_DEBUG_FM
-#   define MO_DEBUG_FM(stream_arg__) MO_PRINT(stream_arg__)
-#else
-#   define MO_DEBUG_FM(unused__) { }
-#endif
+namespace MO {
 
-#endif // MOSRC_IO_LOG_FLOATMATRIX_H
+namespace MATH { class Timeline1d; }
 
+class NeurofoxLoader
+{
+public:
+    enum Format
+    {
+        F_FLOAT,
+        F_HEX
+    };
+
+    struct DataPoint
+    {
+        Double time,
+            v1, v2;
+    };
+
+    NeurofoxLoader();
+    ~NeurofoxLoader();
+
+    void loadFile(const QString& filename, Format f);
+
+    void getTimeline1d(MATH::Timeline1d* tl) const;
+
+private:
+    struct Private;
+    Private* p_;
+};
+
+} // namespace MO
+
+#endif // MOSRC_IO_NEUROFOXLOADER_H

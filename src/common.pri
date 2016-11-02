@@ -292,7 +292,8 @@ HEADERS += \
     $$PWD/io/log_FloatMatrix.h \
     $$PWD/tool/ProgressInfo.h \
     $$PWD/math/FloatMatrix.h \
-    $$PWD/io/error_index.h
+    $$PWD/io/error_index.h \
+    $$PWD/io/NeurofoxLoader.h
 
 SOURCES += \
     src/io/console.cpp \
@@ -518,5 +519,6 @@ SOURCES += \
     $$PWD/mainCommandLine.cpp \
     $$PWD/math/Fraction.cpp \
     $$PWD/tool/ProgressInfo.cpp \
-    $$PWD/math/FloatMatrix.cpp
+    $$PWD/math/FloatMatrix.cpp \
+    $$PWD/io/NeurofoxLoader.cpp
 

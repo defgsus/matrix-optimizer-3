@@ -27,9 +27,11 @@
 #include "painter/Grid.h"
 #include "painter/ValueCurve.h"
 #include "painter/SequenceOverpaint.h"
+#include "tool/enumnames.h"
 #include "io/error.h"
 #include "io/DataStream.h"
-#include "tool/enumnames.h"
+#include "io/Files.h"
+#include "io/NeurofoxLoader.h"
 
 #include <cmath>
 
@@ -1666,6 +1668,32 @@ void Timeline1DView::slotEmptyContextMenu_()
             pop->addAction(a);
             connect(a, SIGNAL(triggered()), this, SLOT(paste()));
         }
+    }
+
+    // ------------------ FILE IO ------------------
+    if ((options_ & O_EditAll) == O_EditAll)
+    {
+        pop->addSeparator();
+
+        a = pop->addAction(tr("Load Neurofox"));
+        connect(a, &QAction::triggered, [=]()
+        {
+            auto fn = IO::Files::getOpenFileName(IO::FT_NEUROFOX_HEX);
+            if (fn.isEmpty())
+                return;
+            try
+            {
+                NeurofoxLoader l;
+                l.loadFile(fn, NeurofoxLoader::F_HEX);
+                l.getTimeline1d(tl_);
+            }
+            catch (const Exception& e)
+            {
+                QMessageBox::critical(this, tr("Load Neurofox"),
+                    tr("Loading Neurofox recording '%1' failed\n%2")
+                                      .arg(e.what()));
+            }
+        });
     }
 
 

@@ -49,6 +49,7 @@ public:
    * @param size Size of the real input (must be power 2)
    */
   void init(size_t size);
+  void setSize(size_t size) { init(size); }
 
   /** The initialized size of the FFT object */
   size_t size() const { return size_; }

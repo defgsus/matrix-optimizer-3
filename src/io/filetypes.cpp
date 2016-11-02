@@ -44,7 +44,8 @@ namespace IO {
       "csg",
       "evo",
       "fmatrix",
-      "nifti"
+      "nifti",
+      "neurofox_hex"
     };
 
     const QStringList fileTypeNames =
@@ -76,7 +77,8 @@ namespace IO {
       QObject::tr("CSG Tree"),
       QObject::tr("Evolution"),
       QObject::tr("Float Matrix"),
-      QObject::tr("Nifti")
+      QObject::tr("Nifti"),
+      QObject::tr("Neurofox (hexadecimal)")
     };
 
     const QList<QStringList> fileTypeExtensions =
@@ -109,7 +111,8 @@ namespace IO {
         { "xml-csg" },
         { "json" },
         { "json" },
-        { "nii", "nii.gz", "img", "hdr" }
+        { "nii", "nii.gz", "img", "hdr" },
+        { "csv" }
     };
 
     const QList<QStringList> fileTypeDialogFilters =
@@ -166,6 +169,7 @@ namespace IO {
           QObject::tr("all files (*)") },
         { QObject::tr("Nifti files ( *.nii *.nii.gz *.img *.hdr )"),
           QObject::tr("all files (*)") },
+        { QObject::tr("Neurofox files ( *.csv * )") }
 
     };
 

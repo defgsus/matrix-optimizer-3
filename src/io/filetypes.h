@@ -49,7 +49,8 @@ namespace IO {
         FT_CSG_XML,
         FT_EVOLUTION,
         FT_FLOAT_MATRIX,
-        FT_NIFTI
+        FT_NIFTI,
+        FT_NEUROFOX_HEX
     };
 
     extern const QStringList fileTypeIds;

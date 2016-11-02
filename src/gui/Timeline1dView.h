@@ -23,7 +23,9 @@
 namespace MO {
 namespace GUI {
 
-namespace PAINTER { class Grid; class ValueCurve; class ValueCurveData; class SequenceOverpaint; }
+namespace PAINTER
+{ class Grid; class ValueCurve;
+  class ValueCurveData; class SequenceOverpaint; }
 
 class Timeline1DView : public QWidget
 {
@@ -66,7 +68,8 @@ public:
 
     // ---------- ctor -------------
 
-    explicit Timeline1DView(MATH::Timeline1d * timeline = 0, QWidget *parent = 0);
+    explicit Timeline1DView(MATH::Timeline1d * timeline = 0,
+                            QWidget *parent = 0);
     ~Timeline1DView();
 
     // ---------- getter -----------

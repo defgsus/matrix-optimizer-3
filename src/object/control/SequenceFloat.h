@@ -58,7 +58,8 @@ public:
                 || t == ST_EQUATION_WT;
     }
 
-    bool typeUsesFrequency() const { return typeUsesFrequency((SequenceType)p_mode_->baseValue()); }
+    bool typeUsesFrequency() const
+        { return typeUsesFrequency((SequenceType)p_mode_->baseValue()); }
 
     enum LoopOverlapMode
     {

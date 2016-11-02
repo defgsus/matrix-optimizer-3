@@ -311,6 +311,8 @@ void FloatMatrixTO::Private::renderGl(
         return;
     doReUpload = false;
 
+    to->clearError();
+
     auto matrix = p_matrix->value(time);
 
     MO_DEBUG_FM("FloatMatrixTO(" << to->idName()
