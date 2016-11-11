@@ -501,8 +501,8 @@ extern "C"
 
     MO_PY_DEF_DOC(geom_get_triangle,
         "get_triangle(long) -> (Vec, Vec, Vec)\n"
-        "Returns the corner point positions of the triangle at the given index\n"
-        "as tuple of 3d vectors."
+        "Returns the corner point positions of the triangle at the given\n"
+        "index as tuple of 3d vectors."
     )
     static PyObject* geom_get_triangle(PyObject* self, PyObject* arg)
     {
@@ -519,8 +519,28 @@ extern "C"
                              );
     }
 
+    MO_PY_DEF_DOC(geom_get_triangle_normal,
+        "get_triangle_normal(long) -> Vec\n"
+        "Returns the normal of the triangle at the given index."
+    )
+    static PyObject* geom_get_triangle_normal(PyObject* self, PyObject* arg)
+    {
+        long idx;
+        if (!PyArg_ParseTuple(arg, "l", &idx))
+            return NULL;
+        MO__GETGEOM(p);
+        if (!checkIndex(idx, p->geometry->numTriangles(), "triangle"))
+            return NULL;
+        Vec3 a = p->geometry->getVertex(p->geometry->triangleIndex(idx, 0)),
+             b = p->geometry->getVertex(p->geometry->triangleIndex(idx, 1)),
+             c = p->geometry->getVertex(p->geometry->triangleIndex(idx, 2)),
+             n = MATH::normalize_safe( glm::cross(b-a, c-a) );
+
+        return buildVector(n);
+    }
+
     MO_PY_DEF_DOC(geom_intersection,
-        "intersects(Vec ro, dir) -> float\n"
+        "intersection(Vec ro, dir) -> float\n"
         "Returns the distance from ro to the closest intersection with one\n"
         "of the triangles of the geometry, or a negative value when not hit"
     )
@@ -541,6 +561,31 @@ extern "C"
         return PyFloat_FromDouble(glm::distance(ro, hit));
     }
 
+    MO_PY_DEF_DOC(geom_triangle_intersection,
+        "triangle_intersection(Vec ro, dir) -> (float, long)\n"
+        "Finds the closest intersection with one\n"
+        "of the triangles of the geometry\n"
+        "Returns a tuple of the distance from ro to the intersection point\n"
+        "and the triangle index, or (-1.,-1) when not hit"
+    )
+    static PyObject* geom_triangle_intersection(PyObject* self, PyObject* arg)
+    {
+        PyObject* vo1, *vo2;
+        if (!PyArg_ParseTuple(arg, "OO", &vo1, &vo2))
+            return NULL;
+        double v1[3], v2[3];
+        if (   !get_vector(vo1, 3, v1)
+            || !get_vector(vo2, 3, v2))
+            return NULL;
+        MO__GETGEOM(p);
+        Vec3 ro(v1[0], v1[1], v1[2]),
+             rd(v2[0], v2[1], v2[2]), hit;
+        double dist = -1.;
+        GEOM::Geometry::IndexType idx = 0;
+        if (p->geometry->intersects(ro, rd, &hit, &idx))
+            dist = glm::distance(ro, hit);
+        return Py_BuildValue("(fl)", dist, dist>=0. ? long(idx) : long(-1));
+    }
 
 
     // -------------- setter ----------------
@@ -1162,8 +1207,10 @@ extern "C"
         MO__METHOD(get_point,               METH_VARARGS)
         MO__METHOD(get_line,                METH_VARARGS)
         MO__METHOD(get_triangle,            METH_VARARGS)
+        MO__METHOD(get_triangle_normal,     METH_VARARGS)
 
         MO__METHOD(intersection,            METH_VARARGS)
+        MO__METHOD(triangle_intersection,   METH_VARARGS)
 
         MO__METHOD(set_shared,              METH_VARARGS)
         MO__METHOD(set_vertex,              METH_VARARGS)

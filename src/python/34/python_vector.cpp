@@ -517,6 +517,26 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         });
     }
 
+    MO_PY_DEF_DOC(vec_reflect_doc,
+        "reflect(vec) -> " MO__VEC_STR "\n"
+        "Reflects self on the plane defined by the given normal.\n"
+        "Returns self.\n"
+        "Must be 3d vector."
+    )
+    static PyObject* vec_reflect(VectorStruct* self, PyObject* other)
+    {
+        if (!checkSize(self, 3))
+            return NULL;
+        return inplace_func(self, [=](VectorStruct* self)
+        {
+            double v2[4];
+            if (!get_vector(other, 3, v2))
+                return false;
+            MATH::INPLACE::vec_reflect_3_3(self->v, v2);
+            return true;
+        });
+    }
+
     MO_PY_DEF_DOC(vec_rotate_doc,
         "rotate(degree) -> " MO__VEC_STR "\n"
         "Rotates a 2d vector."
@@ -979,6 +999,7 @@ static PyMethodDef Vector_methods[] =
     //MO__METHOD(orthogonal,          METH_NOARGS)
 
     MO__METHOD(cross,               METH_VARARGS)
+    MO__METHOD(reflect,             METH_VARARGS)
     MO__METHOD(rotate,              METH_O)
     MO__METHOD(rotate_x,            METH_O)
     MO__METHOD(rotate_y,            METH_O)

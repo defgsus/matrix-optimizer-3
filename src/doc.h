@@ -71,24 +71,39 @@
   */
 
 /** @page distance_field
- *
- *  Sphere (Primitive)
- *    - translate (Transform)
- *    - scale
- *    - ...
- *    - Torus
- *       - rotate
- *       - repeat
- *  Difference
- *    - Box
- *    - Plane
- *
- *  Difference {
- *      Sphere { radius=1.0 Translate { <1,2,3> } }
- *      Union { Torus { 5, 1 } Plane { y, 1 } }
- *  }
- *
- **/
+
+    Sphere (Primitive)
+      - translate (Transform)
+      - scale
+      - ...
+      - Torus
+         - rotate
+         - repeat
+    Difference
+      - Box
+      - Plane
+
+    @code
+
+    Difference {
+        Sphere { radius=1.0 translate { <1,2,3> } }
+        Union { Torus { 5, 3/4 } Plane { y 1 } }
+        Fan { 5 Cylinder { 0 y 1 } }
+        Union { Kaliset { <.4,.5,.7> } Box { -1 1 } }
+    }
+
+    @endcode
+
+*/
+
+/** @page how_to_scipt_objects
+
+    @code
+
+    SequenceFloat -> ParameterAO -> FftAO -> MatrixTO -> ShaderTO
+
+    @endcode
+*/
 
 /** @page random_ideas
 

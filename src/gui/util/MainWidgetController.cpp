@@ -241,6 +241,8 @@ void MainWidgetController::createObjects_()
     connect(objectEditor_, SIGNAL(parameterVisibilityChanged(MO::Parameter*)), this, SLOT(onParamVisChanged_()));
     connect(objectEditor_, &ObjectEditor::sceneChanged, [=](MO::Scene * s)
     {
+        sceneNotSaved_ = true;
+        updateWindowTitle_();
         if (audioEngine_)
             audioEngine_->setScene(s, MO_AUDIO_THREAD);
     });

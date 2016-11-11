@@ -196,16 +196,22 @@ public:
     /** Returns true when the ray intersects with a triangle of the geometry.
         If @p pos is given, it will be set to the intersection position.
         @note Not terribly efficient */
-    bool intersects_any(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+    bool intersects_any(const Vec3& ray_origin, const Vec3& ray_direction,
+                        Vec3 * pos = 0) const;
 
-    /** Returns the closest intersection point of the ray with a triangle of the geometry.
+    /** Returns the closest intersection point of the ray with a triangle
+        of the geometry.
         If @p pos is given, it will be set to the intersection position.
+        if @p triIndex is given, it will be set to the index of the intersecting
+        triangle.
         @note Not terribly efficient */
-    bool intersects(const Vec3& ray_origin, const Vec3& ray_direction, Vec3 * pos = 0) const;
+    bool intersects(const Vec3& ray_origin, const Vec3& ray_direction,
+                    Vec3 * pos = nullptr, IndexType* triIndex = nullptr) const;
 
     /** Creates some JavaScript code snippet defining some arrays. */
     QString toJavaScriptArray(const QString& baseName,
-                              bool withNormals = true, bool withTexCoords = true) const;
+                              bool withNormals = true,
+                              bool withTexCoords = true) const;
 
     // ----------- user attributes -----------
 

@@ -43,7 +43,8 @@ public:
     ~GeometryDialog();
 
     /** Returns the settings as edited in the dialog */
-    const GEOM::GeometryFactorySettings& getGeometrySettings() const { return *settings_; }
+    const GEOM::GeometryFactorySettings& getGeometrySettings() const
+        { return *settings_; }
 
     /** Creates and returns a Geometry edit dialog for the given object.
         The dialog is attached and reused and killed properly. */

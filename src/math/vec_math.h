@@ -82,6 +82,17 @@ namespace INPLACE {
         dst[X] = x;
     }
 
+    /** dst = reflect(dst, src)
+        dst = incident, src = plane normal */
+    template <typename F>
+    void vec_reflect_3_3(F* dst, const F* src)
+    {
+        const F d = F(2) * ( dst[X]*src[X] + dst[Y]*src[Y] + dst[Z]*src[Z] );
+        dst[X] = dst[X] - d * src[X];
+        dst[Y] = dst[Y] - d * src[Y];
+        dst[Z] = dst[Z] - d * src[Z];
+    }
+
     /** dst = rotate(dst, degree) */
     template <typename F>
     void vec_rotate_2(F* dst, F degree)

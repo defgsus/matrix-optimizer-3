@@ -115,13 +115,14 @@ GeometryDialog* GeometryDialog::openForInterface(GeometryEditInterface* iface)
     {
         iface->setAttachedGeometryDialog(0);
     });
+
     connect(diag, &GeometryDialog::apply, [=]()
     {
         if (diag->getGeometrySettings() == iface->getGeometrySettings())
             return;
 
-        auto root = obj? obj->sceneObject() : 0;
-        auto editor = obj? obj->editor() : 0;
+        auto root = obj ? obj->sceneObject() : 0;
+        auto editor = obj ? obj->editor() : 0;
         if (root)
         {
             ScopedObjectChange lock(root, obj);
@@ -438,7 +439,7 @@ void GeometryDialog::createMainWidgets_()
                         connect(but, &QPushButton::clicked, [=]()
                         {
                             setResult(Accepted);
-                            apply();
+                            emit apply();
                             close();
                         });
 

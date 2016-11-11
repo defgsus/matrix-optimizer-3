@@ -626,7 +626,8 @@ bool Geometry::intersects_any(const Vec3 &ray_origin, const Vec3 &ray_direction,
 }
 
 bool Geometry::intersects(
-        const Vec3 &ray_origin, const Vec3 &ray_direction, Vec3 *outpos) const
+        const Vec3 &ray_origin, const Vec3 &ray_direction,
+        Vec3* outpos, IndexType* triIndex) const
 {
     // XXX todo: Test against bounding-box first!
 
@@ -635,22 +636,26 @@ bool Geometry::intersects(
 
     for (uint i=0; i<numTriangles(); ++i)
     {
-        const Vec3 t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
-                   t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
-                   t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
+        const Vec3
+                t0 = getVertex(triIndex_[i * numTriangleIndexComponents()]),
+                t1 = getVertex(triIndex_[i * numTriangleIndexComponents() + 1]),
+                t2 = getVertex(triIndex_[i * numTriangleIndexComponents() + 2]);
 
         if (MATH::intersect_ray_triangle(ray_origin, ray_direction,
                                          t0, t1, t2, &pos))
         {
             // no need to look further, outpos is not used
-            if (!outpos)
+            if (!outpos && !triIndex)
                 return true;
 
             Float dist = glm::distance(ray_origin, pos);
             if (dist < closest || closest < 0)
             {
                 closest = dist;
-                *outpos = pos;
+                if (outpos)
+                    *outpos = pos;
+                if (triIndex)
+                    *triIndex = i;
             }
         }
     }
