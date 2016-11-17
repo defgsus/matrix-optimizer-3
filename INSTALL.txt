@@ -1,0 +1,26 @@
+
+--- packages for generic debian:
+
+g++
+libportaudio2
+libportmidi0
+libsndfile1
+libdump1
+libjpeg8
+libpython3.4
+
+optional:
+libnifti
+libshp
+libavutil
+libavcodec
+libavformat
+libswscale
+
+--- other libraries:
+
+https://github.com/hpicgs/glbinding.git
+http://angelcode.com/
+
+
+

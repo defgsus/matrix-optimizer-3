@@ -301,8 +301,8 @@ void SyntaxHighlighter::initForAngelScript(asIScriptModule * mod)
     // -- reserved words --
 
     types << "void" << "float" << "double" << "bool"
-          << "int" << "int8" << "int16" << "int" << "int64"
-          << "uint" << "uint8" << "uint16" << "uint" << "uint64";
+          << "int" << "int8" << "int16" << "int32" << "int64"
+          << "uint" << "uint8" << "uint16" << "uint32" << "uint64";
 
     reserved << "and" << "abstract" << "auto" << "break"
             << "case" << "cast" << "class" << "const" << "continue" << "default"
@@ -495,12 +495,12 @@ void SyntaxHighlighter::initForPython(const PYTHON34::PythonInterpreter*)
 {
     static const QStringList python_reserved =
     {
-        "False"      , "class"      , "finally"    , "is"         , "return"
-        "None"       , "continue"   , "for"        , "lambda"     , "try"
-        "True"       , "def"        , "from"       , "nonlocal"   , "while"
-        "and"        , "del"        , "global"     , "not"        , "with"
-        "as"         , "elif"       , "if"         , "or"         , "yield"
-        "assert"     , "else"       , "import"     , "pass"
+        "False"      , "class"      , "finally"    , "is"         , "return" ,
+        "None"       , "continue"   , "for"        , "lambda"     , "try"    ,
+        "True"       , "def"        , "from"       , "nonlocal"   , "while"  ,
+        "and"        , "del"        , "global"     , "not"        , "with"   ,
+        "as"         , "elif"       , "if"         , "or"         , "yield"  ,
+        "assert"     , "else"       , "import"     , "pass"       ,
         "break"      , "except"     , "in"         , "raise"
     };
 

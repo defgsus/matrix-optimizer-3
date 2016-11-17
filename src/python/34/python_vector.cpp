@@ -793,6 +793,15 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
         return list;
     }
 
+    MO_PY_DEF_DOC(vec_copy_doc,
+        "copy() -> Vec\n"
+        "Returns a copy of the vector object"
+    )
+    static PyObject* vec_copy(VectorStruct* self, PyObject* )
+    {
+        return buildVector(self->v, self->len);
+    }
+
 
     MO_PY_DEF_DOC(vec_len_doc,
         "len() -> int\n"
@@ -965,7 +974,8 @@ static PyObject* vec_newfunc(PyTypeObject* type, PyObject* , PyObject* )
     {
         if (idx >= self->len)
         {
-            PyErr_Set(PyExc_IndexError, QString("index in vector out of range %1/%2")
+            PyErr_Set(PyExc_IndexError,
+                      QString("index in vector out of range %1/%2")
                       .arg(idx).arg(self->len));
             return -1;
         }
@@ -987,6 +997,7 @@ static PyMethodDef Vector_methods[] =
     MO__METHOD(to_string,           METH_NOARGS)
     MO__METHOD(to_tuple,            METH_NOARGS)
     MO__METHOD(to_list,             METH_NOARGS)
+    MO__METHOD(copy,                METH_NOARGS)
 
     MO__METHOD(len,                 METH_NOARGS)
     MO__METHOD(length,              METH_NOARGS)
@@ -1000,10 +1011,10 @@ static PyMethodDef Vector_methods[] =
 
     MO__METHOD(cross,               METH_VARARGS)
     MO__METHOD(reflect,             METH_VARARGS)
-    MO__METHOD(rotate,              METH_O)
-    MO__METHOD(rotate_x,            METH_O)
-    MO__METHOD(rotate_y,            METH_O)
-    MO__METHOD(rotate_z,            METH_O)
+    MO__METHOD(rotate,              METH_VARARGS)
+    MO__METHOD(rotate_x,            METH_VARARGS)
+    MO__METHOD(rotate_y,            METH_VARARGS)
+    MO__METHOD(rotate_z,            METH_VARARGS)
     MO__METHOD(pow,                 METH_VARARGS)
     MO__METHOD(mod,                 METH_VARARGS)
 
