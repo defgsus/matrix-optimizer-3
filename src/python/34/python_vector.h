@@ -27,7 +27,8 @@ namespace PYTHON34 {
 
     bool isVector(PyObject* pyObject);
 
-    bool get_vector(PyObject* args_, int len, double v[]);
+    bool get_vector(PyObject* args_, int len, double v[],
+                    bool* was_scalar=nullptr);
     bool get_vector_var(PyObject* args_, int *len, double vout[4]);
 
     PyObject* buildVector(const Vec2& v);

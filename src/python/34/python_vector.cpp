@@ -71,8 +71,10 @@ bool checkSize(VectorStruct* self, int len)
     return true;
 }
 
-bool get_vector(PyObject* args_, int len, double v[])
+bool get_vector(PyObject* args_, int len, double v[], bool* was_scalar)
 {
+    if (was_scalar)
+        *was_scalar = false;
     if (!args_)
     {
         PyErr_SetString(PyExc_TypeError, "NULL argument");
@@ -84,7 +86,8 @@ bool get_vector(PyObject* args_, int len, double v[])
     {
         if (PySequence_Size(args_) != len)
         {
-            PyErr_Set(PyExc_TypeError, QString("sequence argument has wrong size %1, "
+            PyErr_Set(PyExc_TypeError,
+                      QString("sequence argument has wrong size %1, "
                                                "expected %2")
                                                 .arg(PySequence_Size(args_))
                                                 .arg(len));
@@ -106,7 +109,7 @@ bool get_vector(PyObject* args_, int len, double v[])
         if (vec->len != len)
         {
             PyErr_SetObject(PyExc_TypeError,
-                            fromString(QString("vector has wrong size %1, expected %2")
+                fromString(QString("vector has wrong size %1, expected %2")
                                        .arg(vec->len).arg(len)));
             return false;
         }
@@ -120,6 +123,8 @@ bool get_vector(PyObject* args_, int len, double v[])
     {
         for (int i=0; i<len; ++i)
             v[i] = tmp;
+        if (was_scalar)
+            *was_scalar = true;
         return true;
     }
     PyErr_Set(PyExc_TypeError, QString("%1 not convertible to " MO__VEC_STR)

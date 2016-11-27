@@ -20,6 +20,7 @@
 #include "python_funcs.h"
 #include "python_object.h"
 #include "python_vector.h"
+#include "python_matrix4.h"
 #include "python_geometry.h"
 #include "python_timeline.h"
 #include "python_output.h"
@@ -78,6 +79,7 @@ namespace
         // add the classes
         MO_PY_DEBUG("init object"); initObject(module);
         MO_PY_DEBUG("init geometry"); initGeometry(module);
+        MO_PY_DEBUG("init mat4"); initMat4(module);
         MO_PY_DEBUG("init vector"); initVector(module);
         MO_PY_DEBUG("init timeline"); initTimeline(module);
 
