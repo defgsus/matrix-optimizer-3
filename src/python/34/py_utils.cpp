@@ -17,6 +17,219 @@
 namespace MO {
 namespace PYTHON34 {
 
+PyObject* toPython(const QString s)
+{
+    return PyUnicode_FromString(s.toUtf8().constData());
+}
+
+PyObject* toPython(long x)
+{
+    return PyLong_FromLong(x);
+}
+
+PyObject* toPython(double x)
+{
+    return PyFloat_FromDouble(x);
+}
+
+PyObject* toPython(bool b)
+{
+    if (b)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+bool fromPython(PyObject* obj, QString* s)
+{
+    if (PyUnicode_Check(obj))
+    {
+        *s = QString::fromUtf8( PyUnicode_AsUTF8(obj) );
+        return true;
+    }
+    return false;
+}
+
+bool fromPython(PyObject* obj, long* s)
+{
+    if (PyLong_Check(obj))
+    {
+        *s = PyLong_AsLong(obj);
+        return true;
+    }
+    return false;
+}
+
+bool fromPython(PyObject* obj, double* val)
+{
+    if (PyFloat_Check(obj))
+    {
+        *val = PyFloat_AsDouble(obj);
+        return true;
+    }
+    if (PyLong_Check(obj))
+    {
+        *val = PyLong_AsLong(obj);
+        return true;
+    }
+    return false;
+}
+
+bool expectFromPython(PyObject* obj, QString* s)
+{
+    if (fromPython(obj, s))
+        return true;
+    setPythonError(PyExc_TypeError, QString("Expected string, got %1").arg(typeName(obj)));
+    return false;
+}
+
+bool expectFromPython(PyObject* obj, long* s)
+{
+    if (fromPython(obj, s))
+        return true;
+    setPythonError(PyExc_TypeError, QString("Expected int, got %1").arg(typeName(obj)));
+    return false;
+}
+
+bool expectFromPython(PyObject* obj, double* val)
+{
+    if (fromPython(obj, val))
+        return true;
+    setPythonError(PyExc_TypeError, QString("Expected double, got %1").arg(typeName(obj)));
+    return false;
+}
+
+template <class T>
+bool fromPythonSequenceT(PyObject* seq, T* vec, size_t len)
+{
+    if (!PySequence_Check(seq))
+        return false;
+    if (PySequence_Size(seq) != len)
+        return false;
+    for (Py_ssize_t i=0; i<len; ++i)
+    {
+        if (!fromPython(PySequence_GetItem(seq, i), &vec[i]))
+            return false;
+    }
+    return true;
+}
+
+bool fromPythonSequence(PyObject *seq, QString *vec, size_t len)
+{
+    return fromPythonSequenceT(seq, vec, len);
+}
+
+bool fromPythonSequence(PyObject *seq, long *vec, size_t len)
+{
+    return fromPythonSequenceT(seq, vec, len);
+}
+
+bool fromPythonSequence(PyObject *seq, double *vec, size_t len)
+{
+    return fromPythonSequenceT(seq, vec, len);
+}
+
+
+template <class T>
+bool expectFromPythonSequenceT(PyObject* seq, T* vec, size_t len, const QString& type)
+{
+    if (!PySequence_Check(seq))
+    {
+        setPythonError(PyExc_TypeError, QString("Expected sequence of %1, got %2")
+                       .arg(type).arg(typeName(seq)));
+        return false;
+    }
+    if (PySequence_Size(seq) != len)
+    {
+        setPythonError(PyExc_ValueError, QString("Expected sequence of length %1, got %2")
+                       .arg(len).arg(PySequence_Size(seq)));
+        return false;
+    }
+    for (Py_ssize_t i=0; i<len; ++i)
+    {
+        if (!expectFromPython(PySequence_GetItem(seq, i), &vec[i]))
+            return false;
+    }
+    return true;
+}
+
+bool expectFromPythonSequence(PyObject *seq, QString *vec, size_t len)
+{
+    return expectFromPythonSequenceT(seq, vec, len, "string");
+}
+
+bool expectFromPythonSequence(PyObject *seq, long *vec, size_t len)
+{
+    return expectFromPythonSequenceT(seq, vec, len, "int");
+}
+
+bool expectFromPythonSequence(PyObject *seq, double *vec, size_t len)
+{
+    return expectFromPythonSequenceT(seq, vec, len, "float");
+}
+
+
+bool checkIndex(Py_ssize_t index, Py_ssize_t len)
+{
+    if (index >= len)
+    {
+        PyErr_Set(PyExc_IndexError,
+                  QString("Index out of range, %1 >= %2").arg(index).arg(len));
+        return false;
+    }
+    return true;
+}
+
+
+
+
+
+void setPythonError(PyObject* exc, const QString& txt)
+{
+    PyErr_SetObject(exc, toPython(txt));
+}
+
+QString typeName(const PyObject *arg)
+{
+    if (!arg)
+        return "NULL";
+    auto s = QString(arg->ob_type->tp_name);
+    return s;
+}
+
+bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo)
+{
+    if (!PySequence_Check(seq))
+    {
+        PyErr_Set(PyExc_TypeError, QString("expected sequence, got %1")
+                  .arg(typeName(seq)));
+        return false;
+    }
+    Py_ssize_t size = PySequence_Size(seq);
+    for (Py_ssize_t i = 0; i < size; ++i)
+    {
+        auto item = PySequence_GetItem(seq, i);
+        if (!item)
+        {
+            PyErr_Set(PyExc_TypeError, QString("NULL object in sequence[%1]").arg(i));
+            return false;
+        }
+        if (!foo(item))
+            return false;
+    }
+    return true;
+}
+
+
+
+
+
+
+
+
+
+// ------- oldstuff --------
+
 PyObject* fromString(const QString& s)
 {
     return PyUnicode_FromString(s.toUtf8().constData());
@@ -27,13 +240,6 @@ QString toString(PyObject* o)
     return QString::fromUtf8( PyUnicode_AsUTF8(o) );
 }
 
-QString typeName(const PyObject *arg)
-{
-    if (!arg)
-        return "NULL";
-    auto s = QString(arg->ob_type->tp_name);
-    return s;
-}
 
 PyObject* fromInt(int i)
 {
@@ -93,29 +299,6 @@ void initObjectType(PyObject* module, PyTypeObject* type, const char* name)
 void PyErr_Set(PyObject* exc, const QString& txt)
 {
     PyErr_SetObject(exc, fromString(txt));
-}
-
-bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo)
-{
-    if (!PySequence_Check(seq))
-    {
-        PyErr_Set(PyExc_TypeError, QString("expected sequence, got %1")
-                  .arg(typeName(seq)));
-        return false;
-    }
-    Py_ssize_t size = PySequence_Size(seq);
-    for (Py_ssize_t i = 0; i < size; ++i)
-    {
-        auto item = PySequence_GetItem(seq, i);
-        if (!item)
-        {
-            PyErr_Set(PyExc_TypeError, QString("NULL object in sequence[%1]").arg(i));
-            return false;
-        }
-        if (!foo(item))
-            return false;
-    }
-    return true;
 }
 
 

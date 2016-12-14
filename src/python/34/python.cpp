@@ -24,6 +24,8 @@
 #include "python_geometry.h"
 #include "python_timeline.h"
 #include "python_output.h"
+//#include "test_mod.h"
+#include "python/mo3.h"
 #include "tool/stringmanip.h"
 #include "io/ApplicationTime.h"
 #include "io/error.h"
@@ -70,11 +72,12 @@ namespace
         if (!module)
             return nullptr;
 
-        PyObject* submod = vecCreateModule();
+        /*PyObject* submod = vecCreateModule();
         if (!submod)
             return NULL;
         Py_INCREF(submod);
         PyModule_AddObject(module, "vecfunc", submod);
+        */
 
         // add the classes
         MO_PY_DEBUG("init object"); initObject(module);
@@ -82,6 +85,7 @@ namespace
         MO_PY_DEBUG("init mat4"); initMat4(module);
         MO_PY_DEBUG("init vector"); initVector(module);
         MO_PY_DEBUG("init timeline"); initTimeline(module);
+        //MO_PY_DEBUG("init test_mod"); initialize_module_test_module();
 
         return module;
     }
@@ -96,7 +100,9 @@ void initPython()
         is_init = true;
 
         PyImport_AppendInittab("matrixoptimizer", moCreateModule);
-        PyImport_AppendInittab("matrixoptimizer.vecfunc", vecCreateModule);
+        //PyImport_AppendInittab("matrixoptimizer.vecfunc", vecCreateModule);
+
+        initialize_module_mo3();
 
         Py_Initialize();
 

@@ -294,7 +294,10 @@ HEADERS += \
     $$PWD/math/FloatMatrix.h \
     $$PWD/io/error_index.h \
     $$PWD/io/NeurofoxLoader.h \
-    $$PWD/python/34/python_matrix4.h
+    $$PWD/python/34/python_matrix4.h \
+    $$PWD/python/34/vector_helper.h \
+    $$PWD/python/mo3.h
+
 
 SOURCES += \
     src/io/console.cpp \
@@ -522,5 +525,9 @@ SOURCES += \
     $$PWD/tool/ProgressInfo.cpp \
     $$PWD/math/FloatMatrix.cpp \
     $$PWD/io/NeurofoxLoader.cpp \
-    $$PWD/python/34/python_matrix4.cpp
+    $$PWD/python/34/python_matrix4.cpp \
+    $$PWD/python/34/vector_helper.cpp \
+    $$PWD/python/mo3.cpp
+
+DISTFILES +=
 

@@ -1,6 +1,8 @@
 *.pro.user*
 *.autosave
 *.mo3-gui
+.idea/
+__pycache__/
 
 render/
 help_export/

@@ -23,6 +23,49 @@
 namespace MO {
 namespace PYTHON34 {
 
+#ifndef Py_RETURN_SELF
+#   define Py_RETURN_SELF return Py_INCREF(self), reinterpret_cast<PyObject*>(self)
+#endif
+
+PyObject* toPython(const QString);
+PyObject* toPython(long);
+PyObject* toPython(double);
+PyObject* toPython(bool);
+
+bool fromPython(PyObject*, QString*);
+bool fromPython(PyObject*, long*);
+bool fromPython(PyObject*, double*);
+
+bool expectFromPython(PyObject*, QString*);
+bool expectFromPython(PyObject*, long*);
+bool expectFromPython(PyObject*, double*);
+
+// Writes 'len' entries from the python sequence into 'vec'
+bool fromPythonSequence(PyObject* seq, QString* vec, size_t len);
+bool fromPythonSequence(PyObject* seq, long* vec, size_t len);
+bool fromPythonSequence(PyObject* seq, double* vec, size_t len);
+
+bool expectFromPythonSequence(PyObject* seq, QString* vec, size_t len);
+bool expectFromPythonSequence(PyObject* seq, long* vec, size_t len);
+bool expectFromPythonSequence(PyObject* seq, double* vec, size_t len);
+
+/** If @p arg is a tuple with one object, then return the object, otherwise arg */
+PyObject* removeArgumentTuple(PyObject* arg);
+
+void setPythonError(PyObject* exc, const QString& txt);
+
+QString typeName(const PyObject* arg);
+
+/** Iterates over every item in the PySequence. If seq is not sequencable,
+    sets PyErr and returns false. If foo returns false, the iteration is stopped
+    and false is returned. */
+bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo);
+
+/** Verify that index < len, raise PyError otherwise */
+bool checkIndex(Py_ssize_t index, Py_ssize_t len);
+
+
+// ------- old stuff ------
 
 /** Initializes the object from the type struct.
     @throws Exception any error */
@@ -32,7 +75,6 @@ void dumpObject(PyObject* arg, bool introspect);
 
 PyObject* fromString(const QString&);
 QString toString(PyObject* unicode);
-QString typeName(const PyObject* arg);
 
 PyObject* fromInt(int v);
 PyObject* fromLong(long v);
@@ -40,14 +82,6 @@ PyObject* fromDouble(double v);
 bool toDouble(PyObject* arg, double* v);
 
 void PyErr_Set(PyObject* exc, const QString& txt);
-
-/** Iterates over every item in the PySequence. If seq is not sequencable,
-    sets PyErr and returns false. If foo returns false, the iteration is stopped
-    and false is returned. */
-bool iterateSequence(PyObject* seq, std::function<bool(PyObject*item)> foo);
-
-/** If @p arg is a tuple with one object, then return the object */
-PyObject* removeArgumentTuple(PyObject* arg);
 
 } // namespace PYTHON34
 } // namespace MO

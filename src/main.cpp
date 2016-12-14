@@ -25,7 +25,7 @@
 #include "engine/ClientEngine.h"
 #include "maincommandline.h"
 #include "io/DiskRenderSettings.h"
-//#include "python/34/python.h"
+#include "python/34/python.h"
 
 void showHelp()
 {
@@ -71,7 +71,6 @@ int renderToDisk()
 //#include "io/streamoperators_qt.h"
 //#include "math/funcparser/parser.h"
 //#include "io/log.h"
-
 
 int main(int argc, char *argv[])
 {
@@ -156,6 +155,7 @@ int main(int argc, char *argv[])
         std::unique_ptr<MO::Application> app_deleter(MO::application());
 
         MO::application()->setAttribute(Qt::AA_X11InitThreads);
+        //MO::PYTHON34::runConsole(argc, argv); return 0;
 
         // tests with QApplication
         //{ MO::TestHelpSystem test; return test.run(); }
