@@ -10,3 +10,6 @@ temp/
 data/_/
 data/cache/
 doc/doxygen/html
+
+*.mp4
+*.wav

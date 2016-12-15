@@ -92,8 +92,9 @@ void NeurofoxLoader::Private::scanHex(const QString& s)
 
         QStringList vals = line.split('\t', QString::SkipEmptyParts);
         if (vals.size() != 5)
-            MO_IO_ERROR(READ, "Error reading line " << lineNum << " '"
-                        << line << "'");
+            continue;
+            //MO_IO_ERROR(READ, "Error reading line " << lineNum << " '"
+            //            << line << "'");
 
         int64_t timeStamp = vals[0].toLongLong();
         if (initTime < 0)
