@@ -296,7 +296,9 @@ HEADERS += \
     $$PWD/io/NeurofoxLoader.h \
     $$PWD/python/34/python_matrix4.h \
     $$PWD/python/34/vector_helper.h \
-    $$PWD/python/mo3.h
+    $$PWD/python/py_helper.h \
+    $$PWD/python/mo3.h \
+    $$PWD/python/py_mo_helper.h
 
 
 SOURCES += \
@@ -527,7 +529,9 @@ SOURCES += \
     $$PWD/io/NeurofoxLoader.cpp \
     $$PWD/python/34/python_matrix4.cpp \
     $$PWD/python/34/vector_helper.cpp \
-    $$PWD/python/mo3.cpp
+    $$PWD/python/py_helper.cpp \
+    $$PWD/python/mo3.cpp \
+    $$PWD/python/py_mo_helper.cpp
 
 DISTFILES +=
 
