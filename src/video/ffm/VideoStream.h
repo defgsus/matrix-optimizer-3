@@ -10,7 +10,8 @@
 #include <QImage>
 #endif
 
-#include "video/decoderframe.h"
+#include "video/DecoderFrame.h"
+#include "video/AudioFrame.h"
 //#include "tool/mediafileinfo.h"
 
 namespace FFM {
@@ -26,6 +27,10 @@ public:
 
     /** Is stream opened */
     bool isReady() const;
+    /** Returns true if audio decoding is enabled */
+    bool isAudioEnabled() const;
+    /** Is an audio track available */
+    bool hasAudioTrack() const;
 
     //MediaFileInfo getFileInfo() const;
 
@@ -34,6 +39,10 @@ public:
 
     /** Informational string */
     std::string toString() const;
+    std::string videoFormatString() const;
+    std::string audioFormatString() const;
+    std::string pixelFormatString() const;
+    std::string sampleFormatString() const;
 
     /** Returns current position in input stream */
     size_t curFilePos() const;
@@ -59,6 +68,12 @@ public:
         @note Must be called before openFile() */
     void setThreadCount(int num);
 
+    /** Enables or disables audio stream extraction,
+        default is enabled.
+        @note If enabled, audio frames will be queued internally
+        without limit. Use getAudioFrame() to use and dispose them! */
+    void setAudioEnabled(bool e);
+
     // --------- io ---------
 
     /** Opens the given file/stream.
@@ -73,7 +88,7 @@ public:
     void seekSecond(double sec);
     void rewind();
 
-    // -------- frames ------
+    // -------- video frames ------
 
     /** Read the next @p frame.
         Returns NULL when the stream has no more frames.
@@ -86,6 +101,20 @@ public:
         Not very efficient and more for debugging purposes. */
     QImage getQImage() const;
 #endif
+
+    // -------- audio frames ---------
+
+    /** Returns true, if audio frames have been decoded
+        and are ready to be taken with getAudioFrame() */
+    bool hasAudioFrame() const;
+    /** Returns the number of seconds of audio that
+        are available via getAudioFrame() */
+    double numAvailableAudioSeconds() const;
+
+    /** Returns a previously decoded audio frame,
+        or NULL if there is none.
+        Ownership of returned frame is with caller. */
+    AudioFrame* getAudioFrame();
 
 private:
     struct Private;

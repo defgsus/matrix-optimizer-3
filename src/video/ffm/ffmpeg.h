@@ -22,7 +22,7 @@ extern "C" {
 /** Execute ffmpeg 'int xx()' function and
     throw Exception with ffmpeg error text on error */
 #define CHECK_FFM_THROW(avFunc_) \
-{ int err__ = avFunc_; if (err__ < 0) MO_ERROR("libav: " \
+{ int err__ = avFunc_; if (err__ < 0) MO_ERROR("libav-error: " \
     << ::FFM::errorString(err__) << " for '" #avFunc_ "'"); }
 
 /** Namespace for all ffmpeg related wrapper */

@@ -197,7 +197,7 @@ public:
 #ifdef MO_ENABLE_WARNING
 #   define MO_WARNING_IMPL_(text__) \
         { std::cerr << "[" << ::MO::applicationTimeString() << "] " << text__ << std::endl; \
-          if (isClient()) \
+          if (::MO::isClient()) \
             MO_NETLOG(APP_WARNING, text__); }
 #else
 #   define MO_WARNING_IMPL_(unused__) { }

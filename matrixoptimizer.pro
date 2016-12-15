@@ -20,6 +20,9 @@ QMAKE_CXXFLAGS_DEBUG += -DOSCPKT_DEBUG
 
 #DEFINES += MO_DISABLE_AUDIO
 
+#for parts of the source that maintain non-qt compatibility
+DEFINES += MO_USE_QT
+
 #disable compatibility mode
 DEFINES += MO_USE_OPENGL_CORE
 
@@ -71,7 +74,8 @@ unix: { DEFINES += MO_OS_UNIX \
         MO_DISABLE_OBJECT_TREE_DRAG \
         MO_ENABLE_PYTHON34 \
         # neuro-imaging io library
-        MO_ENABLE_NIFTI
+        MO_ENABLE_NIFTI \
+        MO_ENABLE_FFMPEG
         #MO_ENABLE_NUMPY
 }
 

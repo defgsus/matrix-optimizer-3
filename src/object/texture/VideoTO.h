@@ -13,7 +13,7 @@
 #ifndef MOSRC_OBJECT_TEXTURE_VIDEOTO_H
 #define MOSRC_OBJECT_TEXTURE_VIDEOTO_H
 
-#include "textureobjectbase.h"
+#include "TextureObjectBase.h"
 
 namespace MO {
 

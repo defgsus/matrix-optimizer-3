@@ -84,7 +84,6 @@ HEADERS += \
     $$PWD/io/log_snd.h \
     $$PWD/gl/gl_state.h \
     $$PWD/video/ffm/ffmpeg.h \
-    $$PWD/video/ffm/videostream.h \
     $$PWD/gl/win32/winerror.h \
     $$PWD/gl/win32/wm_codes.def \
     $$PWD/gl/win32/wglext.h \
@@ -298,7 +297,12 @@ HEADERS += \
     $$PWD/python/34/vector_helper.h \
     $$PWD/python/py_helper.h \
     $$PWD/python/mo3.h \
-    $$PWD/python/py_mo_helper.h
+    $$PWD/python/py_mo_helper.h \
+    $$PWD/video/ffm/VideoStream.h \
+    $$PWD/gl/VideoTextureBuffer.h \
+    $$PWD/video/DecoderThread.h \
+    $$PWD/video/AudioFrame.h \
+    $$PWD/tool/MutexLocker.h
 
 
 SOURCES += \
@@ -531,7 +535,11 @@ SOURCES += \
     $$PWD/python/34/vector_helper.cpp \
     $$PWD/python/py_helper.cpp \
     $$PWD/python/mo3.cpp \
-    $$PWD/python/py_mo_helper.cpp
+    $$PWD/python/py_mo_helper.cpp \
+    $$PWD/gl/VideoTextureBuffer.cpp \
+    $$PWD/video/DecoderThread.cpp \
+    $$PWD/tool/MutexLocker.cpp \
+    $$PWD/video/DecoderFrame.cpp
 
 DISTFILES +=
 

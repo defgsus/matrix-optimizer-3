@@ -10,17 +10,19 @@
 
 #ifdef MO_ENABLE_FFMPEG
 
-#include "videoto.h"
-#include "object/param/parameters.h"
-#include "object/param/parameterfloat.h"
-#include "object/param/parameterint.h"
-#include "object/param/parameterfilename.h"
-#include "gl/texture.h"
-#include "gl/shader.h"
-#include "video/ffm/videostream.h"
-#include "video/decoderframe.h"
-#include "io/filemanager.h"
-#include "io/datastream.h"
+#include "VideoTO.h"
+#include "object/param/Parameters.h"
+#include "object/param/ParameterFloat.h"
+#include "object/param/ParameterInt.h"
+#include "object/param/ParameterFilename.h"
+#include "gl/Texture.h"
+#include "gl/Shader.h"
+//#include "gl/VideoTextureBuffer.h"
+//#include "video/ffm/VideoStream.h"
+#include "video/DecoderThread.h"
+#include "video/DecoderFrame.h"
+#include "io/FileManager.h"
+#include "io/DataStream.h"
 #include "io/log.h"
 
 using namespace gl;
@@ -33,20 +35,25 @@ struct VideoTO::Private
 {
     Private(VideoTO* to)
         : to            (to)
-        , pFilename     (0)
-        , tex           (0)
+        , tex           (nullptr)
+        , pFilename     (nullptr)
     { }
     ~Private()
     {
         delete tex;
     }
 
+    void setTex(GL::Texture*);
+
     VideoTO* to;
     QString initFilename;
+    DecoderThread decoder;
+    GL::Texture * tex;
+    double lastTime;
+
     ParameterFilename * pFilename;
     ParameterInt * pMipmaps;
-    GL::Texture * tex;
-    FFM::VideoStream stream;
+
 };
 
 VideoTO::VideoTO()
@@ -84,7 +91,7 @@ void VideoTO::createParameters()
 
         p_->pFilename = params()->createFilenameParameter(
                     "filename", tr("image file"), tr("Filename of the image"),
-                    IO::FT_TEXTURE,
+                    IO::FT_VIDEO,
                     p_->initFilename);
         /*
         pMipmaps_ = params()->createIntParameter(
@@ -141,42 +148,67 @@ void VideoTO::getNeededFiles(IO::FileList & files)
         files << IO::FileListEntry(p_->pFilename->baseValue(), IO::FT_TEXTURE);
 }
 
+void VideoTO::Private::setTex(GL::Texture* t)
+{
+    if (tex)
+        tex->release();
+    delete tex;
+    tex = t;
+}
+
 void VideoTO::initGl(uint thread)
 {
     TextureObjectBase::initGl(thread);
 
-    if (p_->tex && p_->tex->isAllocated())
-        p_->tex->release();
-    delete p_->tex;
+    p_->setTex(nullptr);
 
     try
     {
         QString fn = IO::fileManager().localFilename(p_->pFilename->baseValue());
-        p_->stream.openFile(fn.toStdString());
-        //tex_ = GL::Texture::createFromImage(fn, getDesiredTextureFormat(),
-        //                                    pMipmaps_->baseValue());
+        if (fn.isEmpty())
+            p_->decoder.close();
+        else
+        {
+            p_->decoder.openFile(fn.toStdString());
+            p_->decoder.start();
+            p_->lastTime = 0.;
+        }
     }
     catch (const Exception& e)
     {
-        p_->tex = 0;
-        setErrorMessage(e.what());
+        setErrorMessage(QString("VIDEO: ") + e.what());
     }
 }
 
 void VideoTO::releaseGl(uint thread)
 {
-    if (p_->tex && p_->tex->isAllocated())
-        p_->tex->release();
-
-    p_->stream.close();
+    p_->decoder.close();
+    p_->setTex(nullptr);
 
     TextureObjectBase::releaseGl(thread);
 }
 
-const GL::Texture * VideoTO::valueTexture(uint chan, const RenderTime& ) const
+const GL::Texture * VideoTO::valueTexture(uint chan, const RenderTime& time) const
 {
+    if (chan != 0 || !p_->decoder.isReady())
+        return nullptr;
 
-    return chan==0 ? p_->tex : 0;
+    if (time.second() < p_->lastTime)
+    {
+        p_->decoder.doneFrames();
+        p_->decoder.seekSecond(time.second());
+    }
+    p_->lastTime = time.second();
+
+    DecoderFrame *frameA, *frameB;
+    double mix;
+    p_->decoder.getFrames(time.second(), &frameA, &frameB, &mix);
+    p_->decoder.doneFramesBefore(time.second()-.2);
+    if (!frameA)
+        return nullptr;
+
+    p_->setTex(frameA->createTextureYUV());
+    return p_->tex;
 }
 
 
