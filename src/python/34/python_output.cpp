@@ -10,7 +10,7 @@
 
 #ifdef MO_ENABLE_PYTHON34
 
-#include <python3.4/Python.h>
+#include <python3.5/Python.h>
 
 #include <iostream>
 #include "python_output.h"

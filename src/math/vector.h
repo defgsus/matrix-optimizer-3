@@ -31,9 +31,9 @@ namespace MATH {
 
     /** Returns the area of a triangle given by three corners */
     template <typename T, glm::precision P>
-    T triangle_area(const glm::detail::tvec3<T, P>& v1,
-                    const glm::detail::tvec3<T, P>& v2,
-                    const glm::detail::tvec3<T, P>& v3)
+    T triangle_area(const MO_GLM_DETAIL::tvec3<T, P>& v1,
+                    const MO_GLM_DETAIL::tvec3<T, P>& v2,
+                    const MO_GLM_DETAIL::tvec3<T, P>& v3)
     {
         const T edge1 = glm::distance(v1, v2),
                 edge2 = glm::distance(v2, v3),
@@ -46,9 +46,9 @@ namespace MATH {
     // ------- wrapper for glm functions that take an angle ---------
 
     template <typename T, glm::precision P>
-    glm::detail::tmat4x4<T, P> rotate(glm::detail::tmat4x4<T, P> const & m,
+    MO_GLM_DETAIL::tmat4x4<T, P> rotate(MO_GLM_DETAIL::tmat4x4<T, P> const & m,
                                     T const & angle_degree,
-                                    glm::detail::tvec3<T, P> const & v)
+                                    MO_GLM_DETAIL::tvec3<T, P> const & v)
     {
         #ifndef MO_GLM_RADIANS
             return glm::rotate(m, angle_degree, v);
@@ -58,7 +58,7 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    glm::detail::tvec3<T, P> rotateX(glm::detail::tvec3<T, P> const & v,
+    MO_GLM_DETAIL::tvec3<T, P> rotateX(MO_GLM_DETAIL::tvec3<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -69,7 +69,7 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    glm::detail::tvec3<T, P> rotateY(glm::detail::tvec3<T, P> const & v,
+    MO_GLM_DETAIL::tvec3<T, P> rotateY(MO_GLM_DETAIL::tvec3<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -80,7 +80,7 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    glm::detail::tvec3<T, P> rotateZ(glm::detail::tvec3<T, P> const & v,
+    MO_GLM_DETAIL::tvec3<T, P> rotateZ(MO_GLM_DETAIL::tvec3<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -92,7 +92,7 @@ namespace MATH {
 
 
     template <typename T, glm::precision P>
-    glm::detail::tvec4<T, P> rotateX(glm::detail::tvec4<T, P> const & v,
+    MO_GLM_DETAIL::tvec4<T, P> rotateX(MO_GLM_DETAIL::tvec4<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -103,7 +103,7 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    glm::detail::tvec4<T, P> rotateY(glm::detail::tvec4<T, P> const & v,
+    MO_GLM_DETAIL::tvec4<T, P> rotateY(MO_GLM_DETAIL::tvec4<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -114,7 +114,7 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    glm::detail::tvec4<T, P> rotateZ(glm::detail::tvec4<T, P> const & v,
+    MO_GLM_DETAIL::tvec4<T, P> rotateZ(MO_GLM_DETAIL::tvec4<T, P> const & v,
                                     T const & angle_degree)
     {
         #ifndef MO_GLM_RADIANS
@@ -126,7 +126,7 @@ namespace MATH {
 
 
     template <typename T>
-    glm::detail::tmat4x4<T, glm::defaultp> perspective(T const & fovy_degree,
+    MO_GLM_DETAIL::tmat4x4<T, glm::defaultp> perspective(T const & fovy_degree,
                                                        T const & aspect,
                                                        T const & zNear,
                                                        T const & zFar)
@@ -140,7 +140,7 @@ namespace MATH {
 
     /** 2D rotation */
     template <typename T, glm::precision P>
-    inline glm::detail::tvec2<T, P> rotate(const glm::detail::tvec2<T, P> & v, Float angle_degree)
+    inline MO_GLM_DETAIL::tvec2<T, P> rotate(const MO_GLM_DETAIL::tvec2<T, P> & v, Float angle_degree)
     {
         const Float a = deg_to_rad(angle_degree);
         const Float s = std::sin(a),
@@ -151,29 +151,29 @@ namespace MATH {
     }
 
     template <typename T, glm::precision P>
-    inline glm::detail::tvec2<T, P> rotateZ(const glm::detail::tvec2<T, P> & v, Float angle_degree)
+    inline MO_GLM_DETAIL::tvec2<T, P> rotateZ(const MO_GLM_DETAIL::tvec2<T, P> & v, Float angle_degree)
     {
-        return rotate(v, angle_degree);
+        return MO::MATH::rotate(v, angle_degree);
     }
 
     /** 3D rotation */
     template <typename T, glm::precision P>
-    inline glm::detail::tvec3<T, P> rotate(const glm::detail::tvec3<T, P> & v,
-                                           const glm::detail::tvec3<T, P> & axis, Float angle_degree)
+    inline MO_GLM_DETAIL::tvec3<T, P> rotate(const MO_GLM_DETAIL::tvec3<T, P> & v,
+                                           const MO_GLM_DETAIL::tvec3<T, P> & axis, Float angle_degree)
     {
-        const glm::detail::tvec4<T, P> v4 =
+        const MO_GLM_DETAIL::tvec4<T, P> v4 =
         #ifndef MO_GLM_RADIANS
-            glm::rotate(Mat4(1), angle_degree, axis) * glm::detail::tvec4<T, P>(v, 1.0);
+            glm::rotate(Mat4(1), angle_degree, axis) * MO_GLM_DETAIL::tvec4<T, P>(v, 1.0);
         #else
-            glm::rotate(Mat4(1), deg_to_rad(angle_degree), axis) * glm::detail::tvec4<T, P>(v, 1.0);
+            glm::rotate(Mat4(1), deg_to_rad(angle_degree), axis) * MO_GLM_DETAIL::tvec4<T, P>(v, 1.0);
         #endif
-        return glm::detail::tvec3<T, P>(v4);
+        return MO_GLM_DETAIL::tvec3<T, P>(v4);
     }
 
     /** rotation of 4D vector */
     template <typename T, glm::precision P>
-    inline glm::detail::tvec4<T, P> rotate(const glm::detail::tvec4<T, P> & v,
-                                           const glm::detail::tvec3<T, P> & axis, Float angle_degree)
+    inline MO_GLM_DETAIL::tvec4<T, P> rotate(const MO_GLM_DETAIL::tvec4<T, P> & v,
+                                           const MO_GLM_DETAIL::tvec3<T, P> & axis, Float angle_degree)
     {
         return
         #ifndef MO_GLM_RADIANS
@@ -188,11 +188,11 @@ namespace MATH {
     then the result is the rotated P. <br>
     u and v are in the range of 0..1 for the whole sphere */
     template <typename F>
-    glm::detail::tvec3<F,glm::defaultp> pointOnSphere(F u, F v)
+    MO_GLM_DETAIL::tvec3<F,glm::defaultp> pointOnSphere(F u, F v)
     {
         u *= TWO_PI,
         v *= PI;
-        auto P = glm::detail::tvec3<F,glm::defaultp>(
+        auto P = MO_GLM_DETAIL::tvec3<F,glm::defaultp>(
         // rotate a point (0,1,0) around z
             -sin(v), std::cos(v), 0 );
         // rotate this point around y
@@ -203,8 +203,8 @@ namespace MATH {
 
 
     template <typename F, glm::precision P>
-    inline glm::detail::tvec2<F, P> normalize_safe(
-            const glm::detail::tvec2<F, P>& v)
+    inline MO_GLM_DETAIL::tvec2<F, P> normalize_safe(
+            const MO_GLM_DETAIL::tvec2<F, P>& v)
     {
         F sqr = v.x * v.x + v.y * v.y;
         if (sqr > 0)
@@ -214,8 +214,8 @@ namespace MATH {
     }
 
     template <typename F, glm::precision P>
-    inline glm::detail::tvec3<F, P> normalize_safe(
-            const glm::detail::tvec3<F, P>& v)
+    inline MO_GLM_DETAIL::tvec3<F, P> normalize_safe(
+            const MO_GLM_DETAIL::tvec3<F, P>& v)
     {
         F sqr = v.x * v.x + v.y * v.y + v.z * v.z;
         if (sqr > 0)
@@ -225,8 +225,8 @@ namespace MATH {
     }
 
     template <typename F, glm::precision P>
-    inline glm::detail::tvec4<F, P> normalize_safe(
-            const glm::detail::tvec4<F, P>& v)
+    inline MO_GLM_DETAIL::tvec4<F, P> normalize_safe(
+            const MO_GLM_DETAIL::tvec4<F, P>& v)
     {
         F sqr = v.x * v.x + v.y * v.y + v.z * v.z + v.w * v.w;
         if (sqr > 0)
@@ -238,7 +238,7 @@ namespace MATH {
 
     template <typename F, glm::precision P>
     inline F length_safe(
-            const glm::detail::tvec2<F, P>& v)
+            const MO_GLM_DETAIL::tvec2<F, P>& v)
     {
         F sqr = v.x * v.x + v.y * v.y;
         return (sqr > 0)
@@ -250,9 +250,9 @@ namespace MATH {
 
 
 template <typename T>
-glm::detail::tmat4x4<T> rotate(glm::detail::tmat4x4<T> const & m,
+MO_GLM_DETAIL::tmat4x4<T> rotate(MO_GLM_DETAIL::tmat4x4<T> const & m,
                                 T const & angle_degree,
-                                glm::detail::tvec3<T> const & v)
+                                MO_GLM_DETAIL::tvec3<T> const & v)
 {
     #ifndef MO_GLM_RADIANS
         return glm::rotate(m, angle_degree, v);
@@ -262,7 +262,7 @@ glm::detail::tmat4x4<T> rotate(glm::detail::tmat4x4<T> const & m,
 }
 
 template <typename T>
-glm::detail::tvec3<T> rotateX(glm::detail::tvec3<T> const & v,
+MO_GLM_DETAIL::tvec3<T> rotateX(MO_GLM_DETAIL::tvec3<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -273,7 +273,7 @@ glm::detail::tvec3<T> rotateX(glm::detail::tvec3<T> const & v,
 }
 
 template <typename T>
-glm::detail::tvec3<T> rotateY(glm::detail::tvec3<T> const & v,
+MO_GLM_DETAIL::tvec3<T> rotateY(MO_GLM_DETAIL::tvec3<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -284,7 +284,7 @@ glm::detail::tvec3<T> rotateY(glm::detail::tvec3<T> const & v,
 }
 
 template <typename T>
-glm::detail::tvec3<T> rotateZ(glm::detail::tvec3<T> const & v,
+MO_GLM_DETAIL::tvec3<T> rotateZ(MO_GLM_DETAIL::tvec3<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -296,7 +296,7 @@ glm::detail::tvec3<T> rotateZ(glm::detail::tvec3<T> const & v,
 
 
 template <typename T>
-glm::detail::tvec4<T> rotateX(glm::detail::tvec4<T> const & v,
+MO_GLM_DETAIL::tvec4<T> rotateX(MO_GLM_DETAIL::tvec4<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -307,7 +307,7 @@ glm::detail::tvec4<T> rotateX(glm::detail::tvec4<T> const & v,
 }
 
 template <typename T>
-glm::detail::tvec4<T> rotateY(glm::detail::tvec4<T> const & v,
+MO_GLM_DETAIL::tvec4<T> rotateY(MO_GLM_DETAIL::tvec4<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -318,7 +318,7 @@ glm::detail::tvec4<T> rotateY(glm::detail::tvec4<T> const & v,
 }
 
 template <typename T>
-glm::detail::tvec4<T> rotateZ(glm::detail::tvec4<T> const & v,
+MO_GLM_DETAIL::tvec4<T> rotateZ(MO_GLM_DETAIL::tvec4<T> const & v,
                                 T const & angle_degree)
 {
     #ifndef MO_GLM_RADIANS
@@ -330,7 +330,7 @@ glm::detail::tvec4<T> rotateZ(glm::detail::tvec4<T> const & v,
 
 
 template <typename T>
-glm::detail::tmat4x4<T> perspective(T const & fovy_degree,
+MO_GLM_DETAIL::tmat4x4<T> perspective(T const & fovy_degree,
                                                    T const & aspect,
                                                    T const & zNear,
                                                    T const & zFar)
@@ -344,7 +344,7 @@ glm::detail::tmat4x4<T> perspective(T const & fovy_degree,
 
 /** 2D rotation */
 template <typename T>
-inline glm::detail::tvec2<T> rotate(const glm::detail::tvec2<T> & v, Float angle_degree)
+inline MO_GLM_DETAIL::tvec2<T> rotate(const MO_GLM_DETAIL::tvec2<T> & v, Float angle_degree)
 {
     const Float a = deg_to_rad(angle_degree);
     const Float s = std::sin(a),
@@ -360,11 +360,11 @@ Given a point P = <0,1,0>, and v = rotation around z, and u = rotation around y 
 then the result is the rotated P. <br>
 u and v are in the range of 0..1 for the whole sphere */
 template <typename F>
-glm::detail::tvec3<F> pointOnSphere(F u, F v)
+MO_GLM_DETAIL::tvec3<F> pointOnSphere(F u, F v)
 {
     u *= TWO_PI,
     v *= PI;
-    auto P = glm::detail::tvec3<F>(
+    auto P = MO_GLM_DETAIL::tvec3<F>(
         // rotate a point (0,1,0) around z
         -sin(v), std::cos(v), 0 );
     // rotate this point around y
@@ -375,8 +375,8 @@ glm::detail::tvec3<F> pointOnSphere(F u, F v)
 
 
 template <typename F>
-inline glm::detail::tvec3<F> normalize_safe(
-        const glm::detail::tvec3<F>& v)
+inline MO_GLM_DETAIL::tvec3<F> normalize_safe(
+        const MO_GLM_DETAIL::tvec3<F>& v)
 {
     F sqr = v.x * v.x + v.y * v.y + v.z * v.z;
     if (sqr > 0)

@@ -74,7 +74,7 @@ unix: { DEFINES += MO_OS_UNIX \
         MO_DISABLE_OBJECT_TREE_DRAG \
         MO_ENABLE_PYTHON34 \
         # neuro-imaging io library
-        MO_ENABLE_NIFTI \
+        #MO_ENABLE_NIFTI \
         MO_ENABLE_FFMPEG
         #MO_ENABLE_NUMPY
 }
@@ -100,7 +100,7 @@ LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
         -ljpeg -langelscript \
-        -lpython3.4m \
+        -lpython3.5m \
         # numpy
         #-L/home/defgsus/.local/lib/ -lnpymath-1.8 \
         -lniftiio \

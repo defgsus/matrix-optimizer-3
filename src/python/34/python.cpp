@@ -10,7 +10,7 @@
 
 #ifdef MO_ENABLE_PYTHON34
 
-#include <python3.4/Python.h>
+#include <python3.5/Python.h>
 
 #include <atomic>
 
@@ -102,7 +102,7 @@ void initPython()
         PyImport_AppendInittab("matrixoptimizer", moCreateModule);
         //PyImport_AppendInittab("matrixoptimizer.vecfunc", vecCreateModule);
 
-        initialize_module_mo3();
+        //initialize_module_mo3();
 
         Py_Initialize();
 

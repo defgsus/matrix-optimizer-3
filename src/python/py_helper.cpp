@@ -262,7 +262,7 @@ void dumpObject(PyObject* arg, bool introspect)
             CPPY__PRINT(arg->ob_type->tp_print);
             CPPY__PRINT(arg->ob_type->tp_getattr);
             CPPY__PRINT(arg->ob_type->tp_setattr);
-            CPPY__PRINT(arg->ob_type->tp_reserved);
+            CPPY__PRINT(arg->ob_type->tp_as_async);
             CPPY__PRINT(arg->ob_type->tp_repr);
             CPPY__PRINT(arg->ob_type->tp_as_number);
             CPPY__PRINT(arg->ob_type->tp_as_sequence);

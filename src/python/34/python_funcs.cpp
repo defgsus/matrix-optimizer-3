@@ -10,7 +10,7 @@
 
 #ifdef MO_ENABLE_PYTHON34
 
-#include <python3.4/Python.h>
+#include <python3.5/Python.h>
 
 #include "python_funcs.h"
 #include "python_object.h"
@@ -142,7 +142,7 @@ extern "C" {
                 MO__PRINT(arg->ob_type->tp_print);
                 MO__PRINT(arg->ob_type->tp_getattr);
                 MO__PRINT(arg->ob_type->tp_setattr);
-                MO__PRINT(arg->ob_type->tp_reserved);
+                MO__PRINT(arg->ob_type->tp_as_async);
                 MO__PRINT(arg->ob_type->tp_repr);
                 MO__PRINT(arg->ob_type->tp_as_number);
                 MO__PRINT(arg->ob_type->tp_as_sequence);
