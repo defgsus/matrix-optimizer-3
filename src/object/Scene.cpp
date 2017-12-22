@@ -1479,6 +1479,7 @@ void Scene::setFreeCameraMatrix(const MO::Mat4& mat)
 
 void Scene::runScripts()
 {
+#ifndef MO_DISABLE_ANGELSCRIPT
     for (Object * o : p_allObjects_)
     if (o->activeAtAll())
     if (auto script = dynamic_cast<AScriptObject*>(o))
@@ -1494,6 +1495,7 @@ void Scene::runScripts()
                        << e.what());
         }
     }
+#endif
 }
 
 void Scene::lockRead_()

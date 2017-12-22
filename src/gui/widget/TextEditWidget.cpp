@@ -212,7 +212,7 @@ void TextEditWidget::Private::createWidgets()
                 });
             }
             break;
-
+#ifndef MO_DISABLE_ANGELSCRIPT
             case TT_ANGELSCRIPT:
             {
                 auto as = new AngelScriptWidget(widget);
@@ -227,6 +227,7 @@ void TextEditWidget::Private::createWidgets()
                 });
             }
             break;
+#endif
         }
 
         auto lh = new QHBoxLayout();

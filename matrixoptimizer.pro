@@ -72,6 +72,8 @@ windows { DEFINES += MO_OS_WIN \
 unix: { DEFINES += MO_OS_UNIX \
 # for optirun bug (XXX old and obsolete by now)
         MO_DISABLE_OBJECT_TREE_DRAG \
+        MO_DISABLE_ANGELSCRIPT \
+        #MO_DISABLE_SHP \
         MO_ENABLE_PYTHON34 \
         # neuro-imaging io library
         #MO_ENABLE_NIFTI \
@@ -99,11 +101,12 @@ unix {
 LIBS += -lglbinding \
         -lGLU -lGL -lX11 \
         -lportaudio -lportmidi -lsndfile -ldumb \
-        -ljpeg -langelscript \
+        -ljpeg \
+        #-langelscript \
         -lpython3.5m \
         # numpy
         #-L/home/defgsus/.local/lib/ -lnpymath-1.8 \
-        -lniftiio \
+        #-lniftiio \
         -lshp -latomic \
         -lavutil -lavcodec -lavformat -lswscale \
         #-lgstreamer-1.0 -lgstapp-1.0 -lgobject-2.0 -lglib-2.0 \
@@ -162,6 +165,9 @@ include(src/3rd/3rd.pri)
 ##bison_comp.output = ./${QMAKE_FILE_BASE}.cc
 #bison_comp.commands = $$BISON_BIN ${QMAKE_FILE_NAME} -o ${QMAKE_FILE_BASE}.cc --defines=./${QMAKE_FILE_BASE}.hh
 #QMAKE_EXTRA_COMPILERS += bison_comp
+
+DISTFILES += \
+    INSTALL.md
 
 
 

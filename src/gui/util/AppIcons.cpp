@@ -207,10 +207,10 @@ AppIcons::Private::IconId AppIcons::Private::idForObject(const Object * o) const
 
     if (dynamic_cast<const OscInputObject*>(o))
         return I_OSCIN;
-
+#ifndef MO_DISABLE_ANGELSCRIPT
     if (dynamic_cast<const AScriptObject*>(o))
         return I_ANGELSCRIPT;
-
+#endif
     if (dynamic_cast<const PythonObject*>(o))
         return I_PYTHON;
 

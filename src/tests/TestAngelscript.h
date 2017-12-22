@@ -8,6 +8,8 @@
     <p>created 09.01.2015</p>
 */
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+
 #ifndef MOSRC_TESTS_TEST_ANGELSCRIPT_H
 #define MOSRC_TESTS_TEST_ANGELSCRIPT_H
 
@@ -30,3 +32,5 @@ private:
 } // namespace MO
 
 #endif // TEST_ANGELSCRIPT_H
+
+#endif

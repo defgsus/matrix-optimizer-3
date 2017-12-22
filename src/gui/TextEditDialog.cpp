@@ -244,7 +244,7 @@ void TextEditDialog::Private::createWidgets()
                 });
             }
             break;
-
+#ifndef MO_DISABLE_ANGELSCRIPT
             case TT_ANGELSCRIPT:
             {
                 auto as = new AngelScriptWidget(dialog);
@@ -260,7 +260,7 @@ void TextEditDialog::Private::createWidgets()
                 });
             }
             break;
-
+#endif
             case TT_PYTHON34:
             {
                 auto py = new Python34Widget(dialog);
@@ -322,11 +322,12 @@ void TextEditDialog::Private::createWidgets()
 
 }
 
+#ifndef MO_DISABLE_ANGELSCRIPT
 AngelScriptWidget * TextEditDialog::getWidgetAngelScript() const
 {
     return dynamic_cast<AngelScriptWidget*>(p_->scriptEdit);
 }
-
+#endif
 
 #ifdef MO_ENABLE_PYTHON34
 Python34Widget * TextEditDialog::getWidgetPython() const

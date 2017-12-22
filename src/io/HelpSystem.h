@@ -84,7 +84,9 @@ private:
     void loadEquationFunctions_();
     void addObjectIndex_(QString& doc);
     void addEquationInfo_(QString& doc);
+#ifndef MO_DISABLE_ANGELSCRIPT
     void addAngelScriptInfo_(QString& doc);
+#endif
     void addPythonInfo_(QString& doc);
 
     QStringList searchPaths_;

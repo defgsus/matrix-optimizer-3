@@ -52,8 +52,10 @@ public:
     /** Give a list of variables with their descriptions to the equation editor */
     void addVariableNames(const QStringList& names, const QStringList& descriptions);
 
+#ifndef MO_DISABLE_ANGELSCRIPT
     /** Access to the angelscript widget (if text type was TT_ANGELSCRIPT in constructor) */
     AngelScriptWidget * getWidgetAngelScript() const;
+#endif
 #ifdef MO_ENABLE_PYTHON34
     Python34Widget * getWidgetPython() const;
 #endif

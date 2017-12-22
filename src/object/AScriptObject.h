@@ -8,6 +8,8 @@
     <p>created 1/1/2015</p>
 */
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+
 #ifndef MOSRC_OBJECT_ASCRIPTOBJECT_H
 #define MOSRC_OBJECT_ASCRIPTOBJECT_H
 
@@ -43,3 +45,5 @@ private:
 } // namespace MO
 
 #endif // MOSRC_OBJECT_ASCRIPTOBJECT_H
+
+#endif

@@ -206,10 +206,10 @@ bool HelpSystem::loadXhtml(const QString &partial_url, QDomDocument &doc)
 
         if (url.contains("equation.html"))
             addEquationInfo_(xhtml);
-
+#ifndef MO_DISABLE_ANGELSCRIPT
         if (url.contains("angelscript.html"))
             addAngelScriptInfo_(xhtml);
-
+#endif
         if (url.contains("python"))
             addPythonInfo_(xhtml);
 
@@ -596,7 +596,7 @@ void HelpSystem::addEquationInfo_(QString& doc)
     doc.replace("!FUNCTIONS!", str);
 }
 
-
+#ifndef MO_DISABLE_ANGELSCRIPT
 void HelpSystem::addAngelScriptInfo_(QString& doc)
 {
     if (doc.contains("!FUNCTIONS_INDEX!"))
@@ -617,6 +617,7 @@ void HelpSystem::addAngelScriptInfo_(QString& doc)
         doc.replace("!FUNCTIONS!", str);
     }
 }
+#endif
 
 void HelpSystem::addPythonInfo_(QString &doc)
 {

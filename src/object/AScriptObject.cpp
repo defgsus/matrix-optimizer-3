@@ -8,6 +8,8 @@
     <p>created 1/1/2015</p>
 */
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+
 #include "AScriptObject.h"
 #include "io/DataStream.h"
 #include "param/Parameters.h"
@@ -185,3 +187,5 @@ void AScriptObject::runScript()
 }
 
 } // namespace MO
+
+#endif

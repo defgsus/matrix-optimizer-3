@@ -1,3 +1,5 @@
+#ifndef MO_DISABLE_ANGELSCRIPT
+
 #include <new>
 #include <stdlib.h>
 #include <string.h>
@@ -2065,3 +2067,5 @@ static void RegisterScriptArray_Generic(asIScriptEngine *engine)
 }
 
 END_AS_NAMESPACE
+
+#endif

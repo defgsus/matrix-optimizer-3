@@ -8,6 +8,8 @@
     <p>created 09.01.2015</p>
 */
 
+#ifndef MO_DISABLE_ANGELSCRIPT
+
 #include <QByteArray>
 #include <QTextStream>
 
@@ -128,3 +130,5 @@ int TestAngelScript::Private::test_vector()
 
 
 } // namespace MO
+
+#endif
