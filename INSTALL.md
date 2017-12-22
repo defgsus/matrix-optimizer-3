@@ -10,7 +10,7 @@ libglu1-mesa-dev
 libpython3.5-dev
 libdumb1-dev
 libsndfile1-dev
-#libportaudio2-dev
+portaudio19-dev
 libglm-dev
 libshp-dev
 
